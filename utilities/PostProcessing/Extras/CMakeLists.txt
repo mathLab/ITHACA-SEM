@@ -7,6 +7,7 @@ ADD_UTILITIES_EXECUTABLE(L2                        util-extra L2.cpp)
 ADD_UTILITIES_EXECUTABLE(Linf                      util-extra Linf.cpp)
 ADD_UTILITIES_EXECUTABLE(SplitFld                  util-extra SplitFld.cpp)
 ADD_UTILITIES_EXECUTABLE(SplitModes                util-extra SplitModes.cpp)
+ADD_UTILITIES_EXECUTABLE(StreamFunction2D          util-extra StreamFunction2D.cpp)
 
 IF (NEKTAR_USE_VTK)
     ADD_UTILITIES_EXECUTABLE(VtkToPng util-extra VtkToPng.cpp)

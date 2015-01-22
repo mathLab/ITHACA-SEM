@@ -65,7 +65,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT MeshPartition(const SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT virtual ~MeshPartition();
 
-            LIB_UTILITIES_EXPORT void PartitionMesh(bool shared = false);
+            LIB_UTILITIES_EXPORT void PartitionMesh(int nParts, bool shared = false);
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT void WriteAllPartitions(
@@ -223,6 +223,7 @@ namespace Nektar
             void WeightElements();
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
+                                int nParts,
                                 std::vector<BoostSubGraph>& pLocalPartition);
 
             virtual void PartitionGraphImpl(
@@ -237,7 +238,8 @@ namespace Nektar
                     Nektar::Array<Nektar::OneD, int>& part) = 0;
 
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
-            void CheckPartitions(Array<OneD, int> &pPart);
+            void CheckPartitions(int nParts, Array<OneD, int> &pPart);
+            int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

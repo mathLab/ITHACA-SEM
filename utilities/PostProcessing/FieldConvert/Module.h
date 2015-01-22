@@ -44,6 +44,7 @@
 #include <set>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Communication/CommSerial.h>
 
 #include "Field.hpp"
@@ -66,7 +67,7 @@ namespace Nektar
             eOutputModule,
             SIZE_ModuleType
         };
-        
+
         const char* const ModuleTypeMap[] =
         {
             "Input",
@@ -81,18 +82,18 @@ namespace Nektar
         {
             /**
              * @brief Construct a new configuration option.
-             * 
+             *
              * @param isBool    True if the option is boolean type.
              * @param defValue  Default value of the option.
              * @param desc      Description of the option.
              */
         ConfigOption(bool isBool, string defValue, string desc) :
-            m_isBool(isBool), m_beenSet(false), m_value(), 
+            m_isBool(isBool), m_beenSet(false), m_value(),
                 m_defValue(defValue), m_desc(desc) {}
         ConfigOption() :
-            m_isBool(false), m_beenSet(false), m_value(), 
+            m_isBool(false), m_beenSet(false), m_value(),
                 m_defValue(), m_desc() {}
-            
+
             /**
              * @brief Re-interpret the value stored in #value as some type using
              * boost::lexical_cast.
@@ -110,7 +111,7 @@ namespace Nektar
                     abort();
                 }
             }
-            
+
             /// True if the configuration option is a boolean (thus does not
             /// need additional arguments).
             bool   m_isBool;
@@ -124,7 +125,7 @@ namespace Nektar
             /// Description of the configuration option.
             string m_desc;
         };
-        
+
         /**
          * Abstract base class for mesh converter modules. Each subclass
          * implements the Process() function, which in some way alters the
@@ -135,11 +136,11 @@ namespace Nektar
         public:
             Module(FieldSharedPtr p_f) : m_f(p_f), m_requireEquiSpaced(false) {}
             virtual void Process(po::variables_map &vm) = 0;
-            
+
             void RegisterConfig(string key, string value);
             void PrintConfig();
             void SetDefaults();
-            
+
             bool GetRequireEquiSpaced(void)
             {
                 return m_requireEquiSpaced;
@@ -150,15 +151,22 @@ namespace Nektar
                 m_requireEquiSpaced = pVal;
             }
 
+            void EvaluateTriFieldAtEquiSpacedPts(
+                      LocalRegions::ExpansionSharedPtr  &exp,
+                const Array<OneD, const NekDouble>      &infield,
+                      Array<OneD, NekDouble>            &outfield);
+
         protected:
+            Module(){};
+
             /// Field object
             FieldSharedPtr m_f;
             /// List of configuration values.
             map<string, ConfigOption> m_config;
             bool m_requireEquiSpaced;
-            
+
         };
-        
+
         /**
          * @brief Abstract base class for input modules.
          *
@@ -173,27 +181,27 @@ namespace Nektar
         public:
             InputModule(FieldSharedPtr p_m);
             void AddFile(string fileType, string fileName);
-            
+
         protected:
             /// Print summary of elements.
             void PrintSummary();
             set<string> m_allowedFiles;
 
         };
-        
+
         typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
 
         /**
          * @brief Abstract base class for processing modules.
-         * 
+         *
          */
         class ProcessModule : public Module
         {
         public:
+            ProcessModule(){};
             ProcessModule(FieldSharedPtr p_f) : Module(p_f) {}
-
         };
-        
+
         /**
          * @brief Abstract base class for output modules.
          *
@@ -205,22 +213,21 @@ namespace Nektar
         public:
             OutputModule(FieldSharedPtr p_f);
             void OpenStream();
-            
+
         protected:
             /// Output stream
             ofstream m_fldFile;
-        
         };
-        
+
         typedef pair<ModuleType,string> ModuleKey;
         ostream& operator<<(ostream& os, const ModuleKey& rhs);
-        
+
         typedef boost::shared_ptr<Module> ModuleSharedPtr;
         typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
             ModuleFactory;
-        
+
         ModuleFactory& GetModuleFactory();
-        
+
         class FieldConvertComm : public  LibUtilities::CommSerial
         {
         public:
@@ -254,7 +261,7 @@ namespace Nektar
             {
                 return true;
             }
-            
+
             bool v_RemoveExistingFiles(void)
             {
                 return false;

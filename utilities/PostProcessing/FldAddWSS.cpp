@@ -14,7 +14,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    int i,j,k;
     int surfID, nfiles, nStart;
 
     if(argc != 5)
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         filename3 << basename;
         filename3 >> nStart;
 
-        for (int i = 0; i< nfiles; ++i)
+        for (i = 0; i< nfiles; ++i)
         {
             basename = argv[3];
             string extension = ".fld";
@@ -110,13 +110,13 @@ int main(int argc, char *argv[])
             
             ASSERTL0(false,"Not implemented in 2D");
 
-            int i=0;
+            i=0;
             MultiRegions::ContField2DSharedPtr cont2D;
             cont2D = MemoryManager<MultiRegions::ContField2D>
                 ::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(i));
             vel[0] =  cont2D;
             
-            for(int i = 1; i < nfields; ++i)
+            for(i = 1; i < nfields; ++i)
             {
                 vel[i] = MemoryManager<MultiRegions::ContField2D>
                     ::AllocateSharedPtr(*cont2D);
@@ -133,14 +133,14 @@ int main(int argc, char *argv[])
             m_locToGlobalMap = firstfield->GetLocalToGlobalMap();
 
             vel[0] = firstfield;
-            for(int i = 1; i < nfields; ++i)
+            for(i = 1; i < nfields; ++i)
             {
                 vel[i] = MemoryManager<MultiRegions::ContField3D>
                     ::AllocateSharedPtr(*firstfield, graphShPt, 
                                         vSession->GetVariable(i));
             }
 
-            for(int i = 0; i < addfields; ++i)
+            for(i = 0; i < addfields; ++i)
             {
                 shear[i] = MemoryManager<MultiRegions::ContField3D>
                     ::AllocateSharedPtr(*firstfield, graphShPt, 
@@ -179,9 +179,9 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Copy data from field file
-        for(int j = 0; j < nfields; ++j)
+        for(j = 0; j < nfields; ++j)
         {
-            for(int i = 0; i < fielddata.size(); ++i)
+            for(i = 0; i < fielddata.size(); ++i)
             {
                 vel[j]->ExtractDataToCoeffs(fielddef[i],
                                             fielddata[i],
@@ -192,9 +192,9 @@ int main(int argc, char *argv[])
             vel[j]->BwdTrans(vel[j]->GetCoeffs(),vel[j]->UpdatePhys());
         }
         
-        for(int j = 0; j < addfields; ++j)
+        for(j = 0; j < addfields; ++j)
         {
-            for(int i = 0; i < fielddata.size(); ++i)
+            for(i = 0; i < fielddata.size(); ++i)
             {
                 shear[j]->ExtractDataToCoeffs(fielddef[i],
                                               fielddata[i],
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
         nt = shear[0]->GetNpoints();
         Array<OneD, const NekDouble> U(nt),V(nt),W(nt);     
 
-        for(int j = 0; j < addfields; ++j)
+        for(j = 0; j < addfields; ++j)
         {
             values[j] = Array<OneD, NekDouble>(nt);
         }
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
         shear[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);        
 
         //get boundary expansions for each field
-        for(int j = 0; j < addfields; ++j)
+        for(j = 0; j < addfields; ++j)
         {
             BndExp[j]   = shear[j]->GetBndCondExpansions();
         }
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
             // identify boundary which the user wanted
             if(n == surfID)
             {   
-                for(int i = 0; i < BndExp[0][n]->GetExpSize(); ++i, cnt++)
+                for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i, cnt++)
                 {
                     // find element and face of this expansion.
                     elmtid = BoundarytoElmtID[cnt];
@@ -244,12 +244,12 @@ int main(int argc, char *argv[])
 
                     // Initialise local arrays for the velocity gradients, and stress components
                     // size of total number of quadrature points for each element (hence local).
-                    for(int j = 0; j < nfields*nfields; ++j)
+                    for(j = 0; j < nfields*nfields; ++j)
                     {
                         grad[j] = Array<OneD, NekDouble>(nq);
                     }
                                         
-                    for(int j = 0; j < nstress; ++j)
+                    for(j = 0; j < nstress; ++j)
                     {
                         stress[j] = Array<OneD, NekDouble>(nq);
                     }
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
                             = elmt->GetFaceNormal(boundary);
 
                         // initialise arrays
-                        for(int j = 0; j < nstress; ++j)
+                        for(j = 0; j < nstress; ++j)
                         {
                             fstress[j] = Array<OneD, NekDouble>(nfq);
                         }
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
                         }
                      
                         //calcuate wss, and update velocity coefficients in the elemental boundary expansion
-                        for (int j = 0; j< addfields; j++)
+                        for (j = 0; j< addfields; j++)
                         {
                             values[j] = BndExp[j][n]->UpdateCoeffs() + BndExp[j][n]->GetCoeff_Offset(i);
                         }
@@ -415,7 +415,7 @@ int main(int argc, char *argv[])
         }
         
 
-        for(int j = 0; j < addfields; ++j)
+        for(j = 0; j < addfields; ++j)
         {
             int ncoeffs = shear[j]->GetNcoeffs();
             Array<OneD, NekDouble> output(ncoeffs);
@@ -430,12 +430,12 @@ int main(int argc, char *argv[])
             const Array<OneD,const int>& map = m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsMap();
             NekDouble sign;
             
-            for(int i = 0; i < BndExp[j].num_elements(); ++i)
+            for(i = 0; i < BndExp[j].num_elements(); ++i)
             {
                 if(i==surfID)
                 {
                     const Array<OneD,const NekDouble>& coeffs = BndExp[j][i]->GetCoeffs();
-                    for(int k = 0; k < (BndExp[j][i])->GetNcoeffs(); ++k)
+                    for(k = 0; k < (BndExp[j][i])->GetNcoeffs(); ++k)
                     {
                         sign = m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
                         outarray[map[bndcnt++]] = sign * coeffs[k];

@@ -242,20 +242,6 @@ the field data is specified. The expansion order used to generate the .rst file
 must be the same as that for the simulation. The filename must be specified
 relative to the location of the .xml file.
 
-With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
-loaded for each timestep. The filenames are defined using
-\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format syntax}
-where the step time is used as variable. For example, the function
-\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
-\inltt{U0V0\_2.00000000E-05.fld} and so on.
-
-\begin{lstlisting}[style=XMLStyle]
-<FUNCTION NAME="Baseflow">
-	<F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8R.fld"/>
-</FUNCTION>
-\end{lstlisting}
-
-
 Other examples of this input feature can be the insertion of a forcing term,
 
 \begin{lstlisting}[style=XMLStyle]
@@ -278,7 +264,59 @@ or of a linear advection term
 </FUNCTION>
 \end{lstlisting}
 
-[wiki:Reference/AnalyticExpressions This page] provides the list of acceptable mathematical functions and other related technical details.
+\subsubsection{Remapping variable names}
+
+Note that it is sometimes the case that the variables being used in the solver
+do not match those saved in the FLD file. For example, if one runs a
+three-dimensional incompressible Navier-Stokes simulation, this produces an FLD
+file with the variables \inltt{u}, \inltt{v}, \inltt{w} and \inltt{p}. If we
+wanted to use this velocity field as input for an advection velocity, the
+advection-diffusion-reaction solver expects the variables \inltt{Vx}, \inltt{Vy}
+and \inltt{Vz}.
+
+We can manually specify this mapping by adding a colon to the
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="AdvectionVelocity">
+  <F VAR="Vx,Vy,Vz" FILE="file.fld:u,v,w" />
+</FUNCTION>
+\end{lstlisting}
+
+There are some caveats with this syntax:
+
+\begin{itemize}
+  \item You must specify the same number of fields for both the variable, and
+  after the colon. For example, the following is not valid.
+  \begin{lstlisting}[style=XMLStyle,gobble=4]
+    <FUNCTION NAME="AdvectionVelocity">
+      <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />
+    </FUNCTION>\end{lstlisting}
+  \item This syntax is not valid with the wildcard operator \inltt{*}, so one
+  cannot write for example:
+  \begin{lstlisting}[style=XMLStyle,gobble=4]
+    <FUNCTION NAME="AdvectionVelocity">
+      <F VAR="*" FILE="file.fld:u,v,w" />
+    </FUNCTION>
+  \end{lstlisting}
+\end{itemize}
+
+\subsubsection{Time-dependent file-based functions}
+
+With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
+loaded for each timestep. The filenames are defined using
+\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format
+  syntax} where the step time is used as variable. For example, the function
+\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
+\inltt{U0V0\_2.00000000E-05.fld} and so on.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Baseflow">
+  <F VAR="U0,V0" TIMEDEPENDENT="1" FILE="U0V0_%14.8R.fld" />
+</FUNCTION>
+\end{lstlisting}
+
+Section~\ref{sec:xml:analytic-expressions} provides the list of acceptable
+mathematical functions and other related technical details.
 
 \subsection{Quasi-3D approach}
 
@@ -375,3 +413,7 @@ available. In case of a 1D homogeneous extension, the homogeneous direction will
 be the z-axis. In case of a 2D homogeneous extension, the homogeneous directions
 will be the y-axis and the z-axis.
 
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End:

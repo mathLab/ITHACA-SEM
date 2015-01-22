@@ -2,7 +2,7 @@ function (find_lib_files PKG_INSTALL_LIBS PKG_INSTALL_LIBS_FILES)
     # Find library file and add the versioned form of each library
     set(PKG_INSTALL_LIBS_FILES)
     foreach(l ${PKG_INSTALL_LIBS})
-        SET(TARGET_LOCATION $<TARGET_FILE:${l}>)
+        SET(TARGET_LOCATION $<TARGET_LINKER_FILE:${l}>)
         if (NOT TARGET_LOCATION)
             message(FATAL_ERROR "Target '${l}' could not be found.")
         endif ()
@@ -22,13 +22,11 @@ function (find_bin_files PKG_INSTALL_BINS PKG_INSTALL_BINS_FILES)
     # Find binary files
     set(PKG_INSTALL_BINS_FILES)
     foreach(b ${PKG_INSTALL_BINS})
-        SET(TARGET_LOCATION $<TARGET_FILE:${l}>)
+        SET(TARGET_LOCATION $<TARGET_FILE:${b}>)
         if (NOT TARGET_LOCATION)
             message(FATAL_ERROR "Target '${b}' could not be found.")
         endif ()
         list(APPEND PKG_INSTALL_BINS_FILES ${TARGET_LOCATION})
-        list(APPEND PKG_INSTALL_BINS_FILES 
-                        ${TARGET_LOCATION}-${NEKTAR_VERSION})
     endforeach()
     set(PKG_INSTALL_BINS_FILES ${PKG_INSTALL_BINS_FILES} PARENT_SCOPE)
 endfunction ()
@@ -45,6 +43,12 @@ macro (add_deb_package)
 
         find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
         find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+
+        # Output the list of files to be installed in the package
+        file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_libs.txt"
+             CONTENT "${PKG_INSTALL_LIBS_FILES}")
+        file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_bins.txt"
+             CONTENT "${PKG_INSTALL_BINS_FILES}")
 
         # Configure project for this package
         configure_file(CMakeListsDpkg.txt.in
@@ -77,6 +81,12 @@ macro (add_rpm_package)
 
         find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
         find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+
+        # Output the list of files to be installed in the package
+        file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_libs.txt"
+             CONTENT "${PKG_INSTALL_LIBS_FILES}")
+        file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_bins.txt"
+             CONTENT "${PKG_INSTALL_BINS_FILES}")
 
         configure_file(CMakeListsRpm.txt.in
                 ${BUILD_DIR}/CMakeLists.txt @ONLY)

@@ -21,7 +21,12 @@ function (write_lib_files PKG_INSTALL_LIBS OUTPUT_FILE)
     endforeach()
 
     # Output the list of files to be installed in the package
-    file(GENERATE OUTPUT "${OUTPUT_FILE}" CONTENT "${PKG_INSTALL_LIBS_FILES}")
+    IF(${CMAKE_MAJOR_VERSION} LESS 3)
+        file(WRITE "${OUTPUT_FILE}" "${PKG_INSTALL_LIBS_FILES}")
+    ELSE ()
+        file(GENERATE OUTPUT "${OUTPUT_FILE}"
+             CONTENT "${PKG_INSTALL_LIBS_FILES}")
+    ENDIF ()
 endfunction ()
 
 function (write_bin_files PKG_INSTALL_BINS OUTPUT_FILE)
@@ -40,7 +45,12 @@ function (write_bin_files PKG_INSTALL_BINS OUTPUT_FILE)
     endforeach()
 
     # Output the list of files to be installed in the package
-    file(GENERATE OUTPUT "${OUTPUT_FILE}" CONTENT "${PKG_INSTALL_BINS_FILES}")
+    IF(${CMAKE_MAJOR_VERSION} LESS 3)
+        file(WRITE "${OUTPUT_FILE}" "${PKG_INSTALL_BINS_FILES}")
+    ELSE ()
+        file(GENERATE OUTPUT "${OUTPUT_FILE}"
+             CONTENT "${PKG_INSTALL_BINS_FILES}")
+    ENDIF ()
 endfunction ()
 
 macro (add_deb_package)

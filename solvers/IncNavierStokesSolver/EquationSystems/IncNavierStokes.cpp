@@ -534,7 +534,7 @@ namespace Nektar
 	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
  	int  i,j,k;
 
-	NekDouble kt,T,R,n0,n1,n2;
+	NekDouble kt,T,R,n0,n1,n2,x0,y0,z0;
 	int M;	
 		
 	m_session->LoadParameter("Period",T);
@@ -544,6 +544,9 @@ namespace Nektar
 	m_session->LoadParameter("n0",n0);
 	m_session->LoadParameter("n1",n1);
 	m_session->LoadParameter("n2",n2);
+	m_session->LoadParameter("x0",x0);
+	m_session->LoadParameter("x1",y0);
+	m_session->LoadParameter("x2",z0);
 	
 	// Womersley Number
 	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
@@ -611,7 +614,7 @@ namespace Nektar
 		elmt->GetTracePhysVals(boundary,bc,w,wbc);
 		//Compute womersley solution
 	        for (j=0;j<nfq;j++){
-			r = sqrt(x[j]*x[j] + y[j]*y[j] + z[j]*z[j])/R;
+			r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
 
 			wbc[j] = vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
 			for (k=1; k<M; k++){

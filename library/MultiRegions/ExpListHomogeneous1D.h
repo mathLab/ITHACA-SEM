@@ -221,7 +221,7 @@ namespace Nektar
             virtual void v_ExtractCoeffsToCoeffs(
                                                  const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
-            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+            virtual void v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                              std::string var);
 
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);

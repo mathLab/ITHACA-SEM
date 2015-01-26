@@ -1124,7 +1124,7 @@ namespace Nektar
         }
 
         void ExpList2D::v_WriteVtkPieceHeader(
-            std::ofstream &outfile, 
+            std::ostream &outfile, 
             int expansion)
 		{
             int i,j;

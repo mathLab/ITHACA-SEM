@@ -881,9 +881,6 @@ namespace Nektar
             // Number of elements
             int nElements = GetExpSize(); 
             
-            // Number of solution points of each element
-            int nLocalSolutionPts;
-            
             // Initial index of each element
             int phys_offset;
             
@@ -906,9 +903,6 @@ namespace Nektar
 
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
-                
-                // Set the number of solution points of each element
-                nLocalSolutionPts = (*m_exp)[n]->GetNumPoints(0);
                 
                 Basis = (*m_exp)[n]->GetBasis(0);
 

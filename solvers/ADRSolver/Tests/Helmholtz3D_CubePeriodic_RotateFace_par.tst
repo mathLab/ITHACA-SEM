@@ -2,7 +2,7 @@
 <test>
     <description> 3D Helmholtz/Steady Diffusion Reaction with Periodic BCs P=5 </description>
     <executable>ADRSolver</executable>
-    <parameters>Helmholtz3D_CubePeriodic_RotateFace.xml</parameters>
+    <parameters>--use-metis Helmholtz3D_CubePeriodic_RotateFace.xml</parameters>
     <processes>5</processes>
     <files>
       <file description="Session File">Helmholtz3D_CubePeriodic_RotateFace.xml</file>

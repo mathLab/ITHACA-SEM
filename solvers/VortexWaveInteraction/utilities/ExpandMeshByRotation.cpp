@@ -148,7 +148,7 @@ void ExpandVertices(TiXmlElement* mesh, map<int,int> jointVerts, map<int,int> &n
         while (vertexBody)
         {
             // Accumulate all non-comment body data.
-            if (vertexBody->Type() == TiXmlNode::TEXT)
+            if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
             {
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";
@@ -220,7 +220,7 @@ void ExpandEdges(TiXmlElement* mesh, map<int,int> &newVerts, map<int,int> jointE
     TiXmlElement *edge = field->FirstChildElement("E");
     
     /// Since all edge data is one big text block, we need to
-    /// accumulate all TEXT data and then parse it.  This
+    /// accumulate all TINYXML_TEXT data and then parse it.  This
     /// approach effectively skips all comments or other node
     /// types since we only care about the edge list.  We
     /// cannot handle missing edge numbers as we could with
@@ -239,7 +239,7 @@ void ExpandEdges(TiXmlElement* mesh, map<int,int> &newVerts, map<int,int> jointE
         
         TiXmlNode *child = edge->FirstChild();
         edgeStr.clear();
-        if (child->Type() == TiXmlNode::TEXT)
+        if (child->Type() == TiXmlNode::TINYXML_TEXT)
         {
             edgeStr += child->ToText()->ValueStr();
         }
@@ -326,7 +326,7 @@ void ExpandElmts(TiXmlElement* mesh, map<int,int> &newEdges, int &nelmts)
         std::string elementStr;
         while(elementChild)
         {
-            if (elementChild->Type() == TiXmlNode::TEXT)
+            if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
             {
                 elementStr += elementChild->ToText()->ValueStr();
             }
@@ -494,7 +494,7 @@ void  ExpandComposites(TiXmlElement * mesh, map<int,int> newEdges, int nOrigElmt
         // Comments appear as nodes just like elements.
         // We are specifically looking for text in the body
         // of the definition.
-        while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+        while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
         {
             compositeChild = compositeChild->NextSibling();
         }

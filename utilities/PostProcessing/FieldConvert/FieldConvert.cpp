@@ -42,7 +42,7 @@
 using namespace std;
 using namespace Nektar::Utilities;
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
     po::options_description desc("Available options");
     desc.add_options()
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         ("modules-list,l",
                 "Print the list of available modules.")
         ("output-points,n", po::value<int>(),
-                "Output at p equipspaced points (for .dat, .vtk).")
+                "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
         ("error,e",
                 "Write error of fields for regression checking")
         ("range,r", po::value<string>(),
@@ -60,6 +60,9 @@ int main(int argc, char* argv[])
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
+        ("onlyshape", po::value<string>(),
+                 "Only use element with defined shape type i.e. -onlyshape "
+                 " Tetrahedron")
         ("procid", po::value<int>(),
                 "Process as single procid of a partition of size nproc "
                 "(-nproc must be specified).")
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
         po::store(po::command_line_parser(argc, argv).
                   options(cmdline_options).positional(p).run(), vm);
         po::notify(vm);
-    } 
+    }
     catch (const std::exception& e)
     {
         cerr << e.what() << endl;
@@ -110,7 +113,7 @@ int main(int argc, char* argv[])
     if (vm.count("modules-opt"))
     {
         vector<string> tmp1;
-        boost::split(tmp1, vm["modules-opt"].as<string>(), 
+        boost::split(tmp1, vm["modules-opt"].as<string>(),
                      boost::is_any_of(":"));
 
         if (tmp1.size() != 2)
@@ -150,7 +153,7 @@ int main(int argc, char* argv[])
     }
 
     if (vm.count("help") || vm.count("input-file") != 1) {
-        cerr << "Usage: FieldConvert [options] inputfile.ext1 outputfile.ext2" 
+        cerr << "Usage: FieldConvert [options] inputfile.ext1 outputfile.ext2"
              << endl;
         cout << desc;
         cout << endl;
@@ -175,9 +178,9 @@ int main(int argc, char* argv[])
     /*
      * Process list of modules. Each element of the vector of module strings can
      * be in the following form:
-     * 
+     *
      * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
-     * 
+     *
      * where the only required argument is 'modname', specifing the name of the
      * module to load.
      */
@@ -317,7 +320,7 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // If any output module has to reset points then set intput modules to match 
+    // If any output module has to reset points then set intput modules to match
     bool RequiresEquiSpaced = false;
     for (int i = 0; i < modules.size(); ++i)
     {

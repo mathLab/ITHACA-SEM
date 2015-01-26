@@ -133,12 +133,7 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-            int i, nPoints = pFields[0]->GetNpoints(), nPlanePts = 0;
-
-            if (m_homogeneous)
-            {
-                nPlanePts = pFields[0]->GetPlane(0)->GetNpoints();
-            }
+            int i, nPoints = pFields[0]->GetNpoints();
 
             m_index++;
 

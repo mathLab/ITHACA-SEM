@@ -280,7 +280,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList3DHomogeneous2D::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous2D::v_WriteTecplotZone(std::ostream &outfile, int expansion)
         {
             int i,j;
 
@@ -310,7 +310,7 @@ namespace Nektar
         }
 
 
-        void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

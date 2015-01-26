@@ -718,20 +718,21 @@ void ForcingMovingBody::TensionedCableModel(
         {
             int nrows = m_NumVariable;
 
-            Array<OneD, NekDouble> tmp1,tmp2;
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            tmp0 = Array<OneD, NekDouble> (m_NumVariable,0.0);
             tmp1 = Array<OneD, NekDouble> (m_NumVariable,0.0);
             tmp2 = Array<OneD, NekDouble> (m_NumVariable,0.0);
 
             for(int var = 0; var < m_NumVariable; var++)
             {
-                tmp1[var] = MotionCoeffs[var][plane];
+                tmp0[var] = MotionCoeffs[var][plane];
             }
-
+		
             tmp2[0] = ForceCoeffs[plane];
 
             Blas::Dgemv('N', nrows, nrows, 1.0,
                         &(m_CoeffMat_B[plane]->GetPtr())[0],
-                        nrows, &tmp1[0], 1,
+                        nrows, &tmp0[0], 1,
                         0.0,   &tmp1[0], 1);
             Blas::Dgemv('N', nrows, nrows, 1.0/m_structrho,
                         &(m_CoeffMat_A[plane]->GetPtr())[0],

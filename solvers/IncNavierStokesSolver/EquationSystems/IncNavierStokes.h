@@ -226,11 +226,21 @@ namespace Nektar
 
 	/// Evaluate Bessels for Wom
 	std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
-	std::complex<NekDouble> Csub(std::complex<NekDouble> a, std::complex<NekDouble> b);
-	std::complex<NekDouble> Cmul(std::complex<NekDouble> a, std::complex<NekDouble> b);
-	std::complex<NekDouble> Cdiv(std::complex<NekDouble> a, std::complex<NekDouble> b);
-	std::complex<NekDouble> Rmul(NekDouble x, std::complex<NekDouble> a);
-	NekDouble Cabs(std::complex<NekDouble> z);
+
+	/// Real and imaginary velocity comp. of wom
+	Array<OneD, NekDouble> wom_vel_r;
+	Array<OneD, NekDouble> wom_vel_i;
+		
+	/// Wom constants
+	NekDouble R,M,n0,n1,n2,x0,y0,z0;
+	NekDouble T;
+//	NekDouble n0;
+//	NekDouble n1;
+//	NekDouble n2;
+//	NekDouble x0;
+//	NekDouble y0;
+//	NekDouble z0;
+
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

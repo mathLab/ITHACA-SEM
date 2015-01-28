@@ -254,49 +254,50 @@ namespace Nektar
         }
 
 	// Set up maping for womersley BC - and load variabls
-//        for (int i = 0; i < m_fields.num_elements(); ++i){
-//            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n){
-//		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
-//			==SpatialDomains::eWomersley){
+        for (int i = 0; i < m_fields.num_elements(); ++i){
+            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n){
+		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
+			==SpatialDomains::eWomersley){
 //
-//			NekDouble kt,T,R,n0,n1,n2;
+//			NekDouble T,R,n0,n1,n2;
 //			int M;	
 //		
-//			m_session->LoadParameter("Period",T);
-////			m_session->LoadParameter("Alpha",alpha);
-//			m_session->LoadParameter("Radius",R);
-//			m_session->LoadParameter("Modes",M);
-//			m_session->LoadParameter("n0",n0);
-//			m_session->LoadParameter("n1",n1);
-//			m_session->LoadParameter("n2",n2);
-//
-//			NekDouble value;
-//	        	Array<OneD, NekDouble> vel_r;
-//	        	Array<OneD, NekDouble> vel_i;
-//
-//			std::ifstream file("fourier_womersley.txt");
-//			std::string line;
-//
-//			int linenum=0;
-//			while(std::getline(file,line)){
-//      			        std::istringstream iss(line);
-//				if (linenum == 0){
-//			        	while(iss << value){
-//					      vel_i.push_back (value);
-//				        }
-// 				}
-//				else if (linenum == 1){
-//					while(iss << value){
-//					      vel_r.push_back (value);
-//				        }
-//
-//				}
-//				linenum += 1;
-//				
-//			}
-//		}
-//	    }
-//	}
+			m_session->LoadParameter("Period",T);
+			m_session->LoadParameter("Radius",R);
+			m_session->LoadParameter("Modes",M);
+			m_session->LoadParameter("n0",n0);
+			m_session->LoadParameter("n1",n1);
+			m_session->LoadParameter("n2",n2);
+			m_session->LoadParameter("x0",x0);
+			m_session->LoadParameter("x1",y0);
+			m_session->LoadParameter("x2",z0);
+
+
+			// Read in fourier coeffs
+			wom_vel_r = Array<OneD, NekDouble> (M,0.0);
+			wom_vel_i = Array<OneD, NekDouble> (M,0.0);
+			std::complex<NekDouble> coef;
+
+			std::ifstream file("fourier_coef.txt");
+			std::string line;
+
+			int count = 0;
+			while(std::getline(file,line)){
+			   std::stringstream stream(line);
+		           while((stream>>coef) && (count<=8))
+		           {
+				wom_vel_r[count] = coef.real();
+				wom_vel_i[count] = coef.imag();
+				std::cout << wom_vel_r[count] << '\n';
+				count++;
+        		   }
+      			}
+	
+
+
+		}
+	    }
+	}
 
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
@@ -534,57 +535,12 @@ namespace Nektar
 	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
  	int  i,j,k;
 
-	NekDouble kt,T,R,n0,n1,n2,x0,y0,z0;
-	int M;	
-		
-	m_session->LoadParameter("Period",T);
-//	m_session->LoadParameter("Alpha",alpha);
-	m_session->LoadParameter("Radius",R);
-	m_session->LoadParameter("Modes",M);
-	m_session->LoadParameter("n0",n0);
-	m_session->LoadParameter("n1",n1);
-	m_session->LoadParameter("n2",n2);
-	m_session->LoadParameter("x0",x0);
-	m_session->LoadParameter("x1",y0);
-	m_session->LoadParameter("x2",z0);
-	
 	// Womersley Number
 	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
 
 	NekDouble normals[] = {n0,n1,n2};
 	
-	// Read in fourier coeffs
-//	Array<OneD, std::complex<NekDouble> > A (M,(0,0));
-	Array<OneD, NekDouble> vel_r (M,0.0);
-	Array<OneD, NekDouble> vel_i (M,0.0);
-	std::complex<NekDouble> coef;
-
-	std::ifstream file("fourier_coef.txt");
-	std::string line;
-
-	int count = 0;
-	while(std::getline(file,line)){
-	   std::stringstream stream(line);
-           while((stream>>coef) && (count<=8))
-           {
-//		std::cout << coef << '\n';
-//		A[count] = coef;
-		vel_r[count] = coef.real();
-		vel_i[count] = coef.imag();
-//		std::cout << VelR[count] << " " << VelI[count] << '\n';
-		count++;
-           }
-      	}
-	
-	
-	
-	
-//	NekDouble vel_i[] = {.0000000000000000,	-0.0114652024383338,	0.0851029213457966,	-0.0063819332723328,	-0.0445916909877261,	0.0237233726269646,	0.0008464594812739,	0.0000176601880968,	-0.0026800533453590,	-0.0024003801647357,	0.0032485079266381,	-0.0001679460999985,	-0.0015374083917995,	-0.0007321330812402};
-//	NekDouble vel_r[] ={0.3789045336112559,	-0.1298052177588835,	-0.0005926433502513,	0.0322744583705603,	0.0051737128568664,	-0.0220534484187635,	0.0045170130867191,	0.0037315438343909,	0.0026464563011693,	-0.0050049685948089,	0.0002078141619409,	0.0021292792048836,	0.0003343912995364,	-0.0014819344644493};
-
-	
-	
-	NekDouble r;
+	NekDouble r,kt;
 
 	std::complex<NekDouble> z1 (1.0,0.0);
 	std::complex<NekDouble> zi (0.0,1.0);
@@ -606,15 +562,6 @@ namespace Nektar
 	
 	Array<OneD, NekDouble> Bvals,w;	
 
-//	int npoints = BndExp[bndid]->GetNpoints();
-//
-//  	Array<OneD, NekDouble> x0(npoints,0.0);
-//    	Array<OneD, NekDouble> x1(npoints,0.0);
-//      Array<OneD, NekDouble> x2(npoints,0.0);
-//	Array<OneD, NekDouble> zeros(npoints,0.0);
-//	Array<OneD, NekDouble> w(npoints,0.0);
-//
-//        BndExp[bndid]->GetCoords(x0,x1,x2);
 
 	//Loop over all expansions	
 	for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++){
@@ -642,7 +589,7 @@ namespace Nektar
 	        for (j=0;j<nfq;j++){
 			r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
 
-			wbc[j] = vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+			wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
 			for (k=1; k<M; k++){
 				kt = 2.0*M_PI*k*m_time/T;
 				za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
@@ -650,7 +597,7 @@ namespace Nektar
 				zJ0 = CompBessel(0,za);
 				zJ0r = CompBessel(0,zar);
 				zJ0rJ0 = zJ0r/zJ0;
-				zq = std::exp(zi*kt)*std::complex<NekDouble>(vel_r[k],vel_i[k]);
+				zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
 //				zq = std::complex<double>(vel_r[k],vel_i[k])*std::complex<double>(cos(kt),sin(kt));
 				zvel = zq*(z1-zJ0rJ0);
 				wbc[j] = wbc[j]+zvel.real();
@@ -677,81 +624,22 @@ namespace Nektar
 	int maxit = 10000;
 	int i = 1;
 
-	zarg = Rmul(-0.25,Cmul(y,y));
+	zarg = -0.25*y*y;
 
-	while (Cabs(z) > tol && i <= maxit){
-		z = Cmul(z,Rmul(1.0/i/(i+n),zarg));
-		if  (Cabs(z) <= tol) break;
+	while (abs(z) > tol && i <= maxit){
+		z = z*(1.0/i/(i+n)*zarg);
+		if  (abs(z) <= tol) break;
 		zbes = zbes + z;
 		i++;
 	}
 
-	zarg = Rmul(0.5,y);
+	zarg = 0.5*y;
 	for (i=1;i<=n;i++){
-		zbes = Cmul(zbes,zarg);
+		zbes = zbes*zarg;
 	}
 	return zbes;
 
     }
-/* Complex arithmatic - only used to ensure correct Wom solution - will remove and use c++/boost math*/
-    std::complex<NekDouble> IncNavierStokes::Csub(std::complex<NekDouble> a, std::complex<NekDouble> b){
-	std::complex<NekDouble> c;
-	c.real() = a.real() - b.real();
-	c.imag() = a.imag() - b.imag();
-	return c;
-    }
-    std::complex<NekDouble> IncNavierStokes::Cmul(std::complex<NekDouble> a, std::complex<NekDouble> b){
-	std::complex<NekDouble> c;
-	c.real() = a.real()*b.real() - a.imag()*b.imag();
-	c.imag() = a.imag()*b.real() + a.real()*b.imag();
-	return c;
-    }
-    std::complex<NekDouble> IncNavierStokes::Cdiv(std::complex<NekDouble> a, std::complex<NekDouble> b){
-	std::complex<NekDouble> c;
-	NekDouble den,r;
-	if (fabs(b.real())>=fabs(b.imag())){
-	r = b.imag()/b.real();
-	den = b.real() + r*b.imag();
-	c.real() = (a.real() + r*a.imag())/den;
-	c.imag() = (a.imag() - r*a.real())/den;
-	}
-	else{
-	r = b.real()/b.imag();
-	den = b.imag() + r*b.real();
-	c.real() = (a.real()*r + a.imag())/den;
-	c.imag() = (a.imag()*r - a.real())/den;
-
-	}
-	return c;
-    }
-    std::complex<NekDouble> IncNavierStokes::Rmul(NekDouble x, std::complex<NekDouble> a){
-	std::complex<NekDouble> c;
-	c.real() = x*a.real();
-	c.imag() = x*a.imag();
-
-	return c;
-    }
-    NekDouble IncNavierStokes::Cabs(std::complex<NekDouble> z){
-	NekDouble x,y,ans,temp;
-	
-	x = fabs(z.real());
-	y = fabs(z.imag());
-	if (x==0.0){
-	    ans=y;
-    	}
-	else if (y==0.0){
-	    ans=x;
-	}
-	else if(x > y){	
-	    temp = x/y;
-	    ans = x*sqrt(1.0+temp*temp);
-	}
-	else{
-	    temp = x/y;
-	    ans = y*sqrt(1.0+temp*temp);
-	}
-	return ans;
-     }
 
      /**
      * Add an additional forcing term programmatically.

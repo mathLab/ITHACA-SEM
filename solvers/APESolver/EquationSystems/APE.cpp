@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -30,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Acoustic perturbation equations in conservative variables
+// Description: APE1/APE4 (Acoustic Perturbation Equations)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@ namespace Nektar
 {
 string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
             "APE", APE::create,
-            "Acoustic perturbation equations in conservative variables.");
+            "APE1/APE4 (Acoustic Perturbation Equations)");
 
 
 APE::APE(
@@ -164,60 +164,58 @@ void APE::GetFluxVector(
 {
     UpdateBasefield();
 
-    for (int i = 0; i < flux.num_elements(); ++i)
+    int nq = physfield[0].num_elements();
+    Array<OneD, NekDouble> tmp1(nq);
+    Array<OneD, NekDouble> tmp2(nq);
+
+    ASSERTL1(flux[0].num_elements() == m_spacedim,
+                 "Dimension of flux array and velocity array do not match");
+
+    // F_{adv,p',j} = \rho_0 u'_j + p' \bar{u}_j / c^2
+    for (int j = 0; j < m_spacedim; ++j)
+    {
+        Vmath::Zero(nq, flux[0][j], 1);
+
+        // construct rho_0 u'_j term
+        Vmath::Vmul(nq, m_basefield[1], 1, physfield[j + 1], 1, flux[0][j], 1);
+
+        // construct p' \bar{u}_j / c^2 term
+        // c^2
+        Vmath::Vdiv(nq, m_basefield[0], 1, m_basefield[1], 1, tmp1, 1);
+        Vmath::Smul(nq, m_gamma, tmp1, 1, tmp1, 1);
+
+        // p' \bar{u}_j / c^2 term
+        Vmath::Vmul(nq, physfield[0], 1, m_basefield[j + 2], 1, tmp2, 1);
+        Vmath::Vdiv(nq, tmp2, 1, tmp1, 1, tmp2, 1);
+
+        // \rho_0 u'_j + p' \bar{u}_j / c^2
+        Vmath::Vadd(nq, flux[0][j], 1, tmp2, 1, flux[0][j], 1);
+    }
+
+    for (int i = 1; i < flux.num_elements(); ++i)
     {
         ASSERTL1(flux[i].num_elements() == m_spacedim,
-                "Dimension of flux array and velocity array do not match");
+                 "Dimension of flux array and velocity array do not match");
 
-        int nq = physfield[0].num_elements();
-        Array<OneD, NekDouble> tmp1(nq);
-        Array<OneD, NekDouble> tmp2(nq);
-
-        if (i == 0)
+        // F_{adv,u'_i,j} = (p'/ \bar{rho} + \bar{u}_k u'_k) \delta_{ij}
+        for (int j = 0; j < m_spacedim; ++j)
         {
-            // F_{adv,p',j} = \rho_0 u'_j + p' \bar{u}_j / c^2
-            for (int j = 0; j < m_spacedim; ++j)
+            Vmath::Zero(nq, flux[i][j], 1);
+
+            if (i - 1 == j)
             {
-                Vmath::Zero(nq, flux[i][j], 1);
+                // contruct p'/ \bar{rho} term
+                Vmath::Vdiv(nq, physfield[0], 1, m_basefield[1], 1, flux[i][j], 1);
 
-                // construct rho_0 u'_j term
-                Vmath::Vmul(nq, m_basefield[1], 1, physfield[j+1], 1, flux[i][j], 1);
-
-                // construct p' \bar{u}_j / c^2 term
-                // c^2
-                Vmath::Vdiv(nq, m_basefield[0], 1, m_basefield[1], 1, tmp1, 1);
-                Vmath::Smul(nq, m_gamma, tmp1, 1, tmp1, 1);
-
-                // p' \bar{u}_j / c^2 term
-                Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+2], 1, tmp2, 1);
-                Vmath::Vdiv(nq, tmp2, 1, tmp1, 1, tmp2, 1);
-
-                // \rho_0 u'_j + p' \bar{u}_j / c^2
-                Vmath::Vadd(nq, flux[i][j], 1, tmp2, 1, flux[i][j], 1);
-            }
-        }
-        else
-        {
-            // F_{adv,u'_i,j} = (p'/ \bar{rho} + \bar{u}_k u'_k) \delta_{ij}
-            for (int j = 0; j < m_spacedim; ++j)
-            {
-                Vmath::Zero(nq, flux[i][j], 1);
-
-                if (i-1 == j)
+                // construct \bar{u}_k u'_k term
+                Vmath::Zero(nq, tmp1, 1);
+                for (int k = 0; k < m_spacedim; ++k)
                 {
-                    // contruct p'/ \bar{rho} term
-                    Vmath::Vdiv(nq, physfield[0], 1, m_basefield[1], 1, flux[i][j], 1);
-
-                    // construct \bar{u}_k u'_k term
-                    Vmath::Zero(nq, tmp1, 1);
-                    for (int k = 0; k < m_spacedim; ++k)
-                    {
-                        Vmath::Vvtvp(nq, physfield[k+1], 1, m_basefield[k+2], 1, tmp1, 1, tmp1, 1);
-                    }
-
-                    // add terms
-                    Vmath::Vadd(nq, flux[i][j], 1, tmp1, 1, flux[i][j], 1);
+                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_basefield[k + 2], 1, tmp1, 1, tmp1, 1);
                 }
+
+                // add terms
+                Vmath::Vadd(nq, flux[i][j], 1, tmp1, 1, flux[i][j], 1);
             }
         }
     }

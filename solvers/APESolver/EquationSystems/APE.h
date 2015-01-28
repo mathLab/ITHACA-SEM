@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -30,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Acoustic perturbation equations in conservative variables
+// Description: APE1/APE4 (Acoustic Perturbation Equations)
 //
 ///////////////////////////////////////////////////////////////////////////////
 

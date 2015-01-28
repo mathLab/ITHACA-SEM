@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
         LibUtilities::Import(fieldfile,fielddef,fielddata);
         bool useFFT = false;
         bool dealiasing = false;
+		
         //----------------------------------------------
 
         //----------------------------------------------
@@ -277,42 +278,90 @@ int main(int argc, char *argv[])
         }
         //----------------------------------------------
 
-        //----------------------------------------------
-        // Copy data from field file
-        for(j = 0; j < nfields; ++j)
-        {
-            for(int i = 0; i < fielddata.size(); ++i)
-            {
-                Exp[j]->ExtractDataToCoeffs(fielddef [i],
-                                            fielddata[i],
-                                            fielddef [i]->m_fields[j],
-                                            Exp[j]->UpdateCoeffs());
-            }
-            Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
-        }
-        //----------------------------------------------
+		if(!vSession->DefinesSolverInfo("HomoStrip"))
+		{
+        	//----------------------------------------------
+        	// Copy data from field file
+        	for(j = 0; j < nfields; ++j)
+        	{
+            	for(int i = 0; i < fielddata.size(); ++i)
+            	{
+                	Exp[j]->ExtractDataToCoeffs(fielddef [i],
+                    	                        fielddata[i],
+                        	                    fielddef [i]->m_fields[j],
+                            	                Exp[j]->UpdateCoeffs());
+            	}
+            	Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+        	}
+        	//----------------------------------------------
 
-        //----------------------------------------------
-        // Write solution
-        //string   outname(strtok(argv[n],"."));
-        //outname += ".vtu";
-        ofstream outfile(fname.c_str());
-        Exp[0]->WriteVtkHeader(outfile);
+        	//----------------------------------------------
+        	// Write solution
+        	//string   outname(strtok(argv[n],"."));
+        	//outname += ".vtu";
+        	ofstream outfile(fname.c_str());
+        	Exp[0]->WriteVtkHeader(outfile);
+    
+        	// For each field write out field data for each expansion.
+        	for(i = 0; i < Exp[0]->GetNumElmts(); ++i)
+        	{
+            	Exp[0]->WriteVtkPieceHeader(outfile,i);
+            	// For this expansion, write out each field.
+            	for(j = 0; j < Exp.num_elements(); ++j)
+            	{
+                	Exp[j]->WriteVtkPieceData(outfile,i, fielddef[0]->m_fields[j]);
+            	}
+            	Exp[0]->WriteVtkPieceFooter(outfile,i);
+        	}
+        	Exp[0]->WriteVtkFooter(outfile);
+        	cout << "Written file: " << fname << endl;
+        	//----------------------------------------------
+		}
+		else
+		{
+            //----------------------------------------------
+            // Write solution
+            //string   outname(strtok(argv[n],"."));
+            //outname += ".vtu";
+            ofstream outfile(fname.c_str());
+            Exp[0]->WriteVtkHeader(outfile);
 
-        // For each field write out field data for each expansion.
-        for(i = 0; i < Exp[0]->GetNumElmts(); ++i)
-        {
-            Exp[0]->WriteVtkPieceHeader(outfile,i);
-            // For this expansion, write out each field.
-            for(j = 0; j < Exp.num_elements(); ++j)
-            {
-                Exp[j]->WriteVtkPieceData(outfile,i, fielddef[0]->m_fields[j]);
-            }
-            Exp[0]->WriteVtkPieceFooter(outfile,i);
-        }
-        Exp[0]->WriteVtkFooter(outfile);
-        cout << "Written file: " << fname << endl;
-        //----------------------------------------------
+			int nstrips;
+			vSession->LoadParameter("Strip_Z", nstrips);
+			for(int n = 0; n < nstrips; n++)
+			{
+            	//----------------------------------------------
+            	// Copy data from field file
+            	for(j = 0; j < nfields; ++j)
+            	{
+                	for(int i = 0; i < fielddata.size()/nstrips; ++i)
+                	{
+                    	Exp[j]->ExtractDataToCoeffs(fielddef [i*nstrips+n],
+                        	                        fielddata[i*nstrips+n],
+                            	                    fielddef [i*nstrips+n]->m_fields[j],
+                                	                Exp[j]->UpdateCoeffs());
+                	}
+                	Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+            	}
+            	//----------------------------------------------
+
+            	// For each field write out field data for each expansion.
+            	for(i = 0; i < Exp[0]->GetNumElmts(); ++i)
+            	{
+                	Exp[0]->WriteVtkPieceHeader(outfile,i,n);
+                	// For this expansion, write out each field.
+                	for(j = 0; j < Exp.num_elements(); ++j)
+                	{
+                    	Exp[j]->WriteVtkPieceData(outfile,i,fielddef[0]->m_fields[j]);
+                	}
+                	Exp[0]->WriteVtkPieceFooter(outfile,i);
+            	}
+			}
+
+            Exp[0]->WriteVtkFooter(outfile);
+            cout << "Written file: " << fname << endl;
+            //----------------------------------------------
+		}
     }
     return 0;
 }

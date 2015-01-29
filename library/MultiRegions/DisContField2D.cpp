@@ -605,7 +605,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {  	
+        {      
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
@@ -630,7 +630,7 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions     = 
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-	    
+        
             cnt = 0;
 
             // list non-periodic boundaries
@@ -1370,7 +1370,7 @@ namespace Nektar
             int id1, id2 = 0;
             
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {				
+            {                
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                 {
@@ -2045,7 +2045,7 @@ namespace Nektar
 
                 //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
                 //LocalRegions::QuadExpSharedPtr ppExp = 
-                //	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                //    MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
                 //Orthogonal expansion created
 
                 //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
@@ -2056,7 +2056,7 @@ namespace Nektar
                 //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
                 //===============================================================================================
                
-                //DGDeriv	
+                //DGDeriv    
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
@@ -2234,6 +2234,22 @@ namespace Nektar
                         coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
                     }    
+                    else
+                    {
+                        ASSERTL0(false, "This type of BC not implemented yet");
+                    }
+                }
+                else if (m_bndConditions[i]->GetUserDefined()
+                            == SpatialDomains::eMovingBody)
+                {
+                    locExpList = m_bndCondExpansions[i];
+                    if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eDirichlet)
+                    {
+                        locExpList->FwdTrans_IterPerExp(
+                                    locExpList->GetPhys(),
+                                    locExpList->UpdateCoeffs());
+                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

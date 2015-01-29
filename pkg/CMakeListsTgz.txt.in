@@ -28,8 +28,8 @@ set(CPACK_PACKAGE_FILE_NAME
     "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
 
 # Files to go in the package
-set(INSTALL_BINS_FILES "@PKG_INSTALL_BINS_FILES@")
-set(INSTALL_LIBS_FILES "@PKG_INSTALL_LIBS_FILES@")
+file(READ "targets/install_libs.txt" INSTALL_LIBS_FILES)
+file(READ "targets/install_bins.txt" INSTALL_BINS_FILES)
 
 # Install any libraries in the lib directory
 if(INSTALL_LIBS_FILES)

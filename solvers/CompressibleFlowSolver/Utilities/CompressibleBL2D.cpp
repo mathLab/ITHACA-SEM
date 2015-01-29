@@ -37,7 +37,6 @@ using namespace Nektar;
 NekDouble m_Re;
 NekDouble m_Mach;
 NekDouble L;
-NekDouble m_xo;
 NekDouble m_Tinf;
 NekDouble m_Suth;
 NekDouble m_Tw;
@@ -390,7 +389,6 @@ int main (int argc, char *argv[])
     
 	vSession->LoadParameter("Re",			m_Re,		1.0);
 	vSession->LoadParameter("Mach",			m_Mach,		1.0);
-	vSession->LoadParameter("xo",			m_xo,		1.0);
 	vSession->LoadParameter("TInf", 		m_Tinf,		1.0);
 	vSession->LoadParameter("Twall",		m_Twall,	1.0);
 	vSession->LoadParameter("Gamma",		m_Gamma,	1.0);
@@ -486,7 +484,7 @@ int main (int argc, char *argv[])
 	
 		if (err < errtol)
 		{
-			cout << "ending" << endl;
+			cout << "Calculating" << endl;
 			OUTPUT(m_xpoints, xx, ff, nQuadraturePts, x_QuadraturePts,
 				   y_QuadraturePts, u_QuadraturePts, v_QuadraturePts,
 				   rho_QuadraturePts, T_QuadraturePts);
@@ -679,11 +677,9 @@ int main (int argc, char *argv[])
     std::cout << "Mach number                      = " << m_Mach               
 			  << "\t[-]"   << std::endl;
     std::cout << "Characteristic length            = " << m_long                
-			  << "\t\t[m]" << std::endl;
+			  << "\t[m]" << std::endl;
     std::cout << "U_infinity                       = " << m_uInf            
 			  << "\t[m/s]" << std::endl;
-    std::cout << "Position x_0 to start the BL [m] = " << m_xo              
-			  << "\t\t[m]" << std::endl;
     std::cout <<"***************************************************\n";
     std::cout <<"---------------------------------------------------\n";
     std::cout <<"MESH and EXPANSION DATA:\n";

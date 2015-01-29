@@ -42,7 +42,6 @@ using namespace Nektar;
 NekDouble m_Re;
 NekDouble m_Mach;
 NekDouble L;
-NekDouble m_xo;
 NekDouble m_Tinf;
 NekDouble m_Suth;
 NekDouble m_Tw;
@@ -297,9 +296,6 @@ void OUTPUT(
 			v_QuadraturePts[i]   =  coeff * (z[m_xpoints-3] -
                                              velocity[m_xpoints-3]);
 			
-			
-			
-			
 			file3 << xcher                 << "    "
                   << ycher                 << "    "
                   << velocity[m_xpoints-3] << "    "
@@ -393,12 +389,11 @@ int main(int argc, char *argv[])
     
 	vSession->LoadParameter("Re",			m_Re,		1.0);
 	vSession->LoadParameter("Mach",			m_Mach,		1.0);
-	vSession->LoadParameter("xo",			m_xo,		1.0);
 	vSession->LoadParameter("TInf", 		m_Tinf,		1.0);
 	vSession->LoadParameter("Twall",		m_Twall,	1.0);
 	vSession->LoadParameter("Gamma",		m_Gamma,	1.0);
 	vSession->LoadParameter("Pr",			m_Pr,	 	1.0);
-	vSession->LoadParameter("L",			m_long,  1.0);
+	vSession->LoadParameter("L",			m_long,     1.0);
 	vSession->LoadParameter("rhoInf",		m_rhoInf,   1.0);
 	vSession->LoadParameter("uInf",			m_uInf,		1.0);
 	vSession->LoadParameter("GasConstant",	m_R,		1.0);
@@ -408,7 +403,6 @@ int main(int argc, char *argv[])
 	m_Suth = 110.4 / m_Tinf;
 	m_Tw   = m_Twall / m_Tinf;
 	m_Re   = m_Re / m_long ;
-	
 	
 	cout << "Number of points" << "   " << m_xpoints << endl;
 
@@ -426,7 +420,7 @@ int main(int argc, char *argv[])
 	
 	Array<OneD, MultiRegions::ExpListSharedPtr> Exp(5);
 
-	if(m_Tw > 0) 
+	if (m_Tw > 0)
 	{
 		vstart[3] = m_Tw;
 	}
@@ -493,7 +487,7 @@ int main(int argc, char *argv[])
 	
 		if (err < errtol)
 		{
-			cout << "ending" << endl;
+			cout << "Calculating" << endl;
 			OUTPUT(m_xpoints, xx, ff, nQuadraturePts, x_QuadraturePts,
 				   z_QuadraturePts, u_QuadraturePts, v_QuadraturePts,
 				   rho_QuadraturePts, T_QuadraturePts);
@@ -699,11 +693,9 @@ int main(int argc, char *argv[])
     std::cout << "Mach number                      = " << m_Mach               
 			  << "\t[-]"   << std::endl;
     std::cout << "Characteristic length            = " << m_long                
-			  << "\t\t[m]" << std::endl;
+			  << "\t[m]" << std::endl;
     std::cout << "U_infinity                       = " << m_uInf            
 			  << "\t[m/s]" << std::endl;
-    std::cout << "Position x_0 to start the BL [m] = " << m_xo              
-			  << "\t\t[m]" << std::endl;
     std::cout <<"***************************************************\n";
     std::cout <<"---------------------------------------------------\n";
     std::cout <<"MESH and EXPANSION DATA:\n";

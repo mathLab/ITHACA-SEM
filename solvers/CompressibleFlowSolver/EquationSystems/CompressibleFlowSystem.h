@@ -167,7 +167,7 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
         void GetFluxVectorPDESC(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetViscousFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
@@ -210,65 +210,65 @@ namespace Nektar
             int                                                 cnt, 
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void GetVelocityVector(
-            const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,       Array<OneD,       NekDouble> >&velocity);
+            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,       Array<OneD, NekDouble> > &velocity);
         void GetSoundSpeed(
-            const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,                         NekDouble>  &pressure,
-                  Array<OneD,                         NekDouble>  &soundspeed);
+            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure,
+                  Array<OneD,                   NekDouble>   &soundspeed);
         void GetMach(
-                  Array<OneD,       Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,                         NekDouble>  &soundspeed,
-                  Array<OneD,                         NekDouble>  &mach);
+                  Array<OneD,       Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &soundspeed,
+                  Array<OneD,                   NekDouble>   &mach);
         void GetTemperature(
-            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,                         NekDouble>  &pressure,
-                  Array<OneD,                         NekDouble>  &temperature);
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure,
+                  Array<OneD,                   NekDouble>   &temperature);
         void GetPressure(
-            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,                         NekDouble>  &pressure);
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure);
         void GetPressure(
-            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
-            const Array<OneD, const Array<OneD,       NekDouble> >&velocity,
-                  Array<OneD,                         NekDouble>  &pressure);
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+            const Array<OneD, const Array<OneD, NekDouble> > &velocity,
+                  Array<OneD,                   NekDouble>   &pressure);
         void GetEnthalpy(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &pressure,
                   Array<OneD,                   NekDouble>   &enthalpy);
         void GetEntropy(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const NekDouble>               &pressure,
-            const Array<OneD, const NekDouble>               &temperature,
-                  Array<OneD,       NekDouble>               &entropy);
+            const Array<OneD, const             NekDouble>   &pressure,
+            const Array<OneD, const             NekDouble>   &temperature,
+                  Array<OneD,                   NekDouble>   &entropy);
         void GetSmoothArtificialViscosity(
-                    const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                          Array<OneD,             NekDouble  > &eps_bar);
+            const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,             NekDouble  > &eps_bar);
         void GetDynamicViscosity(
-            const Array<OneD,                   const NekDouble>  &temperature,
-                  Array<OneD,                         NekDouble  >&mu);
+            const Array<OneD, const NekDouble> &temperature,
+                  Array<OneD,       NekDouble> &mu);
         void GetStdVelocity(
-            const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
-                  Array<OneD,                         NekDouble>  &stdV);
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,                   NekDouble>   &stdV);
         
         virtual bool v_PostIntegrate(int step);
         bool CalcSteadyState();
 
         void GetSensor(
-            const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
-                  Array<OneD,                         NekDouble>   &Sensor,
-                  Array<OneD,                         NekDouble>   &SensorKappa);
+            const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+                  Array<OneD,                   NekDouble>   &Sensor,
+                  Array<OneD,                   NekDouble>   &SensorKappa);
         void GetElementDimensions(
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                  Array<OneD,       NekDouble > &hmin);
+                  Array<OneD,                   NekDouble >  &hmin);
         void GetAbsoluteVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &Vtot);
         void GetArtificialDynamicViscosity(
             const Array<OneD,  Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                    NekDouble  > &mu_var);
+                  Array<OneD,              NekDouble>   &mu_var);
         void SetVarPOrderElmt(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                    NekDouble  > &PolyOrder);
+                  Array<OneD,                   NekDouble>   &PolyOrder);
         void GetForcingTerm(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);

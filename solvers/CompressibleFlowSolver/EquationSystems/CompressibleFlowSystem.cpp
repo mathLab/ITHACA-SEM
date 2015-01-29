@@ -78,9 +78,12 @@ namespace Nektar
             m_vecLocs[0][i] = 1 + i;
         }
 
-        std::ofstream m_errFile( "L2Errors.txt");
-        m_errFile << "% Time\t\t\t\t L2 errors" << endl;
-        m_errFile.close();
+        if (m_session->DefinesParameter("SteadyStateSteps"))
+        {
+            std::ofstream m_errFile( "L2Errors.txt");
+            m_errFile << "% Time\t\t\t\t L2 errors" << endl;
+            m_errFile.close();
+        }
         
         // Get gamma parameter from session file.
         ASSERTL0(m_session->DefinesParameter("Gamma"),
@@ -131,8 +134,8 @@ namespace Nektar
         m_session->LoadParameter ("FH",            m_FacH,          0.0);
         m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
         m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
-        m_session->LoadParameter ("C1",            m_C1,           3.0);
-        m_session->LoadParameter ("C2",            m_C2,           5.0);
+        m_session->LoadParameter ("C1",            m_C1,            3.0);
+        m_session->LoadParameter ("C2",            m_C2,            5.0);
         m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType,    "Off");
         m_session->LoadParameter ("thermalConductivity",

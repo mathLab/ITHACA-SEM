@@ -278,7 +278,7 @@ We can manually specify this mapping by adding a colon to the
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="AdvectionVelocity">
-  <F VAR="Vx,Vy,Vz" VALUE="file.fld:u,v,w" />
+  <F VAR="Vx,Vy,Vz" FILE="file.fld:u,v,w" />
 </FUNCTION>
 \end{lstlisting}
 
@@ -289,13 +289,13 @@ There are some caveats with this syntax:
   after the colon. For example, the following is not valid.
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
-      <F VAR="Vx,Vy,Vz" VALUE="file.fld:u" />
+      <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />
     </FUNCTION>\end{lstlisting}
   \item This syntax is not valid with the wildcard operator \inltt{*}, so one
   cannot write for example:
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
-      <F VAR="*" VALUE="file.fld:u,v,w" />
+      <F VAR="*" FILE="file.fld:u,v,w" />
     </FUNCTION>
   \end{lstlisting}
 \end{itemize}

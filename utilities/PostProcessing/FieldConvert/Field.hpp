@@ -200,6 +200,7 @@ struct Field {
     bool                                    m_writeBndFld;
     vector<unsigned int>                    m_bndRegionsToWrite;
     bool                                    m_fldToBnd;
+    bool                                    m_addNormals;
 
     FieldPtsSharedPtr                       m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;

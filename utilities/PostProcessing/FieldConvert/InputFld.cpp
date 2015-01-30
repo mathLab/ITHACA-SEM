@@ -184,8 +184,7 @@ namespace Nektar
                 {
                     if(i < vars.size())
                     {
-                        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                                                           vars[i]);
+                        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, vars[i]);
                     }
                     else
                     {
@@ -209,6 +208,7 @@ namespace Nektar
                                                            m_f->m_fielddef[i]->m_fields[j],
                                                            m_f->m_exp[j]->UpdateCoeffs());
                     }
+
                     m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
                                             m_f->m_exp[j]->UpdatePhys());
                 }

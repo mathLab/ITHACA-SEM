@@ -56,7 +56,10 @@ namespace Nektar
         {
             // set up dafault values. 
             m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
-            m_config["fldtoboundary"] = ConfigOption(false,"1","Extract fld values to boundary");
+            m_config["fldtoboundary"] = ConfigOption(true,"NotSet","Extract fld values to boundary");
+
+            m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
+
             
             f->m_writeBndFld = true;
             f->m_declareExpansionAsContField = true;
@@ -107,15 +110,9 @@ namespace Nektar
                                                            m_f->m_bndRegionsToWrite),"Failed to interpret range string");
             }
 
-            if(m_config["fldtoboundary"].as<string>().compare("1") == 0)
-            {
-                m_f->m_fldToBnd = true;
-            }
-            else
-            {
-                m_f->m_fldToBnd = false;
-            }
-            
+            m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
+            m_f->m_addNormals = m_config["addnormals"].m_beenSet; 
+
         }
     }
 }

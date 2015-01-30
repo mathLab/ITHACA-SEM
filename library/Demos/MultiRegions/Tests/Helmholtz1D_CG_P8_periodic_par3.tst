@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 1D CG with P=8, periodic BCs</description>
     <executable>Helmholtz1D</executable>
-    <parameters>Helmholtz1D_P8_periodic.xml</parameters>
+    <parameters>--use-metis Helmholtz1D_P8_periodic.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz1D_P8_periodic.xml</file>

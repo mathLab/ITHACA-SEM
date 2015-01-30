@@ -75,7 +75,7 @@ namespace Nektar
         public:
             /// Create a new node at a specified coordinate.
             Node(int pId, NekDouble pX, NekDouble pY, NekDouble pZ)
-        : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
+                : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
                 : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y), 
@@ -454,17 +454,17 @@ namespace Nektar
                     tmp[n*(n-1)] = m_vertexList[3];
                     
                     // Write edge-interior
-                    int skips[4][2] = {{0,1}, {n-1,n}, {n*(n-1),1}, {0,n}};
+                    int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
                     for (int i = 0; i < 4; ++i)
                     {
                         bool reverseEdge = m_edgeList[i]->m_n1 == m_vertexList[i];
                         
-                        if (reverseEdge)
+                        if (!reverseEdge)
                         {
-                            for (int j = n-2; j > 0; --j)
+                            for (int j = 1; j < n-1; ++j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
-                                    m_edgeList[i]->m_edgeNodes[j-1];
+                                    m_edgeList[i]->m_edgeNodes[n-2-j];
                             }
                         }
                         else
@@ -582,16 +582,35 @@ namespace Nektar
          */
         struct ElmtConfig
         {
-            ElmtConfig(LibUtilities::ShapeType pE, unsigned int pOrder, 
-                       bool pFn, bool pVn, bool pReorient = true,
-                       LibUtilities::PointsType pECt=LibUtilities::ePolyEvenlySpaced,
-                       LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced):
-            m_e(pE), m_faceNodes(pFn), m_volumeNodes(pVn), m_order(pOrder),
-                m_reorient(pReorient), m_edgeCurveType(pECt), m_faceCurveType(pFCt) {}
+            ElmtConfig(LibUtilities::ShapeType  pE,
+                       unsigned int             pOrder,
+                       bool                     pFn,
+                       bool                     pVn,
+                       bool                     pReorient = true,
+                       LibUtilities::PointsType pECt
+                                             = LibUtilities::ePolyEvenlySpaced,
+                       LibUtilities::PointsType pFCt
+                                             = LibUtilities::ePolyEvenlySpaced)
+            : m_e            (pE),
+              m_faceNodes    (pFn),
+              m_volumeNodes  (pVn),
+              m_order        (pOrder),
+              m_reorient     (pReorient),
+              m_edgeCurveType(pECt),
+              m_faceCurveType(pFCt)
+            {
+            }
+
             ElmtConfig(ElmtConfig const &p) :
-            m_e(p.m_e), m_faceNodes(p.m_faceNodes), m_volumeNodes(p.m_volumeNodes), 
-                m_order(p.m_order), m_reorient(p.m_reorient), 
-                m_edgeCurveType(p.m_edgeCurveType), m_faceCurveType(p.m_faceCurveType) {}
+                m_e            (p.m_e),
+                m_faceNodes    (p.m_faceNodes),
+                m_volumeNodes  (p.m_volumeNodes),
+                m_order        (p.m_order),
+                m_reorient     (p.m_reorient),
+                m_edgeCurveType(p.m_edgeCurveType),
+                m_faceCurveType(p.m_faceCurveType)
+            {
+            }
 
             ElmtConfig() {}
             
@@ -803,116 +822,6 @@ namespace Nektar
                 return s.str();
             }
 
-            /**
-             * @brief Reorders Gmsh ordered nodes into a row-by-row ordering
-             * required for Nektar++ curve tags.
-             *
-             * The interior nodes of elements in the Gmsh format are ordered
-             * as for a lower-order element of the same type. This promotes
-             * the recursive approach to the reordering algorithm.
-             */
-            std::vector<NodeSharedPtr> tensorNodeOrdering(
-                    const std::vector<NodeSharedPtr> &nodes,
-                    int n) const
-            {
-                std::vector<NodeSharedPtr> nodeList;
-                int cnt2;
-
-                // Triangle
-                if (m_vertex.size() == 3)
-                {
-                    nodeList.resize(nodes.size());
-
-                    // Vertices
-                    nodeList[0] = nodes[0];
-                    if (n > 1)
-                    {
-                        nodeList[n-1] = nodes[1];
-                        nodeList[n*(n+1)/2 - 1] = nodes[2];
-                    }
-
-                    // Edges
-                    int cnt = n;
-                    for (int i = 1; i < n-1; ++i)
-                    {
-                        nodeList[i] = nodes[3+i-1];
-                        nodeList[cnt] = nodes[3+3*(n-2)-i];
-                        nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
-                        cnt += n-i;
-                    }
-
-                    // Interior (recursion)
-                    if (n > 3)
-                    {
-                        // Reorder interior nodes
-                        std::vector<NodeSharedPtr> interior((n-3)*(n-2)/2);
-                        std::copy(nodes.begin() + 3+3*(n-2), nodes.end(), interior.begin());
-                        interior = tensorNodeOrdering(interior, n-3);
-
-                        // Copy into full node list
-                        cnt = n;
-                        cnt2 = 0;
-                        for (int j = 1; j < n-2; ++j)
-                        {
-                            for (int i = 0; i < n-j-2; ++i)
-                            {
-                                nodeList[cnt+i+1] = interior[cnt2+i];
-                            }
-                            cnt += n-j;
-                            cnt2 += n-2-j;
-                        }
-                    }
-                }
-                // Quad
-                else if (m_dim == 2 && m_vertex.size() == 4)
-                {
-                    nodeList.resize(nodes.size());
-
-                    // Vertices and edges
-                    nodeList[0] = nodes[0];
-                    if (n > 1)
-                    {
-                        nodeList[n-1] = nodes[1];
-                        nodeList[n*n-1] = nodes[2];
-                        nodeList[n*(n-1)] = nodes[3];
-                    }
-                    for (int i = 1; i < n-1; ++i)
-                    {
-                        nodeList[i] = nodes[4+i-1];
-                    }
-                    for (int i = 1; i < n-1; ++i)
-                    {
-                        nodeList[n*n-1-i] = nodes[4+2*(n-2)+i-1];
-                    }
-
-                    // Interior (recursion)
-                    if (n > 2)
-                    {
-                        // Reorder interior nodes
-                        std::vector<NodeSharedPtr> interior((n-2)*(n-2));
-                        std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
-                        interior = tensorNodeOrdering(interior, n-2);
-
-                        // Copy into full node list
-                        for (int j = 1; j < n-1; ++j)
-                        {
-                            nodeList[j*n] = nodes[4+3*(n-2)+n-2-j];
-                            for (int i = 1; i < n-1; ++i)
-                            {
-                                nodeList[j*n+i] = interior[(j-1)*(n-2)+(i-1)];
-                            }
-                            nodeList[(j+1)*n-1] = nodes[4+(n-2)+j-1];
-                        }
-                    }
-                }
-                else
-                {
-                    cerr << "TensorNodeOrdering for a " << m_vertex.size()
-                         << "-vertex element is not yet implemented." << endl;
-                }
-                return nodeList;
-            }
-
             /// Generates a string listing the coordinates of all nodes
             /// associated with this element.
             std::string GetXmlCurveString() const
@@ -931,7 +840,9 @@ namespace Nektar
                     std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
                     for (int i = 0; i < 3; ++i)
                     {
-                        std::copy(m_edge[i]->m_edgeNodes.begin(), m_edge[i]->m_edgeNodes.end(), nodeList.begin() + 3 + i*(n-2));
+                        std::copy(m_edge[i]->m_edgeNodes.begin(),
+                                  m_edge[i]->m_edgeNodes.end(),
+                                  nodeList.begin() + 3 + i*(n-2));
                         if (m_edge[i]->m_n1 != m_vertex[i])
                         {
                             // If edge orientation is reversed relative to node
@@ -941,42 +852,54 @@ namespace Nektar
                         }
                     }
 
-                    // Triangle ordering lists vertices, edges then interior.
-                    // Interior nodes are row by row from edge 0 up to vertex 2
-                    // so need to reorder interior nodes only.
-                    std::vector<NodeSharedPtr> interior(m_volumeNodes.size());
-                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(), interior.begin());
-                    interior = tensorNodeOrdering(interior, n-3);
-                    std::copy(interior.begin(), interior.end(), nodeList.begin() + 3*(n-1));
+                    // Copy volume nodes.
+                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(),
+                              nodeList.begin() + 3*(n-1));
                 }
                 // Quad
                 else if (m_dim == 2 && m_vertex.size() == 4)
                 {
                     int n = m_edge[0]->GetNodeCount();
                     nodeList.resize(n*n);
+                    
+                    // Write vertices
+                    nodeList[0]       = m_vertex[0];
+                    nodeList[n-1]     = m_vertex[1];
+                    nodeList[n*n-1]   = m_vertex[2];
+                    nodeList[n*(n-1)] = m_vertex[3];
 
-                    // Populate nodelist
-                    std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
+                    // Write edge-interior
+                    int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
                     for (int i = 0; i < 4; ++i)
                     {
-                        std::copy(m_edge[i]->m_edgeNodes.begin(),
-                                  m_edge[i]->m_edgeNodes.end(),
-                                  nodeList.begin() + 4 + i*(n-2));
+                        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
 
-                        if (m_edge[i]->m_n1 != m_vertex[i])
+                        if (!reverseEdge)
                         {
-                            // If m_edge orientation is reversed relative to node
-                            // ordering, we need to reverse order of nodes.
-                            std::reverse(nodeList.begin() + 4 + i*(n-2),
-                                         nodeList.begin() + 4 + (i+1)*(n-2));
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                nodeList[skips[i][0] + j*skips[i][1]] = 
+                                    m_edge[i]->m_edgeNodes[n-2-j];
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                nodeList[skips[i][0] + j*skips[i][1]] = 
+                                    m_edge[i]->m_edgeNodes[j-1];
+                            }
                         }
                     }
-                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(), nodeList.begin() + 4*(n-1));
 
-                    // Quadrilateral ordering lists all nodes row by row
-                    // starting from edge 0 up to edge 2, so need to reorder
-                    // all nodes.
-                    nodeList = tensorNodeOrdering(nodeList, n);
+                    // Write interior
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        for (int j = 1; j < n-1; ++j)
+                        {
+                            nodeList[i*n+j] = m_volumeNodes[(i-1)*(n-2)+(j-1)];
+                        }
+                    }
                 }
                 else
                 {
@@ -1260,6 +1183,143 @@ namespace Nektar
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
+        /**
+         * @brief A lightweight struct for dealing with high-order triangle
+         * alignment.
+         *
+         * The logic underlying these routines is taken from the original Nektar
+         * code.
+         */
+        template<typename T>
+        struct HOTriangle
+        {
+            HOTriangle(vector<int> pVertId,
+                       vector<T>   pSurfVerts) :
+                vertId(pVertId), surfVerts(pSurfVerts) {}
+            HOTriangle(vector<int> pVertId) : vertId(pVertId) {}
+
+            /// The triangle vertex IDs
+            vector<int> vertId;
+
+            /// The triangle surface vertices -- templated so that this can
+            /// either be nodes or IDs.
+            vector<T> surfVerts;
+
+            /**
+             * @brief Rotates the triangle of data points inside #surfVerts
+             * counter-clockwise nrot times.
+             *
+             * @param nrot Number of times to rotate triangle.
+             */
+            void Rotate(int nrot)
+            {
+                int n, i, j, cnt;
+                int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
+                vector<T> tmp(np*np);
+
+                for (n = 0; n < nrot; ++n)
+                {
+                    for (cnt = i = 0; i < np; ++i)
+                    {
+                        for (j = 0; j < np-i; ++j, cnt++)
+                        {
+                            tmp[i*np+j] = surfVerts[cnt];
+                        }
+                    }
+                    for (cnt = i = 0; i < np; ++i)
+                    {
+                        for (j = 0; j < np-i; ++j,cnt++)
+                        {
+                            surfVerts[cnt] = tmp[(np-1-i-j)*np+i];
+                        }
+                    }
+                }
+            }
+
+            /**
+             * @brief Reflect data points inside #surfVerts.
+             *
+             * This applies a mapping essentially doing the following
+             * reordering:
+             *
+             * 9          9
+             * 7 8    ->  8 7
+             * 4 5 6      6 5 4
+             * 0 1 2 3    3 2 1 0
+             */
+            void Reflect()
+            {
+                int i, j, cnt;
+                int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
+                vector<T> tmp(np*np);
+
+                for (cnt = i = 0; i < np; ++i)
+                {
+                    for (j = 0; j < np-i; ++j,cnt++)
+                    {
+                        tmp[i*np+np-i-1-j] = surfVerts[cnt];
+                    }
+                }
+
+                for (cnt = i = 0; i < np; ++i)
+                {
+                    for(j = 0; j < np-i; ++j,cnt++)
+                    {
+                        surfVerts[cnt] = tmp[i*np+j];
+                    }
+                }
+            }
+
+            /**
+             * @brief Align this surface to a given vertex ID.
+             */
+            void Align(vector<int> vertId)
+            {
+                if (vertId[0] == this->vertId[0])
+                {
+                    if (vertId[1] == this->vertId[1] ||
+                        vertId[1] == this->vertId[2])
+                    {
+                        if (vertId[1] == this->vertId[2])
+                        {
+                            Rotate(1);
+                            Reflect();
+                        }
+                    }
+                }
+                else if (vertId[0] == this->vertId[1])
+                {
+                    if (vertId[1] == this->vertId[0] ||
+                        vertId[1] == this->vertId[2])
+                    {
+                        if (vertId[1] == this->vertId[0])
+                        {
+                            Reflect();
+                        }
+                        else
+                        {
+                            Rotate(2);
+                        }
+                    }
+                }
+                else if (vertId[0] == this->vertId[2])
+                {
+                    if (vertId[1] == this->vertId[0] ||
+                        vertId[1] == this->vertId[1])
+                    {
+                        if (vertId[1] == this->vertId[1])
+                        {
+                            Rotate(2);
+                            Reflect();
+                        }
+                        else
+                        {
+                            Rotate(1);
+                        }
+                    }
+                }
+            }
+        };
 
         /**
          * @brief A 2-dimensional three-sided element.
@@ -1367,10 +1427,8 @@ namespace Nektar
             
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
-            /**
-             * Orientation of tet; unchanged = 0; base vertex swapped = 1.
-             */
             int m_orientationMap[4];
+            int m_origVertMap[4];
 
         protected:
             void OrientTet();

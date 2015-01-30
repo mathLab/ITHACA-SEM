@@ -113,7 +113,7 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)=0;
 
-            void EvaluateFunction(
+            SOLVER_UTILS_EXPORT void EvaluateFunction(
                     Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
                     LibUtilities::SessionReaderSharedPtr        pSession,
                     std::string                                 pFieldName, 
@@ -121,7 +121,7 @@ namespace SolverUtils
                     const std::string& pFunctionName,
                     NekDouble pTime = NekDouble(0));
 
-            void EvaluateTimeFunction(
+            SOLVER_UTILS_EXPORT void EvaluateTimeFunction(
                     LibUtilities::SessionReaderSharedPtr        pSession,
                     std::string                                 pFieldName, 
                     Array<OneD, NekDouble>&                     pArray,

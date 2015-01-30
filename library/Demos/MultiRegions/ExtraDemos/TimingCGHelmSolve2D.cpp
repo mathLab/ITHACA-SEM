@@ -1,12 +1,7 @@
 #include <sstream>
 #include <time.h>
 
-//#define SHARK
-
 #include <sys/time.h>
-#ifdef SHARK
-#include <CHUD/CHUD.h> 
-#endif
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <SpatialDomains/MeshPartition.h>
@@ -377,16 +372,6 @@ int main(int argc, char *argv[])
         NumCalls = 1;
     }
 
-#ifdef SHARK
-    NumCalls *= 20;
-
-    chudInitialize();
-    chudSetErrorLogFile(stderr);
-    chudUmarkPID(getpid(), TRUE);	
-    chudAcquireRemoteAccess();
-    chudStartRemotePerfMonitor("NektarppTimingCGHelmSolve2D");
-#endif
-
     gettimeofday(&timer1, NULL);
     for(i = 0; i < NumCalls; ++i)
     {
@@ -394,12 +379,6 @@ int main(int argc, char *argv[])
         Exp->BwdTrans (Exp->GetContCoeffs(),Exp->UpdatePhys(),true);
     }
     gettimeofday(&timer2, NULL);
-
-#ifdef SHARK
-    chudStopRemotePerfMonitor();
-    chudReleaseRemoteAccess();
-    chudCleanup();
-#endif
 
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
     time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);

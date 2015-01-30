@@ -61,6 +61,7 @@ namespace Nektar
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         UnsteadySystem(pSession),
+        AdvectionSystem(pSession),
         m_subSteppingScheme(false),
         m_SmoothAdvection(false),
         m_steadyStateSteps(0)
@@ -69,14 +70,15 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        
+        AdvectionSystem::v_InitObject();
+
         int i,j;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
-        
+
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
-        
+
         for(i = 0; i < m_spacedim; ++i)
         {
             for(j = 0; j < numfields; ++j)
@@ -87,11 +89,11 @@ namespace Nektar
                     m_velocity[i] = j;
                     break;
                 }
-                
+
                 ASSERTL0(j != numfields, "Failed to find field: " + var);
             }
         }
-        
+
         // Set up equation type enum using kEquationTypeStr
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
@@ -122,7 +124,7 @@ namespace Nektar
                 m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
                 m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
             
-				
+                
                 // check to see if any user defined boundary condition is
                 // indeed implemented
                 
@@ -137,6 +139,8 @@ namespace Nektar
                             SpatialDomains::eWall_Forces ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eTimeDependent ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eMovingBody ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eRadiation ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
@@ -181,7 +185,8 @@ namespace Nektar
         }
 
         // Initialise advection
-        m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
+        m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(vConvectiveType, vConvectiveType);
+        m_advObject->InitObject( m_session, m_fields);
         
         // Forcing terms
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
@@ -302,25 +307,6 @@ namespace Nektar
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
-		
-        // creation of the extrapolation object
-        if(m_equationType == eUnsteadyNavierStokes)
-        {
-            std::string vExtrapolation = "Standard";
-
-            if (m_session->DefinesSolverInfo("Extrapolation"))
-            {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
-            }
-                        
-            m_extrapolation = GetExtrapolateFactory().CreateInstance(
-                vExtrapolation, 
-                m_session,
-                m_fields,
-		m_pressure,
-                m_velocity,
-                m_advObject);
-        }
     }
 
     /**
@@ -331,9 +317,9 @@ namespace Nektar
     }
 
     
-	/**
-	 *
-	 */
+    /**
+     *
+     */
     void IncNavierStokes::v_GetFluxVector(const int i, 
                                           Array<OneD, Array<OneD, NekDouble> > &physfield,
                                             Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -347,8 +333,8 @@ namespace Nektar
     }
 
     /**
-	 * Calcualate numerical fluxes
-	 */
+     * Calcualate numerical fluxes
+     */
     void IncNavierStokes::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                           Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
@@ -392,9 +378,9 @@ namespace Nektar
         }
     }
 
-	/**
-	 * Evaluation -N(V) for all fields except pressure using m_velocity
-	 */
+    /**
+     * Evaluation -N(V) for all fields except pressure using m_velocity
+     */
     void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                                  Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                  Array<OneD, NekDouble> &wk)
@@ -404,10 +390,20 @@ namespace Nektar
         int VelDim     = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
         Array<OneD, NekDouble > Deriv;
+
         for(i = 0; i < VelDim; ++i)
         {
-            velocity[i] = inarray[m_velocity[i]]; 
+            if(m_fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            {
+                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                m_fields[i]->HomogeneousBwdTrans(inarray[m_velocity[i]],velocity[i]);
+            }
+            else
+            {
+                velocity[i] = inarray[m_velocity[i]];
+            }
         }
+
         // Set up Derivative work space; 
         if(wk.num_elements())
         {
@@ -420,13 +416,13 @@ namespace Nektar
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
 
-        m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
-                                 m_velocity,inarray,outarray,m_time,Deriv);
+        m_advObject->Advect(m_nConvectiveFields, m_fields,
+                            velocity, inarray, outarray, m_time);
     }
     
     /**
-	 * Time dependent boundary conditions updating
-	 */
+     * Time dependent boundary conditions updating
+     */
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
         int i, n;
@@ -438,7 +434,9 @@ namespace Nektar
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             { 
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eTimeDependent)
+                   SpatialDomains::eTimeDependent ||
+                    m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+                       SpatialDomains::eMovingBody)
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -458,8 +456,8 @@ namespace Nektar
     }
     
     /**
-	 * Probably should be pushed back into ContField? 
-	 */
+     * Probably should be pushed back into ContField? 
+     */
     void IncNavierStokes::SetRadiationBoundaryForcing(int fieldid)
     {
         int  i,n;
@@ -512,8 +510,9 @@ namespace Nektar
                 cnt1 += BndExp[n]->GetTotPoints();
             }
             else if(type == SpatialDomains::eNoUserDefined ||
-                    type == SpatialDomains::eWall_Forces ||
-                    type == SpatialDomains::eTimeDependent ||
+                    type == SpatialDomains::eWall_Forces || 
+                    type == SpatialDomains::eTimeDependent || 
+                    type == SpatialDomains::eMovingBody ||
                     type == SpatialDomains::eHigh ||
                     type == SpatialDomains::eWomersley ||
                     type == SpatialDomains::eHighOutflow)
@@ -652,9 +651,9 @@ namespace Nektar
 
     /**
      * Decide if at a steady state if the discrerte L2 sum of the
-	 * coefficients is the same as the previous step to within the
-	 * tolerance m_steadyStateTol;
-	 */
+     * coefficients is the same as the previous step to within the
+     * tolerance m_steadyStateTol;
+     */
     bool IncNavierStokes::CalcSteadyState(void)
     {
         static NekDouble previousL2 = 0.0;
@@ -680,9 +679,9 @@ namespace Nektar
         return returnval;
     }
     
-	/**
-	 *
-	 */
+    /**
+     *
+     */
     Array<OneD, NekDouble> IncNavierStokes::GetElmtCFLVals(void)
     {
         int n_vel     = m_velocity.num_elements();
@@ -728,8 +727,8 @@ namespace Nektar
     }
     
     /**
-	 *
-	 */
+     *
+     */
     NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
     { 
         int n_element = m_fields[0]->GetExpSize(); 

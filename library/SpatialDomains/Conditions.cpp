@@ -108,7 +108,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TEXT)
+                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     boundaryRegionChild = boundaryRegionChild->NextSibling();
                 }
@@ -151,13 +151,13 @@ namespace Nektar
             {
                 return;
             }
-
+            
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
             ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
-
+            
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
-
+            
             // Read R (Robin), D (Dirichlet), N (Neumann), P (Periodic) C(Cauchy) tags
             while (regionElement)
             {
@@ -166,6 +166,10 @@ namespace Nektar
                 int boundaryRegionID;
                 int err = regionElement->QueryIntAttribute("REF", &boundaryRegionID);
                 ASSERTL0(err == TIXML_SUCCESS, "Error reading boundary region reference.");
+
+                ASSERTL0(m_boundaryConditions.count(boundaryRegionID) == 0,
+                         "Boundary region '" + boost::lexical_cast<std::string>(boundaryRegionID)
+                         + "' appears multiple times.");
 
                 // Find the boundary region corresponding to this ID.
                 std::string boundaryRegionIDStr;

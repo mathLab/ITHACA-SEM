@@ -846,51 +846,28 @@ namespace Nektar
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
-            
-            //temporary solution, need to add conditions based on face id
-            //also need to add check of the points type
+
+            int dir = k;
             switch(i)
             {
                 case 0:
                 case 5:
-                    switch(k)
-                    {
-                        case 0:
-                            return GetBasis(0)->GetBasisKey();
-                            break;
-                        case 1:
-                            return GetBasis(1)->GetBasisKey();
-                            break;
-                    }
+                    dir = k;
                     break;
                 case 1:
                 case 3:
-                    switch(k)
-                    {
-                        case 0:
-                            return GetBasis(0)->GetBasisKey();
-                            break;
-                        case 1:
-                            return GetBasis(2)->GetBasisKey();
-                            break;
-                    }
+                    dir = 2*k;
                     break;
                 case 2:
                 case 4:
-                    switch(k)
-                    {
-                        case 0:
-                            return GetBasis(1)->GetBasisKey();
-                            break;
-                        case 1:
-                            return GetBasis(2)->GetBasisKey();
-                            break;
-                    }
+                    dir = k+1;
                     break;
             }
             
-            // Should never get here.
-            return LibUtilities::NullBasisKey;
+            return EvaluateQuadFaceBasisKey(k,
+                                            m_base[dir]->GetBasisType(),
+                                            m_base[dir]->GetNumPoints(),
+                                            m_base[dir]->GetNumModes());
         }
 
         LibUtilities::BasisType StdHexExp::v_GetEdgeBasisType(const int i) const

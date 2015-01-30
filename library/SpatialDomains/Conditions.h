@@ -84,6 +84,7 @@ namespace Nektar
             eOutflowCFS,
             eRiemannInvariant,
             eExtrapOrder0,
+            eZeroNormalComponent,
             eNoUserDefined
         };
 
@@ -112,6 +113,7 @@ namespace Nektar
             "OutflowCFS",
             "RiemannInvariant",
             "ExtrapOrder0",
+            "ZeroNormalComponent",
             "NoUserDefined"
         };
 
@@ -143,6 +145,7 @@ namespace Nektar
                 known_type["IsentropicVortex"] = eIsentropicVortex;
                 known_type["RiemannInvariant"] = eRiemannInvariant;
                 known_type["ExtrapOrder0"]     = eExtrapOrder0;
+                known_type["ZeroNormalComponent"] = eZeroNormalComponent;
                 known_type["NoUserDefined"]    = eNoUserDefined;
 
                 std::map<const std::string, BndUserDefinedType>::

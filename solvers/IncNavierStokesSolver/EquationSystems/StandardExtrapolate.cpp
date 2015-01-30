@@ -166,8 +166,8 @@ namespace Nektar
         NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
-	{
-            Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
-	}
+    {
+        Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
+    }
 }
 

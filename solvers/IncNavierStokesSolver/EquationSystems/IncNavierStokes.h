@@ -205,6 +205,9 @@ namespace Nektar
         /// Set Radiation forcing term
         void SetRadiationBoundaryForcing(int fieldid);
 
+        /// Set Normal Velocity Component to Zero
+        void SetZeroNormalVelocity();
+
         /// evaluate steady state
         bool CalcSteadyState(void);
 

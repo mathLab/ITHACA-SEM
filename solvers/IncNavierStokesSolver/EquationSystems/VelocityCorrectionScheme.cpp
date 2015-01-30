@@ -223,6 +223,11 @@ namespace Nektar
         m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
 
+        // set boundary conditions here so that any normal component
+        // correction are imposed before they are imposed on intiial
+        // field below
+        SetBoundaryConditions(m_time);
+
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();

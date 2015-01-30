@@ -137,7 +137,9 @@ namespace Nektar
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eI ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eHighOutflow,
+                            SpatialDomains::eHighOutflow ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                             SpatialDomains::eZeroNormalComponent,
                         "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
@@ -210,6 +212,17 @@ namespace Nektar
                         Set = true;
                     }
                     radpts += BndExp[n]->GetTotPoints();
+                }
+                if(BndConds[n]->GetUserDefined() == SpatialDomains::eZeroNormalComponent)
+                {
+                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet,
+                             "Zero Normal Component boundary condition option must be of type Dirichlet <D>");
+                    
+                    if(Set == false)
+                    {
+                        m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+                        Set = true;
+                    }
                 }
             }
 
@@ -385,11 +398,13 @@ namespace Nektar
             // Set Radiation conditions if required
             SetRadiationBoundaryForcing(i);
         }
+        
+        SetZeroNormalVelocity();
     }
     
     /**
-	 * Probably should be pushed back into ContField? 
-	 */
+     * Probably should be pushed back into ContField? 
+     */
     void IncNavierStokes::SetRadiationBoundaryForcing(int fieldid)
     {
         int  i,n;
@@ -418,7 +433,7 @@ namespace Nektar
             {
                 for(i = 0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
                 {
-                    elmtid = m_fieldsBCToElmtID[fieldid][cnt];
+                    elmtid = m_fieldsBCToElmtID[m_velocity[fieldid]][cnt];
                     elmt   = m_fields[fieldid]->GetExp(elmtid);
                     offset = m_fields[fieldid]->GetPhys_Offset(elmtid);
                     
@@ -433,7 +448,7 @@ namespace Nektar
                     elmt->GetTracePhysVals(boundary,Bc,U,ubc);
                     
                     Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + 
-                             BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+                                                                     BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
 
                     Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
 
@@ -445,13 +460,98 @@ namespace Nektar
                     type == SpatialDomains::eWall_Forces ||
                     type == SpatialDomains::eTimeDependent ||
                     type == SpatialDomains::eHigh ||
-                    type == SpatialDomains::eHighOutflow)
+                    type == SpatialDomains::eHighOutflow||
+                    type == SpatialDomains::eZeroNormalComponent)
             {
                 cnt += BndExp[n]->GetExpSize();
             }
             else
             {
                 ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
+            }
+        }
+    }
+
+    
+    void IncNavierStokes::SetZeroNormalVelocity()
+    {
+        // use static trip since cannot use UserDefinedTag for zero
+        // velocity and have time dependent conditions
+        static bool Setup  = false; 
+        
+        if(Setup == true)
+        {
+            return;
+        }
+        Setup = true;
+
+        int  i,n;
+        
+        Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr > >
+            BndConds(m_spacedim);
+        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >  
+            BndExp(m_spacedim);
+        
+        
+        for(i = 0; i < m_spacedim; ++i)
+        { 
+            BndConds[i] = m_fields[m_velocity[i]]->GetBndConditions();
+            BndExp[i]   = m_fields[m_velocity[i]]->GetBndCondExpansions();
+        }
+        
+        StdRegions::StdExpansionSharedPtr elmt,Bc;
+        
+        int cnt;
+        int elmtid,nq, boundary;
+
+        Array<OneD, Array<OneD, NekDouble> > normals;
+        Array<OneD, NekDouble> Bphys,Bcoeffs;
+
+        int fieldid = m_velocity[0];
+
+        for(cnt = n = 0; n < BndConds[0].num_elements(); ++n)
+        {            
+            if((BndConds[0][n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)&& (BndConds[0][n]->GetUserDefined() == SpatialDomains::eZeroNormalComponent))
+            {
+                for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i,cnt++)
+                {
+                    elmtid   = m_fieldsBCToElmtID[fieldid][cnt];
+                    elmt     = m_fields[0]->GetExp(elmtid);
+                    boundary = m_fieldsBCToTraceID[fieldid][cnt];
+
+                    normals = elmt->GetSurfaceNormal(boundary);
+
+                    nq = BndExp[0][n]->GetExp(i)->GetTotPoints();
+                    Array<OneD, NekDouble> normvel(nq,0.0);
+
+                    for(int k = 0; k < m_spacedim; ++k)
+                    {
+                        Bphys  = BndExp[k][n]->UpdatePhys()+
+                            BndExp[k][n]->GetPhys_Offset(i);
+                        Bc  = BndExp[k][n]->GetExp(i);
+                        Vmath::Vvtvp(nq,normals[k],1,Bphys,1,normvel,1,
+                                     normvel,1);
+                    }
+                    
+                    // negate normvel for next step
+                    Vmath::Neg(nq,normvel,1);
+
+                    for(int k = 0; k < m_spacedim; ++k)
+                    {
+                        Bphys  = BndExp[k][n]->UpdatePhys()+
+                            BndExp[k][n]->GetPhys_Offset(i);
+                        Bcoeffs = BndExp[k][n]->UpdateCoeffs()+
+                            BndExp[k][n]->GetCoeff_Offset(i);
+                        Bc  = BndExp[k][n]->GetExp(i);
+                        Vmath::Vvtvp(nq,normvel,1,normals[k],1,Bphys,1,
+                                     Bphys,1);
+                        Bc->FwdTrans_BndConstrained(Bphys,Bcoeffs);
+                    }
+                }
+            }
+            else 
+            {
+                cnt += BndExp[0][n]->GetExpSize();
             }
         }
     }

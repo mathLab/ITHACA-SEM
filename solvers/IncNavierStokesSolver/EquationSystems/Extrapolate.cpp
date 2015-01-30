@@ -137,7 +137,7 @@ namespace Nektar
     void Extrapolate::CopyPressureHBCsToPbndExp(void)
     {
         int n,cnt;
-        int  nlevels = m_pressureHBCs.num_elements();
+        int nlevels = m_pressureHBCs.num_elements();
 
         for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
         {

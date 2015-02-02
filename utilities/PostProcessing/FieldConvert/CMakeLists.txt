@@ -20,6 +20,8 @@ SET(FieldConvertHeaders
     ProcessJacobianEnergy.h
     ProcessScaleInFld.h
     ProcessVorticity.h
+    ProcessWSS.h
+    ProcessMultiShear.h
     ProcessC0Projection.h
     ProcessQCriterion.h
 )
@@ -46,6 +48,8 @@ SET(FieldConvertSources
     ProcessJacobianEnergy.cpp
     ProcessScaleInFld.cpp
     ProcessVorticity.cpp
+    ProcessWSS.cpp
+    ProcessMultiShear.cpp
     ProcessC0Projection.cpp
     ProcessQCriterion.cpp
 )

@@ -37,119 +37,127 @@
 #define NEKTAR_SOLVERUTILS_DRIVERSTEADYSTATE_H
 
 #include <SolverUtils/Driver.h>
+#include <SolverUtils/DriverArnoldi.h>
+#include <SolverUtils/DriverModifiedArnoldi.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        /// Base class for the development of solvers.
-        class DriverSteadyState: public Driver
-        {
-        public:
-            friend class MemoryManager<DriverSteadyState>;
-            
-            /// Creates an instance of this class
-            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-                DriverSharedPtr p = MemoryManager<DriverSteadyState>::AllocateSharedPtr(pSession);
-                p->InitObject();
-                return p;
-            }
-            
-            ///Name of the class
-            static std::string className;
-            
-            void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                    const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                    NekDouble &MaxNormDiff_q_qBar,
-                                    NekDouble &MaxNormDiff_q1_q0);
-            
-            void EvaluateNextSFDVariables(const int i,
-                                          const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                          const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                                          Array<OneD, Array<OneD, NekDouble> > &q1,
-                                          Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            void RunBDF2(const int i,
-                         const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
-                         const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
-                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                         Array<OneD, Array<OneD, NekDouble> > &q1,
-                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            void RunBDF1(const int i,
-                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                         Array<OneD, Array<OneD, NekDouble> > &q1,
-                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            void ExactFilters(const int i,
-                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                              Array<OneD, Array<OneD, NekDouble> > &q1,
-                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            void SecondOrderFilter(const int i,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                                   Array<OneD, Array<OneD, NekDouble> > &q1,
-                                   Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            
-        protected:
-            /// Constructor
-            SOLVER_UTILS_EXPORT DriverSteadyState(const LibUtilities::SessionReaderSharedPtr pSession);
-            
-            /// Destructor
-            SOLVER_UTILS_EXPORT virtual ~DriverSteadyState();
-            
-            /// Second-stage initialisation
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
-            
-            /// Virtual function for solve implementation.
-            SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
-            
-            static std::string driverLookupId;
-            
-        private:
-            //Definition of the SFD parameters:
-            NekDouble m_Delta;
-            NekDouble m_Delta0;
-            NekDouble m_X;
-            NekDouble m_X0;
-            NekDouble m_dt; 
-            
-            //For implementation of the exact solution of the filters equation
-            NekDouble c1;
-            NekDouble F11;
-            NekDouble F12;
-            NekDouble F21;
-            NekDouble F22;
-            
-            int m_n;
-            int m_Check;
-            
-            int m_infosteps;
-            int m_checksteps;
-            
-            NekDouble m_MinNormDiff_q_qBar;
-            NekDouble m_MaxNormDiff_q_qBar;
-            NekDouble m_First_MinNormDiff_q_qBar;
-            
-            int NumVar_SFD;
-            
-            int MPIrank;
-            
-            NekDouble MaxNormDiff_q_qBar;
-            NekDouble MaxNormDiff_q1_q0;
-            
-            NekDouble Min_MaxNormDiff_q_qBar;
-            
-            std::ofstream m_file;
-        };
-    }	
+namespace SolverUtils
+{
+
+class DriverSteadyState: public DriverModifiedArnoldi
+{
+public:
+    friend class MemoryManager<DriverSteadyState>;
+
+    /// Creates an instance of this class
+    static DriverSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession) {
+        DriverSharedPtr p = MemoryManager<DriverSteadyState>
+                                        ::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
+
+    ///Name of the class
+    static std::string className;
+
+    void PrintSummarySFD();
+
+    void ConvergenceHistory(
+            const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
+            const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                  NekDouble &MaxNormDiff_q_qBar,
+                  NekDouble &MaxNormDiff_q1_q0);
+
+    void ComputeSFD(
+            const int i,
+            const Array<OneD, const Array<OneD, NekDouble> > &q0,
+            const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                  Array<OneD, Array<OneD, NekDouble> > &q1,
+                  Array<OneD, Array<OneD, NekDouble> > &qBar1);
+
+    void EvalEV_ScalarSFD(
+            const NekDouble &X_input,
+            const NekDouble &Delta_input,
+            const complex<NekDouble> &alpha,
+                  NekDouble &MaxEV);
+
+    void GradientDescentMethod(
+            const complex<NekDouble> &alpha,
+                  NekDouble &X_output,
+                  NekDouble &Delta_output);
+
+    void ReadEVfile(
+                  int &KrylovSubspaceDim,
+                  NekDouble &growthEV,
+                  NekDouble &frequencyEV);
+
+    void ComputeOptimization();
+
+    void SetSFDOperator(
+            const NekDouble X_input,
+            const NekDouble Delta_input);
+
+
+protected:
+    /// Constructor
+    SOLVER_UTILS_EXPORT DriverSteadyState(
+            const LibUtilities::SessionReaderSharedPtr pSession);
+
+    /// Destructor
+    SOLVER_UTILS_EXPORT virtual ~DriverSteadyState();
+
+    /// Second-stage initialisation
+    SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
+
+    /// Virtual function for solve implementation.
+    SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
+
+    static std::string driverLookupId;
+
+private:
+    int m_stepCounter;
+    int m_Check;
+    int m_Check_BaseFlow;
+    NekDouble TOL;
+    int m_infosteps;
+    int m_checksteps;
+    int NumVar_SFD;
+
+    Timer     timer;
+    NekDouble cpuTime;
+    NekDouble totalTime;
+    NekDouble elapsed;
+    std::ofstream m_file;
+
+    ///Definition of the SFD parameters:
+    NekDouble m_Delta;
+    NekDouble m_X;
+    NekDouble m_dt;
+
+    ///Definition of the SFD operator
+    NekDouble M11;
+    NekDouble M12;
+    NekDouble M21;
+    NekDouble M22;
+
+    NekDouble Diff_q_qBar;
+    NekDouble Diff_q1_q0;
+
+    ///For adaptive SFD method
+    bool FlowPartiallyConverged;
+    NekDouble AdaptiveTOL;
+    NekDouble AdaptiveTime;
+    int m_NonConvergingStepsCounter;
+    NekDouble GrowthRateEV;
+    NekDouble FrequencyEV;
+};
+
+}
 } //end of namespace
+
 
 #endif //NEKTAR_SOLVERUTILS_DRIVERSTEADYSTATE_H
 

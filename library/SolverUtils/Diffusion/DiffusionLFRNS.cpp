@@ -375,7 +375,9 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {        
             int i, n;
-            NekDouble c0, c1, c2;
+            NekDouble c0 = 0.0;
+            NekDouble c1 = 0.0;
+            NekDouble c2 = 0.0;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
@@ -1737,7 +1739,7 @@ namespace Nektar
             LibUtilities::PointsKeyVector ptsKeys;
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements
@@ -1958,7 +1960,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
                         
             // Loop on the elements
@@ -2154,7 +2156,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements

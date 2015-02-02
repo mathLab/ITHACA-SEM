@@ -53,6 +53,11 @@ namespace Nektar
                      "Missing parameter 'InitialValue'.");
             m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
 
+            if (pParams.find("StartTime") != pParams.end())
+            {
+                m_startTime = atof(pParams.find("StartTime")->second.c_str());
+            }
+
             m_outputFile = pSession->GetSessionName() + "_max.fld";
             if (pParams.find("OutputFile") != pParams.end())
             {
@@ -87,6 +92,11 @@ namespace Nektar
 
         void FilterThresholdMax::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
+            if (time < m_startTime)
+            {
+                return;
+            }
+
             int i;
             NekDouble timestep = pFields[m_thresholdVar]->GetSession()->GetParameter("TimeStep");
 

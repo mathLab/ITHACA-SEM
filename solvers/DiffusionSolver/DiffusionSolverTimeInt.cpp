@@ -61,7 +61,6 @@ class Diffusion
         LibUtilities::SessionReaderSharedPtr            session;
         LibUtilities::FieldIOSharedPtr                  fld;
         string                                          sessionName;
-        string                                          fileName;
         SpatialDomains::MeshGraphSharedPtr              graph;
         MultiRegions::ContField2DSharedPtr              field;
 
@@ -91,7 +90,6 @@ Diffusion::Diffusion(int argc, char* argv[])
                     AllocateSharedPtr(session->GetComm());
 
     // Get some information from the session
-    fileName    = session->GetFilename();
     sessionName = session->GetSessionName();
     scheme      = session->GetSolverInfo("TimeIntegrationMethod");
     nSteps      = session->GetParameter("NumSteps");

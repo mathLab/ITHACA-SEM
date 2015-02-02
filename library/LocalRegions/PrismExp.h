@@ -45,19 +45,19 @@
 
 namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
-        class PrismExp : virtual public StdRegions::StdPrismExp, 
+        class PrismExp : virtual public StdRegions::StdPrismExp,
                          virtual public Expansion3D
         {
         public:
             /// \brief Constructor using BasisKey class for quadrature
-            /// points and order definition 
+            /// points and order definition
             LOCAL_REGIONS_EXPORT PrismExp(const LibUtilities::BasisKey &Ba,
                                           const LibUtilities::BasisKey &Bb,
                                           const LibUtilities::BasisKey &Bc,
                                           const SpatialDomains::PrismGeomSharedPtr &geom);
-	    
+
             LOCAL_REGIONS_EXPORT PrismExp(const PrismExp &T);
 
             LOCAL_REGIONS_EXPORT ~PrismExp();
@@ -67,14 +67,14 @@ namespace Nektar
             // Integration Methods
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
-                const Array<OneD, const NekDouble>& inarray);            
-            
-            
+                const Array<OneD, const NekDouble>& inarray);
+
+
             //----------------------------
             // Differentiation Methods
             //----------------------------
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
-                const Array<OneD, const NekDouble>& inarray, 
+                const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& out_d0,
                       Array<OneD,       NekDouble>& out_d1,
                       Array<OneD,       NekDouble>& out_d2);
@@ -111,7 +111,7 @@ namespace Nektar
             // Evaluation functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
-                const Array<OneD, const NekDouble> &Lcoords, 
+                const Array<OneD, const NekDouble> &Lcoords,
                       Array<OneD,       NekDouble> &coords);
 
             LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
@@ -126,7 +126,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
                 const Array<OneD, const NekDouble>& physvals);
-            
+
 
             //---------------------------------------
             // Helper functions
@@ -134,11 +134,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                 const NekDouble *data,
-                const std::vector<unsigned int > &nummodes,  
-                const int mode_offset,   
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
                 NekDouble * coeffs);
-            LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::Orientation v_GetFaceOrient(int face);
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,
                 const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -154,24 +152,24 @@ namespace Nektar
                 StdRegions::Orientation                  orient);
 
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
-            
+
             //---------------------------------------
             // Operator creation functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual void v_MassMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey);
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey);
             LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey);
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey);
             LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
-                            const int k1,
-                            const int k2,
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey);
+                const int k1,
+                const int k2,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey);
             LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
@@ -180,11 +178,6 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
-            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
-                int                                 numMin,
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
-
             //---------------------------------------
             // Matrix creation functions
             //---------------------------------------
@@ -203,10 +196,17 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
 
+            LOCAL_REGIONS_EXPORT
+            virtual void v_GetSimplexEquiSpacedConnectivity(
+                Array<OneD, int> &conn,
+                bool standard = true);
+
         private:
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
-            
+            LibUtilities::NekManager<MatrixKey, DNekScalMat,
+                                MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat,
+                                MatrixKey::opLess> m_staticCondMatrixManager;
+
             virtual void v_LaplacianMatrixOp_MatFree_Kernel(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,

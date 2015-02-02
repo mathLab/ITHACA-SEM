@@ -189,14 +189,7 @@ namespace Nektar
 
             ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
 
-            m_filename    = m_filenames[0];
-            m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            if (m_filename.size() > 3 &&
-                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
-            {
-                m_sessionName =
-                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
-            }
+            m_sessionName = ParseSessionName(m_filenames);
 
             // Create communicator
             CreateComm(argc, argv);
@@ -226,14 +219,7 @@ namespace Nektar
             m_xmlDoc      = 0;
             m_filenames   = pFilenames;
 
-            m_filename    = pFilenames[0];
-            m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            if (m_filename.size() > 3 &&
-                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
-            {
-                m_sessionName =
-                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
-            }
+            m_sessionName = ParseSessionName(m_filenames);
 
             // Create communicator
             if (!pComm.get())
@@ -345,6 +331,10 @@ namespace Nektar
                                  "number of procs in Y-dir")
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
+                ("nsz",          po::value<int>(),
+                                 "number of slices in Z-dir")
+                ("part-only",    po::value<int>(),
+                                 "only partition mesh into N partitions.")
                 ("part-info",    "Output partition information")
             ;
             
@@ -472,6 +462,44 @@ namespace Nektar
         /**
          *
          */
+        std::string SessionReader::ParseSessionName(
+                std::vector<std::string> &filenames)
+        {
+            ASSERTL0(!filenames.empty(),
+                     "At least one filename expected.");
+
+            std::string retval = "";
+
+            // First input file defines the session name
+            std::string fname = filenames[0];
+
+            // If loading a pre-partitioned mesh, remove _xml extension
+            if (fname.size() > 4 &&
+                fname.substr(fname.size() - 4, 4) == "_xml")
+            {
+                retval = fname.substr(0, fname.find_last_of("_"));
+            }
+            // otherwise remove the .xml extension
+            else if (fname.size() > 4 &&
+                fname.substr(fname.size() - 4, 4) == ".xml")
+            {
+                retval = fname.substr(0, fname.find_last_of("."));
+            }
+            // If compressed .xml.gz, remove both extensions
+            else if (fname.size() > 7 &&
+                fname.substr(fname.size() - 7, 7) == ".xml.gz")
+            {
+                retval = fname.substr(0, fname.find_last_of("."));
+                retval = retval.substr(0, retval.find_last_of("."));
+            }
+
+            return retval;
+        }
+
+
+        /**
+         *
+         */
         TiXmlDocument& SessionReader::GetDocument()
         {
             ASSERTL1(m_xmlDoc, "XML Document not defined.");
@@ -546,9 +574,9 @@ namespace Nektar
         /**
          *
          */
-        const std::string& SessionReader::GetFilename() const
+        const std::vector<std::string>& SessionReader::GetFilenames() const
         {
-            return m_filename;
+            return m_filenames;
         }
 
 
@@ -1218,6 +1246,48 @@ namespace Nektar
         /**
          *
          */
+        std::string SessionReader::GetFunctionFilenameVariable(
+            const std::string &pName,
+            const std::string &pVariable,
+            const int pDomain) const
+        {
+            FunctionMap::const_iterator it1;
+            FunctionVariableMap::const_iterator it2, it3;
+            std::string vName = boost::to_upper_copy(pName);
+
+            it1 = m_functions.find(vName);
+            ASSERTL0 (it1 != m_functions.end(),
+                      std::string("Function '") + pName
+                      + std::string("' not found."));
+
+            // Check for specific and wildcard definitions
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
+                            it1->second.end();
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
+                            it1->second.end();
+
+            // Check function is defined somewhere
+            ASSERTL0(specific || wildcard,
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain)
+                     + " defined for function " + pName
+                     + " in session file.");
+
+            // If not specific, must be wildcard
+            if (!specific)
+            {
+                it2 = it3;
+            }
+
+            return it2->second.m_fileVariable;
+        }
+
+
+        /**
+         *
+         */
         AnalyticExpressionEvaluator& SessionReader::GetExpressionEvaluator()
         {
             return m_exprEvaluator;
@@ -1330,6 +1400,19 @@ namespace Nektar
                              "Error: File '" + pFilename + "' is corrupt.");
                 }
             }
+            else if (pFilename.size() > 4 &&
+                    pFilename.substr(pFilename.size() - 4, 4) == "_xml")
+            {
+                fs::path    pdirname(pFilename);
+                boost::format pad("P%1$07d.xml");
+                pad % m_comm->GetRank();
+                fs::path    pRankFilename(pad.str());
+                fs::path fullpath = pdirname / pRankFilename;
+
+                ifstream file(PortablePath(fullpath).c_str());
+                ASSERTL0(file.good(), "Unable to open file: " + fullpath.string());
+                file >> (*pDoc);
+            }
             else
             {
                 ifstream file(pFilename.c_str());
@@ -1414,11 +1497,6 @@ namespace Nektar
             ReadFunctions         (e);
 
             e = docHandle.FirstChildElement("NEKTAR").
-                FirstChildElement("GEOMETRY").Element();
-
-            ReadGeometricInfo(e);
-
-            e = docHandle.FirstChildElement("NEKTAR").
                 FirstChildElement("FILTERS").Element();
 
             ReadFilters(e);
@@ -1458,28 +1536,97 @@ namespace Nektar
 
             // Get row of comm, or the whole comm if not split
             CommSharedPtr vCommMesh = m_comm->GetRowComm();
+            const bool isRoot = (m_comm->GetRank() == 0);
 
-            // Partition mesh into length of row comms
-            if (vCommMesh->GetSize() > 1)
+            // Delete any existing loaded mesh
+            if (m_xmlDoc)
             {
-                // Default partitioner to use is Metis. Use Scotch as default
-                // if it is installed. Override default with command-line flags
-                // if they are set.
-                string vPartitionerName = "Metis";
-                if (GetMeshPartitionFactory().ModuleExists("Scotch"))
+                delete m_xmlDoc;
+            }
+
+            // Load file for root process only (since this is always needed)
+            // and determine if the provided geometry has already been
+            // partitioned. This will be the case if the user provides the
+            // directory of mesh partitions as an input. Partitioned geometries
+            // have the attribute
+            //    PARTITION=X
+            // where X is the number of the partition (and should match the
+            // process rank). The result is shared with all other processes.
+            int isPartitioned = 0;
+            if (isRoot)
+            {
+                m_xmlDoc = MergeDoc(m_filenames);
+                if (DefinesElement("Nektar/Geometry"))
                 {
-                    vPartitionerName = "Scotch";
+                    if (GetElement("Nektar/Geometry")->Attribute("PARTITION"))
+                    {
+                        cout << "Using pre-partitioned mesh." << endl;
+                        isPartitioned = 1;
+                    }
                 }
-                if (DefinesCmdLineArgument("use-metis"))
+            }
+            GetComm()->AllReduce(isPartitioned, LibUtilities::ReduceMax);
+
+            // If the mesh is already partitioned, we are done. Remaining
+            // processes must load their partitions.
+            if (isPartitioned) {
+                if (!isRoot)
                 {
-                    vPartitionerName = "Metis";
+                    m_xmlDoc = MergeDoc(m_filenames);
                 }
-                if (DefinesCmdLineArgument("use-scotch"))
+                return;
+            }
+
+            // Default partitioner to use is Metis. Use Scotch as default
+            // if it is installed. Override default with command-line flags
+            // if they are set.
+            string vPartitionerName = "Metis";
+            if (GetMeshPartitionFactory().ModuleExists("Scotch"))
+            {
+                vPartitionerName = "Scotch";
+            }
+            if (DefinesCmdLineArgument("use-metis"))
+            {
+                vPartitionerName = "Metis";
+            }
+            if (DefinesCmdLineArgument("use-scotch"))
+            {
+                vPartitionerName = "Scotch";
+            }
+
+            // Mesh has not been partitioned so do partitioning if required.
+            // Note in the serial case nothing is done as we have already loaded
+            // the mesh.
+            if (DefinesCmdLineArgument("part-only"))
+            {
+                // Perform partitioning of the mesh only. For this we insist
+                // the code is run in serial (parallel execution is pointless).
+                ASSERTL0(GetComm()->GetSize() == 1,
+                        "The 'part-only' option should be used in serial.");
+
+                // Number of partitions is specified by the parameter.
+                int nParts = GetCmdLineArgument<int>("part-only");
+                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                MeshPartitionSharedPtr vPartitioner = 
+                        GetMeshPartitionFactory().CreateInstance(
+                                            vPartitionerName, vSession);
+                vPartitioner->PartitionMesh(nParts, true);
+                vPartitioner->WriteAllPartitions(vSession);
+                vPartitioner->GetCompositeOrdering(m_compOrder);
+                vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                if (isRoot && DefinesCmdLineArgument("part-info"))
                 {
-                    vPartitionerName = "Scotch";
+                    vPartitioner->PrintPartInfo(std::cout);
                 }
 
+                Finalise();
+                exit(0);
+            }
+            else if (vCommMesh->GetSize() > 1)
+            {
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                int nParts = vCommMesh->GetSize();
                 if (DefinesCmdLineArgument("shared-filesystem"))
                 {
                     CommSharedPtr vComm = GetComm();
@@ -1493,7 +1640,7 @@ namespace Nektar
                         MeshPartitionSharedPtr vPartitioner =
                                 GetMeshPartitionFactory().CreateInstance(
                                                     vPartitionerName, vSession);
-                        vPartitioner->PartitionMesh(true);
+                        vPartitioner->PartitionMesh(nParts, true);
                         vPartitioner->WriteAllPartitions(vSession);
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
@@ -1603,7 +1750,11 @@ namespace Nektar
                 }
                 else
                 {
-                    m_xmlDoc = MergeDoc(m_filenames);
+                    // Need to load mesh on non-root processes.
+                    if (!isRoot)
+                    {
+                        m_xmlDoc = MergeDoc(m_filenames);
+                    }
 
                     // Partitioner now operates in parallel
                     // Each process receives partitioning over interconnect
@@ -1611,12 +1762,12 @@ namespace Nektar
                     MeshPartitionSharedPtr vPartitioner =
                                 GetMeshPartitionFactory().CreateInstance(
                                                     vPartitionerName, vSession);
-                    vPartitioner->PartitionMesh(false);
+                    vPartitioner->PartitionMesh(nParts, false);
                     vPartitioner->WriteLocalPartition(vSession);
                     vPartitioner->GetCompositeOrdering(m_compOrder);
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
 
-                    if (DefinesCmdLineArgument("part-info"))
+                    if (DefinesCmdLineArgument("part-info") && isRoot)
                     {
                         vPartitioner->PrintPartInfo(std::cout);
                     }
@@ -1630,27 +1781,23 @@ namespace Nektar
                 fs::path    pFilename(pad.str());
                 fs::path fullpath = pdirname / pFilename;
 
-                m_filename = PortablePath(fullpath);
+                std::string vFilename = PortablePath(fullpath);
 
                 if (m_xmlDoc)
                 {
                     delete m_xmlDoc;
                 }
-                m_xmlDoc = new TiXmlDocument(m_filename);
+                m_xmlDoc = new TiXmlDocument(vFilename);
 
                 ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
-                bool loadOkay = m_xmlDoc->LoadFile(m_filename);
-                ASSERTL0(loadOkay, "Unable to load file: " + m_filename      + 
+                bool loadOkay = m_xmlDoc->LoadFile(vFilename);
+                ASSERTL0(loadOkay, "Unable to load file: " + vFilename       +
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
             }
             else
             {
-                if (m_xmlDoc)
-                {
-                    delete m_xmlDoc;
-                }
                 m_xmlDoc = MergeDoc(m_filenames);
             }
         }
@@ -1667,9 +1814,10 @@ namespace Nektar
         {
             if (m_comm->GetSize() > 1)
             {
-                int nProcZ = 1;
-                int nProcY = 1;
-                int nProcX = 1;
+                int nProcZ  = 1;
+                int nProcY  = 1;
+                int nProcX  = 1;
+                int nStripZ = 1;
                 if (DefinesCmdLineArgument("npx")) {
                     nProcX = GetCmdLineArgument<int>("npx");
                 }
@@ -1679,25 +1827,29 @@ namespace Nektar
                 if (DefinesCmdLineArgument("npz")) {
                     nProcZ = GetCmdLineArgument<int>("npz");
                 }
-
+                if (DefinesCmdLineArgument("nsz")) {
+                    nStripZ = GetCmdLineArgument<int>("nsz");
+                }
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0,
                          "Cannot exactly partition using PROC_Z value.");
                 ASSERTL0(nProcZ % nProcY == 0,
                          "Cannot exactly partition using PROC_Y value.");
                 ASSERTL0(nProcY % nProcX == 0,
                          "Cannot exactly partition using PROC_X value.");
-                
+
                 // Number of processes associated with the spectral method
                 int nProcSm  = nProcZ * nProcY * nProcX;
-				
+
                 // Number of processes associated with the spectral element
                 // method.
                 int nProcSem = m_comm->GetSize() / nProcSm;
-                
+
                 m_comm->SplitComm(nProcSm,nProcSem);
-                m_comm->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ);
+                m_comm->GetColumnComm()->SplitComm(nProcZ/nStripZ,nStripZ);
                 m_comm->GetColumnComm()->GetColumnComm()->SplitComm(
-                    nProcX,nProcY);
+                                            (nProcY*nProcX),nProcZ/nStripZ);
+                m_comm->GetColumnComm()->GetColumnComm()->GetColumnComm()
+                                            ->SplitComm(nProcX,nProcY);
             }
         }
 
@@ -1730,9 +1882,11 @@ namespace Nektar
                 // between definitions.
                 while (parameter)
                 {
+                    stringstream tagcontent;
+                    tagcontent << *parameter;
                     TiXmlNode *node = parameter->FirstChild();
 
-                    while (node && node->Type() != TiXmlNode::TEXT)
+                    while (node && node->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         node = node->NextSibling();
                     }
@@ -1747,9 +1901,10 @@ namespace Nektar
                         }
                         catch (...)
                         {
-                            ASSERTL0(false, "Syntax error. "
-                                    "File: '" + m_filename + "', line: "
-                                    + boost::lexical_cast<string>(node->Row()));
+                            ASSERTL0(false, "Syntax error in parameter "
+                                     "expression '" + line 
+                                     + "' in XML element: \n\t'"
+                                     + tagcontent.str() + "'");
                         }
 
                         // We want the list of parameters to have their RHS
@@ -1768,7 +1923,8 @@ namespace Nektar
                             {
                                 ASSERTL0(false, 
                                          "Error evaluating parameter expression"
-                                         " '" + rhs + "'." );
+                                         " '" + rhs + "' in XML element: \n\t'"
+                                         + tagcontent.str() + "'");
                             }
                             m_exprEvaluator.SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
@@ -1806,17 +1962,17 @@ namespace Nektar
 
                 while (solverInfo)
                 {
+                    std::stringstream tagcontent;
+                    tagcontent << *solverInfo;
                     // read the property name
                     ASSERTL0(solverInfo->Attribute("PROPERTY"),
                              "Missing PROPERTY attribute in solver info "
-                             "section. File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(solverInfo->Row()));
+                             "XML element: \n\t'" + tagcontent.str() + "'");
                     std::string solverProperty = 
                         solverInfo->Attribute("PROPERTY");
                     ASSERTL0(!solverProperty.empty(),
-                             "Solver info properties must have a non-empty "
-                             "name. File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(solverInfo->Row()));
+                             "PROPERTY attribute must be non-empty in XML "
+                             "element: \n\t'" + tagcontent.str() + "'");
 
                     // make sure that solver property is capitalised
                     std::string solverPropertyUpper =
@@ -1824,14 +1980,12 @@ namespace Nektar
 
                     // read the value
                     ASSERTL0(solverInfo->Attribute("VALUE"),
-                            "Missing VALUE attribute in solver info section. "
-                            "File: '" + m_filename + "', line: "
-                            + boost::lexical_cast<string>(solverInfo->Row()));
+                            "Missing VALUE attribute in solver info "
+                            "XML element: \n\t'" + tagcontent.str() + "'");
                     std::string solverValue    = solverInfo->Attribute("VALUE");
                     ASSERTL0(!solverValue.empty(),
-                             "Solver info properties must have a non-empty "
-                             "value. File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(solverInfo->Row()));
+                             "VALUE attribute must be non-empty in XML "
+                             "element: \n\t'" + tagcontent.str() + "'");
 
                     EnumMapList::const_iterator propIt = 
                         GetSolverInfoEnums().find(solverPropertyUpper);
@@ -1841,9 +1995,7 @@ namespace Nektar
                             propIt->second.find(solverValue);
                         ASSERTL0(valIt != propIt->second.end(),
                                  "Value '" + solverValue + "' is not valid for "
-                                 "property '" + solverProperty + "'. File: '" +
-                                 m_filename + "', line: " + boost::lexical_cast<
-                                     string>(solverInfo->Row()));
+                                 "property '" + solverProperty + "'");
                     }
 
                     // Set Variable
@@ -1897,22 +2049,24 @@ namespace Nektar
 
             while (VarInfo)
             {
+                std::stringstream tagcontent;
+                tagcontent << *VarInfo;
                 ASSERTL0(VarInfo->Attribute("VAR"),
-                         "Missing VAR in attribute of GobalSysSolnInfo section."
-                         "File: '" + m_filename + ", line: " +
-                         boost::lexical_cast<string>(GlobalSys->Row()));
+                         "Missing VAR attribute in GobalSysSolnInfo XML "
+                         "element: \n\t'" + tagcontent.str() + "'");
 
                 std::string VarList = VarInfo->Attribute("VAR");
+                ASSERTL0(!VarList.empty(),
+                         "VAR attribute must be non-empty in XML element:\n\t'"
+                         + tagcontent.str() + "'");
 
                 // generate a list of variables.
                 std::vector<std::string> varStrings;
                 bool valid = ParseUtils::GenerateOrderedStringVector(
                                                 VarList.c_str(),varStrings);
 
-                ASSERTL0(valid,"Unable to process list of variable in "
-                               "GlobalSysSolnInfo data, File '" + m_filename +
-                               ", line: " +
-                               boost::lexical_cast<string>(GlobalSys->Row()));
+                ASSERTL0(valid,"Unable to process list of variable in XML "
+                               "element \n\t'" + tagcontent.str() + "'");
 
                 if(varStrings.size())
                 {
@@ -1920,21 +2074,23 @@ namespace Nektar
 
                     while (SysSolnInfo)
                     {
+                        tagcontent.clear();
+                        tagcontent << *SysSolnInfo;
                         // read the property name
                         ASSERTL0(SysSolnInfo->Attribute("PROPERTY"),
                                  "Missing PROPERTY attribute in "
-                                 "GlobalSysSolnInfo section. File: '" +
-                                 m_filename + "', line: " +
-                                 boost::lexical_cast<string>(VarInfo->Row()));
+                                 "GlobalSysSolnInfo for variable(s) '"
+                                 + VarList + "' in XML element: \n\t'" 
+                                 + tagcontent.str() + "'");
 
                         std::string SysSolnProperty =
                             SysSolnInfo->Attribute("PROPERTY");
 
                         ASSERTL0(!SysSolnProperty.empty(),
                                  "GlobalSysSolnIno properties must have a "
-                                 "non-empty name for variable(s) : '" +
-                                 VarList + ". File: '" + m_filename + ", line: "
-                                 + boost::lexical_cast<string>(VarInfo->Row()));
+                                 "non-empty name for variable(s) : '"
+                                 + VarList + "' in XML element: \n\t'"
+                                 + tagcontent.str() + "'");
 
                         // make sure that solver property is capitalised
                         std::string SysSolnPropertyUpper =
@@ -1943,16 +2099,17 @@ namespace Nektar
                         // read the value
                         ASSERTL0(SysSolnInfo->Attribute("VALUE"),
                                  "Missing VALUE attribute in GlobalSysSolnInfo "
-                                 "section. File: '" + m_filename + "', line: "
-                                 + boost::lexical_cast<string>(VarInfo->Row()));
+                                 "for variable(s) '" + VarList
+                                 + "' in XML element: \n\t"
+                                 + tagcontent.str() + "'");
 
                         std::string SysSolnValue =
                                             SysSolnInfo->Attribute("VALUE");
                         ASSERTL0(!SysSolnValue.empty(),
                                  "GlobalSysSolnInfo properties must have a "
-                                 "non-empty value. File: '" + m_filename +
-                                 "', line: "
-                                 + boost::lexical_cast<string>(VarInfo->Row()));
+                                 "non-empty value for variable(s) '"
+                                 + VarList + "' in XML element: \n\t'"
+                                 + tagcontent.str() + "'");
 
                         // Store values under variable map.
                         for(int i = 0; i < varStrings.size(); ++i)
@@ -2001,83 +2158,6 @@ namespace Nektar
             }
         }
 
-        /**
-         *
-         */
-        void SessionReader::ReadGeometricInfo(TiXmlElement *geometry)
-        {
-            m_geometricInfo.clear();
-
-            if (!geometry)
-            {
-                return;
-            }
-
-            TiXmlElement *geometricInfoElement = 
-                geometry->FirstChildElement("GEOMINFO");
-
-            if (geometricInfoElement)
-            {
-                TiXmlElement *geometricInfo = 
-                    geometricInfoElement->FirstChildElement("I");
-
-                while (geometricInfo)
-                {
-                    ASSERTL0(geometricInfo->Attribute("PROPERTY"),
-                             "Missing PROPERTY attribute in geometric info "
-                             "section. File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-                    std::string geometricProperty = 
-                        geometricInfo->Attribute("PROPERTY");
-                    ASSERTL0(!geometricProperty.empty(),
-                             "Geometric info properties must have a non-empty "
-                             "name. File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-
-                    // make sure that geometric property is capitalised
-                    boost::to_upper(geometricProperty);
-
-                    // check the property has not already been defined
-                    GeometricInfoMap::iterator geometricInfoIter = 
-                        m_geometricInfo.find(geometricProperty);
-                    ASSERTL0(geometricInfoIter == m_geometricInfo.end(),
-                             "geometricInfo value: " + geometricProperty +
-                             " already specified.");
-
-                    // read the property value
-                    ASSERTL0(geometricInfo->Attribute("VALUE"),
-                             "Missing VALUE attribute in geometric info section"
-                             ". File: '" + m_filename + ", line: " + 
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-                    std::string geometricValue = 
-                        geometricInfo->Attribute("VALUE");
-                    ASSERTL0(!geometricValue.empty(),
-                             "Geometric info properties must have a non-empty "
-                             "value. File: '" + m_filename + ", line: " +
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-
-                    // Set Variable
-                    m_geometricInfo[geometricProperty] = geometricValue;
-                    geometricInfo = geometricInfo->NextSiblingElement("I");
-                }
-            }
-
-            if (m_verbose && m_geometricInfo.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Geometric Info:" << endl;
-                    GeometricInfoMap::iterator x;
-                    for (x  = m_geometricInfo.begin();
-                         x != m_geometricInfo.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
-            }
-        }
-
 
         /**
          *
@@ -2100,25 +2180,23 @@ namespace Nektar
 
                 while (expr)
                 {
+                    stringstream tagcontent;
+                    tagcontent << *expr;
                     ASSERTL0(expr->Attribute("NAME"),
-                             "Missing NAME attribute in expression definition. "
-                             "File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Missing NAME attribute in expression "
+                             "definition: \n\t'" + tagcontent.str() + "'");
                     std::string nameString = expr->Attribute("NAME");
                     ASSERTL0(!nameString.empty(),
-                             "Expressions must have a non-empty name. "
-                             "File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Expressions must have a non-empty name: \n\t'"
+                             + tagcontent.str() + "'");
 
                     ASSERTL0(expr->Attribute("VALUE"),
-                             "Missing VALUE attribute in expression definition."
-                             " File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Missing VALUE attribute in expression "
+                             "definition: \n\t'" + tagcontent.str() + "'");
                     std::string valString = expr->Attribute("VALUE");
                     ASSERTL0(!valString.empty(),
-                             "Expressions must have a non-empty value. "
-                             "File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Expressions must have a non-empty value: \n\t'"
+                            + tagcontent.str() + "'");
 
                     ExpressionMap::iterator exprIter
                                             = m_expressions.find(nameString);
@@ -2160,6 +2238,9 @@ namespace Nektar
 
                 while (varElement)
                 {
+                    stringstream tagcontent;
+                    tagcontent << *varElement;
+
                     /// All elements are of the form: "<V ID="#"> name = value
                     /// </V>", with ? being the element type.
                     nextVariableNumber++;
@@ -2167,20 +2248,19 @@ namespace Nektar
                     int i;
                     int err = varElement->QueryIntAttribute("ID", &i);
                     ASSERTL0(err == TIXML_SUCCESS,
-                             "Variables must have a unique ID number attribute."
-                             " File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(varElement->Row()));
+                             "Variables must have a unique ID number attribute "
+                             "in XML element: \n\t'" + tagcontent.str() + "'");
                     ASSERTL0(i == nextVariableNumber,
                              "ID numbers for variables must begin with zero and"
-                             " be sequential. File: '"+m_filename+"', line: " +
-                             boost::lexical_cast<string>(varElement->Row()));
+                             " be sequential in XML element: \n\t'"
+                             + tagcontent.str() + "'");
 
                     TiXmlNode* varChild = varElement->FirstChild();
                     // This is primarily to skip comments that may be present.
                     // Comments appear as nodes just like elements.  We are
                     // specifically looking for text in the body of the
                     // definition.
-                    while(varChild && varChild->Type() != TiXmlNode::TEXT)
+                    while(varChild && varChild->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         varChild = varChild->NextSibling();
                     }
@@ -2188,9 +2268,9 @@ namespace Nektar
                     ASSERTL0(varChild,
                              "Unable to read variable definition body for "
                              "variable with ID "
-                             + boost::lexical_cast<string>(i) + ". "
-                             " File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(varElement->Row()));
+                             + boost::lexical_cast<string>(i) 
+                             + " in XML element: \n\t'"
+                             + tagcontent.str() + "'");
                     std::string variableName = varChild->ToText()->ValueStr();
 
                     std::istringstream variableStrm(variableName);
@@ -2198,10 +2278,10 @@ namespace Nektar
 
                     ASSERTL0(std::find(m_variables.begin(), m_variables.end(), 
                                        variableName) == m_variables.end(),
-                             "Variable with ID "+boost::lexical_cast<string>(i)
-                             + " has already been defined. "
-                             " File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(varElement->Row()));
+                             "Variable with ID "
+                             + boost::lexical_cast<string>(i) 
+                             + " in XML element \n\t'" + tagcontent.str()
+                             + "'\nhas already been defined.");
 
                     m_variables.push_back(variableName);
 
@@ -2230,16 +2310,17 @@ namespace Nektar
             TiXmlElement *function = conditions->FirstChildElement("FUNCTION");
             while (function)
             {
+                stringstream tagcontent;
+                tagcontent << *function;
+
                 // Every function must have a NAME attribute
                 ASSERTL0(function->Attribute("NAME"),
-                         "Functions must have a NAME attribute defined. "
-                         "File: '" + m_filename + "', line: "
-                         + boost::lexical_cast<std::string>(function->Row()));
+                         "Functions must have a NAME attribute defined in XML "
+                         "element: \n\t'" + tagcontent.str() + "'");
                 std::string functionStr = function->Attribute("NAME");
                 ASSERTL0(!functionStr.empty(),
-                         "Functions must have a non-empty name. "
-                         "File: '" + m_filename + "', line: "
-                         + boost::lexical_cast<string>(function->Row()));
+                         "Functions must have a non-empty name in XML "
+                         "element: \n\t'" + tagcontent.str() + "'");
 
                 // Store function names in uppercase to remain case-insensitive.
                 boost::to_upper(functionStr);
@@ -2284,6 +2365,7 @@ namespace Nektar
                     }
 
                     // Parse list of variables
+                    std::vector<std::string> varSplit;
                     std::vector<unsigned int> domainList;
                     ParseUtils::GenerateSeqVector(domainStr.c_str(), domainList);
 
@@ -2334,19 +2416,45 @@ namespace Nektar
                                  "attribute of function '" + functionStr
                                  + "'.");
 
+                        std::vector<std::string> fSplit;
+                        boost::split(fSplit, filenameStr, boost::is_any_of(":"));
+
+                        ASSERTL0(fSplit.size() == 1 || fSplit.size() == 2,
+                                 "Incorrect filename specification in function "
+                                 + functionStr + "'. "
+                                 "Specify variables inside file as: "
+                                 "filename:var1,var2");
+
                         // set the filename
-                        funcDef.m_filename = filenameStr;
+                        funcDef.m_filename = fSplit[0];
+
+                        if (fSplit.size() == 2)
+                        {
+                            ASSERTL0(variableList[0] != "*",
+                                     "Filename variable mapping not valid "
+                                     "when using * as a variable inside "
+                                     "function '" + functionStr + "'.");
+
+                            boost::split(
+                                varSplit, fSplit[1], boost::is_any_of(","));
+                            ASSERTL0(varSplit.size() == variableList.size(),
+                                     "Filename variables should contain the "
+                                     "same number of variables defined in "
+                                     "VAR in function " + functionStr + "'.");
+                        }
                     }
 
                     // Nothing else supported so throw an error
                     else
                     {
+                        stringstream tagcontent;
+                        tagcontent << *variable;
+
                         ASSERTL0(false,
                                 "Identifier " + conditionType + " in function "
                                 + std::string(function->Attribute("NAME"))
-                                + " is not recognised. "
-                                "File: '" + m_filename + "', line: "
-                                + boost::lexical_cast<string>(variable->Row()));
+                                + " is not recognised in XML element: \n\t'"
+                                + tagcontent.str() + "'");
                     }
 
 
@@ -2366,8 +2474,17 @@ namespace Nektar
                                      + boost::lexical_cast<std::string>(domainList[j]) 
                                      + "' in function '" + functionStr + "'. "
                                      "Expression has already been defined.");
-                            
-                            functionVarMap[key] = funcDef;
+
+                            if (varSplit.size() > 0)
+                            {
+                                FunctionVariableDefinition funcDef2 = funcDef;
+                                funcDef2.m_fileVariable = varSplit[i];
+                                functionVarMap[key] = funcDef2;
+                            }
+                            else
+                            {
+                                functionVarMap[key] = funcDef;
+                            }
                         }
                     }
                     

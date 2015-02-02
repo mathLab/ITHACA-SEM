@@ -2,7 +2,7 @@
 <test>
     <description>HDG Helmholtz 2D CG with P=7</description>
     <executable>HDGHelmholtz2D</executable>
-    <parameters>Helmholtz2D_P7_AllBCs.xml</parameters>
+    <parameters>--use-metis Helmholtz2D_P7_AllBCs.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Helmholtz2D_P7_AllBCs.xml</file>

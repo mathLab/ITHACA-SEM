@@ -40,21 +40,21 @@
 namespace Nektar
 {
     string EulerADCFE::className =
-        SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "EulerADCFE", EulerADCFE::create,
-            "Euler equations in conservative variables with "
-            "artificial diffusion.");
-
+    SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+        "EulerADCFE", EulerADCFE::create,
+        "Euler equations in conservative variables with "
+        "artificial diffusion.");
+    
     EulerADCFE::EulerADCFE(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : CompressibleFlowSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+    : CompressibleFlowSystem(pSession)
     {
     }
-
+    
     void EulerADCFE::v_InitObject()
     {
         CompressibleFlowSystem::v_InitObject();
-
+        
         if (m_shockCaptureType == "Smooth")
         {
             ASSERTL0(m_fields.num_elements() == m_spacedim + 3,
@@ -62,10 +62,10 @@ namespace Nektar
                      "make sure you have added eps to variable list.");
             m_smoothDiffusion = true;
         }
-
+        
         m_diffusion->SetArtificialDiffusionVector(
             &EulerADCFE::GetArtificialDynamicViscosity, this);
-
+        
         if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
         {
             std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
@@ -83,50 +83,50 @@ namespace Nektar
         {
             m_problemType = (ProblemType)0;
         }
-
+        
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs    (&EulerADCFE::
-                                    DoOdeRhs, this);
+            DoOdeRhs, this);
             m_ode.DefineProjection(&EulerADCFE::
-                                    DoOdeProjection, this);
+            DoOdeProjection, this);
         }
         else
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
     }
-
+    
     EulerADCFE::~EulerADCFE()
     {
-
+        
     }
-
+    
     void EulerADCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
         SolverUtils::AddSummaryItem(
             s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
-
+    
     void EulerADCFE::v_SetInitialConditions(
         NekDouble initialtime, 
         bool      dumpInitialConditions,
         const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
-
+        
         if(dumpInitialConditions)
         {
             // Dump initial conditions to file
             Checkpoint_Output(0);
         }
     }
-
+    
     void EulerADCFE::DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
@@ -135,14 +135,15 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-        
+
         for (i = 0; i < nvariables; ++i)
         {
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
         
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                                        outarrayAdv, m_time);
         
         for (i = 0; i < nvariables; ++i)
         {
@@ -222,22 +223,22 @@ namespace Nektar
             }
         }
     }
-
+    
     void EulerADCFE::DoOdeProjection(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
-
+        
         switch(m_projectionType)
         {
             case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-
+                
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -264,7 +265,7 @@ namespace Nektar
         std::string varName;
         int nvariables = m_fields.num_elements();
         int cnt        = 0;
-    
+        
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
@@ -280,9 +281,9 @@ namespace Nektar
                 SpatialDomains::eWallViscous)
             {
                 ASSERTL0(false, "WallViscous is a wrong bc for the "
-                         "Euler equations");
+                "Euler equations");
             }
-    
+            
             // Symmetric Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eSymmetry)
@@ -303,7 +304,7 @@ namespace Nektar
             {
                 ExtrapOrder0BC(n, cnt, inarray);
             }
-    
+            
             // Time Dependent Boundary Condition (specified in meshfile)
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() 
                 == SpatialDomains::eTimeDependent)
@@ -314,7 +315,7 @@ namespace Nektar
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
             }
-    
+            
             cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }

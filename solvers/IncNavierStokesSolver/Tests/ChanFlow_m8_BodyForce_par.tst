@@ -2,7 +2,7 @@
 <test>
     <description>Channel Flow P=8 BodyForce</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>ChanFlow_m8_BodyForce.xml</parameters>
+    <parameters>--use-metis ChanFlow_m8_BodyForce.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">ChanFlow_m8_BodyForce.xml</file>

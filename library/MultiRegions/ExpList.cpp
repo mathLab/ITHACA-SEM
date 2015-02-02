@@ -1235,39 +1235,50 @@ namespace Nektar
             {
                 SpatialDomains::PointGeomSharedPtr v;
                 SpatialDomains::PointGeom w;
-                NekDouble x, y, z;
+                NekDouble dist = 0.0;
 
                 // Scan all elements and store those which may contain the point
                 for (int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
+                                                              locCoords,
                                                               tol, resid))
                     {
-                        v = m_graph->GetVertex((*m_exp)[i]->GetGeom()->GetVid(0));
-
                         w.SetX(gloCoords[0]);
                         w.SetY(gloCoords[1]);
                         w.SetZ(gloCoords[2]);
-                        v->GetCoords(x,y,z);
 
-                        elmtIdDist.push_back(std::pair<int, NekDouble>(i, v->dist(w)));
+                        // Find closest vertex
+                        for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j) {
+                            v = m_graph->GetVertex(
+                                            (*m_exp)[i]->GetGeom()->GetVid(j));
+                            if (j == 0 || dist > v->dist(w))
+                            {
+                                dist = v->dist(w);
+                            }
+                        }
+                        elmtIdDist.push_back(
+                                    std::pair<int, NekDouble>(i, dist));
                     }
                 }
 
                 // Find nearest element
                 if (!elmtIdDist.empty())
                 {
-                    NekDouble   min_d  = elmtIdDist[0].first;
-                    int         min_id = elmtIdDist[0].second;
+                    int         min_id = elmtIdDist[0].first;
+                    NekDouble   min_d  = elmtIdDist[0].second;
 
                     for (int i = 1; i < elmtIdDist.size(); ++i)
                     {
                         if (elmtIdDist[i].second < min_d) {
-                            min_d = elmtIdDist[i].second;
                             min_id = elmtIdDist[i].first;
+                            min_d = elmtIdDist[i].second;
                         }
                     }
 
+                    // retrieve local coordinate of point
+                    (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
+                                                          locCoords);
                     return min_id;
                 }
                 else 
@@ -1356,7 +1367,7 @@ namespace Nektar
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
-        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotHeader(std::ostream &outfile,
                                            std::string    var)
         {
             int coordim  = GetExp(0)->GetCoordim();
@@ -1390,7 +1401,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotZone(std::ostream &outfile, int expansion)
         {
             int i, j;
             int coordim = GetCoordim(0);
@@ -1484,7 +1495,7 @@ namespace Nektar
             }
         }
 
-        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotConnectivity(std::ostream &outfile,
                                                  int expansion)
         {
             int i,j,k,l;
@@ -1561,7 +1572,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotField(std::ostream &outfile, int expansion)
         {
             if (expansion == -1)
             {
@@ -1595,7 +1606,7 @@ namespace Nektar
             }
         }
 
-        void ExpList::WriteVtkHeader(std::ofstream &outfile)
+        void ExpList::WriteVtkHeader(std::ostream &outfile)
         {
             outfile << "<?xml version=\"1.0\"?>" << endl;
             outfile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" "
@@ -1603,24 +1614,29 @@ namespace Nektar
             outfile << "  <UnstructuredGrid>" << endl;
         }
 
-        void ExpList::WriteVtkFooter(std::ofstream &outfile)
+        void ExpList::WriteVtkFooter(std::ostream &outfile)
         {
             outfile << "  </UnstructuredGrid>" << endl;
             outfile << "</VTKFile>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             ASSERTL0(false, "Routine not implemented for this expansion.");
         }
 
-        void ExpList::WriteVtkPieceFooter(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
+        {
+            ASSERTL0(false, "Routine not implemented for this expansion.");
+        }
+
+        void ExpList::WriteVtkPieceFooter(std::ostream &outfile, int expansion)
         {
             outfile << "      </PointData>" << endl;
             outfile << "    </Piece>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+        void ExpList::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
             int i;
@@ -1877,7 +1893,10 @@ namespace Nektar
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
         {
-            int startenum, endenum, s;
+            int startenum = (int) LibUtilities::eSegment;
+            int endenum   = (int) LibUtilities::eHexahedron;
+            int s         = 0;
+            LibUtilities::ShapeType shape;
 
             ASSERTL1(NumHomoDir == HomoBasis.num_elements(),"Homogeneous basis is not the same length as NumHomoDir");
             ASSERTL1(NumHomoDir == HomoLen.size(),"Homogeneous length vector is not the same length as NumHomDir");
@@ -1901,7 +1920,6 @@ namespace Nektar
 
             for(s = startenum; s <= endenum; ++s)
             {
-                LibUtilities::ShapeType               shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
@@ -1911,14 +1929,15 @@ namespace Nektar
                 bool UniOrder = true;
                 int n;
 
+                shape = (LibUtilities::ShapeType) s;
+
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[i]->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
+                    if((*m_exp)[i]->GetGeom()->GetShapeType() == shape)
                     {
                         elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
                         if(first)
                         {
-                            shape = (LibUtilities::ShapeType) s;
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());

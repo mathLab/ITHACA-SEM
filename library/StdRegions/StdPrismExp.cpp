@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Prismatic routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,25 +41,25 @@ namespace Nektar
     namespace StdRegions
     {
 
-        StdPrismExp::StdPrismExp() // Deafult construct of standard expansion directly called. 
+        StdPrismExp::StdPrismExp() // Deafult construct of standard expansion directly called.
         {
         }
 
-        StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba, 
-                                 const LibUtilities::BasisKey &Bb, 
-                                 const LibUtilities::BasisKey &Bc) 
+        StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba,
+                                 const LibUtilities::BasisKey &Bb,
+                                 const LibUtilities::BasisKey &Bc)
             : StdExpansion  (LibUtilities::StdPrismData::getNumberOfCoefficients(
-                                 Ba.GetNumModes(), 
-                                 Bb.GetNumModes(), 
+                                 Ba.GetNumModes(),
+                                 Bb.GetNumModes(),
                                  Bc.GetNumModes()),
                              3,Ba,Bb,Bc),
               StdExpansion3D(LibUtilities::StdPrismData::getNumberOfCoefficients(
-                                 Ba.GetNumModes(), 
-                                 Bb.GetNumModes(), 
-                                 Bc.GetNumModes()), 
+                                 Ba.GetNumModes(),
+                                 Bb.GetNumModes(),
+                                 Bc.GetNumModes()),
                              Ba,Bb,Bc)
         {
-            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), 
+            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(),
                      "order in 'a' direction is higher than order in 'c' direction");
         }
 
@@ -72,19 +72,19 @@ namespace Nektar
 
         // Destructor
         StdPrismExp::~StdPrismExp()
-        {   
-        } 
+        {
+        }
 
         //---------------------------------------
         // Differentiation Methods
         //---------------------------------------
 
         /**
-         * \brief Calculate the derivative of the physical points 
-         *  
+         * \brief Calculate the derivative of the physical points
+         *
          * The derivative is evaluated at the nodal physical points.
          * Derivatives with respect to the local Cartesian coordinates.
-         *  
+         *
          * \f$\begin{Bmatrix} \frac {\partial} {\partial \xi_1} \\ \frac
          * {\partial} {\partial \xi_2} \\ \frac {\partial} {\partial \xi_3}
          * \end{Bmatrix} = \begin{Bmatrix} \frac 2 {(1-\eta_3)} \frac \partial
@@ -93,8 +93,8 @@ namespace Nektar
          * \bar \eta_1} + \frac {\partial} {\partial \eta_3} \end{Bmatrix}\f$
          */
 
-        void StdPrismExp::v_PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
-                                      Array<OneD, NekDouble> &out_dxi1, 
+        void StdPrismExp::v_PhysDeriv(const Array<OneD, const NekDouble>& u_physical,
+                                      Array<OneD, NekDouble> &out_dxi1,
                                       Array<OneD, NekDouble> &out_dxi2,
                                       Array<OneD, NekDouble> &out_dxi3 )
         {
@@ -115,7 +115,7 @@ namespace Nektar
             bool Do_3 = (out_dxi3.num_elements() > 0)? true:false;
 
             // out_dXi2 is just a tensor derivative so is just passed through
-            if(Do_3) 
+            if(Do_3)
             {
                 PhysTensorDeriv(u_physical, dEta_bar1, out_dxi2, out_dxi3);
             }
@@ -123,12 +123,12 @@ namespace Nektar
             {
                 PhysTensorDeriv(u_physical, dEta_bar1, out_dxi2, NullNekDouble1DArray);
             }
-            else // case if just require 2nd direction 
+            else // case if just require 2nd direction
             {
-                PhysTensorDeriv(u_physical, NullNekDouble1DArray, 
+                PhysTensorDeriv(u_physical, NullNekDouble1DArray,
                                 out_dxi2, NullNekDouble1DArray);
             }
-            
+
             if(Do_1)
             {
                 for (k = 0; k < Qz; ++k)
@@ -137,10 +137,10 @@ namespace Nektar
                                 &out_dxi1[0] + k*Qx*Qy,1);
                 }
             }
-            
+
             if(Do_3)
             {
-                // divide dEta_Bar1 by (1-eta_z) 
+                // divide dEta_Bar1 by (1-eta_z)
                 for (k = 0; k < Qz; ++k)
                 {
                     Vmath::Smul(Qx*Qy, 1.0/(1.0-eta_z[k]),&dEta_bar1[0]+k*Qx*Qy,1,
@@ -152,7 +152,7 @@ namespace Nektar
                 {
                     Vmath::Svtvp(Qz*Qy,1.0+eta_x[i],&dEta_bar1[0]+i,Qx,
                                  &out_dxi3[0]+i,Qx,&out_dxi3[0]+i,Qx);
-                }                
+                }
 
             }
         }
@@ -169,21 +169,21 @@ namespace Nektar
                                 NullNekDouble1DArray);
                     break;
                 }
-                
+
                 case 1:
                 {
                     v_PhysDeriv(inarray, NullNekDouble1DArray, outarray,
                                 NullNekDouble1DArray);
                     break;
                 }
-                
+
                 case 2:
                 {
                     v_PhysDeriv(inarray, NullNekDouble1DArray,
                                 NullNekDouble1DArray, outarray);
                     break;
                 }
-                
+
                 default:
                 {
                     ASSERTL1(false,"input dir is out of range");
@@ -192,25 +192,25 @@ namespace Nektar
             }
         }
 
-        void StdPrismExp::v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
+        void StdPrismExp::v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                                Array<OneD,       NekDouble>& out_d0,
                                                Array<OneD,       NekDouble>& out_d1,
                                                Array<OneD,       NekDouble>& out_d2)
         {
             StdPrismExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
-        
+
         void StdPrismExp::v_StdPhysDeriv(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
                                             Array<OneD,       NekDouble>& outarray)
         {
             StdPrismExp::v_PhysDeriv(dir, inarray, outarray);
         }
-        
+
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
+
 	/**
          * @note 'r' (base[2]) runs fastest in this element.
          *
@@ -237,7 +237,7 @@ namespace Nektar
          * u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_{p}^a
          *  (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).  \f$
          */
-        void StdPrismExp::v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
+        void StdPrismExp::v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD,       NekDouble>& outarray)
         {
             ASSERTL1((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
@@ -248,7 +248,7 @@ namespace Nektar
                      (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
                      "Basis[2] is not a general tensor type");
 
-            if(m_base[0]->Collocation() && 
+            if(m_base[0]->Collocation() &&
                m_base[1]->Collocation() &&
                m_base[2]->Collocation())
             {
@@ -263,17 +263,17 @@ namespace Nektar
             }
         }
 
-        void StdPrismExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
+        void StdPrismExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                                   Array<OneD,       NekDouble>& outarray)
         {
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
-            
+
             Array<OneD, NekDouble> wsp(nquad2*order1*order0 +
                                        nquad1*nquad2*order0);
-            
+
             BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
                                   m_base[1]->GetBdata(),
                                   m_base[2]->GetBdata(),
@@ -291,7 +291,7 @@ namespace Nektar
             bool                                doCheckCollDir0,
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
-        { 
+        {
             int i, mode;
             int nquad0    = m_base[0]->GetNumPoints();
             int nquad1    = m_base[1]->GetNumPoints();
@@ -304,13 +304,13 @@ namespace Nektar
 
             for (i = mode = 0; i < nummodes0; ++i)
             {
-                Blas::Dgemm('N', 'N', nquad2, nummodes1, nummodes2-i, 
-                            1.0, base2.get()   + mode*nquad2,        nquad2, 
-                                 inarray.get() + mode*nummodes1,     nummodes2-i, 
+                Blas::Dgemm('N', 'N', nquad2, nummodes1, nummodes2-i,
+                            1.0, base2.get()   + mode*nquad2,        nquad2,
+                                 inarray.get() + mode*nummodes1,     nummodes2-i,
                             0.0, tmp0.get()    + i*nquad2*nummodes1, nquad2);
                 mode += nummodes2-i;
             }
-            
+
             if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 for(i = 0; i < nummodes1; i++)
@@ -324,26 +324,26 @@ namespace Nektar
             {
                 Blas::Dgemm('N', 'T', nquad1, nquad2, nummodes1,
                             1.0, base1.get(),                     nquad1,
-                                 tmp0.get() + i*nquad2*nummodes1, nquad2, 
+                                 tmp0.get() + i*nquad2*nummodes1, nquad2,
                             0.0, tmp1.get() + i*nquad2*nquad1,    nquad1);
             }
 
-            Blas::Dgemm('N', 'T', nquad0, nquad2*nquad1, nummodes0, 
-                        1.0, base0.get(),    nquad0, 
-                             tmp1.get(),     nquad2*nquad1, 
+            Blas::Dgemm('N', 'T', nquad0, nquad2*nquad1, nummodes0,
+                        1.0, base0.get(),    nquad0,
+                             tmp1.get(),     nquad2*nquad1,
                         0.0, outarray.get(), nquad0);
         }
 
-	/** 
+	/**
          * \brief Forward transform from physical quadrature space stored in
          * \a inarray and evaluate the expansion coefficients and store in \a
          * outarray
-         *  
+         *
          *  Inputs:\n
          *  - \a inarray: array of physical quadrature points to be transformed
-         * 
+         *
          * Outputs:\n
-         *  - \a outarray: updated array of expansion coefficients. 
+         *  - \a outarray: updated array of expansion coefficients.
          */
         void StdPrismExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD,       NekDouble>& outarray)
@@ -353,23 +353,23 @@ namespace Nektar
             // Get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
-            
+
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
 
             out = (*matsys)*in;
         }
-        
-        
+
+
         //---------------------------------------
         // Inner product functions
         //---------------------------------------
-        
-        /** 
+
+        /**
          * \brief Calculate the inner product of inarray with respect to the
          * basis B=base0*base1*base2 and put into outarray:
-         * 
+         *
          * \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
          * \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2} \psi_{p}^{a}
          * (\bar \eta_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{pr}^{b} (\xi_{3k})
@@ -377,14 +377,14 @@ namespace Nektar
          * & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i}) \sum_{j=0}^{nq_1}
          * \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{pr}^b u(\bar
          * \eta_{1i},\xi_{2j},\xi_{3k}) J_{i,j,k} \end{array} \f$ \n
-         *  
+         *
          * where
          *
          * \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1)
          * \psi_{q}^a (\xi_2) \psi_{pr}^b (\xi_3) \f$ \n
-         * 
-         * which can be implemented as \n 
-         *  
+         *
+         * which can be implemented as \n
+         *
          * \f$f_{pr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pr}^b u(\bar
          * \eta_{1i},\xi_{2j},\xi_{3k}) J_{i,j,k} = {\bf B_3 U} \f$ \n \f$
          * g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pr}
@@ -413,7 +413,7 @@ namespace Nektar
                 StdPrismExp::v_IProductWRTBase_SumFac(inarray,outarray);
             }
         }
-        
+
         /**
          * Implementation of the local matrix inner product operation.
          */
@@ -440,16 +440,16 @@ namespace Nektar
 
             Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
-            
+
             MultiplyByQuadratureMetric(inarray,tmp);
-            
+
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                          m_base[1]->GetBdata(),
                                          m_base[2]->GetBdata(),
                                          tmp,outarray,wsp,
                                          true,true,true);
         }
-        
+
         void StdPrismExp::v_IProductWRTBase_SumFacKernel(
             const Array<OneD, const NekDouble>& base0,
             const Array<OneD, const NekDouble>& base1,
@@ -469,22 +469,22 @@ namespace Nektar
             const int order0 = m_base[0]->GetNumModes ();
             const int order1 = m_base[1]->GetNumModes ();
             const int order2 = m_base[2]->GetNumModes ();
-            
+
             int i, mode;
-            
-            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 + 
+
+            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 +
                                            nquad2*order0*order1,
                      "Insufficient workspace size");
-            
+
             Array<OneD, NekDouble> tmp0 = wsp;
             Array<OneD, NekDouble> tmp1 = wsp + nquad1*nquad2*order0;
-            
+
             // Inner product with respect to the '0' direction
-            Blas::Dgemm('T', 'N', nquad1*nquad2, order0, nquad0, 
+            Blas::Dgemm('T', 'N', nquad1*nquad2, order0, nquad0,
                         1.0, inarray.get(), nquad0,
                              base0.get(),   nquad0,
                         0.0, tmp0.get(),    nquad1*nquad2);
-            
+
             // Inner product with respect to the '1' direction
             Blas::Dgemm('T', 'N', nquad2*order0, order1, nquad1,
                         1.0, tmp0.get(),  nquad1,
@@ -500,7 +500,7 @@ namespace Nektar
                             0.0, outarray.get()+mode*order1, order2-i);
                 mode  += order2-i;
             }
-            
+
             // Fix top singular vertices; performs phi_{0,q,1} +=
             // phi_1(xi_1)*phi_q(xi_2)*phi_{01}*phi_r(xi_2).
             if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
@@ -509,13 +509,13 @@ namespace Nektar
                 {
                     mode = GetMode(0,i,1);
                     outarray[mode] += Blas::Ddot(
-                        nquad2, base2.get()+nquad2, 1, 
+                        nquad2, base2.get()+nquad2, 1,
                         tmp1.get()+i*order0*nquad2+nquad2, 1);
                 }
             }
         }
 
-        /** 
+        /**
          * \brief Inner product of \a inarray over region with respect to the
          * object's default expansion basis; output in \a outarray.
          */
@@ -533,7 +533,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             ASSERTL0(dir >= 0 && dir <= 2, "input dir is out of range");
-            
+
             int nq = GetTotPoints();
             MatrixType mtype;
 
@@ -563,7 +563,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             ASSERTL0(dir >= 0 && dir <= 2, "input dir is out of range");
-            
+
             int i;
             int order0  = m_base[0]->GetNumModes ();
             int order1  = m_base[1]->GetNumModes ();
@@ -583,7 +583,7 @@ namespace Nektar
             {
                 gfac0[i] = 0.5*(1+z0[i]);
             }
-            
+
             // Set up geometric factor: 2/(1-z2)
             for (i = 0; i < nquad2; ++i)
             {
@@ -628,19 +628,19 @@ namespace Nektar
                 case 2:
                 {
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
-                    
+
                     // Scale eta_1 derivative with gfac0.
                     for(i = 0; i < nquad1*nquad2; ++i)
                     {
                         Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
                     }
-                    
+
                     IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                                  m_base[1]->GetBdata(),
                                                  m_base[2]->GetBdata(),
                                                  tmp0,tmp1,wsp,
                                                  true,true,true);
-                    
+
                     MultiplyByQuadratureMetric(inarray, tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetBdata(),
@@ -653,12 +653,12 @@ namespace Nektar
                 }
             }
         }
-        
-        
+
+
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
 
 
         void StdPrismExp::v_LocCoordToLocCollapsed(
@@ -680,9 +680,9 @@ namespace Nektar
                 eta[2] = xi[2]; // eta_z = xi_z
                 eta[1] = xi[1]; //eta_y = xi_y
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
-            } 
+            }
         }
-                                          
+
         void StdPrismExp::v_GetCoords(Array<OneD, NekDouble>& xi_x,
                                       Array<OneD, NekDouble>& xi_y,
                                       Array<OneD, NekDouble>& xi_z)
@@ -723,18 +723,18 @@ namespace Nektar
         {
             return 6;
         }
-        
+
         int StdPrismExp::v_GetNedges() const
         {
             return 9;
         }
-        
+
         int StdPrismExp::v_GetNfaces() const
         {
             return 5;
         }
-        
-        /** 
+
+        /**
          * \brief Return Shape of region, using ShapeType enum list;
          * i.e. prism.
          */
@@ -742,7 +742,7 @@ namespace Nektar
         {
             return LibUtilities::ePrism;
         }
-        
+
         int StdPrismExp::v_NumBndryCoeffs() const
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
@@ -754,11 +754,11 @@ namespace Nektar
             ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            
+
             int P = m_base[0]->GetNumModes();
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
-            
+
             return LibUtilities::StdPrismData::
                                         getNumberOfBndCoefficients(P,Q,R);
         }
@@ -778,7 +778,7 @@ namespace Nektar
             int P = m_base[0]->GetNumModes()-1;
             int Q = m_base[1]->GetNumModes()-1;
             int R = m_base[2]->GetNumModes()-1;
-            
+
             return (P+1)*(Q+1)               // 1 rect. face on base
                 + 2*(Q+1)*(R+1)              // other 2 rect. faces
                 + 2*(R+1) + P*(1 + 2*R - P); // 2 tri. faces
@@ -787,7 +787,7 @@ namespace Nektar
         int StdPrismExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 8, "edge id is out of range");
-            
+
             if (i == 0 || i == 2)
             {
                 return GetBasisNumModes(0);
@@ -810,7 +810,7 @@ namespace Nektar
 
             return 2*P+3*Q+3*R;
 	}
-        
+
         int StdPrismExp::v_GetFaceNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -832,11 +832,11 @@ namespace Nektar
         int StdPrismExp::v_GetFaceIntNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
+
             int Pi = GetBasisNumModes(0) - 2;
             int Qi = GetBasisNumModes(1) - 2;
             int Ri = GetBasisNumModes(2) - 2;
-            
+
             if (i == 0)
             {
                 return Pi * Qi;
@@ -861,11 +861,11 @@ namespace Nektar
                 Pi * (2*Ri - Pi - 1) +
                 2* Qi * Ri;
 	}
-        
+
         int StdPrismExp::v_GetFaceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
+
             if (i == 0)
             {
                 return m_base[0]->GetNumPoints()*
@@ -888,7 +888,7 @@ namespace Nektar
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             ASSERTL2(j == 0 || j == 1, "face direction is out of range");
-            
+
             if (i == 0)
             {
                 return m_base[j]->GetPointsKey();
@@ -908,60 +908,41 @@ namespace Nektar
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
-            int nummodes = GetBasis(0)->GetNumModes();
 
-            //temporary solution, need to add conditions based on face id
-            //also need to add check of the points type
             switch(i)
             {
                 case 0:
+                {
+                    return EvaluateQuadFaceBasisKey(k,
+                                                    m_base[k]->GetBasisType(),
+                                                    m_base[k]->GetNumPoints(),
+                                                    m_base[k]->GetNumModes());
+                }
                 case 2:
                 case 4:
                 {
-                    switch(k)
-                    {
-                        case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            break;
-                        }
-                        case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            break;
-                        }
-                    }
-                    break;
+                    return EvaluateQuadFaceBasisKey(k,
+                                                    m_base[k+1]->GetBasisType(),
+                                                    m_base[k+1]->GetNumPoints(),
+                                                    m_base[k+1]->GetNumModes());
                 }
                 case 1:
                 case 3:
                 {
-                    switch (k)
-                    {
-                        case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            break;
-                        }
-                        case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
-                            break;
-                        }
-                    }
-                    break;
+                    return EvaluateTriFaceBasisKey(k,
+                                                   m_base[2*k]->GetBasisType(),
+                                                   m_base[2*k]->GetNumPoints(),
+                                                   m_base[2*k]->GetNumModes());
+
                 }
+                break;
             }
 
             // Should never get here.
             return LibUtilities::NullBasisKey;
         }
 
-        int StdPrismExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, 
+        int StdPrismExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes,
                                                     int &modes_offset)
         {
             int nmodes = LibUtilities::StdPrismData::getNumberOfCoefficients(
@@ -996,7 +977,7 @@ namespace Nektar
                    (m_base[1]->GetBasisType() == LibUtilities::eModified_A) &&
                    (m_base[2]->GetBasisType() == LibUtilities::eModified_B);
         }
-        
+
         //---------------------------------------
         // Mappings
         //---------------------------------------
@@ -1013,7 +994,7 @@ namespace Nektar
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A &&
                      GetEdgeBasisType(4) == LibUtilities::eModified_B,
                      "Method only implemented for Modified_A BasisType"
                      "(x and y direction) and Modified_B BasisType (z "
@@ -1056,7 +1037,7 @@ namespace Nektar
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
-            
+
             if (signarray.num_elements() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
@@ -1065,12 +1046,12 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get() + nFaceCoeffs, 1);
             }
-            
+
             // Set up an array indexing for quads, since the ordering may need
             // to be transposed.
             Array<OneD, int> arrayindx(nFaceCoeffs,-1);
-            
-            if (fid != 1 && fid != 3) 
+
+            if (fid != 1 && fid != 3)
             {
                 for (i = 0; i < nummodesB; i++)
                 {
@@ -1087,10 +1068,10 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Set up ordering inside each 2D face. Also for triangular faces,
             // populate signarray.
-            switch (fid) 
+            switch (fid)
             {
                 case 0: // Bottom quad
                     for (q = 0; q < nummodesB; ++q)
@@ -1101,7 +1082,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    
+
                 case 1: // Left triangle
                     for (p = 0; p < nummodesA; ++p)
                     {
@@ -1127,7 +1108,7 @@ namespace Nektar
                     }
                     for (r = 1; r < nummodesB-1; ++r)
                     {
-                        for (q = 0; q < nummodesA; ++q) 
+                        for (q = 0; q < nummodesA; ++q)
                         {
                             maparray[arrayindx[(r+1)*nummodesA+q]] = GetMode(1,q,r);
                         }
@@ -1157,12 +1138,12 @@ namespace Nektar
                         }
                     }
                     break;
-                    
+
                 default:
                     ASSERTL0(false, "Face to element map unavailable.");
             }
-            
-            if (fid == 1 || fid == 3) 
+
+            if (fid == 1 || fid == 3)
             {
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
@@ -1193,7 +1174,7 @@ namespace Nektar
                                 signarray[arrayindx[i*nummodesA+j]] *= -1;
                             }
                         }
-                        
+
                         for (i = 0; i < nummodesA; i++)
                         {
                             swap(maparray [i], maparray [i+nummodesA]);
@@ -1256,16 +1237,16 @@ namespace Nektar
                 }
             }
         }
-        
+
         int StdPrismExp::v_GetVertexMap(const int vId, bool useCoeffPacking)
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_B,
                      "Mapping not defined for this type of basis");
-            
+
             int l = 0;
-            
+
             if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
                 switch (vId)
@@ -1318,12 +1299,12 @@ namespace Nektar
                     ASSERTL0(false, "local vertex id must be between 0 and 5");
                 }
             }
-            
+
             return l;
         }
 
         void StdPrismExp::v_GetEdgeInteriorMap(
-            const int                  eid, 
+            const int                  eid,
             const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD, int>          &signarray)
@@ -1334,12 +1315,12 @@ namespace Nektar
             const int Q              = m_base[1]->GetNumModes() - 1;
             const int R              = m_base[2]->GetNumModes() - 1;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid)    - 2;
-            
+
             if (maparray.num_elements() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
-            
+
             if(signarray.num_elements() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
@@ -1348,11 +1329,11 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeIntCoeffs, 1);
             }
-            
+
             // If edge is oriented backwards, change sign of modes which have
             // degree 2n+1, n >= 1.
             signChange = edgeOrient == eBackwards;
-            
+
             switch (eid)
             {
                 case 0:
@@ -1368,7 +1349,7 @@ namespace Nektar
                         maparray[i-2] = GetMode(1,i,0);
                     }
                     break;
-                    
+
                 case 2:
                     // Base quad; reverse direction.
                     //signChange = !signChange;
@@ -1414,14 +1395,14 @@ namespace Nektar
                         maparray[i-2] = GetMode(0,1,i);
                     }
                     break;
-                    
+
                 case 8:
                     for (i = 2; i <= Q; ++i)
                     {
                         maparray[i-2] = GetMode(0,i,1);
                     }
                     break;
-                    
+
                 default:
                     ASSERTL0(false, "Edge not defined.");
                     break;
@@ -1447,13 +1428,16 @@ namespace Nektar
             const int R              = m_base[2]->GetNumModes() - 1;
             const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
             int       p, q, r, idx   = 0;
-            int nummodesA, nummodesB, i, j;
+            int       nummodesA      = 0;
+            int       nummodesB      = 0;
+            int       i              = 0;
+            int       j              = 0;
 
             if (maparray.num_elements() != nFaceIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
-            
+
             if (signarray.num_elements() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
@@ -1462,13 +1446,13 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nFaceIntCoeffs, 1);
             }
-            
+
             // Set up an array indexing for quad faces, since the ordering may
             // need to be transposed depending on orientation.
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
-            if (fid != 1 && fid != 3) 
+            if (fid != 1 && fid != 3)
             {
-                if (fid == 0) // Base quad 
+                if (fid == 0) // Base quad
                 {
                     nummodesA = P-1;
                     nummodesB = Q-1;
@@ -1478,7 +1462,7 @@ namespace Nektar
                     nummodesA = Q-1;
                     nummodesB = R-1;
                 }
-                
+
                 for (i = 0; i < nummodesB; i++)
                 {
                     for (j = 0; j < nummodesA; j++)
@@ -1494,7 +1478,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             switch (fid)
             {
                 case 0: // Bottom quad
@@ -1520,7 +1504,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    
+
                 case 2: // Slanted quad
                     for (r = 1; r <= R-1; ++r)
                     {
@@ -1530,7 +1514,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    
+
                 case 3: // Right triangle
                     for (p = 2; p <= P; ++p)
                     {
@@ -1554,7 +1538,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    
+
                 default:
                     ASSERTL0(false, "Face interior map not available.");
             }
@@ -1614,7 +1598,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void StdPrismExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
@@ -1639,7 +1623,7 @@ namespace Nektar
             }
 
             int idx = 0;
-            
+
             // Loop over all interior modes.
             for (p = 2; p <= P; ++p)
             {
@@ -1671,7 +1655,7 @@ namespace Nektar
             int idx = 0;
 
             // Loop over all boundary modes (in ascending order).
-            for (p = 0; p <= P; ++p) 
+            for (p = 0; p <= P; ++p)
             {
                 // First two q-r planes are entirely boundary modes.
                 if (p <= 1)
@@ -1697,7 +1681,7 @@ namespace Nektar
                                 maparray[idx++] = GetMode(p,q,r);
                             }
                         }
-                        else 
+                        else
                         {
                             maparray[idx++] = GetMode(p,q,0);
                         }
@@ -1706,26 +1690,96 @@ namespace Nektar
             }
         }
 
-        
+
+
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr StdPrismExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
-            return StdExpansion::CreateGeneralMatrix(mkey);
+
+            MatrixType mtype   = mkey.GetMatrixType();
+
+            DNekMatSharedPtr Mat;
+
+            switch(mtype)
+            {
+            case ePhysInterpToEquiSpaced:
+                {
+                    int nq0 = m_base[0]->GetNumPoints();
+                    int nq1 = m_base[1]->GetNumPoints();
+                    int nq2 = m_base[2]->GetNumPoints();
+                    int nq = max(nq0,max(nq1,nq2));
+                    int neq = LibUtilities::StdPrismData::
+                                            getNumberOfCoefficients (nq,nq,nq);
+                    Array<OneD, Array<OneD, NekDouble> > coords (neq);
+                    Array<OneD, NekDouble>               coll   (3);
+                    Array<OneD, DNekMatSharedPtr>        I      (3);
+                    Array<OneD, NekDouble>               tmp    (nq0);
+
+                    Mat = MemoryManager<DNekMat>::
+                                            AllocateSharedPtr(neq,nq0*nq1*nq2);
+                    int cnt = 0;
+                    for(int i = 0; i < nq; ++i)
+                    {
+                        for(int j = 0; j < nq; ++j)
+                        {
+                            for(int k = 0; k < nq-i; ++k,++cnt)
+                            {
+                                coords[cnt] = Array<OneD, NekDouble>(3);
+                                coords[cnt][0] = -1.0 + 2*k/(NekDouble)(nq-1);
+                                coords[cnt][1] = -1.0 + 2*j/(NekDouble)(nq-1);
+                                coords[cnt][2] = -1.0 + 2*i/(NekDouble)(nq-1);
+                            }
+                        }
+                    }
+
+                    for(int i = 0; i < neq; ++i)
+                    {
+                        LocCoordToLocCollapsed(coords[i],coll);
+
+                        I[0] = m_base[0]->GetI(coll  );
+                        I[1] = m_base[1]->GetI(coll+1);
+                        I[2] = m_base[2]->GetI(coll+2);
+
+                        // interpolate first coordinate direction
+                        NekDouble fac;
+                        for( int k = 0; k < nq2; ++k)
+                        {
+                            for (int j  = 0; j < nq1; ++j)
+                            {
+
+                                fac = (I[1]->GetPtr())[j]*(I[2]->GetPtr())[k];
+                                Vmath::Smul(nq0,fac,I[0]->GetPtr(),1,tmp,1);
+
+                                Vmath::Vcopy(nq0, &tmp[0], 1,
+                                                  Mat->GetRawPtr() +
+                                                      k * nq0 * nq1 * neq +
+                                                      j * nq0 * neq + i,
+                                                  neq);
+                            }
+                        }
+                    }
+                }
+                break;
+            default:
+                {
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+                }
+                break;
+            }
+
+            return Mat;
         }
-        
+
         DNekMatSharedPtr StdPrismExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
-            return StdExpansion::CreateGeneralMatrix(mkey);
+            return v_GenMatrix(mkey);
         }
-        
-        
-        //---------------------------------------
-        // Private helper functions
-        //---------------------------------------
-        
+
+
+
         /**
          * @brief Compute the local mode number in the expansion for a
          * particular tensorial combination.
@@ -1741,14 +1795,14 @@ namespace Nektar
          * 2   6  10    14  17  20
          * 1   5   9    13  16  19
          * 0   4   8    12  15  18
-         * 
+         *
          * Note that in this element, we must have that \f$ P <= R \f$.
          */
         int StdPrismExp::GetMode(int p, int q, int r)
         {
             int Q = m_base[1]->GetNumModes() - 1;
             int R = m_base[2]->GetNumModes() - 1;
-            
+
             return r +                         // Skip along stacks  (r-direction)
                 q*(R+1-p) +                    // Skip along columns (q-direction)
                 (Q+1)*(p*R + 1-(p-2)*(p-1)/2); // Skip along rows    (p-direction)
@@ -1785,7 +1839,7 @@ namespace Nektar
                                 j*nquad0*nquad1,1);
                 }
             }
-            
+
             // Multiply by integration constants in z-direction; need to
             // incorporate factor (1-eta_3)/2 into weights, but only if using
             // GLL quadrature points.
@@ -1799,7 +1853,7 @@ namespace Nektar
                                     &outarray[0]+i*nquad0*nquad1, 1);
                     }
                     break;
-                    
+
                 default:
                     for(i = 0; i < nquad2; ++i)
                     {
@@ -1808,9 +1862,9 @@ namespace Nektar
                     }
                     break;
             }
-        
+
         }
-        
+
         void StdPrismExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                                const StdMatrixKey &mkey)
         {
@@ -1821,37 +1875,37 @@ namespace Nektar
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
             int nmodes_c = m_base[2]->GetNumModes();
-            // Declare orthogonal basis. 
+            // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
             LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
             LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
-            
+
             LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
             LibUtilities::BasisKey Bc(LibUtilities::eOrtho_B,nmodes_c,pc);
             StdPrismExp OrthoExp(Ba,Bb,Bc);
-            
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
+
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             int i,j,k,cnt = 0;
-            
+
             //SVV filter paramaters (how much added diffusion relative to physical one
             // and fraction of modes from which you start applying this added diffusion)
             //
             NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
             NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-            
+
             //Defining the cut of mode
             int cutoff_a = (int) (SVVCutOff*nmodes_a);
             int cutoff_b = (int) (SVVCutOff*nmodes_b);
             int cutoff_c = (int) (SVVCutOff*nmodes_c);
             //To avoid the fac[j] from blowing up
             NekDouble epsilon = 1;
-            
+
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
             NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
-            
+
             //------"New" Version August 22nd '13--------------------
             for(i = 0; i < nmodes_a; ++i)//P
             {
@@ -1867,10 +1921,73 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
-        }                        
-        
+        }
+
+
+
+        void StdPrismExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            int nquad2   = m_base[2]->GetNumPoints();
+            int nqtot    = nquad0*nquad1*nquad2;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int nmodes2  = m_base[2]->GetNumModes();
+            int numMax   = nmodes0;
+
+            Array<OneD, NekDouble> coeff     (m_ncoeffs);
+            Array<OneD, NekDouble> coeff_tmp1(m_ncoeffs, 0.0);
+            Array<OneD, NekDouble> phys_tmp  (nqtot,     0.0);
+            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
+
+
+            const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
+
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_A,    nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho2(
+                LibUtilities::eOrtho_B,    nmodes2, Pkey2);
+
+            int cnt = 0;
+            int u   = 0;
+            int i   = 0;
+            StdRegions::StdPrismExpSharedPtr OrthoPrismExp;
+
+            OrthoPrismExp = MemoryManager<StdRegions::StdPrismExp>
+                ::AllocateSharedPtr(bortho0, bortho1, bortho2);
+
+            BwdTrans(inarray,phys_tmp);
+            OrthoPrismExp->FwdTrans(phys_tmp, coeff);
+
+            // filtering
+            for (u = 0; u < numMin; ++u)
+            {
+                 for (i = 0; i < numMin; ++i)
+                 {
+                     Vmath::Vcopy(numMin - u, tmp  = coeff      + cnt, 1,
+                                              tmp2 = coeff_tmp1 + cnt, 1);
+                     cnt   += numMax - u;
+                 }
+
+                 for (i = numMin; i < numMax; ++i)
+                 {
+                      cnt += numMax - u;
+                 }
+            }
+
+            OrthoPrismExp->BwdTrans(coeff_tmp1, phys_tmp);
+            StdPrismExp::FwdTrans(phys_tmp, outarray);
+        }
     }//end namespace
 }//end namespace

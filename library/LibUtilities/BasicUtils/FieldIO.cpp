@@ -967,7 +967,7 @@ namespace Nektar
                     std::string elementStr;
                     while(elementChild)
                     {
-                        if (elementChild->Type() == TiXmlNode::TEXT)
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
                             elementStr += elementChild->ToText()->ValueStr();
                         }

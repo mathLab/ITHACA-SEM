@@ -42,42 +42,15 @@ namespace Nektar
 {
     namespace Utilities
     {
-        /**
-         * Wrapper structure for high-order mesh information stored in a hsf
-         * file.
-         */
-        struct HOSurf
-        {
-            HOSurf(vector<unsigned int>  pVertId, 
-                   vector<NodeSharedPtr> pSurfVerts) :
-                vertId(pVertId), surfVerts(pSurfVerts) {}
-
-            HOSurf(vector<unsigned int>  pVertId) : vertId(pVertId) {}
-            
-            /**
-             * Felisa vertex ids for this face. Comparing these to those
-             * stored in the rea file determines the orientation of the face.
-             */
-            vector<unsigned int>  vertId;
-            
-            /**
-             * Vector of surface nodal points. These are electrostatically
-             * distributed.
-             */
-            vector<NodeSharedPtr> surfVerts;
-            
-            void Rotate (int i);
-            void Reflect();
-        };
-        
-        typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
-
         enum NekCurve
         {
             eFile,
             eRecon
         };
-        
+
+        typedef HOTriangle<NodeSharedPtr> HOSurf;
+        typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
+
         /**
          * Hash class for high-order surfaces.
          */
@@ -90,7 +63,7 @@ namespace Nektar
             std::size_t operator()(HOSurfSharedPtr const& p) const
             {
                 std::size_t seed = 0;
-                std::vector<unsigned int> ids = p->vertId;
+                std::vector<int> ids = p->vertId;
                 std::sort(ids.begin(), ids.end());
                 for (int i = 0; i < ids.size(); ++i)
                 {
@@ -138,7 +111,7 @@ namespace Nektar
             /**
              * Maps ordering of hsf standard element to Nektar++ ordering.
              */
-            std::map<unsigned int,unsigned int> hoMap;
+            std::map<int, int> hoMap;
         };
     }
 }

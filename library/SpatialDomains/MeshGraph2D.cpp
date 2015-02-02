@@ -112,7 +112,7 @@ namespace Nektar
             TiXmlElement *edge = field->FirstChildElement("E");
 
             /// Since all edge data is one big text block, we need to
-            /// accumulate all TEXT data and then parse it.  This
+            /// accumulate all TINYXML_TEXT data and then parse it.  This
             /// approach effectively skips all comments or other node
             /// types since we only care about the edge list.  We
             /// cannot handle missing edge numbers as we could with
@@ -138,7 +138,7 @@ namespace Nektar
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
-                if (child->Type() == TiXmlNode::TEXT)
+                if (child->Type() == TiXmlNode::TINYXML_TEXT)
                 {
                     edgeStr += child->ToText()->ValueStr();
                 }
@@ -236,7 +236,7 @@ namespace Nektar
                     std::string elementStr;
                     while(elementChild)
                     {
-                        if (elementChild->Type() == TiXmlNode::TEXT)
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
                             elementStr += elementChild->ToText()->ValueStr();
                         }
@@ -395,7 +395,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }
@@ -691,7 +691,7 @@ namespace Nektar
                         {
                         case LibUtilities::eGaussLobattoLegendre:
                             {
-                                const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
@@ -703,7 +703,7 @@ namespace Nektar
                             // here since the ASSERT will stop
                             // execution.  Just return something
                             // to prevent warnings messages.
-                            const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }
@@ -743,6 +743,12 @@ namespace Nektar
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
+                        case LibUtilities::eGaussLobattoLegendre:
+                            {
+                                const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            }
+                            break;
 
                         default:
                             ASSERTL0(false,"Unexpected points distribution");
@@ -773,7 +779,7 @@ namespace Nektar
                             // since the ASSERT will stop execution.
                             // Just return something to prevent
                             // warnings messages.
-                            const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }

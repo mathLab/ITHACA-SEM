@@ -38,35 +38,49 @@
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
 #include <SolverUtils/Filters/Filter.h>
-using namespace SolverUtils;
 
 namespace Nektar
 {
-    class FilterElectrogram : public Filter
+    class FilterElectrogram : public SolverUtils::Filter
     {
     public:
         friend class MemoryManager<FilterElectrogram>;
 
         /// Creates an instance of this class
-        static FilterSharedPtr create(
+        static SolverUtils::FilterSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) {
-            FilterSharedPtr p = MemoryManager<FilterElectrogram>::AllocateSharedPtr(pSession, pParams);
+            const std::map<std::string, std::string>   &pParams) {
+            SolverUtils::FilterSharedPtr p = 
+                MemoryManager<FilterElectrogram>::AllocateSharedPtr(
+                        pSession, pParams);
             return p;
         }
 
-        ///Name of the class
+        /// Name of the class
         static std::string className;
 
+        /// Electrogram filter constructor
         FilterElectrogram(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams);
-        ~FilterElectrogram();
+            const std::map<std::string, std::string>   &pParams);
+
+        /// Electrogram filter destructor
+        virtual ~FilterElectrogram();
 
     protected:
-        virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        /// Initialises the electrogram filter and open output file.
+        virtual void v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+        /// Compute extracellular potential at egm points at current time.
+        virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+            const NekDouble &time);
+        /// Finalise the electrogram filter and close output file.
+        virtual void v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+            const NekDouble &time);
+        /// Filter is time-dependent and should be called at each time-step.
         virtual bool v_IsTimeDependent();
 
     private:

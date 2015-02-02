@@ -1995,9 +1995,9 @@ namespace Nektar
         GetStdVelocity(inarray, stdVelocity);
 
         // Factors to compute the time-step limit
-        NekDouble minLength;
-        NekDouble alpha   = MaxTimeStepEstimator();
-        NekDouble cLambda = 0.2; // Spencer book-317
+        NekDouble minLength = 0.0;
+        NekDouble alpha     = MaxTimeStepEstimator();
+        NekDouble cLambda   = 0.2; // Spencer book-317
 
         // Loop over elements to compute the time-step limit for each element
         for(n = 0; n < nElements; ++n)
@@ -2006,17 +2006,10 @@ namespace Nektar
             Array<OneD, NekDouble> one2D(npoints, 1.0);
             NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
 
+            minLength = sqrt(Area);
             if (m_fields[0]->GetExp(n)->as<LocalRegions::TriExp>())
             {
-                minLength = 2.0 * sqrt(Area);
-            }
-            else if (m_fields[0]->GetExp(n)->as<LocalRegions::QuadExp>())
-            {
-                minLength = sqrt(Area);
-            }
-            else if (m_fields[0]->GetExp(n)->as<LocalRegions::HexExp>())
-            {
-                minLength = sqrt(Area);
+                minLength *= 2.0;
             }
 
             tstep[n] = m_cflSafetyFactor * alpha * minLength

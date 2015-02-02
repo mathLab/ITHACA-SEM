@@ -1028,8 +1028,8 @@ namespace Nektar
                     for (k = 0; k < coordim; ++k)
                     {
                         LibUtilities::Interp2D(
-                            loc_elmt->GetFacePointsKey(faceNumber, 0),
-                            loc_elmt->GetFacePointsKey(faceNumber, 1),
+                            loc_elmt->DetFaceBasisKey(faceNumber, 0).GetPointsKey(),
+                            loc_elmt->DetFaceBasisKey(faceNumber, 1).GetPointsKey(),
                             locnormals[k],
                             (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
                             (*m_exp)[i]->GetBasis(1)->GetPointsKey(),

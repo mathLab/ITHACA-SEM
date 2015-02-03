@@ -831,9 +831,15 @@ namespace Nektar
 
                     if (idx >= 0)
                     {
-                        m_fields[0]->ExtractDataToCoeffs(
-                            FieldDef[i], FieldData[i],
-                            FieldDef[i]->m_fields[idx], vCoeffs);
+                        if(m_session->GetComm()->GetRank() == i)
+
+                        {
+
+                            m_fields[0]->ExtractDataToCoeffs(
+                                FieldDef[i], FieldData[i],
+                                FieldDef[i]->m_fields[idx], vCoeffs);
+
+                        }
                     }
                     else
                     {

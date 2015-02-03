@@ -35,15 +35,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <string>
 #include <iostream>
-#include <iomanip>
-
-#ifdef _WIN32
-    #include <io.h>
-    #define ISTTY _isatty(_fileno(stdout))
-#else
-    #include <unistd.h>
-    #define ISTTY isatty(fileno(stdout))
-#endif
 
 using namespace std;
 
@@ -112,10 +103,10 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 
     // interpolate points and transform
     Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
-    m_f->m_fieldPts->setProgressCallback(
-            &ProcessInterpPointDataToFld::PrintProgressbar, this);
-    if(m_f->m_session->GetComm()->GetRank() == 0)
+    if (m_f->m_session->GetComm()->GetRank() == 0)
     {
+        m_f->m_fieldPts->setProgressCallback(
+            &ProcessInterpPointDataToFld::PrintProgressbar, this);
         cout << "Interpolating:       ";
     }
     m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
@@ -159,41 +150,6 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 
-}
-
-void ProcessInterpPointDataToFld::PrintProgressbar(const int position, const int goal) const
-{
-    if (m_f->m_session->GetComm()->GetRank() != 0)
-    {
-        return;
-    }
-
-    if (ISTTY)
-    {
-        // carriage return
-        cout << "\r";
-
-        cout << "Interpolating: ";
-        float progress = position / float(goal);
-        cout << setw(3) << int(100* progress) << "% [";
-        for (int j = 0; j < int(progress *49); j++)
-        {
-            cout << "=";
-        }
-        for (int j = int(progress *49); j < 49; j++)
-        {
-            cout << " ";
-        }
-        cout << "]" << flush;
-    }
-    else
-    {
-        // print only every 2 percent
-        if (int(100 * position / goal) % 2 ==  0)
-        {
-            cout << "." <<  flush;
-        }
-    }
 }
 
 }

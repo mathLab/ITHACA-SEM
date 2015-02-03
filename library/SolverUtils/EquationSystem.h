@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
@@ -611,7 +612,10 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble > >              &qflux);
 
             SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
-                                                      const int goal) const;
+                                                      const int goal) const
+            {
+                LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+            }
         };
         
         

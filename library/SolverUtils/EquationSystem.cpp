@@ -56,17 +56,7 @@
 # include <boost/function.hpp>
 
 #include <iostream>
-#include <iomanip>
 #include <string>
-
-#ifdef _WIN32
-    #include <io.h>
-    #define ISTTY _isatty(_fileno(stdout))
-#else
-    #include <unistd.h>
-    #define ISTTY isatty(fileno(stdout))
-#endif
-
 
 using std::string;
 
@@ -888,9 +878,9 @@ namespace Nektar
                     }
                     else
                     {
-                        ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
                         if (m_session->GetComm()->GetRank() == 0)
                         {
+                            ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
                             cout << "Interpolating:       ";
                         }
                         ptsField->CalcWeights(coords);
@@ -2406,39 +2396,5 @@ namespace Nektar
         {
         }
 
-        void EquationSystem::PrintProgressbar(const int position, const int goal) const
-        {
-            if (m_session->GetComm()->GetRank() != 0)
-            {
-                return;
-            }
-
-            if (ISTTY)
-            {
-                // carriage return
-                cout << "\r";
-
-                cout << "Interpolating: ";
-                float progress = position / float(goal);
-                cout << setw(3) << int(100* progress) << "% [";
-                for (int j = 0; j < int(progress *49); j++)
-                {
-                    cout << "=";
-                }
-                for (int j = int(progress *49); j < 49; j++)
-                {
-                    cout << " ";
-                }
-                cout << "]" << flush;
-            }
-            else
-            {
-                // print only every 2 percent
-                if (int(100 * position / goal) % 2 ==  0)
-                {
-                    cout << "." <<  flush;
-                }
-            }
-        }
     }
 }

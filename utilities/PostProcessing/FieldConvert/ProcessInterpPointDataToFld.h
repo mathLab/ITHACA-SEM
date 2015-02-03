@@ -36,6 +36,8 @@
 #ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPDATATOFLD
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPDATATOFLD
 
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+
 #include "Module.h"
 
 namespace Nektar
@@ -61,7 +63,10 @@ public:
     /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);
 
-    void PrintProgressbar(const int position, const int goal) const;
+    void PrintProgressbar(const int position, const int goal) const
+    {
+        LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+    }
 
 private:
 };

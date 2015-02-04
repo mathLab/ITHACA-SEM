@@ -119,15 +119,6 @@ namespace SolverUtils
                 v_CovarFromCartesian( inarray, outarray);
             }
             
-            /// Calculate a partial derivative at the Cartesian system
-            SOLVER_UTILS_EXPORT void CartesianDeriv(
-                Direction edir,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_CartesianDeriv( edir, inarray, outarray);
-            }       
-            
             /////////////////////////////////////////////////////////////
             //
             //   Basic tensor calculus functions
@@ -136,9 +127,17 @@ namespace SolverUtils
 
             /// Get the Jacobian of the transformation
             SOLVER_UTILS_EXPORT void GetJacobian(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+                Array<OneD, NekDouble>               &outarray)
             {
                 v_GetJacobian( outarray);
+            } 
+            
+            /// Calculate the dot product with the Jacobian gradient
+            SOLVER_UTILS_EXPORT void DotGradJacobian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, NekDouble>               &outarray)
+            {
+                v_DotGradJacobian( inarray, outarray);
             } 
             
             /// Get the metric tensor g_(i,j)
@@ -214,7 +213,7 @@ namespace SolverUtils
                 v_VelocityLaplacian( inarray, outarray);
             } 
             
-            // Correction needed for convective terms = N(u) - (u \nabla) u
+            // Correction needed for convective terms = N(u) - ( -(u \nabla) u)
             //     inarray is the velocity field
             SOLVER_UTILS_EXPORT void IncNSAdvectionCorrection(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -223,8 +222,10 @@ namespace SolverUtils
                 v_IncNSAdvectionCorrection( inarray, outarray);
             } 
             
-            // Correction needed for pressure terms =  -g^(ij)p_j + (\nabla p)/J
-            //     inarray is the pressure field
+            // Correction needed for pressure terms   
+            //     = -g^(ij)p_j + (\nabla p)/J for variable Jacobian
+            //     = -g^(ij)p_j + (\nabla p)   for constant Jacobian
+            //         inarray is the pressure field
             SOLVER_UTILS_EXPORT void IncNSPressureCorrection(
                 const Array<OneD, NekDouble>                      &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -277,6 +278,8 @@ namespace SolverUtils
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             // Arrays with geometric parameters of the mapping
             Array<OneD, Array<OneD, NekDouble> >        m_GeometricInfo;
+            // Number of velocity components
+            int                                         m_nConvectiveFields;
 
 
             /// Constructor
@@ -303,7 +306,7 @@ namespace SolverUtils
             // Virtual functions
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields,
-                const TiXmlElement* pForce) = 0;
+                const TiXmlElement* pMapping) = 0;
 
             SOLVER_UTILS_EXPORT virtual void v_ContravarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -321,13 +324,12 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
             
-            SOLVER_UTILS_EXPORT virtual void v_CartesianDeriv(
-                Direction edir,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
-            
             SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, NekDouble>               &outarray)             =0;
+            
+            SOLVER_UTILS_EXPORT virtual void v_DotGradJacobian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, NekDouble>               &outarray)            =0;
             
             SOLVER_UTILS_EXPORT virtual void v_GetMetricTensor(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
@@ -353,23 +355,23 @@ namespace SolverUtils
             
             SOLVER_UTILS_EXPORT virtual void v_Divergence(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, NekDouble>                            &outarray) =0; 
+                Array<OneD, NekDouble>                            &outarray); 
             
             SOLVER_UTILS_EXPORT virtual void v_VelocityLaplacian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;  
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);  
             
             SOLVER_UTILS_EXPORT virtual void v_IncNSAdvectionCorrection(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             SOLVER_UTILS_EXPORT virtual void v_IncNSPressureCorrection(
                 const Array<OneD, NekDouble>                      &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             SOLVER_UTILS_EXPORT virtual void v_IncNSViscousCorrection(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent() =0;  
             

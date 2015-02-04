@@ -295,7 +295,6 @@ namespace Nektar
             // Step 3: d(A^(ij))/d(x^j) + {j,pj}*A^(ip) + {i,pj} A^(pj)
             for (int j=0; j< nvel; j++)
             {
-                // Reuse vel as a temporary variable
                 for (int p=0; p< nvel; p++)
                 {
                     Vmath::Vcopy(physTot, wk1[p*nvel+j], 1, tmp1[p], 1);
@@ -365,7 +364,7 @@ namespace Nektar
             
             // Calculate correction = (nabla p)/J - g^(ij)p_,j
             // (Jac is not required if it is constant)
-            if (HasConstantJacobian())
+            if ( !HasConstantJacobian())
             {
                 Array<OneD, NekDouble> Jac(physTot, 0.0);
                 GetJacobian(Jac);
@@ -391,24 +390,24 @@ namespace Nektar
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
             Array<OneD, Array<OneD, NekDouble> > wk(nvel);
-            Array<OneD, NekDouble> tmp (physTot);
+            Array<OneD, NekDouble> tmp (physTot, 0.0);
             
             // Set wavespace to false and store current value
             bool wavespace = m_fields[0]->GetWaveSpace();
             m_fields[0]->SetWaveSpace(false);
             
-            VelocityLaplacian(inarray, wk);  // L(U)
+            VelocityLaplacian(inarray, outarray);  // L(U)
             for (int i = 0; i < nvel; ++i)
             {
                 for (int j = 0; j < nvel; ++j)
                 {
                     m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i], tmp);
                     m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],tmp, tmp);
-                    Vmath::Vsub(physTot, wk[i], 1, tmp, 1, wk[i], 1);                
+                    Vmath::Vsub(physTot, outarray[i], 1, tmp, 1, outarray[i], 1);                
                 }
             } 
             // Restore value of wavespace 
-            m_fields[0]->SetWaveSpace(wavespace);
+            m_fields[0]->SetWaveSpace(wavespace);            
         }
 
     }

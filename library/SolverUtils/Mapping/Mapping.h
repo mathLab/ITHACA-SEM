@@ -50,7 +50,7 @@ namespace SolverUtils
     //  Forward declaration
     class Mapping;
 
-    /// A shared pointer to an EquationSystem object
+    /// A shared pointer to a Mapping object
     SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Mapping> MappingSharedPtr;
 
     /// Declaration of the mapping factory
@@ -191,7 +191,7 @@ namespace SolverUtils
             
             /////////////////////////////////////////////////////////////
             //
-            //   Functions used at IncNs
+            //   Functions used in IncNs
             //    
             /////////////////////////////////////////////////////////////             
             

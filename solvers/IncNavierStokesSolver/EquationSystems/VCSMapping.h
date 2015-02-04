@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File VelocityCorrectionScheme.h
+// File VCSMapping.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,18 +29,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Velocity Correction Scheme header 
+// Description: Velocity Correction Scheme with coordinate transformation header 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_VELOCITYCORRECTIONSCHEME_H
-#define NEKTAR_SOLVERS_VELOCITYCORRECTIONSCHEME_H
+#ifndef NEKTAR_SOLVERS_VCSMAPPING_H
+#define NEKTAR_SOLVERS_VCSMAPPING_H
 
-#include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.h>
+#include <SolverUtils/Mapping/Mapping.h>
 
 namespace Nektar
 {
-    class VelocityCorrectionScheme: public IncNavierStokes
+    class VCSMapping: public VelocityCorrectionScheme
     {
     public:
 
@@ -48,7 +49,7 @@ namespace Nektar
         static SolverUtils::EquationSystemSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
             SolverUtils::EquationSystemSharedPtr p =
-                                MemoryManager<VelocityCorrectionScheme>::
+                                MemoryManager<VCSMapping>::
                                             AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
@@ -59,73 +60,20 @@ namespace Nektar
 
 
         /// Constructor.
-        VelocityCorrectionScheme(const LibUtilities::SessionReaderSharedPtr& pSession);
+        VCSMapping(const LibUtilities::SessionReaderSharedPtr& pSession);
+        
+        // 
+        void ApplyIncNSMappingForcing (
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        virtual ~VelocityCorrectionScheme();
+        virtual ~VCSMapping();
 
         virtual void v_InitObject();
 
-        void SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields,
-								  Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								  const NekDouble aii_Dt)
-        {
-            v_SetUpPressureForcing( fields, Forcing, aii_Dt);
-        }
-
-        void SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								 const NekDouble aii_Dt)
-        {
-            v_SetUpViscousForcing( inarray, Forcing, aii_Dt);
-        }
-        
-        void SolvePressure( const Array<OneD, NekDouble>  &Forcing)
-        {
-            v_SolvePressure( Forcing);
-        }
-        
-        void SolveViscous( const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
-                            Array<OneD, Array<OneD, NekDouble> > &outarray,
-                            const NekDouble aii_Dt)
-        {
-            v_SolveViscous( Forcing, outarray, aii_Dt);
-        }
-
-        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									   Array<OneD, Array<OneD, NekDouble> > &outarray,
-									   const NekDouble time,
-									   const NekDouble a_iixDt);
-
-        void EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-											  Array<OneD, Array<OneD, NekDouble> > &outarray,
-											  const NekDouble time)
-        {
-            v_EvaluateAdvection_SetPressureBCs( inarray, outarray, time);
-        }
-
     protected:
-        /// bool to identify if spectral vanishing viscosity is active.
-        bool m_useHomo1DSpecVanVisc;
-        /// bool to identify if spectral vanishing viscosity is active.
-        bool m_useSpecVanVisc;
-        /// cutt off ratio from which to start decayhing modes
-        NekDouble m_sVVCutoffRatio;
-        /// Diffusion coefficient of SVV modes
-        NekDouble m_sVVDiffCoeff;
-
-        // Virtual functions
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
-        virtual void v_TransCoeffToPhys(void);
-
-        virtual void v_TransPhysToCoeff(void);
-
-        virtual void v_DoInitialise(void);
-
-        virtual Array<OneD, bool> v_GetSystemSingularChecks();
-
-        virtual int v_GetForceDimension();
-        
+        // Mapping object
+        SolverUtils::MappingSharedPtr               m_mapping;
+        // Virtual functions        
         virtual void v_SetUpPressureForcing(
                     const Array<OneD, const Array<OneD, NekDouble> > &fields,
                     Array<OneD, Array<OneD, NekDouble> > &Forcing,
@@ -147,13 +95,13 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble time);
-        
+    
     private:
         
     };
 
-    typedef boost::shared_ptr<VelocityCorrectionScheme>
-                VelocityCorrectionSchemeSharedPtr;
+    typedef boost::shared_ptr<VCSMapping>
+                VCSMappingSharedPtr;
 
 } //end of namespace
 

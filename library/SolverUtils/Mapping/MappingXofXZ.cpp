@@ -76,8 +76,8 @@ namespace SolverUtils
 
         // Read and evaluate function
         const TiXmlElement* funcNameElmt;
-        funcNameElmt = pMapping->FirstChildElement("coords");
-        ASSERTL0(funcNameElmt, "Requires coords tag, specifying function "
+        funcNameElmt = pMapping->FirstChildElement("COORDS");
+        ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
                 "name which prescribes mapping.");
 
         string funcName = funcNameElmt->GetText();
@@ -88,13 +88,14 @@ namespace SolverUtils
         ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                 "Variable '" + s_FieldStr + "' not defined.");
 
+        
+        bool waveSpace = pFields[0]->GetWaveSpace();
+        pFields[0]->SetWaveSpace(false);
+        
         EvaluateFunction(pFields, m_session, s_FieldStr, m_GeometricInfo[0],
                 funcName);
 
         // Calculate derivatives of transformation
-        bool waveSpace = pFields[0]->GetWaveSpace();
-        pFields[0]->SetWaveSpace(false);
-
         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
                     m_GeometricInfo[0], m_GeometricInfo[1]);  //f_x
         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
@@ -108,6 +109,7 @@ namespace SolverUtils
                     m_GeometricInfo[2], m_GeometricInfo[5]);  //f_zz
 
         pFields[0]->SetWaveSpace(waveSpace);
+
     }
 
     void MappingXofXZ::v_ContravarToCartesian(
@@ -348,6 +350,7 @@ namespace SolverUtils
         Vmath::Vmul(physTot,wk,1,inarray[0],1,outarray[0*nvel+2],1); // U1 * fxz/fx
         Vmath::Vdiv(physTot,m_GeometricInfo[5],1,m_GeometricInfo[1],1,wk,1); // fzz/fx
         Vmath::Vvtvp(physTot,wk,1,inarray[2],1,outarray[0*nvel+2],1,outarray[0*nvel+2],1); // U1 * fxz/fx + U3 * fzz/fx 
+        
     }
 
     void MappingXofXZ::v_ApplyChristoffelCovar(

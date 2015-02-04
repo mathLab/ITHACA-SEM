@@ -8,6 +8,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
+       ./EquationSystems/VCSMapping.cpp
        ./EquationSystems/Extrapolate.cpp
        ./EquationSystems/StandardExtrapolate.cpp
        ./EquationSystems/SubSteppingExtrapolate.cpp

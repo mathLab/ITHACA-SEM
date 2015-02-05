@@ -39,6 +39,7 @@ SET(SOLVER_UTILS_SOURCES
   Forcing/ForcingWavyness.cpp
   Mapping/Mapping.cpp
   Mapping/MappingXofXZ.cpp
+  Mapping/MappingXofZ.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -84,6 +85,7 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/ForcingWavyness.h
   Mapping/Mapping.h
   Mapping/MappingXofXZ.h
+  Mapping/MappingXofZ.h
 )
 
 IF (NEKTAR_USE_ARPACK)

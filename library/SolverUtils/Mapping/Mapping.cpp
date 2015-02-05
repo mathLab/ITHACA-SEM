@@ -389,7 +389,6 @@ namespace Nektar
         {
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
-            Array<OneD, Array<OneD, NekDouble> > wk(nvel);
             Array<OneD, NekDouble> tmp (physTot, 0.0);
             
             // Set wavespace to false and store current value

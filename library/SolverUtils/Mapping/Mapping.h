@@ -294,6 +294,26 @@ namespace SolverUtils
                 return m_implicitViscous;
             }
             
+            // Define relaxation paramter and tolerance for pressure and viscous system
+            SOLVER_UTILS_EXPORT NekDouble PressureTolerance()
+            {
+                return m_pressureTolerance;
+            }
+            
+            SOLVER_UTILS_EXPORT NekDouble ViscousTolerance()
+            {
+                return m_viscousTolerance;
+            }
+            
+            SOLVER_UTILS_EXPORT NekDouble PressureRelaxation()
+            {
+                return m_pressureRelaxation;
+            }
+            
+            SOLVER_UTILS_EXPORT NekDouble ViscousRelaxation()
+            {
+                return m_viscousRelaxation;
+            }
             
             //
             //  Function to update time-dependent mappings
@@ -317,6 +337,14 @@ namespace SolverUtils
             //should be treated implicitly
             bool                                        m_implicitPressure;
             bool                                        m_implicitViscous;
+            // Tolerance and relaxation parameters for pressure and viscous
+            //       systems (when solved iteratively)
+            NekDouble                                   m_pressureTolerance;
+            NekDouble                                   m_viscousTolerance;
+            NekDouble                                   m_pressureRelaxation;
+            NekDouble                                   m_viscousRelaxation;
+            
+            
 
             /// Constructor
             SOLVER_UTILS_EXPORT Mapping(

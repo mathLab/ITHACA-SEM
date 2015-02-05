@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingWavyness.cpp
+// File: MappingXofZ.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Implementation of a forcing term to simulate a wavy body
+// Description: Mapping of the type X = x + f(z)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -86,6 +86,7 @@ namespace SolverUtils
 
             param = param->NextSiblingElement("PARAM");
         }        
+        // Check if parameters are defined, otherwise use default values
         if (vParams.find("ImplicitPressure") != vParams.end())
         {
             if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
@@ -101,6 +102,42 @@ namespace SolverUtils
             {
                 m_implicitViscous = true;
             }
+        }
+        //
+        if (vParams.find("PressureTolerance") == vParams.end())
+        {
+            m_pressureTolerance = 1e-12;
+        }
+        else
+        {
+            m_pressureTolerance = atof(vParams.find("PressureTolerance")->second.c_str());
+        }
+        //
+        if (vParams.find("ViscousTolerance") == vParams.end())
+        {
+            m_viscousTolerance = 1e-12;
+        }
+        else
+        {
+            m_viscousTolerance = atof(vParams.find("ViscousTolerance")->second.c_str());
+        }
+        //
+        if (vParams.find("PressureRelaxation") == vParams.end())
+        {
+            m_pressureRelaxation = 1.0;
+        }
+        else
+        {
+            m_pressureRelaxation = atof(vParams.find("PressureRelaxation")->second.c_str());
+        }
+        //
+        if (vParams.find("ViscousRelaxation") == vParams.end())
+        {
+            m_viscousRelaxation = 1.0;
+        }
+        else
+        {
+            m_viscousRelaxation = atof(vParams.find("ViscousRelaxation")->second.c_str());
         }
         
         // Allocation of geometry memory

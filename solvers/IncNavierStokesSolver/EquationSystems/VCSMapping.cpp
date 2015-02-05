@@ -65,6 +65,17 @@ namespace Nektar
         VelocityCorrectionScheme::v_InitObject();
         
         m_mapping = SolverUtils::Mapping::Load(m_session, m_fields); 
+        
+        std::string vExtrapolation = "Mapping";
+        m_extrapolation = GetExtrapolateFactory().CreateInstance(
+            vExtrapolation,
+            m_session,
+            m_fields,
+            m_pressure,
+            m_velocity,
+            m_advObject); 
+        m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
+        m_extrapolation->GenerateHOPBCMap();        
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
@@ -93,6 +104,7 @@ namespace Nektar
         {
             m_presForcingCorrection[i] = Array<OneD, NekDouble>(physTot,0.0);
         }
+        m_verbose = (m_session->DefinesCmdLineArgument("verbose"))? true :false;
     }
     
     /**
@@ -262,7 +274,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &Forcing, 
         const NekDouble aii_Dt)
     {
-        if (m_mapping->HasConstantJacobian())
+        if (m_mapping->HasConstantJacobian() && !m_mapping->ImplicitPressure())
         {
             VelocityCorrectionScheme::v_SetUpViscousForcing(inarray, Forcing, aii_Dt);
         }
@@ -289,8 +301,7 @@ namespace Nektar
             //    if they are implicit, we need to calculate G(p)
             Array<OneD, Array<OneD, NekDouble> > tmp (nvel);
             if (m_pressure->GetWaveSpace())
-            {
-                
+            {                
                 for (int i=0; i<nvel; i++)
                 {                    
                     tmp[i] = Array<OneD, NekDouble>(physTot,0.0);
@@ -344,13 +355,129 @@ namespace Nektar
     void   VCSMapping::v_SolvePressure(
         const Array<OneD, NekDouble>  &Forcing)
     {
-        StdRegions::ConstFactorMap factors;
-        // Setup coefficient for equation
-        factors[StdRegions::eFactorLambda] = 0.0;
+        if (!m_mapping->ImplicitPressure())
+        {
+            VelocityCorrectionScheme::v_SolvePressure(Forcing);
+        }
+        else
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            bool converged = false;             // flag to mark if system converged
+            int s = 0;                          // iteration counter
+            NekDouble error;                    // L2 error at current iteration
+            NekDouble forcing_L2 = 0.0;         // L2 norm of F
+            NekDouble tolerance;
+            NekDouble alpha;                    // relaxation parameter
+            
+            tolerance = m_mapping->PressureTolerance();
+            alpha     = m_mapping->PressureRelaxation();
 
-        // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
-                              factors);
+            // rhs of the equation at current iteration
+            Array< OneD, NekDouble> F_corrected(physTot, 0.0);
+            // Pressure field at previous iteration
+            Array<OneD, NekDouble>  previous_iter (physTot, 0.0);
+            // Temporary variables
+            Array<OneD, Array<OneD, NekDouble> > wk1(nvel);
+            Array<OneD, Array<OneD, NekDouble> > wk2(nvel);
+            Array<OneD, Array<OneD, NekDouble> > gradP(nvel);
+            for(int i = 0; i < nvel; ++i)
+            {
+                wk1[i]   = Array<OneD, NekDouble> (physTot, 0.0);
+                wk2[i]   = Array<OneD, NekDouble> (physTot, 0.0);
+                gradP[i] = Array<OneD, NekDouble> (physTot, 0.0);
+            }
+
+            // Jacobian
+            Array<OneD, NekDouble> Jac(physTot, 0.0);
+            m_mapping->GetJacobian(Jac);
+
+            // Factors for Laplacian system
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorLambda] = 0.0;
+
+            m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            forcing_L2 = m_pressure->L2(Forcing, wk1[0]);
+            while (!converged)
+            {
+                // Update iteration counter and set previous iteration field
+                // (use previous timestep solution for first iteration)
+                s++;            
+                Vmath::Vcopy(physTot, m_pressure->GetPhys(), 1, previous_iter, 1);
+                
+                // Correct pressure bc to account for iteration
+                m_extrapolation->CorrectPressureBCs(previous_iter);            
+
+                //
+                // Calculate forcing term for this iteration
+                //
+                for(int i = 0; i < nvel; ++i)
+                {
+                    m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[i], previous_iter, gradP[i]);
+                    if(m_pressure->GetWaveSpace())
+                    {
+                        m_pressure->HomogeneousBwdTrans(gradP[i], wk1[i]);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(physTot, gradP[i], 1, wk1[i], 1);
+                    }
+                }
+                m_mapping->RaiseIndex(wk1, wk2);   // G(p)
+           
+                m_mapping->Divergence(wk2, F_corrected);   // div(G(p))
+                if (!m_mapping->HasConstantJacobian())
+                {
+                    Vmath::Vmul(physTot, F_corrected, 1, Jac, 1, F_corrected, 1);
+                }                
+                Vmath::Smul(physTot, alpha, F_corrected, 1, F_corrected, 1); // alpha*J*div(G(p))
+                if(m_pressure->GetWaveSpace())
+                {
+                    m_pressure->HomogeneousFwdTrans(F_corrected, F_corrected);
+                }            
+                // alpha*J*div(G(p)) - p_ii      
+                for (int i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[i],gradP[i], wk1[0]);
+                    Vmath::Vsub(physTot, F_corrected, 1, wk1[0], 1, F_corrected, 1);
+                }
+                // p_i,i - J*div(G(p))
+                Vmath::Neg(physTot, F_corrected, 1);           
+                // alpha*F -  alpha*J*div(G(p)) + p_i,i
+                Vmath::Smul(physTot, alpha, Forcing, 1, wk1[0], 1);
+                Vmath::Vadd(physTot, wk1[0], 1, F_corrected, 1, F_corrected, 1);
+
+                //
+                // Solve system
+                //
+                m_pressure->HelmSolve(F_corrected, m_pressure->UpdateCoeffs(), NullFlagList,
+                                  factors);  
+                m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());     
+
+                //
+                // Test convergence
+                //
+                error = m_pressure->L2(m_pressure->GetPhys(), previous_iter);           
+                if ( forcing_L2 != 0)
+                {
+                    if ( (error/forcing_L2 < tolerance) && (error < tolerance))
+                    {
+                        converged = true;
+                    }  
+                }
+                else
+                {
+                    if ( error < tolerance)
+                    {
+                        converged = true;
+                    }                
+                }                    
+            }
+            if (m_verbose)
+            {
+                std::cout << " Pressure system (mapping) converged in " << s << " iterations with error = " << error << std::endl;
+            }            
+        }
     }
     
     /**
@@ -361,21 +488,155 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble aii_Dt)
     {
-        StdRegions::ConstFactorMap factors;
-        // Setup coefficients for equation
-        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
-        if(m_useSpecVanVisc)
+        if(!m_mapping->ImplicitViscous())
         {
-            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+            VelocityCorrectionScheme::v_SolveViscous(Forcing, outarray, aii_Dt);
         }
-
-        // Solve Helmholtz system and put in Physical space
-        for(int i = 0; i < m_nConvectiveFields; ++i)
+        else
         {
-            m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors);
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            bool converged = false;             // flag to mark if system converged
+            int s = 0;                          // iteration counter
+            NekDouble error, max_error;                    // L2 error at current iteration
+
+            NekDouble tolerance;
+            NekDouble alpha;                    // relaxation parameter
+            
+            tolerance = m_mapping->ViscousTolerance();
+            alpha     = m_mapping->ViscousRelaxation();
+            
+
+            Array<OneD, NekDouble> forcing_L2(m_nConvectiveFields,0.0); //L2 norm of F
+
+            // rhs of the equation at current iteration
+            Array<OneD, Array<OneD, NekDouble> > F_corrected(nvel);
+            // Solution at previous iteration
+            Array<OneD, Array<OneD, NekDouble> > previous_iter(nvel);
+            // Working space
+            Array<OneD, Array<OneD, NekDouble> >  wk(nvel);
+            for(int i = 0; i < nvel; ++i)
+            {
+                F_corrected[i]   = Array<OneD, NekDouble> (physTot, 0.0);
+                previous_iter[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                wk[i]            = Array<OneD, NekDouble> (physTot, 0.0);
+            }
+
+            // Factors for Helmholtz system
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+            if(m_useSpecVanVisc)
+            {
+                factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+                factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+            }
+
+            // Calculate L2-norm of F and set initial solution for iteration
+            for(int i = 0; i < nvel; ++i)
+            {
+                forcing_L2[i] = m_fields[0]->L2(Forcing[i],wk[0]);
+                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),previous_iter[i]);
+            }
+
+            while (!converged)
+            {
+                converged = true;
+                // Iteration counter
+                s++;
+                max_error = 0.0;
+
+                //
+                // Calculate forcing term for next iteration
+                //
+
+                // Calculate L(U) - in this parts all components might be coupled
+                if(m_fields[0]->GetWaveSpace())
+                {
+                    for (int i = 0; i < nvel; ++i)
+                    {
+                        m_fields[0]->HomogeneousBwdTrans(previous_iter[i], wk[i]);
+                    }                    
+                }
+                else
+                {
+                    for (int i = 0; i < nvel; ++i)
+                    {
+                        Vmath::Vcopy(physTot, previous_iter[i], 1, wk[i], 1);
+                    }                   
+                }                    
+                
+                m_mapping->VelocityLaplacian(wk, F_corrected);
+                
+                if(m_fields[0]->GetWaveSpace())
+                {
+                    for (int i = 0; i < nvel; ++i)
+                    {
+                        m_fields[0]->HomogeneousFwdTrans(F_corrected[i], F_corrected[i]);
+                    }                    
+                }
+                else
+                {
+                    for (int i = 0; i < nvel; ++i)
+                    {
+                        Vmath::Vcopy(physTot, F_corrected[i], 1, F_corrected[i], 1);
+                    }                   
+                }
+                
+                // Loop velocity components
+                for (int i = 0; i < nvel; ++i)
+                {
+                    Vmath::Neg(physTot, F_corrected[i], 1);
+                    Vmath::Smul(physTot, alpha, F_corrected[i], 1, F_corrected[i], 1);
+                    // (-alpha*L(U^i) + U^i_jj)
+                    for (int j = 0; j < nvel; ++j)
+                    {
+                        m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],previous_iter[i], wk[0]);
+                        m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],wk[0], wk[0]);
+                        Vmath::Vadd(physTot, F_corrected[i], 1, wk[0], 1, F_corrected[i], 1);                
+                    }
+                    //  F_corrected = alpha*F + (-alpha*L(U^i) + U^i_jj)
+                    Vmath::Smul(physTot, alpha, Forcing[i], 1, wk[0], 1);
+                    Vmath::Vadd(physTot, wk[0], 1, F_corrected[i], 1, F_corrected[i], 1);                                 
+
+                    //
+                    // Solve System
+                    //
+                    m_fields[i]->HelmSolve(F_corrected[i], m_fields[i]->UpdateCoeffs(),
+                                       NullFlagList, factors); 
+                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
+
+                    //
+                    // Test convergence
+                    //
+                    error = m_fields[i]->L2(outarray[i], previous_iter[i]);
+
+                    if ( forcing_L2[i] != 0)
+                    {
+                        if ( (error/forcing_L2[i] >= tolerance) || (error >= tolerance) )
+                        {
+                            converged = false;
+                        }  
+                    }
+                    else
+                    {
+                        if ( error >= tolerance)
+                        {
+                            converged = false;
+                        }                
+                    }         
+                    if (error > max_error)
+                    {
+                        max_error = error;
+                    }
+
+                    // Copy field to previous_iter
+                    Vmath::Vcopy(physTot, outarray[i], 1, previous_iter[i], 1); 
+                }           
+            }
+            if (m_verbose)
+            {
+                std::cout << " Velocity system (mapping) converged in " << s << " iterations with error = " << max_error << std::endl;
+            }            
         }
     }
     

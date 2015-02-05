@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingWavyness.h
+// File: MappingXofZ.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Flow past a wavy body (in the z-direction)
+// Description: Mapping of the type X = x + f(z)
 //
 ///////////////////////////////////////////////////////////////////////////////
 

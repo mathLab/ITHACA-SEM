@@ -1517,5 +1517,34 @@ namespace Nektar
         return maxV;
     }
 
+    /**
+     *    Update oldarrays to include newarray and 
+     *          extrapolate result to outarray
+     */    
+    void Extrapolate::ExtrapolateArray(
+            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
+            Array<OneD, NekDouble>  &newarray,
+            Array<OneD, NekDouble>  &outarray)
+    {
+        int  nint    = min(m_pressureCalls,m_intSteps);
+        int nPts = newarray.num_elements();
+        
+        // Update oldarrays
+        RollOver(oldarrays);
+        Vmath::Vcopy(nPts, newarray, 1, oldarrays[0], 1);
+        
+        // Extrapolate to outarray
+        Vmath::Smul(nPts, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
+                         oldarrays[nint-1],    1,
+                         outarray, 1);
+
+        for(int n = 0; n < nint-1; ++n)
+        {
+            Vmath::Svtvp(nPts, StifflyStable_Betaq_Coeffs[nint-1][n],
+                         oldarrays[n],1,outarray,1,
+                         outarray,1);
+        }        
+    }
+
 }
 

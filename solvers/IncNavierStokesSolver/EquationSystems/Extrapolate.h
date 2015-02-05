@@ -125,6 +125,11 @@ namespace Nektar
         Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
         
+        void ExtrapolateArray(
+            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
+            Array<OneD, NekDouble>  &newarray,
+            Array<OneD, NekDouble>  &outarray);
+        
     protected:
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,        

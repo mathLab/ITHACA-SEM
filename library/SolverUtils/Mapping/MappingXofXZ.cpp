@@ -67,6 +67,41 @@ namespace SolverUtils
         int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields==3,"Mapping X = X(x,z) needs 3 velocity components.");
+        
+        // Read parameters
+        std::string typeStr = pMapping->Attribute("TYPE");
+        std::map<std::string, std::string> vParams;
+        const TiXmlElement *param = pMapping->FirstChildElement("PARAM");
+        while (param)
+        {
+            ASSERTL0(param->Attribute("NAME"),
+                     "Missing attribute 'NAME' for parameter in mapping "
+                     + typeStr + "'.");
+            std::string nameStr = param->Attribute("NAME");
+
+            ASSERTL0(param->GetText(), "Empty value string for param.");
+            std::string valueStr = param->GetText();
+
+            vParams[nameStr] = valueStr;
+
+            param = param->NextSiblingElement("PARAM");
+        }        
+        if (vParams.find("ImplicitPressure") != vParams.end())
+        {
+            if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
+               || boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "yes"))
+            {
+                m_implicitPressure = true;
+            }
+        }
+        if (vParams.find("ImplicitViscous") != vParams.end())
+        {
+            if (  boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "true")
+               || boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "yes"))
+            {
+                m_implicitViscous = true;
+            }
+        }        
 
         // Allocation of geometry memory
         for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
@@ -203,8 +238,8 @@ namespace SolverUtils
     {
         int physTot = m_fields[0]->GetTotPoints();
         
-        Vmath::Vmul(physTot, m_GeometricInfo[2], 1, inarray[0], 1, outarray, 1);   
-        Vmath::Vvtvp(physTot, m_GeometricInfo[3], 1, inarray[2], 1, 
+        Vmath::Vmul(physTot, m_GeometricInfo[3], 1, inarray[0], 1, outarray, 1);   
+        Vmath::Vvtvp(physTot, m_GeometricInfo[4], 1, inarray[2], 1, 
                                 outarray, 1, outarray,1);
     }
 

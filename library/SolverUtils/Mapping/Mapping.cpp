@@ -49,16 +49,17 @@ namespace Nektar
 
         Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
                          const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
-                : m_session(pSession), m_fields(pFields)
+                : m_session(pSession), m_fields(pFields),
+                  m_implicitPressure(false), m_implicitViscous(false)
         {
             m_nConvectiveFields = m_fields.num_elements()-1;
         }
 
         void Mapping::InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                const TiXmlElement* pForce)
+                const TiXmlElement* pMapping)
         {
-            v_InitObject(pFields, pForce);
+            v_InitObject(pFields, pMapping);
         }
 
         /**
@@ -309,6 +310,109 @@ namespace Nektar
             // Restore value of wavespace 
             m_fields[0]->SetWaveSpace(wavespace);
         }
+        
+        void Mapping::v_gradgradU(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            
+            // Declare variables
+            outarray = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel*nvel);
+            Array<OneD, Array<OneD, NekDouble> > wk1(nvel*nvel);
+            Array<OneD, Array<OneD, NekDouble> > wk2(nvel*nvel);
+            Array<OneD, Array<OneD, NekDouble> > tmp(nvel);   
+            for (int i=0; i< nvel; i++)
+            {
+                tmp[i] = Array<OneD, NekDouble>(physTot,0.0);
+                for (int j=0; j< nvel; j++)
+                {
+                    wk1[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
+                    wk2[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
+                    for (int k=0; k< nvel; k++)
+                    {
+                        outarray[i*nvel*nvel+j*nvel+k] = Array<OneD, NekDouble>(physTot,0.0);
+                    }
+                }
+            }
+            
+            // Set wavespace to false and store current value
+            bool wavespace = m_fields[0]->GetWaveSpace();
+            m_fields[0]->SetWaveSpace(false);
+            
+            // Calculate vector gradient u^i_(,j) = du^i/dx^j + {i,pj}*u^p
+            ApplyChristoffelContravar(inarray, wk1);        
+            for (int i=0; i< nvel; i++)
+            {
+                for (int j=0; j< nvel; j++)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
+                                            wk2[i*nvel+j]);
+
+                    Vmath::Vadd(physTot,wk1[i*nvel+j],1,wk2[i*nvel+j],1,wk2[i*nvel+j], 1);               
+                }
+            }            
+            
+            //
+            // Calculate (u^i_,j),k
+            //
+
+            // Step 1 : d(u^i_,j))/d(x^k)
+            for (int i=0; i< nvel; i++)
+            { 
+                for (int j=0; j< nvel; j++)
+                {
+                    for (int k=0; k< nvel; k++)
+                    {
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[k],
+                                wk1[i*nvel+j], outarray[i*nvel*nvel+j*nvel+k]); 
+                    }
+                }
+            }
+
+            // Step 2: d(u^i_,j)/d(x^k) - {p,jk}*u^i_,p
+            for (int i=0; i< nvel; i++)
+            {
+                for (int p=0; p< nvel; p++)
+                {
+                    Vmath::Vcopy(physTot, wk1[i*nvel+p], 1, tmp[p], 1);
+                }
+                ApplyChristoffelCovar(tmp, wk2);
+                for (int j=0; j< nvel; j++)
+                {
+                    for (int k=0; k< nvel; k++)
+                    {
+                        Vmath::Vsub(physTot,outarray[i*nvel*nvel+j*nvel+k],1,
+                                            wk2[j*nvel+k],1,
+                                            outarray[i*nvel*nvel+j*nvel+k], 1); 
+                    }
+
+                }
+            }        
+
+            // Step 3: d(u^i_,j)/d(x^k) - {p,jk}*u^i_,p + {i,pk} u^p_,j
+            for (int j=0; j< nvel; j++)
+            {
+                for (int p=0; p< nvel; p++)
+                {
+                    Vmath::Vcopy(physTot, wk1[p*nvel+j], 1, tmp[p], 1);
+                }
+                ApplyChristoffelContravar(tmp, wk2);
+                for (int i=0; i< nvel; i++)
+                {
+                    for (int k=0; k< nvel; k++)
+                    {
+                        Vmath::Vadd(physTot,outarray[i*nvel*nvel+j*nvel+k],1,
+                                            wk2[i*nvel+k],1,
+                                            outarray[i*nvel*nvel+j*nvel+k], 1);
+                    }                                   
+                }
+            }            
+                       
+            // Restore value of wavespace 
+            m_fields[0]->SetWaveSpace(wavespace);            
+        }
 
         void Mapping::v_IncNSAdvectionCorrection(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -405,6 +509,158 @@ namespace Nektar
                     Vmath::Vsub(physTot, outarray[i], 1, tmp, 1, outarray[i], 1);                
                 }
             } 
+            // Restore value of wavespace 
+            m_fields[0]->SetWaveSpace(wavespace);            
+        }
+        
+        void Mapping::v_CurlCurlField(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            Array<OneD, NekDouble> tmp (physTot, 0.0);
+            Array<OneD, Array<OneD, NekDouble> > wk1(nvel);
+            Array<OneD, Array<OneD, NekDouble> > wk2(nvel);
+            for (int i = 0; i < nvel; ++i)
+            {
+                wk1[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                wk2[i] = Array<OneD, NekDouble> (physTot, 0.0);
+            }
+            
+            // Set wavespace to false and store current value
+            bool wavespace = m_fields[0]->GetWaveSpace();
+            m_fields[0]->SetWaveSpace(false);
+            
+            // For implicit treatment of viscous terms, we want the generalized curlcurl
+            //     and for explicit treatment, we want the cartesian one.
+            if (ImplicitViscous())
+            {
+                // Get the second derivatives u^i_{,jk}
+                Array<OneD, Array<OneD, NekDouble> > ddU(nvel*nvel*nvel);
+                gradgradU(inarray, ddU);
+                
+                // Raise index to obtain A^{ip}_{k} = g^pj u^i_{,jk}
+                for (int i = 0; i < nvel; ++i)
+                {
+                    for (int k = 0; k < nvel; ++k)
+                    {
+                        // Copy to wk
+                        for (int j = 0; j < nvel; ++j)
+                        {
+                            Vmath::Vcopy(physTot, ddU[i*nvel*nvel+j*nvel+k], 1, wk1[j], 1);
+                        }
+                        RaiseIndex(wk1, wk2);
+                        for (int p=0; p<nvel; p++)
+                        {
+                           Vmath::Vcopy(physTot, wk2[p], 1, ddU[i*nvel*nvel+p*nvel+k], 1);
+                        }                       
+                    }
+                }
+                // The curlcurl is g^ji u^k_{kj} - g^jk u^i_kj = A^{ik}_k - A^{ki}_k
+                for (int i = 0; i < nvel; ++i)
+                {
+                    outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                    for (int k = 0; k < nvel; ++k)
+                    {
+                        Vmath::Vadd(physTot, outarray[i], 1,
+                                             ddU[i*nvel*nvel+k*nvel+k], 1,
+                                             outarray[i], 1);
+                        Vmath::Vsub(physTot, outarray[i], 1,
+                                             ddU[k*nvel*nvel+i*nvel+k], 1,
+                                             outarray[i], 1);
+                    }
+                }                               
+            }
+            else
+            {
+                switch(nvel)
+                {
+                    case 2:
+                    {
+                        Array<OneD,NekDouble> Vx(physTot);
+                        Array<OneD,NekDouble> Uy(physTot);
+                        Array<OneD,NekDouble> Dummy(physTot);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], inarray[1], Vx);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], inarray[0], Uy);
+
+                        Vmath::Vsub(physTot, Vx, 1, Uy, 1, Dummy, 1);
+
+                        m_fields[0]->PhysDeriv(Dummy,outarray[1],outarray[0]);
+
+                        Vmath::Smul(physTot, -1.0, outarray[1], 1, outarray[1], 1);
+                    }
+                    break;
+                    
+                    case 3:
+                    {
+                        // Declare variables
+                        Array<OneD,NekDouble> Ux(physTot);
+                        Array<OneD,NekDouble> Uy(physTot);
+                        Array<OneD,NekDouble> Uz(physTot);
+
+                        Array<OneD,NekDouble> Vx(physTot);
+                        Array<OneD,NekDouble> Vy(physTot);
+                        Array<OneD,NekDouble> Vz(physTot);
+
+                        Array<OneD,NekDouble> Wx(physTot);
+                        Array<OneD,NekDouble> Wy(physTot);
+                        Array<OneD,NekDouble> Wz(physTot);
+
+                        Array<OneD,NekDouble> Dummy1(physTot);
+                        Array<OneD,NekDouble> Dummy2(physTot);
+
+                        // Calculate gradient
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], inarray[0], Ux);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], inarray[0], Uy);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], inarray[0], Uz);        
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], inarray[1], Vx);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], inarray[1], Vy);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], inarray[1], Vz);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], inarray[2], Wx);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], inarray[2], Wy);
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], inarray[2], Wz);
+
+                        // x-component
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], Vx, Dummy1); //Vxy
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], Uy, Dummy2); //Uyy
+                        Vmath::Vsub(physTot, Dummy1, 1, Dummy2, 1, outarray[0],   1);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], Uz, Dummy1); //Uzz
+                        Vmath::Vsub(physTot, outarray[0],   1, Dummy1, 1,  outarray[0],   1);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], Wz, Dummy2); //Wxz
+                        Vmath::Vadd(physTot, outarray[0],   1, Dummy2, 1,  outarray[0],   1);
+
+                        // y-component
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], Wz, Dummy1); //Wzy
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], Vz, Dummy2); //Vzz       
+                        Vmath::Vsub(physTot, Dummy1, 1, Dummy2, 1, outarray[1],   1);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], Vx, Dummy1); //Vxx
+                        Vmath::Vsub(physTot, outarray[1],   1, Dummy1, 1,  outarray[1],   1);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], Uy, Dummy2); //Uyx
+                        Vmath::Vadd(physTot, outarray[1],   1, Dummy2, 1,  outarray[1],   1);  
+
+                        // z-component
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], Uz, Dummy1); //Uxz
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], Wy, Dummy2); //Wyy       
+                        Vmath::Vsub(physTot, Dummy1, 1, Dummy2, 1, outarray[2],   1);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], Wx, Dummy1); //Wxx
+                        Vmath::Vsub(physTot, outarray[2],   1, Dummy1, 1,  outarray[2],   1);
+
+                        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], Vz, Dummy2); //Vyz
+                        Vmath::Vadd(physTot, outarray[2],   1, Dummy2, 1,  outarray[2],   1);                        
+                    }
+                    break;
+                }
+            }
+
             // Restore value of wavespace 
             m_fields[0]->SetWaveSpace(wavespace);            
         }

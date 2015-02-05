@@ -213,6 +213,15 @@ namespace SolverUtils
                 v_VelocityLaplacian( inarray, outarray);
             } 
             
+            // Generalized velocity second order derivatives
+            //         ddU = u^i_{,jk}
+            SOLVER_UTILS_EXPORT void gradgradU(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            {
+                v_gradgradU( inarray, outarray);
+            }
+            
             // Correction needed for convective terms = N(u) - ( -(u \nabla) u)
             //     inarray is the velocity field
             SOLVER_UTILS_EXPORT void IncNSAdvectionCorrection(
@@ -242,6 +251,18 @@ namespace SolverUtils
                 v_IncNSViscousCorrection( inarray, outarray);
             }
             
+            // CurlCurl calculated on the whole field
+            //     when the mapping viscous are treated: 
+            //          - explicitly it corresponds to the Cartesian curl-curl
+            //          - implicitly it corresponds to the Generalized curl-curl
+                    
+            SOLVER_UTILS_EXPORT void CurlCurlField(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            {
+                v_CurlCurlField( inarray, outarray);
+            }
+            
             
             /////////////////////////////////////////////////////////////
             //
@@ -259,7 +280,19 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT bool HasConstantJacobian()
             {
                 return v_HasConstantJacobian();
-            }      
+            }
+            
+            // Define if the mapping pressure terms should be treated implicitly 
+            SOLVER_UTILS_EXPORT bool ImplicitPressure()
+            {
+                return m_implicitPressure;
+            }
+            
+            // Define if the mapping viscous terms should be treated implicitly
+            SOLVER_UTILS_EXPORT bool ImplicitViscous()
+            {
+                return m_implicitViscous;
+            }
             
             
             //
@@ -280,7 +313,10 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> >        m_GeometricInfo;
             // Number of velocity components
             int                                         m_nConvectiveFields;
-
+            // Flags defining if pressure and viscous mapping terms 
+            //should be treated implicitly
+            bool                                        m_implicitPressure;
+            bool                                        m_implicitViscous;
 
             /// Constructor
             SOLVER_UTILS_EXPORT Mapping(
@@ -361,6 +397,10 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);  
             
+            SOLVER_UTILS_EXPORT virtual void v_gradgradU(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+            
             SOLVER_UTILS_EXPORT virtual void v_IncNSAdvectionCorrection(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
@@ -370,6 +410,10 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             SOLVER_UTILS_EXPORT virtual void v_IncNSViscousCorrection(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+            SOLVER_UTILS_EXPORT virtual void v_CurlCurlField(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             

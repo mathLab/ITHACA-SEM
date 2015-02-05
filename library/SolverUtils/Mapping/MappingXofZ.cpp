@@ -68,6 +68,41 @@ namespace SolverUtils
         
         ASSERTL0(m_nConvectiveFields==3,"Mapping X = x + f(z) needs 3 velocity components.");
 
+        // Read parameters
+        std::string typeStr = pMapping->Attribute("TYPE");
+        std::map<std::string, std::string> vParams;
+        const TiXmlElement *param = pMapping->FirstChildElement("PARAM");
+        while (param)
+        {
+            ASSERTL0(param->Attribute("NAME"),
+                     "Missing attribute 'NAME' for parameter in mapping "
+                     + typeStr + "'.");
+            std::string nameStr = param->Attribute("NAME");
+
+            ASSERTL0(param->GetText(), "Empty value string for param.");
+            std::string valueStr = param->GetText();
+
+            vParams[nameStr] = valueStr;
+
+            param = param->NextSiblingElement("PARAM");
+        }        
+        if (vParams.find("ImplicitPressure") != vParams.end())
+        {
+            if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
+               || boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "yes"))
+            {
+                m_implicitPressure = true;
+            }
+        }
+        if (vParams.find("ImplicitViscous") != vParams.end())
+        {
+            if (  boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "true")
+               || boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "yes"))
+            {
+                m_implicitViscous = true;
+            }
+        }
+        
         // Allocation of geometry memory
         for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
         {

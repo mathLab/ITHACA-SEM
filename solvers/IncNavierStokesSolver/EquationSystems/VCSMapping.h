@@ -96,7 +96,8 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble time);
     
-    private:
+    private:        
+        Array<OneD, Array<OneD, NekDouble> >    m_presForcingCorrection;
         
     };
 

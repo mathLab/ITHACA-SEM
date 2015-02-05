@@ -89,6 +89,8 @@ namespace Nektar
         // Mapping object
         SolverUtils::MappingSharedPtr               m_mapping;
         
+        Array<OneD, NekDouble>                      m_bcCorrection;
+        
     };
     
 }

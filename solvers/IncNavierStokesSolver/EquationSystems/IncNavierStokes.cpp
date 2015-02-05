@@ -536,7 +536,6 @@ namespace Nektar
     {
 	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
  	int  i,j,k;
-	std::cout << m_time << "wom" << '\n';
 
 	// Womersley Number
 	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);

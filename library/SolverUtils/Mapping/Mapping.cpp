@@ -350,7 +350,7 @@ namespace Nektar
                     m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
                                             wk2[i*nvel+j]);
 
-                    Vmath::Vadd(physTot,wk1[i*nvel+j],1,wk2[i*nvel+j],1,wk2[i*nvel+j], 1);               
+                    Vmath::Vadd(physTot,wk1[i*nvel+j],1,wk2[i*nvel+j],1,wk1[i*nvel+j], 1);               
                 }
             }            
             
@@ -551,23 +551,23 @@ namespace Nektar
                             Vmath::Vcopy(physTot, ddU[i*nvel*nvel+j*nvel+k], 1, wk1[j], 1);
                         }
                         RaiseIndex(wk1, wk2);
-                        for (int p=0; p<nvel; p++)
+                        for (int p=0; p<nvel; ++p)
                         {
                            Vmath::Vcopy(physTot, wk2[p], 1, ddU[i*nvel*nvel+p*nvel+k], 1);
                         }                       
                     }
                 }
-                // The curlcurl is g^ji u^k_{kj} - g^jk u^i_kj = A^{ik}_k - A^{ki}_k
+                // The curlcurl is g^ji u^k_{kj} - g^jk u^i_kj = A^{ki}_k - A^{ik}_k
                 for (int i = 0; i < nvel; ++i)
                 {
                     outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
                     for (int k = 0; k < nvel; ++k)
                     {
                         Vmath::Vadd(physTot, outarray[i], 1,
-                                             ddU[i*nvel*nvel+k*nvel+k], 1,
+                                             ddU[k*nvel*nvel+i*nvel+k], 1,
                                              outarray[i], 1);
                         Vmath::Vsub(physTot, outarray[i], 1,
-                                             ddU[k*nvel*nvel+i*nvel+k], 1,
+                                             ddU[i*nvel*nvel+k*nvel+k], 1,
                                              outarray[i], 1);
                     }
                 }                               

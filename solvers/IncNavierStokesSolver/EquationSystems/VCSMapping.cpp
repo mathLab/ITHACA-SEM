@@ -171,7 +171,7 @@ namespace Nektar
             Array<OneD, NekDouble> Jac(physTot,0.0);
             m_mapping->GetJacobian(Jac);
             
-            // Calculate div(-J*u/Dt)
+            // Calculate div(J*u/Dt)
             Vmath::Zero(physTot,Forcing[0],1);
             for(int i = 0; i < nvel; ++i)
             {
@@ -524,7 +524,7 @@ namespace Nektar
 
             // Factors for Helmholtz system
             StdRegions::ConstFactorMap factors;
-            factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+            factors[StdRegions::eFactorLambda] = 1.0*alpha/aii_Dt/m_kinvis;
             if(m_useSpecVanVisc)
             {
                 factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;

@@ -235,23 +235,7 @@ namespace Nektar
          		    m_fields[i]->GlobalToLocal();
           		    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
-			    
-			// Time Dependent Boundary Conditions
-			   SetBoundaryConditions(m_time);
-           
-//		for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
-//
-//                { 
-//			if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-//                   	SpatialDomains::eWomersley)  
-//                	{
-//                           SetWomersleyBoundary(i,n);
-//              		}
-//			   
-//
-//                }
-
-
+                   	    std::cout << "Impose Dirichlet " << '\n';
         }
     }
     

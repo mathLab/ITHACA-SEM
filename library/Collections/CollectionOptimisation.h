@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Collection.h 
+// File: Collection.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -40,104 +40,108 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <tinyxml.h>
 
-namespace Nektar 
+namespace Nektar
 {
-    namespace Collections 
-    {        
-        class OpImpTimingKey
+namespace Collections
+{
+
+class OpImpTimingKey
+{
+public:
+    /// Constructor
+    OpImpTimingKey(StdRegions::StdExpansionSharedPtr pExp,
+            int ngeoms, int nbases):
+        m_exp(pExp),
+        m_ngeoms(ngeoms),
+        m_nbasis(nbases)
+    {
+    }
+
+    /// Destructor
+    ~OpImpTimingKey(void)
+    {
+    }
+
+
+    bool operator<(const OpImpTimingKey &rhs) const
+    {
+
+        if(m_nbasis <   rhs.m_nbasis)
         {
-        public:
-            /// Constructor
-            OpImpTimingKey(StdRegions::StdExpansionSharedPtr pExp, int ngeoms, int nbases):
-                    m_exp(pExp),
-                    m_ngeoms(ngeoms),
-                    m_nbasis(nbases)
+            return true;
+        }
+
+        if(m_nbasis > rhs.m_nbasis)
+        {
+            return false;
+        }
+
+        for(int i = 0; i < m_nbasis; ++i)
+        {
+            if( m_exp->GetBasis(i)->GetBasisKey() !=
+                rhs.m_exp->GetBasis(i)->GetBasisKey() )
             {
+                return (m_exp->GetBasis(i)->GetBasisKey() <
+                        rhs.m_exp->GetBasis(i)->GetBasisKey());
             }
-            
-            /// Destructor
-                ~OpImpTimingKey(void)
+        }
+
+        if( (m_ngeoms < 100) && (rhs.m_ngeoms < 100) )
+        {
+            if(m_ngeoms < rhs.m_ngeoms)
             {
+                return true;
             }
-            
-
-            bool operator<(const OpImpTimingKey &rhs) const
+            else
             {
-
-                if(m_nbasis <   rhs.m_nbasis) 
-                {
-                    return true; 
-                }
-
-                if(m_nbasis > rhs.m_nbasis)
-                {
-                    return false; 
-                }
-                
-                for(int i = 0; i < m_nbasis; ++i)
-                {
-                    if((m_exp->GetBasis(i)->GetBasisKey() 
-                        != rhs.m_exp->GetBasis(i)->GetBasisKey()))
-                    {
-		      return (m_exp->GetBasis(i)->GetBasisKey() < rhs.m_exp->GetBasis(i)->GetBasisKey());
-                    }
-                }
-                
-                if((m_ngeoms < 100)&&(rhs.m_ngeoms < 100))
-                {
-
-                    if(m_ngeoms < rhs.m_ngeoms)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                
                 return false;
             }
+        }
 
-            StdRegions::StdExpansionSharedPtr m_exp; 
-            int m_ngeoms; 
-            int m_nbasis; 
-        private:
-        };
-        
-        
-        class CollectionOptimisation
-        {
-            typedef pair<LibUtilities::ShapeType, int> ElmtOrder;
-
-        public:
-            // Constuctor 
-            CollectionOptimisation( LibUtilities::SessionReaderSharedPtr pSession,
-                                    ImplementationType defaultType = eStdMat);
-
-            ~CollectionOptimisation(){};
-
-            
-            /// Get Operator Implementation Map from XMl or using default; 
-            OperatorImpMap  GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp);
-
-            // Get Map by doing autotuning testing. 
-            OperatorImpMap SetWithTimings(vector<StdRegions::StdExpansionSharedPtr> pGeom,
-                                          OperatorImpMap &impTypes,
-                                          bool verbose = true);
-
-
-                
-            bool SetByXml(void)
-            {
-                return m_setByXml;
-            }
-
-        private:
-            static map<OpImpTimingKey,OperatorImpMap> m_opImpMap;
-            map<OperatorType, map<ElmtOrder, ImplementationType> > m_global;
-            bool m_setByXml;
-        };
+        return false;
     }
+
+    StdRegions::StdExpansionSharedPtr m_exp;
+    int m_ngeoms;
+    int m_nbasis;
+
+private:
+
+};
+
+
+class CollectionOptimisation
+{
+    typedef pair<LibUtilities::ShapeType, int> ElmtOrder;
+
+public:
+    // Constuctor
+    CollectionOptimisation(
+            LibUtilities::SessionReaderSharedPtr pSession,
+            ImplementationType defaultType = eStdMat);
+
+    ~CollectionOptimisation(){};
+
+    /// Get Operator Implementation Map from XMl or using default;
+    OperatorImpMap  GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp);
+
+    // Get Map by doing autotuning testing.
+    OperatorImpMap SetWithTimings(
+            vector<StdRegions::StdExpansionSharedPtr> pGeom,
+            OperatorImpMap &impTypes,
+            bool verbose = true);
+
+    bool SetByXml(void)
+    {
+        return m_setByXml;
+    }
+
+private:
+    static map<OpImpTimingKey,OperatorImpMap> m_opImpMap;
+    map<OperatorType, map<ElmtOrder, ImplementationType> > m_global;
+    bool m_setByXml;
+};
+
+}
 }
 #endif

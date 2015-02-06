@@ -36,182 +36,189 @@
 #include <Collections/Collection.h>
 
 namespace Nektar {
+namespace Collections {
 
-    namespace Collections {
+CoalescedGeomData::CoalescedGeomData(void)
+{
+}
 
+CoalescedGeomData::~CoalescedGeomData(void)
+{
+}
 
-        CoalescedGeomData::CoalescedGeomData(void)
+const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
+        vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
+{
+
+    if(m_oneDGeomData.count(eJac) == 0)
+    {
+
+        LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+        int nElmts = pCollExp.size();
+
+        // set up Cached Jacobians to be continuous
+        int npts = 1;
+        for (int i = 0; i < ptsKeys.size(); ++i)
         {
+            npts   *= ptsKeys[i].GetNumPoints();
         }
 
-        CoalescedGeomData::~CoalescedGeomData(void)
-        {
-        }
 
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
-        {
+        Array<OneD, NekDouble> newjac(npts*nElmts);
 
-            if(m_oneDGeomData.count(eJac) == 0)
+        //copy Jacobians into a continuous list and set new chatched value
+        int cnt = 0;
+        for(int i = 0; i < nElmts; ++i)
+        {
+            const Array<OneD, const NekDouble> jac =
+                                pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
+
+            if (pCollExp[i]->GetMetricInfo()->GetGtype() ==
+                    SpatialDomains::eDeformed)
             {
-
-                LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();            
-                int nElmts = pCollExp.size();
-                
-                // set up Cached Jacobians to be continuous 
-                int npts = 1;
-                for (int i = 0; i < ptsKeys.size(); ++i)
-                {
-                    npts   *= ptsKeys[i].GetNumPoints();
-                }
-                
-
-                Array<OneD, NekDouble> newjac(npts*nElmts);
-            
-                //copy Jacobians into a continuous list and set new chatched value
-                int cnt = 0;
-                for(int i = 0; i < nElmts; ++i)
-                {
-                    const Array<OneD, const NekDouble> jac= pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
-                    
-                    if (pCollExp[i]->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
-                    }
-                    else
-                    {
-                        Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
-                    }
-
-                    cnt += npts;
-                }
-                
-                m_oneDGeomData[eJac] = newjac; 
+                Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
             }
-            
-            return m_oneDGeomData[eJac];
-        }
-
-
-
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
-        {
-            if(m_oneDGeomData.count(eJacWithStdWeights) == 0)
+            else
             {
-                LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();            
-                int nElmts = pCollExp.size();
-                
-                // set up Cached Jacobians to be continuous 
-                int npts = 1;
-                for (int i = 0; i < ptsKeys.size(); ++i)
-                {
-                    npts   *= ptsKeys[i].GetNumPoints();
-                }
-                
-
-                Array<OneD, NekDouble> newjac(npts*nElmts), tmp;
-            
-                //copy Jacobians into a continuous list and set new chatched value
-                int cnt = 0;
-                for(int i = 0; i < nElmts; ++i)
-                {
-                    const Array<OneD, const NekDouble> jac= pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
-                    
-                    if (pCollExp[i]->GetMetricInfo()->GetGtype() 
-                        == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
-                    }
-                    else
-                    {
-                        Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
-                    }
-                    
-                    pCollExp[0]->MultiplyByStdQuadratureMetric(newjac+cnt,tmp=newjac+cnt);
-                    cnt += npts;
-                }
-                
-                m_oneDGeomData[eJacWithStdWeights] = newjac; 
+                Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
             }
-            
-            return m_oneDGeomData[eJacWithStdWeights];
+
+            cnt += npts;
+        }
+
+        m_oneDGeomData[eJac] = newjac;
+    }
+
+    return m_oneDGeomData[eJac];
+}
+
+
+
+const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(
+        vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
+{
+    if(m_oneDGeomData.count(eJacWithStdWeights) == 0)
+    {
+        LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+        int nElmts = pCollExp.size();
+
+        // set up Cached Jacobians to be continuous
+        int npts = 1;
+        for (int i = 0; i < ptsKeys.size(); ++i)
+        {
+            npts   *= ptsKeys[i].GetNumPoints();
         }
 
 
-        const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
+        Array<OneD, NekDouble> newjac(npts*nElmts), tmp;
+
+        //copy Jacobians into a continuous list and set new chatched value
+        int cnt = 0;
+        for(int i = 0; i < nElmts; ++i)
         {
-            if(m_twoDGeomData.count(eDerivFactors) == 0)
+            const Array<OneD, const NekDouble> jac =
+                            pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
+
+            if (pCollExp[i]->GetMetricInfo()->GetGtype() ==
+                    SpatialDomains::eDeformed)
             {
-                LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();            
-                
-                int nElmts = pCollExp.size();
-                const int coordim = pCollExp[0]->GetCoordim();
-                int dim = ptsKeys.size();
-
-                // set up Cached Jacobians to be continuous 
-                int npts = 1;
-                for (int i = 0; i < dim; ++i)
-                {
-                    npts   *= ptsKeys[i].GetNumPoints();
-                }
-                
-
-                Array<TwoD, NekDouble> newDFac(dim*coordim,npts*nElmts);
-            
-                //copy Jacobians into a continuous list and set new chatched value
-                int cnt = 0;
-                for(int i = 0; i < nElmts; ++i)
-                {
-                    const Array<TwoD, const NekDouble> Dfac= pCollExp[i]->GetMetricInfo()->GetDerivFactors(ptsKeys);
-                    
-                    if (pCollExp[i]->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        for (int j = 0; j < dim*coordim; ++j)
-                        {
-                            Vmath::Vcopy(npts, &Dfac[j][0], 1, &newDFac[j][cnt], 1);
-                        }
-                    }
-                    else
-                    {
-                        for (int j = 0; j < dim*coordim; ++j)
-                        {
-                            Vmath::Fill(npts, Dfac[j][0], &newDFac[j][cnt], 1);
-                        }
-                    }
-                    cnt += npts;
-                }
-                
-                m_twoDGeomData[eDerivFactors] = newDFac; 
+                Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
             }
-            
-            return m_twoDGeomData[eDerivFactors];
+            else
+            {
+                Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
+            }
+
+            pCollExp[0]->MultiplyByStdQuadratureMetric(newjac + cnt,
+                                                       tmp = newjac + cnt);
+            cnt += npts;
         }
 
-        Collection::Collection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                               OperatorImpMap &impTypes)
+        m_oneDGeomData[eJacWithStdWeights] = newjac;
+    }
+
+    return m_oneDGeomData[eJacWithStdWeights];
+}
+
+
+const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
+        vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
+{
+    if(m_twoDGeomData.count(eDerivFactors) == 0)
+    {
+        LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+
+        int nElmts = pCollExp.size();
+        const int coordim = pCollExp[0]->GetCoordim();
+        int dim = ptsKeys.size();
+
+        // set up Cached Jacobians to be continuous
+        int npts = 1;
+        for (int i = 0; i < dim; ++i)
         {
-            OperatorImpMap::iterator it;
+            npts   *= ptsKeys[i].GetNumPoints();
+        }
 
-            // Initialise geometry data.
-            m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
 
-            // Loop over all operator types.
-            for (int i = 0; i < SIZE_OperatorType; ++i)
+        Array<TwoD, NekDouble> newDFac(dim*coordim,npts*nElmts);
+
+        //copy Jacobians into a continuous list and set new chatched value
+        int cnt = 0;
+        for(int i = 0; i < nElmts; ++i)
+        {
+            const Array<TwoD, const NekDouble> Dfac =
+                    pCollExp[i]->GetMetricInfo()->GetDerivFactors(ptsKeys);
+
+            if (pCollExp[i]->GetMetricInfo()->GetGtype() ==
+                    SpatialDomains::eDeformed)
             {
-                OperatorType opType = (OperatorType)i;
-                ImplementationType impType;
-
-                it = impTypes.find(opType);
-                impType = it == impTypes.end() ? eIterPerExp : it->second;
-
-                OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType, pCollExp[0]->IsNodalNonTensorialExp());
-                if (GetOperatorFactory().ModuleExists(opKey))
+                for (int j = 0; j < dim*coordim; ++j)
                 {
-                    //cout << opKey << endl;
-                    m_ops[opType] = GetOperatorFactory().CreateInstance(
-                        opKey, pCollExp, m_geomData);
+                    Vmath::Vcopy(npts, &Dfac[j][0], 1, &newDFac[j][cnt], 1);
                 }
             }
+            else
+            {
+                for (int j = 0; j < dim*coordim; ++j)
+                {
+                    Vmath::Fill(npts, Dfac[j][0], &newDFac[j][cnt], 1);
+                }
+            }
+            cnt += npts;
+        }
+
+        m_twoDGeomData[eDerivFactors] = newDFac;
+    }
+
+    return m_twoDGeomData[eDerivFactors];
+}
+
+Collection::Collection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                       OperatorImpMap &impTypes)
+{
+    OperatorImpMap::iterator it;
+
+    // Initialise geometry data.
+    m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
+
+    // Loop over all operator types.
+    for (int i = 0; i < SIZE_OperatorType; ++i)
+    {
+        OperatorType opType = (OperatorType)i;
+        ImplementationType impType;
+
+        it = impTypes.find(opType);
+        impType = it == impTypes.end() ? eIterPerExp : it->second;
+
+        OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
+                          pCollExp[0]->IsNodalNonTensorialExp());
+        if (GetOperatorFactory().ModuleExists(opKey))
+        {
+            m_ops[opType] = GetOperatorFactory().CreateInstance(
+                                                opKey, pCollExp, m_geomData);
         }
     }
 }
-    
+}
+}
+

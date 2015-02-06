@@ -40,92 +40,95 @@
 
 #include <boost/unordered_map.hpp>
 
-namespace Nektar 
+namespace Nektar
 {
-    namespace Collections 
+namespace Collections
+{
+
+enum GeomData
+{
+    eJac,
+    eJacWithStdWeights,
+    eDerivFactors
+};
+
+class CoalescedGeomData
+{
+public:
+    CoalescedGeomData(void);
+
+    virtual ~CoalescedGeomData(void);
+
+    const Array<OneD, const NekDouble> &GetJac(
+            vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+
+    const Array<OneD, const NekDouble> &GetJacWithStdWeights(
+            vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+
+    const Array<TwoD, const NekDouble> &GetDerivFactors(
+            vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+
+private:
+    map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
+    map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
+};
+
+typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+
+static CoalescedGeomDataSharedPtr GeomDataNull;
+
+
+/**
+ * @brief Collection
+ */
+class Collection
+{
+public:
+
+    Collection(vector<StdRegions::StdExpansionSharedPtr> pColLExp,
+               OperatorImpMap &impTypes);
+
+    void ApplyOperator(const OperatorType                 &op,
+                       const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD,       NekDouble> &output)
     {
-
-
-        enum GeomData
-        {
-            eJac,
-            eJacWithStdWeights,
-            eDerivFactors
-        };
-
-        class CoalescedGeomData
-        {
-        public:
-            CoalescedGeomData(void);
-            
-            virtual ~CoalescedGeomData(void);
-
-            const Array<OneD, const NekDouble> &GetJac(vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
-
-            const Array<OneD, const NekDouble> &GetJacWithStdWeights(vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
-
-            const Array<TwoD, const NekDouble> &GetDerivFactors(vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
-        private:
-            map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
-            map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
-        };
-        
-        typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
-                
-        static CoalescedGeomDataSharedPtr GeomDataNull;
-
-
-        /**
-         * @brief Collection
-         */
-        class Collection
-        {
-        public:
-            
-            Collection(vector<StdRegions::StdExpansionSharedPtr> pColLExp,
-                       OperatorImpMap &impTypes);
-            
-            void ApplyOperator(const OperatorType                 &op,
-                               const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD,       NekDouble> &output)
-            {
-                Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
-                (*m_ops[op])(inarray, output, NullNekDouble1DArray,
-                             NullNekDouble1DArray, wsp);
-            }
-
-
-            void ApplyOperator(const OperatorType                 &op,
-                               const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD,       NekDouble> &output0,
-                               Array<OneD,       NekDouble> &output1)
-            {
-                Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
-                (*m_ops[op])(inarray, output0, output1, NullNekDouble1DArray, wsp);
-            }
-
-            void ApplyOperator(const OperatorType                 &op,
-                               const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD,       NekDouble> &output0,
-                               Array<OneD,       NekDouble> &output1,
-                               Array<OneD,       NekDouble> &output2)
-            {
-                Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
-                (*m_ops[op])(inarray, output0, output1, output2, wsp);
-            }
-
-        protected:
-            StdRegions::StdExpansionSharedPtr                     m_stdExp;
-            vector<SpatialDomains::GeometrySharedPtr>             m_geom;
-            boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
-            CoalescedGeomDataSharedPtr                            m_geomData;
-
-        };
-
-        typedef std::vector<Collection> CollectionVector;
-        typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
-
+        Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+        (*m_ops[op])(inarray, output, NullNekDouble1DArray,
+                     NullNekDouble1DArray, wsp);
     }
+
+
+    void ApplyOperator(const OperatorType                 &op,
+                       const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD,       NekDouble> &output0,
+                             Array<OneD,       NekDouble> &output1)
+    {
+        Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+        (*m_ops[op])(inarray, output0, output1, NullNekDouble1DArray, wsp);
+    }
+
+    void ApplyOperator(const OperatorType                 &op,
+                       const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD,       NekDouble> &output0,
+                             Array<OneD,       NekDouble> &output1,
+                             Array<OneD,       NekDouble> &output2)
+    {
+        Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+        (*m_ops[op])(inarray, output0, output1, output2, wsp);
+    }
+
+protected:
+    StdRegions::StdExpansionSharedPtr                     m_stdExp;
+    vector<SpatialDomains::GeometrySharedPtr>             m_geom;
+    boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
+    CoalescedGeomDataSharedPtr                            m_geomData;
+
+};
+
+typedef std::vector<Collection> CollectionVector;
+typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
+
+}
 }
 
 #endif

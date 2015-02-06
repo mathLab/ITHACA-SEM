@@ -40,6 +40,7 @@ SET(SOLVER_UTILS_SOURCES
   Mapping/Mapping.cpp
   Mapping/MappingXofXZ.cpp
   Mapping/MappingXofZ.cpp
+  Mapping/MappingXYofZ.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -86,6 +87,7 @@ SET(SOLVER_UTILS_HEADERS
   Mapping/Mapping.h
   Mapping/MappingXofXZ.h
   Mapping/MappingXofZ.h
+  Mapping/MappingXYofZ.h
 )
 
 IF (NEKTAR_USE_ARPACK)

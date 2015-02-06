@@ -189,6 +189,52 @@ namespace Nektar
             }
         }
         
+        void Mapping::v_LowerIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            
+            Array<OneD, Array<OneD, NekDouble> > g(nvel*nvel);
+            
+            GetMetricTensor(g);
+            
+            for (int i=0; i< nvel; i++)
+            {
+                outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                for (int j=0; j< nvel; j++)
+                {
+                    Vmath::Vvtvp(physTot, g[i*nvel+j], 1, inarray[j], 1,
+                                            outarray[i], 1,
+                                            outarray[i], 1);
+                }
+            }
+        }
+
+        void Mapping::v_RaiseIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            
+            Array<OneD, Array<OneD, NekDouble> > g(nvel*nvel);
+            
+            GetInvMetricTensor(g);
+            
+            for (int i=0; i< nvel; i++)
+            {
+                outarray[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                for (int j=0; j< nvel; j++)
+                {
+                    Vmath::Vvtvp(physTot, g[i*nvel+j], 1, inarray[j], 1,
+                                            outarray[i], 1,
+                                            outarray[i], 1);
+                }
+            } 
+        }
+        
         void Mapping::v_Divergence(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, NekDouble>                            &outarray)

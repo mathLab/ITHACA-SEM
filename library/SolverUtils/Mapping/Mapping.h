@@ -407,11 +407,11 @@ namespace SolverUtils
             
             SOLVER_UTILS_EXPORT virtual void v_LowerIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             SOLVER_UTILS_EXPORT virtual void v_RaiseIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
             SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelContravar(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,

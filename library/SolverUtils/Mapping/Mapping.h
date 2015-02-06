@@ -344,11 +344,15 @@ namespace SolverUtils
             NekDouble                                   m_pressureRelaxation;
             NekDouble                                   m_viscousRelaxation;
             
+            // Static variables to load mapping
+            static MappingSharedPtr                     m_mappingPtr;
+            static bool                                 m_init;
+            
             
 
             /// Constructor
             SOLVER_UTILS_EXPORT Mapping(
-                const LibUtilities::SessionReaderSharedPtr&,
+                const LibUtilities::SessionReaderSharedPtr&          pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
 
             // Evaluators

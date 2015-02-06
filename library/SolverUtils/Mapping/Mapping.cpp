@@ -39,6 +39,9 @@ namespace Nektar
 {
     namespace SolverUtils
     {
+        MappingSharedPtr Mapping::m_mappingPtr;
+        bool             Mapping::m_init = false;
+        
         MappingFactory& GetMappingFactory()
         {
             typedef Loki::SingletonHolder<MappingFactory,
@@ -69,23 +72,26 @@ namespace Nektar
                             const LibUtilities::SessionReaderSharedPtr& pSession,
                             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
         {
-            MappingSharedPtr mapping;
-
             if (!pSession->DefinesElement("Nektar/Mapping"))
             {
-                return mapping;
+                return m_mappingPtr;
             }
-
-            TiXmlElement* vMapping = pSession->GetElement("Nektar/Mapping");
-            if (vMapping)
+            
+            if (!m_init)
             {
-                string vType = vMapping->Attribute("TYPE");
+                TiXmlElement* vMapping = pSession->GetElement("Nektar/Mapping");
+                if (vMapping)
+                {
+                    string vType = vMapping->Attribute("TYPE");
 
-                mapping =   GetMappingFactory().CreateInstance(
-                                    vType, pSession, pFields,
-                                    vMapping);
+                    m_mappingPtr =   GetMappingFactory().CreateInstance(
+                                        vType, pSession, pFields,
+                                        vMapping);
+                }
+                m_init = true;
             }
-            return mapping;
+             
+            return m_mappingPtr;
         }
 
         void Mapping::EvaluateTimeFunction(

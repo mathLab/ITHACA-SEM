@@ -235,7 +235,8 @@ namespace Nektar
          		    m_fields[i]->GlobalToLocal();
           		    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
-                   	    std::cout << "Impose Dirichlet " << '\n';
+                   	    std::cout << "Impose Dirichlet " << m_time << '\n';
+			    SetBoundaryConditions(m_time); 
         }
     }
     

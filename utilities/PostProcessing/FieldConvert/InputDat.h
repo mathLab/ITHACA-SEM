@@ -60,7 +60,9 @@ public:
     static ModuleKey m_className[];
 
 private:
-    void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line);
+    void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line,
+                                Array<OneD, Array<OneD, NekDouble> > &pts,
+                                vector<Array<OneD, int> > &ptsConn);
 };
 
 }

@@ -226,7 +226,7 @@ Incompressible Navier-Stokes cases,
 Finally, multi-variable functions such as initial conditions and analytic
 solutions may be specified for use in, or comparison with, simulations. These
 may be specified using expressions (\inltt{<E>}) or imported from a file
-(\inltt{<F>}) using the Nektar++ FLD file format
+(\inltt{<F>}) using the Nektar++ .fld or .pts file formats
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="ExactSolution">
@@ -237,11 +237,31 @@ may be specified using expressions (\inltt{<E>}) or imported from a file
 </FUNCTION>
 \end{lstlisting}
 
-A restart file is a solution file (in other words an .fld renamed as .rst) where
+An .fld  file is a solution file (in other words an .fld renamed as .rst) where
 the field data is specified. The expansion order used to generate the .rst file
-must be the same as that for the simulation. The filename must be specified
-relative to the location of the .xml file.
+must be the same as that for the simulation.
+.pts files contain scattered point data which needs to be interpolated to the field. 
+For further information on the file format and the different interpolation schemes, see
+section~\ref{s:utilities:fieldconvert:sub:interppointdatatofld}.
+All filenames must be specified relative to the location of the .xml file.
 
+With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
+loaded for each timestep. The filenames are defined using
+\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format syntax}
+where the step time is used as variable. For example, the function
+\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
+\inltt{U0V0\_2.00000000E-05.fld} and so on.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Baseflow">
+	<F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8E.fld"/>
+</FUNCTION>
+\end{lstlisting}
+
+For .pts files, the time consuming computation of interpolation weights in only
+performed for the first timestep. The weights are stored and reused in all subsequent steps, 
+which is why all consecutive .pts files must use the same ordering, number and location of
+data points.
 Other examples of this input feature can be the insertion of a forcing term,
 
 \begin{lstlisting}[style=XMLStyle]
@@ -278,7 +298,7 @@ We can manually specify this mapping by adding a colon to the
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="AdvectionVelocity">
-  <F VAR="Vx,Vy,Vz" VALUE="file.fld:u,v,w" />
+  <F VAR="Vx,Vy,Vz" FILE="file.fld:u,v,w" />
 </FUNCTION>
 \end{lstlisting}
 
@@ -289,13 +309,13 @@ There are some caveats with this syntax:
   after the colon. For example, the following is not valid.
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
-      <F VAR="Vx,Vy,Vz" VALUE="file.fld:u" />
+      <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />
     </FUNCTION>\end{lstlisting}
   \item This syntax is not valid with the wildcard operator \inltt{*}, so one
   cannot write for example:
   \begin{lstlisting}[style=XMLStyle,gobble=4]
     <FUNCTION NAME="AdvectionVelocity">
-      <F VAR="*" VALUE="file.fld:u,v,w" />
+      <F VAR="*" FILE="file.fld:u,v,w" />
     </FUNCTION>
   \end{lstlisting}
 \end{itemize}

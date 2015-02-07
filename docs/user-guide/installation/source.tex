@@ -24,7 +24,7 @@ There are two ways to obtain the source code for \nekpp:
 	public repository. Use this initially if you would like to try using 
 	Nektar++.
     \begin{lstlisting}[style=BashInputStyle]
-        git clone http://gitlab.nektar.info/clone/nektar.git nektar++
+        git clone http://gitlab.nektar.info/clone/nektar/nektar.git nektar++
     \end{lstlisting}
 	\item Using authenticated access. This will allow you to directly contribute
 	back into the code.
@@ -74,7 +74,7 @@ OpenMPI         &        & \cmark &        &        & For
 parallel execution\\
 GSMPI           &        &        &        & \cmark & For
 parallel execution\\
-PetSC           &        &        & \cmark & \cmark &
+PETSc           &        &        & \cmark & \cmark &
 Alternative linear solvers\\
 Scotch          &        & \cmark & \cmark & \cmark &
 Alternative mesh partitioning\\
@@ -95,7 +95,7 @@ Open a terminal.
 
 If you have downloaded the tarball, first unpack it:
 \begin{lstlisting}[style=BashInputStyle]
-    tar -zxvf nektar++-\nekver.tar.gz
+tar -zxvf nektar++-(*\nekver*).tar.gz
 \end{lstlisting}
 Change into the \inlsh{nektar++} source code directory
 \begin{lstlisting}[style=BashInputStyle]
@@ -109,7 +109,7 @@ From a terminal:
 \begin{enumerate}
     \item If you have downloaded the tarball, first unpack it
     \begin{lstlisting}[style=BashInputStyle]
-    tar -zxvf nektar++-\nekver.tar.gz
+tar -zxvf nektar++-(*\nekver*).tar.gz
     \end{lstlisting}
     
     \item Change into the source-code directory, create a \inltt{build}
@@ -118,7 +118,7 @@ From a terminal:
     mkdir -p build && cd build
     \end{lstlisting}
     
-    \item Run the CMake GUI and configure the build
+    \item Run the CMake GUI and configure the build by pressing \inltt{c}
     \begin{lstlisting}[style=BashInputStyle]
     ccmake ../
     \end{lstlisting}
@@ -211,30 +211,30 @@ system-wide).
         &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
 Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
-Xcode           & \cmark &        & & & gcc, icc, etc \\
-CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
+Xcode           & \cmark &        & & & Provides developer tools \\
+CMake  $>2.8.7$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
 GUI optional \\
-BLAS            & \cmark &        &        &        & Part of
+BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
-LAPACK          & \cmark &        &        &        & Part of
+LAPACK          & \cmark &                  &        &        & Part of
 Xcode \\
-Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
-with iostreams
-\\
-ModMETIS        & \cmark &        &        & \cmark & \\
-FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
+Boost $>1.49$   & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
+with iostreams \\
+TinyXML         & \cmark & \texttt{tinyxml} & \cmark & \cmark & \\
+ModMETIS        & \cmark &                  &        & \cmark & \\
+FFTW $>3.0$     &        & \texttt{fftw-3}  & \cmark & \cmark & For
 high-performance FFTs\\
-ARPACK $>2.0$   &        & \cmark & \cmark &        & For
+ARPACK $>2.0$   &        & \texttt{arpack}  & \cmark &        & For
 arnoldi algorithms\\
-OpenMPI         &        & \cmark &        &        & For
+OpenMPI         &        & \texttt{openmpi} &        &        & For
 parallel execution\\
-GSMPI           &        &        &        & \cmark & For
+GSMPI           &        &                  &        & \cmark & For
 parallel execution\\
-PetSC           &        & \cmark & \cmark & \cmark &
+PETSc           &        & \texttt{petsc}   & \cmark & \cmark &
 Alternative linear solvers\\
-Scotch          &        &        & \cmark & \cmark &
+Scotch          &        & \texttt{scotch}  & \cmark & \cmark &
 Alternative mesh partitioning\\
-VTK $>5.8$      &        & \cmark & \cmark &        &
+VTK $>5.8$      &        & \texttt{vtk}     & \cmark &        &
 Visualisation utilities\\
 \bottomrule
 \end{tabular}
@@ -253,6 +253,9 @@ CMake, and some other software, is available from MacPorts
 (\url{http://macports.org}) and can be installed using, for example,
 
 \noindent\usebox\installationOSXMacPortsTip
+
+Package names are given in the table above. Similar packages also exist in other
+package managers such as Homebrew.
 \end{tipbox}
 
 
@@ -261,7 +264,7 @@ Open a terminal (Applications->Utilities->Terminal).
 
 If you have downloaded the tarball, first unpack it:
 \begin{lstlisting}[style=BashInputStyle]
-    tar -zxvf nektar++-\nekver.tar.gz
+tar -zxvf nektar++-(*\nekver*).tar.gz
 \end{lstlisting}
 Change into the \inlsh{nektar++} source code directory
 \begin{lstlisting}[style=BashInputStyle]
@@ -275,7 +278,7 @@ From a terminal (Applications->Utilities->Terminal):
 \begin{enumerate}
     \item If you have downloaded the tarball, first unpack it
     \begin{lstlisting}[style=BashInputStyle]
-    tar -zxvf nektar++-\nekver.tar.gz
+tar -zxvf nektar++-(*\nekver*).tar.gz
     \end{lstlisting}
 
     \item Change into the source-code directory, create a \inltt{build}
@@ -388,9 +391,9 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   to the PATH.
   \item (Optional) If you do not wish to build boost during the compilation
   process (which can take some time), then boost binaries can be found at
-  \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.55.0-build2/}. By
+  \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.57.0/}. By
   default these install into \inlsh{C:\textbackslash local\textbackslash
-    boost\_1\_55\_0}. If you use these libraries, you will need to:
+    boost\_1\_57\_0}. If you use these libraries, you will need to:
   \begin{itemize}
     \item Rename \texttt{libs-msvc12.0} to \texttt{lib}
     \item Inside the \texttt{lib} directory, create duplicates of
@@ -421,9 +424,7 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   drop-down list. If you have a 64-bit installation of Windows 7, you should
   select the \emph{Win64} variant, otherwise 32-bit executables will be
   generated. Select the option to use the native compilers.
-  \item Click the \emph{Configure} button.
-  \item An error will appear, since Boost cannot be found. To rectify this,
-  select the option named \inltt{THIRDPARTY\_BUILD\_BOOST}, and click Generate.
+  \item Click the \emph{Configure} button, then the \emph{Generate} button.
   \item Return to the command line and issue the command:
   \begin{lstlisting}[style=BashInputStyle]
     msbuild INSTALL.vcxproj /p:Configuration=Release
@@ -442,14 +443,13 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   \emph{Edit}. To the end of this list, add the \textbf{full paths} to
   directories:
   \begin{itemize}
-    \item \inlsh{builds\textbackslash dist\textbackslash lib}
+    \item \inlsh{builds\textbackslash dist\textbackslash lib\textbackslash nektar++-\nekver}
     \item \inlsh{builds\textbackslash dist\textbackslash bin}
-    \item \inlsh{builds\textbackslash ThirdParty\textbackslash dist\textbackslash lib}
     \item Optionally, if you installed Boost from the binary packages,
-    \inlsh{C:\textbackslash local\textbackslash boost\_1\_55\_0 \textbackslash lib}
+    \inlsh{C:\textbackslash local\textbackslash boost\_1\_57\_0 \textbackslash lib}
   \end{itemize}
-  \item Open a \textbf{new} command line window, change to the \inlsh{builds}
-  directory, and then run the test suite by issuing the command
+  \item To run the test suite, open a \textbf{new} command line window, change
+  to the \inlsh{builds} directory, and then issue the command
   \begin{lstlisting}[style=BashInputStyle]
     ctest -C Release
   \end{lstlisting}
@@ -492,7 +492,7 @@ Components of the \nekpp package can be selected using the following options:
     Compiles the solvers distributed with the \nekpp framework.
 
     If enabling \inlsh{NEKTAR\_BUILD\_SOLVERS}, individual solvers can be
-    enabled or disabled. See Chapter~\ref{s:solvers} for the list of available
+    enabled or disabled. See Part~\ref{p:applications} for the list of available
     solvers. You can disable solvers which are not required to reduce
     compilation time. See the \inlsh{NEKTAR\_SOLVER\_X} option.
 
@@ -551,19 +551,19 @@ using the following options:
     
     \item \inlsh{NEKTAR\_USE\_FFTW}
     
-    Build Nektar++ with support for FFTW for performing Fast Fourier Transforms
+    Build \nekpp with support for FFTW for performing Fast Fourier Transforms
     (FFTs). This is used only when using domains with homogeneous coordinate
     directions.
     
     \item \inlsh{NEKTAR\_USE\_ARPACK}
     
-    Build Nektar++ with support for ARPACK. This provides routines used for
+    Build \nekpp with support for ARPACK. This provides routines used for
     linear stability analyses. Alternative Arnoldi algorithms are also
-    implemented directly in Nektar++.
+    implemented directly in \nekpp.
     
     \item \inlsh{NEKTAR\_USE\_VTK}
     
-    Build Nektar++ with support for VTK libraries. This is only needed for
+    Build \nekpp with support for VTK libraries. This is only needed for
     specialist utilities and is not needed for general use.
     
     \begin{notebox}
@@ -593,8 +593,17 @@ automatically built during the \nekpp build process. Below are the choices of X:
     \item \inlsh{METIS}
     
     A graph partitioning library used for substructuring of matrices and mesh
-    partitioning when Nektar++ is run in parallel.
-    
+    partitioning when \nekpp is run in parallel.
+
+    \item \inlsh{PETSC}
+
+    A package for the parallel solution of linear algebra systems.
+
+    \item \inlsh{SCOTCH}
+
+    An alternative graph partitioning library used for mesh partitioning when
+    \nekpp is run in parallel.
+
     \item \inlsh{TINYXML}
     
     Library for reading and writing XML files.

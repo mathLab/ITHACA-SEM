@@ -324,7 +324,9 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {        
             int i, n;
-            NekDouble c0, c1, c2;
+            NekDouble c0 = 0.0;
+            NekDouble c1 = 0.0;
+            NekDouble c2 = 0.0;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;

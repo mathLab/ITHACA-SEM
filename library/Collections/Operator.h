@@ -55,7 +55,9 @@ namespace Nektar
 {
 namespace Collections
 {
+
 class CoalescedGeomData;
+typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
 
 enum OperatorType
 {
@@ -93,49 +95,38 @@ const char* const ImplementationTypeMap[] =
     "SumFac"
 };
 
+typedef bool ExpansionIsNodal;
+
 typedef map<OperatorType, ImplementationType> OperatorImpMap;
 
 /// simple Operator Implementation Map generator
 OperatorImpMap SetFixedImpType(ImplementationType defaultType);
 
-class Operator;
-typedef boost::shared_ptr<Operator> OperatorSharedPtr;
-
-typedef boost::tuple<
-    LibUtilities::ShapeType, OperatorType, ImplementationType, bool> OperatorKey;
-bool operator< (OperatorKey const &p1, OperatorKey const &p2);
-std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
-
-typedef Nektar::LibUtilities::NekFactory<
-    OperatorKey,
-    Operator,
-    vector<StdRegions::StdExpansionSharedPtr>,
-    boost::shared_ptr<CoalescedGeomData> > OperatorFactory;
-OperatorFactory& GetOperatorFactory();
-
+/// Base class for operators on a collection of elements
 class Operator
 {
 public:
-Operator(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-         boost::shared_ptr<CoalescedGeomData> GeomData)
-    :   m_stdExp(pCollExp[0]->GetStdExp()),
-        m_numElmt(pCollExp.size()),
-        m_wspSize(0)
-        {
-        }
-
-    Operator(void)
+    /// Constructor
+    Operator(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            boost::shared_ptr<CoalescedGeomData> GeomData)
+        : m_stdExp(pCollExp[0]->GetStdExp()),
+          m_numElmt(pCollExp.size()),
+          m_wspSize(0)
     {
     }
 
+    /// Perform operation
     virtual void operator()(const Array<OneD, const NekDouble> &input,
                             Array<OneD,       NekDouble> &output0,
                             Array<OneD,       NekDouble> &output1,
                             Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp = NullNekDouble1DArray) = 0;
+                            Array<OneD,       NekDouble> &wsp
+                                                = NullNekDouble1DArray) = 0;
 
-    virtual ~Operator(void);
+    virtual ~Operator();
 
+    /// Get the size of the required workspace
     int GetWspSize()
     {
         return m_wspSize;
@@ -146,6 +137,32 @@ protected:
     unsigned int m_numElmt;
     unsigned int m_wspSize;
 };
+
+/// Shared pointer to an Operator object
+typedef boost::shared_ptr<Operator> OperatorSharedPtr;
+
+/// Key for describing an Operator
+typedef boost::tuple<
+    LibUtilities::ShapeType,
+    OperatorType,
+    ImplementationType,
+    ExpansionIsNodal> OperatorKey;
+
+/// Less-than comparison operator for OperatorKey objects
+bool operator< (OperatorKey const &p1, OperatorKey const &p2);
+
+/// Stream output operator for OperatorKey objects
+std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
+
+/// Operator factory definition
+typedef Nektar::LibUtilities::NekFactory<
+    OperatorKey,
+    Operator,
+    vector<StdRegions::StdExpansionSharedPtr>,
+    CoalescedGeomDataSharedPtr> OperatorFactory;
+
+/// Returns the singleton Operator factory object
+OperatorFactory& GetOperatorFactory();
 
 }
 }

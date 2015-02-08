@@ -40,6 +40,9 @@
 namespace Nektar {
 namespace Collections {
 
+/**
+ *
+ */
 bool operator< (OperatorKey const &p1, OperatorKey const &p2)
 {
     if (boost::get<0>(p1) < boost::get<0>(p2))
@@ -79,6 +82,10 @@ bool operator< (OperatorKey const &p1, OperatorKey const &p2)
     return false;
 }
 
+
+/**
+ *
+ */
 std::ostream &operator<<(std::ostream &os, OperatorKey const &p)
 {
     os <<                       boost::get<0>(p)  << " "
@@ -88,11 +95,18 @@ std::ostream &operator<<(std::ostream &os, OperatorKey const &p)
     return os;
 }
 
-Operator::~Operator(void)
+
+/**
+ *
+ */
+Operator::~Operator()
 {
 }
 
 
+/**
+ *
+ */
 OperatorFactory& GetOperatorFactory()
 {
     typedef Loki::SingletonHolder<OperatorFactory,
@@ -251,9 +265,9 @@ class BwdTrans_NoCollection : public Operator
 public:
     BwdTrans_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                     CoalescedGeomDataSharedPtr GeomData)
+        : Operator(pCollExp,GeomData)
     {
         m_expList = pCollExp;
-        m_numElmt = pCollExp.size();
     }
 
     virtual void operator()(
@@ -414,11 +428,12 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
 class IProductWRTBase_NoCollection : public Operator
 {
 public:
-    IProductWRTBase_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                           CoalescedGeomDataSharedPtr GeomData)
+    IProductWRTBase_NoCollection(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr GeomData)
+        : Operator(pCollExp,GeomData)
     {
         m_expList = pCollExp;
-        m_numElmt = pCollExp.size();
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -527,7 +542,8 @@ virtual void operator()(const Array<OneD, const NekDouble> &input,
 
     for (int i = 0; i < m_numElmt; ++i)
     {
-        m_stdExp->IProductWRTBase_SumFac(wsp + i*nPhys, tmp = output + i*nCoeffs,false);
+        m_stdExp->IProductWRTBase_SumFac(wsp + i*nPhys,
+                                         tmp = output + i*nCoeffs, false);
     }
 }
 
@@ -813,9 +829,9 @@ class PhysDeriv_NoCollection : public Operator
 public:
     PhysDeriv_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                          CoalescedGeomDataSharedPtr GeomData)
+        : Operator(pCollExp,GeomData)
     {
         m_expList = pCollExp;
-        m_numElmt = pCollExp.size();
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -1197,9 +1213,9 @@ public:
     IProductWRTDerivBase_NoCollection(
             vector<StdRegions::StdExpansionSharedPtr> pCollExp,
             CoalescedGeomDataSharedPtr GeomData)
+        : Operator(pCollExp,GeomData)
     {
         m_expList = pCollExp;
-        m_numElmt = pCollExp.size();
         m_dim = pCollExp[0]->GetNumBases();
         m_coordim = pCollExp[0]->GetCoordim();
     }

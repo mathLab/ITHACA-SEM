@@ -262,8 +262,8 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
 
     if(verbose)
     {
-        cout << "Collection Implemenation for " << LibUtilities::ShapeTypeMap[pExp->DetShapeType()];
-        cout << " ( ";
+        cout << "Collection Implemenation for "
+             << LibUtilities::ShapeTypeMap[pExp->DetShapeType()] << " ( ";
         for(int i = 0; i < pExp->GetNumBases(); ++i)
         {
             cout << pExp->GetBasis(i)->GetNumModes() <<" ";
@@ -326,8 +326,8 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
 
         if(verbose)
         {
-            cout << "\t " << OperatorTypeMap[i] << ": " << ImplementationTypeMap[minImp];
-            cout << "\t (";
+            cout << "\t " << OperatorTypeMap[i] << ": "
+                 << ImplementationTypeMap[minImp] << "\t (";
             for(int j = 0; j < coll.size(); ++j)
             {
                 cout << timing[j] ;

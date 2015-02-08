@@ -1,4 +1,5 @@
 SET(COLLECTIONS_SOURCES
+  CoalescedGeomData.cpp
   Collection.cpp
   CollectionOptimisation.cpp
   Operator.cpp
@@ -12,6 +13,7 @@ SET(COLLECTIONS_SOURCES
   )
 
 SET(SOLVER_UTILS_HEADERS
+  CoalescedGeomData.h
   Collection.h 
   CollectionOptimisation.h
   IProduct.h

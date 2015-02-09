@@ -959,6 +959,40 @@ namespace Nektar
                 int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                 int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
 
+                StdRegions::Orientation orient = loc_elmt->GetForient(faceNumber);
+                int coordDim = locnormals.num_elements();
+                Array<OneD, Array<OneD, NekDouble> > traceNormals(coordDim);
+
+                if (orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    for (j = 0; j < coordDim; ++j)
+                    {
+                        traceNormals[j] = locnormals[j];
+                    }
+                }
+                else if (orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    for (j = 0; j < coordDim; ++j)
+                    {
+                        int nPts  = locnormals[j].num_elements();
+                        int nPts0 = loc_exp->GetNumPoints(0);
+                        int nPts1 = loc_exp->GetNumPoints(1);
+
+                        traceNormals[j] = Array<OneD, NekDouble>(nPts);
+
+                        for (k = 0; k < nPts1; ++k)
+                        {
+                            Vmath::Vcopy(nPts0,
+                                         &locnormals[j][k*nPts0], 1,
+                                         &traceNormals[j][(k+1)*nPts0-1], -1);
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false, "unsupported");
+                }
+
                 if (e_nmodes != loc_nmodes)
                 {
                     if (loc_exp->GetRightAdjacentElementFace() >= 0)
@@ -1030,7 +1064,7 @@ namespace Nektar
                         LibUtilities::Interp2D(
                             loc_elmt->DetFaceBasisKey(faceNumber, 0).GetPointsKey(),
                             loc_elmt->DetFaceBasisKey(faceNumber, 1).GetPointsKey(),
-                            locnormals[k],
+                            traceNormals[k],
                             (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
                             (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
                             tmp = normals[k]+offset);

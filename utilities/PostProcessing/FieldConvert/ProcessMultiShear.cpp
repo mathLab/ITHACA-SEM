@@ -115,7 +115,6 @@ namespace Nektar
                     ::AllocateSharedPtr(m_fromField[0]->m_session->GetComm());
             }
             
-	    cout << "break" << '\n';
             //Import all fld files. 
             for (i=0; i<nfld; ++i)
             {

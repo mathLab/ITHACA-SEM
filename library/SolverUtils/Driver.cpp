@@ -157,7 +157,7 @@ void Driver::v_InitObject(ostream &out)
                 string          meshfile;
                 string          LinNSCondFile;
                 vector<string>  LinNSFilename;
-                meshfile = m_session->GetSessionName() + ".gz";
+                meshfile = m_session->GetFilenames()[0];
                 LinNSCondFile = m_session->GetSessionName();
                 LinNSCondFile += "_LinNS.xml";
                 LinNSFilename.push_back(meshfile);

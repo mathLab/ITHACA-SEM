@@ -499,7 +499,7 @@ void DriverSteadyState::ReadEVfile(
 {
     // This routine reads the .evl file written by the Arnoldi algorithm
     // (written in September 2014)
-    std::string EVfileName = m_session->GetSessionName() +  ".evl";
+    std::string EVfileName = m_session->GetFilenames()[0] +  ".evl";
     std::ifstream EVfile(EVfileName.c_str());
 
     int NumLinesInFile(0);

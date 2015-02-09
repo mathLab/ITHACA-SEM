@@ -917,7 +917,7 @@ namespace Nektar
 
                 Array<OneD,NekDouble> work   (nq_face,   0.0);
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(ptsKeys[0], ptsKeys[1], jac,
+                LibUtilities::Interp2D(points0, points1, jac,
                                        tobasis0.GetPointsKey(),
                                        tobasis1.GetPointsKey(),
                                        work);

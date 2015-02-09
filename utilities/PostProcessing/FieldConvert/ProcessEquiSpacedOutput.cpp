@@ -57,7 +57,6 @@ ModuleKey ProcessEquiSpacedOutput::className =
 ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
     f->m_setUpEquiSpacedFields = true;
 
     m_config["tetonly"] = ConfigOption(true, "NotSet",
@@ -103,6 +102,12 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     map<int,StdRegions::Orientation > face0orient;
     set<int> prismorient;
     LocalRegions::ExpansionSharedPtr e;
+
+    // prepare PtsField
+    vector<std::string> fieldNames;
+    vector<int> ppe;
+    vector<Array<OneD, int> > ptsConn;
+    int nfields;
 
     for(int i = 0; i < nel; ++i)
     {
@@ -196,7 +201,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints = LibUtilities::StdSegData::
                                     getNumberOfCoefficients(npoints0);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -207,7 +212,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np = max(np0,np1);
                 newpoints     = LibUtilities::StdTriData::
                                     getNumberOfCoefficients(np,np);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -219,7 +224,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints  = LibUtilities::StdQuadData::
                                     getNumberOfCoefficients(np,np);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -232,7 +237,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints  = LibUtilities::StdTetData::
                                     getNumberOfCoefficients(np,np,np);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -245,7 +250,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints  = LibUtilities::StdPrismData::
                                     getNumberOfCoefficients(np,np,np);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -258,7 +263,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints     = LibUtilities::StdPyrData::
                                     getNumberOfCoefficients(np,np,np);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -271,7 +276,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints     = LibUtilities::StdPyrData::
                                     getNumberOfCoefficients(np,np,np);
-                m_f->m_fieldPts->m_npts.push_back(newpoints);
+                ppe.push_back(newpoints);
                 newtotpoints += newpoints;
             }
             break;
@@ -310,26 +315,24 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
             newconn[j] = conn[j] + cnt;
         }
 
-        m_f->m_fieldPts->m_ptsConn.push_back(newconn);
+        ptsConn.push_back(newconn);
         cnt += newpoints;
     }
 
-    m_f->m_fieldPts->m_ptsDim  = coordim;
     if(m_f->m_fielddef.size())
     {
-        m_f->m_fieldPts->m_nFields = m_f->m_exp.size();
+        nfields = m_f->m_exp.size();
     }
     else // just the mesh points
     {
-        m_f->m_fieldPts->m_nFields = 0;
+        nfields = 0;
     }
 
-    m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> >(
-                                        m_f->m_fieldPts->m_nFields + coordim);
+    Array<OneD, Array<OneD, NekDouble> > pts(nfields + coordim);
 
-    for(int i = 0; i < m_f->m_fieldPts->m_nFields + coordim; ++i)
+    for(int i = 0; i < nfields + coordim; ++i)
     {
-        m_f->m_fieldPts->m_pts[i] = Array<OneD, NekDouble>(newtotpoints);
+        pts[i] = Array<OneD, NekDouble>(newtotpoints);
     }
 
     // Interpolate coordinates
@@ -353,14 +356,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
     m_f->m_exp[0]->GetCoords(x1, y1, z1);
 
-    if (shapedim == 2)
-    {
-        m_f->m_fieldPts->m_ptype = ePtsTriBlock;
-    }
-    else if (shapedim == 3)
-    {
-        m_f->m_fieldPts->m_ptype = ePtsTetBlock;
-    }
+
 
     Array<OneD, NekDouble> tmp;
 
@@ -372,8 +368,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
         {
             m_f->m_exp[0]->GetExp(i)->PhysInterpToSimplexEquiSpaced(
                                         coords[n] + cnt,
-                                        tmp = m_f->m_fieldPts->m_pts[n] + cnt1);
-            cnt1 += m_f->m_fieldPts->m_npts[i];
+                                        tmp = pts[n] + cnt1);
+            cnt1 += ppe[i];
             cnt  += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
         }
     }
@@ -392,16 +388,26 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
             {
                 m_f->m_exp[0]->GetExp(i)->PhysInterpToSimplexEquiSpaced(
                             phys + cnt,
-                            tmp = m_f->m_fieldPts->m_pts[coordim + n] + cnt1);
-                cnt1 += m_f->m_fieldPts->m_npts[i];
+                            tmp = pts[coordim + n] + cnt1);
+                cnt1 += ppe[i];
                 cnt  += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
             }
 
             // Set up Variable string.
-            m_f->m_fieldPts->m_fields.push_back(
-                                    m_f->m_fielddef[0]->m_fields[n]);
+            fieldNames.push_back(m_f->m_fielddef[0]->m_fields[n]);
         }
     }
+
+    m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(coordim, fieldNames, pts);
+    if (shapedim == 2)
+    {
+        m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
+    }
+    else if (shapedim == 3)
+    {
+        m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTetBlock);
+    }
+    m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
 }
 }

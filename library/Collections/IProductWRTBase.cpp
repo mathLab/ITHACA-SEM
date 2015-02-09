@@ -1,0 +1,691 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: IProductWRTBase.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: BwdTrans operator implementations
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <loki/Singleton.h>
+#include <Collections/Operator.h>
+#include <Collections/Collection.h>
+#include <Collections/IProduct.h>
+
+namespace Nektar {
+namespace Collections {
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+
+class IProductWRTBase_StdMat : public Operator
+{
+public:
+    IProductWRTBase_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                           CoalescedGeomDataSharedPtr GeomData)
+        : Operator(pCollExp,GeomData)
+    {
+        m_jac = GeomData->GetJac(pCollExp);
+        StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase,
+                                     m_stdExp->DetShapeType(), *m_stdExp);
+        m_mat = m_stdExp->GetStdMatrix(key);
+        m_wspSize = m_stdExp->GetTotPoints()*m_numElmt;
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        ASSERTL1(wsp.num_elements() == m_wspSize,
+                 "Incorrect workspace size");
+
+        Vmath::Vmul(m_jac.num_elements(),m_jac,1,input,1,wsp,1);
+
+        Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
+                    m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
+                    m_mat->GetRows(), wsp.get(), m_stdExp->GetTotPoints(),
+                    0.0, output.get(), m_stdExp->GetNcoeffs());
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_StdMat)
+
+    DNekMatSharedPtr m_mat;
+    Array<OneD, const NekDouble> m_jac;
+
+};
+
+OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eSegment,       eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle,      eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle,      eIProductWRTBase, eStdMat,true),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_NodalTri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle,      eIProductWRTBase, eSumFac,true),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_NodalTri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron,   eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Tet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron,   eIProductWRTBase, eStdMat,true),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_NodalTet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron,   eIProductWRTBase, eSumFac,true),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_NodalTet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePyramid,       eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePyramid,       eIProductWRTBase, eSumFac,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism,         eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism,         eIProductWRTBase, eStdMat,true),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_NodalPrism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism,         eIProductWRTBase, eSumFac,true),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_NodalPrism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eHexahedron,    eIProductWRTBase, eStdMat,false),
+        IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Hex"),
+};
+
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+
+class IProductWRTBase_NoCollection : public Operator
+{
+public:
+    IProductWRTBase_NoCollection(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr GeomData)
+        : Operator(pCollExp,GeomData)
+    {
+        m_expList = pCollExp;
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+
+        const int nCoeffs = m_expList[0]->GetNcoeffs();
+        const int nPhys   = m_expList[0]->GetTotPoints();
+        Array<OneD, NekDouble> tmp;
+
+        for (int i = 0; i < m_numElmt; ++i)
+        {
+            m_expList[i]->IProductWRTBase(input + i*nPhys,
+                                          tmp = output + i*nCoeffs);
+        }
+
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_NoCollection)
+
+    vector<StdRegions::StdExpansionSharedPtr> m_expList;
+};
+
+OperatorKey IProductWRTBase_NoCollection::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eNoCollection,true),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_NodalTri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac,true),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_NodalTri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Tet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eNoCollection,true),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_NodalTet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eSumFac,true),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_NodalTet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eSumFac,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eNoCollection,true),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_NodalPrism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eSumFac,true),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_NodalPrism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eNoCollection,false),
+        IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Hex"),
+};
+
+
+class IProductWRTBase_IterPerExp : public Operator
+{
+public:
+IProductWRTBase_IterPerExp(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                           CoalescedGeomDataSharedPtr GeomData)
+    : Operator(pCollExp, GeomData)
+{
+    int nqtot = 1;
+    LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
+    for(int i = 0; i < PtsKey.size(); ++i)
+    {
+        nqtot *= PtsKey[i].GetNumPoints();
+    }
+
+    m_jac = GeomData->GetJacWithStdWeights(pCollExp);
+
+    m_wspSize = nqtot*m_numElmt;
+}
+
+virtual void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD,       NekDouble> &output,
+                        Array<OneD,       NekDouble> &output1,
+                        Array<OneD,       NekDouble> &output2,
+                        Array<OneD,       NekDouble> &wsp)
+{
+    ASSERTL1(wsp.num_elements() == m_wspSize,
+             "Incorrect workspace size");
+
+    const int nCoeffs = m_stdExp->GetNcoeffs();
+    const int nPhys   = m_stdExp->GetTotPoints();
+    Array<OneD, NekDouble> tmp;
+
+    Vmath::Vmul(m_jac.num_elements(),m_jac,1,input,1,wsp,1);
+
+    for (int i = 0; i < m_numElmt; ++i)
+    {
+        m_stdExp->IProductWRTBase_SumFac(wsp + i*nPhys,
+                                         tmp = output + i*nCoeffs, false);
+    }
+}
+
+OPERATOR_CREATE(IProductWRTBase_IterPerExp)
+
+Array<OneD, NekDouble> m_jac;
+
+};
+
+OperatorKey IProductWRTBase_IterPerExp::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eIterPerExp,true),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_NodalTri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Tet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eIterPerExp,true),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_NodalTet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eIterPerExp,true),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_NodalPrism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eIterPerExp,false),
+        IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Hex"),
+};
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+class IProductWRTBase_SumFac_Seg : public Operator
+{
+public:
+    IProductWRTBase_SumFac_Seg(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                               CoalescedGeomDataSharedPtr GeomData)
+        : Operator  (pCollExp, GeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata())
+    {
+        m_wspSize = m_numElmt*m_nquad0;
+        m_jac = GeomData->GetJacWithStdWeights(pCollExp);
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+
+        if(m_colldir0)
+        {
+            Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,output,1);
+        }
+        else
+        {
+            Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,wsp,1);
+
+            // out = B0*in;
+            Blas::Dgemm('T','N', m_nmodes0,m_numElmt,m_nquad0,1.0, m_base0.get(), m_nquad0,
+                        &wsp[0], m_nquad0, 0.0,&output[0], m_nmodes0);
+        }
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_SumFac_Seg)
+
+    protected:
+    const int  m_nquad0;
+    const int  m_nmodes0;
+    const bool m_colldir0;
+    Array<OneD, const NekDouble> m_jac;
+    Array<OneD, const NekDouble> m_base0;
+};
+
+OperatorKey IProductWRTBase_SumFac_Seg::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eIProductWRTBase,
+                                        eSumFac,false),
+                            IProductWRTBase_SumFac_Seg::create, "IProductWRTBase_SumFac_Seg");
+
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+class IProductWRTBase_SumFac_Quad : public Operator
+{
+public:
+    IProductWRTBase_SumFac_Quad(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                CoalescedGeomDataSharedPtr GeomData)
+        : Operator  (pCollExp, GeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata())
+    {
+        m_jac     = GeomData->GetJacWithStdWeights(pCollExp);
+        m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+
+        QuadIProduct(m_colldir0,m_colldir1,m_numElmt,
+                     m_nquad0,  m_nquad1,
+                     m_nmodes0, m_nmodes1,
+                     m_base0,   m_base1,
+                     m_jac, input, output, wsp);
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_SumFac_Quad)
+
+    protected:
+    const int  m_nquad0;
+    const int  m_nquad1;
+    const int  m_nmodes0;
+    const int  m_nmodes1;
+    const bool m_colldir0;
+    const bool m_colldir1;
+    Array<OneD, const NekDouble> m_jac;
+    Array<OneD, const NekDouble> m_base0;
+    Array<OneD, const NekDouble> m_base1;
+};
+
+OperatorKey IProductWRTBase_SumFac_Quad::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eSumFac,false),IProductWRTBase_SumFac_Quad::create, "IProductWRTBase_SumFac_Quad");
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+class IProductWRTBase_SumFac_Tri : public Operator
+{
+public:
+    IProductWRTBase_SumFac_Tri(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                               CoalescedGeomDataSharedPtr GeomData)
+        : Operator  (pCollExp, GeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata())
+    {
+        m_jac     = GeomData->GetJacWithStdWeights(pCollExp);
+        m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
+        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+        {
+            m_sortTopVertex = true;
+        }
+        else
+        {
+            m_sortTopVertex = false;
+        }
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+
+        TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
+                    m_nmodes0, m_nmodes1,m_base0,m_base1,m_jac, input,
+                    output,wsp);
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_SumFac_Tri)
+
+    protected:
+    const int  m_nquad0;
+    const int  m_nquad1;
+    const int  m_nmodes0;
+    const int  m_nmodes1;
+    Array<OneD, const NekDouble> m_jac;
+    Array<OneD, const NekDouble> m_base0;
+    Array<OneD, const NekDouble> m_base1;
+    bool m_sortTopVertex;
+};
+
+OperatorKey IProductWRTBase_SumFac_Tri::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac,false),IProductWRTBase_SumFac_Tri::create, "IProductWRTBase_SumFac_Tri");
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+class IProductWRTBase_SumFac_Hex : public Operator
+{
+public:
+    IProductWRTBase_SumFac_Hex(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                               CoalescedGeomDataSharedPtr GeomData)
+        : Operator  (pCollExp, GeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nquad2  (m_stdExp->GetNumPoints(2)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+          m_colldir2(m_stdExp->GetBasis(2)->Collocation()),
+          m_base0    (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1    (m_stdExp->GetBasis(1)->GetBdata()),
+          m_base2    (m_stdExp->GetBasis(2)->GetBdata())
+
+    {
+        m_jac = GeomData->GetJacWithStdWeights(pCollExp);
+        m_wspSize = 3*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD, NekDouble> &output,
+                            Array<OneD, NekDouble> &output1,
+                            Array<OneD, NekDouble> &output2,
+                            Array<OneD, NekDouble> &wsp)
+    {
+
+        ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+
+        HexIProduct(m_colldir0,m_colldir1,m_colldir2, m_numElmt,
+                    m_nquad0,  m_nquad1,  m_nquad2,
+                    m_nmodes0, m_nmodes1, m_nmodes2,
+                    m_base0,   m_base1,   m_base2,
+                    m_jac,input,output,wsp);
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_SumFac_Hex)
+
+    protected:
+    const int  m_nquad0;
+    const int  m_nquad1;
+    const int  m_nquad2;
+    const int  m_nmodes0;
+    const int  m_nmodes1;
+    const int  m_nmodes2;
+    const bool m_colldir0;
+    const bool m_colldir1;
+    const bool m_colldir2;
+    Array<OneD, const NekDouble> m_jac;
+    Array<OneD, const NekDouble> m_base0;
+    Array<OneD, const NekDouble> m_base1;
+    Array<OneD, const NekDouble> m_base2;
+};
+
+OperatorKey IProductWRTBase_SumFac_Hex::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eSumFac,false),
+                            IProductWRTBase_SumFac_Hex::create, "IProductWRTBase_SumFac_Hex");
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+class IProductWRTBase_SumFac_Tet : public Operator
+{
+public:
+    IProductWRTBase_SumFac_Tet(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                               CoalescedGeomDataSharedPtr GeomData)
+        : Operator  (pCollExp, GeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nquad2  (m_stdExp->GetNumPoints(2)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+          m_base2   (m_stdExp->GetBasis(2)->GetBdata())
+    {
+        m_jac     = GeomData->GetJacWithStdWeights(pCollExp);
+        m_wspSize = m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,
+                    m_nquad2*m_nmodes0*(2*m_nmodes1-m_nmodes0+1)/2)+
+                               m_nquad2*m_nquad1*m_nmodes0);
+
+        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+        {
+            m_sortTopEdge = true;
+        }
+        else
+        {
+            m_sortTopEdge = false;
+        }
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+
+        TetIProduct(m_sortTopEdge, m_numElmt,
+                    m_nquad0,  m_nquad1,  m_nquad2,
+                    m_nmodes0, m_nmodes1, m_nmodes2,
+                    m_base0,   m_base1,   m_base2,
+                    m_jac,input,output,wsp);
+
+    }
+    OPERATOR_CREATE(IProductWRTBase_SumFac_Tet)
+
+    protected:
+    const int  m_nquad0;
+    const int  m_nquad1;
+    const int  m_nquad2;
+    const int  m_nmodes0;
+    const int  m_nmodes1;
+    const int  m_nmodes2;
+    Array<OneD, const NekDouble> m_jac;
+    Array<OneD, const NekDouble> m_base0;
+    Array<OneD, const NekDouble> m_base1;
+    Array<OneD, const NekDouble> m_base2;
+    bool m_sortTopEdge;
+};
+
+OperatorKey IProductWRTBase_SumFac_Tet::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eSumFac,false), IProductWRTBase_SumFac_Tet::create, "IProductWRTBase_SumFac_Tet");
+
+
+/*
+ * ----------------------------------------------------------
+ * IProductWRTBase operators
+ * ----------------------------------------------------------
+ */
+class IProductWRTBase_SumFac_Prism : public Operator
+{
+public:
+    IProductWRTBase_SumFac_Prism(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                 CoalescedGeomDataSharedPtr GeomData)
+        : Operator  (pCollExp, GeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nquad2  (m_stdExp->GetNumPoints(2)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+          m_base0    (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1    (m_stdExp->GetBasis(1)->GetBdata()),
+          m_base2    (m_stdExp->GetBasis(2)->GetBdata())
+
+    {
+        m_jac = GeomData->GetJacWithStdWeights(pCollExp);
+
+        m_wspSize = m_numElmt*m_nquad2*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1)) +
+            m_nquad1*m_nquad2*m_numElmt*m_nmodes0;
+
+        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+        {
+            m_sortTopVertex = true;
+        }
+        else
+        {
+            m_sortTopVertex = false;
+        }
+    }
+
+    virtual void operator()(const Array<OneD, const NekDouble> &input,
+                            Array<OneD, NekDouble> &output,
+                            Array<OneD, NekDouble> &output1,
+                            Array<OneD, NekDouble> &output2,
+                            Array<OneD, NekDouble> &wsp)
+    {
+
+        ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+
+        PrismIProduct(m_sortTopVertex, m_numElmt,
+                    m_nquad0,  m_nquad1,  m_nquad2,
+                    m_nmodes0, m_nmodes1, m_nmodes2,
+                    m_base0,   m_base1,   m_base2,
+                    m_jac,input,output,wsp);
+    }
+
+    OPERATOR_CREATE(IProductWRTBase_SumFac_Prism)
+
+    protected:
+    const int  m_nquad0;
+    const int  m_nquad1;
+    const int  m_nquad2;
+    const int  m_nmodes0;
+    const int  m_nmodes1;
+    const int  m_nmodes2;
+    Array<OneD, const NekDouble> m_jac;
+    Array<OneD, const NekDouble> m_base0;
+    Array<OneD, const NekDouble> m_base1;
+    Array<OneD, const NekDouble> m_base2;
+    bool m_sortTopVertex;
+};
+
+OperatorKey IProductWRTBase_SumFac_Prism::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eSumFac,false),
+                            IProductWRTBase_SumFac_Prism::create, "IProductWRTBase_SumFac_Prism");
+
+}
+}

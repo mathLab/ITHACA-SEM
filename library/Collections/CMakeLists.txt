@@ -3,13 +3,11 @@ SET(COLLECTIONS_SOURCES
   Collection.cpp
   CollectionOptimisation.cpp
   Operator.cpp
-  HexOperators.cpp
+  BwdTrans.cpp
+  IProductWRTBase.cpp
+  PhysDeriv.cpp
+  IProductWRTDerivBase.cpp
   IProduct.cpp
-  PrismOperators.cpp
-  QuadOperators.cpp
-  SegOperators.cpp
-  TetOperators.cpp
-  TriOperators.cpp
   )
 
 SET(SOLVER_UTILS_HEADERS

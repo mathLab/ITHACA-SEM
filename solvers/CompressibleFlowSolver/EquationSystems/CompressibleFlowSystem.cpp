@@ -143,11 +143,10 @@ namespace Nektar
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
         
-        m_session->LoadParameter ("amplitude",  m_amplitude,   0.001);
-        m_session->LoadParameter ("omega",      m_omega,       1.0);
-
+        m_session->LoadParameter("amplitude",      m_amplitude,      0.001);
+        m_session->LoadParameter("omega",          m_omega,          1.0);
         m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
-        
+
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
                                                m_fields.num_elements());
@@ -187,7 +186,6 @@ namespace Nektar
             {
                 int numBCPts = m_fields[0]->
                     GetBndCondExpansions()[n]->GetNpoints();
-                //m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
                 for (int i = 0; i < nvariables; ++i)
                 {
                     m_fieldStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
@@ -2655,7 +2653,8 @@ namespace Nektar
     }
     
     /**
-     * Perform steady-state check
+     * @brief Perform post-integration checks, presently just to check steady
+     * state behaviour.
      */
     bool CompressibleFlowSystem::v_PostIntegrate(int step)
     {
@@ -2674,16 +2673,19 @@ namespace Nektar
         }
         return false;
     }
-    
-    // Calculate if the solution reached a steady state
+
+    /**
+     * @brief Calculate whether the system has reached a steady state by
+     * observing residuals to a user-defined tolerance.
+     */
     bool CompressibleFlowSystem::CalcSteadyState(bool output)
     {
         const int nPoints = GetTotPoints();
         const int nFields = m_fields.num_elements();
 
         // Holds L2 errors.
-        Array<OneD, NekDouble> L2      (  nFields);
-        Array<OneD, NekDouble> residual(2*nFields);
+        Array<OneD, NekDouble> L2      (nFields);
+        Array<OneD, NekDouble> residual(nFields);
 
         for (int i = 0; i < nFields; ++i)
         {
@@ -2729,7 +2731,6 @@ namespace Nektar
             m_comm->GetRank() == 0 && output)
         {
             cout << "-- Maximum L^2 residual: " << maxL2 << endl;
-            //     << scientific << setprecision(11) << maxL2 << endl;
         }
 
         if (maxL2 <= m_steadyStateTol)

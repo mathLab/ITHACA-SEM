@@ -45,24 +45,10 @@
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdHexExp.h>
 
-#define EPSILON 0.000001
-
-#define CROSS(dest, v1, v2){                 \
-          dest[0] = v1[1] * v2[2] - v1[2] * v2[1]; \
-          dest[1] = v1[2] * v2[0] - v1[0] * v2[2]; \
-          dest[2] = v1[0] * v2[1] - v1[1] * v2[0];}
-
-#define DOT(v1, v2) (v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
-
-#define SUB(dest, v1, v2){       \
-          dest[0] = v1[0] - v2[0]; \
-          dest[1] = v1[1] - v2[1]; \
-          dest[2] = v1[2] - v2[2];}
-
 namespace Nektar
-{  
+{
     /**
-     * 
+     *
      */
     class CompressibleFlowSystem: public SolverUtils::UnsteadySystem
     {
@@ -79,17 +65,17 @@ namespace Nektar
         }
         /// Name of class
         static std::string className;
-      
+
         virtual ~CompressibleFlowSystem();
-        
+
         /// Function to calculate the stability limit for DG/CG.
         NekDouble GetStabilityLimit(int n);
-        
-        /// Function to calculate the stability limit for DG/CG 
+
+        /// Function to calculate the stability limit for DG/CG
         /// (a vector of them).
         Array<OneD, NekDouble> GetStabilityLimitVector(
             const Array<OneD,int> &ExpOrder);
-      
+
     protected:
         SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
         SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
@@ -123,16 +109,16 @@ namespace Nektar
         NekDouble                           m_Prandtl;
         NekDouble                           m_amplitude;
         NekDouble                           m_omega;
-        
+
         // L2 error file
         std::ofstream m_errFile;
-        
+
         // Check for steady state at step interval
         int m_steadyStateSteps;
-        
+
         // Tolerance to which steady state should be evaluated at
         NekDouble m_steadyStateTol;
-        
+
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
         StdRegions::StdQuadExpSharedPtr            m_OrthoQuadExp;
@@ -142,18 +128,18 @@ namespace Nektar
 
         // Pressure storage for PressureOutflowFileBC
         Array<OneD, NekDouble> m_pressureStorage;
-        
+
         // Field storage for PressureInflowFileBC
         Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
-        
+
         // Storage for L2 norm error
         Array<OneD, Array<OneD, NekDouble> > m_un;
-        
+
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
-      
+
         /// Print a summary of time stepping parameters.
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
@@ -187,28 +173,28 @@ namespace Nektar
             int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void RiemannInvariantBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
+            int                                                 bcRegion,
+            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowNonReflectiveBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
+            int                                                 bcRegion,
+            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
+            int                                                 bcRegion,
+            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowFileBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
+            int                                                 bcRegion,
+            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureInflowFileBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
+            int                                                 bcRegion,
+            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void ExtrapOrder0BC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
+            int                                                 bcRegion,
+            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD, NekDouble> > &physfield,
@@ -250,7 +236,7 @@ namespace Nektar
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
-        
+
         virtual bool v_PostIntegrate(int step);
         bool CalcSteadyState(bool output);
 
@@ -281,22 +267,22 @@ namespace Nektar
             const int domain = 0)
         {
         }
-        
+
         NekDouble GetGasConstant()
         {
             return m_gasConstant;
         }
-        
+
         NekDouble GetGamma()
         {
             return m_gamma;
         }
-      
+
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs()
         {
             return m_vecLocs;
         }
-        
+
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
         {
             return m_traceNormals;

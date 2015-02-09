@@ -78,13 +78,6 @@ namespace Nektar
             m_vecLocs[0][i] = 1 + i;
         }
 
-        if (m_session->DefinesParameter("SteadyStateSteps"))
-        {
-            std::ofstream m_errFile( "L2Errors.txt");
-            m_errFile << "% Time\t\t\t\t L2 errors" << endl;
-            m_errFile.close();
-        }
-        
         // Get gamma parameter from session file.
         ASSERTL0(m_session->DefinesParameter("Gamma"),
                  "Compressible flow sessions must define a Gamma parameter.");
@@ -105,6 +98,8 @@ namespace Nektar
                  "Compressible flow sessions must define a uInf parameter.");
         m_session->LoadParameter("uInf", m_uInf, 0.1);
 
+        m_UInf = m_uInf;
+
         // Get vInf parameter from session file.
         if (m_spacedim == 2 || m_spacedim == 3)
         {
@@ -112,6 +107,7 @@ namespace Nektar
                      "Compressible flow sessions must define a vInf parameter"
                      "for 2D/3D problems.");
             m_session->LoadParameter("vInf", m_vInf, 0.0);
+            m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf);
         }
 
         // Get wInf parameter from session file.
@@ -121,6 +117,7 @@ namespace Nektar
                      "Compressible flow sessions must define a wInf parameter"
                      "for 3D problems.");
             m_session->LoadParameter("wInf", m_wInf, 0.0);
+            m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf + m_wInf*m_wInf);
         }
 
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
@@ -149,8 +146,7 @@ namespace Nektar
         m_session->LoadParameter ("amplitude",  m_amplitude,   0.001);
         m_session->LoadParameter ("omega",      m_omega,       1.0);
 
-        m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
-        m_session->LoadParameter("SteadyStateTol",   m_steadyStateTol,   1e-15);
+        m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
         
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
@@ -166,7 +162,7 @@ namespace Nektar
                 SpatialDomains::ePressureOutflowFile)
             {
                 int numBCPts = m_fields[0]->
-                GetBndCondExpansions()[n]->GetNpoints();
+                    GetBndCondExpansions()[n]->GetNpoints();
                 m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
                 for (int i = 0; i < nvariables; ++i)
                 {
@@ -202,15 +198,7 @@ namespace Nektar
                 }
             }
         }
-        
-        const int nPoints = m_fields[0]->GetTotPoints();
-        m_un = Array<OneD, Array<OneD, NekDouble> > (m_fields.num_elements());
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            m_un[i] = Array<OneD, NekDouble> (nPoints, 0.0);
-            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
-        }
-        
+
         // Type of advection class to be used
         switch(m_projectionType)
         {
@@ -866,7 +854,6 @@ namespace Nektar
             = m_fields[0]->GetTraceBndMap();
         
         NekDouble gamma            = m_gamma;
-        NekDouble gammaInv         = 1.0 / gamma;
         NekDouble gammaMinusOne    = gamma - 1.0;
         NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
         
@@ -1027,7 +1014,6 @@ namespace Nektar
         = m_fields[0]->GetTraceBndMap();
         
         NekDouble gamma            = m_gamma;
-        NekDouble gammaInv         = 1.0 / gamma;
         NekDouble gammaMinusOne    = gamma - 1.0;
         NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
         
@@ -1189,7 +1175,6 @@ namespace Nektar
         = m_fields[0]->GetTraceBndMap();
         
         NekDouble gamma            = m_gamma;
-        NekDouble gammaInv         = 1.0 / gamma;
         NekDouble gammaMinusOne    = gamma - 1.0;
         NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
         
@@ -1354,7 +1339,6 @@ namespace Nektar
             = m_fields[0]->GetTraceBndMap();
         
         NekDouble gamma            = m_gamma;
-        NekDouble gammaInv         = 1.0 / gamma;
         NekDouble gammaMinusOne    = gamma - 1.0;
         NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
         
@@ -2675,10 +2659,10 @@ namespace Nektar
      */
     bool CompressibleFlowSystem::v_PostIntegrate(int step)
     {
-        if (m_steadyStateSteps && step && (!((step+1)%m_steadyStateSteps)))
+        if (m_steadyStateTol > 0.0)
         {
-            //NekDouble maxL2 = CalcSteadyState();
-            if (CalcSteadyState() == true)
+            bool doOutput = step % m_infosteps == 0;
+            if (CalcSteadyState(doOutput))
             {
                 if (m_comm->GetRank() == 0)
                 {
@@ -2692,101 +2676,72 @@ namespace Nektar
     }
     
     // Calculate if the solution reached a steady state
-    bool CompressibleFlowSystem::CalcSteadyState()
+    bool CompressibleFlowSystem::CalcSteadyState(bool output)
     {
-        bool returnval = false;
-        int  nPoints   = GetTotPoints();
-        
-        Array<OneD,             NekDouble>   L2   (m_fields.num_elements());
-        Array<OneD,             NekDouble>   numer(m_fields.num_elements());
-        Array<OneD,             NekDouble>   denom(m_fields.num_elements());
-        Array<OneD, Array<OneD, NekDouble> > unp1 (m_fields.num_elements());
-        Array<OneD, Array<OneD, NekDouble> > diff (m_fields.num_elements());
-        Array<OneD, Array<OneD, NekDouble> > diff2(m_fields.num_elements());
-        Array<OneD, Array<OneD, NekDouble> > u2np1(m_fields.num_elements());
-        
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {            
-            unp1[i]  = Array<OneD, NekDouble>(nPoints, 0.0);
-            diff[i]  = Array<OneD, NekDouble>(nPoints, 0.0);
-            diff2[i] = Array<OneD, NekDouble>(nPoints, 0.0);
-            u2np1[i] = Array<OneD, NekDouble>(nPoints, 0.0);
+        const int nPoints = GetTotPoints();
+        const int nFields = m_fields.num_elements();
 
-            // Numerator
-            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, unp1[i], 1);
-            Vmath::Vsub (nPoints, unp1[i], 1, m_un[i], 1, diff[i],  1);
-            Vmath::Vmul (nPoints, diff[i], 1, diff[i], 1, diff2[i], 1);
-            numer[i] = Vmath::Vsum(nPoints, diff2[i], 1);
-            m_comm->AllReduce(numer[i], LibUtilities::ReduceSum);
+        // Holds L2 errors.
+        Array<OneD, NekDouble> L2      (  nFields);
+        Array<OneD, NekDouble> residual(2*nFields);
 
-            // Denominator
-            Vmath::Vmul(nPoints, unp1[i], 1, unp1[i], 1, u2np1[i], 1);
-            denom[i] = Vmath::Vsum(nPoints, u2np1[i], 1);
-            m_comm->AllReduce(denom[i], LibUtilities::ReduceSum);
-            
-            // L2 error
-            L2[i] = sqrt(numer[i]/denom[i]);
-            
-            // Store current solution for next steady-state calculation
-            Vmath::Vcopy(nPoints, unp1[i], 1, m_un[i], 1);
+        for (int i = 0; i < nFields; ++i)
+        {
+            Array<OneD, NekDouble> diff(nPoints);
+
+            Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1, diff, 1);
+            Vmath::Vmul(nPoints, diff, 1, diff, 1, diff, 1);
+            residual[i] = Vmath::Vsum(nPoints, diff, 1);
+        }
+
+        m_comm->AllReduce(residual, LibUtilities::ReduceSum);
+
+        // L2 error
+        L2[0] = sqrt(residual[0]) / m_rhoInf;
+
+        for (int i = 1; i < nFields-1; ++i)
+        {
+            L2[i] = sqrt(residual[i]) / m_UInf / m_rhoInf;
+        }
+
+        NekDouble Einf = m_pInf / (m_gamma-1.0) + 0.5 * m_rhoInf * m_UInf;
+        L2[nFields-1] = sqrt(residual[nFields-1]) / Einf;
+
+        if (m_comm->GetRank() == 0 && output)
+        {
+            // Output time
+            m_errFile << setprecision(8) << setw(17) << scientific << m_time;
+
+            // Output residuals
+            for (int i = 0; i < nFields; ++i)
+            {
+                m_errFile << setprecision(11) << setw(22) << scientific
+                          << L2[i];
+            }
+
+            m_errFile << endl;
         }
 
         // Calculate maximum L2 error
-        NekDouble maxL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
+        NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
 
-        if (m_fields.num_elements() == 3)
+        if (m_session->DefinesCmdLineArgument("verbose") &&
+            m_comm->GetRank() == 0 && output)
         {
-            if (m_comm->GetRank() == 0)
-            {
-                std::ofstream m_errFile( "L2Errors.txt", std::ios_base::app);
-                m_errFile << setprecision(16) << scientific
-                     << m_time << "    "
-                     << L2[0]  << "    "
-                     << L2[1]  << "    "
-                     << L2[2]  << endl;
-                m_errFile.close();
-            }
+            cout << "-- Maximum L^2 residual: " << maxL2 << endl;
+            //     << scientific << setprecision(11) << maxL2 << endl;
         }
-        else if (m_fields.num_elements() == 4)
-        {
-            if (m_comm->GetRank() == 0)
-            {
-                std::ofstream m_errFile( "L2Errors.txt", std::ios_base::app);
-                m_errFile << setprecision(16) << scientific
-                     << m_time << "    "
-                     << L2[0]  << "    "
-                     << L2[1]  << "    "
-                     << L2[2]  << "    "
-                     << L2[3]  << endl;
-                m_errFile.close();
-            }
-        }
-        else if (m_fields.num_elements() == 5)
-        {
-            if (m_comm->GetRank() == 0)
-            {
-                std::ofstream m_errFile( "L2Errors.txt", std::ios_base::app);
-                m_errFile << setprecision(16) << scientific
-                     << m_time << "    "
-                     << L2[0]  << "    "
-                     << L2[1]  << "    "
-                     << L2[2]  << "    "
-                     << L2[3]  << "    "
-                     << L2[4]  << endl;
-                m_errFile.close();
-            }
-        }
-        
+
         if (maxL2 <= m_steadyStateTol)
         {
-            returnval = true;
+            return true;
         }
  
-        return returnval;
+        return false;
     }
 
     /**
-     * @brief Calcualte entropy.
+     * @brief Calculate entropy.
      */
     void CompressibleFlowSystem::GetEntropy(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,

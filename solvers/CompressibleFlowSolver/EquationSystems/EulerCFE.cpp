@@ -126,22 +126,36 @@ namespace Nektar
                 break;
             }
         }
-        
-        //insert white noise in initial condition
-        NekDouble Noise;
-        int phystot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> noise(phystot);
-        
-        m_session->LoadParameter("Noise", Noise,0.0);
-        int m_nConvectiveFields =  m_fields.num_elements();
-        
-        if(Noise > 0.0)
+
+        if (m_session->DefinesParameter("SteadyStateTol"))
         {
-            for(int i = 0; i < m_nConvectiveFields; i++)
+            const int nPoints = m_fields[0]->GetTotPoints();
+            m_un = Array<OneD, Array<OneD, NekDouble> > (
+                m_fields.num_elements());
+
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
             {
-                Vmath::FillWhiteNoise(phystot,Noise,noise,1,m_comm->GetColumnComm()->GetRank()+1);
-                Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                cout << Vmath::Vmax(nPoints, m_fields[i]->GetPhys(), 1) << endl;
+                m_un[i] = Array<OneD, NekDouble>(nPoints);
+                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
+            }
+
+            if (m_comm->GetRank() == 0)
+            {
+                m_errFile.open(m_session->GetSessionName() + std::string(".res"));
+                m_errFile << "# "
+                          << setw(15) << left << "Time"
+                          << setw(22) << left << "rho";
+
+                std::string velFields[3] = {"u", "v", "w"};
+
+                for (int i = 0; i < m_fields.num_elements()-2; ++i)
+                {
+                    m_errFile << setw(22) << "rho"+velFields[i];
+                }
+
+                m_errFile << setw(22) << left << "E" << endl;
             }
         }
         
@@ -358,6 +372,7 @@ namespace Nektar
             }
             default:
             {
+                EquationSystem::v_EvaluateExactSolution(field, outfield, time);
                 break;
             }
         }

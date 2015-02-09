@@ -429,7 +429,7 @@ namespace Nektar
                         case 1:
                         {
                             const LibUtilities::PointsKey pkey(
-                                numpoints+1,
+                                numpoints,
                                 LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(
                                 LibUtilities::eModified_B, nummodes, pkey);

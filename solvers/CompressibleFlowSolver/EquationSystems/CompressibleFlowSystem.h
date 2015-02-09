@@ -102,6 +102,7 @@ namespace Nektar
         NekDouble                           m_uInf;
         NekDouble                           m_vInf;
         NekDouble                           m_wInf;
+        NekDouble                           m_UInf;
         NekDouble                           m_gasConstant;
         NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
@@ -251,7 +252,7 @@ namespace Nektar
                   Array<OneD,                   NekDouble>   &stdV);
         
         virtual bool v_PostIntegrate(int step);
-        bool CalcSteadyState();
+        bool CalcSteadyState(bool output);
 
         void GetSensor(
             const Array<OneD, const Array<OneD, NekDouble> > &physarray,

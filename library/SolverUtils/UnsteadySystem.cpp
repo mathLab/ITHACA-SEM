@@ -306,12 +306,6 @@ namespace Nektar
                     cpuTime = 0.0;
                 }
                 
-                // Perform any solver-specific post-integration steps
-                if (v_PostIntegrate(step))
-                {
-                    break;
-                }
-
                 // Transform data into coefficient space
                 for (i = 0; i < nvariables; ++i)
                 {
@@ -322,6 +316,12 @@ namespace Nektar
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
                 
+                // Perform any solver-specific post-integration steps
+                if (v_PostIntegrate(step))
+                {
+                    break;
+                }
+
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)

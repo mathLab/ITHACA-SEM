@@ -187,7 +187,13 @@ namespace SolverUtils
             {
                 v_ApplyChristoffelCovar( inarray, outarray);
             }
-
+            
+            // Obtain the velocity of the coordinates for time-dependent mappings
+            SOLVER_UTILS_EXPORT void GetCoordVelocity(
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            {
+                v_GetCoordVelocity( outarray);
+            }
             
             /////////////////////////////////////////////////////////////
             //
@@ -230,6 +236,16 @@ namespace SolverUtils
             {
                 v_IncNSAdvectionCorrection( inarray, outarray);
             } 
+            
+            // Correction needed for time-derivative terms 
+            //     = U_coord^j u^i_,j - u^j U_coord^i_,j
+            //     inarray is the velocity field
+            SOLVER_UTILS_EXPORT void IncNSAccelerationCorrection(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            {
+                v_IncNSAccelerationCorrection( inarray, outarray);
+            }
             
             // Correction needed for pressure terms   
             //     = -g^(ij)p_j + (\nabla p)/J for variable Jacobian
@@ -397,7 +413,7 @@ namespace SolverUtils
             
             SOLVER_UTILS_EXPORT virtual void v_DotGradJacobian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, NekDouble>               &outarray)            =0;
+                Array<OneD, NekDouble>               &outarray);
             
             SOLVER_UTILS_EXPORT virtual void v_GetMetricTensor(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
@@ -421,6 +437,9 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
             
+            SOLVER_UTILS_EXPORT virtual void v_GetCoordVelocity(
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+            
             SOLVER_UTILS_EXPORT virtual void v_Divergence(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble>                            &outarray); 
@@ -434,6 +453,10 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             SOLVER_UTILS_EXPORT virtual void v_IncNSAdvectionCorrection(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+            
+            SOLVER_UTILS_EXPORT virtual void v_IncNSAccelerationCorrection(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             

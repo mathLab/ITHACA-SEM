@@ -680,7 +680,17 @@ namespace Nektar
         }
         //Advection contribution
         m_mapping->IncNSAdvectionCorrection(vel, Forcing);
-
+        
+        // Time-derivative contribution
+        if ( m_mapping->IsTimeDependent() )
+        {
+            m_mapping->IncNSAccelerationCorrection(vel, tmp);
+            for (int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                Vmath::Vadd(physTot, tmp[i], 1, Forcing[i], 1, Forcing[i], 1);
+            }            
+        }
+        
         // Pressure contribution
         if (!m_mapping->ImplicitPressure())
         {

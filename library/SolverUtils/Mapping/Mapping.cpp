@@ -189,6 +189,37 @@ namespace Nektar
             }
         }
         
+        void Mapping::v_DotGradJacobian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>               &outarray) 
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            
+            outarray = Array<OneD, NekDouble>(physTot, 0.0);
+            if ( !HasConstantJacobian() )
+            {
+                // Set wavespace to false and store current value
+                bool wavespace = m_fields[0]->GetWaveSpace();
+                m_fields[0]->SetWaveSpace(false);
+                
+                // Get Mapping Jacobian
+                Array<OneD, NekDouble> Jac(physTot, 0.0);
+                GetJacobian(Jac);
+                
+                // Calculate inarray . grad(Jac)
+                Array<OneD, NekDouble> wk(physTot, 0.0);
+                for(int i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],
+                                            Jac, wk);
+                    Vmath::Vvtvp(physTot, inarray[i], 1, wk, 1, 
+                                            outarray, 1, outarray, 1);
+                }           
+            }
+            
+            m_fields[0]->SetWaveSpace(wavespace);
+        }
+        
         void Mapping::v_LowerIndex(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -233,6 +264,19 @@ namespace Nektar
                                             outarray[i], 1);
                 }
             } 
+        }
+        
+        void Mapping::v_GetCoordVelocity(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            ASSERTL0(!IsTimeDependent(),
+                     "Time-dependent mapping needs to define GetCoordVelocity function");
+            int physTot = m_fields[0]->GetTotPoints();
+            
+            for(int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                outarray[i] = Array<OneD, NekDouble>(physTot, 0.0);
+            }
         }
         
         void Mapping::v_Divergence(
@@ -489,6 +533,62 @@ namespace Nektar
                 }    
                 Vmath::Neg(physTot, outarray[i], 1);
             } 
+        }
+        
+        void Mapping::v_IncNSAccelerationCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            
+            Array<OneD, Array<OneD, NekDouble> > wk(nvel*nvel);
+            Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
+            Array<OneD, Array<OneD, NekDouble> > coordVel(nvel);
+            // Get coordinates velocity in transformed system
+            GetCoordVelocity(tmp);
+            ContravarFromCartesian(tmp, coordVel);         
+            
+            // Set wavespace to false and store current value
+            bool wavespace = m_fields[0]->GetWaveSpace();
+            m_fields[0]->SetWaveSpace(false);
+
+            // Calculate first term: U^j u^i,j = U^j (du^i/dx^j + {i,kj}u^k)
+            ApplyChristoffelContravar(inarray, wk);        
+            for (int i=0; i< nvel; i++)
+            {
+                Vmath::Zero(physTot,outarray[i],1);
+                for (int j=0; j< nvel; j++)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
+                                            tmp[0]);
+
+                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1); 
+                    
+                    Vmath::Vvtvp(physTot, coordVel[j], 1, wk[i*nvel+j], 1,
+                                          outarray[i], 1, outarray[i], 1);
+                }
+            }
+            
+            // Add -u^j U^i,j
+            ApplyChristoffelContravar(coordVel, wk);        
+            for (int i=0; i< nvel; i++)
+            {
+                for (int j=0; j< nvel; j++)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],coordVel[i],
+                                            tmp[0]);
+
+                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1);
+                    Vmath::Neg(physTot, wk[i*nvel+j], 1);
+                    
+                    Vmath::Vvtvp(physTot, inarray[j], 1, wk[i*nvel+j], 1,
+                                          outarray[i], 1, outarray[i], 1);
+                }
+            }
+            
+            // Restore value of wavespace 
+            m_fields[0]->SetWaveSpace(wavespace);
         }
 
         void Mapping::v_IncNSPressureCorrection(

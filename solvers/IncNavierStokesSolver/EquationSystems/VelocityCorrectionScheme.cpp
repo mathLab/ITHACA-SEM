@@ -237,6 +237,7 @@ namespace Nektar
                                   m_fields[i]->UpdatePhys());
                    	    std::cout << "Impose Dirichlet " << m_time << '\n';
 			    SetBoundaryConditions(m_time); 
+
         }
     }
     

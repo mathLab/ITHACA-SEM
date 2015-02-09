@@ -252,9 +252,9 @@ namespace Nektar
                     radpts += npoints;
                 }
 		// Set up mapping for womersley BC - need to put this in a seperate loop for all the womersley info
-		if(BndConds[n]->GetUserDefined() ==SpatialDomains::eWomersley){
-			 m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
-		}
+		//if(BndConds[n]->GetUserDefined() ==SpatialDomains::eWomersley){
+		//	 m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+		//}
             }
         }
 
@@ -301,6 +301,7 @@ namespace Nektar
         		   }
       			}
 	
+			m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
 
 
 		}
@@ -614,6 +615,90 @@ namespace Nektar
 	}
 
     }
+
+ void IncNavierStokes::InitWomersleyBoundary(int fieldid,int bndid)
+    {
+	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
+ 	int  i,j,k;
+
+	// Womersley Number
+	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
+
+	NekDouble normals[] = {n0,n1,n2};
+	
+	NekDouble r,kt;
+
+	std::complex<NekDouble> z1 (1.0,0.0);
+	std::complex<NekDouble> zi (0.0,1.0);
+	std::complex<NekDouble> z;
+
+        
+        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+        Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+        
+        
+        BndConds = m_fields[fieldid]->GetBndConditions();
+        BndExp   = m_fields[fieldid]->GetBndCondExpansions();
+	
+	StdRegions::StdExpansionSharedPtr elmt;
+        StdRegions::StdExpansionSharedPtr bc;
+        
+        int cnt=0;
+        int elmtid,offset, boundary,nfq;
+	
+	Array<OneD, NekDouble> Bvals,w;	
+
+
+	//Loop over all expansions	
+	for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++){
+		// Get element id and offset
+		elmtid = m_fieldsBCToElmtID[fieldid][cnt];
+                elmt   = m_fields[fieldid]->GetExp(elmtid); 
+                offset = m_fields[fieldid]->GetPhys_Offset(elmtid); 
+
+		// Get Boundary and trace expansion
+		bc = BndExp[bndid]->GetExp(i);
+		boundary = m_fieldsBCToTraceID[fieldid][cnt];
+		
+		nfq=bc->GetTotPoints();
+		w = m_fields[fieldid]->UpdatePhys() + offset;
+		
+	        Array<OneD, NekDouble> x(nfq,0.0);
+    		Array<OneD, NekDouble> y(nfq,0.0);
+        	Array<OneD, NekDouble> z(nfq,0.0);
+		Array<OneD, NekDouble> wbc(nfq,0.0);
+		bc->GetCoords(x,y,z);
+
+		// Add edge values (trace) into the wbc 
+		elmt->GetTracePhysVals(boundary,bc,w,wbc);
+		//Compute womersley solution
+	        for (j=0;j<nfq;j++){
+			r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
+
+			wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+			for (k=1; k<M; k++){
+				kt = 2.0*M_PI*k*m_time/T;
+				za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
+				zar = r*za;
+				zJ0 = CompBessel(0,za);
+				zJ0r = CompBessel(0,zar);
+				zJ0rJ0 = zJ0r/zJ0;
+				zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
+//				zq = std::complex<double>(wom_vel_r[k],wom_vel_i[k])*std::complex<double>(cos(kt),sin(kt));
+				zvel = zq*(z1-zJ0rJ0);
+				wbc[j] = wbc[j]+zvel.real();
+			}
+		}
+		// Multiply w by normal to get u,v,w component of velocity
+		Vmath::Smul(nfq,normals[fieldid],wbc,1,wbc,1);
+
+		Bvals = BndExp[bndid]->UpdateCoeffs()+BndExp[bndid]->GetCoeff_Offset(i);
+		// Push back to Coeff space	
+		bc->BwdTrans(wbc,Bvals);
+	}
+
+    }
+
 
 /* Computes the Complex Bessel function of 1st kind integer order using series rep. - taken from numberical recipies in C.
 */

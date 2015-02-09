@@ -211,6 +211,7 @@ namespace Nektar
 
 	/// Set Womersley Profile If specified
 	void SetWomersleyBoundary(int fieldid,int bndid);
+	void InitWomersleyBoundary(int fieldid,int bndid);
 
         /// evaluate steady state
         bool CalcSteadyState(void);

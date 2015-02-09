@@ -58,12 +58,88 @@ namespace Nektar
             m_nConvectiveFields = m_fields.num_elements()-1;
         }
 
-        void Mapping::InitObject(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                const TiXmlElement* pMapping)
+    /**
+     *
+     */
+    void Mapping::v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const TiXmlElement                                *pMapping)
+    {        
+        // Read parameters
+        std::string typeStr = pMapping->Attribute("TYPE");
+        std::map<std::string, std::string> vParams;
+        const TiXmlElement *param = pMapping->FirstChildElement("PARAM");
+        while (param)
         {
-            v_InitObject(pFields, pMapping);
+            ASSERTL0(param->Attribute("NAME"),
+                     "Missing attribute 'NAME' for parameter in mapping "
+                     + typeStr + "'.");
+            std::string nameStr = param->Attribute("NAME");
+
+            ASSERTL0(param->GetText(), "Empty value string for param.");
+            std::string valueStr = param->GetText();
+
+            vParams[nameStr] = valueStr;
+
+            param = param->NextSiblingElement("PARAM");
+        }        
+        // Check if parameters are defined, otherwise use default values
+        if (vParams.find("ImplicitPressure") != vParams.end())
+        {
+            if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
+               || boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "yes"))
+            {
+                m_implicitPressure = true;
+            }
         }
+        if (vParams.find("ImplicitViscous") != vParams.end())
+        {
+            if (  boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "true")
+               || boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "yes"))
+            {
+                m_implicitViscous = true;
+            }
+        }
+        //
+        if (vParams.find("PressureTolerance") == vParams.end())
+        {
+            m_pressureTolerance = 1e-12;
+        }
+        else
+        {
+            m_pressureTolerance = atof(vParams.find("PressureTolerance")->second.c_str());
+        }
+        //
+        if (vParams.find("ViscousTolerance") == vParams.end())
+        {
+            m_viscousTolerance = 1e-12;
+        }
+        else
+        {
+            m_viscousTolerance = atof(vParams.find("ViscousTolerance")->second.c_str());
+        }
+        //
+        if (vParams.find("PressureRelaxation") == vParams.end())
+        {
+            m_pressureRelaxation = 1.0;
+        }
+        else
+        {
+            m_pressureRelaxation = atof(vParams.find("PressureRelaxation")->second.c_str());
+        }
+        //
+        if (vParams.find("ViscousRelaxation") == vParams.end())
+        {
+            m_viscousRelaxation = 1.0;
+        }
+        else
+        {
+            m_viscousRelaxation = atof(vParams.find("ViscousRelaxation")->second.c_str());
+        }
+    }
+        
+        
+
 
         /**
          *
@@ -214,10 +290,9 @@ namespace Nektar
                                             Jac, wk);
                     Vmath::Vvtvp(physTot, inarray[i], 1, wk, 1, 
                                             outarray, 1, outarray, 1);
-                }           
-            }
-            
-            m_fields[0]->SetWaveSpace(wavespace);
+                }
+                m_fields[0]->SetWaveSpace(wavespace);
+            }       
         }
         
         void Mapping::v_LowerIndex(

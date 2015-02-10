@@ -403,21 +403,21 @@ namespace SolverUtils
         return true;
     }
 
-    void MappingXYofT::v_UpdateMapping()
+    void MappingXYofT::v_UpdateMapping(const NekDouble time)
     {
         std::string s_XFieldStr = m_session->GetVariable(0);
         std::string s_YFieldStr = m_session->GetVariable(1);
         // Evaluate x-functions --> GeometricInfo 0-1
         EvaluateFunction(m_fields, m_session, s_XFieldStr, m_GeometricInfo[0],
-                m_funcName); 
+                m_funcName, time); 
         EvaluateFunction(m_fields, m_session, s_XFieldStr, m_GeometricInfo[1],
-                m_velFuncName);
+                m_velFuncName, time);
         
         // Evaluate y-functions --> GeometricInfo 2-3
         EvaluateFunction(m_fields, m_session, s_YFieldStr, m_GeometricInfo[2],
-                m_funcName);
+                m_funcName, time);
         EvaluateFunction(m_fields, m_session, s_YFieldStr, m_GeometricInfo[3],
-                m_velFuncName);
+                m_velFuncName, time);
     }
 
 }

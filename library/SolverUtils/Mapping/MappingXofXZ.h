@@ -131,7 +131,7 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian();
 
-    SOLVER_UTILS_EXPORT virtual void v_UpdateMapping();
+    SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(const NekDouble time);
     
 private:
 

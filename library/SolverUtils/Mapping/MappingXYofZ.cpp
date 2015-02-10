@@ -379,7 +379,7 @@ namespace SolverUtils
         return true;
     }
 
-    void MappingXYofZ::v_UpdateMapping()
+    void MappingXYofZ::v_UpdateMapping(const NekDouble time)
     {
 
     }

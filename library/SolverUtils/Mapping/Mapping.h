@@ -345,9 +345,9 @@ namespace SolverUtils
             //
             //  Function to update time-dependent mappings
             //
-            SOLVER_UTILS_EXPORT void UpdateMapping()
+            SOLVER_UTILS_EXPORT void UpdateMapping(const NekDouble time)
             {
-                v_UpdateMapping();
+                v_UpdateMapping( time);
             }
             
             SOLVER_UTILS_EXPORT void UpdateBCs()
@@ -499,7 +499,7 @@ namespace SolverUtils
             
             SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian() =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_UpdateMapping() =0;
+            SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(const NekDouble time) =0;
             
             SOLVER_UTILS_EXPORT virtual void v_UpdateBCs();
             

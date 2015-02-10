@@ -413,7 +413,7 @@ namespace SolverUtils
         return false;
     }
 
-    void MappingXofXZ::v_UpdateMapping()
+    void MappingXofXZ::v_UpdateMapping(const NekDouble time)
     {
 
     }

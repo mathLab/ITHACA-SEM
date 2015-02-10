@@ -376,9 +376,7 @@ namespace Nektar
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eTimeDependent ||
-                    m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                       SpatialDomains::eMovingBody)
+                   SpatialDomains::eTimeDependent)
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);

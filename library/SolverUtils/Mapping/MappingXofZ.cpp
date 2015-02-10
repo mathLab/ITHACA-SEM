@@ -116,10 +116,11 @@ namespace SolverUtils
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> wk(physTot, 0.0);
         
         // U1 = u1 + fz*u3
-        Vmath::Vvtvp(physTot, m_GeometricInfo[1], 1, inarray[2], 1, 
-                                outarray[0], 1, outarray[0],1);
+        Vmath::Vmul(physTot, inarray[2], 1, m_GeometricInfo[1], 1, wk, 1);
+        Vmath::Vadd(physTot, wk, 1, inarray[0], 1, outarray[0],1);
         
         // U2 = u2
         Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
@@ -155,7 +156,7 @@ namespace SolverUtils
         
         // U1 = u1 - fz * u3
         Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, wk, 1);
-        Vmath::Vsub(physTot, outarray[0], 1, wk, 1, outarray[0], 1);        
+        Vmath::Vsub(physTot, inarray[0], 1, wk, 1, outarray[0], 1);        
         
         // U2 = u2
         Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);

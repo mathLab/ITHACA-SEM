@@ -116,7 +116,26 @@ namespace Nektar
     {        
     }
     
+    void VCSMapping::v_DoInitialise(void)
+    {
+        UnsteadySystem::v_DoInitialise();
 
+        // Set up Field Meta Data for output files
+        m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
+
+        // Correct Dirichlet boundary conditions to account for mapping
+        m_mapping->UpdateBCs();
+        //
+        for(int i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_fields[i]->LocalToGlobal();
+            m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
+            m_fields[i]->GlobalToLocal();
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  m_fields[i]->UpdatePhys());
+        }
+    }
 
     /**
      * Explicit part of the method - Advection, Forcing + HOPBCs
@@ -125,8 +144,13 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
-    {
-        m_mapping->UpdateMapping();
+    {       
+        // Update mapping and Deal with Dirichlet boundary conditions
+        if (m_mapping->IsTimeDependent())
+        {
+            m_mapping->UpdateMapping();
+            m_mapping->UpdateBCs();
+        }       
         
         EvaluateAdvectionTerms(inarray, outarray);
 

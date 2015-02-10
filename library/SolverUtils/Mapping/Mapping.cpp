@@ -620,6 +620,11 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > wk(nvel*nvel);
             Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
             Array<OneD, Array<OneD, NekDouble> > coordVel(nvel);
+            for (int i = 0; i< nvel; i++)
+            {
+                tmp[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                coordVel[i] = Array<OneD, NekDouble> (physTot, 0.0);
+            }
             // Get coordinates velocity in transformed system
             GetCoordVelocity(tmp);
             ContravarFromCartesian(tmp, coordVel);         
@@ -890,6 +895,300 @@ namespace Nektar
 
             // Restore value of wavespace 
             m_fields[0]->SetWaveSpace(wavespace);            
+        }
+        
+        void Mapping::v_UpdateBCs()
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+
+            // Declare variables
+            Array<OneD, int> BCtoElmtID;
+            Array<OneD, int> BCtoTraceID;
+            Array<OneD, const SpatialDomains::BoundaryConditionShPtr> BndConds;
+            Array<OneD, const SpatialDomains::BoundaryConditionShPtr> UBndConds;
+            Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+            Array<OneD, MultiRegions::ExpListSharedPtr>  UBndExp;
+            StdRegions::StdExpansionSharedPtr elmt;
+            StdRegions::StdExpansionSharedPtr Bc;
+
+            Array<OneD, NekDouble>  ElmtVal(physTot, 0.0);
+            Array<OneD, NekDouble>  BndVal(physTot, 0.0);
+            Array<OneD, NekDouble>  coordVelElmt(physTot, 0.0);
+            Array<OneD, NekDouble>  coordVelBnd(physTot, 0.0);
+            Array<OneD, NekDouble>  Vals(physTot, 0.0);
+            
+            
+            // Get coordinates velocity in transformed system (for MovingBody regions)
+            Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
+            Array<OneD, Array<OneD, NekDouble> > tmp2(nvel);
+            Array<OneD, Array<OneD, NekDouble> > coordVel(nvel);
+            for (int i = 0; i< nvel; i++)
+            {
+                tmp[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                tmp2[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                coordVel[i] = Array<OneD, NekDouble> (physTot, 0.0);
+            }
+            GetCoordVelocity(tmp);
+            ContravarFromCartesian(tmp, coordVel);
+            
+            // Evaluate Dirichlet pressure boundary conditions
+            BndConds   = m_fields[nvel]->GetBndConditions();
+            BndExp     = m_fields[nvel]->GetBndCondExpansions();
+            for(int n = 0 ; n < BndConds.num_elements(); ++n)
+            {
+                if ( BndConds[n]->GetBoundaryConditionType() == 
+                                    SpatialDomains::eDirichlet)
+                {
+                    int npoints = BndExp[n]->GetTotPoints();
+                    // Get coordinates    
+                    Array<OneD, Array<OneD, NekDouble> > coords(3);
+                    Array<OneD, Array<OneD, NekDouble> > coordsCartesian(3);
+                    for (int dir=0; dir<3; dir++)
+                    {
+                        coords[dir] = Array<OneD, NekDouble> (npoints, 0.0);
+                        coordsCartesian[dir] = 
+                                      Array<OneD, NekDouble> (npoints, 0.0);
+                    }                       
+                    BndExp[n]->GetCoords(coords[0],coords[1],coords[2]);
+                    // Transform coordinates to Cartesian system
+                    CoordinatesToCartesian(coords, coordsCartesian);
+
+                    LibUtilities::Equation condition =
+                        boost::static_pointer_cast<
+                            SpatialDomains::DirichletBoundaryCondition>
+                                (BndConds[n])->
+                                    m_dirichletCondition;
+                    // Evaluate
+                    condition.Evaluate(coordsCartesian[0], coordsCartesian[1],
+                                        coordsCartesian[2], 0.0,
+                                        BndExp[n]->UpdatePhys());
+                }
+            }
+            
+            // Evaluate original Dirichlet velocity boundary conditions
+            //     and add correction to MovingBody regions
+            UBndConds   = m_fields[0]->GetBndConditions();
+            UBndExp     = m_fields[0]->GetBndCondExpansions();
+            // Loop boundary conditions looking for Dirichlet bc's to evaluate
+            for(int n = 0 ; n < UBndConds.num_elements(); ++n)
+            {
+                if ( UBndConds[n]->GetBoundaryConditionType() == 
+                                    SpatialDomains::eDirichlet)
+                {
+                    // check if other velocity components also have Dirichlet bc
+                    for (int i = 1; i < nvel; ++i)
+                    {
+                        ASSERTL0(m_fields[i]->GetBndConditions()[n]->GetBoundaryConditionType() == 
+                                                SpatialDomains::eDirichlet,
+                                    "Mapping only supported when all velocity components have the same type of boundary conditions");
+                    }
+                    
+                    // First, evaluate function in whole domain for all velocity components
+                    for (int i = 0; i < nvel; ++i)
+                    {
+                        BndConds   = m_fields[i]->GetBndConditions();
+                        BndExp     = m_fields[i]->GetBndCondExpansions(); 
+                        
+                        // Get coordinates    
+                        Array<OneD, Array<OneD, NekDouble> > coords(3);
+                        Array<OneD, Array<OneD, NekDouble> > coordsCartesian(3);
+                        for (int dir=0; dir < 3; dir++)
+                        {
+                            coords[dir] = Array<OneD, NekDouble> (physTot, 0.0);
+                            coordsCartesian[dir] = 
+                                          Array<OneD, NekDouble> (physTot, 0.0);
+                        }                       
+                        m_fields[i]->GetCoords(coords[0],coords[1],coords[2]);
+                         
+                        // Transform coordinates to Cartesian system
+                        CoordinatesToCartesian(coords, coordsCartesian);
+
+                        LibUtilities::Equation condition =
+                            boost::static_pointer_cast<
+                                SpatialDomains::DirichletBoundaryCondition>
+                                    (BndConds[n])->
+                                        m_dirichletCondition;
+                        // Evaluate
+                        condition.Evaluate(coordsCartesian[0], coordsCartesian[1],
+                                            coordsCartesian[2], 0.0, tmp[i]);
+                    }                             
+                    // Convert velocity vector to transformed system
+                    ContravarFromCartesian(tmp, tmp2);
+                
+                    // Now, project result to boundary
+                    switch (m_fields[0]->GetExpType())
+                    {
+                        case MultiRegions::e2D:
+                        case MultiRegions::e3D:
+                        {                            
+                            // Loop boundary conditions again to get correct
+                            //    values for cnt
+                            int cnt = 0;
+                            for(int m = 0 ; m < UBndConds.num_elements(); ++m)
+                            {
+                                int exp_size = UBndExp[m]->GetExpSize();
+                                if (m==n)
+                                {
+                                    for (int j = 0; j < exp_size; ++j, cnt++)
+                                    {                        
+                                        for (int i = 0; i < nvel; ++i)
+                                        {
+                                            BndConds   = m_fields[i]->GetBndConditions();
+                                            BndExp     = m_fields[i]->GetBndCondExpansions();
+                                            m_fields[i]->GetBoundaryToElmtMap(BCtoElmtID,BCtoTraceID);
+                                            /// Casting the boundary expansion to the specific case
+                                            Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
+                                                    (BndExp[n]->GetExp(j));
+                                            // Get element expansion
+                                            elmt = m_fields[i]->GetExp(BCtoElmtID[cnt]);
+                                            // Get velocity on the element
+                                            ElmtVal  = tmp2[i] + m_fields[i]->GetPhys_Offset(
+                                                                                 BCtoElmtID[cnt]);
+                                            // Get coordinate velocity on the element
+                                            coordVelElmt  = coordVel[i] + m_fields[i]->GetPhys_Offset(
+                                                                                 BCtoElmtID[cnt]);
+                                            // Get values on boundary
+                                            switch (m_fields[i]->GetExpType())
+                                            {
+                                                case MultiRegions::e2D:
+                                                {
+                                                    elmt->GetEdgePhysVals(BCtoTraceID[cnt], Bc,
+                                                                          ElmtVal, BndVal);
+                                                    elmt->GetEdgePhysVals(BCtoTraceID[cnt], Bc,
+                                                                          coordVelElmt, coordVelBnd);
+                                                }
+                                                break;
+
+                                                case MultiRegions::e3D:
+                                                {
+                                                    elmt->GetFacePhysVals(BCtoTraceID[cnt], Bc, 
+                                                                          ElmtVal, BndVal);
+                                                    elmt->GetFacePhysVals(BCtoTraceID[cnt], Bc, 
+                                                                          coordVelElmt, coordVelBnd);
+                                                }
+                                                break;
+
+                                                default:
+                                                    ASSERTL0(0,"Dimension not supported");
+                                                break;
+                                            }
+                                            // Pointer to value that should be updated
+                                            Vals = BndExp[n]->UpdatePhys()
+                                                        + BndExp[n]->GetPhys_Offset(j);                            
+
+                                            // Copy result
+                                            Vmath::Vcopy(Bc->GetTotPoints(), BndVal, 1, Vals, 1);
+                                            // Apply coordinate velocity correction
+                                            if(BndConds[n]->GetUserDefined() == SpatialDomains::eMovingBody)
+                                            {
+                                                Vmath::Vadd(Bc->GetTotPoints(), coordVelBnd, 1, 
+                                                                        Vals, 1, Vals, 1);
+                                            }
+                                        }                        
+                                    }   
+                                }
+                                else // setting if m!=n
+                                {
+                                    cnt += exp_size;
+                                }
+                            }                            
+                        }
+                        break;
+                        
+                        case MultiRegions::e3DH1D:
+                        {
+                            Array<OneD, unsigned int> planes;
+                            planes = m_fields[0]->GetZIDs();
+                            int num_planes = planes.num_elements();            
+                            // Loop boundary conditions again to get correct
+                            //    values for cnt
+                            int cnt = 0;
+                            for(int k = 0; k < num_planes; k++)
+                            {
+                                for(int m = 0 ; m < UBndConds.num_elements(); ++m)
+                                {
+                                    int exp_size = UBndExp[m]->GetExpSize();
+                                    int exp_size_per_plane = exp_size/num_planes;
+                                    if (m==n)
+                                    {
+                                        for (int j = 0; j < exp_size_per_plane; ++j, cnt++)
+                                        {                        
+                                            for (int i = 0; i < nvel; ++i)
+                                            {
+                                                int bndElmtOffset = j+k*exp_size_per_plane;
+                                                
+                                                BndConds   = m_fields[i]->GetBndConditions();
+                                                BndExp     = m_fields[i]->GetBndCondExpansions();
+                                                m_fields[i]->GetBoundaryToElmtMap(BCtoElmtID,BCtoTraceID);
+                                                /// Casting the boundary expansion to the specific case
+                                                Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
+                                                        (BndExp[n]->GetExp(bndElmtOffset));
+                                                // Get element expansion
+                                                elmt = m_fields[i]->GetExp(BCtoElmtID[cnt]);
+                                                // Get velocity on the element
+                                                ElmtVal  = tmp2[i] + m_fields[i]->GetPhys_Offset(
+                                                                                     BCtoElmtID[cnt]);
+                                                // Get coordinate velocity on the element
+                                                coordVelElmt  = coordVel[i] + m_fields[i]->GetPhys_Offset(
+                                                                                     BCtoElmtID[cnt]);
+                                                // Get values on boundary
+                                                elmt->GetEdgePhysVals(BCtoTraceID[cnt], Bc,
+                                                                      ElmtVal, BndVal);
+                                                elmt->GetEdgePhysVals(BCtoTraceID[cnt], Bc,
+                                                                      coordVelElmt, coordVelBnd);
+                                                // Pointer to value that should be updated
+                                                Vals = BndExp[n]->UpdatePhys()
+                                                            + BndExp[n]->GetPhys_Offset(bndElmtOffset);                            
+
+                                                // Copy result
+                                                Vmath::Vcopy(Bc->GetTotPoints(), BndVal, 1, Vals, 1);
+                                                // Apply coordinate velocity correction
+                                                if(BndConds[n]->GetUserDefined() == SpatialDomains::eMovingBody)
+                                                {
+                                                    Vmath::Vadd(Bc->GetTotPoints(), coordVelBnd, 1, 
+                                                                            Vals, 1, Vals, 1);
+                                                }
+                                            }                        
+                                        }   
+                                    }
+                                    else // setting if m!=n
+                                    {
+                                        cnt += exp_size_per_plane;
+                                    }
+                                }                                
+                            }                            
+                        }
+                        break;
+                        
+                        default:
+                            ASSERTL0(0,"Dimension not supported");
+                        break;                        
+                    }
+                }
+            }            
+            
+            // Finally, perform FwdTrans in all fields
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                // Get boundary condition information
+                BndConds   = m_fields[i]->GetBndConditions();
+                BndExp     = m_fields[i]->GetBndCondExpansions();                                
+                for(int n = 0 ; n < BndConds.num_elements(); ++n)
+                {   
+                    if ( BndConds[n]->GetBoundaryConditionType() == 
+                            SpatialDomains::eDirichlet)
+                    {
+                        BndExp[n]->FwdTrans_BndConstrained(BndExp[n]->GetPhys(),
+                                                    BndExp[n]->UpdateCoeffs());
+                        if (m_fields[i]->GetExpType() == MultiRegions::e3DH1D)
+                        {
+                            BndExp[n]->HomogeneousFwdTrans(BndExp[n]->GetCoeffs(),
+                                                    BndExp[n]->UpdateCoeffs());
+                        }
+                    }
+                }             
+            }            
         }
 
     }

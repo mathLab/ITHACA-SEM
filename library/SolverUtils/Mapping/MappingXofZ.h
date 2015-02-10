@@ -93,6 +93,10 @@ protected:
     SOLVER_UTILS_EXPORT virtual void v_CovarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray); 
+    
+    SOLVER_UTILS_EXPORT virtual void v_CoordinatesToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
     SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
         Array<OneD, NekDouble>               &outarray);

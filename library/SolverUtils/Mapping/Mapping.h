@@ -122,6 +122,14 @@ namespace SolverUtils
                 v_CovarFromCartesian( inarray, outarray);
             }
             
+            /// Convert a the domain coordinates inarray to the Cartesian system
+            SOLVER_UTILS_EXPORT void CoordinatesToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            {
+                v_CoordinatesToCartesian( inarray, outarray);
+            }
+            
             /////////////////////////////////////////////////////////////
             //
             //   Basic tensor calculus functions
@@ -342,6 +350,11 @@ namespace SolverUtils
                 v_UpdateMapping();
             }
             
+            SOLVER_UTILS_EXPORT void UpdateBCs()
+            {
+                v_UpdateBCs();
+            }
+            
 
         protected:
             /// Session reader
@@ -362,6 +375,9 @@ namespace SolverUtils
             NekDouble                                   m_viscousTolerance;
             NekDouble                                   m_pressureRelaxation;
             NekDouble                                   m_viscousRelaxation;
+            
+            // Name of the function containing the coordinates
+            string                                      m_funcName;
             
             // Static variables to load mapping
             static MappingSharedPtr                     m_mappingPtr;
@@ -410,6 +426,10 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_CovarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
+            
+            SOLVER_UTILS_EXPORT virtual void v_CoordinatesToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
             
             SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
                 Array<OneD, NekDouble>               &outarray)             =0;
@@ -480,6 +500,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian() =0;
             
             SOLVER_UTILS_EXPORT virtual void v_UpdateMapping() =0;
+            
+            SOLVER_UTILS_EXPORT virtual void v_UpdateBCs();
             
     };
 }

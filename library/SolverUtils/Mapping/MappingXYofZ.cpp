@@ -82,16 +82,16 @@ namespace SolverUtils
         ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
                 "name which prescribes mapping.");
 
-        string funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(funcName),
-                "Function '" + funcName + "' not defined.");
+        m_funcName = funcNameElmt->GetText();
+        ASSERTL0(m_session->DefinesFunction(m_funcName),
+                "Function '" + m_funcName + "' not defined.");
 
         std::string s_XFieldStr = m_session->GetVariable(0);
-        ASSERTL0(m_session->DefinesFunction(funcName, s_XFieldStr),
+        ASSERTL0(m_session->DefinesFunction(m_funcName, s_XFieldStr),
                 "Variable '" + s_XFieldStr + "' not defined.");
         
         std::string s_YFieldStr = m_session->GetVariable(1);
-        ASSERTL0(m_session->DefinesFunction(funcName, s_YFieldStr),
+        ASSERTL0(m_session->DefinesFunction(m_funcName, s_YFieldStr),
                 "Variable '" + s_YFieldStr + "' not defined.");
 
         
@@ -101,7 +101,7 @@ namespace SolverUtils
         
         // Evaluate x-function --> GeometricInfo 0
         EvaluateFunction(pFields, m_session, s_XFieldStr, m_GeometricInfo[0],
-                funcName);
+                m_funcName);
 
         // Calculate derivatives of transformation --> m_GeometricInfo 1-3
         for(int i = 1; i < 4; i++)
@@ -116,7 +116,7 @@ namespace SolverUtils
         
         // Evaluate y-function --> GeometricInfo 6
         EvaluateFunction(pFields, m_session, s_YFieldStr, m_GeometricInfo[6],
-                funcName);
+                m_funcName);
 
         // Calculate derivatives of transformation m_GeometricInfo 7-9
         for(int i = 7; i < 10; i++)
@@ -207,6 +207,25 @@ namespace SolverUtils
         Vmath::Vvtvp(physTot, m_GeometricInfo[7], 1, inarray[1], 1,
                                 outarray[2], 1, outarray[2], 1);        
         Vmath::Vadd(physTot, inarray[2], 1, outarray[2], 1, outarray[2], 1);
+    }
+
+    void MappingXYofZ::v_CoordinatesToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+    {
+        int npoints = outarray[0].num_elements();
+        
+        // x' = f(x,z)
+        LibUtilities::EquationSharedPtr ffunc =
+                    m_session->GetFunction(m_funcName, m_session->GetVariable(0));
+                
+        ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, outarray[0]);       
+        // y' = g(y,z)
+        ffunc = m_session->GetFunction(m_funcName, m_session->GetVariable(1));
+                
+        ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, outarray[1]);
+        // z' = z
+        Vmath::Vcopy(npoints, inarray[2], 1, outarray[2], 1);        
     }
 
     void MappingXYofZ::v_GetJacobian(

@@ -75,7 +75,10 @@ namespace Nektar
         SolverUtils::MappingSharedPtr               m_mapping;
         
         bool                                        m_verbose;
-        // Virtual functions        
+        // Virtual functions     
+        virtual void v_DoInitialise(void);
+        
+        
         virtual void v_SetUpPressureForcing(
                     const Array<OneD, const Array<OneD, NekDouble> > &fields,
                     Array<OneD, Array<OneD, NekDouble> > &Forcing,

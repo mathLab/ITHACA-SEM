@@ -82,12 +82,12 @@ namespace SolverUtils
         ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
                 "name which prescribes mapping.");
 
-        string funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(funcName),
-                "Function '" + funcName + "' not defined.");
+        m_funcName = funcNameElmt->GetText();
+        ASSERTL0(m_session->DefinesFunction(m_funcName),
+                "Function '" + m_funcName + "' not defined.");
 
         std::string s_FieldStr = m_session->GetVariable(0);
-        ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
+        ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                 "Variable '" + s_FieldStr + "' not defined.");
 
         
@@ -95,7 +95,7 @@ namespace SolverUtils
         pFields[0]->SetWaveSpace(false);
         
         EvaluateFunction(pFields, m_session, s_FieldStr, m_GeometricInfo[0],
-                funcName);
+                m_funcName);
 
         // Calculate derivatives of transformation
         pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
@@ -190,6 +190,23 @@ namespace SolverUtils
         Vmath::Vmul(physTot, m_GeometricInfo[2], 1, 
                              inarray[0], 1, outarray[2], 1);
         Vmath::Vadd(physTot, inarray[2], 1, outarray[2], 1, outarray[2], 1);
+    }
+    
+    void MappingXofXZ::v_CoordinatesToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+    {
+        int npoints = outarray[0].num_elements();
+        
+        // x' = f(x,z)
+        LibUtilities::EquationSharedPtr ffunc =
+                    m_session->GetFunction(m_funcName, m_session->GetVariable(0));
+                
+        ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, outarray[0]);       
+        // y' = y
+        Vmath::Vcopy(npoints, inarray[1], 1, outarray[1], 1);
+        // z' = z
+        Vmath::Vcopy(npoints, inarray[2], 1, outarray[2], 1);
     }
 
     void MappingXofXZ::v_GetJacobian(

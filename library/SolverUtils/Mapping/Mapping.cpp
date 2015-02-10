@@ -55,7 +55,32 @@ namespace Nektar
                 : m_session(pSession), m_fields(pFields),
                   m_implicitPressure(false), m_implicitViscous(false)
         {
-            m_nConvectiveFields = m_fields.num_elements()-1;
+            switch (m_fields[0]->GetExpType())
+            {
+                case MultiRegions::e1D:
+                {
+                    m_nConvectiveFields = 1;
+                }
+                break;
+                
+                case MultiRegions::e2D:
+                {
+                    m_nConvectiveFields = 2;
+                }
+                break;
+                
+                case MultiRegions::e3D:
+                case MultiRegions::e3DH1D:
+                case MultiRegions::e3DH2D:
+                {
+                    m_nConvectiveFields = 3;
+                }                    
+                break;
+                
+                default:
+                    ASSERTL0(0,"Dimension not supported");
+                break;
+            }
         }
 
     /**

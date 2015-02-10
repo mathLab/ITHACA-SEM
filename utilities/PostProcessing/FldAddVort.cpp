@@ -8,6 +8,7 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
+#include <SolverUtils/Mapping/Mapping.h>
 
 using namespace Nektar;
 
@@ -27,17 +28,18 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-3]);
+    string meshfile(argv[1]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
     // Import field file.
-    string fieldfile(argv[argc-2]);
+    string fieldfile(argv[2]);
     vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     LibUtilities::Import(fieldfile,fielddef,fielddata);
     bool useFFT = false;
+    vSession->MatchSolverInfo("USEFFT", "FFTW", useFFT, false);
     bool dealiasing = false;
     //----------------------------------------------
 
@@ -45,7 +47,12 @@ int main(int argc, char *argv[])
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_fields.size();
-    int addfields = (nfields == 4)? 3:1;
+    int veldim = expdim;
+    if (fielddef[0]->m_numHomogeneousDir > 0)
+    {
+	veldim = veldim + fielddef[0]->m_numHomogeneousDir;
+    }
+    int addfields = (veldim == 3)? 3:1;
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + addfields);
 
     switch(expdim)
@@ -65,7 +72,7 @@ int main(int argc, char *argv[])
 
                 // choose points to be at evenly spaced points at
                 // nplanes points
-                const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
@@ -92,10 +99,10 @@ int main(int argc, char *argv[])
 
                 // choose points to be at evenly spaced points at
                 // nplanes points
-                const LibUtilities::PointsKey PkeyY(nylines,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey PkeyY(nylines,LibUtilities::eFourierEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyY(fielddef[0]->m_basis[1],nylines,PkeyY);
 
-                const LibUtilities::PointsKey PkeyZ(nzlines,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey PkeyZ(nylines,LibUtilities::eFourierEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
 
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
@@ -134,12 +141,12 @@ int main(int argc, char *argv[])
                 // Define Homogeneous expansion
                 //int nplanes = fielddef[0]->m_numModes[2];
 
-				int nplanes;
-				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[2]);
+                int nplanes;
+                vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[2]);
 
                 // choose points to be at evenly spaced points at
                 // nplanes points
-                const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
@@ -187,8 +194,7 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
 
-    //----------------------------------------------
-
+    //----------------------------------------------    
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
 
     std::vector<std::vector<NekDouble> > FieldData;
@@ -196,8 +202,8 @@ int main(int argc, char *argv[])
 	if(!vSession->DefinesSolverInfo("HomoStrip"))
 	{
 	    for(j = 0; j < nfields; ++j)
-    	{
-        	for(int i = 0; i < fielddata.size(); ++i)
+            {
+        	for(i = 0; i < fielddata.size(); ++i)
         	{
             	Exp[j]->ExtractDataToCoeffs(fielddef [i],
                 	                        fielddata[i],
@@ -205,94 +211,132 @@ int main(int argc, char *argv[])
                         	                Exp[j]->UpdateCoeffs());
         	}
         	Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
-    	}
-    	//----------------------------------------------
+            }
+            //----------------------------------------------
+            // Check if mapping was defined
+            SolverUtils::MappingSharedPtr mapping = SolverUtils::Mapping::Load(vSession, Exp);
+            if( mapping)
+            {
+                //Convert velocity to Cartesian system
+                int nq = Exp[0]->GetNpoints();
+                Array<OneD, Array<OneD, NekDouble> > tmp1 (veldim);
+                Array<OneD, Array<OneD, NekDouble> > tmp2 (veldim);
+                for ( i =0; i<veldim; ++i )
+                {
+                    tmp1[i] = Array<OneD, NekDouble> (nq);
+                    tmp2[i] = Array<OneD, NekDouble> (nq);                    
+                    Vmath::Vcopy(nq, Exp[i]->GetPhys(), 1, tmp1[i], 1);
+                }
+                mapping->ContravarToCartesian(tmp1, tmp2);
+                for ( i =0; i<veldim; ++i )
+                {
+                    Vmath::Vcopy(nq, tmp2[i], 1, Exp[i]->UpdatePhys(), 1);
+                }
+            }
+            
+            //----------------------------------------------
+            // Compute gradients of fields
+            ASSERTL0(veldim >= 2, "Need two fields (u,v) to add vorticity");
+            int nq = Exp[0]->GetTotPoints();
+            Array<OneD, Array<OneD, NekDouble> > grad(veldim*veldim);
+            Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
 
-    	//----------------------------------------------
-    	// Compute gradients of fields
-    	ASSERTL0(nfields >= 3, "Need two fields (u,v) to add reentricity");
-    	int nq = Exp[0]->GetNpoints();
-    	Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
-    	Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
+            for(i = 0; i < veldim*veldim; ++i)
+            {
+                    grad[i] = Array<OneD, NekDouble>(nq, 0.0);
+            }
 
-    	for(i = 0; i < nfields*nfields; ++i)
-    	{
-        	grad[i] = Array<OneD, NekDouble>(nq);
-    	}
+            for(i = 0; i < addfields; ++i)
+            {
+                    outfield[i] = Array<OneD, NekDouble>(nq, 0.0);
+            }            
+            // Calculate Velocity Gradient
+            for(i = 0; i < veldim; ++i)
+            {
+                for(j = 0; j < veldim; ++j)
+                {
+                    Exp[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],Exp[i]->GetPhys(),grad[i*veldim+j]);
+                }      
+            }
+            
+            if( mapping)
+            {
+                // Calculate gradient wrt Cartesian coordinates
+                Array<OneD, Array<OneD, NekDouble> > tmp1 (veldim);
+                Array<OneD, Array<OneD, NekDouble> > tmp2 (veldim);
+                for(i = 0; i < veldim; ++i)
+                {                    
+                    for ( j =0; j<veldim; ++j )
+                    {
+                        tmp1[j] = Array<OneD, NekDouble> (nq);
+                        tmp2[j] = Array<OneD, NekDouble> (nq);
+                        Vmath::Vcopy(nq, grad[i*veldim+j], 1, tmp1[j], 1);
+                    }
+                    mapping->ContravarToCartesian(tmp1, tmp2);
+                    for ( j =0; j<veldim; ++j )
+                    {
+                        Vmath::Vcopy(nq, tmp2[j], 1, grad[i*veldim+j], 1);
+                    }                    
+                }
+            }
+            
+            // Calculate Vorticity
+            if(veldim == 2)
+            {
+                // W_z = Vx - Uy
+                Vmath::Vsub(nq,grad[1*veldim+0],1,grad[0*veldim+1],1,outfield[0],1);
+            }
+            else
+            {
+                // W_x = Wy - Vz
+                Vmath::Vsub(nq,grad[2*veldim+1],1,grad[1*veldim+2],1,outfield[0],1);
+                // W_y = Uz - Wx
+                Vmath::Vsub(nq,grad[0*veldim+2],1,grad[2*veldim+0],1,outfield[1],1);
+                // W_z = Vx - Uy
+                Vmath::Vsub(nq,grad[1*veldim+0],1,grad[0*veldim+1],1,outfield[2],1);
+            }
+            for (i = 0; i < addfields; ++i)
+            {
+                Exp[nfields + i]->FwdTrans(outfield[i], Exp[nfields+i]->UpdateCoeffs());
+            }
+            //-----------------------------------------------
+            // Write solution to file with additional computed fields
+            string   out(argv[3]);
+            FieldDef
+                    = Exp[0]->GetFieldDefinitions();
+            FieldData 
+                            = std::vector<std::vector<NekDouble> >(FieldDef.size());
 
-    	for(i = 0; i < addfields; ++i)
-    	{
-        	outfield[i] = Array<OneD, NekDouble>(nq);
-    	}
+            vector<string > outname;
 
-	    // Calculate Gradient & Vorticity
-    	if(nfields == 3)
-    	{
-        	for(i = 0; i < nfields; ++i)
-        	{
-            	Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1]);
-        	}
-        	// W_z = Vx - Uy
-        	Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[0],1);
-    	}
-    	else
-    	{
-        	for(i = 0; i < nfields; ++i)
-        	{
-            	Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1],grad[i*nfields+2]);
-        	}
+            if(addfields == 1)
+            {
+                    outname.push_back("W_z");
+            }
+            else
+            {
+                    outname.push_back("W_x");
+                    outname.push_back("W_y");
+                    outname.push_back("W_z");
+            }
 
-        	// W_x = Wy - Vz
-        	Vmath::Vsub(nq,grad[2*nfields+1],1,grad[1*nfields+2],1,outfield[0],1);
-        	// W_y = Uz - Wx
-        	Vmath::Vsub(nq,grad[0*nfields+2],1,grad[2*nfields+0],1,outfield[1],1);
-        	// W_z = Vx - Uy
-        	Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[2],1);
-    	}
-
-    	for (i = 0; i < addfields; ++i)
-    	{
-        	Exp[nfields + i]->FwdTrans(outfield[i], Exp[nfields+i]->UpdateCoeffs());
-    	}
-
-    	//-----------------------------------------------
-    	// Write solution to file with additional computed fields
-    	string   out(argv[argc-1]);
-    	FieldDef
-        	= Exp[0]->GetFieldDefinitions();
-    	FieldData 
-			= std::vector<std::vector<NekDouble> >(FieldDef.size());
-
-    	vector<string > outname;
-
-    	if(addfields == 1)
-    	{
-        	outname.push_back("W_z");
-    	}
-    	else
-    	{
-        	outname.push_back("W_x");
-        	outname.push_back("W_y");
-        	outname.push_back("W_z");
-    	}
-
-    	for(j = 0; j < nfields + addfields; ++j)
-    	{
-        	for(i = 0; i < FieldDef.size(); ++i)
-        	{
-            	if (j >= nfields)
-            	{
-                	FieldDef[i]->m_fields.push_back(outname[j-nfields]);
-            	}
-            	else
-            	{
-                	FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
-            	}
-            	Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        	}
-    	}
-    	LibUtilities::Write(out, FieldDef, FieldData);
-    	//-----------------------------------------------
+            for(j = 0; j < nfields + addfields; ++j)
+            {
+                    for(i = 0; i < FieldDef.size(); ++i)
+                    {
+                    if (j >= nfields)
+                    {
+                            FieldDef[i]->m_fields.push_back(outname[j-nfields]);
+                    }
+                    else
+                    {
+                            FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
+                    }
+                    Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+                    }
+            }
+            LibUtilities::Write(out, FieldDef, FieldData);
+            //-----------------------------------------------
 	}
 	else
 	{

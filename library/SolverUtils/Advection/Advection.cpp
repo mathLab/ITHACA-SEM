@@ -103,7 +103,9 @@ void Advection::v_InitObject(
     {
         std::string HomoStr = pSession->GetSolverInfo("HOMOGENEOUS");
         if (HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
-            HomoStr == "1D"            || HomoStr == "Homo1D")
+            HomoStr == "1D"            || HomoStr == "Homo1D" ||
+            HomoStr == "HOMOGENEOUS2D" || HomoStr == "Homogeneous2D" ||
+            HomoStr == "2D"            || HomoStr == "Homo2D")
         {
             m_spaceDim++;
         }

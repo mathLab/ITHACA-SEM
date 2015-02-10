@@ -36,6 +36,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/MeshGraph.h>
@@ -62,119 +64,12 @@ namespace Nektar
 namespace Utilities
 {
 
-enum PtsType
-{
-    ePtsFile,
-    ePtsLine,
-    ePtsPlane,
-    ePtsTriBlock,
-    ePtsTetBlock
-};
-
-struct FieldPts
-{
-    FieldPts(void): m_ptsDim(0),
-                    m_ptype(ePtsFile) {}
-
-    int                                     m_ptsDim;
-    int                                     m_nFields;
-    Array<OneD, Array<OneD, NekDouble> >    m_pts;
-    PtsType                                 m_ptype;
-    vector<int>                             m_npts;
-    vector<std::string>                     m_fields;
-    vector<Array<OneD, int> >               m_ptsConn;
-
-    // Interpolate field_id (which is the id after the coordinates)
-    void Interp1DPts(const NekDouble          coord,
-                     Array<OneD, NekDouble > &intfields)
-    {
-        // currently assume first field is coordinate
-        WARNINGL1(m_ptsDim == 1,
-                  "Assumed only one coordinate given taking first coordinate "
-                  "for interpolation");
-        int npts = m_pts[0].num_elements();
-        int i;
-
-        for(i = 0; i < npts-1; ++i)
-        {
-            if((m_pts[0][i] <= coord) && (coord <= m_pts[0][i+1]))
-            {
-                NekDouble pdiff = m_pts[0][i+1]-m_pts[0][i];
-
-                if(npts <= 2)
-                {
-                    //  linear interpolation
-                    for(int j = 0; j < m_nFields; ++j)
-                    {
-                        intfields[j] = m_pts[m_ptsDim+j][i]
-                            * (m_pts[0][i+1] - coord) / pdiff
-                            + m_pts[m_ptsDim+j][i+1]
-                            * (coord - m_pts[0][i]) / pdiff;
-                    }
-                }
-                else // quadratic interpolation
-                {
-                   if(i < npts-2)
-                   { // forwards stencil
-                        NekDouble pdiff2 = m_pts[0][i+2] - m_pts[0][i+1];
-
-                        NekDouble h1 = (m_pts[0][i+1]-coord)
-                            * (m_pts[0][i+2] - coord)
-                            / (pdiff * (pdiff+pdiff2));
-                        NekDouble h2 = (coord-m_pts[0][i])
-                            * (m_pts[0][i+2] - coord)
-                            / (pdiff * pdiff2);
-                        NekDouble h3 = (coord-m_pts[0][i])
-                            * (coord - m_pts[0][i+1])
-                            / ((pdiff + pdiff2) * pdiff2);
-                        for(int j = 0; j < m_nFields; ++j)
-                        {
-                            intfields[j] = m_pts[m_ptsDim+j][i] * h1
-                                +  m_pts[m_ptsDim+j][i+1] * h2
-                                +  m_pts[m_ptsDim+j][i+2] * h3;
-                        }
-                    }
-                    else
-                    { // backwards stencil
-                        NekDouble pdiff2 = m_pts[0][i] - m_pts[0][i-1];
-
-                        NekDouble h1 = (m_pts[0][i+1]-coord)
-                            * (coord - m_pts[0][i-1])
-                            / (pdiff * pdiff2);
-                        NekDouble h2 = (coord - m_pts[0][i])
-                            * (coord - m_pts[0][i-1])
-                            / (pdiff * (pdiff + pdiff2));
-                        NekDouble h3 = (m_pts[0][i]-coord)
-                            * (m_pts[0][i+1] - coord)
-                            / ((pdiff + pdiff2) * pdiff);
-                        for(int j = 0; j < m_nFields; ++j)
-                        {
-                            intfields[j] = m_pts[m_ptsDim+j][i] * h1
-                                +  m_pts[m_ptsDim+j][i+1] * h2
-                                +  m_pts[m_ptsDim+j][i-1] * h3;
-                         }
-                    }
-                }
-                break;
-            }
-        }
-
-        ASSERTL0(i != npts-1, "Failed to find coordinate " +
-                              boost::lexical_cast<string>(coord) +
-                              " within provided input points");
-    };
-
-};
-
-typedef boost::shared_ptr<FieldPts> FieldPtsSharedPtr;
-static FieldPtsSharedPtr NullFieldPts;
-
 struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_writeBndFld(false),
-              m_fieldPts(NullFieldPts){}
+              m_fieldPts(LibUtilities::NullPtsField){}
 
     ~Field()
     {
@@ -195,13 +90,14 @@ struct Field {
     LibUtilities::SessionReaderSharedPtr    m_session;
     SpatialDomains::MeshGraphSharedPtr      m_graph;
     LibUtilities::FieldIOSharedPtr          m_fld;
+    LibUtilities::PtsIOSharedPtr            m_ptsIO;
     map<string, vector<string> >            m_inputfiles;
 
     bool                                    m_writeBndFld;
     vector<unsigned int>                    m_bndRegionsToWrite;
     bool                                    m_fldToBnd;
 
-    FieldPtsSharedPtr                       m_fieldPts;
+    LibUtilities::PtsFieldSharedPtr         m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;
 
 

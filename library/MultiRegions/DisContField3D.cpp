@@ -1665,7 +1665,7 @@
             }
             else
             {
-                ASSERTL2(false, "Unconnected trace element!");
+                ASSERTL0(false, "Unconnected trace element!");
             }
 
             return fwd;

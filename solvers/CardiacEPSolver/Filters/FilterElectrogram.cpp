@@ -111,7 +111,6 @@ namespace Nektar
         // Read electrogram points
         // Always use dim = 3 to allow electrode to be above surface
         const int dim = 3;
-        const NekDouble tol = 1e-06;
         int i = 0;
 
         while (!m_electrogramStream.fail())

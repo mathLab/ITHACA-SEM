@@ -51,13 +51,13 @@ namespace Nektar
         enum Homogeneous2DMatType
         {
             eForwardsCoeffSpaceY1D,
-			eForwardsCoeffSpaceZ1D,
+            eForwardsCoeffSpaceZ1D,
             eBackwardsCoeffSpaceY1D,
-			eBackwardsCoeffSpaceZ1D,
+            eBackwardsCoeffSpaceZ1D,
             eForwardsPhysSpaceY1D,
-			eForwardsPhysSpaceZ1D,
+            eForwardsPhysSpaceZ1D,
             eBackwardsPhysSpaceY1D,
-			eBackwardsPhysSpaceZ1D
+            eBackwardsPhysSpaceZ1D
         };
 
         /// A map between homo matrix keys and their associated block
@@ -213,7 +213,7 @@ namespace Nektar
                                          const Array<OneD, NekDouble> &inarray2,
                                          Array<OneD, NekDouble> &outarray, 
                                          CoeffState coeffstate = eLocal);
-			
+            
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
                                      Array<OneD, NekDouble> &out_d1, 
@@ -241,7 +241,7 @@ namespace Nektar
         {
             v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-		
+        
         inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
                                                               CoeffState coeffstate,
@@ -250,7 +250,7 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-	
+    
         inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                         const Array<OneD, NekDouble> &inarray2,
                                                         Array<OneD, NekDouble> &outarray, 

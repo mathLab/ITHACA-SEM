@@ -965,6 +965,11 @@ namespace Nektar
                 if ( BndConds[n]->GetBoundaryConditionType() == 
                                     SpatialDomains::eDirichlet)
                 {
+                    // Check if bc is time-dependent
+                    ASSERTL0( BndConds[n]->GetUserDefined() != 
+                                    SpatialDomains::eTimeDependent,
+                                "Time-dependent Dirichlet boundary conditions not supported with mapping.");
+                    
                     int npoints = BndExp[n]->GetTotPoints();
                     // Get coordinates    
                     Array<OneD, Array<OneD, NekDouble> > coords(3);
@@ -1008,6 +1013,14 @@ namespace Nektar
                                                 SpatialDomains::eDirichlet,
                                     "Mapping only supported when all velocity components have the same type of boundary conditions");
                     }
+                    
+                    // Check if bc is time-dependent
+                    for (int i = 0; i < nvel; ++i)
+                    {
+                        ASSERTL0( BndConds[n]->GetUserDefined() != 
+                                    SpatialDomains::eTimeDependent,
+                                "Time-dependent Dirichlet boundary conditions not supported with mapping.");
+                    }                   
                     
                     // First, evaluate function in whole domain for all velocity components
                     for (int i = 0; i < nvel; ++i)

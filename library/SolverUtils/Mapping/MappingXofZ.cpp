@@ -67,7 +67,8 @@ namespace SolverUtils
                 
         int phystot         = pFields[0]->GetTotPoints();
         
-        ASSERTL0(m_nConvectiveFields==3,"Mapping X = x + f(z) needs 3 velocity components.");
+        ASSERTL0(m_nConvectiveFields==3,
+                    "Mapping X = x + f(z) needs 3 velocity components.");
         
         // Allocation of geometry memory
         m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(6);
@@ -89,7 +90,6 @@ namespace SolverUtils
         std::string s_FieldStr = m_session->GetVariable(0);
         ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                 "Variable '" + s_FieldStr + "' not defined.");
-
         
         bool waveSpace = pFields[0]->GetWaveSpace();
         pFields[0]->SetWaveSpace(false);
@@ -191,7 +191,8 @@ namespace SolverUtils
         
         // x' = f(x,z)
         LibUtilities::EquationSharedPtr ffunc =
-                    m_session->GetFunction(m_funcName, m_session->GetVariable(0));
+                    m_session->GetFunction(m_funcName, 
+                                            m_session->GetVariable(0));
                 
         ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, outarray[0]);       
         // y' = y
@@ -230,7 +231,8 @@ namespace SolverUtils
             // Fill diagonal with 1.0
             for (int i=0; i<nvel; i++)
             {
-                Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, outarray[i+nvel*i], 1); 
+                Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                        outarray[i+nvel*i], 1); 
             }            
             
             // G_{13} and G_{31} = fz
@@ -240,7 +242,8 @@ namespace SolverUtils
             // G^{33} = (1+fz^2)
             Vmath::Vmul(physTot, m_GeometricInfo[1], 1,
                                 m_GeometricInfo[1], 1, wk, 1); // fz^2
-            Vmath::Vadd(physTot, wk, 1, outarray[2*nvel+2], 1, outarray[2*nvel+2], 1);
+            Vmath::Vadd(physTot, wk, 1, outarray[2*nvel+2], 1, 
+                                        outarray[2*nvel+2], 1);
     }
 
     void MappingXofZ::v_GetInvMetricTensor(
@@ -257,7 +260,8 @@ namespace SolverUtils
             // Fill diagonal with 1.0
             for (int i=0; i<nvel; i++)
             {
-                Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, outarray[i+nvel*i], 1); 
+                Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                            outarray[i+nvel*i], 1); 
             }            
             
             // G^{13} and G^{31} = -fz
@@ -279,14 +283,18 @@ namespace SolverUtils
         int physTot = m_fields[0]->GetTotPoints();
         Array<OneD, NekDouble> wk(physTot, 0.0);
         
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, outarray[0], 1);     //  in[2] * fz
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, outarray[2], 1);     //  in[0] * fz
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, 
+                                                    outarray[0], 1); //in[2]*fz
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, 
+                                                    outarray[2], 1); //in[0]*fz
         
-        Vmath::Vadd(physTot, outarray[0], 1, inarray[0], 1, outarray[0], 1); // out[0] = in[0] + in[2] * fz
+        Vmath::Vadd(physTot, outarray[0], 1, inarray[0], 1, 
+                                                    outarray[0], 1); // out[0] = in[0] + in[2] * fz
         
         Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1); // out[1] = in[1]]
 
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, m_GeometricInfo[1], 1, wk, 1); // fz^2
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, m_GeometricInfo[1], 1, 
+                                                        wk, 1); // fz^2
         Vmath::Sadd(physTot, 1.0, wk, 1, wk, 1); // 1+fz^2
         Vmath::Vmul(physTot, wk, 1, inarray[2],1, wk, 1); // (1+fz^2)*in[2]
         Vmath::Vadd(physTot, wk, 1, outarray[2],1, outarray[2], 1); // out[2] = fz*in[0] + (1+fz^2)*in[2]
@@ -300,13 +308,17 @@ namespace SolverUtils
         Array<OneD, NekDouble> wk(physTot, 0.0);
         Array<OneD, NekDouble> wk_2(physTot, 0.0);
         
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, outarray[0], 1);     //  in[2] * fz
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, outarray[2], 1);     //  in[0] * fz       
-        Vmath::Vsub(physTot, inarray[2], 1, outarray[2], 1, outarray[2], 1); // out[2] = in[2] - in[0] * fz
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, 
+                                                    outarray[0], 1); // in[2]*fz
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, 
+                                                    outarray[2], 1); //in[0]*fz       
+        Vmath::Vsub(physTot, inarray[2], 1, outarray[2], 1, 
+                                                    outarray[2], 1); // out[2] = in[2] - in[0] * fz
         
         Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1); // out[1] = in[1]]
 
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, m_GeometricInfo[1], 1, wk, 1); // fz^2
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, m_GeometricInfo[1], 1, 
+                                                        wk, 1); // fz^2
         Vmath::Sadd(physTot, 1.0, wk, 1, wk, 1); // 1+fz^2
         Vmath::Vmul(physTot, wk, 1, inarray[0],1, wk, 1); // in[0]*(1+fz^2)
         Vmath::Vsub(physTot, wk, 1, outarray[0], 1, outarray[0], 1); // out[0] = in[0]*(1+fz^2)- in[2] * fz
@@ -331,7 +343,8 @@ namespace SolverUtils
         // Calculate non-zero terms  
         
         // outarray(0,2) = U3 * fzz
-        Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[2],1,outarray[0*nvel+2],1); // U1 * fzz
+        Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[2],1,
+                                            outarray[0*nvel+2],1); // U1 * fzz
         
     }
 
@@ -354,7 +367,8 @@ namespace SolverUtils
         // Calculate non-zero terms
         
         // outarray(2,2) = U1 * fzz
-        Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[0],1,outarray[2*nvel+2],1); // U1 * fzz 
+        Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[0],1,
+                                        outarray[2*nvel+2],1); // U1 * fzz 
     }   
 
     bool MappingXofZ::v_IsTimeDependent()

@@ -67,7 +67,8 @@ namespace SolverUtils
         
         int phystot         = pFields[0]->GetTotPoints();
         
-        ASSERTL0(m_nConvectiveFields>=2,"Mapping X = X(x,y), Y = Y(x,y) needs 2 velocity components.");   
+        ASSERTL0(m_nConvectiveFields>=2,
+                "Mapping X = X(x,y), Y = Y(x,y) needs 2 velocity components.");   
 
         // Allocation of geometry memory
         m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(7);
@@ -134,12 +135,14 @@ namespace SolverUtils
         int physTot = m_fields[0]->GetTotPoints();
         
         // U1 = fx*u1 + fy*u2
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, outarray[0], 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, 
+                                                    outarray[0], 1);
         Vmath::Vvtvp(physTot, m_GeometricInfo[2], 1, inarray[1], 1, 
                                 outarray[0], 1, outarray[0],1);
         
         // U2 = gx*u1+gy*u2
-        Vmath::Vmul(physTot, m_GeometricInfo[4], 1, inarray[0], 1, outarray[1], 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[4], 1, inarray[0], 1, 
+                                                    outarray[1], 1);
         Vmath::Vvtvp(physTot, m_GeometricInfo[5], 1, inarray[1], 1, 
                                 outarray[1], 1, outarray[1],1);
         
@@ -158,18 +161,22 @@ namespace SolverUtils
         Array<OneD, NekDouble> wk(physTot, 0.0);
         
         // U1 = [gy*u1-gx*u2]/(fx*gy-gx*fy)
-        Vmath::Vmul(physTot, inarray[1], 1, m_GeometricInfo[4], 1, outarray[0], 1);
+        Vmath::Vmul(physTot, inarray[1], 1, m_GeometricInfo[4], 1, 
+                                            outarray[0], 1);
         Vmath::Vvtvm(physTot, inarray[0], 1, m_GeometricInfo[5], 1,
                                             outarray[0], 1,
                                             outarray[0], 1);
-        Vmath::Vdiv(physTot, outarray[0], 1, m_GeometricInfo[6], 1, outarray[0], 1);        
+        Vmath::Vdiv(physTot, outarray[0], 1, m_GeometricInfo[6], 1, 
+                                            outarray[0], 1);        
         
         // U2 = [fx*u2 - fy*u1]/(fx*gy-gx*fy)
-        Vmath::Vmul(physTot, inarray[0], 1, m_GeometricInfo[2], 1, outarray[1], 1);
+        Vmath::Vmul(physTot, inarray[0], 1, m_GeometricInfo[2], 1, 
+                                            outarray[1], 1);
         Vmath::Vvtvm(physTot, inarray[1], 1, m_GeometricInfo[1], 1,
                                             outarray[1], 1,
                                             outarray[1], 1);
-        Vmath::Vdiv(physTot, outarray[1], 1, m_GeometricInfo[6], 1, outarray[1], 1); 
+        Vmath::Vdiv(physTot, outarray[1], 1, m_GeometricInfo[6], 1, 
+                                            outarray[1], 1); 
         
         // U3 = u3
         if (m_nConvectiveFields ==3)
@@ -186,18 +193,22 @@ namespace SolverUtils
         Array<OneD, NekDouble> wk(physTot, 0.0);
         
         // U1 = [gy*u1-fy*u2]/(fx*gy-gx*fy) 
-        Vmath::Vmul(physTot, inarray[1], 1, m_GeometricInfo[2], 1, outarray[0], 1);
+        Vmath::Vmul(physTot, inarray[1], 1, m_GeometricInfo[2], 1, 
+                                            outarray[0], 1);
         Vmath::Vvtvm(physTot, inarray[0], 1, m_GeometricInfo[5], 1,
                                             outarray[0], 1,
                                             outarray[0], 1);
-        Vmath::Vdiv(physTot, outarray[0], 1, m_GeometricInfo[6], 1, outarray[0], 1);        
+        Vmath::Vdiv(physTot, outarray[0], 1, m_GeometricInfo[6], 1, 
+                                            outarray[0], 1);        
         
         // U2 = [fx*u2-gx*u1]/(fx*gy-gx*fy)
-        Vmath::Vmul(physTot, inarray[0], 1, m_GeometricInfo[4], 1, outarray[1], 1);
+        Vmath::Vmul(physTot, inarray[0], 1, m_GeometricInfo[4], 1, 
+                                            outarray[1], 1);
         Vmath::Vvtvm(physTot, inarray[1], 1, m_GeometricInfo[1], 1,
                                             outarray[1], 1,
                                             outarray[1], 1);
-        Vmath::Vdiv(physTot, outarray[1], 1, m_GeometricInfo[6], 1, outarray[1], 1);
+        Vmath::Vdiv(physTot, outarray[1], 1, m_GeometricInfo[6], 1, 
+                                            outarray[1], 1);
         
         // U3 = u3
         if (m_nConvectiveFields ==3)
@@ -213,12 +224,14 @@ namespace SolverUtils
         int physTot = m_fields[0]->GetTotPoints();
         
         // U1 = u1*fx +gx*u2
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, outarray[0], 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, 
+                                                    outarray[0], 1);
         Vmath::Vvtvp(physTot, m_GeometricInfo[4], 1, inarray[1], 1, 
                                 outarray[0], 1, outarray[0],1);
         
         // U2 = fy*u1 + gy*u2
-        Vmath::Vmul(physTot, m_GeometricInfo[2], 1, inarray[0], 1, outarray[1], 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[2], 1, inarray[0], 1, 
+                                                    outarray[1], 1);
         Vmath::Vvtvp(physTot, m_GeometricInfo[5], 1, inarray[1], 1, 
                                 outarray[1], 1, outarray[1],1);
         
@@ -237,7 +250,7 @@ namespace SolverUtils
         
         // x' = f(x,y)
         LibUtilities::EquationSharedPtr ffunc =
-                    m_session->GetFunction(m_funcName, m_session->GetVariable(0));
+                m_session->GetFunction(m_funcName, m_session->GetVariable(0));
                 
         ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, outarray[0]);       
         // y' = g(x,y)
@@ -258,68 +271,73 @@ namespace SolverUtils
     void MappingXYofXY::v_GetMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            
-            for (int i=0; i<nvel*nvel; i++)
-            {
-                outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-            }
-            
-            // g_{1,1} = m_metricTensor[0]
-            Vmath::Vcopy(physTot, m_metricTensor[0], 1, outarray[0*nvel+0], 1);
-            
-            // g_{2,2} = m_metricTensor[1]
-            Vmath::Vcopy(physTot, m_metricTensor[1], 1, outarray[1*nvel+1], 1);
-            
-            // g_{1,2}=g{2,1} = m_metricTensor[2]
-            Vmath::Vcopy(physTot, m_metricTensor[2], 1, outarray[0*nvel+1], 1);
-            Vmath::Vcopy(physTot, m_metricTensor[2], 1, outarray[1*nvel+0], 1);
-            
-            // g_{3,3}  = 1
-            if (m_nConvectiveFields ==3)
-            {
-                Vmath::Sadd(physTot, 1.0, outarray[2*nvel+2], 1, outarray[2*nvel+2], 1);
-            }
+        int physTot = m_fields[0]->GetTotPoints();
+        int nvel = m_nConvectiveFields;
+
+        for (int i=0; i<nvel*nvel; i++)
+        {
+            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        }
+
+        // g_{1,1} = m_metricTensor[0]
+        Vmath::Vcopy(physTot, m_metricTensor[0], 1, outarray[0*nvel+0], 1);
+
+        // g_{2,2} = m_metricTensor[1]
+        Vmath::Vcopy(physTot, m_metricTensor[1], 1, outarray[1*nvel+1], 1);
+
+        // g_{1,2}=g{2,1} = m_metricTensor[2]
+        Vmath::Vcopy(physTot, m_metricTensor[2], 1, outarray[0*nvel+1], 1);
+        Vmath::Vcopy(physTot, m_metricTensor[2], 1, outarray[1*nvel+0], 1);
+
+        // g_{3,3}  = 1
+        if (m_nConvectiveFields ==3)
+        {
+            Vmath::Sadd(physTot, 1.0, outarray[2*nvel+2], 1, 
+                                        outarray[2*nvel+2], 1);
+        }
     }
 
     void MappingXYofXY::v_GetInvMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            
-            for (int i=0; i<nvel*nvel; i++)
-            {
-                outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-            }
+        int physTot = m_fields[0]->GetTotPoints();
+        int nvel = m_nConvectiveFields;
 
-            // Get Jacobian
-            Array<OneD, NekDouble> Jac(physTot, 0.0);
-            GetJacobian(Jac);
-            
-            // Get Jacobian squared
-            Array<OneD, NekDouble> wk(physTot, 0.0);
-            Vmath::Vmul(physTot, Jac, 1, Jac, 1, wk, 1);
-            // G^{1,1} = m_metricTensor[1]/Jac^2
-            Vmath::Vcopy(physTot, m_metricTensor[1], 1, outarray[0*nvel+0], 1);
-            Vmath::Vdiv(physTot, outarray[0*nvel+0], 1, wk,1, outarray[0*nvel+0], 1);
+        for (int i=0; i<nvel*nvel; i++)
+        {
+            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        }
 
-            // G^{2,2} = m_metricTensor[0]/Jac^2
-            Vmath::Vcopy(physTot, m_metricTensor[0], 1, outarray[1*nvel+1], 1);
-            Vmath::Vdiv(physTot, outarray[1*nvel+1], 1, wk,1, outarray[1*nvel+1], 1);
-            
-            // G^{1,2} = G^{2,1} = -m_metricTensor[2]/Jac^2
-            Vmath::Vcopy(physTot, m_metricTensor[2], 1, outarray[0*nvel+1], 1);
-            Vmath::Neg(physTot, outarray[0*nvel+1], 1);
-            Vmath::Vdiv(physTot, outarray[0*nvel+1], 1, wk,1, outarray[0*nvel+1], 1);
-            Vmath::Vcopy(physTot, outarray[0*nvel+1], 1, outarray[1*nvel+0], 1);
-            
-            // G^{3,3}  = 1
-            if (m_nConvectiveFields ==3)
-            {
-                Vmath::Sadd(physTot, 1.0, outarray[2*nvel+2], 1, outarray[2*nvel+2], 1);
-            }            
+        // Get Jacobian
+        Array<OneD, NekDouble> Jac(physTot, 0.0);
+        GetJacobian(Jac);
+
+        // Get Jacobian squared
+        Array<OneD, NekDouble> wk(physTot, 0.0);
+        Vmath::Vmul(physTot, Jac, 1, Jac, 1, wk, 1);
+        // G^{1,1} = m_metricTensor[1]/Jac^2
+        Vmath::Vcopy(physTot, m_metricTensor[1], 1, outarray[0*nvel+0], 1);
+        Vmath::Vdiv(physTot, outarray[0*nvel+0], 1, wk,1, 
+                                                outarray[0*nvel+0], 1);
+
+        // G^{2,2} = m_metricTensor[0]/Jac^2
+        Vmath::Vcopy(physTot, m_metricTensor[0], 1, outarray[1*nvel+1], 1);
+        Vmath::Vdiv(physTot, outarray[1*nvel+1], 1, wk,1, 
+                                                outarray[1*nvel+1], 1);
+
+        // G^{1,2} = G^{2,1} = -m_metricTensor[2]/Jac^2
+        Vmath::Vcopy(physTot, m_metricTensor[2], 1, outarray[0*nvel+1], 1);
+        Vmath::Neg(physTot, outarray[0*nvel+1], 1);
+        Vmath::Vdiv(physTot, outarray[0*nvel+1], 1, wk,1, 
+                                                outarray[0*nvel+1], 1);
+        Vmath::Vcopy(physTot, outarray[0*nvel+1], 1, outarray[1*nvel+0], 1);
+
+        // G^{3,3}  = 1
+        if (m_nConvectiveFields ==3)
+        {
+            Vmath::Sadd(physTot, 1.0, outarray[2*nvel+2], 1, 
+                                            outarray[2*nvel+2], 1);
+        }            
     }
 
     void MappingXYofXY::v_ApplyChristoffelContravar(
@@ -341,22 +359,26 @@ namespace SolverUtils
         // Calculate non-zero terms
 
         // outarray(0,0) = U1 * m_Christoffel[0] + U2 * m_Christoffel[1]  
-        Vmath::Vmul(physTot,m_Christoffel[0],1,inarray[0],1,outarray[0*nvel+0],1);
+        Vmath::Vmul(physTot,m_Christoffel[0],1,inarray[0],1,
+                                                outarray[0*nvel+0],1);
         Vmath::Vvtvp(physTot,m_Christoffel[1],1,inarray[1],1,
                             outarray[0*nvel+0],1,outarray[0*nvel+0],1); 
         
         // outarray(0,1) = U1 * m_Christoffel[1] + U2 * m_Christoffel[2]
-        Vmath::Vmul(physTot,m_Christoffel[1],1,inarray[0],1,outarray[0*nvel+1],1);
+        Vmath::Vmul(physTot,m_Christoffel[1],1,inarray[0],1,
+                                                outarray[0*nvel+1],1);
         Vmath::Vvtvp(physTot,m_Christoffel[2],1,inarray[1],1,
                             outarray[0*nvel+1],1,outarray[0*nvel+1],1);
         
         // outarray(1,0) = U1 * m_Christoffel[3] + U2 * m_Christoffel[4]
-        Vmath::Vmul(physTot,m_Christoffel[3],1,inarray[0],1,outarray[1*nvel+0],1);
+        Vmath::Vmul(physTot,m_Christoffel[3],1,inarray[0],1,
+                                                outarray[1*nvel+0],1);
         Vmath::Vvtvp(physTot,m_Christoffel[4],1,inarray[1],1,
                             outarray[1*nvel+0],1,outarray[1*nvel+0],1);
         
         // outarray(1,1) = U1 * m_Christoffel[4] + U2 * m_Christoffel[5]
-        Vmath::Vmul(physTot,m_Christoffel[4],1,inarray[0],1,outarray[1*nvel+1],1);
+        Vmath::Vmul(physTot,m_Christoffel[4],1,inarray[0],1,
+                                                outarray[1*nvel+1],1);
         Vmath::Vvtvp(physTot,m_Christoffel[5],1,inarray[1],1,
                             outarray[1*nvel+1],1,outarray[1*nvel+1],1);
         
@@ -381,22 +403,26 @@ namespace SolverUtils
         // Calculate non-zero terms
 
         // outarray(0,0) = U1 * m_Christoffel[0] + U2 * m_Christoffel[3]  
-        Vmath::Vmul(physTot,m_Christoffel[0],1,inarray[0],1,outarray[0*nvel+0],1);
+        Vmath::Vmul(physTot,m_Christoffel[0],1,inarray[0],1,
+                                                outarray[0*nvel+0],1);
         Vmath::Vvtvp(physTot,m_Christoffel[3],1,inarray[1],1,
                             outarray[0*nvel+0],1,outarray[0*nvel+0],1); 
         
         // outarray(0,1) = U1 * m_Christoffel[1] + U2 * m_Christoffel[4]
-        Vmath::Vmul(physTot,m_Christoffel[1],1,inarray[0],1,outarray[0*nvel+1],1);
+        Vmath::Vmul(physTot,m_Christoffel[1],1,inarray[0],1,
+                                                outarray[0*nvel+1],1);
         Vmath::Vvtvp(physTot,m_Christoffel[4],1,inarray[1],1,
                             outarray[0*nvel+1],1,outarray[0*nvel+1],1);
         
         // outarray(1,0) = U1 * m_Christoffel[1] + U2 * m_Christoffel[4]
-        Vmath::Vmul(physTot,m_Christoffel[1],1,inarray[0],1,outarray[1*nvel+0],1);
+        Vmath::Vmul(physTot,m_Christoffel[1],1,inarray[0],1,
+                                                outarray[1*nvel+0],1);
         Vmath::Vvtvp(physTot,m_Christoffel[4],1,inarray[1],1,
                             outarray[1*nvel+0],1,outarray[1*nvel+0],1);
         
         // outarray(1,1) = U1 * m_Christoffel[2] + U2 * m_Christoffel[5]
-        Vmath::Vmul(physTot,m_Christoffel[2],1,inarray[0],1,outarray[1*nvel+1],1);
+        Vmath::Vmul(physTot,m_Christoffel[2],1,inarray[0],1,
+                                                outarray[1*nvel+1],1);
         Vmath::Vvtvp(physTot,m_Christoffel[5],1,inarray[1],1,
                             outarray[1*nvel+1],1,outarray[1*nvel+1],1); 
     }

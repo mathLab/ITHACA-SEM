@@ -76,7 +76,8 @@ namespace Nektar
             m_pressure,
             m_velocity,
             m_advObject); 
-        m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
+        m_extrapolation->SubSteppingTimeIntegration(
+                            m_intScheme->GetIntegrationMethod(), m_intScheme);
         m_extrapolation->GenerateHOPBCMap();        
 
        // Storage to extrapolate pressure forcing
@@ -101,7 +102,7 @@ namespace Nektar
             }
             break;
         }        
-        m_presForcingCorrection = Array<OneD, Array<OneD, NekDouble> > (intSteps);
+        m_presForcingCorrection= Array<OneD, Array<OneD, NekDouble> >(intSteps);
         for(int i = 0; i < m_presForcingCorrection.num_elements(); i++)
         {
             m_presForcingCorrection[i] = Array<OneD, NekDouble>(physTot,0.0);
@@ -391,12 +392,12 @@ namespace Nektar
         {
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
-            bool converged = false;             // flag to mark if system converged
-            int s = 0;                          // iteration counter
-            NekDouble error;                    // L2 error at current iteration
-            NekDouble forcing_L2 = 0.0;         // L2 norm of F
+            bool converged = false;          // flag to mark if system converged
+            int s = 0;                       // iteration counter
+            NekDouble error;                 // L2 error at current iteration
+            NekDouble forcing_L2 = 0.0;      // L2 norm of F
             NekDouble tolerance;
-            NekDouble alpha;                    // relaxation parameter
+            NekDouble alpha;                 // relaxation parameter
             
             tolerance = m_mapping->PressureTolerance();
             alpha     = m_mapping->PressureRelaxation();
@@ -441,7 +442,8 @@ namespace Nektar
                 //
                 for(int i = 0; i < nvel; ++i)
                 {
-                    m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[i], previous_iter, gradP[i]);
+                    m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[i], 
+                                                    previous_iter, gradP[i]);
                     if(m_pressure->GetWaveSpace())
                     {
                         m_pressure->HomogeneousBwdTrans(gradP[i], wk1[i]);
@@ -458,7 +460,8 @@ namespace Nektar
                 {
                     Vmath::Vmul(physTot, F_corrected, 1, Jac, 1, F_corrected, 1);
                 }                
-                Vmath::Smul(physTot, alpha, F_corrected, 1, F_corrected, 1); // alpha*J*div(G(p))
+                // alpha*J*div(G(p))
+                Vmath::Smul(physTot, alpha, F_corrected, 1, F_corrected, 1); 
                 if(m_pressure->GetWaveSpace())
                 {
                     m_pressure->HomogeneousFwdTrans(F_corrected, F_corrected);
@@ -466,8 +469,10 @@ namespace Nektar
                 // alpha*J*div(G(p)) - p_ii      
                 for (int i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[i],gradP[i], wk1[0]);
-                    Vmath::Vsub(physTot, F_corrected, 1, wk1[0], 1, F_corrected, 1);
+                    m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[i],
+                                                            gradP[i], wk1[0]);
+                    Vmath::Vsub(physTot, F_corrected, 1, wk1[0], 1, 
+                                                            F_corrected, 1);
                 }
                 // p_i,i - J*div(G(p))
                 Vmath::Neg(physTot, F_corrected, 1);           
@@ -478,9 +483,10 @@ namespace Nektar
                 //
                 // Solve system
                 //
-                m_pressure->HelmSolve(F_corrected, m_pressure->UpdateCoeffs(), NullFlagList,
-                                  factors);  
-                m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());     
+                m_pressure->HelmSolve(F_corrected, m_pressure->UpdateCoeffs(), 
+                                        NullFlagList, factors);  
+                m_pressure->BwdTrans(m_pressure->GetCoeffs(),
+                                    m_pressure->UpdatePhys());     
 
                 //
                 // Test convergence
@@ -503,7 +509,8 @@ namespace Nektar
             }
             if (m_verbose)
             {
-                std::cout << " Pressure system (mapping) converged in " << s << " iterations with error = " << error << std::endl;
+                std::cout << " Pressure system (mapping) converged in " << s <<
+                            " iterations with error = " << error << std::endl;
             }            
         }
     }
@@ -524,18 +531,18 @@ namespace Nektar
         {
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
-            bool converged = false;             // flag to mark if system converged
-            int s = 0;                          // iteration counter
-            NekDouble error, max_error;                    // L2 error at current iteration
+            bool converged = false;          // flag to mark if system converged
+            int s = 0;                       // iteration counter
+            NekDouble error, max_error;      // L2 error at current iteration
 
             NekDouble tolerance;
-            NekDouble alpha;                    // relaxation parameter
+            NekDouble alpha;                 // relaxation parameter
             
             tolerance = m_mapping->ViscousTolerance();
             alpha     = m_mapping->ViscousRelaxation();
             
-
-            Array<OneD, NekDouble> forcing_L2(m_nConvectiveFields,0.0); //L2 norm of F
+            //L2 norm of F
+            Array<OneD, NekDouble> forcing_L2(m_nConvectiveFields,0.0); 
 
             // rhs of the equation at current iteration
             Array<OneD, Array<OneD, NekDouble> > F_corrected(nvel);
@@ -618,13 +625,17 @@ namespace Nektar
                     // (-alpha*L(U^i) + U^i_jj)
                     for (int j = 0; j < nvel; ++j)
                     {
-                        m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],previous_iter[i], wk[0]);
-                        m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],wk[0], wk[0]);
-                        Vmath::Vadd(physTot, F_corrected[i], 1, wk[0], 1, F_corrected[i], 1);                
+                        m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
+                                                        previous_iter[i], wk[0]);
+                        m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
+                                                        wk[0], wk[0]);
+                        Vmath::Vadd(physTot, F_corrected[i], 1, wk[0], 1, 
+                                                        F_corrected[i], 1);                
                     }
                     //  F_corrected = alpha*F + (-alpha*L(U^i) + U^i_jj)
                     Vmath::Smul(physTot, alpha, Forcing[i], 1, wk[0], 1);
-                    Vmath::Vadd(physTot, wk[0], 1, F_corrected[i], 1, F_corrected[i], 1);                                 
+                    Vmath::Vadd(physTot, wk[0], 1, F_corrected[i], 1, 
+                                                    F_corrected[i], 1);                                 
 
                     //
                     // Solve System
@@ -663,7 +674,8 @@ namespace Nektar
             }
             if (m_verbose)
             {
-                std::cout << " Velocity system (mapping) converged in " << s << " iterations with error = " << max_error << std::endl;
+                std::cout << " Velocity system (mapping) converged in " << s <<
+                        " iterations with error = " << max_error << std::endl;
             }            
         }
     }

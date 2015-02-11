@@ -51,9 +51,9 @@ namespace Nektar
         }
 
         Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
-                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
-                : m_session(pSession), m_fields(pFields),
-                  m_implicitPressure(false), m_implicitViscous(false)
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+            : m_session(pSession), m_fields(pFields),
+                m_implicitPressure(false), m_implicitViscous(false)
         {
             switch (m_fields[0]->GetExpType())
             {
@@ -808,7 +808,7 @@ namespace Nektar
                     // Check if bc is time-dependent
                     ASSERTL0( BndConds[n]->GetUserDefined() != 
                                     SpatialDomains::eTimeDependent,
-                                "Time-dependent Dirichlet boundary conditions not supported with mapping.");
+                        "Time-dependent Dirichlet boundary conditions not supported with mapping.");
                     
                     int npoints = BndExp[n]->GetTotPoints();
                     // Get coordinates    
@@ -851,7 +851,7 @@ namespace Nektar
                     {
                         ASSERTL0(m_fields[i]->GetBndConditions()[n]->GetBoundaryConditionType() == 
                                                 SpatialDomains::eDirichlet,
-                                    "Mapping only supported when all velocity components have the same type of boundary conditions");
+                            "Mapping only supported when all velocity components have the same type of boundary conditions");
                     }
                     
                     // Check if bc is time-dependent
@@ -859,7 +859,7 @@ namespace Nektar
                     {
                         ASSERTL0( BndConds[n]->GetUserDefined() != 
                                     SpatialDomains::eTimeDependent,
-                                "Time-dependent Dirichlet boundary conditions not supported with mapping.");
+                            "Time-dependent Dirichlet boundary conditions not supported with mapping.");
                     }                   
                     
                     // First, evaluate function in whole domain for all velocity components

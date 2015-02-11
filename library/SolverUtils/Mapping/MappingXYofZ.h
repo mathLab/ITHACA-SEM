@@ -48,89 +48,89 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-
-class MappingXYofZ: public Mapping
-{
-public:
-
-    friend class MemoryManager<MappingXYofZ> ;
-
-    /// Creates an instance of this class
-    SOLVER_UTILS_EXPORT
-    static MappingSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr        &pSession,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const TiXmlElement                                *pMapping)
+    class MappingXYofZ: public Mapping
     {
-        MappingSharedPtr p =
-                MemoryManager<MappingXYofZ>::AllocateSharedPtr(pSession, pFields);
-        p->InitObject(pFields, pMapping);
-        return p;
-    }
+    public:
 
-    ///Name of the class
-    static std::string className;
+        friend class MemoryManager<MappingXYofZ> ;
 
-protected:
-// Virtual functions
-    SOLVER_UTILS_EXPORT
-    virtual void v_InitObject(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const TiXmlElement                                *pMapping);
-   
-    SOLVER_UTILS_EXPORT virtual void v_ContravarToCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        /// Creates an instance of this class
+        SOLVER_UTILS_EXPORT
+        static MappingSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr        &pSession,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const TiXmlElement                                *pMapping)
+        {
+            MappingSharedPtr p =
+                    MemoryManager<MappingXYofZ>::AllocateSharedPtr(pSession,
+                                                                   pFields);
+            p->InitObject(pFields, pMapping);
+            return p;
+        }
 
-    SOLVER_UTILS_EXPORT virtual void v_CovarToCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);            
+        ///Name of the class
+        static std::string className;
 
-    SOLVER_UTILS_EXPORT virtual void v_ContravarFromCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    protected:
+    // Virtual functions
+        SOLVER_UTILS_EXPORT
+        virtual void v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const TiXmlElement                                *pMapping);
 
-    SOLVER_UTILS_EXPORT virtual void v_CovarFromCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray); 
-    
-    SOLVER_UTILS_EXPORT virtual void v_CoordinatesToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        SOLVER_UTILS_EXPORT virtual void v_ContravarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-    SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
-        Array<OneD, NekDouble>               &outarray);
-    
-    SOLVER_UTILS_EXPORT virtual void v_DotGradJacobian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, NekDouble>               &outarray);
+        SOLVER_UTILS_EXPORT virtual void v_CovarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);            
 
-    SOLVER_UTILS_EXPORT virtual void v_GetMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        SOLVER_UTILS_EXPORT virtual void v_ContravarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-    SOLVER_UTILS_EXPORT virtual void v_GetInvMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        SOLVER_UTILS_EXPORT virtual void v_CovarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray); 
 
-    SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelContravar(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        SOLVER_UTILS_EXPORT virtual void v_CoordinatesToCartesian(
+                    const Array<OneD, Array<OneD, NekDouble> >       &inarray,
+                    Array<OneD, Array<OneD, NekDouble> >             &outarray);
 
-    SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelCovar(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
+            Array<OneD, NekDouble>               &outarray);
 
-    SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();  
+        SOLVER_UTILS_EXPORT virtual void v_DotGradJacobian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>               &outarray);
 
-    SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian();
+        SOLVER_UTILS_EXPORT virtual void v_GetMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-    SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(const NekDouble time);
-    
-private:
+        SOLVER_UTILS_EXPORT virtual void v_GetInvMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-    MappingXYofZ(const LibUtilities::SessionReaderSharedPtr           &pSession,
-                 const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
+        SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelContravar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-};
+        SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelCovar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();  
+
+        SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian();
+
+        SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(const NekDouble time);
+
+    private:
+
+        MappingXYofZ(const LibUtilities::SessionReaderSharedPtr       &pSession,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
+
+    };
 
 }
 }

@@ -67,7 +67,8 @@ namespace SolverUtils
         
         int phystot         = pFields[0]->GetTotPoints();
         
-        ASSERTL0(m_nConvectiveFields>=2,"Mapping X = x + f(t), Y = y+g(t) needs 2 velocity components.");
+        ASSERTL0(m_nConvectiveFields>=2,
+               "Mapping X = x + f(t), Y = y+g(t) needs 2 velocity components.");
        
         // Allocation of geometry memory
         m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(12);
@@ -206,7 +207,8 @@ namespace SolverUtils
         
         // x' = f(x,z)
         LibUtilities::EquationSharedPtr ffunc =
-                    m_session->GetFunction(m_funcName, m_session->GetVariable(0));
+                    m_session->GetFunction(m_funcName, 
+                                            m_session->GetVariable(0));
                 
         ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, outarray[0]);       
         // y' = g(y,z)
@@ -265,7 +267,8 @@ namespace SolverUtils
         // Fill diagonal with 1.0
         for (int i=0; i<nvel; i++)
         {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, outarray[i+nvel*i], 1); 
+            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                        outarray[i+nvel*i], 1); 
         }            
     }
 
@@ -282,7 +285,8 @@ namespace SolverUtils
         // Fill diagonal with 1.0
         for (int i=0; i<nvel; i++)
         {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, outarray[i+nvel*i], 1); 
+            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                        outarray[i+nvel*i], 1); 
         }            
     }
     

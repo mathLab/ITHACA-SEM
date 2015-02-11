@@ -73,15 +73,15 @@ namespace SolverUtils
 
             /// Initialise the mapping object
             SOLVER_UTILS_EXPORT void InitObject(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&     pFields,
                 const TiXmlElement* pMapping)
             {
                 v_InitObject( pFields, pMapping);
             }
             
             SOLVER_UTILS_EXPORT static MappingSharedPtr Load(
-                        const LibUtilities::SessionReaderSharedPtr& pSession,
-                        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
             
             /////////////////////////////////////////////////////////////
             //
@@ -444,7 +444,8 @@ namespace SolverUtils
             
             SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian() =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(const NekDouble time) =0;
+            SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(
+                                                const NekDouble time) =0;
             
             SOLVER_UTILS_EXPORT virtual void v_UpdateBCs();
             

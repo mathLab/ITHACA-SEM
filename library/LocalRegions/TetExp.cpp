@@ -824,7 +824,7 @@ namespace Nektar
                 LibUtilities::PointsKey points1;
 
                 Array<OneD, NekDouble> faceJac(nqtot);
-                Array<OneD,NekDouble> normals(vCoordDim*nqtot, 0.0);
+                Array<OneD,NekDouble>  normals(vCoordDim*nqtot, 0.0);
 
                 // Extract Jacobian along face and recover local derivates
                 // (dx/dr) for polynomial interpolation by multiplying m_gmat by

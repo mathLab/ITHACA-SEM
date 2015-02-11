@@ -240,15 +240,16 @@ namespace SolverUtils
             }
             
             // CurlCurl calculated on the whole field
-            //     when the mapping viscous are treated: 
-            //          - explicitly it corresponds to the Cartesian curl-curl
-            //          - implicitly it corresponds to the Generalized curl-curl
+            //     if the flag generalized is: 
+            //        - false, this corresponds to the usual Cartesian operator
+            //        - true,  it corresponds to the Generalized curl-curl
                     
             SOLVER_UTILS_EXPORT void CurlCurlField(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const bool                                        generalized)
             {
-                v_CurlCurlField( inarray, outarray);
+                v_CurlCurlField( inarray, outarray, generalized);
             }
             
             
@@ -268,39 +269,6 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT bool HasConstantJacobian()
             {
                 return v_HasConstantJacobian();
-            }
-            
-            // Define if the mapping pressure terms should be treated implicitly 
-            SOLVER_UTILS_EXPORT bool ImplicitPressure()
-            {
-                return m_implicitPressure;
-            }
-            
-            // Define if the mapping viscous terms should be treated implicitly
-            SOLVER_UTILS_EXPORT bool ImplicitViscous()
-            {
-                return m_implicitViscous;
-            }
-            
-            // Define relaxation paramter and tolerance for pressure and viscous system
-            SOLVER_UTILS_EXPORT NekDouble PressureTolerance()
-            {
-                return m_pressureTolerance;
-            }
-            
-            SOLVER_UTILS_EXPORT NekDouble ViscousTolerance()
-            {
-                return m_viscousTolerance;
-            }
-            
-            SOLVER_UTILS_EXPORT NekDouble PressureRelaxation()
-            {
-                return m_pressureRelaxation;
-            }
-            
-            SOLVER_UTILS_EXPORT NekDouble ViscousRelaxation()
-            {
-                return m_viscousRelaxation;
             }
             
             //
@@ -326,16 +294,6 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> >        m_GeometricInfo;
             // Number of velocity components
             int                                         m_nConvectiveFields;
-            // Flags defining if pressure and viscous mapping terms 
-            //should be treated implicitly
-            bool                                        m_implicitPressure;
-            bool                                        m_implicitViscous;
-            // Tolerance and relaxation parameters for pressure and viscous
-            //       systems (when solved iteratively)
-            NekDouble                                   m_pressureTolerance;
-            NekDouble                                   m_viscousTolerance;
-            NekDouble                                   m_pressureRelaxation;
-            NekDouble                                   m_viscousRelaxation;
             
             // Name of the function containing the coordinates
             string                                      m_funcName;
@@ -438,7 +396,8 @@ namespace SolverUtils
 
             SOLVER_UTILS_EXPORT virtual void v_CurlCurlField(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const bool                                      generalized);
             
             SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent() =0;  
             

@@ -52,8 +52,7 @@ namespace Nektar
 
         Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
-            : m_session(pSession), m_fields(pFields),
-                m_implicitPressure(false), m_implicitViscous(false)
+            : m_session(pSession), m_fields(pFields)
         {
             switch (m_fields[0]->GetExpType())
             {
@@ -90,82 +89,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const TiXmlElement                                *pMapping)
         {        
-            // Read parameters
-            std::string typeStr = pMapping->Attribute("TYPE");
-            std::map<std::string, std::string> vParams;
-            const TiXmlElement *param = pMapping->FirstChildElement("PARAM");
-            while (param)
-            {
-                ASSERTL0(param->Attribute("NAME"),
-                         "Missing attribute 'NAME' for parameter in mapping "
-                         + typeStr + "'.");
-                std::string nameStr = param->Attribute("NAME");
-
-                ASSERTL0(param->GetText(), "Empty value string for param.");
-                std::string valueStr = param->GetText();
-
-                vParams[nameStr] = valueStr;
-
-                param = param->NextSiblingElement("PARAM");
-            }        
-            // Check if parameters are defined, otherwise use default values
-            if (vParams.find("ImplicitPressure") != vParams.end())
-            {
-                if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
-                   || boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "yes"))
-                {
-                    m_implicitPressure = true;
-                }
-            }
-            if (vParams.find("ImplicitViscous") != vParams.end())
-            {
-                if (  boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "true")
-                   || boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "yes"))
-                {
-                    m_implicitViscous = true;
-                }
-            }
-            //
-            if (vParams.find("PressureTolerance") == vParams.end())
-            {
-                m_pressureTolerance = 1e-12;
-            }
-            else
-            {
-                m_pressureTolerance = atof(vParams.find("PressureTolerance")->second.c_str());
-            }
-            //
-            if (vParams.find("ViscousTolerance") == vParams.end())
-            {
-                m_viscousTolerance = 1e-12;
-            }
-            else
-            {
-                m_viscousTolerance = atof(vParams.find("ViscousTolerance")->second.c_str());
-            }
-            //
-            if (vParams.find("PressureRelaxation") == vParams.end())
-            {
-                m_pressureRelaxation = 1.0;
-            }
-            else
-            {
-                m_pressureRelaxation = atof(vParams.find("PressureRelaxation")->second.c_str());
-            }
-            //
-            if (vParams.find("ViscousRelaxation") == vParams.end())
-            {
-                m_viscousRelaxation = 1.0;
-            }
-            else
-            {
-                m_viscousRelaxation = atof(vParams.find("ViscousRelaxation")->second.c_str());
-            }
         }
-        
-        
-
-
+      
         /**
          *
          */
@@ -612,7 +537,8 @@ namespace Nektar
         
         void Mapping::v_CurlCurlField(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const bool                                        generalized)
         {
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
@@ -631,7 +557,7 @@ namespace Nektar
             
             // For implicit treatment of viscous terms, we want the generalized curlcurl
             //     and for explicit treatment, we want the cartesian one.
-            if (ImplicitViscous())
+            if (generalized)
             {
                 // Get the second derivatives u^i_{,jk}
                 Array<OneD, Array<OneD, NekDouble> > ddU(nvel*nvel*nvel);

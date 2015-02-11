@@ -55,6 +55,14 @@ namespace Nektar
         : StandardExtrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_mapping = SolverUtils::Mapping::Load(m_session, m_fields);
+        
+        // Load solve parameters related to the mapping
+        // Flags determining if pressure/viscous terms should be treated implicitly
+        m_session->MatchSolverInfo("MappingImplicitPressure","True",m_implicitPressure,false);
+        m_session->MatchSolverInfo("MappingImplicitViscous","True",m_implicitViscous,false);
+        
+        // Relaxation parameter for pressure system
+        m_session->LoadParameter("MappingPressureRelaxation",m_pressureRelaxation,1.0);
     }
 
     MappingExtrapolate::~MappingExtrapolate()
@@ -72,9 +80,6 @@ namespace Nektar
             int cnt, n;
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_fields.num_elements()-1;
-            
-            NekDouble       alpha;
-            alpha     = m_mapping->PressureRelaxation();
             
             Array<OneD, NekDouble> Vals;
             // Remove previous correction
@@ -120,6 +125,7 @@ namespace Nektar
             }
             m_mapping->RaiseIndex(wk, correction);   // G(p)
 
+            // alpha*J*(G(p))
             if (!m_mapping->HasConstantJacobian())
             {
                 for(int i = 0; i < nvel; ++i)
@@ -129,7 +135,7 @@ namespace Nektar
             }   
             for(int i = 0; i < nvel; ++i)
             {
-                Vmath::Smul(physTot, alpha, correction[i], 1, correction[i], 1); // alpha*J*(G(p))
+                Vmath::Smul(physTot, m_pressureRelaxation, correction[i], 1, correction[i], 1); 
             }
             
             if(m_pressure->GetWaveSpace())
@@ -225,7 +231,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-        if (m_mapping->HasConstantJacobian() && !m_mapping->ImplicitViscous())
+        if (m_mapping->HasConstantJacobian() && !m_implicitViscous)
         {
             Extrapolate::v_CalcNeumannPressureBCs( fields, N, kinvis);
         }
@@ -297,11 +303,11 @@ namespace Nektar
             }
             
             // Calculate appropriate form of the CurlCurl operator
-            m_mapping->CurlCurlField(fields_new, Q_field);
+            m_mapping->CurlCurlField(fields_new, Q_field, m_implicitViscous);
             
             // If viscous terms are treated explicitly,
             //     add grad(U/J \dot grad J) to CurlCurl
-            if ( !m_mapping->ImplicitViscous())
+            if ( !m_implicitViscous)
             {
                 m_mapping->DotGradJacobian(fields_new, tmp);
                 Vmath::Vdiv(physTot, tmp, 1, Jac, 1, tmp, 1);
@@ -440,18 +446,16 @@ namespace Nektar
         }
         // If pressure terms are treated implicitly, we need to multiply
         //     by the relaxation parameter, and zero the correction term
-        if (m_mapping->ImplicitPressure())
+        if (m_implicitPressure)
         {
             int n, cnt;
-            NekDouble       alpha;
-            alpha     = m_mapping->PressureRelaxation();
 
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
                 if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
-                    Vmath::Smul(nq, alpha,
+                    Vmath::Smul(nq, m_pressureRelaxation,
                                     &(m_PBndExp[n]->GetCoeffs()[0]),  1, 
                                     &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
                     cnt += nq;

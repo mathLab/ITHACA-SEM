@@ -108,6 +108,18 @@ namespace Nektar
             m_presForcingCorrection[i] = Array<OneD, NekDouble>(physTot,0.0);
         }
         m_verbose = (m_session->DefinesCmdLineArgument("verbose"))? true :false;
+        
+        // Load solve parameters related to the mapping
+        // Flags determining if pressure/viscous terms should be treated implicitly
+        m_session->MatchSolverInfo("MappingImplicitPressure","True",m_implicitPressure,false);
+        m_session->MatchSolverInfo("MappingImplicitViscous","True",m_implicitViscous,false);
+        
+        // Tolerances and relaxation parameters for implicit terms
+        m_session->LoadParameter("MappingPressureTolerance",m_pressureTolerance,1e-12);
+        m_session->LoadParameter("MappingViscousTolerance",m_viscousTolerance,1e-12);
+        m_session->LoadParameter("MappingPressureRelaxation",m_pressureRelaxation,1.0);
+        m_session->LoadParameter("MappingViscousRelaxation",m_viscousRelaxation,1.0);
+        
     }
     
     /**
@@ -225,7 +237,7 @@ namespace Nektar
             //
             // If the mapping viscous terms are being treated explicitly 
             //        we need to apply a correction to the forcing
-            if (!m_mapping->ImplicitViscous())
+            if (!m_implicitViscous)
             {               
                 bool wavespace = m_fields[0]->GetWaveSpace();
                 m_fields[0]->SetWaveSpace(false);
@@ -270,7 +282,7 @@ namespace Nektar
                 }        
 
                 // Part 2: grad(J) . curl(curl(U))
-                m_mapping->CurlCurlField(velocity, tmp);
+                m_mapping->CurlCurlField(velocity, tmp, m_implicitViscous);
                 m_mapping->DotGradJacobian(tmp, velocity[0]); // dont need velocity any more
 
                 // Add two parts
@@ -303,7 +315,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &Forcing, 
         const NekDouble aii_Dt)
     {
-        if (m_mapping->HasConstantJacobian() && !m_mapping->ImplicitPressure())
+        if (m_mapping->HasConstantJacobian() && !m_implicitPressure)
         {
             VelocityCorrectionScheme::v_SetUpViscousForcing(inarray, Forcing, aii_Dt);
         }
@@ -346,7 +358,7 @@ namespace Nektar
                 }
                 
             }
-            if (m_mapping->ImplicitPressure())
+            if (m_implicitPressure)
             {                
                 m_mapping->RaiseIndex(tmp, Forcing);
             }
@@ -384,7 +396,7 @@ namespace Nektar
     void   VCSMapping::v_SolvePressure(
         const Array<OneD, NekDouble>  &Forcing)
     {
-        if (!m_mapping->ImplicitPressure())
+        if (!m_implicitPressure)
         {
             VelocityCorrectionScheme::v_SolvePressure(Forcing);
         }
@@ -396,11 +408,6 @@ namespace Nektar
             int s = 0;                       // iteration counter
             NekDouble error;                 // L2 error at current iteration
             NekDouble forcing_L2 = 0.0;      // L2 norm of F
-            NekDouble tolerance;
-            NekDouble alpha;                 // relaxation parameter
-            
-            tolerance = m_mapping->PressureTolerance();
-            alpha     = m_mapping->PressureRelaxation();
 
             // rhs of the equation at current iteration
             Array< OneD, NekDouble> F_corrected(physTot, 0.0);
@@ -461,7 +468,7 @@ namespace Nektar
                     Vmath::Vmul(physTot, F_corrected, 1, Jac, 1, F_corrected, 1);
                 }                
                 // alpha*J*div(G(p))
-                Vmath::Smul(physTot, alpha, F_corrected, 1, F_corrected, 1); 
+                Vmath::Smul(physTot, m_pressureRelaxation, F_corrected, 1, F_corrected, 1); 
                 if(m_pressure->GetWaveSpace())
                 {
                     m_pressure->HomogeneousFwdTrans(F_corrected, F_corrected);
@@ -477,7 +484,7 @@ namespace Nektar
                 // p_i,i - J*div(G(p))
                 Vmath::Neg(physTot, F_corrected, 1);           
                 // alpha*F -  alpha*J*div(G(p)) + p_i,i
-                Vmath::Smul(physTot, alpha, Forcing, 1, wk1[0], 1);
+                Vmath::Smul(physTot, m_pressureRelaxation, Forcing, 1, wk1[0], 1);
                 Vmath::Vadd(physTot, wk1[0], 1, F_corrected, 1, F_corrected, 1);
 
                 //
@@ -494,14 +501,14 @@ namespace Nektar
                 error = m_pressure->L2(m_pressure->GetPhys(), previous_iter);           
                 if ( forcing_L2 != 0)
                 {
-                    if ( (error/forcing_L2 < tolerance) && (error < tolerance))
+                    if ( (error/forcing_L2 < m_pressureTolerance) && (error < m_pressureTolerance))
                     {
                         converged = true;
                     }  
                 }
                 else
                 {
-                    if ( error < tolerance)
+                    if ( error < m_pressureTolerance)
                     {
                         converged = true;
                     }                
@@ -523,7 +530,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble aii_Dt)
     {
-        if(!m_mapping->ImplicitViscous())
+        if(!m_implicitViscous)
         {
             VelocityCorrectionScheme::v_SolveViscous(Forcing, outarray, aii_Dt);
         }
@@ -534,12 +541,6 @@ namespace Nektar
             bool converged = false;          // flag to mark if system converged
             int s = 0;                       // iteration counter
             NekDouble error, max_error;      // L2 error at current iteration
-
-            NekDouble tolerance;
-            NekDouble alpha;                 // relaxation parameter
-            
-            tolerance = m_mapping->ViscousTolerance();
-            alpha     = m_mapping->ViscousRelaxation();
             
             //L2 norm of F
             Array<OneD, NekDouble> forcing_L2(m_nConvectiveFields,0.0); 
@@ -559,7 +560,7 @@ namespace Nektar
 
             // Factors for Helmholtz system
             StdRegions::ConstFactorMap factors;
-            factors[StdRegions::eFactorLambda] = 1.0*alpha/aii_Dt/m_kinvis;
+            factors[StdRegions::eFactorLambda] = 1.0*m_viscousRelaxation/aii_Dt/m_kinvis;
             if(m_useSpecVanVisc)
             {
                 factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
@@ -621,7 +622,7 @@ namespace Nektar
                 for (int i = 0; i < nvel; ++i)
                 {
                     Vmath::Neg(physTot, F_corrected[i], 1);
-                    Vmath::Smul(physTot, alpha, F_corrected[i], 1, F_corrected[i], 1);
+                    Vmath::Smul(physTot, m_viscousRelaxation, F_corrected[i], 1, F_corrected[i], 1);
                     // (-alpha*L(U^i) + U^i_jj)
                     for (int j = 0; j < nvel; ++j)
                     {
@@ -633,7 +634,7 @@ namespace Nektar
                                                         F_corrected[i], 1);                
                     }
                     //  F_corrected = alpha*F + (-alpha*L(U^i) + U^i_jj)
-                    Vmath::Smul(physTot, alpha, Forcing[i], 1, wk[0], 1);
+                    Vmath::Smul(physTot, m_viscousRelaxation, Forcing[i], 1, wk[0], 1);
                     Vmath::Vadd(physTot, wk[0], 1, F_corrected[i], 1, 
                                                     F_corrected[i], 1);                                 
 
@@ -651,14 +652,14 @@ namespace Nektar
 
                     if ( forcing_L2[i] != 0)
                     {
-                        if ( (error/forcing_L2[i] >= tolerance) || (error >= tolerance) )
+                        if ( (error/forcing_L2[i] >= m_viscousTolerance) || (error >= m_viscousTolerance) )
                         {
                             converged = false;
                         }  
                     }
                     else
                     {
-                        if ( error >= tolerance)
+                        if ( error >= m_viscousTolerance)
                         {
                             converged = false;
                         }                
@@ -728,7 +729,7 @@ namespace Nektar
         }
         
         // Pressure contribution
-        if (!m_mapping->ImplicitPressure())
+        if (!m_implicitPressure)
         {
             MappingPressureCorrection(P, tmp);
             for (int i = 0; i < m_nConvectiveFields; ++i)
@@ -737,7 +738,7 @@ namespace Nektar
             }            
         }   
         // Viscous contribution
-        if (!m_mapping->ImplicitViscous())
+        if (!m_implicitViscous)
         {
             MappingViscousCorrection(vel, tmp);
             for (int i = 0; i < m_nConvectiveFields; ++i)

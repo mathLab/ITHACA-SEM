@@ -91,6 +91,14 @@ namespace Nektar
         
         Array<OneD, NekDouble>                      m_bcCorrection;
         
+        // Flags defining if pressure and viscous mapping terms 
+        //should be treated implicitly
+        bool                                        m_implicitPressure;
+        bool                                        m_implicitViscous;
+        // Relaxation parameters for pressure 
+        //       system (when solved iteratively)
+        NekDouble                                   m_pressureRelaxation;
+        
     };
     
 }

@@ -76,6 +76,17 @@ namespace Nektar
         
         bool                                        m_verbose;
         
+        // Flags defining if pressure and viscous mapping terms 
+        //should be treated implicitly
+        bool                                        m_implicitPressure;
+        bool                                        m_implicitViscous;
+        // Tolerance and relaxation parameters for pressure and viscous
+        //       systems (when solved iteratively)
+        NekDouble                                   m_pressureTolerance;
+        NekDouble                                   m_viscousTolerance;
+        NekDouble                                   m_pressureRelaxation;
+        NekDouble                                   m_viscousRelaxation;
+        
         // Virtual functions     
         virtual void v_DoInitialise(void);
         

@@ -138,7 +138,7 @@ namespace Nektar
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
 
         // Correct Dirichlet boundary conditions to account for mapping
-        m_mapping->UpdateBCs();
+        m_mapping->UpdateBCs(0.0);
         //
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
@@ -162,7 +162,7 @@ namespace Nektar
         if (m_mapping->IsTimeDependent())
         {
             m_mapping->UpdateMapping(time);
-            m_mapping->UpdateBCs();
+            m_mapping->UpdateBCs(time);
         }       
         
         EvaluateAdvectionTerms(inarray, outarray);

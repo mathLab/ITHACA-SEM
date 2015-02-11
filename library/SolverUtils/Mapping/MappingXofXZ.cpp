@@ -198,7 +198,8 @@ namespace SolverUtils
     
     void MappingXofXZ::v_CoordinatesToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble time)
     {
         int npoints = outarray[0].num_elements();
         
@@ -207,7 +208,7 @@ namespace SolverUtils
                     m_session->GetFunction(m_funcName, 
                                             m_session->GetVariable(0));
                 
-        ffunc->Evaluate(inarray[0], inarray[1], inarray[2], 0.0, 
+        ffunc->Evaluate(inarray[0], inarray[1], inarray[2], time, 
                                                 outarray[0]);       
         // y' = y
         Vmath::Vcopy(npoints, inarray[1], 1, outarray[1], 1);

@@ -125,9 +125,10 @@ namespace SolverUtils
             /// Convert a the domain coordinates inarray to the Cartesian system
             SOLVER_UTILS_EXPORT void CoordinatesToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble time)
             {
-                v_CoordinatesToCartesian( inarray, outarray);
+                v_CoordinatesToCartesian( inarray, outarray, time);
             }
             
             /////////////////////////////////////////////////////////////
@@ -279,9 +280,9 @@ namespace SolverUtils
                 v_UpdateMapping( time);
             }
             
-            SOLVER_UTILS_EXPORT void UpdateBCs()
+            SOLVER_UTILS_EXPORT void UpdateBCs( const NekDouble time)
             {
-                v_UpdateBCs();
+                v_UpdateBCs(time);
             }
             
 
@@ -348,7 +349,8 @@ namespace SolverUtils
             
             SOLVER_UTILS_EXPORT virtual void v_CoordinatesToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble time                                       ) =0;
             
             SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
                 Array<OneD, NekDouble>               &outarray)             =0;
@@ -406,7 +408,7 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(
                                                 const NekDouble time) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_UpdateBCs();
+            SOLVER_UTILS_EXPORT virtual void v_UpdateBCs(const NekDouble time);
             
     };
 }

@@ -688,7 +688,7 @@ namespace Nektar
             m_fields[0]->SetWaveSpace(wavespace);            
         }
         
-        void Mapping::v_UpdateBCs()
+        void Mapping::v_UpdateBCs( const NekDouble time)
         {
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
@@ -748,7 +748,7 @@ namespace Nektar
                     }                       
                     BndExp[n]->GetCoords(coords[0],coords[1],coords[2]);
                     // Transform coordinates to Cartesian system
-                    CoordinatesToCartesian(coords, coordsCartesian);
+                    CoordinatesToCartesian(coords, coordsCartesian, time);
 
                     LibUtilities::Equation condition =
                         boost::static_pointer_cast<
@@ -806,7 +806,7 @@ namespace Nektar
                         m_fields[i]->GetCoords(coords[0],coords[1],coords[2]);
                          
                         // Transform coordinates to Cartesian system
-                        CoordinatesToCartesian(coords, coordsCartesian);
+                        CoordinatesToCartesian(coords, coordsCartesian, time);
 
                         LibUtilities::Equation condition =
                             boost::static_pointer_cast<

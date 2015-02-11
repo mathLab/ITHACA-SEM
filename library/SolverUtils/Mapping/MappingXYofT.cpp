@@ -354,45 +354,6 @@ namespace SolverUtils
         }
     }
 
-    void MappingXYofT::v_IncNSAdvectionCorrection(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-    }
-
-    void MappingXYofT::v_IncNSPressureCorrection(
-        const Array<OneD, NekDouble>                      &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-    }
-
-    void MappingXYofT::v_IncNSViscousCorrection(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }           
-    }    
-
     bool MappingXYofT::v_IsTimeDependent()
     {
         return true;

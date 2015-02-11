@@ -703,12 +703,12 @@ namespace Nektar
             Vmath::Vcopy(physTot, m_fields[m_nConvectiveFields]->GetPhys(), 1, P, 1);
         }
         //Advection contribution
-        m_mapping->IncNSAdvectionCorrection(vel, Forcing);
+        MappingAdvectionCorrection(vel, Forcing);
         
         // Time-derivative contribution
         if ( m_mapping->IsTimeDependent() )
         {
-            m_mapping->IncNSAccelerationCorrection(vel, tmp);
+            MappingAccelerationCorrection(vel, tmp);
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {
                 Vmath::Vadd(physTot, tmp[i], 1, Forcing[i], 1, Forcing[i], 1);
@@ -718,7 +718,7 @@ namespace Nektar
         // Pressure contribution
         if (!m_mapping->ImplicitPressure())
         {
-            m_mapping->IncNSPressureCorrection(P, tmp);
+            MappingPressureCorrection(P, tmp);
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {
                 Vmath::Vadd(physTot, tmp[i], 1, Forcing[i], 1, Forcing[i], 1);
@@ -727,7 +727,7 @@ namespace Nektar
         // Viscous contribution
         if (!m_mapping->ImplicitViscous())
         {
-            m_mapping->IncNSViscousCorrection(vel, tmp);
+            MappingViscousCorrection(vel, tmp);
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {            
                 Vmath::Smul(physTot, m_kinvis, tmp[i], 1, tmp[i], 1);
@@ -750,5 +750,165 @@ namespace Nektar
             Vmath::Vadd(physTot, outarray[i], 1, Forcing[i], 1, outarray[i], 1);
         }          
     }
+    
+        void VCSMapping::MappingAdvectionCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            
+            Array<OneD, Array<OneD, NekDouble> > wk(nvel*nvel);
+
+            // Apply Christoffel symbols to obtain {i,kj}vel(k) 
+            m_mapping->ApplyChristoffelContravar(inarray, wk);
+
+            // Calculate correction -U^j*{i,kj}vel(k)
+            for (int i = 0; i< nvel; i++)
+            {
+                Vmath::Zero(physTot,outarray[i],1);
+                for (int j = 0; j< nvel; j++)
+                {
+                        Vmath::Vvtvp(physTot,wk[i*nvel+j],1,inarray[j],1,
+                                        outarray[i],1,outarray[i],1);
+                }    
+                Vmath::Neg(physTot, outarray[i], 1);
+            } 
+        }
+        
+        void VCSMapping::MappingAccelerationCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            
+            Array<OneD, Array<OneD, NekDouble> > wk(nvel*nvel);
+            Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
+            Array<OneD, Array<OneD, NekDouble> > coordVel(nvel);
+            for (int i = 0; i< nvel; i++)
+            {
+                tmp[i] = Array<OneD, NekDouble> (physTot, 0.0);
+                coordVel[i] = Array<OneD, NekDouble> (physTot, 0.0);
+            }
+            // Get coordinates velocity in transformed system
+            m_mapping->GetCoordVelocity(tmp);
+            m_mapping->ContravarFromCartesian(tmp, coordVel);         
+            
+            // Set wavespace to false and store current value
+            bool wavespace = m_fields[0]->GetWaveSpace();
+            m_fields[0]->SetWaveSpace(false);
+
+            // Calculate first term: U^j u^i,j = U^j (du^i/dx^j + {i,kj}u^k)
+            m_mapping->ApplyChristoffelContravar(inarray, wk);        
+            for (int i=0; i< nvel; i++)
+            {
+                Vmath::Zero(physTot,outarray[i],1);
+                for (int j=0; j< nvel; j++)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
+                                            tmp[0]);
+
+                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1); 
+                    
+                    Vmath::Vvtvp(physTot, coordVel[j], 1, wk[i*nvel+j], 1,
+                                          outarray[i], 1, outarray[i], 1);
+                }
+            }
+            
+            // Add -u^j U^i,j
+            m_mapping->ApplyChristoffelContravar(coordVel, wk);        
+            for (int i=0; i< nvel; i++)
+            {
+                for (int j=0; j< nvel; j++)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],coordVel[i],
+                                            tmp[0]);
+
+                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1);
+                    Vmath::Neg(physTot, wk[i*nvel+j], 1);
+                    
+                    Vmath::Vvtvp(physTot, inarray[j], 1, wk[i*nvel+j], 1,
+                                          outarray[i], 1, outarray[i], 1);
+                }
+            }
+            
+            // Restore value of wavespace 
+            m_fields[0]->SetWaveSpace(wavespace);
+        }
+
+        void VCSMapping::MappingPressureCorrection(
+            const Array<OneD, NekDouble>                      &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+
+            Array<OneD, Array<OneD, NekDouble> > wk(nvel);
+            for(int i = 0; i < nvel; ++i)
+            {
+                wk[i] = Array<OneD, NekDouble>(physTot, 0.0);
+            }           
+
+            // Set wavespace to false and store current value
+            bool wavespace = m_fields[0]->GetWaveSpace();
+            m_fields[0]->SetWaveSpace(false);
+            
+            // Calculate Cartesian gradient p_(,j)
+            for(int i = 0; i < nvel; ++i)
+            {
+                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],
+                                        inarray, wk[i]);
+            }                                      
+                 
+            // Multiply by g^(ij)
+            m_mapping->RaiseIndex(wk, outarray);
+            
+            // Calculate correction = (nabla p)/J - g^(ij)p_,j
+            // (Jac is not required if it is constant)
+            if ( !m_mapping->HasConstantJacobian())
+            {
+                Array<OneD, NekDouble> Jac(physTot, 0.0);
+                m_mapping->GetJacobian(Jac);
+                for(int i = 0; i < nvel; ++i)
+                {
+                    Vmath::Vdiv(physTot, wk[i], 1, Jac, 1, wk[i], 1);
+                }
+            }
+            for(int i = 0; i < nvel; ++i)
+            {
+                
+                Vmath::Vsub(physTot, wk[i], 1,outarray[i], 1,outarray[i], 1);
+            }
+            
+            // Restore value of wavespace 
+            m_fields[0]->SetWaveSpace(wavespace);
+        }
+
+        void VCSMapping::MappingViscousCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            int nvel = m_nConvectiveFields;
+            Array<OneD, NekDouble> tmp (physTot, 0.0);
+            
+            // Set wavespace to false and store current value
+            bool wavespace = m_fields[0]->GetWaveSpace();
+            m_fields[0]->SetWaveSpace(false);
+            
+            m_mapping->VelocityLaplacian(inarray, outarray);  // L(U)
+            for (int i = 0; i < nvel; ++i)
+            {
+                for (int j = 0; j < nvel; ++j)
+                {
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i], tmp);
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],tmp, tmp);
+                    Vmath::Vsub(physTot, outarray[i], 1, tmp, 1, outarray[i], 1);                
+                }
+            } 
+            // Restore value of wavespace 
+            m_fields[0]->SetWaveSpace(wavespace);            
+        }
     
 } //end of namespace

@@ -208,7 +208,7 @@ namespace SolverUtils
             
             /////////////////////////////////////////////////////////////
             //
-            //   Functions used in IncNs
+            //   Differential operators
             //    
             /////////////////////////////////////////////////////////////             
             
@@ -237,45 +237,6 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
                 v_gradgradU( inarray, outarray);
-            }
-            
-            // Correction needed for convective terms = N(u) - ( -(u \nabla) u)
-            //     inarray is the velocity field
-            SOLVER_UTILS_EXPORT void IncNSAdvectionCorrection(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_IncNSAdvectionCorrection( inarray, outarray);
-            } 
-            
-            // Correction needed for time-derivative terms 
-            //     = U_coord^j u^i_,j - u^j U_coord^i_,j
-            //     inarray is the velocity field
-            SOLVER_UTILS_EXPORT void IncNSAccelerationCorrection(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_IncNSAccelerationCorrection( inarray, outarray);
-            }
-            
-            // Correction needed for pressure terms   
-            //     = -g^(ij)p_j + (\nabla p)/J for variable Jacobian
-            //     = -g^(ij)p_j + (\nabla p)   for constant Jacobian
-            //         inarray is the pressure field
-            SOLVER_UTILS_EXPORT void IncNSPressureCorrection(
-                const Array<OneD, NekDouble>                      &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_IncNSPressureCorrection( inarray, outarray);
-            }
-            
-            // Correction needed for viscous terms = g^jk u^i_{,jk}-(\nabla^2 u)
-            //     inarray is the velocity field
-            SOLVER_UTILS_EXPORT void IncNSViscousCorrection(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_IncNSViscousCorrection( inarray, outarray);
             }
             
             // CurlCurl calculated on the whole field
@@ -472,22 +433,6 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);  
             
             SOLVER_UTILS_EXPORT virtual void v_gradgradU(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            SOLVER_UTILS_EXPORT virtual void v_IncNSAdvectionCorrection(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            SOLVER_UTILS_EXPORT virtual void v_IncNSAccelerationCorrection(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            SOLVER_UTILS_EXPORT virtual void v_IncNSPressureCorrection(
-                const Array<OneD, NekDouble>                      &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            SOLVER_UTILS_EXPORT virtual void v_IncNSViscousCorrection(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
 

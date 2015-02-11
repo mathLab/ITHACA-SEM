@@ -75,6 +75,7 @@ namespace Nektar
         SolverUtils::MappingSharedPtr               m_mapping;
         
         bool                                        m_verbose;
+        
         // Virtual functions     
         virtual void v_DoInitialise(void);
         
@@ -103,6 +104,33 @@ namespace Nektar
     
     private:        
         Array<OneD, Array<OneD, NekDouble> >    m_presForcingCorrection;
+        
+        // Correction needed for convective terms = N(u) - ( -(u \nabla) u)
+        //     inarray is the velocity field
+        void MappingAdvectionCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        // Correction needed for time-derivative terms 
+        //     = U_coord^j u^i_,j - u^j U_coord^i_,j
+        //     inarray is the velocity field
+        void MappingAccelerationCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        // Correction needed for pressure terms   
+        //     = -g^(ij)p_j + (\nabla p)/J for variable Jacobian
+        //     = -g^(ij)p_j + (\nabla p)   for constant Jacobian
+        //         inarray is the pressure field
+        void MappingPressureCorrection(
+            const Array<OneD, NekDouble>                      &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        // Correction needed for viscous terms = g^jk u^i_{,jk}-(\nabla^2 u)
+        //     inarray is the velocity field
+        void MappingViscousCorrection(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
         
     };
 

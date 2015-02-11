@@ -126,18 +126,6 @@ protected:
     SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelCovar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray);
-    
-    SOLVER_UTILS_EXPORT virtual void v_IncNSAdvectionCorrection(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
-
-    SOLVER_UTILS_EXPORT virtual void v_IncNSPressureCorrection(
-        const Array<OneD, NekDouble>                      &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
-
-    SOLVER_UTILS_EXPORT virtual void v_IncNSViscousCorrection(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
     SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();  
 

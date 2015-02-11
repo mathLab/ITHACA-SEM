@@ -4,7 +4,7 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
 
     SET_COMMON_PROPERTIES(${name})
 
-    TARGET_LINK_LIBRARIES(${name} MultiRegions SolverUtils)
+    TARGET_LINK_LIBRARIES(${name} MultiRegions)
     
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 

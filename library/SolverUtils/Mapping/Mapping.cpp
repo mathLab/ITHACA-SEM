@@ -83,85 +83,85 @@ namespace Nektar
             }
         }
 
-    /**
-     *
-     */
-    void Mapping::v_InitObject(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const TiXmlElement                                *pMapping)
-    {        
-        // Read parameters
-        std::string typeStr = pMapping->Attribute("TYPE");
-        std::map<std::string, std::string> vParams;
-        const TiXmlElement *param = pMapping->FirstChildElement("PARAM");
-        while (param)
-        {
-            ASSERTL0(param->Attribute("NAME"),
-                     "Missing attribute 'NAME' for parameter in mapping "
-                     + typeStr + "'.");
-            std::string nameStr = param->Attribute("NAME");
-
-            ASSERTL0(param->GetText(), "Empty value string for param.");
-            std::string valueStr = param->GetText();
-
-            vParams[nameStr] = valueStr;
-
-            param = param->NextSiblingElement("PARAM");
-        }        
-        // Check if parameters are defined, otherwise use default values
-        if (vParams.find("ImplicitPressure") != vParams.end())
-        {
-            if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
-               || boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "yes"))
+        /**
+         *
+         */
+        void Mapping::v_InitObject(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const TiXmlElement                                *pMapping)
+        {        
+            // Read parameters
+            std::string typeStr = pMapping->Attribute("TYPE");
+            std::map<std::string, std::string> vParams;
+            const TiXmlElement *param = pMapping->FirstChildElement("PARAM");
+            while (param)
             {
-                m_implicitPressure = true;
+                ASSERTL0(param->Attribute("NAME"),
+                         "Missing attribute 'NAME' for parameter in mapping "
+                         + typeStr + "'.");
+                std::string nameStr = param->Attribute("NAME");
+
+                ASSERTL0(param->GetText(), "Empty value string for param.");
+                std::string valueStr = param->GetText();
+
+                vParams[nameStr] = valueStr;
+
+                param = param->NextSiblingElement("PARAM");
+            }        
+            // Check if parameters are defined, otherwise use default values
+            if (vParams.find("ImplicitPressure") != vParams.end())
+            {
+                if (  boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "true")
+                   || boost::iequals(vParams.find("ImplicitPressure")->second.c_str(), "yes"))
+                {
+                    m_implicitPressure = true;
+                }
+            }
+            if (vParams.find("ImplicitViscous") != vParams.end())
+            {
+                if (  boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "true")
+                   || boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "yes"))
+                {
+                    m_implicitViscous = true;
+                }
+            }
+            //
+            if (vParams.find("PressureTolerance") == vParams.end())
+            {
+                m_pressureTolerance = 1e-12;
+            }
+            else
+            {
+                m_pressureTolerance = atof(vParams.find("PressureTolerance")->second.c_str());
+            }
+            //
+            if (vParams.find("ViscousTolerance") == vParams.end())
+            {
+                m_viscousTolerance = 1e-12;
+            }
+            else
+            {
+                m_viscousTolerance = atof(vParams.find("ViscousTolerance")->second.c_str());
+            }
+            //
+            if (vParams.find("PressureRelaxation") == vParams.end())
+            {
+                m_pressureRelaxation = 1.0;
+            }
+            else
+            {
+                m_pressureRelaxation = atof(vParams.find("PressureRelaxation")->second.c_str());
+            }
+            //
+            if (vParams.find("ViscousRelaxation") == vParams.end())
+            {
+                m_viscousRelaxation = 1.0;
+            }
+            else
+            {
+                m_viscousRelaxation = atof(vParams.find("ViscousRelaxation")->second.c_str());
             }
         }
-        if (vParams.find("ImplicitViscous") != vParams.end())
-        {
-            if (  boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "true")
-               || boost::iequals(vParams.find("ImplicitViscous")->second.c_str(), "yes"))
-            {
-                m_implicitViscous = true;
-            }
-        }
-        //
-        if (vParams.find("PressureTolerance") == vParams.end())
-        {
-            m_pressureTolerance = 1e-12;
-        }
-        else
-        {
-            m_pressureTolerance = atof(vParams.find("PressureTolerance")->second.c_str());
-        }
-        //
-        if (vParams.find("ViscousTolerance") == vParams.end())
-        {
-            m_viscousTolerance = 1e-12;
-        }
-        else
-        {
-            m_viscousTolerance = atof(vParams.find("ViscousTolerance")->second.c_str());
-        }
-        //
-        if (vParams.find("PressureRelaxation") == vParams.end())
-        {
-            m_pressureRelaxation = 1.0;
-        }
-        else
-        {
-            m_pressureRelaxation = atof(vParams.find("PressureRelaxation")->second.c_str());
-        }
-        //
-        if (vParams.find("ViscousRelaxation") == vParams.end())
-        {
-            m_viscousRelaxation = 1.0;
-        }
-        else
-        {
-            m_viscousRelaxation = atof(vParams.find("ViscousRelaxation")->second.c_str());
-        }
-    }
         
         
 
@@ -606,166 +606,6 @@ namespace Nektar
                 }
             }            
                        
-            // Restore value of wavespace 
-            m_fields[0]->SetWaveSpace(wavespace);            
-        }
-
-        void Mapping::v_IncNSAdvectionCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
-        {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            
-            Array<OneD, Array<OneD, NekDouble> > wk(nvel*nvel);
-
-            // Apply Christoffel symbols to obtain {i,kj}vel(k) 
-            ApplyChristoffelContravar(inarray, wk);
-
-            // Calculate correction -U^j*{i,kj}vel(k)
-            for (int i = 0; i< nvel; i++)
-            {
-                Vmath::Zero(physTot,outarray[i],1);
-                for (int j = 0; j< nvel; j++)
-                {
-                        Vmath::Vvtvp(physTot,wk[i*nvel+j],1,inarray[j],1,
-                                        outarray[i],1,outarray[i],1);
-                }    
-                Vmath::Neg(physTot, outarray[i], 1);
-            } 
-        }
-        
-        void Mapping::v_IncNSAccelerationCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
-        {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            
-            Array<OneD, Array<OneD, NekDouble> > wk(nvel*nvel);
-            Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
-            Array<OneD, Array<OneD, NekDouble> > coordVel(nvel);
-            for (int i = 0; i< nvel; i++)
-            {
-                tmp[i] = Array<OneD, NekDouble> (physTot, 0.0);
-                coordVel[i] = Array<OneD, NekDouble> (physTot, 0.0);
-            }
-            // Get coordinates velocity in transformed system
-            GetCoordVelocity(tmp);
-            ContravarFromCartesian(tmp, coordVel);         
-            
-            // Set wavespace to false and store current value
-            bool wavespace = m_fields[0]->GetWaveSpace();
-            m_fields[0]->SetWaveSpace(false);
-
-            // Calculate first term: U^j u^i,j = U^j (du^i/dx^j + {i,kj}u^k)
-            ApplyChristoffelContravar(inarray, wk);        
-            for (int i=0; i< nvel; i++)
-            {
-                Vmath::Zero(physTot,outarray[i],1);
-                for (int j=0; j< nvel; j++)
-                {
-                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
-                                            tmp[0]);
-
-                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1); 
-                    
-                    Vmath::Vvtvp(physTot, coordVel[j], 1, wk[i*nvel+j], 1,
-                                          outarray[i], 1, outarray[i], 1);
-                }
-            }
-            
-            // Add -u^j U^i,j
-            ApplyChristoffelContravar(coordVel, wk);        
-            for (int i=0; i< nvel; i++)
-            {
-                for (int j=0; j< nvel; j++)
-                {
-                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],coordVel[i],
-                                            tmp[0]);
-
-                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1);
-                    Vmath::Neg(physTot, wk[i*nvel+j], 1);
-                    
-                    Vmath::Vvtvp(physTot, inarray[j], 1, wk[i*nvel+j], 1,
-                                          outarray[i], 1, outarray[i], 1);
-                }
-            }
-            
-            // Restore value of wavespace 
-            m_fields[0]->SetWaveSpace(wavespace);
-        }
-
-        void Mapping::v_IncNSPressureCorrection(
-            const Array<OneD, NekDouble>                      &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
-        {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-
-            Array<OneD, Array<OneD, NekDouble> > wk(nvel);
-            for(int i = 0; i < nvel; ++i)
-            {
-                wk[i] = Array<OneD, NekDouble>(physTot, 0.0);
-            }           
-
-            // Set wavespace to false and store current value
-            bool wavespace = m_fields[0]->GetWaveSpace();
-            m_fields[0]->SetWaveSpace(false);
-            
-            // Calculate Cartesian gradient p_(,j)
-            for(int i = 0; i < nvel; ++i)
-            {
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],
-                                        inarray, wk[i]);
-            }                                      
-                 
-            // Multiply by g^(ij)
-            RaiseIndex(wk, outarray);
-            
-            // Calculate correction = (nabla p)/J - g^(ij)p_,j
-            // (Jac is not required if it is constant)
-            if ( !HasConstantJacobian())
-            {
-                Array<OneD, NekDouble> Jac(physTot, 0.0);
-                GetJacobian(Jac);
-                for(int i = 0; i < nvel; ++i)
-                {
-                    Vmath::Vdiv(physTot, wk[i], 1, Jac, 1, wk[i], 1);
-                }
-            }
-            for(int i = 0; i < nvel; ++i)
-            {
-                
-                Vmath::Vsub(physTot, wk[i], 1,outarray[i], 1,outarray[i], 1);
-            }
-            
-            // Restore value of wavespace 
-            m_fields[0]->SetWaveSpace(wavespace);
-        }
-
-        void Mapping::v_IncNSViscousCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
-        {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            Array<OneD, NekDouble> tmp (physTot, 0.0);
-            
-            // Set wavespace to false and store current value
-            bool wavespace = m_fields[0]->GetWaveSpace();
-            m_fields[0]->SetWaveSpace(false);
-            
-            VelocityLaplacian(inarray, outarray);  // L(U)
-            for (int i = 0; i < nvel; ++i)
-            {
-                for (int j = 0; j < nvel; ++j)
-                {
-                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i], tmp);
-                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],tmp, tmp);
-                    Vmath::Vsub(physTot, outarray[i], 1, tmp, 1, outarray[i], 1);                
-                }
-            } 
             // Restore value of wavespace 
             m_fields[0]->SetWaveSpace(wavespace);            
         }

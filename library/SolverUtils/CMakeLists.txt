@@ -43,6 +43,7 @@ SET(SOLVER_UTILS_SOURCES
   Mapping/MappingXYofZ.cpp
   Mapping/MappingXYofT.cpp
   Mapping/MappingXYofXY.cpp
+  Mapping/MappingGeneralFixed.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -92,6 +93,7 @@ SET(SOLVER_UTILS_HEADERS
   Mapping/MappingXYofZ.h
   Mapping/MappingXYofT.h
   Mapping/MappingXYofXY.h
+  Mapping/MappingGeneralFixed.h
 )
 
 IF (NEKTAR_USE_ARPACK)

@@ -82,7 +82,7 @@ namespace Nektar
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
-        int intSteps;
+        int intSteps = 1;
         int intMethod = m_intScheme->GetIntegrationMethod();
         switch(intMethod)
         {

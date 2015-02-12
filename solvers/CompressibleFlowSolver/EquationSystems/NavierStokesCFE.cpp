@@ -99,8 +99,8 @@ namespace Nektar
         const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
-        
-        //insert white noise in initial condition
+
+        // insert white noise in initial condition
         NekDouble Noise;
         int phystot = m_fields[0]->GetTotPoints();
         Array<OneD, NekDouble> noise(phystot);
@@ -121,6 +121,7 @@ namespace Nektar
             }
         }
 
+        CompressibleFlowSystem::v_SetInitialConditions();
 
         if (dumpInitialConditions)
         {

@@ -115,6 +115,7 @@ namespace Nektar
         const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
+        CompressibleFlowSystem::v_SetInitialConditions();
         
         if(dumpInitialConditions)
         {

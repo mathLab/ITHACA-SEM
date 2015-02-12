@@ -302,10 +302,9 @@ namespace Nektar
                     ss << cpuTime << "s";
                     cout << " CPU Time: " << setw(8) << left
                          << ss.str() << endl;
-                                        
                     cpuTime = 0.0;
                 }
-                
+
                 // Transform data into coefficient space
                 for (i = 0; i < nvariables; ++i)
                 {
@@ -315,7 +314,7 @@ namespace Nektar
                         m_fields[m_intVariables[i]]->UpdateCoeffs());
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-                
+
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {
@@ -332,7 +331,7 @@ namespace Nektar
                 // Write out checkpoint files
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
                     doCheckTime)
-                {                
+                {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
                         vector<bool> transformed(nfields, false);

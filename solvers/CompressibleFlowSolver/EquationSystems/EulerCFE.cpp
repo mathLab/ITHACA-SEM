@@ -127,41 +127,9 @@ namespace Nektar
             }
         }
 
-        if (m_session->DefinesParameter("SteadyStateTol"))
-        {
-            const int nPoints = m_fields[0]->GetTotPoints();
-            m_un = Array<OneD, Array<OneD, NekDouble> > (
-                m_fields.num_elements());
+        CompressibleFlowSystem::v_SetInitialConditions();
 
-
-            for (int i = 0; i < m_fields.num_elements(); ++i)
-            {
-                cout << Vmath::Vmax(nPoints, m_fields[i]->GetPhys(), 1) << endl;
-                m_un[i] = Array<OneD, NekDouble>(nPoints);
-                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
-            }
-
-            if (m_comm->GetRank() == 0)
-            {
-                std::string fName = m_session->GetSessionName() +
-                    std::string(".res");
-                m_errFile.open(fName.c_str());
-                m_errFile << "# "
-                          << setw(15) << left << "Time"
-                          << setw(22) << left << "rho";
-
-                std::string velFields[3] = {"u", "v", "w"};
-
-                for (int i = 0; i < m_fields.num_elements()-2; ++i)
-                {
-                    m_errFile << setw(22) << "rho"+velFields[i];
-                }
-
-                m_errFile << setw(22) << left << "E" << endl;
-            }
-        }
-        
-        if (dumpInitialConditions)
+        if (dumpInitialConditions && m_checksteps)
         {
             // Dump initial conditions to file
             Checkpoint_Output(0);

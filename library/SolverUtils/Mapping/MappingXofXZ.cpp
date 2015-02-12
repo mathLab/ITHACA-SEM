@@ -196,24 +196,27 @@ namespace SolverUtils
         Vmath::Vadd(physTot, inarray[2], 1, outarray[2], 1, outarray[2], 1);
     }
     
-    void MappingXofXZ::v_CoordinatesToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray,
-                const NekDouble time)
+    void MappingXofXZ::v_GetCartesianCoordinates(
+                Array<OneD, NekDouble>               &out0,
+                Array<OneD, NekDouble>               &out1,
+                Array<OneD, NekDouble>               &out2)
     {
-        int npoints = outarray[0].num_elements();
+        int physTot = m_fields[0]->GetTotPoints();
         
-        // x' = f(x,z)
-        LibUtilities::EquationSharedPtr ffunc =
-                    m_session->GetFunction(m_funcName, 
-                                            m_session->GetVariable(0));
-                
-        ffunc->Evaluate(inarray[0], inarray[1], inarray[2], time, 
-                                                outarray[0]);       
+        Array<OneD, NekDouble> x0(physTot);
+        Array<OneD, NekDouble> x1(physTot);
+        Array<OneD, NekDouble> x2(physTot);
+
+        m_fields[0]->GetCoords(x0, x1, x2);
+        
+        // x' = m_GeometricInfo[0]
+        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, out0, 1);
+        
         // y' = y
-        Vmath::Vcopy(npoints, inarray[1], 1, outarray[1], 1);
+        Vmath::Vcopy(physTot, x1, 1, out1, 1);    
+        
         // z' = z
-        Vmath::Vcopy(npoints, inarray[2], 1, outarray[2], 1);
+        Vmath::Vcopy(physTot, x2, 1, out2, 1);        
     }
 
     void MappingXofXZ::v_GetJacobian(

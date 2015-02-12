@@ -122,13 +122,13 @@ namespace SolverUtils
                 v_CovarFromCartesian( inarray, outarray);
             }
             
-            /// Convert a the domain coordinates inarray to the Cartesian system
-            SOLVER_UTILS_EXPORT void CoordinatesToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray,
-                const NekDouble time)
+            /// Get the Cartesian coordinates in the field
+            SOLVER_UTILS_EXPORT void GetCartesianCoordinates(
+                Array<OneD, NekDouble>               &out0,
+                Array<OneD, NekDouble>               &out1,
+                Array<OneD, NekDouble>               &out2)
             {
-                v_CoordinatesToCartesian( inarray, outarray, time);
+                v_GetCartesianCoordinates( out0, out1, out2);
             }
             
             /////////////////////////////////////////////////////////////
@@ -347,10 +347,10 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
             
-            SOLVER_UTILS_EXPORT virtual void v_CoordinatesToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray,
-                const NekDouble time                                       ) =0;
+            SOLVER_UTILS_EXPORT virtual void v_GetCartesianCoordinates(
+                Array<OneD, NekDouble>               &out0,
+                Array<OneD, NekDouble>               &out1,
+                Array<OneD, NekDouble>               &out2) =0;
             
             SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
                 Array<OneD, NekDouble>               &outarray)             =0;

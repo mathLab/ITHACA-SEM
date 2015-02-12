@@ -143,7 +143,9 @@ namespace Nektar
 
             if (m_comm->GetRank() == 0)
             {
-                m_errFile.open(m_session->GetSessionName() + std::string(".res"));
+                std::string fName = m_session->GetSessionName() +
+                    std::string(".res");
+                m_errFile.open(fName.c_str());
                 m_errFile << "# "
                           << setw(15) << left << "Time"
                           << setw(22) << left << "rho";

@@ -17,6 +17,7 @@ SET(FieldConvertHeaders
     ProcessScaleInFld.h
     ProcessVorticity.h
     ProcessWSS.h
+    ProcessScalGrad.h
     ProcessMultiShear.h
     ProcessC0Projection.h
     ProcessQCriterion.h
@@ -41,6 +42,7 @@ SET(FieldConvertSources
     ProcessScaleInFld.cpp
     ProcessVorticity.cpp
     ProcessWSS.cpp
+    ProcessScalGrad.cpp
     ProcessMultiShear.cpp
     ProcessC0Projection.cpp
     ProcessQCriterion.cpp

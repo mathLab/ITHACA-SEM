@@ -6,11 +6,6 @@
 #include <SpatialDomains/MeshGraph3D.h>
 #include <MultiRegions/DisContField3D.h>
 
-#ifdef NEKTAR_USING_CHUD
-#include <CHUD/CHUD.h> 
-//#define SHARK
-#endif 
-
 using namespace Nektar;
 
 std::string PortablePath(const boost::filesystem::path& path);
@@ -455,16 +450,6 @@ int main(int argc, char *argv[])
         NumCalls = 1;
     }
 
-#ifdef SHARK
-    NumCalls *= 20;
-
-    chudInitialize();
-    chudSetErrorLogFile(stderr);
-    chudUmarkPID(getpid(), TRUE);    
-    chudAcquireRemoteAccess();
-    chudStartRemotePerfMonitor("TimingHDGHelmSolve3D");
-#endif
-
     timer.Start();
     for(i = 0; i < NumCalls; ++i)
     {
@@ -473,13 +458,6 @@ int main(int argc, char *argv[])
     }
     timer.Stop();
     exeTime = timer.TimePerTest(1);
-
-#ifdef SHARK
-    chudStopRemotePerfMonitor();
-    chudReleaseRemoteAccess();
-    chudCleanup();
-#endif
-
 
     int nLocCoeffs     = Exp->GetTraceMap()->GetNumLocalCoeffs();
     int nGlobCoeffs    = Exp->GetTraceMap()->GetNumGlobalCoeffs();

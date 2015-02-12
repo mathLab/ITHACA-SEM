@@ -884,7 +884,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         
         // For 3DHomogenoeus1D
-        int n_planes;
+        int n_planes = 1;
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();

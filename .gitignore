@@ -1,0 +1,12 @@
+.*
+!.gitignore
+# Ignore builds and ThirdParty directories
+build
+builds
+ThirdParty
+# Ignore .DS_Store sometimes created by OS X.
+.DS_Store
+# for the userguide
+*.pdf
+# Kdevelop project files
+*.kdev4

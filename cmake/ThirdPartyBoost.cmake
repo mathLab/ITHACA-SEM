@@ -1,7 +1,60 @@
-OPTION(THIRDPARTY_BUILD_BOOST "Build Boost libraries" OFF)
+########################################################################
+#
+# ThirdParty configuration for Nektar++
+#
+# Boost
+#
+########################################################################
+
+#If the user has not set BOOST_ROOT, look in a couple common places first.
+MESSAGE(STATUS "Searching for Boost:")
+SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
+    program_options regex)
+SET(Boost_DEBUG 0)
+SET(Boost_NO_BOOST_CMAKE ON)
+IF( BOOST_ROOT )
+    SET(Boost_NO_SYSTEM_PATHS ON)
+    FIND_PACKAGE( Boost COMPONENTS ${NEEDED_BOOST_LIBS})
+ELSE ()
+    SET(TEST_ENV1 $ENV{BOOST_HOME})
+    SET(TEST_ENV2 $ENV{BOOST_DIR})
+    IF (DEFINED TEST_ENV1)
+        SET(BOOST_ROOT $ENV{BOOST_HOME})
+        SET(Boost_NO_SYSTEM_PATHS ON)
+        FIND_PACKAGE( Boost QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+    ELSEIF (DEFINED TEST_ENV2)
+        SET(BOOST_ROOT $ENV{BOOST_DIR})
+        SET(Boost_NO_SYSTEM_PATHS ON)
+        FIND_PACKAGE( Boost QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+    ELSE ()
+        SET(BOOST_ROOT ${TPDIST})
+        FIND_PACKAGE( Boost QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+    ENDIF()
+ENDIF()
+
+# Check what we found and determine if we need to build boost
+FOREACH(FOUND_VAR ${NEEDED_BOOST_LIBS})
+    STRING(TOUPPER ${FOUND_VAR} FOUND_VAR_UPPER)
+    IF (Boost_${FOUND_VAR_UPPER}_FOUND )
+        MESSAGE(STATUS "-- Found Boost ${FOUND_VAR} library: "
+                "${Boost_${FOUND_VAR_UPPER}_LIBRARY}")
+    ELSE ()
+        MESSAGE(STATUS "-- Pre-installed Boost ${FOUND_VAR} library not found")
+    ENDIF()
+ENDFOREACH()
+
+IF (NOT Boost_FOUND)
+    SET(BUILD_BOOST ON)
+ELSE()
+    SET(BUILD_BOOST OFF)
+ENDIF ()
+
+
+OPTION(THIRDPARTY_BUILD_BOOST "Build Boost libraries" ${BUILD_BOOST})
 SET(Boost_USE_MULTITHREADED ON CACHE BOOL
     "Search for multithreaded boost libraries")
 MARK_AS_ADVANCED(Boost_USE_MULTITHREADED)
+
 
 IF (WIN32)
     ADD_DEFINITIONS("-DBOOST_ALL_NO_LIB")
@@ -36,13 +89,13 @@ IF (THIRDPARTY_BUILD_BOOST)
     ELSE(APPLE)
         SET(TOOLSET gcc)
     ENDIF(APPLE)
-    
+
     IF (NOT WIN32)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_55_0.tar.bz2
-            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
+            URL ${TPURL}/boost_1_57_0.tar.bz2
+            URL_MD5 "1be49befbdd9a5ce9def2983ba3e7b76"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/boost
@@ -68,8 +121,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_55_0.tar.bz2
-            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
+            URL ${TPURL}/boost_1_57_0.tar.bz2
+            URL_MD5 "1be49befbdd9a5ce9def2983ba3e7b76"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/boost
@@ -95,7 +148,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     IF (APPLE)
         EXTERNALPROJECT_ADD_STEP(boost patch-install-path
-            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPSRC}/boost/tools/build/v2/tools/darwin.jam
+            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPBUILD}/boost/tools/build/v2/tools/darwin.jam
             DEPENDERS build
             DEPENDEES download)
     ENDIF (APPLE)
@@ -128,105 +181,21 @@ IF (THIRDPARTY_BUILD_BOOST)
     SET(Boost_THREAD_LIBRARY_DEBUG boost_thread)
     SET(Boost_THREAD_LIBRARY_RELEASE boost_thread)
     SET(Boost_INCLUDE_DIRS ${TPSRC}/dist/include)
+    SET(Boost_CONFIG_INCLUDE_DIR ${TPINC})
     SET(Boost_LIBRARY_DIRS ${TPSRC}/dist/lib)
+    SET(Boost_CONFIG_LIBRARY_DIR ${TPLIB})
+    SET(Boost_LIBRARIES boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_system boost_thread)
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+
+    STRING(REPLACE ";" ", " NEEDED_BOOST_LIBS_STRING "${NEEDED_BOOST_LIBS}")
+    MESSAGE(STATUS "Build boost libs: ${NEEDED_BOOST_LIBS_STRING}")
 ELSE (THIRDPARTY_BUILD_BOOST)
     ADD_CUSTOM_TARGET(boost ALL)
-    SET(Boost_DEBUG 0)
-    SET(Boost_NO_BOOST_CMAKE ON)
-    #If the user has not set BOOST_ROOT, look in a couple common places first.
-    IF( NOT BOOST_ROOT )
-        SET(TEST_ENV1 $ENV{BOOST_HOME})
-        SET(TEST_ENV2 $ENV{BOOST_DIR})
-        IF (DEFINED TEST_ENV1)
-            SET(BOOST_ROOT $ENV{BOOST_HOME})
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
-                filesystem system program_options regex )
-        ELSEIF (DEFINED TEST_ENV2)
-            SET(BOOST_ROOT $ENV{BOOST_DIR})
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
-                filesystem system program_options regex )
-        ELSE ()
-            SET(BOOST_ROOT ${TPDIST})
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
-        ENDIF()
-    ELSE()
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
-    ENDIF()
-
-    IF (Boost_IOSTREAMS_FOUND)
-        MESSAGE(STATUS "Found Boost iostreams library: "
-                       "${Boost_IOSTREAMS_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost IOSTREAM library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-iostreams option.")
-    ENDIF ()
-
-    IF (Boost_THREAD_FOUND)
-        MESSAGE(STATUS "Found Boost thread library: "
-                       "${Boost_THREAD_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost THREAD library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-thread option.")
-    ENDIF ()
-
-    IF (Boost_DATE_TIME_FOUND)
-        MESSAGE(STATUS "Found Boost date_time library: "
-                       "${Boost_DATE_TIME_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost DATE_TIME library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-date_time option.")
-    ENDIF ()
-
-    IF (Boost_FILESYSTEM_FOUND)
-        MESSAGE(STATUS "Found Boost filesystem library: "
-                       "${Boost_FILESYSTEM_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost FILESYSTEM library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-filesystem option.")
-    ENDIF ()
-
-    IF (Boost_SYSTEM_FOUND)
-        MESSAGE(STATUS "Found Boost system library: "
-                       "${Boost_SYSTEM_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost SYSTEM library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-filesystem option.")
-    ENDIF ()
-
-    IF (Boost_PROGRAM_OPTIONS_FOUND)
-        MESSAGE(STATUS "Found Boost program_options library: "
-                       "${Boost_PROGRAM_OPTIONS_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost PROGRAM_OPTIONS library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-program_options option.")
-    ENDIF ()
-
-    IF (Boost_REGEX_FOUND)
-        MESSAGE(STATUS "Found Boost regex library: "
-                       "${Boost_REGEX_LIBRARY}")
-    ELSE ()
-        MESSAGE(WARNING "Boost REGEX library not found. "
-                        "Please ensure it is installed, or Boost was "
-                        "compiled with the --with-regex option.")
-    ENDIF ()
-
     IF (BOOST_THREAD_LIBRARY)
         MARK_AS_ADVANCED(BOOST_THREAD_LIBRARY)
     ENDIF (BOOST_THREAD_LIBRARY)
-
-    IF (NOT Boost_FOUND)
-        MESSAGE(FATAL_ERROR "One of more Boost libraries could not be found. "
-                            "See above warnings. To have CMake automatically "
-                            "build and install the necessary Boost libraries "
-                            "select the THIRDPARTY_BUILD_BOOST option.")
-    ENDIF ()
+    SET(Boost_CONFIG_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
+    SET(Boost_CONFIG_LIBRARY_DIR ${Boost_LIBRARY_DIRS})
 ENDIF (THIRDPARTY_BUILD_BOOST)
 
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})

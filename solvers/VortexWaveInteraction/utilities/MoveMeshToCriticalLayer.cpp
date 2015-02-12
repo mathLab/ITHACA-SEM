@@ -482,7 +482,7 @@ void  TurnOffEdges(TiXmlElement *doc,
         // Comments appear as nodes just like elements.
         // We are specifically looking for text in the body
         // of the definition.
-        while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+        while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
         {
             compositeChild = compositeChild->NextSibling();
         }
@@ -638,7 +638,7 @@ void   RedefineVertices(TiXmlElement *doc,
         while (vertexBody)
         {
             // Accumulate all non-comment body data.
-            if (vertexBody->Type() == TiXmlNode::TEXT)
+            if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
             {
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";

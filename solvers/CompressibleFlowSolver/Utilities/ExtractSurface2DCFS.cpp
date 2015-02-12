@@ -89,7 +89,8 @@ int main(int argc, char *argv[])
     fname = fname + ".txt";
 
     int cnt;
-    int id1, id2;
+    int id1 = 0;
+    int id2 = 0;
     int i, j, n, e, b;
     Array<OneD, NekDouble> auxArray;
 

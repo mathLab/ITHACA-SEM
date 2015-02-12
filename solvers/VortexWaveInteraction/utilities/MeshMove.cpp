@@ -746,7 +746,7 @@ cout<<"nlays="<<nlays<<endl;
          {                 	 
              //determine the closer xold_up
              NekDouble diff=1000;
-             int qp_closer;
+             int qp_closer = 0;
              for(int k=0; k<nvertl; k++)
              {     
                 if(abs(x-xold_up[k]) < diff)
@@ -2374,8 +2374,12 @@ cout<<"nlays="<<nlays<<endl;
       }
       
       //determine the others verts and edge for each layer
-      NekDouble normbef, normtmp,xbef,ybef,xtmp,ytmp,normnext,xnext,ynext,diff;
-      NekDouble Ubef, Utmp, Unext;
+      NekDouble normbef = 0.0;
+      NekDouble normtmp = 0.0;
+      NekDouble xbef = 0.0;
+      NekDouble ybef=0.0;
+      NekDouble xtmp,ytmp,normnext,xnext,ynext,diff;
+      NekDouble Ubef = 0.0, Utmp = 0.0, Unext = 0.0;
       Array<OneD, NekDouble> coord(2);
       int elmtid,offset;     
       int nTotEdges = V1.num_elements();
@@ -3418,7 +3422,7 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
           SpatialDomains::PointGeomSharedPtr vertex = mesh->GetVertex(n);
           NekDouble x,y,z;
           vertex->GetCoords(x,y,z); 
-          int qp_closeroldup, qp_closerolddown;
+          int qp_closeroldup = 0, qp_closerolddown = 0;
           NekDouble diffup, diffdown;
           //determine the closer xold_up,down
           diffdown =1000;
@@ -3446,7 +3450,7 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
           diffdown =1000;
           diffup = 1000;
           
-          int qp_closerup, qp_closerdown;
+          int qp_closerup = 0, qp_closerdown = 0;
           
           for(int f=0; f< nvertl; f++)
           {
@@ -3926,7 +3930,7 @@ cout<<"alpha="<<s_alp<<endl;
     	   // Now read body of vertex
            TiXmlNode *vertexBody = vertexnew->FirstChild();
            // Accumulate all non-comment body data.
-           if (vertexBody->Type() == TiXmlNode::TEXT)
+           if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
            {
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";
@@ -3996,7 +4000,7 @@ cout<<"alpha="<<s_alp<<endl;
                   std::string edgeBodyStr;
 		  //read the body of the edge
 		  TiXmlNode *edgeBody = edgenew->FirstChild();
-       		  if(edgeBody->Type() == TiXmlNode::TEXT)
+       		  if(edgeBody->Type() == TiXmlNode::TINYXML_TEXT)
           	  {
 		       edgeBodyStr += edgeBody->ToText()->Value();
                        edgeBodyStr += " ";

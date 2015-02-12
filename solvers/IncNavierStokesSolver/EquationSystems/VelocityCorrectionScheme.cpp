@@ -267,7 +267,7 @@ namespace Nektar
             m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
         }
     }
-	
+    
     /**
      * 
      */
@@ -342,7 +342,7 @@ namespace Nektar
         
         // Substep the pressure boundary condition
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
-	
+    
         // Set up forcing term and coefficients for pressure Poisson equation
         SetUpPressureForcing(inarray, F, aii_Dt);
         factors[StdRegions::eFactorLambda] = 0.0;
@@ -389,6 +389,7 @@ namespace Nektar
             m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
             Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
         }
+
         Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
     }
     
@@ -425,5 +426,5 @@ namespace Nektar
             Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
         }
     }
-	
+    
 } //end of namespace

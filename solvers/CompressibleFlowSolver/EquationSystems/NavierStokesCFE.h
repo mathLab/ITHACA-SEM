@@ -39,22 +39,22 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
-{  
+{
 
   enum ProblemType
-  {           
+  {
     eGeneral,          ///< No problem defined - Default Inital data
     SIZE_ProblemType   ///< Length of enum list
   };
-  
+
   const char* const ProblemTypeMap[] =
     {
       "General"
     };
-  
+
   /**
-   * 
-   * 
+   *
+   *
    **/
   class NavierStokesCFE : public CompressibleFlowSystem
   {
@@ -65,19 +65,19 @@ namespace Nektar
     static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      SolverUtils::EquationSystemSharedPtr p = 
+      SolverUtils::EquationSystemSharedPtr p =
             MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
       p->InitObject();
       return p;
     }
     // Name of class
     static std::string className;
-    
+
     virtual ~NavierStokesCFE();
 
     // Problem type selector
-    ProblemType m_problemType;   
-          
+    ProblemType m_problemType;
+
   protected:
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -98,8 +98,8 @@ namespace Nektar
 
   private:
       void SetBoundaryConditions(
-        Array<OneD, Array<OneD, NekDouble> >             &physarray, 
-        NekDouble                                         time);      
+        Array<OneD, Array<OneD, NekDouble> >             &physarray,
+        NekDouble                                         time);
   };
 }
 #endif

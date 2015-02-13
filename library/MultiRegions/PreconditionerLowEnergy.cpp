@@ -2168,29 +2168,50 @@ namespace Nektar
                 Array<OneD, unsigned int> TetFace1=TetExp->GetFaceInverseBoundaryMap(faceid2);
                 Array<OneD, unsigned int> TetFace2=TetExp->GetFaceInverseBoundaryMap(faceid3);
 
+
+                int nfacemodes=TetFace0.num_elements();
+
+                Array<OneD, unsigned int> ExtractTetFace0(nfacemodes);
+                Array<OneD, unsigned int> ExtractTetFace1(nfacemodes);
+                Array<OneD, unsigned int> ExtractTetFace2(nfacemodes);
+
+                int offset=0;
+                int cnt=0;
+                cout<<"nummodes-3: "<<nummodes0-3<<endl;
+                for(int k=0; k<nummodes0-3; ++k)
+                {
+                    for(int j=0; j<nummodes0-3-k; ++j)
+                    {
+                        cout<<"location: "<<offset+j<<" counter: "<<cnt<<" j: "<<j<<endl;
+                        ExtractTetFace0[cnt]=maxTetFace0[offset+j];
+                        ExtractTetFace1[cnt]=maxTetFace1[offset+j];
+                        ExtractTetFace2[cnt]=maxTetFace2[offset+j];
+                        cnt++;
+                    }
+                    offset+=maxnummodes-3-k;
+                }
+                cout<<"done"<<endl;
                 for(int i=0; i<TetFace0.num_elements(); ++i)
                 {
                     maxVertFaceValue = (*m_maxRtet)(maxvertlocation,
-                                                    maxTetFace0[i]);
+                                                    ExtractTetFace0[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Facemode: "<<TetFace0[i]<<" value: "<<maxVertFaceValue<<endl;
                     RtetHet->SetValue(vertlocation, TetFace0[i], maxVertFaceValue);
                     RTtetHet->SetValue(TetFace0[i], vertlocation,  maxVertFaceValue);
 
-                    maxVertFaceValue = (*m_maxRTinvtet)(maxTetFace0[i],maxvertlocation);
+                    maxVertFaceValue = (*m_maxRTinvtet)(ExtractTetFace0[i],maxvertlocation);
                     invRTtetHet->SetValue(TetFace0[i], vertlocation,  maxVertFaceValue);
                 }
 
                 for(int i=0; i<TetFace1.num_elements(); ++i)
                 {
                     maxVertFaceValue = (*m_maxRtet)(maxvertlocation,
-                                                    maxTetFace1[i]);
+                                                    ExtractTetFace1[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Facemode: "<<TetFace0[i]<<" value: "<<maxVertFaceValue<<endl;
                     RtetHet->SetValue(vertlocation, TetFace1[i], maxVertFaceValue);
                     RTtetHet->SetValue(TetFace1[i], vertlocation,  maxVertFaceValue);
 
-                    maxVertFaceValue = (*m_maxRTinvtet)(maxTetFace1[i],maxvertlocation);
+                    maxVertFaceValue = (*m_maxRTinvtet)(ExtractTetFace1[i],maxvertlocation);
                     invRTtetHet->SetValue(TetFace1[i], vertlocation,  maxVertFaceValue);
 
 
@@ -2200,13 +2221,12 @@ namespace Nektar
                 for(int i=0; i<TetFace2.num_elements(); ++i)
                 {
                     maxVertFaceValue = (*m_maxRtet)(maxvertlocation,
-                                                    maxTetFace2[i]);
+                                                    ExtractTetFace2[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Facemode: "<<TetFace0[i]<<" value: "<<maxVertFaceValue<<endl;
                     RtetHet->SetValue(vertlocation, TetFace2[i], maxVertFaceValue);
                     RTtetHet->SetValue(TetFace2[i], vertlocation,  maxVertFaceValue);
 
-                    maxVertFaceValue = (*m_maxRTinvtet)(maxTetFace2[i],maxvertlocation);
+                    maxVertFaceValue = (*m_maxRTinvtet)(ExtractTetFace2[i],maxvertlocation);
                     invRTtetHet->SetValue(TetFace2[i], vertlocation,  maxVertFaceValue);
 
                 }
@@ -2230,17 +2250,39 @@ namespace Nektar
                 Array<OneD, unsigned int> TetFace0=TetExp->GetFaceInverseBoundaryMap(faceid0);
                 Array<OneD, unsigned int> TetFace1=TetExp->GetFaceInverseBoundaryMap(faceid1);
 
+                int nfacemodes=TetFace0.num_elements();
+
+                Array<OneD, unsigned int> ExtractTetFace0(nfacemodes);
+                Array<OneD, unsigned int> ExtractTetFace1(nfacemodes);
+
+                int offset=0;
+                int cnt=0;
+                cout<<"nummodes-3: "<<nummodes0-3<<endl;
+                for(int k=0; k<nummodes0-3; ++k)
+                {
+                    for(int j=0; j<nummodes0-3-k; ++j)
+                    {
+                        cout<<"location: "<<offset+j<<" counter: "<<cnt<<" j: "<<j<<endl;
+                        ExtractTetFace0[cnt]=maxTetFace0[offset+j];
+                        ExtractTetFace1[cnt]=maxTetFace1[offset+j];
+                        cnt++;
+                    }
+                    offset+=maxnummodes-3-k;
+                }
+                cout<<"done"<<endl;
+
+
 
                 for(int i=0; i<TetEdge0.num_elements(); ++i)
                 {
                     for(int j=0; j<TetFace0.num_elements(); ++j)
                     {
                         maxEdgeFaceValue = (*m_maxRtet)(maxTetEdge0[i],
-                                                        maxTetFace0[j]);
+                                                        ExtractTetFace0[j]);
                         RtetHet->SetValue(TetEdge0[i], TetFace0[j], maxEdgeFaceValue);
                         RTtetHet->SetValue(TetFace0[j],TetEdge0[i], maxEdgeFaceValue);
 
-                        maxEdgeFaceValue = (*m_maxRTinvtet)(maxTetFace0[j],maxTetEdge0[i]);
+                        maxEdgeFaceValue = (*m_maxRTinvtet)(ExtractTetFace0[j],maxTetEdge0[i]);
                         invRTtetHet->SetValue(TetFace0[j],TetEdge0[i], maxEdgeFaceValue);
                     }
                 }
@@ -2250,11 +2292,11 @@ namespace Nektar
                     for(int j=0; j<TetFace1.num_elements(); ++j)
                     {
                         maxEdgeFaceValue = (*m_maxRtet)(maxTetEdge0[i],
-                                                        maxTetFace1[j]);
+                                                        ExtractTetFace1[j]);
                         RtetHet->SetValue(TetEdge0[i], TetFace1[j], maxEdgeFaceValue);
                         RTtetHet->SetValue(TetFace1[j],TetEdge0[i], maxEdgeFaceValue);
 
-                        maxEdgeFaceValue = (*m_maxRTinvtet)(maxTetFace1[j],maxTetEdge0[i]);
+                        maxEdgeFaceValue = (*m_maxRTinvtet)(ExtractTetFace1[j],maxTetEdge0[i]);
                         invRTtetHet->SetValue(TetFace1[j],TetEdge0[i], maxEdgeFaceValue);
 
                     }
@@ -2268,6 +2310,18 @@ namespace Nektar
                 invRTtetHet->SetValue(i, i, 1.0);
             }
 
+            cout<<"R-NORMAL"<<endl;
+            for(i=0; i<m_Rtet->GetRows(); ++i)
+            {
+                for(j=0; j<m_Rtet->GetColumns(); ++j)
+                {
+                    cout<<(*m_Rtet)(i,j)<<" ";
+                }
+                cout<<endl;
+            }
+            cout<<endl; 
+
+
             m_Rtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RtetHet);
             m_RTtet = MemoryManager<DNekScalMat>
@@ -2276,9 +2330,10 @@ namespace Nektar
                 ::AllocateSharedPtr(1.0,invRTtetHet);
 
 
+
             /*DNekScalMat &RTET=(*m_maxRtet);
               cout<<"Tet R matrix"<<" rows: "<<RTET.GetRows()<<endl;*/
-            /*cout<<"R"<<endl;
+            cout<<"R-MOD"<<endl;
             for(i=0; i<RtetHet->GetRows(); ++i)
             {
                 for(j=0; j<RtetHet->GetColumns(); ++j)
@@ -2288,29 +2343,6 @@ namespace Nektar
                 cout<<endl;
             }
             cout<<endl; 
-
-            cout<<"RT"<<endl;
-            for(i=0; i<RTtetHet->GetRows(); ++i)
-            {
-                for(j=0; j<RTtetHet->GetColumns(); ++j)
-                {
-                    cout<<(*RTtetHet)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl; 
-
-            cout<<"invRT"<<endl;
-            for(i=0; i<invRTtetHet->GetRows(); ++i)
-            {
-                for(j=0; j<invRTtetHet->GetColumns(); ++j)
-                {
-                    cout<<(*invRTtetHet)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl;*/ 
-
 
 
             /*cout<<"Tet vertex 0: "<<TetVertex0<<endl;
@@ -2322,7 +2354,7 @@ namespace Nektar
             //These are the edge mode locations of R which need to be replaced
             //in the prism element
 
-            /*cout<<"Tet face 0: ";
+            cout<<"Tet face 0: ";
             for(int i=0; i< TetFace0.num_elements(); ++i)
             {
                 cout<<TetFace0[i]<<" ";
@@ -2346,7 +2378,6 @@ namespace Nektar
                 cout<<TetFace3[i]<<" ";
             }
             cout<<endl;
-            cout<<endl;*/
 
 
             /***********************************/
@@ -2411,49 +2442,11 @@ namespace Nektar
                 Array<OneD, unsigned int> HexEdge1=HexExp->GetEdgeInverseBoundaryMap(edgeid2);
                 Array<OneD, unsigned int> HexEdge2=HexExp->GetEdgeInverseBoundaryMap(edgeid3);
 
-                /*for(int i=0; i<HexEdge0.num_elements(); ++i)
-                {
-                    cout<<"Edge0: "<<HexEdge0[i]<<" ";
-                }
-                cout<<endl;
-
-                for(int i=0; i<HexEdge1.num_elements(); ++i)
-                {
-                    cout<<"Edge1: "<<HexEdge1[i]<<" ";
-                }
-                cout<<endl;
-
-                for(int i=0; i<HexEdge2.num_elements(); ++i)
-                {
-                    cout<<"Edge2: "<<HexEdge2[i]<<" ";
-                }
-                cout<<endl;
-
-                for(int i=0; i<maxHexEdge0.num_elements(); ++i)
-                {
-                    cout<<"Edge0: "<<maxHexEdge0[i]<<" ";
-                }
-                cout<<endl;
-
-                for(int i=0; i<maxHexEdge1.num_elements(); ++i)
-                {
-                    cout<<"Edge1: "<<maxHexEdge1[i]<<" ";
-                }
-                cout<<endl;
-
-                for(int i=0; i<maxHexEdge2.num_elements(); ++i)
-                {
-                    cout<<"Edge2: "<<maxHexEdge2[i]<<" ";
-                }
-                cout<<endl;*/
-
-
                 for(int i=0; i<HexEdge0.num_elements(); ++i)
                 {
                     maxVertEdgeValue = (*m_maxRhex)(maxvertlocation,
                                                     maxHexEdge0[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Edgemode: "<<HexEdge0[i]<<" value: "<<maxVertEdgeValue<<endl;
                     RhexHet->SetValue(vertlocation, HexEdge0[i], maxVertEdgeValue);
                     RThexHet->SetValue(HexEdge0[i], vertlocation,maxVertEdgeValue);
 
@@ -2466,7 +2459,6 @@ namespace Nektar
                     maxVertEdgeValue = (*m_maxRhex)(maxvertlocation,
                                                     maxHexEdge1[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Edgemode: "<<HexEdge0[i]<<" value: "<<maxVertEdgeValue<<endl;
                     RhexHet->SetValue(vertlocation, HexEdge1[i], maxVertEdgeValue);
                     RThexHet->SetValue(HexEdge1[i],vertlocation, maxVertEdgeValue);
 
@@ -2479,7 +2471,6 @@ namespace Nektar
                     maxVertEdgeValue = (*m_maxRhex)(maxvertlocation,
                                                     maxHexEdge2[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Edgemode: "<<HexEdge0[i]<<" value: "<<maxVertEdgeValue<<endl;
                     RhexHet->SetValue(vertlocation, HexEdge2[i], maxVertEdgeValue);
                     RThexHet->SetValue(HexEdge2[i],vertlocation, maxVertEdgeValue);
 
@@ -2489,8 +2480,6 @@ namespace Nektar
 
 
             }
-
-            //NekDouble maxVertFaceValue;
 
             //set vertex face values
             for(int vid=0; vid<8; ++vid)
@@ -2513,7 +2502,6 @@ namespace Nektar
                 
 
                 int nfacemodes=HexFace0.num_elements();
-                //int nmaxfacemodes=maxHexFace0.num_elements();
 
                 Array<OneD, unsigned int> ExtractHexFace0(nfacemodes);
                 Array<OneD, unsigned int> ExtractHexFace1(nfacemodes);
@@ -2524,7 +2512,6 @@ namespace Nektar
                 {
                     for(int j=0; j<nummodes0-2; ++j)
                     {
-                        cout<<"location: "<<offset+j<<" counter: "<<k*(nummodes0-2)+j<<" j: "<<j<<endl;
                         ExtractHexFace0[k*(nummodes0-2)+j]=maxHexFace0[offset+j];
                         ExtractHexFace1[k*(nummodes0-2)+j]=maxHexFace1[offset+j];
                         ExtractHexFace2[k*(nummodes0-2)+j]=maxHexFace2[offset+j];
@@ -2532,20 +2519,11 @@ namespace Nektar
                     offset+=maxnummodes-2;
                 }
 
-                /*std::sort(HexFace0.get(), HexFace0.end());
-                std::sort(HexFace1.get(), HexFace1.end());
-                std::sort(HexFace2.get(), HexFace2.end());
-                std::sort(maxHexFace0.get(), maxHexFace0.end());
-                std::sort(maxHexFace1.get(), maxHexFace1.end());
-                std::sort(maxHexFace2.get(), maxHexFace2.end());*/
-
-
                 for(int i=0; i<HexFace0.num_elements(); ++i)
                 {
                     maxVertFaceValue = (*m_maxRhex)(maxvertlocation,
                                                     ExtractHexFace0[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Facemode: "<<HexFace0[i]<<" value: "<<maxVertFaceValue<<endl;
                     RhexHet->SetValue(vertlocation, HexFace0[i], maxVertFaceValue);
                     RThexHet->SetValue(HexFace0[i], vertlocation,  maxVertFaceValue);
 
@@ -2558,7 +2536,6 @@ namespace Nektar
                     maxVertFaceValue = (*m_maxRhex)(maxvertlocation,
                                                     ExtractHexFace1[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Facemode: "<<HexFace1[i]<<" value: "<<maxVertFaceValue<<endl;
                     RhexHet->SetValue(vertlocation, HexFace1[i], maxVertFaceValue);
                     RThexHet->SetValue(HexFace1[i], vertlocation,  maxVertFaceValue);
 
@@ -2571,7 +2548,6 @@ namespace Nektar
                     maxVertFaceValue = (*m_maxRhex)(maxvertlocation,
                                                     ExtractHexFace2[i]);
 
-                    //cout<<"vertex: "<<vertlocation<<" Facemode: "<<HexFace2[i]<<" value: "<<maxVertFaceValue<<endl;
                     RhexHet->SetValue(vertlocation, HexFace2[i], maxVertFaceValue);
                     RThexHet->SetValue(HexFace2[i], vertlocation,  maxVertFaceValue);
 
@@ -2580,7 +2556,6 @@ namespace Nektar
                 }
             }
 
-            //NekDouble maxEdgeFaceValue;
             //set egde-edge values
             for(int eid=0; eid<12; ++eid)
             {
@@ -2612,12 +2587,6 @@ namespace Nektar
                     }
                     offset+=maxnummodes-2;
                 }
-
-                /*std::sort(HexFace0.get(), HexFace0.end());
-                std::sort(HexFace1.get(), HexFace1.end());
-                std::sort(maxHexFace0.get(), maxHexFace0.end());
-                std::sort(maxHexFace1.get(), maxHexFace1.end());*/
-
 
                 for(int i=0; i<HexEdge0.num_elements(); ++i)
                 {
@@ -2658,66 +2627,12 @@ namespace Nektar
 
             //LocalTransformToLowEnergy(m_RThex, HexExp);
 
-            cout<<"R-NORMAL"<<endl;
-            for(i=0; i<m_Rhex->GetRows(); ++i)
-            {
-                for(j=0; j<m_Rhex->GetColumns(); ++j)
-                {
-                    cout<<(*m_Rhex)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl; 
-
-
             m_Rhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RhexHet);
             m_RThex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RThexHet);
             m_RTinvhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,invRThexHet);
-
-
-
-            /*---------- HEX END ----------*/
-            cout<<"R-MOD"<<endl;
-            for(i=0; i<RhexHet->GetRows(); ++i)
-            {
-                for(j=0; j<RhexHet->GetColumns(); ++j)
-                {
-                    cout<<(*RhexHet)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl; 
-
-            /*  cout<<"invRT"<<endl;
-            for(i=0; i<invRThexHet->GetRows(); ++i)
-            {
-                for(j=0; j<invRThexHet->GetColumns(); ++j)
-                {
-                    cout<<(*invRThexHet)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl;*/ 
-
-
-            //LocalTransformToLowEnergy(m_RThex, maxHexExp);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             /*DNekScalMat &RPRISM=(*m_Rprism);
@@ -2733,23 +2648,23 @@ namespace Nektar
             cout<<endl;*/ 
 
             //Hex vertex modes
-            int HexVertex0=maxHexExp->GetVertexMap(0);
+            /*int HexVertex0=maxHexExp->GetVertexMap(0);
             int HexVertex1=maxHexExp->GetVertexMap(1);
             int HexVertex2=maxHexExp->GetVertexMap(2);
             int HexVertex3=maxHexExp->GetVertexMap(3);
             int HexVertex4=maxHexExp->GetVertexMap(4);
-            int HexVertex5=maxHexExp->GetVertexMap(5);
+            int HexVertex5=maxHexExp->GetVertexMap(5);*/
 
-            cout<<"Hex vertex 0: "<<HexVertex0<<endl;
+            /*cout<<"Hex vertex 0: "<<HexVertex0<<endl;
             cout<<"Hex vertex 1: "<<HexVertex1<<endl;
             cout<<"Hex vertex 2: "<<HexVertex2<<endl;
             cout<<"Hex vertex 3: "<<HexVertex3<<endl;
             cout<<"Hex vertex 4: "<<HexVertex4<<endl;
             cout<<"Hex vertex 5: "<<HexVertex5<<endl;
-            cout<<endl;
+            cout<<endl;*/
 
             //Hex edge modes
-            Array<OneD, unsigned int> HexEdge0=
+            /*Array<OneD, unsigned int> HexEdge0=
                 maxHexExp->GetEdgeInverseBoundaryMap(0);
             Array<OneD, unsigned int> HexEdge1=
                 maxHexExp->GetEdgeInverseBoundaryMap(1);
@@ -2888,7 +2803,7 @@ namespace Nektar
 
             cout<<"stop"<<endl;
             cout<<endl;
-            cout<<endl;
+            cout<<endl;*/
         }
 
         /**

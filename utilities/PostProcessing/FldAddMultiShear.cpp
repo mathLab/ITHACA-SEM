@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     
     // Define local arrays for wss components, and outputs (TAwss, osi, trs) 
     int n, cnt, elmtid, offset, boundary, bndOffset;
-    Array<OneD, NekDouble> Sx(nbq), Sy(nbq), Sz(nbq), S(nbq), Sxr(nbq), Syr(nbq), Szr(nbq), sx(nbq), sy(nbq), sz(nbq);
+    Array<OneD, NekDouble> Sx(nbq), Sy(nbq), Sz(nbq), S(nbq), Sxr(nbq), Syr(nbq), Szr(nbq);
     Array<OneD, NekDouble> Save(nbq), temp2(nbq), trs(nbq), TAwss(nbq), osi(nbq);
     Array<OneD, Array<OneD, NekDouble> > temp(sfields), values(nfields);
    
@@ -272,11 +272,6 @@ int main(int argc, char *argv[])
     Vmath::Smul(nbq, 1.0/nfiles , Sx, 1, Sx, 1);
     Vmath::Smul(nbq, 1.0/nfiles , Sy, 1, Sy, 1);
     Vmath::Smul(nbq, 1.0/nfiles , Sz, 1, Sz, 1);
-
-    // Store temporal mean vectors sx, sy, sz
-    Vmath::Vcopy(nbq, Sx, 1, sx, 1);
-    Vmath::Vcopy(nbq, Sy, 1, sy, 1);
-    Vmath::Vcopy(nbq, Sz, 1, sz, 1);
 
     // Spatial average of the temporal averaged wss vector: Save = sqrt(sx^2 + Sy^2 + Sz^2);
     // i.e magnitude of mean temporal wss. 
@@ -381,10 +376,6 @@ int main(int argc, char *argv[])
                     if (temp2[m]> 0.0) 
                     {
                         trs[m] = trs[m] + sqrt(temp2[m]);
-                    }
-                    else
-                    {
-                        trs[m] = 0.0;
                     }    
                 }
               
@@ -483,20 +474,6 @@ int main(int argc, char *argv[])
                         values[j] = BndExp[j+nfields][n]->UpdateCoeffs() + BndExp[j+nfields][n]->GetCoeff_Offset(i);
                         bc->FwdTrans(temp[j], values[j]);
                     }
-                    /*
-                    for (j = 0; j < nfq; j++)
-                    {
-                        temp[0][j] = sx[bndOffset + j];                     
-                        temp[1][j] = sy[bndOffset + j];
-                        temp[2][j] = sz[bndOffset + j];
-                    }
-
-                    for (j = 0; j < expdim; j++)
-                    {
-                        values[j] = BndExp[j+addfields][n]->UpdateCoeffs() + BndExp[j+addfields][n]->GetCoeff_Offset(i);
-                        bc->FwdTrans(temp[j], values[j]);
-                    } 
-                    */
                 }
             }
         }

@@ -43,6 +43,7 @@
 #define OPERATOR_CREATE(cname)                                  \
     static OperatorKey m_type;                                  \
     static OperatorKey m_typeArr[];                             \
+    friend class MemoryManager<cname>;                          \
     static OperatorSharedPtr create(                            \
         vector<StdRegions::StdExpansionSharedPtr> pCollExp,     \
         boost::shared_ptr<CoalescedGeomData> GeomData)          \

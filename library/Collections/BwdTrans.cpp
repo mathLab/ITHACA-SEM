@@ -39,28 +39,23 @@
 
 namespace Nektar {
 namespace Collections {
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
+
+/// Backward transform operator using standard matrix approach.
 class BwdTrans_StdMat : public Operator
 {
 public:
-    BwdTrans_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                    CoalescedGeomDataSharedPtr GeomData)
-        : Operator(pCollExp, GeomData)
+    OPERATOR_CREATE(BwdTrans_StdMat)
+
+    virtual ~BwdTrans_StdMat()
     {
-        StdRegions::StdMatrixKey  key(StdRegions::eBwdTrans,
-                                      m_stdExp->DetShapeType(), *m_stdExp);
-        m_mat = m_stdExp->GetStdMatrix(key);
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+    virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
         Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
                     m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
@@ -68,9 +63,19 @@ public:
                     0.0, output.get(), m_stdExp->GetTotPoints());
     }
 
-    OPERATOR_CREATE(BwdTrans_StdMat)
-
+protected:
     DNekMatSharedPtr m_mat;
+
+private:
+    BwdTrans_StdMat(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator(pCollExp, pGeomData)
+    {
+        StdRegions::StdMatrixKey  key(StdRegions::eBwdTrans,
+                                      m_stdExp->DetShapeType(), *m_stdExp);
+        m_mat = m_stdExp->GetStdMatrix(key);
+    }
 };
 
 OperatorKey BwdTrans_StdMat::m_typeArr[] = {
@@ -118,21 +123,23 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
         BwdTrans_StdMat::create, "BwdTrans_StdMat_Hex"),
 };
 
+
+/// Backward transform operator using element-wise operation.
 class BwdTrans_IterPerExp : public Operator
 {
 public:
-    BwdTrans_IterPerExp(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                        CoalescedGeomDataSharedPtr GeomData)
-        : Operator(pCollExp,GeomData)
+    OPERATOR_CREATE(BwdTrans_IterPerExp)
+
+    virtual ~BwdTrans_IterPerExp()
     {
     }
 
     virtual void operator()(
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
         const int nCoeffs = m_stdExp->GetNcoeffs();
         const int nPhys   = m_stdExp->GetTotPoints();
@@ -144,7 +151,14 @@ public:
         }
     }
 
-    OPERATOR_CREATE(BwdTrans_IterPerExp)
+private:
+    BwdTrans_IterPerExp(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator(pCollExp, pGeomData)
+    {
+    }
+
 };
 
 OperatorKey BwdTrans_IterPerExp::m_typeArr[] = {
@@ -184,22 +198,22 @@ OperatorKey BwdTrans_IterPerExp::m_typeArr[] = {
 };
 
 
+/// Backward transform operator using original MultiRegions implementation.
 class BwdTrans_NoCollection : public Operator
 {
 public:
-    BwdTrans_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                    CoalescedGeomDataSharedPtr GeomData)
-        : Operator(pCollExp,GeomData)
+    OPERATOR_CREATE(BwdTrans_NoCollection)
+
+    virtual ~BwdTrans_NoCollection()
     {
-        m_expList = pCollExp;
     }
 
     virtual void operator()(
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
         const int nCoeffs = m_expList[0]->GetNcoeffs();
         const int nPhys   = m_expList[0]->GetTotPoints();
@@ -211,9 +225,17 @@ public:
         }
     }
 
-    OPERATOR_CREATE(BwdTrans_NoCollection)
-
+protected:
     vector<StdRegions::StdExpansionSharedPtr> m_expList;
+
+private:
+    BwdTrans_NoCollection(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator(pCollExp, pGeomData)
+    {
+        m_expList = pCollExp;
+    }
 };
 
 OperatorKey BwdTrans_NoCollection::m_typeArr[] = {
@@ -253,23 +275,14 @@ OperatorKey BwdTrans_NoCollection::m_typeArr[] = {
 };
 
 
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
+/// Backward transform operator using sum-factorisation (Segment)
 class BwdTrans_SumFac_Seg : public Operator
 {
 public:
-    BwdTrans_SumFac_Seg(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                          CoalescedGeomDataSharedPtr GeomData)
-        : Operator  (pCollExp, GeomData),
-          m_nquad0  (m_stdExp->GetNumPoints(0)),
-          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
-          m_base0   (m_stdExp->GetBasis(0)->GetBdata())
+    OPERATOR_CREATE(BwdTrans_SumFac_Seg)
+
+    virtual ~BwdTrans_SumFac_Seg()
     {
-        m_wspSize = 0;
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -291,13 +304,25 @@ public:
         }
     }
 
-    OPERATOR_CREATE(BwdTrans_SumFac_Seg)
 
-    protected:
-    const int  m_nquad0;
-    const int  m_nmodes0;
-    const bool m_colldir0;
-    Array<OneD, const NekDouble> m_base0;
+protected:
+    const int                       m_nquad0;
+    const int                       m_nmodes0;
+    const bool                      m_colldir0;
+    Array<OneD, const NekDouble>    m_base0;
+
+private:
+    BwdTrans_SumFac_Seg(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata())
+    {
+        m_wspSize = 0;
+    }
 };
 
 OperatorKey BwdTrans_SumFac_Seg::m_type = GetOperatorFactory().
@@ -307,27 +332,14 @@ OperatorKey BwdTrans_SumFac_Seg::m_type = GetOperatorFactory().
 
 
 
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
+/// Backward transform operator using sum-factorisation (Quad)
 class BwdTrans_SumFac_Quad : public Operator
 {
 public:
-    BwdTrans_SumFac_Quad(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                          CoalescedGeomDataSharedPtr GeomData)
-        : Operator  (pCollExp, GeomData),
-          m_nquad0  (m_stdExp->GetNumPoints(0)),
-          m_nquad1  (m_stdExp->GetNumPoints(1)),
-          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
-          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
-          m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
-          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
-          m_base1   (m_stdExp->GetBasis(1)->GetBdata())
+    OPERATOR_CREATE(BwdTrans_SumFac_Quad)
+
+    virtual ~BwdTrans_SumFac_Quad()
     {
-        m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -376,17 +388,32 @@ public:
         }
     }
 
-    OPERATOR_CREATE(BwdTrans_SumFac_Quad)
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    const bool                      m_colldir0;
+    const bool                      m_colldir1;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
 
-    protected:
-    const int  m_nquad0;
-    const int  m_nquad1;
-    const int  m_nmodes0;
-    const int  m_nmodes1;
-    const bool m_colldir0;
-    const bool m_colldir1;
-    Array<OneD, const NekDouble> m_base0;
-    Array<OneD, const NekDouble> m_base1;
+private:
+    BwdTrans_SumFac_Quad(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata())
+    {
+        m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
+    }
 };
 
 OperatorKey BwdTrans_SumFac_Quad::m_type = GetOperatorFactory().
@@ -395,40 +422,22 @@ OperatorKey BwdTrans_SumFac_Quad::m_type = GetOperatorFactory().
                             BwdTrans_SumFac_Quad::create, "BwdTrans_SumFac_Quad");
 
 
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
+/// Backward transform operator using sum-factorisation (Tri)
 class BwdTrans_SumFac_Tri : public Operator
 {
 public:
-    BwdTrans_SumFac_Tri(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                        CoalescedGeomDataSharedPtr GeomData)
-        : Operator  (pCollExp, GeomData),
-          m_nquad0  (m_stdExp->GetNumPoints(0)),
-          m_nquad1  (m_stdExp->GetNumPoints(1)),
-          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
-          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
-          m_base1   (m_stdExp->GetBasis(1)->GetBdata())
+    OPERATOR_CREATE(BwdTrans_SumFac_Tri)
+
+    virtual ~BwdTrans_SumFac_Tri()
     {
-        m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
-        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
-        {
-            m_sortTopVertex = true;
-        }
-        else
-        {
-            m_sortTopVertex = false;
-        }
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+    virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
 
         ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
@@ -459,16 +468,39 @@ public:
                     &wsp[0], m_nquad1*m_numElmt,0.0, &output[0], m_nquad0);
     }
 
-    OPERATOR_CREATE(BwdTrans_SumFac_Tri)
 
-    protected:
-    const int  m_nquad0;
-    const int  m_nquad1;
-    const int  m_nmodes0;
-    const int  m_nmodes1;
-    Array<OneD, const NekDouble> m_base0;
-    Array<OneD, const NekDouble> m_base1;
-    bool m_sortTopVertex;
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
+    bool                            m_sortTopVertex;
+
+private:
+    BwdTrans_SumFac_Tri(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata())
+    {
+        m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
+        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+        {
+            m_sortTopVertex = true;
+        }
+        else
+        {
+            m_sortTopVertex = false;
+        }
+    }
+
 };
 
 OperatorKey BwdTrans_SumFac_Tri::m_type = GetOperatorFactory().
@@ -476,47 +508,23 @@ OperatorKey BwdTrans_SumFac_Tri::m_type = GetOperatorFactory().
                             BwdTrans_SumFac_Tri::create, "BwdTrans_SumFac_Tri");
 
 
-
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
+/// Backward transform operator using sum-factorisation (Hex)
 //#define ELMTLOOP
 class BwdTrans_SumFac_Hex : public Operator
 {
 public:
-    BwdTrans_SumFac_Hex(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                        CoalescedGeomDataSharedPtr GeomData)
-        : Operator  (pCollExp, GeomData),
-          m_nquad0  (pCollExp[0]->GetNumPoints(0)),
-          m_nquad1  (pCollExp[0]->GetNumPoints(1)),
-          m_nquad2  (pCollExp[0]->GetNumPoints(2)),
-          m_nmodes0 (pCollExp[0]->GetBasisNumModes(0)),
-          m_nmodes1 (pCollExp[0]->GetBasisNumModes(1)),
-          m_nmodes2 (pCollExp[0]->GetBasisNumModes(2)),
-          m_base0   (pCollExp[0]->GetBasis(0)->GetBdata()),
-          m_base1   (pCollExp[0]->GetBasis(1)->GetBdata()),
-          m_base2   (pCollExp[0]->GetBasis(2)->GetBdata()),
-          m_colldir0(pCollExp[0]->GetBasis(0)->Collocation()),
-          m_colldir1(pCollExp[0]->GetBasis(1)->Collocation()),
-          m_colldir2(pCollExp[0]->GetBasis(2)->Collocation())
-    {
-#ifdef ELMTLOOP
-        m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,
-                                     m_nmodes0*m_nmodes1*m_nmodes2));
-#else
-        m_wspSize =  m_numElmt*m_nmodes0*(m_nmodes1*m_nquad2 +
-                                          m_nquad1*m_nquad2);
-#endif
+    OPERATOR_CREATE(BwdTrans_SumFac_Hex)
 
+    virtual ~BwdTrans_SumFac_Hex()
+    {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+    virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
 
         if(m_colldir0 && m_colldir1 && m_colldir2)
@@ -611,21 +619,47 @@ public:
         }
     }
 
-    OPERATOR_CREATE(BwdTrans_SumFac_Hex)
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nquad2;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    const int                       m_nmodes2;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
+    Array<OneD, const NekDouble>    m_base2;
+    const bool                      m_colldir0;
+    const bool                      m_colldir1;
+    const bool                      m_colldir2;
 
-    protected:
-    const int  m_nquad0;
-    const int  m_nquad1;
-    const int  m_nquad2;
-    const int  m_nmodes0;
-    const int  m_nmodes1;
-    const int  m_nmodes2;
-    Array<OneD, const NekDouble> m_base0;
-    Array<OneD, const NekDouble> m_base1;
-    Array<OneD, const NekDouble> m_base2;
-    const bool m_colldir0;
-    const bool m_colldir1;
-    const bool m_colldir2;
+private:
+    BwdTrans_SumFac_Hex(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
+          m_nquad0  (pCollExp[0]->GetNumPoints(0)),
+          m_nquad1  (pCollExp[0]->GetNumPoints(1)),
+          m_nquad2  (pCollExp[0]->GetNumPoints(2)),
+          m_nmodes0 (pCollExp[0]->GetBasisNumModes(0)),
+          m_nmodes1 (pCollExp[0]->GetBasisNumModes(1)),
+          m_nmodes2 (pCollExp[0]->GetBasisNumModes(2)),
+          m_base0   (pCollExp[0]->GetBasis(0)->GetBdata()),
+          m_base1   (pCollExp[0]->GetBasis(1)->GetBdata()),
+          m_base2   (pCollExp[0]->GetBasis(2)->GetBdata()),
+          m_colldir0(pCollExp[0]->GetBasis(0)->Collocation()),
+          m_colldir1(pCollExp[0]->GetBasis(1)->Collocation()),
+          m_colldir2(pCollExp[0]->GetBasis(2)->Collocation())
+    {
+#ifdef ELMTLOOP
+        m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,
+                                     m_nmodes0*m_nmodes1*m_nmodes2));
+#else
+        m_wspSize =  m_numElmt*m_nmodes0*(m_nmodes1*m_nquad2 +
+                                          m_nquad1*m_nquad2);
+#endif
+
+    }
 };
 
 OperatorKey BwdTrans_SumFac_Hex::m_type = GetOperatorFactory().
@@ -633,45 +667,22 @@ OperatorKey BwdTrans_SumFac_Hex::m_type = GetOperatorFactory().
                             BwdTrans_SumFac_Hex::create, "BwdTrans_SumFac_Hex");
 
 
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
+/// Backward transform operator using sum-factorisation (Tet)
 class BwdTrans_SumFac_Tet : public Operator
 {
 public:
-    BwdTrans_SumFac_Tet(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                        CoalescedGeomDataSharedPtr GeomData)
-        : Operator  (pCollExp, GeomData),
-          m_nquad0  (m_stdExp->GetNumPoints(0)),
-          m_nquad1  (m_stdExp->GetNumPoints(1)),
-          m_nquad2  (m_stdExp->GetNumPoints(2)),
-          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
-          m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
-          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
-          m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
-          m_base2   (m_stdExp->GetBasis(2)->GetBdata())
-    {
-        m_wspSize = m_numElmt*(m_nquad2*m_nmodes0*(2*m_nmodes1-m_nmodes0+1)/2+
-                               m_nquad2*m_nquad1*m_nmodes0);
+    OPERATOR_CREATE(BwdTrans_SumFac_Tet)
 
-        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
-        {
-            m_sortTopEdge = true;
-        }
-        else
-        {
-            m_sortTopEdge = false;
-        }
+    virtual ~BwdTrans_SumFac_Tet()
+    {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+    virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
         ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
 
@@ -754,37 +765,24 @@ public:
                     m_nquad1*m_nquad2*m_numElmt, 0.0, output.get(), m_nquad0);
 
     }
-    OPERATOR_CREATE(BwdTrans_SumFac_Tet)
 
-    protected:
-    const int  m_nquad0;
-    const int  m_nquad1;
-    const int  m_nquad2;
-    const int  m_nmodes0;
-    const int  m_nmodes1;
-    const int  m_nmodes2;
-    Array<OneD, const NekDouble> m_base0;
-    Array<OneD, const NekDouble> m_base1;
-    Array<OneD, const NekDouble> m_base2;
-    bool m_sortTopEdge;
-};
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nquad2;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    const int                       m_nmodes2;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
+    Array<OneD, const NekDouble>    m_base2;
+    bool                            m_sortTopEdge;
 
-OperatorKey BwdTrans_SumFac_Tet::m_type = GetOperatorFactory().
-    RegisterCreatorFunction(OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eSumFac,false),
-                            BwdTrans_SumFac_Tet::create, "BwdTrans_SumFac_Tet");
-
-
-/*
- * ----------------------------------------------------------
- * BwdTrans operators
- * ----------------------------------------------------------
- */
-class BwdTrans_SumFac_Prism : public Operator
-{
-public:
-    BwdTrans_SumFac_Prism(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                          CoalescedGeomDataSharedPtr GeomData)
-        : Operator  (pCollExp, GeomData),
+private:
+    BwdTrans_SumFac_Tet(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
           m_nquad0  (m_stdExp->GetNumPoints(0)),
           m_nquad1  (m_stdExp->GetNumPoints(1)),
           m_nquad2  (m_stdExp->GetNumPoints(2)),
@@ -795,24 +793,41 @@ public:
           m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
           m_base2   (m_stdExp->GetBasis(2)->GetBdata())
     {
-        m_wspSize = m_numElmt*m_nmodes0*(m_nmodes1*m_nquad2 + m_nquad1*m_nquad2);
+        m_wspSize = m_numElmt*(m_nquad2*m_nmodes0*(2*m_nmodes1-m_nmodes0+1)/2+
+                               m_nquad2*m_nquad1*m_nmodes0);
 
         if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
         {
-            m_sortTopVertex = true;
+            m_sortTopEdge = true;
         }
         else
         {
-            m_sortTopVertex = false;
+            m_sortTopEdge = false;
         }
+    }
+};
 
+OperatorKey BwdTrans_SumFac_Tet::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eSumFac,false),
+                            BwdTrans_SumFac_Tet::create, "BwdTrans_SumFac_Tet");
+
+
+/// Backward transform operator using sum-factorisation (Prism)
+class BwdTrans_SumFac_Prism : public Operator
+{
+public:
+    OPERATOR_CREATE(BwdTrans_SumFac_Prism)
+
+    virtual ~BwdTrans_SumFac_Prism()
+    {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp)
+    virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp)
     {
 
         ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
@@ -873,19 +888,46 @@ public:
 
     }
 
-    OPERATOR_CREATE(BwdTrans_SumFac_Prism)
 
-    protected:
-    const int  m_nquad0;
-    const int  m_nquad1;
-    const int  m_nquad2;
-    const int  m_nmodes0;
-    const int  m_nmodes1;
-    const int  m_nmodes2;
-    Array<OneD, const NekDouble> m_base0;
-    Array<OneD, const NekDouble> m_base1;
-    Array<OneD, const NekDouble> m_base2;
-    bool m_sortTopVertex;
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nquad2;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    const int                       m_nmodes2;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
+    Array<OneD, const NekDouble>    m_base2;
+    bool                            m_sortTopVertex;
+
+private:
+    BwdTrans_SumFac_Prism(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nquad2  (m_stdExp->GetNumPoints(2)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+          m_base2   (m_stdExp->GetBasis(2)->GetBdata())
+    {
+        m_wspSize = m_numElmt*m_nmodes0*(m_nmodes1*m_nquad2 + m_nquad1*m_nquad2);
+
+        if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+        {
+            m_sortTopVertex = true;
+        }
+        else
+        {
+            m_sortTopVertex = false;
+        }
+
+    }
 };
 
 OperatorKey BwdTrans_SumFac_Prism::m_type = GetOperatorFactory().

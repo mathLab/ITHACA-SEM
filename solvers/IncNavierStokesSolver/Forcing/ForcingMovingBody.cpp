@@ -790,7 +790,7 @@ void ForcingMovingBody::TensionedCableModel(
                 for(int j = 0 ; j < m_NumVariable+1; ++j)
                 {
                     fft_in[j][i] = temp[j];
-                   }
+                }
             }
         }
         else
@@ -1030,13 +1030,13 @@ void ForcingMovingBody::EvaluateStructDynModel(
     //Get the hydrodynamic forces from the fluid solver
     Array<OneD, Array <OneD, NekDouble> > fces(m_motion.num_elements());
 
-    fces[0] = Array <OneD, NekDouble> (m_NumLocPlane);
-    fces[1] = Array <OneD, NekDouble> (m_NumLocPlane);
+    fces[0] = Array <OneD, NekDouble> (m_NumLocPlane,0.0);
+    fces[1] = Array <OneD, NekDouble> (m_NumLocPlane,0.0);
 
     for(int plane = 0; plane < m_NumLocPlane; plane++)
     {
-        fces[0] = m_Aeroforces;
-        fces[1] = m_Aeroforces+m_NumLocPlane;
+        fces[0][plane] = m_Aeroforces[plane];
+        fces[1][plane] = m_Aeroforces[plane+m_NumLocPlane];
     }
 
     // Fictitious mass method used to stablize the explicit coupling at
@@ -1093,6 +1093,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
     {
         int offset = cn*m_VarArraysize;
         Array<OneD, NekDouble> tmp(m_VarArraysize, 0.0);
+
         TensionedCableModel(pFields, fces[cn], tmp = m_MotionVars+offset);
     }
 
@@ -1154,7 +1155,9 @@ void ForcingMovingBody::EvaluateStructDynModel(
             {
                 bndCondExps = pFields[dir]->GetPlane(plane)
                                             ->GetBndCondExpansions();
-                bndConds = pFields[dir]->GetPlane(plane)->GetBndConditions();
+                bndConds    = pFields[dir]->GetPlane(plane)
+                                            ->GetBndConditions();
+
                 if (bndConds[i]->GetUserDefined() ==
                                             SpatialDomains::eMovingBody)
                 {

@@ -102,6 +102,13 @@ namespace Nektar
             DNekScalMatSharedPtr    m_Rinvprism;
             DNekScalMatSharedPtr    m_RTinvprism;
 
+            DNekScalMatSharedPtr    m_maxRtet;
+            DNekScalMatSharedPtr    m_maxRTtet;
+            DNekScalMatSharedPtr    m_maxRhex;
+            DNekScalMatSharedPtr    m_maxRThex;
+            DNekScalMatSharedPtr    m_maxRTinvtet;
+            DNekScalMatSharedPtr    m_maxRTinvhex;
+
             Array<OneD, NekDouble>  m_locToGloSignMult;
             Array<OneD, NekDouble>  m_multiplicity;
             Array<OneD, int>        m_map;
@@ -121,6 +128,10 @@ namespace Nektar
                 LocalRegions::PrismExpSharedPtr PrismExp,
                 DNekMatSharedPtr Rmodprism,
                 DNekMatSharedPtr RTmodprism);
+
+            void LocalTransformToLowEnergy(
+                DNekScalMatSharedPtr RTmat,
+                LocalRegions::HexExpSharedPtr maxTetExp);
 
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);

@@ -383,8 +383,8 @@ namespace Nektar
                                     
                                     // Sz
                                     Vmath::Svtsvtp(nfq,normals[0][0],fstress[4],1,
-                                                   normals[1][0],fstress[5],1,shear[1],1);
-                                    Vmath::Svtvp(nfq,normals[2][0],fstress[2],1,shear[1],1,shear[1],1);
+                                                   normals[1][0],fstress[5],1,shear[2],1);
+                                    Vmath::Svtvp(nfq,normals[2][0],fstress[2],1,shear[2],1,shear[2],1);
                                 }
                                 
                                 // T = T - (T.n)n

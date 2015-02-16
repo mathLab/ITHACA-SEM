@@ -160,7 +160,7 @@ namespace Nektar
                         m_fromField[i]->m_exp[j]->ExtractDataToCoeffs(
                             m_fromField[i]->m_fielddef[k],
                             m_fromField[i]->m_data[k],
-                            m_fromField[i]->m_fielddef[0]->m_fields[j],
+                            m_fromField[i]->m_fielddef[k]->m_fields[j],
                             m_fromField[i]->m_exp[j]->UpdateCoeffs());
                     }
                     m_fromField[i]->m_exp[j]->BwdTrans(m_fromField[i]->m_exp[j]->GetCoeffs(),
@@ -261,12 +261,14 @@ namespace Nektar
                 //TACFI
                 for (j = 0; j < npoints; ++j)
                 {
-                    temp[j] = 1 - temp[j];
+                    temp[j] = 1 - temp[j]*temp[j];
                     if(temp[j] > 0.0)
                     {
                         outfield[4][j] = outfield[4][j] + sqrt(temp[j]);
                     }
                 }
+             
+                Vmath::Zero(npoints, DotProduct,1);
             }
 
             //Divide by nfld

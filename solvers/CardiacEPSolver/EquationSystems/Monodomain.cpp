@@ -196,20 +196,19 @@ namespace Nektar
                 }
             }
         }
-	
-	else 
-	{
-		NekDouble   o_max        = m_session->GetParameter("o_max");
-
-		// Scale anisotropic conductivity values
-            	for (int i = 0; i < nVarDiffCmpts; ++i)
-            	{
-                	Vmath::Smul(nq,o_max,
+        else
+        {
+            // Otherwise apply isotropic conductivity value (o_max) to
+            // diagonal components of tensor
+            NekDouble o_max = m_session->GetParameter("o_max");
+            for (int i = 0; i < nVarDiffCmpts; ++i)
+            {
+                Vmath::Smul(nq,o_max,
                                 m_vardiff[varCoeffEnum[i]], 1,
                                 m_vardiff[varCoeffEnum[i]], 1);
-            	}
-	}
-	
+            }
+        }
+
         // Scale by scar map (range 0->1) derived from intensity map
         // (range d_min -> d_max)
         if (m_session->DefinesFunction("IsotropicConductivity"))

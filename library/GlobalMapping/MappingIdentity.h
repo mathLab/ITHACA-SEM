@@ -102,11 +102,6 @@ namespace GlobalMapping
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray); 
 
-        GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
-                Array<OneD, NekDouble>               &out0,
-                Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2);
-
         GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
             Array<OneD, NekDouble>               &outarray);
 

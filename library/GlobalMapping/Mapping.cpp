@@ -88,7 +88,94 @@ namespace Nektar
         void Mapping::v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const TiXmlElement                                *pMapping)
-        {        
+        {   
+            int phystot         = pFields[0]->GetTotPoints();
+            // Initialise variables
+            m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
+            m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
+            Array<OneD, Array<OneD, NekDouble> > coords(3);
+            for (int i = 0; i < 3; i++)
+            {
+                m_coords[i]    = Array<OneD, NekDouble> (phystot);
+                m_coordsVel[i] = Array<OneD, NekDouble> (phystot);
+                coords[i]      = Array<OneD, NekDouble> (phystot);
+            }            
+            
+            // Load coordinates           
+            const TiXmlElement* funcNameElmt = pMapping->FirstChildElement("COORDS");
+            ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
+                    "name which prescribes mapping.");
+
+            m_funcName = funcNameElmt->GetText();
+            ASSERTL0(m_session->DefinesFunction(m_funcName),
+                    "Function '" + m_funcName + "' not defined.");
+
+            // Get coordinates in the domain
+            m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
+
+            std::string s_FieldStr; 
+            // Check if function from session file defines each component
+            //      and evaluate them, otherwise use trivial transformation
+            for(int i = 0; i < 3; i++)
+            {
+                s_FieldStr = m_session->GetVariable(i);
+                if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
+                {
+                    EvaluateFunction(pFields, m_session, s_FieldStr, m_coords[i],
+                                            m_funcName);
+                    if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                    {
+                        ASSERTL0 (false,
+                                "3DH1D does not support mapping in the z-direction.");
+                    }
+                }
+                else
+                {
+                    // This coordinate is not defined, so use (x^i)' = x^i
+                    Vmath::Vcopy(phystot, coords[i], 1, m_coords[i], 1);
+                }
+            }
+            
+            // Load coordinate velocity if they are defined,
+            //      otherwise use zero to make it general
+            const TiXmlElement* velFuncNameElmt = pMapping->FirstChildElement("VEL");
+            if (velFuncNameElmt)
+            {
+                m_velFuncName = velFuncNameElmt->GetText();
+                ASSERTL0(m_session->DefinesFunction(m_velFuncName),
+                        "Function '" + m_velFuncName + "' not defined.");
+
+                std::string s_FieldStr; 
+                // Check if function from session file defines each component
+                //      and evaluate them, otherwise use 0
+                for(int i = 0; i < 3; i++)
+                {
+                    s_FieldStr = m_session->GetVariable(i);
+                    if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
+                    {
+                        EvaluateFunction(pFields, m_session, s_FieldStr, 
+                                            m_coordsVel[i], m_velFuncName);
+                        if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                        {
+                            ASSERTL0 (false,
+                                    "3DH1D does not support mapping in the z-direction.");
+                        }
+                    }
+                    else
+                    {
+                        // This coordinate velocity is not defined, so use 0
+                        Vmath::Zero(phystot, m_coordsVel[i], 1);
+                    }
+                }
+            }
+            else
+            {
+                for(int i = 0; i < 3; i++)
+                {
+                    Vmath::Zero(phystot, m_coordsVel[i], 1);
+                }
+            }            
+            
         }
       
         /**
@@ -217,6 +304,34 @@ namespace Nektar
             }
         }
         
+        void Mapping::v_GetCartesianCoordinates(
+                    Array<OneD, NekDouble>               &out0,
+                    Array<OneD, NekDouble>               &out1,
+                    Array<OneD, NekDouble>               &out2)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            
+            out0 = Array<OneD, NekDouble>(physTot, 0.0);
+            out1 = Array<OneD, NekDouble>(physTot, 0.0);
+            out2 = Array<OneD, NekDouble>(physTot, 0.0);
+            
+            Vmath::Vcopy(physTot, m_coords[0], 1, out0, 1);
+            Vmath::Vcopy(physTot, m_coords[1], 1, out1, 1);
+            Vmath::Vcopy(physTot, m_coords[2], 1, out2, 1);
+        }
+        
+        void Mapping::v_GetCoordVelocity(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            int physTot = m_fields[0]->GetTotPoints();
+            
+            for(int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                outarray[i] = Array<OneD, NekDouble>(physTot, 0.0);
+                Vmath::Vcopy(physTot, m_coordsVel[i], 1, outarray[i], 1);
+            }         
+        }
+        
         void Mapping::v_DotGradJacobian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, NekDouble>               &outarray) 
@@ -291,19 +406,6 @@ namespace Nektar
                                             outarray[i], 1);
                 }
             } 
-        }
-        
-        void Mapping::v_GetCoordVelocity(
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
-        {
-            ASSERTL0(!IsTimeDependent(),
-                     "Time-dependent mapping needs to define GetCoordVelocity function");
-            int physTot = m_fields[0]->GetTotPoints();
-            
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                outarray[i] = Array<OneD, NekDouble>(physTot, 0.0);
-            }
         }
         
         void Mapping::v_Divergence(

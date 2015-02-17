@@ -62,11 +62,20 @@ namespace GlobalMapping
     void MappingIdentity::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
-    {
-        Mapping::v_InitObject(pFields, pMapping);  
-        
+    {   
+        int phystot         = pFields[0]->GetTotPoints();
         m_constantJacobian = true;
         m_timeDependent    = false;
+        
+        m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
+        m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
+        for (int i = 0; i < 3; i++)
+        {
+            m_coords[i]    = Array<OneD, NekDouble> (phystot);
+            m_coordsVel[i] = Array<OneD, NekDouble> (phystot, 0.0);
+        }
+        
+        m_fields[0]->GetCoords(m_coords[0], m_coords[1], m_coords[2]);
         
     }
 
@@ -144,14 +153,6 @@ namespace GlobalMapping
         {
             Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
         } 
-    }
-
-    void MappingIdentity::v_GetCartesianCoordinates(
-                Array<OneD, NekDouble>               &out0,
-                Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2)
-    {
-        m_fields[0]->GetCoords(out0, out1, out2);    
     }
 
     void MappingIdentity::v_GetJacobian(

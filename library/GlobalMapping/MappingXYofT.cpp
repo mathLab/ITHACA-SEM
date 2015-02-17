@@ -67,100 +67,8 @@ namespace GlobalMapping
         
         m_timeDependent    = true;
         
-        int phystot         = pFields[0]->GetTotPoints();
-        
         ASSERTL0(m_nConvectiveFields>=2,
                "Mapping X = x + f(t), Y = y+g(t) needs 2 velocity components.");
-       
-        // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(12);
-        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
-        {
-            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
-        }
-
-        // Read and evaluate function
-        const TiXmlElement* funcNameElmt;
-        funcNameElmt = pMapping->FirstChildElement("COORDS");
-        ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
-                "name which prescribes mapping.");
-
-        m_funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(m_funcName),
-                "Function '" + m_funcName + "' not defined.");
-
-        std::string s_XFieldStr = m_session->GetVariable(0);
-        ASSERTL0(m_session->DefinesFunction(m_funcName, s_XFieldStr),
-                "Variable '" + s_XFieldStr + "' not defined.");
-        
-        std::string s_YFieldStr = m_session->GetVariable(1);
-        ASSERTL0(m_session->DefinesFunction(m_funcName, s_YFieldStr),
-                "Variable '" + s_YFieldStr + "' not defined.");     
-        
-        funcNameElmt = pMapping->FirstChildElement("VEL");
-        ASSERTL0(funcNameElmt, "Requires VEL tag, specifying function "
-                "name which prescribes mapping velocity.");
-
-        m_velFuncName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(m_velFuncName),
-                "Function '" + m_velFuncName + "' not defined.");
-
-        ASSERTL0(m_session->DefinesFunction(m_velFuncName, s_XFieldStr),
-                "Variable '" + s_XFieldStr + "' not defined.");
-        
-        ASSERTL0(m_session->DefinesFunction(m_velFuncName, s_YFieldStr),
-                "Variable '" + s_YFieldStr + "' not defined."); 
-        
-        // Evaluate x-functions --> GeometricInfo 0-1
-        EvaluateFunction(pFields, m_session, s_XFieldStr, m_GeometricInfo[0],
-                m_funcName); 
-        EvaluateFunction(pFields, m_session, s_XFieldStr, m_GeometricInfo[1],
-                m_velFuncName);
-        
-        // Evaluate y-functions --> GeometricInfo 2-3
-        EvaluateFunction(pFields, m_session, s_YFieldStr, m_GeometricInfo[2],
-                m_funcName);
-        EvaluateFunction(pFields, m_session, s_YFieldStr, m_GeometricInfo[3],
-                m_velFuncName);
-
-    }
-
-    void MappingXYofT::v_GetCartesianCoordinates(
-                Array<OneD, NekDouble>               &out0,
-                Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        Array<OneD, NekDouble> x0(physTot);
-        Array<OneD, NekDouble> x1(physTot);
-        Array<OneD, NekDouble> x2(physTot);
-
-        m_fields[0]->GetCoords(x0, x1, x2);
-        
-        // x' = m_GeometricInfo[0]
-        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, out0, 1);
-        
-        // y' = m_GeometricInfo[2]
-        Vmath::Vcopy(physTot, m_GeometricInfo[2], 1, out1, 1);
-        
-        // z' = z
-        Vmath::Vcopy(physTot, x2, 1, out2, 1);        
-    }
-    
-    void MappingXYofT::v_GetCoordVelocity(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-
-        Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[0], 1);
-        Vmath::Vcopy(physTot, m_GeometricInfo[3], 1, outarray[1], 1);
     }
 
     void MappingXYofT::v_UpdateMapping(const NekDouble time)
@@ -168,15 +76,15 @@ namespace GlobalMapping
         std::string s_XFieldStr = m_session->GetVariable(0);
         std::string s_YFieldStr = m_session->GetVariable(1);
         // Evaluate x-functions --> GeometricInfo 0-1
-        EvaluateFunction(m_fields, m_session, s_XFieldStr, m_GeometricInfo[0],
+        EvaluateFunction(m_fields, m_session, s_XFieldStr, m_coords[0],
                 m_funcName, time); 
-        EvaluateFunction(m_fields, m_session, s_XFieldStr, m_GeometricInfo[1],
+        EvaluateFunction(m_fields, m_session, s_XFieldStr, m_coordsVel[0],
                 m_velFuncName, time);
         
         // Evaluate y-functions --> GeometricInfo 2-3
-        EvaluateFunction(m_fields, m_session, s_YFieldStr, m_GeometricInfo[2],
+        EvaluateFunction(m_fields, m_session, s_YFieldStr, m_coords[1],
                 m_funcName, time);
-        EvaluateFunction(m_fields, m_session, s_YFieldStr, m_GeometricInfo[3],
+        EvaluateFunction(m_fields, m_session, s_YFieldStr, m_coordsVel[1],
                 m_velFuncName, time);
     }
 

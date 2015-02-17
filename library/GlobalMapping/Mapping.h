@@ -291,6 +291,9 @@ namespace GlobalMapping
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Fields
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
+            // Arrays with coordinates and coordinates velocity
+            Array<OneD, Array<OneD, NekDouble> >        m_coords;
+            Array<OneD, Array<OneD, NekDouble> >        m_coordsVel;
             // Arrays with geometric parameters of the mapping
             Array<OneD, Array<OneD, NekDouble> >        m_GeometricInfo;
             // Number of velocity components
@@ -298,6 +301,7 @@ namespace GlobalMapping
             
             // Name of the function containing the coordinates
             string                                      m_funcName;
+            string                                      m_velFuncName;
             
             // Flags to help the solver
             bool                                        m_constantJacobian;
@@ -354,7 +358,10 @@ namespace GlobalMapping
             GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2) =0;
+                Array<OneD, NekDouble>               &out2);
+            
+            GLOBAL_MAPPING_EXPORT virtual void v_GetCoordVelocity(
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
                 Array<OneD, NekDouble>               &outarray)             =0;
@@ -384,9 +391,6 @@ namespace GlobalMapping
             GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_GetCoordVelocity(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             GLOBAL_MAPPING_EXPORT virtual void v_Divergence(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,

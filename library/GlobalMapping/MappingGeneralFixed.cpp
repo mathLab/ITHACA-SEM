@@ -68,57 +68,9 @@ namespace GlobalMapping
         
         m_constantJacobian = false;
         m_timeDependent    = false;
-        
-        int phystot         = pFields[0]->GetTotPoints();
-        
+                
         ASSERTL0(m_nConvectiveFields>=2,
                 "General Mapping needs at least 2 velocity components.");   
-
-        // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(3);
-        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
-        {
-            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
-        }
-
-        // Read and evaluate function
-        const TiXmlElement* funcNameElmt;
-        funcNameElmt = pMapping->FirstChildElement("COORDS");
-        ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
-                "name which prescribes mapping.");
-
-        m_funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(m_funcName),
-                "Function '" + m_funcName + "' not defined.");
-
-        // Get coordinates in the domain
-        Array<OneD, Array<OneD, NekDouble> > coords(3);
-        for (int i = 0; i < 3; i++)
-        {
-            coords[i] = Array<OneD, NekDouble> (phystot);
-        }
-        m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
-        
-        std::string s_FieldStr; 
-        for(int i = 0; i < m_nConvectiveFields; i++)
-        {
-            s_FieldStr = m_session->GetVariable(i);
-            if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
-            {
-                EvaluateFunction(pFields, m_session, s_FieldStr, m_GeometricInfo[i],
-                                        m_funcName);
-                if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-                {
-                    ASSERTL0 (false,
-                            "3DH1D does not support mapping in the z-direction.");
-                }
-            }
-            else
-            {
-                // This coordinate is not defined, so use (x^i)' = x^i
-                Vmath::Vcopy(phystot, coords[i], 1, m_GeometricInfo[i], 1);
-            }
-        }
        
         CalculateMetricTerms();
         CalculateChristoffel();
@@ -207,23 +159,6 @@ namespace GlobalMapping
             }
             
         } 
-    }
-    
-    void MappingGeneralFixed::v_GetCartesianCoordinates(
-                Array<OneD, NekDouble>               &out0,
-                Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // x' = m_GeometricInfo[0]
-        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, out0, 1);
-        
-        // y' = m_GeometricInfo[1]
-        Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, out1, 1);
-        
-        // z' = m_GeometricInfo[2]
-        Vmath::Vcopy(physTot, m_GeometricInfo[2], 1, out2, 1);      
     }
 
     void MappingGeneralFixed::v_GetJacobian(
@@ -352,7 +287,7 @@ namespace GlobalMapping
             for( int j = 0; j<nvel; j++)
             {
                 m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                            m_GeometricInfo[i],
+                                            m_coords[i],
                                             m_deriv[i*nvel+j]);
             }
         }

@@ -263,13 +263,13 @@ namespace GlobalMapping
             // Define if mapping is constant or time-dependent
             GLOBAL_MAPPING_EXPORT bool IsTimeDependent()
             {
-                return v_IsTimeDependent();
+                return m_timeDependent;
             }          
             
             // Define if the Jacobian of the transformation is constant
             GLOBAL_MAPPING_EXPORT bool HasConstantJacobian()
             {
-                return v_HasConstantJacobian();
+                return m_constantJacobian;
             }
             
             //
@@ -298,6 +298,10 @@ namespace GlobalMapping
             
             // Name of the function containing the coordinates
             string                                      m_funcName;
+            
+            // Flags to help the solver
+            bool                                        m_constantJacobian;
+            bool                                        m_timeDependent;
             
             // Static variables to load mapping
             static MappingSharedPtr                     m_mappingPtr;
@@ -400,10 +404,6 @@ namespace GlobalMapping
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const bool                                      generalized);
-            
-            GLOBAL_MAPPING_EXPORT virtual bool v_IsTimeDependent() =0;  
-            
-            GLOBAL_MAPPING_EXPORT virtual bool v_HasConstantJacobian() =0;
             
             GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
                                                 const NekDouble time) =0;

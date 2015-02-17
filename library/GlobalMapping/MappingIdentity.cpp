@@ -63,7 +63,11 @@ namespace GlobalMapping
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {
-        Mapping::v_InitObject(pFields, pMapping);        
+        Mapping::v_InitObject(pFields, pMapping);  
+        
+        m_constantJacobian = true;
+        m_timeDependent    = false;
+        
     }
 
     void MappingIdentity::v_ContravarToCartesian(
@@ -268,16 +272,6 @@ namespace GlobalMapping
                 outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
             }            
         }
-    }
-
-    bool MappingIdentity::v_IsTimeDependent()
-    {
-        return false;
-    }
-
-    bool MappingIdentity::v_HasConstantJacobian()
-    {
-        return true;
     }
 
     void MappingIdentity::v_UpdateMapping(const NekDouble time)

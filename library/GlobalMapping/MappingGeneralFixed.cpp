@@ -66,6 +66,9 @@ namespace GlobalMapping
     {
         Mapping::v_InitObject(pFields, pMapping); 
         
+        m_constantJacobian = false;
+        m_timeDependent    = false;
+        
         int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields>=2,
@@ -313,16 +316,6 @@ namespace GlobalMapping
                 }                
             }
         } 
-    }
-
-    bool MappingGeneralFixed::v_IsTimeDependent()
-    {
-        return false;
-    }
-
-    bool MappingGeneralFixed::v_HasConstantJacobian()
-    {
-        return false;
     }
 
     void MappingGeneralFixed::v_UpdateMapping(const NekDouble time)

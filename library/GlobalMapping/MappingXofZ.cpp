@@ -63,7 +63,10 @@ namespace GlobalMapping
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {
-        Mapping::v_InitObject(pFields, pMapping);     
+        Mapping::v_InitObject(pFields, pMapping); 
+        
+        m_constantJacobian = true;
+        m_timeDependent    = false;
                 
         int phystot         = pFields[0]->GetTotPoints();
         
@@ -375,16 +378,6 @@ namespace GlobalMapping
         Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[0],1,
                                         outarray[2*nvel+2],1); // U1 * fzz 
     }   
-
-    bool MappingXofZ::v_IsTimeDependent()
-    {
-        return false;
-    }
-
-    bool MappingXofZ::v_HasConstantJacobian()
-    {
-        return true;
-    }
 
     void MappingXofZ::v_UpdateMapping(const NekDouble time)
     {

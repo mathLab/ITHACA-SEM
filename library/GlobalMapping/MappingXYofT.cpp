@@ -65,6 +65,8 @@ namespace GlobalMapping
     {
         MappingIdentity::v_InitObject(pFields, pMapping);
         
+        m_timeDependent    = true;
+        
         int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields>=2,
@@ -159,11 +161,6 @@ namespace GlobalMapping
 
         Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[0], 1);
         Vmath::Vcopy(physTot, m_GeometricInfo[3], 1, outarray[1], 1);
-    }
-
-    bool MappingXYofT::v_IsTimeDependent()
-    {
-        return true;
     }
 
     void MappingXYofT::v_UpdateMapping(const NekDouble time)

@@ -64,6 +64,9 @@ namespace GlobalMapping
     {
         Mapping::v_InitObject(pFields, pMapping);
         
+        m_constantJacobian = true;
+        m_timeDependent    = false;
+        
         int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields==3,
@@ -378,16 +381,6 @@ namespace GlobalMapping
         Vmath::Vvtvp(physTot, m_GeometricInfo[8], 1, inarray[1], 1, 
                                 outarray[2*nvel+2], 1, outarray[2*nvel+2],1);
     }    
-
-    bool MappingXYofZ::v_IsTimeDependent()
-    {
-        return false;
-    }
-
-    bool MappingXYofZ::v_HasConstantJacobian()
-    {
-        return true;
-    }
 
     void MappingXYofZ::v_UpdateMapping(const NekDouble time)
     {

@@ -81,6 +81,7 @@ namespace Nektar
         NekDouble m_pz2;
         NekDouble m_pis;
         NekDouble m_strength;
+        NekDouble m_chiCapMembrane;
 
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time);

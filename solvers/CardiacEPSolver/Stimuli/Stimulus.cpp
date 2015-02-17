@@ -75,7 +75,7 @@ namespace Nektar
         
         m_Protocol = GetProtocolFactory().CreateInstance(
                                 vTypeP, pSession, vProtocol);
- 
+
     }
     
     

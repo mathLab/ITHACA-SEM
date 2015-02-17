@@ -68,6 +68,8 @@ namespace Nektar
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
+        m_chiCapMembrane = m_session->GetParameter("chi")
+                            * m_session->GetParameter("Cm");
         
         if (!pXml)
         {
@@ -135,7 +137,8 @@ namespace Nektar
         m_field->GetCoords(x0,x1,x2);
 
         // Get the protocol amplitude
-        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
+        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength
+                            / m_chiCapMembrane;
         
         switch (dim)
         {

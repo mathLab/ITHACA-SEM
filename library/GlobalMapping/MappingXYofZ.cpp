@@ -73,7 +73,7 @@ namespace GlobalMapping
                "Mapping X = x + f(z), Y = y+g(z) needs 3 velocity components.");
        
         // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(12);
+        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(9);
         for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
         {
             m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
@@ -104,35 +104,33 @@ namespace GlobalMapping
         EvaluateFunction(pFields, m_session, s_XFieldStr, m_GeometricInfo[0],
                 m_funcName);
 
-        // Calculate derivatives of transformation --> m_GeometricInfo 1-3
-        for(int i = 1; i < 4; i++)
+        // Calculate derivatives of transformation --> m_GeometricInfo 1-2
+        for(int i = 1; i < 3; i++)
         {
             pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                     m_GeometricInfo[i-1],m_GeometricInfo[i]);
         }
-        // m_GeometricInfo[4] = fz^2
+        // m_GeometricInfo[3] = fz^2
         Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[1],1,
-                                                m_GeometricInfo[4],1);
-        // m_GeometricInfo[5] = fz*fzz
-        Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[2],1,
-                                                m_GeometricInfo[5],1);       
+                                                m_GeometricInfo[3],1);       
         
-        // Evaluate y-function --> GeometricInfo 6
-        EvaluateFunction(pFields, m_session, s_YFieldStr, m_GeometricInfo[6],
+        // Evaluate y-function --> GeometricInfo 4
+        EvaluateFunction(pFields, m_session, s_YFieldStr, m_GeometricInfo[4],
                 m_funcName);
 
-        // Calculate derivatives of transformation m_GeometricInfo 7-9
-        for(int i = 7; i < 10; i++)
+        // Calculate derivatives of transformation m_GeometricInfo 5-6
+        for(int i = 5; i < 7; i++)
         {
             pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                     m_GeometricInfo[i-1],m_GeometricInfo[i]);
         }
-        // m_GeometricInfo[10] = gz^2
-        Vmath::Vmul(phystot,m_GeometricInfo[7],1,m_GeometricInfo[7],1,
-                                                m_GeometricInfo[10],1);
-        // m_GeometricInfo[11] = gz*gzz
-        Vmath::Vmul(phystot,m_GeometricInfo[7],1,m_GeometricInfo[8],1,
-                                                m_GeometricInfo[11],1);
+        // m_GeometricInfo[7] = gz^2
+        Vmath::Vmul(phystot,m_GeometricInfo[5],1,m_GeometricInfo[5],1,
+                                                m_GeometricInfo[7],1);
+        
+        // m_GeometricInfo[8] = gz*fz
+        Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[5],1,
+                                                m_GeometricInfo[8],1);
 
         pFields[0]->SetWaveSpace(waveSpace);
 
@@ -149,7 +147,7 @@ namespace GlobalMapping
                                 outarray[0], 1, outarray[0],1);
         
         // U2 = u2 + gz*u3
-        Vmath::Vvtvp(physTot, m_GeometricInfo[7], 1, inarray[2], 1, 
+        Vmath::Vvtvp(physTot, m_GeometricInfo[5], 1, inarray[2], 1, 
                                 outarray[1], 1, outarray[1],1);
         
         // U3 = u3
@@ -172,7 +170,7 @@ namespace GlobalMapping
         // U3 = u3 - fz*u1 - gz*u2
         Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, wk, 1);
         Vmath::Vsub(physTot, inarray[2], 1, wk, 1, outarray[2], 1);
-        Vmath::Vmul(physTot, m_GeometricInfo[7], 1, inarray[1], 1, wk, 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[5], 1, inarray[1], 1, wk, 1);
         Vmath::Vsub(physTot, inarray[2], 1, wk, 1, outarray[2], 1);
     }
 
@@ -188,7 +186,7 @@ namespace GlobalMapping
         Vmath::Vsub(physTot, outarray[0], 1, wk, 1, outarray[0], 1);        
         
         // U2 = u2 - gz*u3
-        Vmath::Vmul(physTot, m_GeometricInfo[7], 1, inarray[2], 1, wk, 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[5], 1, inarray[2], 1, wk, 1);
         Vmath::Vsub(physTot, outarray[1], 1, wk, 1, outarray[1], 1);
         
         // U3 = u3
@@ -210,7 +208,7 @@ namespace GlobalMapping
         // U3 = u3 + fz*u1 + gz*u2
         Vmath::Vmul(physTot, m_GeometricInfo[1], 1, 
                              inarray[0], 1, outarray[2], 1);
-        Vmath::Vvtvp(physTot, m_GeometricInfo[7], 1, inarray[1], 1,
+        Vmath::Vvtvp(physTot, m_GeometricInfo[5], 1, inarray[1], 1,
                                 outarray[2], 1, outarray[2], 1);        
         Vmath::Vadd(physTot, inarray[2], 1, outarray[2], 1, outarray[2], 1);
     }
@@ -232,7 +230,7 @@ namespace GlobalMapping
         Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, out0, 1);
         
         // y' = m_GeometricInfo[6]
-        Vmath::Vcopy(physTot, m_GeometricInfo[6], 1, out1, 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[4], 1, out1, 1);
         
         // z' = z
         Vmath::Vcopy(physTot, x2, 1, out2, 1);        
@@ -276,13 +274,13 @@ namespace GlobalMapping
         Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[2*nvel+1], 1);
 
         // G_{23} and G_{32} = gz
-        Vmath::Vcopy(physTot, m_GeometricInfo[7], 1, outarray[1*nvel+2], 1);
-        Vmath::Vcopy(physTot, m_GeometricInfo[7], 1, outarray[2*nvel+1], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[5], 1, outarray[1*nvel+2], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[5], 1, outarray[2*nvel+1], 1);
 
         // G^{33} = (1+fz^2 + gz^2)
-        Vmath::Vadd(physTot, m_GeometricInfo[4], 1, outarray[2*nvel+2], 1, 
+        Vmath::Vadd(physTot, m_GeometricInfo[3], 1, outarray[2*nvel+2], 1, 
                                                     outarray[2*nvel+2], 1);
-        Vmath::Vadd(physTot, m_GeometricInfo[10], 1, outarray[2*nvel+2], 1, 
+        Vmath::Vadd(physTot, m_GeometricInfo[7], 1, outarray[2*nvel+2], 1, 
                                                     outarray[2*nvel+2], 1);
     }
 
@@ -305,16 +303,15 @@ namespace GlobalMapping
         }            
 
         // G^{11} = 1+fz^2
-        Vmath::Vadd(physTot, outarray[0+nvel*0], 1, m_GeometricInfo[4], 1,
+        Vmath::Vadd(physTot, outarray[0+nvel*0], 1, m_GeometricInfo[3], 1,
                                                     outarray[0+nvel*0], 1);
 
         // G^{22} = 1+gz^2
-        Vmath::Vadd(physTot, outarray[1+nvel*1], 1, m_GeometricInfo[10], 1,
+        Vmath::Vadd(physTot, outarray[1+nvel*1], 1, m_GeometricInfo[7], 1,
                                                     outarray[1+nvel*1], 1);
 
         // G^{12} and G^{21} = fz*gz
-        Vmath::Vmul(physTot, m_GeometricInfo[1],1,m_GeometricInfo[7],1,
-                                                  outarray[0+nvel*1], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[8],1, outarray[0+nvel*1], 1);
         Vmath::Vcopy(physTot, outarray[0+nvel*1], 1, outarray[1*nvel+0], 1);
 
         // G^{13} and G^{31} = -fz
@@ -324,7 +321,7 @@ namespace GlobalMapping
         Vmath::Vcopy(physTot, wk, 1, outarray[2*nvel+0], 1);
 
         // G^{23} and G^{32} = -gz
-        Vmath::Vcopy(physTot, m_GeometricInfo[7],1,wk,1); // fz
+        Vmath::Vcopy(physTot, m_GeometricInfo[5],1,wk,1); // fz
         Vmath::Neg(physTot, wk, 1);
         Vmath::Vcopy(physTot, wk, 1, outarray[1*nvel+2], 1);
         Vmath::Vcopy(physTot, wk, 1, outarray[2*nvel+1], 1);
@@ -353,7 +350,7 @@ namespace GlobalMapping
                                                 outarray[0*nvel+2],1);
         
         // outarray(1,2) = U3 * gzz
-        Vmath::Vmul(physTot,m_GeometricInfo[8],1,inarray[2],1,
+        Vmath::Vmul(physTot,m_GeometricInfo[6],1,inarray[2],1,
                                                 outarray[1*nvel+2],1);
         
     }
@@ -378,7 +375,7 @@ namespace GlobalMapping
         
         // outarray(2,2) = U1 * fzz + U^2 * gzz
         Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[0],1,outarray[2*nvel+2],1); // U1 * fzz
-        Vmath::Vvtvp(physTot, m_GeometricInfo[8], 1, inarray[1], 1, 
+        Vmath::Vvtvp(physTot, m_GeometricInfo[6], 1, inarray[1], 1, 
                                 outarray[2*nvel+2], 1, outarray[2*nvel+2],1);
     }    
 

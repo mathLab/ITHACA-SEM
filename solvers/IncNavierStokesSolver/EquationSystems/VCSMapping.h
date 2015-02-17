@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERS_VCSMAPPING_H
 
 #include <IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.h>
-#include <SolverUtils/Mapping/Mapping.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -72,7 +72,7 @@ namespace Nektar
 
     protected:
         // Mapping object
-        SolverUtils::MappingSharedPtr               m_mapping;
+        GlobalMapping::MappingSharedPtr               m_mapping;
         
         bool                                        m_verbose;
         

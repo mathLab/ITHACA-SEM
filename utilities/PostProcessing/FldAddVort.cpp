@@ -8,7 +8,7 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <SolverUtils/Mapping/Mapping.h>
+#include <GlobalMapping/Mapping.h>
 
 using namespace Nektar;
 
@@ -214,7 +214,8 @@ int main(int argc, char *argv[])
             }
             //----------------------------------------------
             // Check if mapping was defined
-            SolverUtils::MappingSharedPtr mapping;// = SolverUtils::Mapping::Load(vSession, Exp);
+            GlobalMapping::MappingSharedPtr mapping = 
+                                GlobalMapping::Mapping::Load(vSession, Exp);
             if( mapping)
             {
                 //Convert velocity to Cartesian system

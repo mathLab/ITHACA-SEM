@@ -214,7 +214,8 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
     // Check if mapping was defined
-    SolverUtils::MappingSharedPtr mapping;// = SolverUtils::Mapping::Load(vSession, Exp);
+    GlobalMapping::MappingSharedPtr mapping = 
+                            GlobalMapping::Mapping::Load(vSession, Exp);
     if( mapping)
     {
         //Convert velocity to Cartesian system

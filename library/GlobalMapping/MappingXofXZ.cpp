@@ -33,12 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Mapping/MappingXofXZ.h>
+#include <GlobalMapping/MappingXofXZ.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace GlobalMapping
 {
 
     std::string MappingXofXZ::className =

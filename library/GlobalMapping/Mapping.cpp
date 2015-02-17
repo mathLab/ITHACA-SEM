@@ -33,11 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Mapping/Mapping.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
-    namespace SolverUtils
+    namespace GlobalMapping
     {
         MappingSharedPtr Mapping::m_mappingPtr;
         bool             Mapping::m_init = false;

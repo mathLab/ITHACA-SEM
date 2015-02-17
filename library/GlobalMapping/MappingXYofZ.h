@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingXYofXY.h
+// File: MappingXYofZ.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,42 +29,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Mapping of the type X = X(x,y), Y = Y(x,y)
+// Description: Mapping of the type X = x + f(z), Y = y + g(z)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_MAPPINGXYOFXY
-#define NEKTAR_SOLVERUTILS_MAPPINGXYOFXY
+#ifndef NEKTAR_GLOBALMAPPING_MAPPINGXYOFZ
+#define NEKTAR_GLOBALMAPPING_MAPPINGXYOFZ
 
 #include <string>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/Mapping/Mapping.h>
+#include <GlobalMapping/GlobalMappingDeclspec.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace GlobalMapping
 {
-
-    class MappingXYofXY: public Mapping
+    class MappingXYofZ: public Mapping
     {
     public:
 
-        friend class MemoryManager<MappingXYofXY> ;
+        friend class MemoryManager<MappingXYofZ> ;
 
         /// Creates an instance of this class
-        SOLVER_UTILS_EXPORT
+        GLOBAL_MAPPING_EXPORT
         static MappingSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr        &pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
         {
             MappingSharedPtr p =
-                    MemoryManager<MappingXYofXY>::AllocateSharedPtr(pSession,
-                                                                    pFields);
+                    MemoryManager<MappingXYofZ>::AllocateSharedPtr(pSession,
+                                                                   pFields);
             p->InitObject(pFields, pMapping);
             return p;
         }
@@ -73,70 +72,64 @@ namespace SolverUtils
         static std::string className;
 
     protected:
-        // Functions and variables to calculate the terms 
-        //      of the metric tensor and of the Christoffel symbols
-        void CalculateMetricTensor();
-
-        void CalculateChristoffel();
-
-        Array<OneD, Array<OneD, NekDouble> >        m_metricTensor;
-        Array<OneD, Array<OneD, NekDouble> >        m_Christoffel;
-
-
     // Virtual functions
-        SOLVER_UTILS_EXPORT
+        GLOBAL_MAPPING_EXPORT
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping);
 
-        SOLVER_UTILS_EXPORT virtual void v_ContravarToCartesian(
+        GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        SOLVER_UTILS_EXPORT virtual void v_CovarToCartesian(
+        GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);            
 
-        SOLVER_UTILS_EXPORT virtual void v_ContravarFromCartesian(
+        GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        SOLVER_UTILS_EXPORT virtual void v_CovarFromCartesian(
+        GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray); 
 
-        SOLVER_UTILS_EXPORT virtual void v_GetCartesianCoordinates(
+        GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
                 Array<OneD, NekDouble>               &out2);
 
-        SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
+        GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
             Array<OneD, NekDouble>               &outarray);
 
-        SOLVER_UTILS_EXPORT virtual void v_GetMetricTensor(
+        GLOBAL_MAPPING_EXPORT virtual void v_DotGradJacobian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>               &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        SOLVER_UTILS_EXPORT virtual void v_GetInvMetricTensor(
+        GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelContravar(
+        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelCovar(
+        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();  
+        GLOBAL_MAPPING_EXPORT virtual bool v_IsTimeDependent();  
 
-        SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian();
+        GLOBAL_MAPPING_EXPORT virtual bool v_HasConstantJacobian();
 
-        SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(const NekDouble time);
+        GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
 
     private:
 
-        MappingXYofXY(const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);  
+        MappingXYofZ(const LibUtilities::SessionReaderSharedPtr       &pSession,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
     };
 

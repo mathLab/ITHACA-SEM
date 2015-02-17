@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingXofZ.cpp
+// File: MappingXYofZ.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,49 +29,48 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Mapping of the type X = x + f(z)
+// Description: Mapping of the type X = x + f(z), Y = y + g(z)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Mapping/MappingXofZ.h>
+#include <GlobalMapping/MappingXYofZ.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace GlobalMapping
 {
 
-    std::string MappingXofZ::className =
-            GetMappingFactory().RegisterCreatorFunction("XofZ",
-                    MappingXofZ::create, "X = x + f(z)");
+    std::string MappingXYofZ::className =
+            GetMappingFactory().RegisterCreatorFunction("XYofZ",
+                    MappingXYofZ::create, "X = x + f(z), Y = y +g(z)");
 
     /**
      *
      */
-    MappingXofZ::MappingXofZ(
+    MappingXYofZ::MappingXYofZ(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
         : Mapping(pSession, pFields)
     {
     }
 
-
     /**
      *
      */
-    void MappingXofZ::v_InitObject(
+    void MappingXYofZ::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {
-        Mapping::v_InitObject(pFields, pMapping);     
-                
+        Mapping::v_InitObject(pFields, pMapping);
+        
         int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields==3,
-                    "Mapping X = x + f(z) needs 3 velocity components.");
-        
+               "Mapping X = x + f(z), Y = y+g(z) needs 3 velocity components.");
+       
         // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(6);
+        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(12);
         for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
         {
             m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
@@ -87,49 +86,74 @@ namespace SolverUtils
         ASSERTL0(m_session->DefinesFunction(m_funcName),
                 "Function '" + m_funcName + "' not defined.");
 
-        std::string s_FieldStr = m_session->GetVariable(0);
-        ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
-                "Variable '" + s_FieldStr + "' not defined.");
+        std::string s_XFieldStr = m_session->GetVariable(0);
+        ASSERTL0(m_session->DefinesFunction(m_funcName, s_XFieldStr),
+                "Variable '" + s_XFieldStr + "' not defined.");
+        
+        std::string s_YFieldStr = m_session->GetVariable(1);
+        ASSERTL0(m_session->DefinesFunction(m_funcName, s_YFieldStr),
+                "Variable '" + s_YFieldStr + "' not defined.");
         
         bool waveSpace = pFields[0]->GetWaveSpace();
-        pFields[0]->SetWaveSpace(false);
+        pFields[0]->SetWaveSpace(false);        
         
-        EvaluateFunction(pFields, m_session, s_FieldStr, m_GeometricInfo[0],
+        // Evaluate x-function --> GeometricInfo 0
+        EvaluateFunction(pFields, m_session, s_XFieldStr, m_GeometricInfo[0],
                 m_funcName);
 
-        // Calculate derivatives of transformation
+        // Calculate derivatives of transformation --> m_GeometricInfo 1-3
         for(int i = 1; i < 4; i++)
         {
-            pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],m_GeometricInfo[i-1],m_GeometricInfo[i]);
+            pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                    m_GeometricInfo[i-1],m_GeometricInfo[i]);
         }
         // m_GeometricInfo[4] = fz^2
-        Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[1],1,m_GeometricInfo[4],1);
+        Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[1],1,
+                                                m_GeometricInfo[4],1);
         // m_GeometricInfo[5] = fz*fzz
-        Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[2],1,m_GeometricInfo[5],1);
+        Vmath::Vmul(phystot,m_GeometricInfo[1],1,m_GeometricInfo[2],1,
+                                                m_GeometricInfo[5],1);       
+        
+        // Evaluate y-function --> GeometricInfo 6
+        EvaluateFunction(pFields, m_session, s_YFieldStr, m_GeometricInfo[6],
+                m_funcName);
+
+        // Calculate derivatives of transformation m_GeometricInfo 7-9
+        for(int i = 7; i < 10; i++)
+        {
+            pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                    m_GeometricInfo[i-1],m_GeometricInfo[i]);
+        }
+        // m_GeometricInfo[10] = gz^2
+        Vmath::Vmul(phystot,m_GeometricInfo[7],1,m_GeometricInfo[7],1,
+                                                m_GeometricInfo[10],1);
+        // m_GeometricInfo[11] = gz*gzz
+        Vmath::Vmul(phystot,m_GeometricInfo[7],1,m_GeometricInfo[8],1,
+                                                m_GeometricInfo[11],1);
 
         pFields[0]->SetWaveSpace(waveSpace);
 
     }
 
-    void MappingXofZ::v_ContravarToCartesian(
+    void MappingXYofZ::v_ContravarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> wk(physTot, 0.0);
         
         // U1 = u1 + fz*u3
-        Vmath::Vmul(physTot, inarray[2], 1, m_GeometricInfo[1], 1, wk, 1);
-        Vmath::Vadd(physTot, wk, 1, inarray[0], 1, outarray[0],1);
+        Vmath::Vvtvp(physTot, m_GeometricInfo[1], 1, inarray[2], 1, 
+                                outarray[0], 1, outarray[0],1);
         
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
+        // U2 = u2 + gz*u3
+        Vmath::Vvtvp(physTot, m_GeometricInfo[7], 1, inarray[2], 1, 
+                                outarray[1], 1, outarray[1],1);
         
         // U3 = u3
         Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
     }
 
-    void MappingXofZ::v_CovarToCartesian(
+    void MappingXYofZ::v_CovarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -142,12 +166,14 @@ namespace SolverUtils
         // U2 = u2
         Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
         
-        // U3 = u3 - fz*u1
+        // U3 = u3 - fz*u1 - gz*u2
         Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, wk, 1);
+        Vmath::Vsub(physTot, inarray[2], 1, wk, 1, outarray[2], 1);
+        Vmath::Vmul(physTot, m_GeometricInfo[7], 1, inarray[1], 1, wk, 1);
         Vmath::Vsub(physTot, inarray[2], 1, wk, 1, outarray[2], 1);
     }
 
-    void MappingXofZ::v_ContravarFromCartesian(
+    void MappingXYofZ::v_ContravarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -156,16 +182,17 @@ namespace SolverUtils
         
         // U1 = u1 - fz * u3
         Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, wk, 1);
-        Vmath::Vsub(physTot, inarray[0], 1, wk, 1, outarray[0], 1);        
+        Vmath::Vsub(physTot, outarray[0], 1, wk, 1, outarray[0], 1);        
         
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
+        // U2 = u2 - gz*u3
+        Vmath::Vmul(physTot, m_GeometricInfo[7], 1, inarray[2], 1, wk, 1);
+        Vmath::Vsub(physTot, outarray[1], 1, wk, 1, outarray[1], 1);
         
         // U3 = u3
         Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);        
     }
 
-    void MappingXofZ::v_CovarFromCartesian(
+    void MappingXYofZ::v_CovarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -177,13 +204,15 @@ namespace SolverUtils
         // U2 = u2
         Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
         
-        // U3 = u3 + fz*u1
+        // U3 = u3 + fz*u1 + gz*u2
         Vmath::Vmul(physTot, m_GeometricInfo[1], 1, 
                              inarray[0], 1, outarray[2], 1);
+        Vmath::Vvtvp(physTot, m_GeometricInfo[7], 1, inarray[1], 1,
+                                outarray[2], 1, outarray[2], 1);        
         Vmath::Vadd(physTot, inarray[2], 1, outarray[2], 1, outarray[2], 1);
     }
-    
-    void MappingXofZ::v_GetCartesianCoordinates(
+
+    void MappingXYofZ::v_GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
                 Array<OneD, NekDouble>               &out2)
@@ -199,137 +228,106 @@ namespace SolverUtils
         // x' = m_GeometricInfo[0]
         Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, out0, 1);
         
-        // y' = y
-        Vmath::Vcopy(physTot, x1, 1, out1, 1);    
+        // y' = m_GeometricInfo[6]
+        Vmath::Vcopy(physTot, m_GeometricInfo[6], 1, out1, 1);
         
         // z' = z
         Vmath::Vcopy(physTot, x2, 1, out2, 1);        
     }
 
-    void MappingXofZ::v_GetJacobian(
+    void MappingXYofZ::v_GetJacobian(
         Array<OneD, NekDouble>               &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
         Vmath::Fill(physTot, 1.0, outarray, 1);
     }
     
-    void MappingXofZ::v_DotGradJacobian(
+    void MappingXYofZ::v_DotGradJacobian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, NekDouble>               &outarray)
     {
-        int physTot = m_fields[0]->GetTotPoints();
-        
+        int physTot = m_fields[0]->GetTotPoints();        
         Vmath::Zero(physTot, outarray, 1);   
     }
 
-    void MappingXofZ::v_GetMetricTensor(
+    void MappingXYofZ::v_GetMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            Array<OneD, NekDouble> wk(physTot, 0.0);
-            
-            for (int i=0; i<nvel*nvel; i++)
-            {
-                outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-            }
-            // Fill diagonal with 1.0
-            for (int i=0; i<nvel; i++)
-            {
-                Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+        int physTot = m_fields[0]->GetTotPoints();
+        int nvel = m_nConvectiveFields;
+        Array<OneD, NekDouble> wk(physTot, 0.0);
+
+        for (int i=0; i<nvel*nvel; i++)
+        {
+            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        }
+        // Fill diagonal with 1.0
+        for (int i=0; i<nvel; i++)
+        {
+            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1,
                                         outarray[i+nvel*i], 1); 
-            }            
-            
-            // G_{13} and G_{31} = fz
-            Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[0*nvel+2], 1);
-            Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[2*nvel+0], 1);
-            
-            // G^{33} = (1+fz^2)
-            Vmath::Vmul(physTot, m_GeometricInfo[1], 1,
-                                m_GeometricInfo[1], 1, wk, 1); // fz^2
-            Vmath::Vadd(physTot, wk, 1, outarray[2*nvel+2], 1, 
-                                        outarray[2*nvel+2], 1);
+        }            
+
+        // G_{13} and G_{31} = fz
+        Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[1*nvel+2], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[1], 1, outarray[2*nvel+1], 1);
+
+        // G_{23} and G_{32} = gz
+        Vmath::Vcopy(physTot, m_GeometricInfo[7], 1, outarray[1*nvel+2], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[7], 1, outarray[2*nvel+1], 1);
+
+        // G^{33} = (1+fz^2 + gz^2)
+        Vmath::Vadd(physTot, m_GeometricInfo[4], 1, outarray[2*nvel+2], 1, 
+                                                    outarray[2*nvel+2], 1);
+        Vmath::Vadd(physTot, m_GeometricInfo[10], 1, outarray[2*nvel+2], 1, 
+                                                    outarray[2*nvel+2], 1);
     }
 
-    void MappingXofZ::v_GetInvMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-            int physTot = m_fields[0]->GetTotPoints();
-            int nvel = m_nConvectiveFields;
-            Array<OneD, NekDouble> wk(physTot, 0.0);
-            
-            for (int i=0; i<nvel*nvel; i++)
-            {
-                outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-            }
-            // Fill diagonal with 1.0
-            for (int i=0; i<nvel; i++)
-            {
-                Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
-                                            outarray[i+nvel*i], 1); 
-            }            
-            
-            // G^{13} and G^{31} = -fz
-            Vmath::Vcopy(physTot, m_GeometricInfo[1],1,wk,1); // fz
-            Vmath::Neg(physTot, wk, 1);
-            Vmath::Vcopy(physTot, wk, 1, outarray[0*nvel+2], 1);
-            Vmath::Vcopy(physTot, wk, 1, outarray[2*nvel+0], 1);
-
-            // G^{11} = (1+fz^2)
-            Vmath::Vmul(physTot, m_GeometricInfo[1], 1,
-                                m_GeometricInfo[1], 1, wk, 1); // fz^2
-            Vmath::Sadd(physTot, 1.0, wk, 1, outarray[0*nvel+0], 1);
-    }
-
-    void MappingXofZ::v_LowerIndex(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    void MappingXYofZ::v_GetInvMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
+        int nvel = m_nConvectiveFields;
         Array<OneD, NekDouble> wk(physTot, 0.0);
-        
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, 
-                                                    outarray[0], 1); //in[2]*fz
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, 
-                                                    outarray[2], 1); //in[0]*fz
-        
-        Vmath::Vadd(physTot, outarray[0], 1, inarray[0], 1, 
-                                                    outarray[0], 1); // out[0] = in[0] + in[2] * fz
-        
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1); // out[1] = in[1]]
 
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, m_GeometricInfo[1], 1, 
-                                                        wk, 1); // fz^2
-        Vmath::Sadd(physTot, 1.0, wk, 1, wk, 1); // 1+fz^2
-        Vmath::Vmul(physTot, wk, 1, inarray[2],1, wk, 1); // (1+fz^2)*in[2]
-        Vmath::Vadd(physTot, wk, 1, outarray[2],1, outarray[2], 1); // out[2] = fz*in[0] + (1+fz^2)*in[2]
+        for (int i=0; i<nvel*nvel; i++)
+        {
+            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+        }
+        // Fill diagonal with 1.0
+        for (int i=0; i<nvel; i++)
+        {
+            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                        outarray[i+nvel*i], 1); 
+        }            
+
+        // G^{11} = 1+fz^2
+        Vmath::Vadd(physTot, outarray[0+nvel*0], 1, m_GeometricInfo[4], 1,
+                                                    outarray[0+nvel*0], 1);
+
+        // G^{22} = 1+gz^2
+        Vmath::Vadd(physTot, outarray[1+nvel*1], 1, m_GeometricInfo[10], 1,
+                                                    outarray[1+nvel*1], 1);
+
+        // G^{12} and G^{21} = fz*gz
+        Vmath::Vmul(physTot, m_GeometricInfo[1],1,m_GeometricInfo[7],1,
+                                                  outarray[0+nvel*1], 1);
+        Vmath::Vcopy(physTot, outarray[0+nvel*1], 1, outarray[1*nvel+0], 1);
+
+        // G^{13} and G^{31} = -fz
+        Vmath::Vcopy(physTot, m_GeometricInfo[1],1,wk,1); // fz
+        Vmath::Neg(physTot, wk, 1);
+        Vmath::Vcopy(physTot, wk, 1, outarray[0*nvel+2], 1);
+        Vmath::Vcopy(physTot, wk, 1, outarray[2*nvel+0], 1);
+
+        // G^{23} and G^{32} = -gz
+        Vmath::Vcopy(physTot, m_GeometricInfo[7],1,wk,1); // fz
+        Vmath::Neg(physTot, wk, 1);
+        Vmath::Vcopy(physTot, wk, 1, outarray[1*nvel+2], 1);
+        Vmath::Vcopy(physTot, wk, 1, outarray[2*nvel+1], 1);
     }
 
-    void MappingXofZ::v_RaiseIndex(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> wk(physTot, 0.0);
-        Array<OneD, NekDouble> wk_2(physTot, 0.0);
-        
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[2], 1, 
-                                                    outarray[0], 1); // in[2]*fz
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, inarray[0], 1, 
-                                                    outarray[2], 1); //in[0]*fz       
-        Vmath::Vsub(physTot, inarray[2], 1, outarray[2], 1, 
-                                                    outarray[2], 1); // out[2] = in[2] - in[0] * fz
-        
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1); // out[1] = in[1]]
-
-        Vmath::Vmul(physTot, m_GeometricInfo[1], 1, m_GeometricInfo[1], 1, 
-                                                        wk, 1); // fz^2
-        Vmath::Sadd(physTot, 1.0, wk, 1, wk, 1); // 1+fz^2
-        Vmath::Vmul(physTot, wk, 1, inarray[0],1, wk, 1); // in[0]*(1+fz^2)
-        Vmath::Vsub(physTot, wk, 1, outarray[0], 1, outarray[0], 1); // out[0] = in[0]*(1+fz^2)- in[2] * fz
-    }
-
-    void MappingXofZ::v_ApplyChristoffelContravar(
+    void MappingXYofZ::v_ApplyChristoffelContravar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -349,11 +347,15 @@ namespace SolverUtils
         
         // outarray(0,2) = U3 * fzz
         Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[2],1,
-                                            outarray[0*nvel+2],1); // U1 * fzz
+                                                outarray[0*nvel+2],1);
+        
+        // outarray(1,2) = U3 * gzz
+        Vmath::Vmul(physTot,m_GeometricInfo[8],1,inarray[2],1,
+                                                outarray[1*nvel+2],1);
         
     }
 
-    void MappingXofZ::v_ApplyChristoffelCovar(
+    void MappingXYofZ::v_ApplyChristoffelCovar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -371,22 +373,23 @@ namespace SolverUtils
         
         // Calculate non-zero terms
         
-        // outarray(2,2) = U1 * fzz
-        Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[0],1,
-                                        outarray[2*nvel+2],1); // U1 * fzz 
-    }   
+        // outarray(2,2) = U1 * fzz + U^2 * gzz
+        Vmath::Vmul(physTot,m_GeometricInfo[2],1,inarray[0],1,outarray[2*nvel+2],1); // U1 * fzz
+        Vmath::Vvtvp(physTot, m_GeometricInfo[8], 1, inarray[1], 1, 
+                                outarray[2*nvel+2], 1, outarray[2*nvel+2],1);
+    }    
 
-    bool MappingXofZ::v_IsTimeDependent()
+    bool MappingXYofZ::v_IsTimeDependent()
     {
         return false;
     }
 
-    bool MappingXofZ::v_HasConstantJacobian()
+    bool MappingXYofZ::v_HasConstantJacobian()
     {
         return true;
     }
 
-    void MappingXofZ::v_UpdateMapping(const NekDouble time)
+    void MappingXYofZ::v_UpdateMapping(const NekDouble time)
     {
 
     }

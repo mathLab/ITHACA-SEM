@@ -64,7 +64,7 @@ namespace Nektar
     {
         VelocityCorrectionScheme::v_InitObject();
         
-        m_mapping = SolverUtils::Mapping::Load(m_session, m_fields); 
+        m_mapping = GlobalMapping::Mapping::Load(m_session, m_fields); 
         ASSERTL0(m_mapping,
              "Mapping must be defined to use VCSMapping.");
         

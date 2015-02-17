@@ -1,4 +1,4 @@
-SET(LibrarySubDirs LibUtilities LocalRegions MultiRegions SpatialDomains
+SET(LibrarySubDirs GlobalMapping LibUtilities LocalRegions MultiRegions SpatialDomains
 StdRegions SolverUtils)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs Demos)

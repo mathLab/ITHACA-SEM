@@ -37,13 +37,6 @@ SET(SOLVER_UTILS_SOURCES
   Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
   Forcing/ForcingWavyness.cpp
-  Mapping/Mapping.cpp
-  Mapping/MappingXofXZ.cpp
-  Mapping/MappingXofZ.cpp
-  Mapping/MappingXYofZ.cpp
-  Mapping/MappingXYofT.cpp
-  Mapping/MappingXYofXY.cpp
-  Mapping/MappingGeneralFixed.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -87,13 +80,6 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h
   Forcing/ForcingWavyness.h
-  Mapping/Mapping.h
-  Mapping/MappingXofXZ.h
-  Mapping/MappingXofZ.h
-  Mapping/MappingXYofZ.h
-  Mapping/MappingXYofT.h
-  Mapping/MappingXYofXY.h
-  Mapping/MappingGeneralFixed.h
 )
 
 IF (NEKTAR_USE_ARPACK)
@@ -106,6 +92,6 @@ ENDIF (NEKTAR_USE_ARPACK)
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SolverUtils lib ${NEKTAR_LIBRARY_TYPE} ${SOLVER_UTILS_SOURCES} ${SOLVER_UTILS_HEADERS})
-TARGET_LINK_LIBRARIES(SolverUtils MultiRegions)
+TARGET_LINK_LIBRARIES(SolverUtils GlobalMapping)
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

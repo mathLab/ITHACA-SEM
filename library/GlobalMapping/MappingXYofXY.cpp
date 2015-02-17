@@ -33,12 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Mapping/MappingXYofXY.h>
+#include <GlobalMapping/MappingXYofXY.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace GlobalMapping
 {
 
     std::string MappingXYofXY::className =

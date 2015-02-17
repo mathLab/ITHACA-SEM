@@ -33,25 +33,25 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_MAPPING
-#define NEKTAR_SOLVERUTILS_MAPPING
+#ifndef NEKTAR_GLOBALMAPPING_MAPPING
+#define NEKTAR_GLOBALMAPPING_MAPPING
 
 #include <string>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <GlobalMapping/GlobalMappingDeclspec.h>
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace GlobalMapping
 {
     //  Forward declaration
     class Mapping;
 
     /// A shared pointer to a Mapping object
-    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Mapping> MappingSharedPtr;
+    GLOBAL_MAPPING_EXPORT typedef boost::shared_ptr<Mapping> MappingSharedPtr;
 
     /// Declaration of the mapping factory
     typedef LibUtilities::NekFactory<std::string, Mapping,
@@ -60,7 +60,7 @@ namespace SolverUtils
             const TiXmlElement*> MappingFactory;
 
     /// Declaration of the mapping factory singleton
-    SOLVER_UTILS_EXPORT MappingFactory& GetMappingFactory();
+    GLOBAL_MAPPING_EXPORT MappingFactory& GetMappingFactory();
 
     /**
      * @class Mapping
@@ -69,17 +69,17 @@ namespace SolverUtils
     class Mapping
     {
         public:
-            SOLVER_UTILS_EXPORT virtual ~Mapping() {}
+            GLOBAL_MAPPING_EXPORT virtual ~Mapping() {}
 
             /// Initialise the mapping object
-            SOLVER_UTILS_EXPORT void InitObject(
+            GLOBAL_MAPPING_EXPORT void InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&     pFields,
                 const TiXmlElement* pMapping)
             {
                 v_InitObject( pFields, pMapping);
             }
             
-            SOLVER_UTILS_EXPORT static MappingSharedPtr Load(
+            GLOBAL_MAPPING_EXPORT static MappingSharedPtr Load(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
             
@@ -91,7 +91,7 @@ namespace SolverUtils
             /////////////////////////////////////////////////////////////
               
             /// Convert a contravariant vector to the Cartesian system
-            SOLVER_UTILS_EXPORT void ContravarToCartesian(
+            GLOBAL_MAPPING_EXPORT void ContravarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -99,7 +99,7 @@ namespace SolverUtils
             }
             
             /// Convert a covariant vector to the Cartesian system
-            SOLVER_UTILS_EXPORT void CovarToCartesian(
+            GLOBAL_MAPPING_EXPORT void CovarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -107,7 +107,7 @@ namespace SolverUtils
             }
             
             /// Convert a contravariant vector to the transformed system
-            SOLVER_UTILS_EXPORT void ContravarFromCartesian(
+            GLOBAL_MAPPING_EXPORT void ContravarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -115,7 +115,7 @@ namespace SolverUtils
             }
             
             /// Convert a covariant vector to the transformed system
-            SOLVER_UTILS_EXPORT void CovarFromCartesian(
+            GLOBAL_MAPPING_EXPORT void CovarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -123,7 +123,7 @@ namespace SolverUtils
             }
             
             /// Get the Cartesian coordinates in the field
-            SOLVER_UTILS_EXPORT void GetCartesianCoordinates(
+            GLOBAL_MAPPING_EXPORT void GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
                 Array<OneD, NekDouble>               &out2)
@@ -138,14 +138,14 @@ namespace SolverUtils
             /////////////////////////////////////////////////////////////   
 
             /// Get the Jacobian of the transformation
-            SOLVER_UTILS_EXPORT void GetJacobian(
+            GLOBAL_MAPPING_EXPORT void GetJacobian(
                 Array<OneD, NekDouble>               &outarray)
             {
                 v_GetJacobian( outarray);
             } 
             
             /// Calculate the dot product with the Jacobian gradient
-            SOLVER_UTILS_EXPORT void DotGradJacobian(
+            GLOBAL_MAPPING_EXPORT void DotGradJacobian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble>               &outarray)
             {
@@ -153,21 +153,21 @@ namespace SolverUtils
             } 
             
             /// Get the metric tensor g_(i,j)
-            SOLVER_UTILS_EXPORT void GetMetricTensor(
+            GLOBAL_MAPPING_EXPORT void GetMetricTensor(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
                 v_GetMetricTensor( outarray);
             }  
             
             /// Get the inverse of metric tensor g^(i,j)
-            SOLVER_UTILS_EXPORT void GetInvMetricTensor(
+            GLOBAL_MAPPING_EXPORT void GetInvMetricTensor(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
                 v_GetInvMetricTensor( outarray);
             }
             
             /// Lower index using v_(i) = g_(i,j)*v^(j)
-            SOLVER_UTILS_EXPORT void LowerIndex(
+            GLOBAL_MAPPING_EXPORT void LowerIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -175,7 +175,7 @@ namespace SolverUtils
             }     
             
             /// Raise index using v^(i) = g^(i,j)*v_(j)
-            SOLVER_UTILS_EXPORT void RaiseIndex(
+            GLOBAL_MAPPING_EXPORT void RaiseIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -184,7 +184,7 @@ namespace SolverUtils
             
             // Apply the Christoffel symbols to a contravariant vector
             //          outarray = {i,pk}*u^p
-            SOLVER_UTILS_EXPORT void ApplyChristoffelContravar(
+            GLOBAL_MAPPING_EXPORT void ApplyChristoffelContravar(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -193,7 +193,7 @@ namespace SolverUtils
             
             // Apply the Christoffel symbols to a convariant vector
             //          outarray = {p,ik}*u_p
-            SOLVER_UTILS_EXPORT void ApplyChristoffelCovar(
+            GLOBAL_MAPPING_EXPORT void ApplyChristoffelCovar(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -201,7 +201,7 @@ namespace SolverUtils
             }
             
             // Obtain the velocity of the coordinates for time-dependent mappings
-            SOLVER_UTILS_EXPORT void GetCoordVelocity(
+            GLOBAL_MAPPING_EXPORT void GetCoordVelocity(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
                 v_GetCoordVelocity( outarray);
@@ -215,7 +215,7 @@ namespace SolverUtils
             
             // Generalized divergence operator
             //         D = u^i_,i = 1/J*d(J*u^i)/dx^i
-            SOLVER_UTILS_EXPORT void Divergence(
+            GLOBAL_MAPPING_EXPORT void Divergence(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble>                            &outarray)
             {
@@ -224,7 +224,7 @@ namespace SolverUtils
             
             // Generalized velocity Laplacian operator
             //         L = g^jk u^i_{,jk}
-            SOLVER_UTILS_EXPORT void VelocityLaplacian(
+            GLOBAL_MAPPING_EXPORT void VelocityLaplacian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -233,7 +233,7 @@ namespace SolverUtils
             
             // Generalized velocity second order derivatives
             //         ddU = u^i_{,jk}
-            SOLVER_UTILS_EXPORT void gradgradU(
+            GLOBAL_MAPPING_EXPORT void gradgradU(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray)
             {
@@ -245,7 +245,7 @@ namespace SolverUtils
             //        - false, this corresponds to the usual Cartesian operator
             //        - true,  it corresponds to the Generalized curl-curl
                     
-            SOLVER_UTILS_EXPORT void CurlCurlField(
+            GLOBAL_MAPPING_EXPORT void CurlCurlField(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const bool                                        generalized)
@@ -261,13 +261,13 @@ namespace SolverUtils
             /////////////////////////////////////////////////////////////             
             
             // Define if mapping is constant or time-dependent
-            SOLVER_UTILS_EXPORT bool IsTimeDependent()
+            GLOBAL_MAPPING_EXPORT bool IsTimeDependent()
             {
                 return v_IsTimeDependent();
             }          
             
             // Define if the Jacobian of the transformation is constant
-            SOLVER_UTILS_EXPORT bool HasConstantJacobian()
+            GLOBAL_MAPPING_EXPORT bool HasConstantJacobian()
             {
                 return v_HasConstantJacobian();
             }
@@ -275,12 +275,12 @@ namespace SolverUtils
             //
             //  Function to update time-dependent mappings
             //
-            SOLVER_UTILS_EXPORT void UpdateMapping(const NekDouble time)
+            GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time)
             {
                 v_UpdateMapping( time);
             }
             
-            SOLVER_UTILS_EXPORT void UpdateBCs( const NekDouble time)
+            GLOBAL_MAPPING_EXPORT void UpdateBCs( const NekDouble time)
             {
                 v_UpdateBCs(time);
             }
@@ -306,12 +306,12 @@ namespace SolverUtils
             
 
             /// Constructor
-            SOLVER_UTILS_EXPORT Mapping(
+            GLOBAL_MAPPING_EXPORT Mapping(
                 const LibUtilities::SessionReaderSharedPtr&          pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
 
             // Evaluators
-            SOLVER_UTILS_EXPORT void EvaluateFunction(
+            GLOBAL_MAPPING_EXPORT void EvaluateFunction(
                     Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
                     LibUtilities::SessionReaderSharedPtr        pSession,
                     std::string                                 pFieldName, 
@@ -319,7 +319,7 @@ namespace SolverUtils
                     const std::string& pFunctionName,
                     NekDouble pTime = NekDouble(0));
 
-            SOLVER_UTILS_EXPORT void EvaluateTimeFunction(
+            GLOBAL_MAPPING_EXPORT void EvaluateTimeFunction(
                     LibUtilities::SessionReaderSharedPtr        pSession,
                     std::string                                 pFieldName, 
                     Array<OneD, NekDouble>&                     pArray,
@@ -327,88 +327,88 @@ namespace SolverUtils
                     NekDouble pTime = NekDouble(0));            
             
             // Virtual functions
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(
+            GLOBAL_MAPPING_EXPORT virtual void v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields,
                 const TiXmlElement* pMapping);
 
-            SOLVER_UTILS_EXPORT virtual void v_ContravarToCartesian(
+            GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
 
-            SOLVER_UTILS_EXPORT virtual void v_CovarToCartesian(
+            GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;            
 
-            SOLVER_UTILS_EXPORT virtual void v_ContravarFromCartesian(
+            GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
 
-            SOLVER_UTILS_EXPORT virtual void v_CovarFromCartesian(
+            GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
             
-            SOLVER_UTILS_EXPORT virtual void v_GetCartesianCoordinates(
+            GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
                 Array<OneD, NekDouble>               &out2) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_GetJacobian(
+            GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
                 Array<OneD, NekDouble>               &outarray)             =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_DotGradJacobian(
+            GLOBAL_MAPPING_EXPORT virtual void v_DotGradJacobian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble>               &outarray);
             
-            SOLVER_UTILS_EXPORT virtual void v_GetMetricTensor(
+            GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_GetInvMetricTensor(
+            GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_LowerIndex(
+            GLOBAL_MAPPING_EXPORT virtual void v_LowerIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
-            SOLVER_UTILS_EXPORT virtual void v_RaiseIndex(
+            GLOBAL_MAPPING_EXPORT virtual void v_RaiseIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelContravar(
+            GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_ApplyChristoffelCovar(
+            GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_GetCoordVelocity(
+            GLOBAL_MAPPING_EXPORT virtual void v_GetCoordVelocity(
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
-            SOLVER_UTILS_EXPORT virtual void v_Divergence(
+            GLOBAL_MAPPING_EXPORT virtual void v_Divergence(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, NekDouble>                            &outarray); 
             
-            SOLVER_UTILS_EXPORT virtual void v_VelocityLaplacian(
+            GLOBAL_MAPPING_EXPORT virtual void v_VelocityLaplacian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);  
             
-            SOLVER_UTILS_EXPORT virtual void v_gradgradU(
+            GLOBAL_MAPPING_EXPORT virtual void v_gradgradU(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            SOLVER_UTILS_EXPORT virtual void v_CurlCurlField(
+            GLOBAL_MAPPING_EXPORT virtual void v_CurlCurlField(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const bool                                      generalized);
             
-            SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent() =0;  
+            GLOBAL_MAPPING_EXPORT virtual bool v_IsTimeDependent() =0;  
             
-            SOLVER_UTILS_EXPORT virtual bool v_HasConstantJacobian() =0;
+            GLOBAL_MAPPING_EXPORT virtual bool v_HasConstantJacobian() =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_UpdateMapping(
+            GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
                                                 const NekDouble time) =0;
             
-            SOLVER_UTILS_EXPORT virtual void v_UpdateBCs(const NekDouble time);
+            GLOBAL_MAPPING_EXPORT virtual void v_UpdateBCs(const NekDouble time);
             
     };
 }

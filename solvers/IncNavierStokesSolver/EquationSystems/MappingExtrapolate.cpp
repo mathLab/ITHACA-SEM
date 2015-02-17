@@ -54,7 +54,7 @@ namespace Nektar
         const SolverUtils::AdvectionSharedPtr advObject)
         : StandardExtrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
-        m_mapping = SolverUtils::Mapping::Load(m_session, m_fields);
+        m_mapping = GlobalMapping::Mapping::Load(m_session, m_fields);
         
         // Load solve parameters related to the mapping
         // Flags determining if pressure/viscous terms should be treated implicitly

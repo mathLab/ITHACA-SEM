@@ -33,13 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Mapping/MappingGeneralFixed.h>
+#include <GlobalMapping/MappingGeneralFixed.h>
 #include <MultiRegions/ExpList.h>
 #include <iomanip> 
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace GlobalMapping
 {
 
     std::string MappingGeneralFixed::className =

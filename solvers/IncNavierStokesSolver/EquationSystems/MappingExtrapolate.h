@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERS_MAPPINGEXTRAPOLATE_H
 
 #include <IncNavierStokesSolver/EquationSystems/StandardExtrapolate.h>
-#include <SolverUtils/Mapping/Mapping.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -87,7 +87,7 @@ namespace Nektar
         
     protected:
         // Mapping object
-        SolverUtils::MappingSharedPtr               m_mapping;
+        GlobalMapping::MappingSharedPtr               m_mapping;
         
         Array<OneD, NekDouble>                      m_bcCorrection;
         

@@ -40,7 +40,6 @@
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
-#include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdHexExp.h>

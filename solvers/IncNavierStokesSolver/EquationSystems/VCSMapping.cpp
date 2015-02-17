@@ -66,7 +66,7 @@ namespace Nektar
         
         m_mapping = GlobalMapping::Mapping::Load(m_session, m_fields); 
         ASSERTL0(m_mapping,
-             "Mapping must be defined to use VCSMapping.");
+             "Could not create mapping in VCSMapping.");
         
         std::string vExtrapolation = "Mapping";
         m_extrapolation = GetExtrapolateFactory().CreateInstance(

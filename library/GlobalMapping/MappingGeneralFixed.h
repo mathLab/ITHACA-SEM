@@ -86,8 +86,11 @@ namespace GlobalMapping
         Array<OneD, Array<OneD, NekDouble> >        m_Christoffel;
         Array<OneD, NekDouble>                      m_jac;
 
-
-    // Virtual functions
+        // Constructor
+        MappingGeneralFixed(const LibUtilities::SessionReaderSharedPtr  &pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields); 
+        
+        // Virtual functions
         GLOBAL_MAPPING_EXPORT
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -137,10 +140,7 @@ namespace GlobalMapping
 
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
 
-    private:
-
-        MappingGeneralFixed(const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);  
+    private: 
 
     };
 

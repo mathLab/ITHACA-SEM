@@ -51,7 +51,7 @@ namespace GlobalMapping
     MappingXYofT::MappingXYofT(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
-        : Mapping(pSession, pFields)
+        : MappingIdentity(pSession, pFields)
     {
     }
 
@@ -63,7 +63,7 @@ namespace GlobalMapping
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {
-        Mapping::v_InitObject(pFields, pMapping);
+        MappingIdentity::v_InitObject(pFields, pMapping);
         
         int phystot         = pFields[0]->GetTotPoints();
         
@@ -123,82 +123,6 @@ namespace GlobalMapping
 
     }
 
-    void MappingXYofT::v_ContravarToCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
-        {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        }        
-    }
-
-    void MappingXYofT::v_CovarToCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
-        {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        } 
-    }
-
-    void MappingXYofT::v_ContravarFromCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
-        {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        }         
-    }
-
-    void MappingXYofT::v_CovarFromCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
-        {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        } 
-    }
-
     void MappingXYofT::v_GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
@@ -221,22 +145,6 @@ namespace GlobalMapping
         // z' = z
         Vmath::Vcopy(physTot, x2, 1, out2, 1);        
     }
-
-    void MappingXYofT::v_GetJacobian(
-        Array<OneD, NekDouble>               &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        Vmath::Fill(physTot, 1.0, outarray, 1);
-    }
-    
-    void MappingXYofT::v_DotGradJacobian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, NekDouble>               &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        Vmath::Zero(physTot, outarray, 1);   
-    }
     
     void MappingXYofT::v_GetCoordVelocity(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -253,116 +161,7 @@ namespace GlobalMapping
         Vmath::Vcopy(physTot, m_GeometricInfo[3], 1, outarray[1], 1);
     }
 
-    void MappingXYofT::v_GetMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel*nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Fill diagonal with 1.0
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
-                                        outarray[i+nvel*i], 1); 
-        }            
-    }
-
-    void MappingXYofT::v_GetInvMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel*nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Fill diagonal with 1.0
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
-                                        outarray[i+nvel*i], 1); 
-        }            
-    }
-    
-    void MappingXYofT::v_RaiseIndex(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel*nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Copy
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1); 
-        }            
-    }
-    
-    void MappingXYofT::v_LowerIndex(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel*nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Copy
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1); 
-        }            
-    }
-
-    void MappingXYofT::v_ApplyChristoffelContravar(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-        
-        for (int i = 0; i< nvel; i++)
-        {
-            for (int j = 0; j< nvel; j++)
-            {
-                outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            }            
-        }        
-    }
-
-    void MappingXYofT::v_ApplyChristoffelCovar(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-        
-        for (int i = 0; i< nvel; i++)
-        {
-            for (int j = 0; j< nvel; j++)
-            {
-                outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            }            
-        }
-    }
-
     bool MappingXYofT::v_IsTimeDependent()
-    {
-        return true;
-    }
-
-    bool MappingXYofT::v_HasConstantJacobian()
     {
         return true;
     }

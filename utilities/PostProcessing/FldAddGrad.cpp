@@ -216,28 +216,24 @@ int main(int argc, char *argv[])
     // Check if mapping was defined
     GlobalMapping::MappingSharedPtr mapping = 
                             GlobalMapping::Mapping::Load(vSession, Exp);
-    if( mapping)
+    //Convert velocity to Cartesian system
+    int nq = Exp[0]->GetNpoints();
+    Array<OneD, Array<OneD, NekDouble> > tmp1 (veldim);
+    Array<OneD, Array<OneD, NekDouble> > tmp2 (veldim);
+    for ( i =0; i<veldim; ++i )
     {
-        //Convert velocity to Cartesian system
-        int nq = Exp[0]->GetNpoints();
-        Array<OneD, Array<OneD, NekDouble> > tmp1 (veldim);
-        Array<OneD, Array<OneD, NekDouble> > tmp2 (veldim);
-        for ( i =0; i<veldim; ++i )
-        {
-            tmp1[i] = Array<OneD, NekDouble> (nq);
-            tmp2[i] = Array<OneD, NekDouble> (nq);                    
-            Vmath::Vcopy(nq, Exp[i]->GetPhys(), 1, tmp1[i], 1);
-        }
-        mapping->ContravarToCartesian(tmp1, tmp2);
-        for ( i =0; i<veldim; ++i )
-        {
-            Vmath::Vcopy(nq, tmp2[i], 1, Exp[i]->UpdatePhys(), 1);
-        }
+        tmp1[i] = Array<OneD, NekDouble> (nq);
+        tmp2[i] = Array<OneD, NekDouble> (nq);                    
+        Vmath::Vcopy(nq, Exp[i]->GetPhys(), 1, tmp1[i], 1);
+    }
+    mapping->ContravarToCartesian(tmp1, tmp2);
+    for ( i =0; i<veldim; ++i )
+    {
+        Vmath::Vcopy(nq, tmp2[i], 1, Exp[i]->UpdatePhys(), 1);
     }
 
     //----------------------------------------------
     // Compute gradients of fields
-    int nq = Exp[0]->GetTotPoints();
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
     for(i = 0; i < addfields; ++i)
     {
@@ -253,25 +249,20 @@ int main(int argc, char *argv[])
         }      
     }
 
-    if( mapping)
-    {
-        // Calculate gradient wrt Cartesian coordinates
-        Array<OneD, Array<OneD, NekDouble> > tmp1 (veldim);
-        Array<OneD, Array<OneD, NekDouble> > tmp2 (veldim);
-        for(i = 0; i < nfields; ++i)
-        {                    
-            for ( j =0; j<veldim; ++j )
-            {
-                tmp1[j] = Array<OneD, NekDouble> (nq);
-                tmp2[j] = Array<OneD, NekDouble> (nq);
-                Vmath::Vcopy(nq, outfield[i*veldim+j], 1, tmp1[j], 1);
-            }
-            mapping->ContravarToCartesian(tmp1, tmp2);
-            for ( j =0; j<veldim; ++j )
-            {
-                Vmath::Vcopy(nq, tmp2[j], 1, outfield[i*veldim+j], 1);
-            }                    
+    // Apply mapping to convert gradient to Cartesian coordinates
+    for(i = 0; i < nfields; ++i)
+    {                    
+        for ( j =0; j<veldim; ++j )
+        {
+            tmp1[j] = Array<OneD, NekDouble> (nq);
+            tmp2[j] = Array<OneD, NekDouble> (nq);
+            Vmath::Vcopy(nq, outfield[i*veldim+j], 1, tmp1[j], 1);
         }
+        mapping->ContravarToCartesian(tmp1, tmp2);
+        for ( j =0; j<veldim; ++j )
+        {
+            Vmath::Vcopy(nq, tmp2[j], 1, outfield[i*veldim+j], 1);
+        }                    
     }
 
     for (i = 0; i < addfields; ++i)

@@ -81,9 +81,12 @@ namespace GlobalMapping
 
         Array<OneD, Array<OneD, NekDouble> >        m_metricTensor;
         Array<OneD, Array<OneD, NekDouble> >        m_Christoffel;
+        
+        // Constructor
+        MappingXYofXY(const LibUtilities::SessionReaderSharedPtr  &pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
-
-    // Virtual functions
+        // Virtual functions
         GLOBAL_MAPPING_EXPORT
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -133,10 +136,7 @@ namespace GlobalMapping
 
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
 
-    private:
-
-        MappingXYofXY(const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);  
+    private: 
 
     };
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingXYofT.h
+// File: MappingIdentity.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Mapping of the type X = x + f(t), Y = y + g(t)
+// Description: Empty mapping for identity transformation
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_GLOBALMAPPING_MAPPINGXYOFT
-#define NEKTAR_GLOBALMAPPING_MAPPINGXYOFT
+#ifndef NEKTAR_GLOBALMAPPING_MAPPINGIDENTITY
+#define NEKTAR_GLOBALMAPPING_MAPPINGIDENTITY
 
 #include <string>
 
@@ -42,18 +42,18 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <GlobalMapping/GlobalMappingDeclspec.h>
-#include <GlobalMapping/MappingIdentity.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
 namespace GlobalMapping
 {
 
-    class MappingXYofT: public MappingIdentity
+    class MappingIdentity: public Mapping
     {
     public:
 
-        friend class MemoryManager<MappingXYofT> ;
+        friend class MemoryManager<MappingIdentity> ;
 
         /// Creates an instance of this class
         GLOBAL_MAPPING_EXPORT
@@ -63,7 +63,7 @@ namespace GlobalMapping
             const TiXmlElement                                *pMapping)
         {
             MappingSharedPtr p =
-                    MemoryManager<MappingXYofT>::AllocateSharedPtr(pSession, 
+                    MemoryManager<MappingIdentity>::AllocateSharedPtr(pSession, 
                                                                    pFields);
             p->InitObject(pFields, pMapping);
             return p;
@@ -74,27 +74,71 @@ namespace GlobalMapping
 
     protected:
         // Name of the function containing the coordinates velocity
-        string                                      m_velFuncName;    
-
-        // Constructor
-        MappingXYofT(const LibUtilities::SessionReaderSharedPtr   &pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
+        string                                      m_velFuncName;   
         
+        // Constructor
+        MappingIdentity(const LibUtilities::SessionReaderSharedPtr   &pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);        
+
         // Virtual functions
         GLOBAL_MAPPING_EXPORT
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping);
 
+        GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);            
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray); 
+
         GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
                 Array<OneD, NekDouble>               &out0,
                 Array<OneD, NekDouble>               &out1,
                 Array<OneD, NekDouble>               &out2);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_GetCoordVelocity(
-            Array<OneD, Array<OneD, NekDouble> >              &outarray); 
+        GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
+            Array<OneD, NekDouble>               &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_DotGradJacobian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>               &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_LowerIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_RaiseIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);   
 
         GLOBAL_MAPPING_EXPORT virtual bool v_IsTimeDependent();  
+
+        GLOBAL_MAPPING_EXPORT virtual bool v_HasConstantJacobian();
 
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
 

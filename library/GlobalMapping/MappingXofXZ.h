@@ -73,7 +73,11 @@ namespace GlobalMapping
         static std::string className;
 
     protected:
-    // Virtual functions
+        // Constructor
+        MappingXofXZ(const LibUtilities::SessionReaderSharedPtr     &pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
+        
+        // Virtual functions
         GLOBAL_MAPPING_EXPORT
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -136,9 +140,6 @@ namespace GlobalMapping
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
 
     private:
-
-        MappingXofXZ(const LibUtilities::SessionReaderSharedPtr     &pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
 
     };
 

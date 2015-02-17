@@ -97,23 +97,25 @@ namespace Nektar
         MappingSharedPtr Mapping::Load(
                             const LibUtilities::SessionReaderSharedPtr& pSession,
                             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
-        {
-            if (!pSession->DefinesElement("Nektar/Mapping"))
-            {
-                return m_mappingPtr;
-            }
-            
+        {            
             if (!m_init)
             {
-                TiXmlElement* vMapping = pSession->GetElement("Nektar/Mapping");
-                if (vMapping)
-                {
-                    string vType = vMapping->Attribute("TYPE");
-
-                    m_mappingPtr =   GetMappingFactory().CreateInstance(
-                                        vType, pSession, pFields,
-                                        vMapping);
+                TiXmlElement* vMapping;
+                string vType;
+                if (pSession->DefinesElement("Nektar/Mapping"))
+                {                
+                    vMapping = pSession->GetElement("Nektar/Mapping");
+                    vType = vMapping->Attribute("TYPE");
                 }
+                else
+                {
+                    vType = "Identity";
+                }    
+                
+                m_mappingPtr =   GetMappingFactory().CreateInstance(
+                                    vType, pSession, pFields,
+                                    vMapping);
+                
                 m_init = true;
             }
              

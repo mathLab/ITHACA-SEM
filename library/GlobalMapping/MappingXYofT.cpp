@@ -75,13 +75,13 @@ namespace GlobalMapping
     {
         std::string s_XFieldStr = m_session->GetVariable(0);
         std::string s_YFieldStr = m_session->GetVariable(1);
-        // Evaluate x-functions --> GeometricInfo 0-1
+        // Evaluate x-functions
         EvaluateFunction(m_fields, m_session, s_XFieldStr, m_coords[0],
                 m_funcName, time); 
         EvaluateFunction(m_fields, m_session, s_XFieldStr, m_coordsVel[0],
                 m_velFuncName, time);
         
-        // Evaluate y-functions --> GeometricInfo 2-3
+        // Evaluate y-functions 
         EvaluateFunction(m_fields, m_session, s_YFieldStr, m_coords[1],
                 m_funcName, time);
         EvaluateFunction(m_fields, m_session, s_YFieldStr, m_coordsVel[1],

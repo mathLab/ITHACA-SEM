@@ -73,9 +73,6 @@ namespace GlobalMapping
         static std::string className;
 
     protected:
-        // Name of the function containing the coordinates velocity
-        string                                      m_velFuncName;    
-
         // Constructor
         MappingXYofT(const LibUtilities::SessionReaderSharedPtr   &pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);

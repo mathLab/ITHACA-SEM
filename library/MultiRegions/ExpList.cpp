@@ -189,24 +189,24 @@ namespace Nektar
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
-            
+
             if(DeclareCoeffPhysArrays)
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
                 m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
         }
-        
+
 	/**
-         * 
+         *
          */
         ExpansionType ExpList::GetExpType(void)
         {
             return m_expType;
         }
-		
+
         /**
-         * 
+         *
          */
         void ExpList::SetExpType(ExpansionType Type)
         {
@@ -318,7 +318,7 @@ namespace Nektar
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                
+
                 m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
                                                inarray + m_coll_phys_offset[i],
                                                tmp = outarray + m_coll_coeff_offset[i]);
@@ -369,7 +369,7 @@ namespace Nektar
                                            Array<OneD, NekDouble> &outarray)
         {
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
-            // assume coord dimension defines the size of Deriv Base 
+            // assume coord dimension defines the size of Deriv Base
             int dim = GetCoordim(0);
 
             ASSERTL1(inarray.num_elements() >= dim,"inarray is not of sufficient dimension");
@@ -457,9 +457,9 @@ namespace Nektar
             {
                 int offset = m_coll_phys_offset[i];
                 e_out_d0 = out_d0  + offset;
-                e_out_d1 = out_d1  + offset; 
-                e_out_d2 = out_d2  + offset; 
-                
+                e_out_d1 = out_d1  + offset;
+                e_out_d2 = out_d2  + offset;
+
                 m_collections[i].ApplyOperator(Collections::ePhysDeriv,
                                                inarray + offset,
                                                e_out_d0,e_out_d1, e_out_d2);
@@ -474,7 +474,7 @@ namespace Nektar
             Direction edir = DirCartesianMap[dir];
             v_PhysDeriv(edir, inarray,out_d);
         }
-        
+
         void ExpList::v_PhysDeriv(Direction edir, const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &out_d)
         {
@@ -603,9 +603,9 @@ namespace Nektar
             // Maybe a different techique for the smoothing require
             // implementation for modal basis.
 
-            ASSERTL0((*m_exp)[0]->GetBasisType(0) 
+            ASSERTL0((*m_exp)[0]->GetBasisType(0)
                      == LibUtilities::eGLL_Lagrange ||
-                     (*m_exp)[0]->GetBasisType(0) 
+                     (*m_exp)[0]->GetBasisType(0)
                      == LibUtilities::eGauss_Lagrange,
                      "Smoothing is currently not allowed unless you are using "
                      "a nodal base for efficiency reasons. The implemented "
@@ -1214,21 +1214,21 @@ namespace Nektar
         }
 
 
-        /** 
+        /**
          * @todo need a smarter search here that first just looks at bounding
          * vertices - suggest first seeing if point is within 10% of
-         * region defined by vertices. The do point search. 
+         * region defined by vertices. The do point search.
          */
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol,
                                  bool returnNearestElmt)
         {
-            Array<OneD, NekDouble> Lcoords(gloCoord.num_elements()); 
-            
+            Array<OneD, NekDouble> Lcoords(gloCoord.num_elements());
+
             return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt);
         }
-        
+
 
         int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
                                  Array<OneD, NekDouble> &locCoords,
@@ -1294,7 +1294,7 @@ namespace Nektar
                                                           locCoords);
                     return min_id;
                 }
-                else 
+                else
                 {
                     return -1;
                 }
@@ -1306,7 +1306,7 @@ namespace Nektar
                 int min_id  = 0;
                 NekDouble resid_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
-                
+
                 // restart search from last found value
                 for (int i = start; i < (*m_exp).size(); ++i)
                 {
@@ -1326,7 +1326,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 for (int i = 0; i < start; ++i)
                 {
                     if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
@@ -1530,7 +1530,7 @@ namespace Nektar
                 {
                     const int np0 = (*exp)[i]->GetNumPoints(0);
                     const int np1 = (*exp)[i]->GetNumPoints(1);
-                    
+
                     for(j = 1; j < np1; ++j)
                     {
                         for(k = 1; k < np0; ++k)
@@ -1541,7 +1541,7 @@ namespace Nektar
                             outfile << cnt +  j   *np0 + k   << endl;
                         }
                     }
-                    
+
                     cnt += np0*np1;
                 }
             }
@@ -1594,7 +1594,7 @@ namespace Nektar
                 {
                     BwdTrans(m_coeffs,m_phys);
                 }
-                
+
                 for(int i = 0; i < totpoints; ++i)
                 {
                     outfile << m_phys[i] << " ";
@@ -1604,7 +1604,7 @@ namespace Nektar
                     }
                 }
                 outfile << std::endl;
-                
+
             }
             else
             {
@@ -1771,13 +1771,13 @@ namespace Nektar
             Array<OneD, NekDouble> NoEnergy(1,0.0);
             return NoEnergy;
         }
-		
+
         LibUtilities::TranspositionSharedPtr ExpList::v_GetTransposition(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             LibUtilities::TranspositionSharedPtr trans;
-			
+
             return trans;
         }
 
@@ -1794,16 +1794,16 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
-			
+
             return NoModes;
         }
-		
+
         Array<OneD, const unsigned int> ExpList::v_GetYIDs(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
-			
+
             return NoModes;
         }
 
@@ -1813,7 +1813,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         void ExpList::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)        {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -1854,7 +1854,7 @@ namespace Nektar
             ASSERTL0(found, "Could not find variable '"+varName+
                             "' in file boundary condition "+fileName);
             locExpList->BwdTrans_IterPerExp(
-                locExpList->GetCoeffs(), 
+                locExpList->GetCoeffs(),
                 locExpList->UpdatePhys());
         }
 
@@ -1894,9 +1894,9 @@ namespace Nektar
             return sqrt(err);
         }
 
-        void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
-                                                  int NumHomoDir, 
-                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+        void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
+                                                  int NumHomoDir,
+                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
@@ -2013,7 +2013,7 @@ namespace Nektar
         {
             v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
-        
+
         void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i;
@@ -2035,7 +2035,7 @@ namespace Nektar
             }
 
         }
-        
+
         /// Extract the data in fielddata into the coeffs
         void ExpList::ExtractDataToCoeffs(
                                    LibUtilities::FieldDefinitionsSharedPtr &fielddef,
@@ -2064,7 +2064,7 @@ namespace Nektar
             std::vector<NekDouble>                    &fielddata,
             std::string                               &field,
             Array<OneD, NekDouble>                    &coeffs)
-        {     	
+        {
             int i, expId;
             int offset       = 0;
             int modes_offset = 0;
@@ -2079,13 +2079,13 @@ namespace Nektar
                 }
                 offset += datalen;
             }
-            
+
             ASSERTL0(i != fielddef->m_fields.size(),
                      "Field (" + field + ") not found in file.");
 
             // Determine mapping from element ids to location in expansion list
             map<int, int> elmtToExpId;
-            
+
             // Loop in reverse order so that in case where using a Homogeneous
             // expansion it sets geometry ids to first part of m_exp
             // list. Otherwise will set to second (complex) expansion
@@ -2093,7 +2093,7 @@ namespace Nektar
             {
                 elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
-            
+
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
                 // Reset modes_offset in the case where all expansions of
@@ -2102,22 +2102,22 @@ namespace Nektar
                 {
                     modes_offset = 0;
                 }
-                
+
                 datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType,
                                                                 fielddef->m_numModes, modes_offset);
-                
+
                 const int elmtId = fielddef->m_elementIDs[i];
                 if (elmtToExpId.count(elmtId) == 0)
                 {
                     offset += datalen;
                     continue;
                 }
-                
+
                 expId   = elmtToExpId[elmtId];
-                
+
                 if (datalen == (*m_exp)[expId]->GetNcoeffs())
                 {
-                    Vmath::Vcopy(datalen, &fielddata[offset], 1, 
+                    Vmath::Vcopy(datalen, &fielddata[offset], 1,
                                  &coeffs[m_coeff_offset[expId]], 1);
                 }
                 else
@@ -2126,16 +2126,16 @@ namespace Nektar
                                                          &fielddata[offset], fielddef->m_numModes,
                                                          modes_offset, &coeffs[m_coeff_offset[expId]]);
                 }
-                
+
                 offset += datalen;
                 modes_offset += (*m_exp)[0]->GetNumBases();
             }
-            
+
             return;
         }
-        
+
         void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
-        {     	
+        {
             int i;
             int offset = 0;
 
@@ -2154,10 +2154,10 @@ namespace Nektar
                     {
                         nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
                     }
-                    
-                    (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0, 
+
+                    (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
                                                        &toCoeffs[m_coeff_offset[eid]]);
-                    
+
                     offset += fromExpList->GetExp(eid)->GetNcoeffs();
                 }
             }
@@ -2180,7 +2180,7 @@ namespace Nektar
             static boost::shared_ptr<ExpList> result;
             return result;
         }
-        
+
         void ExpList::v_Upwind(
             const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
             const Array<OneD,                   const NekDouble>   &Fwd,
@@ -2200,7 +2200,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
         {
             ASSERTL0(false,
@@ -2304,7 +2304,7 @@ namespace Nektar
         {
             ASSERTL0(false, "HelmSolve not implemented.");
         }
-		
+
         void ExpList::v_LinearAdvectionDiffusionReactionSolve(
                        const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,
@@ -2328,9 +2328,9 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-		
-        void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                            Array<OneD, NekDouble> &outarray, 
+
+        void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray,
                                             CoeffState coeffstate,
                                             bool Shuff,
                                             bool UnShuff)
@@ -2338,9 +2338,9 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
-        void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                            Array<OneD, NekDouble> &outarray, 
+
+        void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray,
                                             CoeffState coeffstate,
                                             bool Shuff,
                                             bool UnShuff)
@@ -2348,22 +2348,22 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+
         void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,const Array<OneD, NekDouble> &inarray2,Array<OneD, NekDouble> &outarray,CoeffState coeffstate)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
-	
-        void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
-                                    const Array<OneD, NekDouble> &TotField, 
+
+
+        void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals,
+                                    const Array<OneD, NekDouble> &TotField,
                                     int BndID)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+
         void ExpList::v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
                                                   Array<OneD, const NekDouble> &V2,
                                                   Array<OneD, NekDouble> &outarray,
@@ -2372,7 +2372,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+
         void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
             ASSERTL0(false,
@@ -2402,14 +2402,14 @@ namespace Nektar
 
         void ExpList::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray,
-                                 CoeffState coeffstate)			     
+                                 CoeffState coeffstate)
         {
             v_BwdTrans_IterPerExp(inarray,outarray);
         }
-        
+
         void ExpList::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray,
-                                 CoeffState coeffstate)			     
+                                 CoeffState coeffstate)
         {
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
@@ -2417,23 +2417,23 @@ namespace Nektar
         void ExpList::v_IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)	   
+                                CoeffState coeffstate)
         {
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                
+
                 m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
                                                inarray + m_coll_phys_offset[i],
                                                tmp = outarray + m_coll_coeff_offset[i]);
             }
         }
-        
+
         void ExpList::v_GeneralMatrixOp(
                                         const GlobalMatrixKey             &gkey,
                                         const Array<OneD,const NekDouble> &inarray,
                                         Array<OneD,      NekDouble> &outarray,
-                                        CoeffState coeffstate)	 
+                                        CoeffState coeffstate)
         {
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
@@ -2494,7 +2494,7 @@ namespace Nektar
                 break;
             }
         }
-		
+
         /**
          */
         void ExpList::v_SetUpPhysNormals()
@@ -2519,7 +2519,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-        
+
         /**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
@@ -2531,7 +2531,7 @@ namespace Nektar
                                                                         result;
             return result;
         }
-        
+
         /**
          */
         Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()
@@ -2547,7 +2547,7 @@ namespace Nektar
         void ExpList::v_EvaluateBoundaryConditions(
             const NekDouble time,
             const std::string varName,
-            const NekDouble x2_in, 
+            const NekDouble x2_in,
             const NekDouble x3_in)
         {
             ASSERTL0(false,
@@ -2574,7 +2574,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
- 
+
         SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(
             const SpatialDomains::BoundaryConditionCollection& collection,
             unsigned int regionId,
@@ -2599,7 +2599,7 @@ namespace Nektar
 
         StdRegions::StdExpansionSharedPtr GetStdExp(StdRegions::StdExpansionSharedPtr exp)
         {
-            
+
             StdRegions::StdExpansionSharedPtr stdExp;
 
             switch(exp->DetShapeType())
@@ -2669,71 +2669,44 @@ namespace Nektar
          */
         void ExpList::CreateCollections(Collections::ImplementationType ImpType)
         {
-            //return; 
+            //return;
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            bool autotuning = false;
-            bool verbose  =m_session->DefinesCmdLineArgument("verbose");
-            int collmax;
+            // Figure out optimisation parameters if provided in
+            // session file or default given
+            Collections::CollectionOptimisation colOpt(m_session, ImpType);
+            ImpType = colOpt.GetDefaultImplementationType();
 
-	    if(m_comm->GetRank() != 0) //just turn on verbose mode for root node
-	    {
-	        verbose = false;
-	    }
+            bool autotuning = colOpt.IsUsingAutotuning();
+            bool verbose  = m_session->DefinesCmdLineArgument("verbose") &&
+                            (m_comm->GetRank() == 0);
+            int collmax = colOpt.GetMaxCollectionSize();
+            collmax = (collmax > 0 ? collmax : 2*m_exp->size());
 
-            m_session->LoadParameter("CollectionMax",collmax,2*m_exp->size());
-
-            if(m_session->DefinesSolverInfo("CollectionOptions"))
-            {
-                const std::string collinfo = m_session->GetSolverInfo("CollectionOptions");
-                
-                if(NoCaseStringCompare(collinfo,"Autotuning") == 0)
-                {
-                    autotuning = true;
-                }
-                
-                for(int i = 1; i < Collections::SIZE_ImplementationType; ++i)
-                {
-                    if(NoCaseStringCompare(collinfo,Collections::ImplementationTypeMap[i]) == 0)
-                    {
-                        ImpType = (Collections::ImplementationType) i;
-                        break;
-                    }
-                }
-            }                        
 
             // If ImpType is not specified by default argument call
             // then set ImpType to eStdMat for large collections or
             // eSumFac for small
             if(ImpType == Collections::eNoImpType)
             {
-	      if(m_exp->size() < 100)
-	      {
-		ImpType = Collections::eSumFac; 
-	      }
-	      else
-	      {
-		ImpType = Collections::eStdMat; 
-	      }
+                ImpType = (m_exp->size() < 100 ? Collections::eSumFac
+                                               : Collections::eStdMat);
             }
             else // if ImpType was provided do not perform autotuning.
             {
-                autotuning = false; 
+                autotuning = false;
             }
 
-            // Figure out optimisation parameters if provided in
-            // session file or default given
-            Collections::CollectionOptimisation colOpt(m_session, ImpType);
 
             if(colOpt.SetByXml() == true)
             {
-                autotuning = false; 
+                autotuning = false;
                 if(verbose)
                 {
-		  cout << "Setting Collection optimisation using XML file" << endl;
+                    cout << "Setting Collection optimisation using XML file" << endl;
                 }
             }
             else if (autotuning == false)
@@ -2743,7 +2716,7 @@ namespace Nektar
                     cout << "Setting Collection optimisation using: " << Collections::ImplementationTypeMap[ImpType] << endl;
                 }
             }
-            
+
             // clear vectors in case previously called
             m_collections.clear();
             m_coll_coeff_offset.clear();
@@ -2761,10 +2734,10 @@ namespace Nektar
 
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(exp);
                 vector<StdRegions::StdExpansionSharedPtr> collExp;
-                
+
                 int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
                 int prevPhysOffset      = m_phys_offset [it->second[0].second];
-                int collcnt; 
+                int collcnt;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
@@ -2773,8 +2746,8 @@ namespace Nektar
                 {
                     collExp.push_back(it->second[0].first);
 
-                    // if no Imp Type provided and No settign in xml file. 
-                    // reset impTypes using timings 
+                    // if no Imp Type provided and No settign in xml file.
+                    // reset impTypes using timings
                     if(autotuning)
                     {
                         impTypes = colOpt.SetWithTimings(collExp,
@@ -2786,7 +2759,7 @@ namespace Nektar
                 }
                 else
                 {
-                    // set up first geometry 
+                    // set up first geometry
                     collExp.push_back(it->second[0].first);
                     int prevnCoeff = it->second[0].first->GetNcoeffs();
                     int prevnPhys  = it->second[0].first->GetTotPoints();
@@ -2798,7 +2771,7 @@ namespace Nektar
                         int nPhys       = it->second[i].first->GetTotPoints();
                         int coeffOffset = m_coeff_offset[it->second[i].second];
                         int physOffset  = m_phys_offset [it->second[i].second];
-                        
+
                         // check to see if next elmt is different or
                         // collmax reached and if so end collection
                         // and start new one
@@ -2807,36 +2780,36 @@ namespace Nektar
                            prevPhysOffset + nPhys != physOffset ||
                            prevnPhys != nPhys || collcnt >= collmax)
                         {
-                            
+
                             // if no Imp Type provided and No
                             // settign in xml file. reset
                             // impTypes using timings
                             if(autotuning)
                             {
                                 impTypes = colOpt.SetWithTimings(collExp,
-                                                                 impTypes, 
+                                                                 impTypes,
                                                                  verbose);
                             }
-                            
+
                             Collections::Collection tmp(collExp, impTypes);
                             m_collections.push_back(tmp);
-                            
 
-                            // start new geom list 
+
+                            // start new geom list
                             collExp.clear();
-                            
+
                             m_coll_coeff_offset.push_back(coeffOffset);
                             m_coll_phys_offset .push_back(physOffset);
                             collExp.push_back(it->second[i].first);
                             collcnt = 1;
                         }
-                        else // add to list of collections 
+                        else // add to list of collections
                         {
                             collExp.push_back(it->second[i].first);
                             collcnt++;
                         }
 
-                        // if end of list finish up collection 
+                        // if end of list finish up collection
                         if (i == it->second.size() - 1)
                         {
                             // if no Imp Type provided and No
@@ -2846,21 +2819,21 @@ namespace Nektar
                                 impTypes = colOpt.SetWithTimings(collExp,
                                                                  impTypes,verbose);
                             }
-                            
+
                             Collections::Collection tmp(collExp, impTypes);
                             m_collections.push_back(tmp);
                             collExp.clear();
                             collcnt = 0;
-                            
+
                         }
-                        
+
                         prevCoeffOffset = coeffOffset;
                         prevPhysOffset  = physOffset;
                         prevnCoeff      = nCoeffs;
                         prevnPhys       = nPhys;
                     }
                 }
-            }  
+            }
         }
 
         int NoCaseStringCompare( const string & s1, const string& s2)

@@ -97,6 +97,28 @@ CollectionOptimisation::CollectionOptimisation(
 
         if (xmlCol)
         {
+            const char *maxSize = xmlCol->Attribute("MAXSIZE");
+            m_maxCollSize = maxSize ? atoi(maxSize) : 0;
+
+            const char *defaultImpl = xmlCol->Attribute("DEFAULT");
+            m_defaultType = defaultType;
+            if (defaultType == eNoImpType && defaultImpl)
+            {
+                const std::string collinfo = string(defaultImpl);
+                m_autotune = boost::iequals(collinfo, "autotuning");
+                if (!m_autotune)
+                {
+                    for(int i = 1; i < Collections::SIZE_ImplementationType; ++i)
+                    {
+                        if(boost::iequals(collinfo,Collections::ImplementationTypeMap[i]))
+                        {
+                            m_defaultType = (Collections::ImplementationType) i;
+                            break;
+                        }
+                    }
+                }
+            }
+
             TiXmlElement *elmt = xmlCol->FirstChildElement();
             m_setByXml = true;
 

@@ -122,6 +122,21 @@ public:
 
     ~CollectionOptimisation(){};
 
+    ImplementationType GetDefaultImplementationType()
+    {
+        return m_defaultType;
+    }
+
+    unsigned int GetMaxCollectionSize()
+    {
+        return m_maxCollSize;
+    }
+
+    bool IsUsingAutotuning()
+    {
+        return m_autotune;
+    }
+
     /// Get Operator Implementation Map from XMl or using default;
     OperatorImpMap  GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp);
 
@@ -140,6 +155,9 @@ private:
     static map<OpImpTimingKey,OperatorImpMap> m_opImpMap;
     map<OperatorType, map<ElmtOrder, ImplementationType> > m_global;
     bool m_setByXml;
+    bool m_autotune;
+    ImplementationType m_defaultType;
+    unsigned int m_maxCollSize;
 };
 
 }

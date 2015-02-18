@@ -924,6 +924,70 @@ namespace Nektar
             }
         }
 
+        void AlignFace(const StdRegions::Orientation       orient,
+                       const int                           nquad1,
+                       const int                           nquad2,
+                       const Array<OneD, const NekDouble> &in,
+                             Array<OneD,       NekDouble> &out)
+        {
+            // Copy transpose.
+            if (orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+                orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+            {
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    for (int j = 0; j < nquad1; ++j)
+                    {
+                        out[i*nquad1 + j] = in[j*nquad2 + i];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    for (int j = 0; j < nquad1; ++j)
+                    {
+                        out[i*nquad1 + j] = in[i*nquad1 + j];
+                    }
+                }
+            }
+
+            if (orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2 ||
+                orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+            {
+                // Reverse x direction
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    for (int j = 0; j < nquad1/2; ++j)
+                    {
+                        swap(out[i*nquad1 + j],
+                             out[i*nquad1 + nquad1-j-1]);
+                    }
+                }
+            }
+
+            if (orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2 ||
+                orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+                orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+                orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+            {
+                // Reverse y direction
+                for (int j = 0; j < nquad1; ++j)
+                {
+                    for (int i = 0; i < nquad2/2; ++i)
+                    {
+                        swap(out[i*nquad1 + j],
+                             out[(nquad2-i-1)*nquad1 + j]);
+                    }
+                }
+            }
+        }
+
         /**
          * For each local element, copy the normals stored in the element list
          * into the array \a normals.
@@ -934,76 +998,61 @@ namespace Nektar
         void ExpList2D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            int i,j,k,offset;
-            Array<OneD,Array<OneD,NekDouble> > locnormals;
             Array<OneD, NekDouble> tmp;
-            // Assume whole array is of same coordinate dimension
-            int coordim = GetCoordim(0);
+            int i, j, k, offset;
+            const int coordim = GetCoordim(0);
 
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
             // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
+            for (i = 0; i < m_exp->size(); ++i)
             {
-                int e_npoints = (*m_exp)[i]->GetTotPoints();
-
-                LocalRegions::Expansion2DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion2D>();
-                LocalRegions::Expansion3DSharedPtr loc_elmt =
-                    loc_exp->GetLeftAdjacentElementExp();
-                int faceNumber = loc_exp->GetLeftAdjacentElementFace();
+                LocalRegions::Expansion2DSharedPtr traceExp = (*m_exp)[i]->as<
+                    LocalRegions::Expansion2D>();
+                LocalRegions::Expansion3DSharedPtr exp3D =
+                    traceExp->GetLeftAdjacentElementExp();
 
                 // Get the number of points and normals for this expansion.
-                locnormals = loc_elmt->GetFaceNormal(faceNumber);
-                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
-                int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
+                int nElmtPts = (*m_exp)[i]->GetTotPoints();
+                int faceNumber = traceExp->GetLeftAdjacentElementFace();
+                const Array<OneD, const Array<OneD, NekDouble> > &locNormals
+                    = exp3D->GetFaceNormal(faceNumber);
 
-                StdRegions::Orientation orient = loc_elmt->GetForient(faceNumber);
-                int coordDim = locnormals.num_elements();
-                Array<OneD, Array<OneD, NekDouble> > traceNormals(coordDim);
+                // Project normals from 3D element onto the same orientation as
+                // the trace expansion.
+                StdRegions::Orientation orient = exp3D->GetForient(faceNumber);
+                Array<OneD, Array<OneD, NekDouble> > traceNormals(coordim);
 
-                if (orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                LibUtilities::BasisKey faceBasis0
+                    = exp3D->DetFaceBasisKey(faceNumber, 0);
+                LibUtilities::BasisKey faceBasis1
+                    = exp3D->DetFaceBasisKey(faceNumber, 1);
+
+                const int faceNq0 = faceBasis0.GetNumPoints();
+                const int faceNq1 = faceBasis1.GetNumPoints();
+
+                for (j = 0; j < coordim; ++j)
                 {
-                    for (j = 0; j < coordDim; ++j)
-                    {
-                        traceNormals[j] = locnormals[j];
-                    }
-                }
-                else if (orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    for (j = 0; j < coordDim; ++j)
-                    {
-                        int nPts  = locnormals[j].num_elements();
-                        int nPts0 = loc_exp->GetNumPoints(0);
-                        int nPts1 = loc_exp->GetNumPoints(1);
-
-                        traceNormals[j] = Array<OneD, NekDouble>(nPts);
-
-                        for (k = 0; k < nPts1; ++k)
-                        {
-                            Vmath::Vcopy(nPts0,
-                                         &locnormals[j][k*nPts0], 1,
-                                         &traceNormals[j][(k+1)*nPts0-1], -1);
-                        }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false, "unsupported");
+                    traceNormals[j] = Array<OneD, NekDouble>(faceNq0*faceNq1);
+                    AlignFace(orient, faceNq0, faceNq1,
+                              locNormals[j], traceNormals[j]);
                 }
 
-                if (e_nmodes != loc_nmodes)
+                if (faceBasis0 != traceExp->GetBasis(0)->GetBasisKey() ||
+                    faceBasis1 != traceExp->GetBasis(1)->GetBasisKey())
                 {
-                    if (loc_exp->GetRightAdjacentElementFace() >= 0)
+                    // In serial, use the normals from the other side.
+                    if (traceExp->GetRightAdjacentElementFace() >= 0)
                     {
-                        LocalRegions::Expansion3DSharedPtr loc_elmt =
-                            loc_exp->GetRightAdjacentElementExp();
+                        exp3D      = traceExp->GetRightAdjacentElementExp ();
+                        faceNumber = traceExp->GetRightAdjacentElementFace();
 
-                        int faceNumber = loc_exp->GetRightAdjacentElementFace();
-
-                        // Get the number of points and normals for this expansion.
-                        locnormals = loc_elmt->GetFaceNormal(faceNumber);
+                        // Get the number of points and normals for this
+                        // expansion.
+                        const Array<OneD, const Array<OneD, NekDouble> >
+                            &locNormals = exp3D->GetFaceNormal(faceNumber);
 
                         offset = m_phys_offset[i];
                         // Process each point in the expansion.
@@ -1011,7 +1060,7 @@ namespace Nektar
                         {
                             for(k = 0; k < coordim; ++k)
                             {
-                                normals[k][offset+j] = -locnormals[k][j];
+                                normals[k][offset+j] = -locNormals[k][j];
                             }
                         }
                     }
@@ -1034,7 +1083,7 @@ namespace Nektar
 
                             LibUtilities::Interp2D(from_key0,
                                                    from_key1,
-                                                   locnormals[p],
+                                                   locNormals[p],
                                                    to_key0,
                                                    to_key1,
                                                    normal[p]);
@@ -1056,20 +1105,21 @@ namespace Nektar
                 }
                 else
                 {
+                */
                     // Get the physical data offset for this expansion.
                     offset = m_phys_offset[i];
 
                     for (k = 0; k < coordim; ++k)
                     {
                         LibUtilities::Interp2D(
-                            loc_elmt->DetFaceBasisKey(faceNumber, 0).GetPointsKey(),
-                            loc_elmt->DetFaceBasisKey(faceNumber, 1).GetPointsKey(),
+                            exp3D->DetFaceBasisKey(faceNumber, 0).GetPointsKey(),
+                            exp3D->DetFaceBasisKey(faceNumber, 1).GetPointsKey(),
                             traceNormals[k],
-                            (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
-                            (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                            traceExp->GetBasis(0)->GetPointsKey(),
+                            traceExp->GetBasis(1)->GetPointsKey(),
                             tmp = normals[k]+offset);
                     }
-                }
+                    //}
             }
         }
 

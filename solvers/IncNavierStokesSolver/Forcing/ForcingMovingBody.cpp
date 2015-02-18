@@ -70,7 +70,8 @@ void ForcingMovingBody::v_InitObject(
 
     // only a first order approximation is considered for dw/dt in forcing term
     m_intSteps        = 1;
-    // forcing size (it must be 3)
+    // forcing size (it must be 3: Ax, Ay and Az)
+    // total number of structural variables(Disp, Vel and Accel) must be 3
     m_NumVariable     = pNumForcingFields;
     m_Forcing         = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
     m_funcName        = Array<OneD, std::string> (3);
@@ -87,10 +88,10 @@ void ForcingMovingBody::v_InitObject(
     // used to calculate dw/dt in forcing term
     int nPointsTot = pFields[0]->GetNpoints();
     m_W    = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
-    m_W[0] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+    m_W[0] = Array<OneD, NekDouble> (nPointsTot, 0.0);
     for(int n = 0; n < m_intSteps; ++n)
     {
-        m_W[n+1] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+        m_W[n+1] = Array<OneD, NekDouble> (nPointsTot, 0.0);
     }
 
     // Loading the x-dispalcement (m_zeta) and the y-displacement (m_eta)
@@ -141,6 +142,8 @@ void ForcingMovingBody::v_InitObject(
     // check if we need to load a file or we have an equation
     CheckIsFromFile();
 
+    // Get the outputfile name, output frequency and 
+    // the boundary's ID for the cable's wall
     std::string typeStr = pForce->Attribute("TYPE");
     std::map<std::string, std::string> vParams;
 
@@ -199,13 +202,8 @@ void ForcingMovingBody::v_InitObject(
         m_eta[i]  = Array<OneD, NekDouble>(phystot,0.0);
     }
 
-    // Identify vibration type and initialise the cable model
-    m_vibrationtype = m_session->GetSolverInfo("VibrationType");
-    if(m_vibrationtype == "Free" || m_vibrationtype == "FREE" ||
-        m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
-    {
-        InitialiseCableModel(m_session, pFields);
-    }
+    // Initialise the cable model
+    InitialiseCableModel(m_session, pFields);
 }
 
 void ForcingMovingBody::v_Apply(
@@ -250,8 +248,7 @@ void ForcingMovingBody::UpdateMotion(
     }
     else if(m_vibrationtype == "Forced" || m_vibrationtype == "FORCED")
     {
-        // For forced vibration case, displacements, velocities, accelerations
-        // are loading from specified file or function
+        // For forced vibration case, load from specified file or function
         int cnt = 0;
         for(int j = 0; j < m_funcName.num_elements(); j++)
         {
@@ -286,8 +283,7 @@ void ForcingMovingBody::UpdateMotion(
     }
     else
     {
-        ASSERTL0(false, "Vibration type of moving body needs to be specified "
-                        "as free or constrained or forced");
+        ASSERTL0(false, "Unrecogized vibration type for cable's dynamic model");
     }
 
     // Pass the variables of the cable's motion to the movingbody filter
@@ -681,6 +677,7 @@ void ForcingMovingBody::TensionedCableModel(
               Array<OneD, NekDouble> &MotPhysinArray)
 {
     Array<OneD, NekDouble> ForceCoeffs(m_NumLocPlane, 0.0);
+
     Array<OneD, Array<OneD, NekDouble> > MotionCoeffs(m_NumVariable);
     Array<OneD, Array<OneD, NekDouble> > MotionPhys(m_NumVariable);
 
@@ -703,18 +700,114 @@ void ForcingMovingBody::TensionedCableModel(
     // implemented for the motion of cable, so it is matched with that carried
     // out in fluid fields; on the other hand, if m_homostrip == true, there is
     // a mismatch between the structure and fluid fields in terms of fourier
-    // transformation, then the routines such as HomogeneousFwdTrans/
-    // HomogeneousBwdTrans can not be used directly for cable's solution.
-    if(!m_homostrip)
+    // transformation, then the routines such as FFTFwdTrans/
+    // FFTBwdTrans can not be used directly for cable's solution.
+    if(!m_homostrip) //modeling in full resolutions
     {
-        pFields[0]->HomogeneousFwdTrans(FcePhysinArray, ForceCoeffs);
-        for (int var = 0; var < m_NumVariable; var++)
+        Array<OneD, Array <OneD, NekDouble> > fft_in(m_NumVariable+1);
+        Array<OneD, Array <OneD, NekDouble> > fft_out(m_NumVariable+1);
+
+        int nplanes = m_session->GetParameter("HomModesZ");
+
+        for(int j = 0; j < m_NumVariable+1; j++)
         {
-            pFields[0]->HomogeneousFwdTrans(MotionPhys[var], MotionCoeffs[var]);
+            fft_in[j]  = Array <OneD, NekDouble> (nplanes, 0.0);
+            fft_out[j] = Array <OneD, NekDouble> (nplanes, 0.0);
         }
 
-        // solve the ODE in the wave space to obtain disp, vel and accel of
-        // cable
+        int nproc   = m_comm->GetColumnComm()->GetSize();
+        int colrank = m_comm->GetColumnComm()->GetRank();
+ 
+        if (colrank == 0)
+        {
+            Vmath::Vcopy(m_NumLocPlane, FcePhysinArray, 1, fft_in[0], 1);
+
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                Vmath::Vcopy(m_NumLocPlane, MotionPhys[var], 1, fft_in[var+1], 1);
+            }
+
+            for(int j = 0; j < m_NumVariable+1; j++)
+            {
+                for (int i = 1; i < nproc; ++i)
+                {
+                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+
+                    m_comm->GetColumnComm()->Recv(i, tmp = fft_in[j] + i*m_NumLocPlane);
+                }
+            }
+
+            if(m_supporttype == "FREE-FREE" || m_supporttype == "Free-Free")
+            {
+                for(int j = 0 ; j < m_NumVariable+1; ++j)
+                {
+                    m_FFT->FFTFwdTrans(fft_in[j], fft_out[j]);
+                }
+            }
+            else if (m_supporttype == "PINNED-PINNED" || m_supporttype == "Pinned-Pinned")
+            {
+                //TODO:
+                int N = fft_in[0].num_elements();
+
+                for(int j = 0 ; j < m_NumVariable+1; ++j)
+                {
+                    for(int i = 0; i < N; i++)
+                    {
+                        fft_out[j][i] = 0.0;
+
+                        for(int k = 0; k < N; k++)
+                        {
+                            fft_out[j][i] +=
+                                fft_in[j][k]*
+                                    sin(M_PI/(N)*(k+1/2)*(i+1));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
+            }
+
+            Vmath::Vcopy(m_NumLocPlane, fft_out[0], 1, ForceCoeffs, 1);
+
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                Vmath::Vcopy(m_NumLocPlane, fft_out[var+1], 1, MotionCoeffs[var], 1);
+            }
+
+            for(int j = 0; j < m_NumVariable+1; j++)
+            {
+                for (int i = 1; i < nproc; i++)
+                {
+                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+
+                    Vmath::Vcopy(m_NumLocPlane, fft_out[j] + i*m_NumLocPlane, 1, tmp, 1);
+
+                    m_comm->GetColumnComm()->Send(i, tmp);
+                }
+            }
+        }
+        else
+        {
+            m_comm->GetColumnComm()->Send(0, FcePhysinArray);
+
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                m_comm->GetColumnComm()->Send(0, MotionPhys[var]);
+            }
+
+            m_comm->GetColumnComm()->Recv(0, ForceCoeffs);
+
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                m_comm->GetColumnComm()->Recv(0, MotionCoeffs[var]);
+            }
+        }
+        
+        // solve the ODE in the wave space to obtain the
+        // cable's variables
         for(int plane = 0; plane < m_NumLocPlane; plane++)
         {
             int nrows = m_NumVariable;
@@ -745,13 +838,89 @@ void ForcingMovingBody::TensionedCableModel(
                 MotionCoeffs[var][plane] = tmp1[var];
             }
         }
-
-        for(int var = 0; var < m_NumVariable; var++)
+        
+        if (colrank == 0)
         {
-            pFields[0]->HomogeneousBwdTrans(MotionCoeffs[var], MotionPhys[var]);
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                Vmath::Vcopy(m_NumLocPlane, MotionCoeffs[var], 1, fft_in[var], 1);
+            }
+
+            for(int j = 0; j < m_NumVariable; j++)
+            {
+                for (int i = 1; i < nproc; ++i)
+                {
+                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+
+                    m_comm->GetColumnComm()->Recv(i, tmp = fft_in[j]+i*m_NumLocPlane);
+                }
+            }
+
+            if(m_supporttype == "FREE-FREE" || m_supporttype == "Free-Free")
+            {
+                for(int j = 0 ; j < m_NumVariable; ++j)
+                {
+                    m_FFT->FFTBwdTrans(fft_in[j], fft_out[j]);
+                }
+            }
+            else if (m_supporttype == "PINNED-PINNED" || m_supporttype == "Pinned-Pinned")
+            {
+                //TODO:
+                int N = fft_in[0].num_elements();
+
+                for(int var = 0; var < m_NumVariable; var++)
+                {
+                    for(int i = 0; i < N; i++)
+                    {
+                        fft_out[var][i] = 0;
+
+                        for(int k = 0; k < N; k++)
+                        {
+                            fft_out[var][i] +=
+                                fft_in[var][k]*
+                                    sin(M_PI/(N)*(k+1)*(i+1/2))*2/N;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
+            }
+
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                Vmath::Vcopy(m_NumLocPlane, fft_out[var], 1, MotionPhys[var], 1);
+            }
+
+            for(int j = 0; j < m_NumVariable; j++)
+            {
+                for (int i = 1; i < nproc; ++i)
+                {
+                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+
+                    Vmath::Vcopy(m_NumLocPlane, fft_out[j]+i*m_NumLocPlane, 1, tmp, 1);
+
+                    m_comm->GetColumnComm()->Send(i, tmp);
+                }
+            }
         }
+        else
+        {
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                m_comm->GetColumnComm()->Send(0, MotionCoeffs[var]);
+            }
+
+            for (int var = 0; var < m_NumVariable; var++)
+            {
+                m_comm->GetColumnComm()->Recv(0, MotionPhys[var]);
+            }
+        }
+        
     }
-    else
+    else //strip modeling
     {
         int nstrips;
         m_session->LoadParameter("Strip_Z", nstrips);
@@ -807,9 +976,37 @@ void ForcingMovingBody::TensionedCableModel(
         // Implement fourier transformation on the root process
         if(colrank == 0)
         {
-            for(int j = 0 ; j < m_NumVariable+1; ++j)
+            if(m_supporttype == "FREE-FREE" || m_supporttype == "Free-Free")
             {
-                m_FFT->FFTFwdTrans(fft_in[j], fft_out[j]);
+                for(int j = 0 ; j < m_NumVariable+1; ++j)
+                {
+                    m_FFT->FFTFwdTrans(fft_in[j], fft_out[j]);
+                }
+            }
+            else if(m_supporttype == "PINNED-PINNED" || m_supporttype == "Pinned-Pinned")
+            {
+                //TODO:
+                int N = fft_in[0].num_elements();
+
+                for(int var = 0; var < m_NumVariable+1; var++)
+                {
+                    for(int i = 0; i < N; i++)
+                    {
+                        fft_out[var][i] = 0;
+
+                        for(int k = 0; k < N; k++)
+                        {
+                            fft_out[var][i] +=
+                                fft_in[var][k]*
+                                    sin(M_PI/(N)*(k+1/2)*(i+1));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
             }
         }
 
@@ -930,9 +1127,37 @@ void ForcingMovingBody::TensionedCableModel(
         // coefficients
         if(colrank == 0)
         {
-            for(int var = 0; var < m_NumVariable; var++)
+            if(m_supporttype == "FREE-FREE" || m_supporttype == "Free-Free")
             {
-                m_FFT->FFTBwdTrans(fft_in[var], fft_out[var]);
+                for(int var = 0; var < m_NumVariable; var++)
+                {
+                    m_FFT->FFTBwdTrans(fft_in[var], fft_out[var]);
+                }
+            }
+            else if(m_supporttype == "PINNED-PINNED" || m_supporttype == "Pinned-Pinned")
+            {
+                //TODO:
+                int N = fft_in[0].num_elements();
+
+                for(int var = 0; var < m_NumVariable; var++)
+                {
+                    for(int i = 0; i < N; i++)
+                    {
+                        fft_out[var][i] = 0;
+
+                        for(int k = 0; k < N; k++)
+                        {
+                            fft_out[var][i] +=
+                                fft_in[var][k]*
+                                    sin(M_PI/(N)*(k+1)*(i+1/2))*2/N;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
             }
         }
 
@@ -1092,6 +1317,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
     for(int n = 0, cn = 1; n < m_NumD; n++, cn--)
     {
         int offset = cn*m_VarArraysize;
+
         Array<OneD, NekDouble> tmp(m_VarArraysize, 0.0);
 
         TensionedCableModel(pFields, fces[cn], tmp = m_MotionVars+offset);
@@ -1208,6 +1434,15 @@ void ForcingMovingBody::InitialiseCableModel(
         const LibUtilities::SessionReaderSharedPtr& pSession,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
 {
+    Array<OneD, unsigned int> ZIDs;
+    ZIDs           = pFields[0]->GetZIDs();
+    m_NumLocPlane  = ZIDs.num_elements();
+    m_VarArraysize = m_NumLocPlane*m_NumVariable;
+    m_Aeroforces   = Array<OneD, NekDouble>(2*m_NumLocPlane,0.0);
+    m_MotionVars   = Array<OneD, NekDouble>(2*m_VarArraysize,0.0);
+
+    m_vibrationtype = m_session->GetSolverInfo("VibrationType");
+
     if(m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
     {
         m_NumD = 1;
@@ -1216,20 +1451,23 @@ void ForcingMovingBody::InitialiseCableModel(
     {
         m_NumD = 2;
     }
+    else if (m_vibrationtype == "Forced" || m_vibrationtype == "FORCED")
+    {
+        return;
+    }
+
+    m_supporttype = m_session->GetSolverInfo("SupportType");
+
+    m_comm        = pFields[0]->GetComm();
 
     m_session->MatchSolverInfo("HomoStrip","True",m_homostrip,false);
 
-    Array<OneD, unsigned int> ZIDs;
-    ZIDs           = pFields[0]->GetZIDs();
-    m_NumLocPlane  = ZIDs.num_elements();
-    m_VarArraysize = m_NumLocPlane*m_NumVariable;
-    m_Aeroforces   = Array<OneD, NekDouble>(2*m_NumLocPlane,0.0);
-    m_MotionVars   = Array<OneD, NekDouble>(2*m_VarArraysize,0.0);
-
-    //Loading strcutural parameters from input file
     if(!m_homostrip)
     {
         m_session->LoadParameter("LZ", m_lhom);
+        int nplanes = m_session->GetParameter("HomModesZ");
+        m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance(
+                                                            "NekFFTW", nplanes);
     }
     else
     {
@@ -1240,11 +1478,11 @@ void ForcingMovingBody::InitialiseCableModel(
         m_session->LoadParameter("DistStrip", DistStrip);
         m_session->LoadParameter("Strip_Z", nstrips);
         m_lhom = nstrips * DistStrip;
-        m_comm = pFields[0]->GetComm();
         m_FFT  = LibUtilities::GetNektarFFTFactory().CreateInstance(
                                                             "NekFFTW", nstrips);
     }
 
+    // load the structural dynamic parameters from xml file
     m_session->LoadParameter("StructRho",    m_structrho);
     m_session->LoadParameter("StructDamp",   m_structdamp,   0.0);
     m_session->LoadParameter("StructStiff",  m_structstiff,  0.0);
@@ -1297,13 +1535,13 @@ void ForcingMovingBody::InitialiseCableModel(
     // Setting the coefficient matrices for solving structural dynamic ODEs
     SetDynEqCoeffMatrix(pFields);
 
-    // Set initial condition for cable motion
+    // Set initial condition for cable's motion
     int cnt = 0;
 
     for(int j = 0; j < m_funcName.num_elements(); j++)
     {
                 
-        // loading from the specific files outside through inputstream
+        // loading from the specified files through inputstream
         if(m_IsFromFile[cnt] && m_IsFromFile[cnt+1])
         {
     
@@ -1546,12 +1784,41 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
         {
             Array<OneD, unsigned int> ZIDs;
             ZIDs = pFields[0]->GetZIDs();
-            K = ZIDs[plane]/2;
+
+            if(m_supporttype == "FREE-FREE" || 
+                    m_supporttype == "Free-Free")
+            {
+                K = ZIDs[plane]/2;
+            }
+            else if(m_supporttype == "PINNED-PINNED" || 
+                        m_supporttype == "Pinned-Pinned")
+            {
+                K = ZIDs[plane];
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
+            }          
         }
         else
         {
             unsigned int irank = m_comm->GetColumnComm()->GetRank();
-            K = irank/2;
+            if(m_supporttype == "FREE-FREE" || 
+                    m_supporttype == "Free-Free")
+            {
+                K = irank/2;
+            }
+            else if(m_supporttype == "PINNED-PINNED" || 
+                        m_supporttype == "Pinned-Pinned")
+            {
+                K = irank;
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
+            }
         }
 
         tmp6 = beta * K;

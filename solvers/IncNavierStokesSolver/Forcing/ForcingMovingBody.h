@@ -148,8 +148,10 @@ class ForcingMovingBody : public SolverUtils::Forcing
         LibUtilities::CommSharedPtr m_comm;
         FilterMovingBodySharedPtr m_filter;
 
-        /// free vibration or forced vibration types are available
+        /// either free or forced vibration types are available
         std::string m_vibrationtype;
+        /// either free-free or pinned-pinned support types
+        std::string m_supporttype;
 
         /// storage for the cable's force(x,y) variables
         Array<OneD, NekDouble> m_Aeroforces;

@@ -1170,57 +1170,58 @@ void ForcingMovingBody::EvaluateStructDynModel(
                             = pFields[0]->GetHomogeneousBasis()->GetZ();
     int nbnd = pFields[0]->GetBndCondExpansions().num_elements();
 
-    for (int i = 0; i < nbnd; ++i)
-    {
-        for (int plane = 0; plane < m_NumLocPlane; plane++)
-        {
-            for ( int dir = 0; dir < m_motion.num_elements(); dir++)
-            {
-                bndCondExps = pFields[dir]->GetPlane(plane)
-                                            ->GetBndCondExpansions();
-                bndConds    = pFields[dir]->GetPlane(plane)
-                                            ->GetBndConditions();
-
-                if (bndConds[i]->GetUserDefined() ==
-                                            SpatialDomains::eMovingBody)
-                {
-                    int npoints = bndCondExps[i]->GetNpoints();
-                    Array<OneD, NekDouble> x0(npoints, 0.0);
-                    Array<OneD, NekDouble> x1(npoints, 0.0);
-                    Array<OneD, NekDouble> x2(npoints, 0.0);
-                    Array<OneD, NekDouble> tmp(npoints,0.0);
-
-                    NekDouble local_z = z[pFields[0]->GetTransposition()
-                                                    ->GetPlaneID(plane)];
-                    NekDouble x2_in   = 0.5*m_lhom*(1.0+local_z);
-
-                    // Homogeneous input case for x2.
-                    if (x2_in == NekConstants::kNekUnsetDouble)
-                    {
-                        bndCondExps[i]->GetCoords(x0,x1,x2);
-                    }
-                    else
-                    {
-                        bndCondExps[i]->GetCoords(x0, x1, x2);
-                        Vmath::Fill(npoints, x2_in, x2, 1);
-                    }
-
-                    LibUtilities::Equation condition =
-                        boost::static_pointer_cast<
-                            SpatialDomains::DirichletBoundaryCondition>
-                                (bndConds[i])->
-                                    m_dirichletCondition;
-
-                    condition.Evaluate(x0, x1, x2, time,
-                                    bndCondExps[i]->UpdatePhys());
-                    Vmath::Fill(npoints, m_BndV[dir][0][plane], tmp, 1);
-                    Vmath::Vsub(npoints, bndCondExps[i]->UpdatePhys(), 1,
-                                         tmp,                          1,
-                                         bndCondExps[i]->UpdatePhys(), 1);
-                }
-            }
-        }
-    }
+    // Boundary conditions are now treated by the Mapping class
+//    for (int i = 0; i < nbnd; ++i)
+//    {
+//        for (int plane = 0; plane < m_NumLocPlane; plane++)
+//        {
+//            for ( int dir = 0; dir < m_motion.num_elements(); dir++)
+//            {
+//                bndCondExps = pFields[dir]->GetPlane(plane)
+//                                            ->GetBndCondExpansions();
+//                bndConds    = pFields[dir]->GetPlane(plane)
+//                                            ->GetBndConditions();
+//
+//                if (bndConds[i]->GetUserDefined() ==
+//                                            SpatialDomains::eMovingBody)
+//                {
+//                    int npoints = bndCondExps[i]->GetNpoints();
+//                    Array<OneD, NekDouble> x0(npoints, 0.0);
+//                    Array<OneD, NekDouble> x1(npoints, 0.0);
+//                    Array<OneD, NekDouble> x2(npoints, 0.0);
+//                    Array<OneD, NekDouble> tmp(npoints,0.0);
+//
+//                    NekDouble local_z = z[pFields[0]->GetTransposition()
+//                                                    ->GetPlaneID(plane)];
+//                    NekDouble x2_in   = 0.5*m_lhom*(1.0+local_z);
+//
+//                    // Homogeneous input case for x2.
+//                    if (x2_in == NekConstants::kNekUnsetDouble)
+//                    {
+//                        bndCondExps[i]->GetCoords(x0,x1,x2);
+//                    }
+//                    else
+//                    {
+//                        bndCondExps[i]->GetCoords(x0, x1, x2);
+//                        Vmath::Fill(npoints, x2_in, x2, 1);
+//                    }
+//
+//                    LibUtilities::Equation condition =
+//                        boost::static_pointer_cast<
+//                            SpatialDomains::DirichletBoundaryCondition>
+//                                (bndConds[i])->
+//                                    m_dirichletCondition;
+//
+//                    condition.Evaluate(x0, x1, x2, time,
+//                                    bndCondExps[i]->UpdatePhys());
+//                    Vmath::Fill(npoints, m_BndV[dir][0][plane], tmp, 1);
+//                    Vmath::Vsub(npoints, bndCondExps[i]->UpdatePhys(), 1,
+//                                         tmp,                          1,
+//                                         bndCondExps[i]->UpdatePhys(), 1);
+//                }
+//            }
+//        }
+//    }
 }
 
 

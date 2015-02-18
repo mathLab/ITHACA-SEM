@@ -66,42 +66,9 @@ namespace GlobalMapping
         Mapping::v_InitObject(pFields, pMapping); 
         
         m_constantJacobian = false;
-        m_timeDependent    = false;
-        
-        int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields>=2,
                 "Mapping X = X(x,y), Y = Y(x,y) needs 2 velocity components.");   
-
-        // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(5);
-        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
-        {
-            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
-        }
-        
-        bool waveSpace = pFields[0]->GetWaveSpace();
-        pFields[0]->SetWaveSpace(false);
-
-        // Calculate derivatives of x transformation --> m_GeometricInfo 0-1
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],m_coords[0],m_GeometricInfo[0]);
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],m_coords[0],m_GeometricInfo[1]);     
-
-        // Calculate derivatives of y transformation m_GeometricInfo 2-3
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],m_coords[1],m_GeometricInfo[2]);
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],m_coords[1],m_GeometricInfo[3]);
-        
-        // Calculate fx*gy-gx*fy --> m_GeometricInfo4
-        Vmath::Vmul(phystot, m_GeometricInfo[1], 1, m_GeometricInfo[2], 1, m_GeometricInfo[4], 1);
-        Vmath::Vvtvm(phystot, m_GeometricInfo[0], 1, m_GeometricInfo[3], 1,
-                                                    m_GeometricInfo[4], 1,
-                                                    m_GeometricInfo[4], 1);
-        // 
-        CalculateMetricTensor();
-        CalculateChristoffel();
-
-        pFields[0]->SetWaveSpace(waveSpace);
-
     }
 
     void MappingXYofXY::v_ContravarToCartesian(
@@ -384,9 +351,37 @@ namespace GlobalMapping
                             outarray[1*nvel+1],1,outarray[1*nvel+1],1); 
     }
 
-    void MappingXYofXY::v_UpdateMapping(const NekDouble time)
+    void MappingXYofXY::v_UpdateGeomInfo()
     {
+        int phystot         = m_fields[0]->GetTotPoints();
+        // Allocation of geometry memory
+        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(5);
+        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
+        {
+            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
+        }
+        
+        bool waveSpace = m_fields[0]->GetWaveSpace();
+        m_fields[0]->SetWaveSpace(false);
 
+        // Calculate derivatives of x transformation --> m_GeometricInfo 0-1
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],m_coords[0],m_GeometricInfo[0]);
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],m_coords[0],m_GeometricInfo[1]);     
+
+        // Calculate derivatives of y transformation m_GeometricInfo 2-3
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],m_coords[1],m_GeometricInfo[2]);
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],m_coords[1],m_GeometricInfo[3]);
+        
+        // Calculate fx*gy-gx*fy --> m_GeometricInfo4
+        Vmath::Vmul(phystot, m_GeometricInfo[1], 1, m_GeometricInfo[2], 1, m_GeometricInfo[4], 1);
+        Vmath::Vvtvm(phystot, m_GeometricInfo[0], 1, m_GeometricInfo[3], 1,
+                                                    m_GeometricInfo[4], 1,
+                                                    m_GeometricInfo[4], 1);
+        // 
+        CalculateMetricTensor();
+        CalculateChristoffel();
+
+        m_fields[0]->SetWaveSpace(waveSpace);        
     }
     
     void MappingXYofXY::CalculateMetricTensor()

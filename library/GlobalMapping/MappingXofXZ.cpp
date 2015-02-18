@@ -66,38 +66,9 @@ namespace GlobalMapping
         Mapping::v_InitObject(pFields, pMapping); 
         
         m_constantJacobian = false;
-        m_timeDependent    = false;
-        
-        int phystot         = pFields[0]->GetTotPoints();
         
         ASSERTL0(m_nConvectiveFields==3,
                 "Mapping X = X(x,z) needs 3 velocity components.");   
-
-        // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(5);
-        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
-        {
-            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
-        }
-        
-        bool waveSpace = pFields[0]->GetWaveSpace();
-        pFields[0]->SetWaveSpace(false);
-
-        // Calculate derivatives of transformation
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                    m_coords[0], m_GeometricInfo[0]);  //f_x
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
-                    m_coords[0], m_GeometricInfo[1]);  //f_z
-
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                    m_GeometricInfo[0], m_GeometricInfo[2]);  //f_xx
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
-                    m_GeometricInfo[0], m_GeometricInfo[3]);  //f_xz
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
-                    m_GeometricInfo[1], m_GeometricInfo[4]);  //f_zz
-
-        pFields[0]->SetWaveSpace(waveSpace);
-
     }
 
     void MappingXofXZ::v_ContravarToCartesian(
@@ -393,9 +364,33 @@ namespace GlobalMapping
         Vmath::Vmul(physTot,wk,1,inarray[0],1,outarray[2*nvel+2],1);  
     }
 
-    void MappingXofXZ::v_UpdateMapping(const NekDouble time)
+    void MappingXofXZ::v_UpdateGeomInfo()
     {
+        int phystot         = m_fields[0]->GetTotPoints();
+        // Allocation of geometry memory
+        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(5);
+        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
+        {
+            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
+        }
+        
+        bool waveSpace = m_fields[0]->GetWaveSpace();
+        m_fields[0]->SetWaveSpace(false);
 
+        // Calculate derivatives of transformation
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
+                    m_coords[0], m_GeometricInfo[0]);  //f_x
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
+                    m_coords[0], m_GeometricInfo[1]);  //f_z
+
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
+                    m_GeometricInfo[0], m_GeometricInfo[2]);  //f_xx
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
+                    m_GeometricInfo[0], m_GeometricInfo[3]);  //f_xz
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
+                    m_GeometricInfo[1], m_GeometricInfo[4]);  //f_zz
+
+        m_fields[0]->SetWaveSpace(waveSpace);
     }
 
 

@@ -275,7 +275,7 @@ namespace GlobalMapping
         }
     }
 
-    void MappingIdentity::v_UpdateMapping(const NekDouble time)
+    void MappingIdentity::v_UpdateGeomInfo()
     {
 
     }

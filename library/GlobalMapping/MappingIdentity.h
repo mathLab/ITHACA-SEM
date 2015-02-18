@@ -131,7 +131,7 @@ namespace GlobalMapping
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);   
 
-        GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
+        GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo();
 
     private:
 

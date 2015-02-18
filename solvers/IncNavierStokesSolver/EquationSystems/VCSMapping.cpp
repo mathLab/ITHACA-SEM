@@ -161,7 +161,7 @@ namespace Nektar
         // Update mapping and Deal with Dirichlet boundary conditions
         if (m_mapping->IsTimeDependent())
         {
-            m_mapping->UpdateMapping(time);
+            m_mapping->UpdateMapping(time, true);
             m_mapping->UpdateBCs(time);
         }       
         

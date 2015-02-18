@@ -89,7 +89,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const TiXmlElement                                *pMapping)
         {   
-            int phystot         = pFields[0]->GetTotPoints();
+            int phystot         = m_fields[0]->GetTotPoints();
+            m_timeDependent    = false;
             // Initialise variables
             m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
             m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
@@ -103,35 +104,45 @@ namespace Nektar
             
             // Load coordinates           
             const TiXmlElement* funcNameElmt = pMapping->FirstChildElement("COORDS");
-            ASSERTL0(funcNameElmt, "Requires COORDS tag, specifying function "
-                    "name which prescribes mapping.");
-
-            m_funcName = funcNameElmt->GetText();
-            ASSERTL0(m_session->DefinesFunction(m_funcName),
-                    "Function '" + m_funcName + "' not defined.");
-
-            // Get coordinates in the domain
-            m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
-
-            std::string s_FieldStr; 
-            // Check if function from session file defines each component
-            //      and evaluate them, otherwise use trivial transformation
-            for(int i = 0; i < 3; i++)
+            if (funcNameElmt)
             {
-                s_FieldStr = m_session->GetVariable(i);
-                if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
+                m_funcName = funcNameElmt->GetText();
+                ASSERTL0(m_session->DefinesFunction(m_funcName),
+                        "Function '" + m_funcName + "' not defined.");
+
+                // Get coordinates in the domain
+                m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
+
+                std::string s_FieldStr; 
+                // Check if function from session file defines each component
+                //      and evaluate them, otherwise use trivial transformation
+                for(int i = 0; i < 3; i++)
                 {
-                    EvaluateFunction(pFields, m_session, s_FieldStr, m_coords[i],
-                                            m_funcName);
-                    if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                    s_FieldStr = m_session->GetVariable(i);
+                    if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
                     {
-                        ASSERTL0 (false,
-                                "3DH1D does not support mapping in the z-direction.");
+                        EvaluateFunction(m_fields, m_session, s_FieldStr, m_coords[i],
+                                                m_funcName);
+                        if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                        {
+                            ASSERTL0 (false,
+                                    "3DH1D does not support mapping in the z-direction.");
+                        }
                     }
-                }
-                else
+                    else
+                    {
+                        // This coordinate is not defined, so use (x^i)' = x^i
+                        Vmath::Vcopy(phystot, coords[i], 1, m_coords[i], 1);
+                    }
+                }                
+            }
+            else
+            {
+                for(int i = 0; i < 3; i++)
                 {
-                    // This coordinate is not defined, so use (x^i)' = x^i
+                    // Use (x^i)' = x^i as default. This can be useful if we
+                    //    have a time-dependent mapping, and then only the
+                    //    initial mapping will be trivial
                     Vmath::Vcopy(phystot, coords[i], 1, m_coords[i], 1);
                 }
             }
@@ -153,7 +164,7 @@ namespace Nektar
                     s_FieldStr = m_session->GetVariable(i);
                     if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
                     {
-                        EvaluateFunction(pFields, m_session, s_FieldStr, 
+                        EvaluateFunction(m_fields, m_session, s_FieldStr, 
                                             m_coordsVel[i], m_velFuncName);
                         if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                         {
@@ -174,8 +185,10 @@ namespace Nektar
                 {
                     Vmath::Zero(phystot, m_coordsVel[i], 1);
                 }
-            }            
-            
+            }
+
+            // Calculate information required by the particular mapping
+            UpdateGeomInfo();           
         }
       
         /**
@@ -1092,6 +1105,63 @@ namespace Nektar
                     }
                 }             
             }            
+        }
+        
+        void Mapping::v_UpdateMapping(
+                const NekDouble time,
+                const bool      fromFunction,
+                const Array<OneD, Array<OneD, NekDouble> > &coords  ,
+                const Array<OneD, Array<OneD, NekDouble> > &coordsVel)
+        {
+            if (fromFunction)
+            {
+                std::string s_FieldStr; 
+                // Check if function from session file defines each component
+                //      and evaluate them, otherwise there is no need to update
+                //          coords
+                for(int i = 0; i < 3; i++)
+                {
+                    s_FieldStr = m_session->GetVariable(i);
+                    if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
+                    {
+                        EvaluateFunction(m_fields, m_session, s_FieldStr, m_coords[i],
+                                                m_funcName);
+                        if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                        {
+                            ASSERTL0 (false,
+                                    "3DH1D does not support mapping in the z-direction.");
+                        }
+                    }
+                    if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
+                     {
+                         EvaluateFunction(m_fields, m_session, s_FieldStr, 
+                                             m_coordsVel[i], m_velFuncName);
+                         if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                         {
+                             ASSERTL0 (false,
+                                     "3DH1D does not support mapping in the z-direction.");
+                         }
+                     }
+                }                                
+            }
+            else
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                // Copy coordinates
+                for(int i = 0; i < 3; i++)
+                {
+                    Vmath::Vcopy(physTot, coords[i], 1, m_coords[i], 1);
+                }
+                
+                for(int i = 0; i < nvel; i++)
+                {
+                    Vmath::Vcopy(physTot, coordsVel[i], 1, m_coordsVel[i], 1);
+                }
+            }
+            
+            // Update the information required by the specific mapping
+            UpdateGeomInfo();
         }
 
     }

@@ -66,30 +66,10 @@ namespace GlobalMapping
         Mapping::v_InitObject(pFields, pMapping); 
         
         m_constantJacobian = true;
-        m_timeDependent    = false;
-                
-        int phystot         = pFields[0]->GetTotPoints();
-        
+                        
         ASSERTL0(m_nConvectiveFields==3,
                     "Mapping X = x + f(z) needs 3 velocity components.");
         
-        // Allocation of geometry memory
-        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(4);
-        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
-        {
-            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
-        }
-        
-        bool waveSpace = pFields[0]->GetWaveSpace();
-        pFields[0]->SetWaveSpace(false);
-        // Calculate derivatives of transformation
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],m_coords[0],m_GeometricInfo[0]);
-        pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],m_GeometricInfo[0],m_GeometricInfo[1]);
-        // m_GeometricInfo[2] = fz^2
-        Vmath::Vmul(phystot,m_GeometricInfo[0],1,m_GeometricInfo[0],1,m_GeometricInfo[2],1);
-
-        pFields[0]->SetWaveSpace(waveSpace);
-
     }
 
     void MappingXofZ::v_ContravarToCartesian(
@@ -327,9 +307,25 @@ namespace GlobalMapping
                                         outarray[2*nvel+2],1); // U1 * fzz 
     }   
 
-    void MappingXofZ::v_UpdateMapping(const NekDouble time)
+    void MappingXofZ::v_UpdateGeomInfo()
     {
+        int phystot         = m_fields[0]->GetTotPoints();
+        // Allocation of geometry memory
+        m_GeometricInfo =  Array<OneD, Array<OneD, NekDouble> >(4);
+        for (int i = 0; i < m_GeometricInfo.num_elements(); i++)
+        {
+            m_GeometricInfo[i] = Array<OneD, NekDouble>(phystot, 0.0);
+        }
+        
+        bool waveSpace = m_fields[0]->GetWaveSpace();
+        m_fields[0]->SetWaveSpace(false);
+        // Calculate derivatives of transformation
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],m_coords[0],m_GeometricInfo[0]);
+        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],m_GeometricInfo[0],m_GeometricInfo[1]);
+        // m_GeometricInfo[2] = fz^2
+        Vmath::Vmul(phystot,m_GeometricInfo[0],1,m_GeometricInfo[0],1,m_GeometricInfo[2],1);
 
+        m_fields[0]->SetWaveSpace(waveSpace);
     }
 
 

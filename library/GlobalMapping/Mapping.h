@@ -264,7 +264,13 @@ namespace GlobalMapping
             GLOBAL_MAPPING_EXPORT bool IsTimeDependent()
             {
                 return m_timeDependent;
-            }          
+            } 
+            
+            // Change the value of m_timeDependent
+            GLOBAL_MAPPING_EXPORT void SetTimeDependent( const bool value)
+            {
+                m_timeDependent = value;
+            }
             
             // Define if the Jacobian of the transformation is constant
             GLOBAL_MAPPING_EXPORT bool HasConstantJacobian()
@@ -274,15 +280,23 @@ namespace GlobalMapping
             
             //
             //  Function to update time-dependent mappings
-            //
-            GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time)
-            {
-                v_UpdateMapping( time);
-            }
-            
+            //            
             GLOBAL_MAPPING_EXPORT void UpdateBCs( const NekDouble time)
             {
                 v_UpdateBCs(time);
+            }
+            
+            GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time,
+                const bool      fromFunction,
+                const Array<OneD, Array<OneD, NekDouble> > &coords    = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &coordsVel = NullNekDoubleArrayofArray)
+            {
+                v_UpdateMapping( time, fromFunction, coords, coordsVel);
+            }
+            
+            GLOBAL_MAPPING_EXPORT void UpdateGeomInfo()
+            {
+                v_UpdateGeomInfo();
             }
             
 
@@ -410,7 +424,12 @@ namespace GlobalMapping
                 const bool                                      generalized);
             
             GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
-                                                const NekDouble time) =0;
+                const NekDouble time,
+                const bool      fromFunction,
+                const Array<OneD, Array<OneD, NekDouble> > &coords    = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &coordsVel = NullNekDoubleArrayofArray);
+            
+            GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo() =0;
             
             GLOBAL_MAPPING_EXPORT virtual void v_UpdateBCs(const NekDouble time);
             

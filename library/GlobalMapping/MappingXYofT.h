@@ -83,7 +83,6 @@ namespace GlobalMapping
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping);
         
-        GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(const NekDouble time);
 
     private:
 

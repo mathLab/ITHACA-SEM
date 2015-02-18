@@ -67,14 +67,9 @@ namespace GlobalMapping
         Mapping::v_InitObject(pFields, pMapping); 
         
         m_constantJacobian = false;
-        m_timeDependent    = false;
                 
         ASSERTL0(m_nConvectiveFields>=2,
                 "General Mapping needs at least 2 velocity components.");   
-       
-        CalculateMetricTerms();
-        CalculateChristoffel();
-
     }
 
     void MappingGeneralFixed::v_ContravarToCartesian(
@@ -253,9 +248,10 @@ namespace GlobalMapping
         } 
     }
 
-    void MappingGeneralFixed::v_UpdateMapping(const NekDouble time)
+    void MappingGeneralFixed::v_UpdateGeomInfo()
     {
-
+        CalculateMetricTerms();
+        CalculateChristoffel();
     }
     
     void MappingGeneralFixed::CalculateMetricTerms()

@@ -6,7 +6,7 @@ SET(GLOBAL_MAPPING_SOURCES
   MappingXYofT.cpp
   MappingXYofXY.cpp
   MappingGeneralFixed.cpp
-  MappingIdentity.cpp
+  MappingTranslation.cpp
 )
 
 SET(GLOBAL_MAPPING_HEADERS
@@ -17,7 +17,7 @@ SET(GLOBAL_MAPPING_HEADERS
   MappingXYofT.h
   MappingXYofXY.h
   MappingGeneralFixed.h
-  MappingIdentity.h
+  MappingTranslation.h
 )
 
 ADD_DEFINITIONS(-DGLOBAL_MAPPING_EXPORTS)

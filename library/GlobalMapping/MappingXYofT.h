@@ -42,14 +42,14 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <GlobalMapping/GlobalMappingDeclspec.h>
-#include <GlobalMapping/MappingIdentity.h>
+#include <GlobalMapping/MappingTranslation.h>
 
 namespace Nektar
 {
 namespace GlobalMapping
 {
 
-    class MappingXYofT: public MappingIdentity
+    class MappingXYofT: public MappingTranslation
     {
     public:
 

@@ -209,7 +209,7 @@ namespace Nektar
                 }
                 else
                 {
-                    vType = "Identity";
+                    vType = "Translation";
                 }    
                 
                 m_mappingPtr =   GetMappingFactory().CreateInstance(

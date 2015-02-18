@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingIdentity.h
+// File: MappingTranslation.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Empty mapping for identity transformation
+// Description: Trivial mapping for translation transformation
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_GLOBALMAPPING_MAPPINGIDENTITY
-#define NEKTAR_GLOBALMAPPING_MAPPINGIDENTITY
+#ifndef NEKTAR_GLOBALMAPPING_MAPPINGTRANSLATION
+#define NEKTAR_GLOBALMAPPING_MAPPINGTRANSLATION
 
 #include <string>
 
@@ -49,11 +49,11 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-    class MappingIdentity: public Mapping
+    class MappingTranslation: public Mapping
     {
     public:
 
-        friend class MemoryManager<MappingIdentity> ;
+        friend class MemoryManager<MappingTranslation> ;
 
         /// Creates an instance of this class
         GLOBAL_MAPPING_EXPORT
@@ -63,7 +63,7 @@ namespace GlobalMapping
             const TiXmlElement                                *pMapping)
         {
             MappingSharedPtr p =
-                    MemoryManager<MappingIdentity>::AllocateSharedPtr(pSession, 
+                    MemoryManager<MappingTranslation>::AllocateSharedPtr(pSession, 
                                                                    pFields);
             p->InitObject(pFields, pMapping);
             return p;
@@ -77,7 +77,7 @@ namespace GlobalMapping
         string                                      m_velFuncName;   
         
         // Constructor
-        MappingIdentity(const LibUtilities::SessionReaderSharedPtr   &pSession,
+        MappingTranslation(const LibUtilities::SessionReaderSharedPtr   &pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);        
 
         // Virtual functions

@@ -51,7 +51,7 @@ namespace GlobalMapping
     MappingXYofT::MappingXYofT(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
-        : MappingIdentity(pSession, pFields)
+        : MappingTranslation(pSession, pFields)
     {
     }
 
@@ -63,7 +63,7 @@ namespace GlobalMapping
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {
-        MappingIdentity::v_InitObject(pFields, pMapping);
+        MappingTranslation::v_InitObject(pFields, pMapping);
         
         m_timeDependent    = true;
         

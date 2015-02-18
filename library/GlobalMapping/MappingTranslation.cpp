@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingIdentity.cpp
+// File: MappingTranslation.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Empty mapping for identity transformation
+// Description: Trivial mapping for translation transformation
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <GlobalMapping/MappingIdentity.h>
+#include <GlobalMapping/MappingTranslation.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar
@@ -41,14 +41,14 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-    std::string MappingIdentity::className =
-            GetMappingFactory().RegisterCreatorFunction("Identity",
-                    MappingIdentity::create, "Identity mapping");
+    std::string MappingTranslation::className =
+            GetMappingFactory().RegisterCreatorFunction("Translation",
+                    MappingTranslation::create, "Translation mapping (X_i = x_i + constant)");
 
     /**
      *
      */
-    MappingIdentity::MappingIdentity(
+    MappingTranslation::MappingTranslation(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
         : Mapping(pSession, pFields)
@@ -59,27 +59,37 @@ namespace GlobalMapping
     /**
      *
      */
-    void MappingIdentity::v_InitObject(
+    void MappingTranslation::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {   
-        int phystot         = pFields[0]->GetTotPoints();
         m_constantJacobian = true;
-        m_timeDependent    = false;
-        
-        m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
-        m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
-        for (int i = 0; i < 3; i++)
+        // When there is no Mapping object defined, use the identity
+        //      transformation as a default
+        if (m_session->DefinesElement("Nektar/Mapping"))
         {
-            m_coords[i]    = Array<OneD, NekDouble> (phystot);
-            m_coordsVel[i] = Array<OneD, NekDouble> (phystot, 0.0);
+            Mapping::v_InitObject(pFields, pMapping);
         }
-        
-        m_fields[0]->GetCoords(m_coords[0], m_coords[1], m_coords[2]);
+        else
+        {            
+            int phystot         = pFields[0]->GetTotPoints();
+            
+            m_timeDependent    = false;
+
+            m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
+            m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
+            for (int i = 0; i < 3; i++)
+            {
+                m_coords[i]    = Array<OneD, NekDouble> (phystot);
+                m_coordsVel[i] = Array<OneD, NekDouble> (phystot, 0.0);
+            }
+
+            m_fields[0]->GetCoords(m_coords[0], m_coords[1], m_coords[2]);
+        }
         
     }
 
-    void MappingIdentity::v_ContravarToCartesian(
+    void MappingTranslation::v_ContravarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -98,7 +108,7 @@ namespace GlobalMapping
         }        
     }
 
-    void MappingIdentity::v_CovarToCartesian(
+    void MappingTranslation::v_CovarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -117,7 +127,7 @@ namespace GlobalMapping
         } 
     }
 
-    void MappingIdentity::v_ContravarFromCartesian(
+    void MappingTranslation::v_ContravarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -136,7 +146,7 @@ namespace GlobalMapping
         }         
     }
 
-    void MappingIdentity::v_CovarFromCartesian(
+    void MappingTranslation::v_CovarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -155,14 +165,14 @@ namespace GlobalMapping
         } 
     }
 
-    void MappingIdentity::v_GetJacobian(
+    void MappingTranslation::v_GetJacobian(
         Array<OneD, NekDouble>               &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
         Vmath::Fill(physTot, 1.0, outarray, 1);
     }
     
-    void MappingIdentity::v_DotGradJacobian(
+    void MappingTranslation::v_DotGradJacobian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, NekDouble>               &outarray)
     {
@@ -171,7 +181,7 @@ namespace GlobalMapping
         Vmath::Zero(physTot, outarray, 1);   
     }
 
-    void MappingIdentity::v_GetMetricTensor(
+    void MappingTranslation::v_GetMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
@@ -189,7 +199,7 @@ namespace GlobalMapping
         }            
     }
 
-    void MappingIdentity::v_GetInvMetricTensor(
+    void MappingTranslation::v_GetInvMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
@@ -207,7 +217,7 @@ namespace GlobalMapping
         }            
     }
     
-    void MappingIdentity::v_RaiseIndex(
+    void MappingTranslation::v_RaiseIndex(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -225,7 +235,7 @@ namespace GlobalMapping
         }            
     }
     
-    void MappingIdentity::v_LowerIndex(
+    void MappingTranslation::v_LowerIndex(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -243,7 +253,7 @@ namespace GlobalMapping
         }            
     }
 
-    void MappingIdentity::v_ApplyChristoffelContravar(
+    void MappingTranslation::v_ApplyChristoffelContravar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -259,7 +269,7 @@ namespace GlobalMapping
         }        
     }
 
-    void MappingIdentity::v_ApplyChristoffelCovar(
+    void MappingTranslation::v_ApplyChristoffelCovar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -275,7 +285,7 @@ namespace GlobalMapping
         }
     }
 
-    void MappingIdentity::v_UpdateGeomInfo()
+    void MappingTranslation::v_UpdateGeomInfo()
     {
 
     }

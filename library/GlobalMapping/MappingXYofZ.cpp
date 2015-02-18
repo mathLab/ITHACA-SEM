@@ -116,11 +116,11 @@ namespace GlobalMapping
         
         // U1 = u1 + fz*u3
         Vmath::Vvtvp(physTot, m_GeometricInfo[0], 1, inarray[2], 1, 
-                                outarray[0], 1, outarray[0],1);
+                                inarray[0], 1, outarray[0],1);
         
         // U2 = u2 + gz*u3
         Vmath::Vvtvp(physTot, m_GeometricInfo[3], 1, inarray[2], 1, 
-                                outarray[1], 1, outarray[1],1);
+                                inarray[1], 1, outarray[1],1);
         
         // U3 = u3
         Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
@@ -155,11 +155,11 @@ namespace GlobalMapping
         
         // U1 = u1 - fz * u3
         Vmath::Vmul(physTot, m_GeometricInfo[0], 1, inarray[2], 1, wk, 1);
-        Vmath::Vsub(physTot, outarray[0], 1, wk, 1, outarray[0], 1);        
+        Vmath::Vsub(physTot, inarray[0], 1, wk, 1, outarray[0], 1);        
         
         // U2 = u2 - gz*u3
         Vmath::Vmul(physTot, m_GeometricInfo[3], 1, inarray[2], 1, wk, 1);
-        Vmath::Vsub(physTot, outarray[1], 1, wk, 1, outarray[1], 1);
+        Vmath::Vsub(physTot, inarray[1], 1, wk, 1, outarray[1], 1);
         
         // U3 = u3
         Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);        
@@ -214,13 +214,13 @@ namespace GlobalMapping
         // Fill diagonal with 1.0
         for (int i=0; i<nvel; i++)
         {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1,
-                                        outarray[i+nvel*i], 1); 
+            Vmath::Sadd(physTot, 1.0, outarray[i*nvel+i], 1,
+                                        outarray[i*nvel+i], 1); 
         }            
 
         // G_{13} and G_{31} = fz
-        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, outarray[1*nvel+2], 1);
-        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, outarray[2*nvel+1], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, outarray[0*nvel+2], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[0], 1, outarray[2*nvel+0], 1);
 
         // G_{23} and G_{32} = gz
         Vmath::Vcopy(physTot, m_GeometricInfo[3], 1, outarray[1*nvel+2], 1);
@@ -247,21 +247,21 @@ namespace GlobalMapping
         // Fill diagonal with 1.0
         for (int i=0; i<nvel; i++)
         {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
-                                        outarray[i+nvel*i], 1); 
+            Vmath::Sadd(physTot, 1.0, outarray[i*nvel+i], 1, 
+                                        outarray[i*nvel+i], 1); 
         }            
 
         // G^{11} = 1+fz^2
-        Vmath::Vadd(physTot, outarray[0+nvel*0], 1, m_GeometricInfo[2], 1,
-                                                    outarray[0+nvel*0], 1);
+        Vmath::Vadd(physTot, outarray[0*nvel+0], 1, m_GeometricInfo[2], 1,
+                                                    outarray[0*nvel+0], 1);
 
         // G^{22} = 1+gz^2
-        Vmath::Vadd(physTot, outarray[1+nvel*1], 1, m_GeometricInfo[5], 1,
-                                                    outarray[1+nvel*1], 1);
+        Vmath::Vadd(physTot, outarray[1*nvel+1], 1, m_GeometricInfo[5], 1,
+                                                    outarray[1*nvel+1], 1);
 
         // G^{12} and G^{21} = fz*gz
-        Vmath::Vcopy(physTot, m_GeometricInfo[6],1, outarray[0+nvel*1], 1);
-        Vmath::Vcopy(physTot, outarray[0+nvel*1], 1, outarray[1*nvel+0], 1);
+        Vmath::Vcopy(physTot, m_GeometricInfo[6],1, outarray[0*nvel+1], 1);
+        Vmath::Vcopy(physTot, outarray[0*nvel+1], 1, outarray[1*nvel+0], 1);
 
         // G^{13} and G^{31} = -fz
         Vmath::Vcopy(physTot, m_GeometricInfo[0],1,wk,1); // fz

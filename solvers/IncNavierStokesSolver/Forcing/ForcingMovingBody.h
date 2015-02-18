@@ -42,6 +42,7 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <IncNavierStokesSolver/Filters/FilterMovingBody.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -70,6 +71,9 @@ class ForcingMovingBody : public SolverUtils::Forcing
         static std::string className;
 
     protected:
+        // Mapping object
+        GlobalMapping::MappingSharedPtr               m_mapping;
+        
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
             const unsigned int&                         pNumForcingFields,

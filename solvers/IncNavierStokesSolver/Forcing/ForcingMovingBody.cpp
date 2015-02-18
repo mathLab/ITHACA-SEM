@@ -68,6 +68,10 @@ void ForcingMovingBody::v_InitObject(
     ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,
              "Moving body implemented just for 3D Homogenous 1D expansions.");
 
+    // Load mapping
+    m_mapping = GlobalMapping::Mapping::Load(m_session, pFields); 
+    m_mapping->SetTimeDependent( true );
+    
     // only a first order approximation is considered for dw/dt in forcing term
     m_intSteps        = 1;
     // forcing size (it must be 3)
@@ -216,8 +220,11 @@ void ForcingMovingBody::v_Apply(
 {
     // Fill in m_zeta and m_eta with all the required values
     UpdateMotion(fields,time);
-    //calcualte the forcing components Ax,Ay,Az and put them in m_Forcing
-    CalculateForcing(fields);
+    
+    // Mapping terms are now treated by the mapping class and VCSMapping,
+    //      so maybe this should not be a forcing any more...
+    //CalculateForcing(fields);
+    
     // Apply forcing terms
     for (int i = 0; i < m_NumVariable; i++)
     {
@@ -247,6 +254,28 @@ void ForcingMovingBody::UpdateMotion(
         // For free vibration case, displacements, velocities and acceleartions
         // are obtained through solving structure dynamic model
         EvaluateStructDynModel(pFields, time);
+        
+        int physTot = pFields[0]->GetTotPoints();
+        Array< OneD, Array< OneD, NekDouble> >  coords(3);
+        Array< OneD, Array< OneD, NekDouble> >  coordsVel(3);
+        for(int i =0; i<3; i++)
+        {
+            coords[i] = Array< OneD, NekDouble> (physTot, 0.0);
+            coordsVel[i] = Array< OneD, NekDouble> (physTot, 0.0);
+        }
+        // Get original coordinates
+        pFields[0]->GetCoords(coords[0], coords[1], coords[2]);
+        
+        // Add displacement to coordinates
+        Vmath::Vadd(physTot, coords[0], 1, m_zeta[0], 1, coords[0], 1);
+        Vmath::Vadd(physTot, coords[1], 1, m_eta[0], 1, coords[1], 1);
+        // Copy velocities
+        Vmath::Vcopy(physTot, m_zeta[1], 1, coordsVel[0], 1);
+        Vmath::Vcopy(physTot, m_eta[1], 1, coordsVel[1], 1);       
+        
+        // Update mapping
+        m_mapping->UpdateMapping(time, false, coords, coordsVel);
+        
     }
     else if(m_vibrationtype == "Forced" || m_vibrationtype == "FORCED")
     {
@@ -260,15 +289,9 @@ void ForcingMovingBody::UpdateMotion(
                 ASSERTL0(false, "Motion loading from file needs specific "
                                 "implementation: Work in Progress!");
             }
-            else
-            {
-                EvaluateFunction(pFields, m_session, m_motion[0], m_zeta[j],
-                                 m_funcName[j], time);
-                EvaluateFunction(pFields, m_session, m_motion[1], m_eta[j],
-                                 m_funcName[j], time);
-                cnt = cnt + 2;
-            }
         }
+        // Update mapping
+        m_mapping->UpdateMapping(time, true);
 
         for(int var = 0; var < m_NumVariable; var++)
         {

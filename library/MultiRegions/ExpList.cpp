@@ -2683,9 +2683,9 @@ namespace Nektar
             bool autotuning = colOpt.IsUsingAutotuning();
             bool verbose  = m_session->DefinesCmdLineArgument("verbose") &&
                             (m_comm->GetRank() == 0);
-            int collmax = colOpt.GetMaxCollectionSize();
-            collmax = (collmax > 0 ? collmax : 2*m_exp->size());
-
+            int collmax = (colOpt.GetMaxCollectionSize() > 0
+                                        ? colOpt.GetMaxCollectionSize()
+                                        : 2*m_exp->size());
 
             // If ImpType is not specified by default argument call
             // then set ImpType to eStdMat for large collections or

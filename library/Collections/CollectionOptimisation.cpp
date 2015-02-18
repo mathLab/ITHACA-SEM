@@ -48,8 +48,11 @@ CollectionOptimisation::CollectionOptimisation(
         LibUtilities::SessionReaderSharedPtr pSession,
         ImplementationType defaultType)
 {
+    int i;
     map<ElmtOrder, ImplementationType> defaults;
     map<ElmtOrder, ImplementationType>::iterator it;
+    bool verbose  = pSession->DefinesCmdLineArgument("verbose") &&
+                    (pSession->GetComm()->GetRank() == 0);
 
     m_setByXml = false;
 
@@ -74,14 +77,14 @@ CollectionOptimisation::CollectionOptimisation(
     elTypes["H"] = LibUtilities::eHexahedron;
 
     map<string, OperatorType> opTypes;
-    for (int i = 0; i < SIZE_OperatorType; ++i)
+    for (i = 0; i < SIZE_OperatorType; ++i)
     {
         opTypes[OperatorTypeMap[i]] = (OperatorType)i;
         m_global[(OperatorType)i] = defaults;
     }
 
     map<string, ImplementationType> impTypes;
-    for (int i = 0; i < SIZE_ImplementationType; ++i)
+    for (i = 0; i < SIZE_ImplementationType; ++i)
     {
         impTypes[ImplementationTypeMap[i]] = (ImplementationType)i;
     }
@@ -98,19 +101,20 @@ CollectionOptimisation::CollectionOptimisation(
         if (xmlCol)
         {
             const char *maxSize = xmlCol->Attribute("MAXSIZE");
-            m_maxCollSize = maxSize ? atoi(maxSize) : 0;
+            m_maxCollSize = (maxSize ? atoi(maxSize) : 0);
 
             const char *defaultImpl = xmlCol->Attribute("DEFAULT");
             m_defaultType = defaultType;
             if (defaultType == eNoImpType && defaultImpl)
             {
                 const std::string collinfo = string(defaultImpl);
-                m_autotune = boost::iequals(collinfo, "autotuning");
+                m_autotune = boost::iequals(collinfo, "auto");
                 if (!m_autotune)
                 {
-                    for(int i = 1; i < Collections::SIZE_ImplementationType; ++i)
+                    for(i = 1; i < Collections::SIZE_ImplementationType; ++i)
                     {
-                        if(boost::iequals(collinfo,Collections::ImplementationTypeMap[i]))
+                        if(boost::iequals(collinfo,
+                                Collections::ImplementationTypeMap[i]))
                         {
                             m_defaultType = (Collections::ImplementationType) i;
                             break;
@@ -120,10 +124,10 @@ CollectionOptimisation::CollectionOptimisation(
             }
 
             TiXmlElement *elmt = xmlCol->FirstChildElement();
-            m_setByXml = true;
-
             while (elmt)
             {
+                m_setByXml = true;
+
                 string tagname = elmt->ValueStr();
 
                 ASSERTL0(boost::iequals(tagname, "OPERATOR"),
@@ -194,7 +198,8 @@ CollectionOptimisation::CollectionOptimisation(
             if(pSession->DefinesCmdLineArgument("verbose") &&
                pSession->GetComm()->GetRank() == 0)
             {
-                map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator mIt;
+                map<OperatorType, map<ElmtOrder,
+                                      ImplementationType> >::iterator mIt;
                 map<ElmtOrder, ImplementationType>::iterator eIt;
                 for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
                 {

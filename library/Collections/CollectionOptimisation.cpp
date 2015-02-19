@@ -199,9 +199,15 @@ CollectionOptimisation::CollectionOptimisation(
             }
 
             // Print out operator map
-            if(pSession->DefinesCmdLineArgument("verbose") &&
-               pSession->GetComm()->GetRank() == 0)
+            if (verbose)
             {
+                if (!m_setByXml && !m_autotune)
+                {
+                    cout << "Setting Collection optimisation using: "
+                         << Collections::ImplementationTypeMap[m_defaultType]
+                         << endl;
+                }
+
                 map<OperatorType, map<ElmtOrder,
                                       ImplementationType> >::iterator mIt;
                 map<ElmtOrder, ImplementationType>::iterator eIt;

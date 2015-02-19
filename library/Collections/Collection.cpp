@@ -61,11 +61,12 @@ Collection::Collection(
 
         OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
                           pCollExp[0]->IsNodalNonTensorialExp());
-        if (GetOperatorFactory().ModuleExists(opKey))
-        {
-            m_ops[opType] = GetOperatorFactory().CreateInstance(
+
+        ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
+                "Requested unknown operator");
+
+        m_ops[opType] = GetOperatorFactory().CreateInstance(
                                                 opKey, pCollExp, m_geomData);
-        }
     }
 }
 

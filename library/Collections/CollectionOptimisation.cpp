@@ -51,10 +51,14 @@ CollectionOptimisation::CollectionOptimisation(
     int i;
     map<ElmtOrder, ImplementationType> defaults;
     map<ElmtOrder, ImplementationType>::iterator it;
-    bool verbose  = pSession->DefinesCmdLineArgument("verbose") &&
+    bool verbose  = (pSession.get()) &&
+                    (pSession->DefinesCmdLineArgument("verbose")) &&
                     (pSession->GetComm()->GetRank() == 0);
 
     m_setByXml = false;
+    m_autotune = false;
+    m_maxCollSize = 0;
+    m_defaultType = defaultType;
 
     // Default all elements to eStdMat
     defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;

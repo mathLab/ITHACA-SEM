@@ -2675,18 +2675,6 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            // Figure out optimisation parameters if provided in
-            // session file or default given
-            Collections::CollectionOptimisation colOpt(m_session, ImpType);
-            ImpType = colOpt.GetDefaultImplementationType();
-
-            bool autotuning = colOpt.IsUsingAutotuning();
-            bool verbose  = m_session->DefinesCmdLineArgument("verbose") &&
-                            (m_comm->GetRank() == 0);
-            int collmax = (colOpt.GetMaxCollectionSize() > 0
-                                        ? colOpt.GetMaxCollectionSize()
-                                        : 2*m_exp->size());
-
             // If ImpType is not specified by default argument call
             // then set ImpType to eStdMat for large collections or
             // eSumFac for small
@@ -2695,27 +2683,18 @@ namespace Nektar
                 ImpType = (m_exp->size() < 100 ? Collections::eSumFac
                                                : Collections::eStdMat);
             }
-            else // if ImpType was provided do not perform autotuning.
-            {
-                autotuning = false;
-            }
 
+            // Figure out optimisation parameters if provided in
+            // session file or default given
+            Collections::CollectionOptimisation colOpt(m_session, ImpType);
+            ImpType = colOpt.GetDefaultImplementationType();
 
-            if(colOpt.SetByXml() == true)
-            {
-                autotuning = false;
-                if(verbose)
-                {
-                    cout << "Setting Collection optimisation using XML file" << endl;
-                }
-            }
-            else if (autotuning == false)
-            {
-                if(verbose)
-                {
-                    cout << "Setting Collection optimisation using: " << Collections::ImplementationTypeMap[ImpType] << endl;
-                }
-            }
+            bool autotuning = colOpt.IsUsingAutotuning();
+            bool verbose    = (m_session->DefinesCmdLineArgument("verbose")) &&
+                              (m_comm->GetRank() == 0);
+            int  collmax    = (colOpt.GetMaxCollectionSize() > 0
+                                        ? colOpt.GetMaxCollectionSize()
+                                        : 2*m_exp->size());
 
             // clear vectors in case previously called
             m_collections.clear();

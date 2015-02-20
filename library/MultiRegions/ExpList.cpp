@@ -1370,6 +1370,11 @@ namespace Nektar
         void ExpList::v_WriteTecplotHeader(std::ostream &outfile,
                                            std::string    var)
         {
+            if (GetNumElmts() == 0)
+            {
+                return;
+            }
+
             int coordim  = GetExp(0)->GetCoordim();
             char vars[3] = { 'x', 'y', 'z' };
 
@@ -2438,6 +2443,11 @@ namespace Nektar
                                   Array<OneD, NekDouble> &coord_1,
                                   Array<OneD, NekDouble> &coord_2)
         {
+            if ( GetNumElmts() == 0 )
+            {
+                return;
+            }
+
             int    i;
             Array<OneD, NekDouble> e_coord_0;
             Array<OneD, NekDouble> e_coord_1;

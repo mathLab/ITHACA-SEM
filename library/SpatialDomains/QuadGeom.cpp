@@ -538,6 +538,11 @@ namespace Nektar
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
+                    if (!m_curve)
+                    {
+                        continue;
+                    }
+
                     int npts = m_curve->m_points.size();
                     int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
                     Array<OneD,NekDouble> tmp(npts);
@@ -602,7 +607,7 @@ namespace Nektar
                 m_state = ePtsFilled;
             }
         }
-        
+
         /**
          *
          */

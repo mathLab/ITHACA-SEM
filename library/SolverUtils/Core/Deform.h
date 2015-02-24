@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IterativeElasticSystem.h
+// File: Deform.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,55 +29,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Linear elasticity equation system
+// Description: Deformation of mesh from fields.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_LINEARELASTICSOLVER_EQUATIONSYSTEMS_ITERELASSYSTEM_H
-#define NEKTAR_SOLVERS_LINEARELASTICSOLVER_EQUATIONSYSTEMS_ITERELASSYSTEM_H
+#ifndef NEKTAR_SOLVERUTILS_CORE_DEFORM_H
+#define NEKTAR_SOLVERUTILS_CORE_DEFORM_H
 
-#include <SolverUtils/EquationSystem.h>
-#include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
+#include <string>
 
-using namespace Nektar::SolverUtils;
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
-namespace Nektar
-{
-    class IterativeElasticSystem : public LinearElasticSystem
-    {
-    public:
-        /// Class may only be instantiated through the MemoryManager.
-        friend class MemoryManager<IterativeElasticSystem>;
+namespace Nektar {
+namespace SolverUtils {
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<
-                IterativeElasticSystem>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+    /// Adds a summary item to the summary info list
+    SOLVER_UTILS_EXPORT void UpdateGeometry(
+        SpatialDomains::MeshGraphSharedPtr           graph,
+        Array<OneD, MultiRegions::ExpListSharedPtr> &exp);
 
-        /// Name of class
-        static std::string className;
-
-    protected:
-        int m_numSteps;
-        bool m_repeatBCs;
-
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_savedBCs;
-        vector<int> m_toDeform;
-
-        IterativeElasticSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        virtual void v_InitObject();
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        virtual void v_DoSolve();
-
-        void WriteGeometry(const int i);
-    };
+}
 }
 
 #endif

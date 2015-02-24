@@ -458,6 +458,11 @@ namespace Nektar
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
+                    if (!m_curve)
+                    {
+                        continue;
+                    }
+
                     int pdim = LibUtilities::PointsManager()[
                         LibUtilities::PointsKey(2, m_curve->m_ptype)]
                         ->GetPointsDim();
@@ -469,12 +474,12 @@ namespace Nektar
                         int N = m_curve->m_points.size();
                         int nEdgePts = (
                             -1+(int)sqrt(static_cast<NekDouble>(8*N+1)))/2;
-                    
+
                         ASSERTL0(nEdgePts*(nEdgePts+1)/2 == N,
                                  "NUMPOINTS should be a triangle number for"
                                  " triangle "
                                  + boost::lexical_cast<string>(m_globalID));
-                    
+
                         for (int j = 0; j < kNedges; ++j)
                         {
                             ASSERTL0(
@@ -483,7 +488,7 @@ namespace Nektar
                                 "number of face points in triangle "
                                 + boost::lexical_cast<string>(m_globalID));
                         }
-                    
+
                         // Create a StdNodalTriExp.
                         const LibUtilities::PointsKey P0(
                             nEdgePts, LibUtilities::eGaussLobattoLegendre);
@@ -493,11 +498,11 @@ namespace Nektar
                             LibUtilities::eOrtho_A, nEdgePts, P0);
                         const LibUtilities::BasisKey  T1(
                             LibUtilities::eOrtho_B, nEdgePts, P1);
-                    
+
                         StdRegions::StdNodalTriExpSharedPtr t =
                             MemoryManager<StdRegions::StdNodalTriExp>
                             ::AllocateSharedPtr(T0, T1, m_curve->m_ptype);
-                        
+
                         Array<OneD, NekDouble> phys(
                             max(t->GetTotPoints(), m_xmap->GetTotPoints()));
 
@@ -526,7 +531,7 @@ namespace Nektar
                         Array<OneD,NekDouble> tmp(npts);
                         LibUtilities::PointsKey curveKey(
                             nEdgePts, m_curve->m_ptype);
-                    
+
                         // Sanity checks:
                         // - Curved faces should have square number of points;
                         // - Each edge should have sqrt(npts) points.
@@ -534,7 +539,7 @@ namespace Nektar
                                  "NUMPOINTS should be a square number for"
                                  " triangle "
                                  + boost::lexical_cast<string>(m_globalID));
-                
+
                         for (int j = 0; j < kNedges; ++j)
                         {
                             ASSERTL0(
@@ -543,12 +548,12 @@ namespace Nektar
                                 "number of face points in triangle "
                                 + boost::lexical_cast<string>(m_globalID));
                         }
-                    
+
                         for (int j = 0; j < npts; ++j)
                         {
                             tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
                         }
-                    
+
                         // Interpolate curve points to standard triangle points.
                         Array<OneD, NekDouble> phys(m_xmap->GetTotPoints());
                         LibUtilities::Interp2D(
@@ -566,7 +571,6 @@ namespace Nektar
                                         "supported.");
                     }
                 }
-
 
                 Array<OneD, unsigned int> mapArray (nEdgeCoeffs);
                 Array<OneD, int>          signArray(nEdgeCoeffs);

@@ -1040,12 +1040,10 @@ namespace Nektar
 
                 const int faceNq0 = faceBasis0.GetNumPoints();
                 const int faceNq1 = faceBasis1.GetNumPoints();
-                const int faceNq  = faceNq0 * faceNq1;
-                const int traceNq = traceExp->GetTotPoints();
 
                 for (j = 0; j < coordim; ++j)
                 {
-                    Array<OneD, NekDouble> traceNormals(faceNq);
+                    Array<OneD, NekDouble> traceNormals(faceNq0 * faceNq1);
                     AlignFace(orient, faceNq0, faceNq1,
                               locNormals[j], traceNormals);
                     LibUtilities::Interp2D(

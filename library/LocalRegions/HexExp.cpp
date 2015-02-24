@@ -1282,7 +1282,7 @@ namespace Nektar
                             normals[j]       = -df[2][j]*jac[j];
                             normals[nqe+j]   = -df[5][j]*jac[j];
                             normals[2*nqe+j] = -df[8][j]*jac[j];
-                            faceJac[j]         = jac[j];
+                            faceJac[j]       = jac[j];
                         }
 
                         points0 = ptsKeys[0];
@@ -1312,6 +1312,7 @@ namespace Nektar
                                 normals[j+k*nqe1]       = df[0][idx]*jac[idx];
                                 normals[nqe+j+k*nqe1]   = df[3][idx]*jac[idx];
                                 normals[2*nqe+j+k*nqe1] = df[6][idx]*jac[idx];
+                                faceJac[j+k*nqe1]       = jac[idx];
                             }
                         }
                         points0 = ptsKeys[1];

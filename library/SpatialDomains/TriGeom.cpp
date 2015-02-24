@@ -820,18 +820,15 @@ namespace Nektar
         }
 
         void TriGeom::v_Reset(
-            CurveVector &curvedEdges,
-            CurveVector &curvedFaces)
+            CurveMap &curvedEdges,
+            CurveMap &curvedFaces)
         {
             Geometry::v_Reset(curvedEdges, curvedFaces);
+            CurveMap::iterator it = curvedFaces.find(m_globalID);
 
-            for (int i = 0; i < curvedFaces.size(); ++i)
+            if (it != curvedFaces.end())
             {
-                if (curvedFaces[i]->m_curveID == m_globalID)
-                {
-                    m_curve = curvedFaces[i];
-                    break;
-                }
+                m_curve = it->second;
             }
 
             for (int i = 0; i < 3; ++i)

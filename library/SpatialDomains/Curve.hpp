@@ -60,8 +60,7 @@ namespace Nektar
         };
 
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef boost::unordered_map<CurveSharedPtr> CurveMap;
-        typedef boost::shared_ptr<CurveMap> CurveMapSharedPtr;
+        typedef boost::unordered_map<int, CurveSharedPtr> CurveMap;
     }
 }
 

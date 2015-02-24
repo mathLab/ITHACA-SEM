@@ -72,8 +72,8 @@ namespace Nektar
 
             // Maybe create a new copy of MeshGraph to work on?
             SpatialDomains::MeshGraphSharedPtr graph = m_f->m_graph;
-            SpatialDomains::CurveVector &curvedEdges = m_f->m_graph->GetCurvedEdges();
-            SpatialDomains::CurveVector &curvedFaces = m_f->m_graph->GetCurvedFaces();
+            SpatialDomains::CurveMap &curvedEdges = m_f->m_graph->GetCurvedEdges();
+            SpatialDomains::CurveMap &curvedFaces = m_f->m_graph->GetCurvedFaces();
             curvedEdges.clear();
             curvedFaces.clear();
 
@@ -174,8 +174,7 @@ namespace Nektar
                             curve->m_points.push_back(vert);
                         }
 
-                        curvedEdges.push_back(curve);
-
+                        curvedEdges[edge->GetGlobalID()] = curve;
                         updatedEdges.insert(edge->GetGlobalID());
                     }
                 }
@@ -321,7 +320,7 @@ namespace Nektar
                                     }
                                 }
 
-                                curvedEdges.push_back(curve);
+                                curvedEdges[edge->GetGlobalID()] = curve;
                                 updatedEdges.insert(edge->GetGlobalID());
                             }
                         }
@@ -344,7 +343,7 @@ namespace Nektar
                             curve->m_points.push_back(vert);
                         }
 
-                        curvedFaces.push_back(curve);
+                        curvedFaces[face->GetGlobalID()] = curve;
                         updatedFaces.insert(face->GetGlobalID());
                     }
                 }

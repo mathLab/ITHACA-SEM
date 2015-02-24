@@ -143,9 +143,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom ();
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_Reset(
-                    CurveVector &curvedEdges,
-                    CurveVector &curvedFaces);
-            
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
+
                 SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);

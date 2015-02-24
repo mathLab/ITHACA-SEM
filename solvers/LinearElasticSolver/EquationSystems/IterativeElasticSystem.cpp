@@ -239,8 +239,8 @@ namespace Nektar
     void IterativeElasticSystem::UpdateGeometry()
     {
         SpatialDomains::MeshGraphSharedPtr graph = m_fields[0]->GetGraph();
-        SpatialDomains::CurveVector &curvedEdges = graph->GetCurvedEdges();
-        SpatialDomains::CurveVector &curvedFaces = graph->GetCurvedFaces();
+        SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
+        SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
         curvedEdges.clear();
         curvedFaces.clear();
 
@@ -341,8 +341,7 @@ namespace Nektar
                         curve->m_points.push_back(vert);
                     }
 
-                    curvedEdges.push_back(curve);
-
+                    curvedEdges[edge->GetGlobalID()] = curve;
                     updatedEdges.insert(edge->GetGlobalID());
                 }
             }
@@ -488,7 +487,7 @@ namespace Nektar
                                 }
                             }
 
-                            curvedEdges.push_back(curve);
+                            curvedEdges[edge->GetGlobalID()] = curve;
                             updatedEdges.insert(edge->GetGlobalID());
                         }
                     }
@@ -511,7 +510,7 @@ namespace Nektar
                         curve->m_points.push_back(vert);
                     }
 
-                    curvedFaces.push_back(curve);
+                    curvedFaces[face->GetGlobalID()] = curve;
                     updatedFaces.insert(face->GetGlobalID());
                 }
             }

@@ -626,8 +626,8 @@ namespace Nektar
         }
 
         void PyrGeom::v_Reset(
-            CurveVector &curvedEdges,
-            CurveVector &curvedFaces)
+            CurveMap &curvedEdges,
+            CurveMap &curvedFaces)
         {
             Geometry::v_Reset(curvedEdges, curvedFaces);
 

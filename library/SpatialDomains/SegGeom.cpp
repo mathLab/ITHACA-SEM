@@ -402,19 +402,15 @@ namespace Nektar
             }
         }
 
-        void SegGeom::v_Reset(CurveVector &curvedEdges,
-                              CurveVector &curvedFaces)
+        void SegGeom::v_Reset(CurveMap &curvedEdges,
+                              CurveMap &curvedFaces)
         {
             Geometry::v_Reset(curvedEdges, curvedFaces);
+            CurveMap::iterator it = curvedEdges.find(m_globalID);
 
-            // This is horribly slow, needs curvevector changing to curvemap...
-            for (int i = 0; i < curvedEdges.size(); ++i)
+            if (it != curvedEdges.end())
             {
-                if (curvedEdges[i]->m_curveID == m_globalID)
-                {
-                    m_curve = curvedEdges[i];
-                    break;
-                }
+                m_curve = it->second;
             }
 
             SetUpXmap();

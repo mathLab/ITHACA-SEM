@@ -91,8 +91,8 @@ namespace Nektar
             virtual int v_GetDir(
                     const int faceidx, const int facedir) const;
             virtual void v_Reset(
-                    CurveVector &curvedEdges,
-                    CurveVector &curvedFaces);
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
 
         private:
             void SetUpLocalEdges();

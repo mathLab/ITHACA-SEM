@@ -924,6 +924,9 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Helper function to re-align face to a given orientation.
+         */
         void AlignFace(const StdRegions::Orientation       orient,
                        const int                           nquad1,
                        const int                           nquad2,
@@ -989,8 +992,9 @@ namespace Nektar
         }
 
         /**
-         * For each local element, copy the normals stored in the element list
-         * into the array \a normals.
+         * @brief For each local element, copy the normals stored in the element
+         * list into the array \a normals.
+         *
          * @param   normals     Multidimensional array in which to copy normals
          *                      to. Must have dimension equal to or larger than
          *                      the spatial dimension of the elements.
@@ -999,7 +1003,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
             Array<OneD, NekDouble> tmp;
-            int i, j, k, offset;
+            int i, j;
             const int coordim = GetCoordim(0);
 
             ASSERTL1(normals.num_elements() >= coordim,
@@ -1015,111 +1019,81 @@ namespace Nektar
                     traceExp->GetLeftAdjacentElementExp();
 
                 // Get the number of points and normals for this expansion.
-                int nElmtPts = (*m_exp)[i]->GetTotPoints();
-                int faceNumber = traceExp->GetLeftAdjacentElementFace();
+                int faceNum = traceExp->GetLeftAdjacentElementFace();
+                int offset  = m_phys_offset[i];
+
                 const Array<OneD, const Array<OneD, NekDouble> > &locNormals
-                    = exp3D->GetFaceNormal(faceNumber);
+                    = exp3D->GetFaceNormal(faceNum);
 
                 // Project normals from 3D element onto the same orientation as
                 // the trace expansion.
-                StdRegions::Orientation orient = exp3D->GetForient(faceNumber);
-                Array<OneD, Array<OneD, NekDouble> > traceNormals(coordim);
+                StdRegions::Orientation orient = exp3D->GetForient(faceNum);
 
                 LibUtilities::BasisKey faceBasis0
-                    = exp3D->DetFaceBasisKey(faceNumber, 0);
+                    = exp3D->DetFaceBasisKey(faceNum, 0);
                 LibUtilities::BasisKey faceBasis1
-                    = exp3D->DetFaceBasisKey(faceNumber, 1);
+                    = exp3D->DetFaceBasisKey(faceNum, 1);
+                LibUtilities::BasisKey traceBasis0
+                    = traceExp->GetBasis(0)->GetBasisKey();
+                LibUtilities::BasisKey traceBasis1
+                    = traceExp->GetBasis(1)->GetBasisKey();
 
                 const int faceNq0 = faceBasis0.GetNumPoints();
                 const int faceNq1 = faceBasis1.GetNumPoints();
+                const int faceNq  = faceNq0 * faceNq1;
+                const int traceNq = traceExp->GetTotPoints();
 
-                for (j = 0; j < coordim; ++j)
+                // In serial, and in the case of variable p, use the normals
+                // from the other side. (This is possibly redundant.)
+                if ((faceBasis0 != traceBasis0 || faceBasis1 != traceBasis1) &&
+                    traceExp->GetRightAdjacentElementFace() >= 0)
                 {
-                    traceNormals[j] = Array<OneD, NekDouble>(faceNq0*faceNq1);
-                    AlignFace(orient, faceNq0, faceNq1,
-                              locNormals[j], traceNormals[j]);
-                }
+                    exp3D      = traceExp->GetRightAdjacentElementExp ();
+                    faceNum    = traceExp->GetRightAdjacentElementFace();
+                    orient     = exp3D->GetForient(faceNum);
+                    faceBasis0 = exp3D->DetFaceBasisKey(faceNum, 0);
+                    faceBasis1 = exp3D->DetFaceBasisKey(faceNum, 1);
 
-                if (faceBasis0 != traceExp->GetBasis(0)->GetBasisKey() ||
-                    faceBasis1 != traceExp->GetBasis(1)->GetBasisKey())
-                {
-                    // In serial, use the normals from the other side.
-                    if (traceExp->GetRightAdjacentElementFace() >= 0)
+                    // Get the number of points and normals for this
+                    // expansion.
+                    const Array<OneD, const Array<OneD, NekDouble> >
+                        &locNormals = exp3D->GetFaceNormal(faceNum);
+
+                    // Process each point in the expansion.
+                    for (j = 0; j < coordim; ++j)
                     {
-                        exp3D      = traceExp->GetRightAdjacentElementExp ();
-                        faceNumber = traceExp->GetRightAdjacentElementFace();
+                        Array<OneD, NekDouble> traceNormals(faceNq);
+                        AlignFace(orient, faceNq0, faceNq1,
+                                  locNormals[j], traceNormals);
 
-                        // Get the number of points and normals for this
-                        // expansion.
-                        const Array<OneD, const Array<OneD, NekDouble> >
-                            &locNormals = exp3D->GetFaceNormal(faceNumber);
+                        LibUtilities::Interp2D(
+                            faceBasis0.GetPointsKey(),
+                            faceBasis1.GetPointsKey(),
+                            traceNormals,
+                            traceBasis0.GetPointsKey(),
+                            traceBasis1.GetPointsKey(),
+                            tmp = normals[j]+offset);
 
-                        offset = m_phys_offset[i];
-                        // Process each point in the expansion.
-                        for(int j = 0; j < e_npoints; ++j)
-                        {
-                            for(k = 0; k < coordim; ++k)
-                            {
-                                normals[k][offset+j] = -locNormals[k][j];
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Array<OneD, Array<OneD, NekDouble> > normal(coordim);
-
-                        for (int p = 0; p < coordim; ++p)
-                        {
-                            normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
-
-                            LibUtilities::PointsKey to_key0 =
-                                loc_exp->GetBasis(0)->GetPointsKey();
-                            LibUtilities::PointsKey to_key1 =
-                                loc_exp->GetBasis(1)->GetPointsKey();
-                            LibUtilities::PointsKey from_key0 =
-                                loc_elmt->GetBasis(0)->GetPointsKey();
-                            LibUtilities::PointsKey from_key1 =
-                                loc_elmt->GetBasis(1)->GetPointsKey();
-
-                            LibUtilities::Interp2D(from_key0,
-                                                   from_key1,
-                                                   locNormals[p],
-                                                   to_key0,
-                                                   to_key1,
-                                                   normal[p]);
-                        }
-
-                        offset = m_phys_offset[i];
-
-                        // Process each point in the expansion.
-                        for (j = 0; j < e_npoints; ++j)
-                        {
-                            // Process each spatial dimension and copy the values
-                            // into the output array.
-                            for (k = 0; k < coordim; ++k)
-                            {
-                                normals[k][offset + j] = normal[k][j];
-                            }
-                        }
+                        Vmath::Neg(traceNq, tmp = normals[j]+offset, 1);
                     }
                 }
                 else
                 {
-                */
-                    // Get the physical data offset for this expansion.
-                    offset = m_phys_offset[i];
-
-                    for (k = 0; k < coordim; ++k)
+                    for (j = 0; j < coordim; ++j)
                     {
+                        Array<OneD, NekDouble> traceNormals(faceNq);
+                        AlignFace(orient, faceNq0, faceNq1,
+                                  locNormals[j], traceNormals);
+
                         LibUtilities::Interp2D(
-                            exp3D->DetFaceBasisKey(faceNumber, 0).GetPointsKey(),
-                            exp3D->DetFaceBasisKey(faceNumber, 1).GetPointsKey(),
-                            traceNormals[k],
-                            traceExp->GetBasis(0)->GetPointsKey(),
-                            traceExp->GetBasis(1)->GetPointsKey(),
-                            tmp = normals[k]+offset);
+                            faceBasis0.GetPointsKey(),
+                            faceBasis1.GetPointsKey(),
+                            traceNormals,
+                            traceBasis0.GetPointsKey(),
+                            traceBasis1.GetPointsKey(),
+                            tmp = normals[j]+offset);
                     }
-                    //}
+                }
             }
         }
 

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: LinearElasticSystem solve routines 
+// Description: LinearElasticSystem solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@ namespace Nektar
         RegisterCreatorFunction("LinearElasticSystem",
                                 LinearElasticSystem::create);
 
-    /* 
+    /*
      * @brief Generate mapping between a simplex and the reference element.
      *
      * Mapping that requires the coordinates of the three vertices (x,y) of the
@@ -110,7 +110,7 @@ namespace Nektar
 
         return mapred;
     }
-    
+
 
     /**
      * @brief Default constructor.
@@ -131,18 +131,18 @@ namespace Nektar
     void LinearElasticSystem::v_InitObject()
     {
         EquationSystem::v_InitObject();
-        
+
         const int nVel = m_fields[0]->GetCoordim(0);
         int n;
 
         ASSERTL0(nVel > 1, "Linear elastic solver not set up for"
                            " this dimension (only 2D/3D supported).");
-       
+
         // Make sure that we have Young's modulus and Poisson ratio set.
         m_session->LoadParameter("E",    m_E,    1.00);
         m_session->LoadParameter("nu",   m_nu,   0.25);
         m_session->LoadParameter("Beta", m_beta, 1.00);
-        
+
         // Create a coupled assembly map which allows us to tie u, v and w
         // fields together.
         if (nVel == 2)
@@ -156,7 +156,7 @@ namespace Nektar
                                     m_boundaryConditions,
                                     m_fields);
         }
-        
+
         if (nVel == 3)
         {
             MultiRegions::ContField3DSharedPtr u = boost::dynamic_pointer_cast<
@@ -168,7 +168,7 @@ namespace Nektar
                                     m_boundaryConditions,
                                     m_fields);
         }
-        
+
         // Figure out size of our new matrix systems by looping over all
         // expansions and multiply number of coefficients by velocity
         // components.
@@ -233,7 +233,7 @@ namespace Nektar
     {
         const int nEl = m_fields[0]->GetExpSize();
         const int nVel = m_fields[0]->GetCoordim(0);
-        
+
         LocalRegions::ExpansionSharedPtr exp;
         int n;
 
@@ -261,7 +261,7 @@ namespace Nektar
                 const int nPhys = exp->GetTotPoints();
                 Array<OneD, NekDouble> aArr(nPhys, a);
                 Array<OneD, NekDouble> bArr(nPhys, b);
-                
+
                 StdRegions::VarCoeffMap varcoeffA, varcoeffD;
                 varcoeffA[StdRegions::eVarCoeffD00] = aArr;
                 varcoeffA[StdRegions::eVarCoeffD11] = bArr;
@@ -334,15 +334,15 @@ namespace Nektar
                 mat[0][0] = exp->GenMatrix(matkeyA);
                 mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
                 mat[0][2] = BuildLaplacianIJMatrix(2, 0, c, exp);
-                
+
                 mat[1][0] = mat[0][1];
                 mat[1][1] = exp->GenMatrix(matkeyE);
                 mat[1][2] = BuildLaplacianIJMatrix(2, 1, c, exp);
-                
+
                 mat[2][0] = mat[0][2];
                 mat[2][1] = mat[1][2];
                 mat[2][2] = exp->GenMatrix(matkeyI);
-                
+
                 // Set up the statically condensed block for this element.
                 SetStaticCondBlock(n, exp, mat);
 
@@ -388,7 +388,7 @@ namespace Nektar
      */
     void LinearElasticSystem::v_DoSolve()
     {
-        
+
         int i, j, k, l, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
 
@@ -438,7 +438,7 @@ namespace Nektar
         m_session->LoadSolverInfo("Temperature", tempEval, "None");
         string refElement;
         m_session->LoadSolverInfo("RefElement", refElement, "None");
-        
+
         if (tempEval == "Jacobian")
         {
             // Allocate storage
@@ -449,7 +449,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp;
                 m_temperature[nv] = Array<OneD, NekDouble>(
                     m_fields[nv]->GetNpoints());
-                
+
                 for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
                 {
                     // Calculate element area
@@ -491,7 +491,7 @@ namespace Nektar
 
             m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
             m_stress = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nVel);
-            
+
             for (nv = 0; nv < nVel; ++nv)
             {
                 m_temperature[nv] = Array<OneD, NekDouble>(
@@ -688,7 +688,7 @@ namespace Nektar
 
             for (i = 0; i < bndCondExp.num_elements(); ++i)
             {
-                const Array<OneD,const NekDouble> &bndCoeffs = 
+                const Array<OneD,const NekDouble> &bndCoeffs =
                     bndCondExp[i]->GetCoeffs();
 
                 for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
@@ -890,7 +890,7 @@ namespace Nektar
         {
             return;
         }
-        
+
         for (int i = 0; i < nVel; ++i)
         {
             Array<OneD, NekDouble> tFwd(nCoeffs);

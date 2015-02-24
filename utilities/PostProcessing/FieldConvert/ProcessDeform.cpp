@@ -97,7 +97,7 @@ namespace Nektar
                     coord[j] = Array<OneD, NekDouble>(nquad);
                 }
 
-                // In 2D loop over edges. 3D TODO
+                // In 2D loop over edges.
                 if (dim == 2)
                 {
                     exp->GetCoords(coord[0], coord[1]);

@@ -1043,59 +1043,19 @@ namespace Nektar
                 const int faceNq  = faceNq0 * faceNq1;
                 const int traceNq = traceExp->GetTotPoints();
 
-                // In serial, and in the case of variable p, use the normals
-                // from the other side. (This is possibly redundant.)
-                /*
-                if ((faceBasis0 != traceBasis0 || faceBasis1 != traceBasis1) &&
-                    traceExp->GetRightAdjacentElementFace() >= 0)
+                for (j = 0; j < coordim; ++j)
                 {
-                    exp3D      = traceExp->GetRightAdjacentElementExp ();
-                    faceNum    = traceExp->GetRightAdjacentElementFace();
-                    orient     = exp3D->GetForient(faceNum);
-                    faceBasis0 = exp3D->DetFaceBasisKey(faceNum, 0);
-                    faceBasis1 = exp3D->DetFaceBasisKey(faceNum, 1);
-
-                    // Get the number of points and normals for this
-                    // expansion.
-                    const Array<OneD, const Array<OneD, NekDouble> >
-                        &locNormals = exp3D->GetFaceNormal(faceNum);
-
-                    // Process each point in the expansion.
-                    for (j = 0; j < coordim; ++j)
-                    {
-                        Array<OneD, NekDouble> traceNormals(faceNq);
-                        AlignFace(orient, faceNq0, faceNq1,
-                                  locNormals[j], traceNormals);
-
-                        LibUtilities::Interp2D(
-                            faceBasis0.GetPointsKey(),
-                            faceBasis1.GetPointsKey(),
-                            traceNormals,
-                            traceBasis0.GetPointsKey(),
-                            traceBasis1.GetPointsKey(),
-                            tmp = normals[j]+offset);
-
-                        Vmath::Neg(traceNq, tmp = normals[j]+offset, 1);
-                    }
+                    Array<OneD, NekDouble> traceNormals(faceNq);
+                    AlignFace(orient, faceNq0, faceNq1,
+                              locNormals[j], traceNormals);
+                    LibUtilities::Interp2D(
+                        faceBasis0.GetPointsKey(),
+                        faceBasis1.GetPointsKey(),
+                        traceNormals,
+                        traceBasis0.GetPointsKey(),
+                        traceBasis1.GetPointsKey(),
+                        tmp = normals[j]+offset);
                 }
-                else
-                {
-                */
-                    for (j = 0; j < coordim; ++j)
-                    {
-                        Array<OneD, NekDouble> traceNormals(faceNq);
-                        AlignFace(orient, faceNq0, faceNq1,
-                                  locNormals[j], traceNormals);
-
-                        LibUtilities::Interp2D(
-                            faceBasis0.GetPointsKey(),
-                            faceBasis1.GetPointsKey(),
-                            traceNormals,
-                            traceBasis0.GetPointsKey(),
-                            traceBasis1.GetPointsKey(),
-                            tmp = normals[j]+offset);
-                    }
-                    //}
             }
         }
 

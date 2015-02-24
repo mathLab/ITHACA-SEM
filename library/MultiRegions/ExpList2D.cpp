@@ -1045,6 +1045,7 @@ namespace Nektar
 
                 // In serial, and in the case of variable p, use the normals
                 // from the other side. (This is possibly redundant.)
+                /*
                 if ((faceBasis0 != traceBasis0 || faceBasis1 != traceBasis1) &&
                     traceExp->GetRightAdjacentElementFace() >= 0)
                 {
@@ -1079,6 +1080,7 @@ namespace Nektar
                 }
                 else
                 {
+                */
                     for (j = 0; j < coordim; ++j)
                     {
                         Array<OneD, NekDouble> traceNormals(faceNq);
@@ -1093,7 +1095,7 @@ namespace Nektar
                             traceBasis1.GetPointsKey(),
                             tmp = normals[j]+offset);
                     }
-                }
+                    //}
             }
         }
 

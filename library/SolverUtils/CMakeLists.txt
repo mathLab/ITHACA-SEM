@@ -1,4 +1,5 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Deform.cpp
   Core/Misc.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
@@ -39,6 +40,7 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Deform.h
   Core/Misc.h
   AdvectionSystem.h
   Advection/Advection.h

@@ -51,9 +51,9 @@ namespace Nektar
     namespace Utilities
     {
         ModuleKey ProcessDeform::className =
-        GetModuleFactory().RegisterCreatorFunction(
-            ModuleKey(eProcessModule, "deform"), ProcessDeform::create,
-            "Deform a mesh given an input field defining displacement");
+            GetModuleFactory().RegisterCreatorFunction(
+                ModuleKey(eProcessModule, "deform"), ProcessDeform::create,
+                "Deform a mesh given an input field defining displacement");
 
         ProcessDeform::ProcessDeform(FieldSharedPtr f) :
             ProcessModule(f)
@@ -71,7 +71,14 @@ namespace Nektar
                 cout << "ProcessDeform: Deforming grid..." << endl;
             }
 
-            SolverUtils::UpdateGeometry(m_f->m_graph, m_f->m_exp);
+            Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
+
+            for (int i = 0; i < exp.num_elements(); ++i)
+            {
+                exp[i] = m_f->m_exp[i];
+            }
+
+            SolverUtils::UpdateGeometry(m_f->m_graph, exp);
         }
     }
 }

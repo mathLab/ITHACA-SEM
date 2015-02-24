@@ -38,8 +38,14 @@
 
 #include <string>
 
+#include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <StdRegions/StdSegExp.h>
+#include <StdRegions/StdQuadExp.h>
+#include <SpatialDomains/MeshGraph.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar {
 namespace SolverUtils {
@@ -50,7 +56,7 @@ namespace SolverUtils {
      */
     void UpdateGeometry(
         SpatialDomains::MeshGraphSharedPtr           graph,
-        Array<OneD, MultiRegions::ExpListSharedPtr> &exp)
+        Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
     {
         SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
         SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
@@ -77,7 +83,7 @@ namespace SolverUtils {
                 coord[j] = Array<OneD, NekDouble>(nquad);
             }
 
-            // In 2D loop over edges. 3D TODO
+            // In 2D loop over edges.
             if (dim == 2)
             {
                 exp->GetCoords(coord[0], coord[1]);
@@ -98,7 +104,7 @@ namespace SolverUtils {
 
                     // Extract edge displacement.
                     int nEdgePts = exp->GetEdgeNumPoints(j);
-                    Array<OneD, Array<OneD, NekDouble> > edgePhys(dim);
+                    Array<OneD, Array<OneD, NekDouble> > edgePhys (dim);
                     Array<OneD, Array<OneD, NekDouble> > edgeCoord(dim);
 
                     const LibUtilities::BasisKey B(
@@ -177,11 +183,13 @@ namespace SolverUtils {
                     }
 
                     // Extract face displacement.
-                    int nFacePts = exp->GetFaceNumPoints(j);
                     int nq0 = exp->GetNumPoints(0);
                     int nq1 = exp->GetNumPoints(1);
-                    Array<OneD, Array<OneD, NekDouble> > facePhys(dim);
-                    Array<OneD, Array<OneD, NekDouble> > faceCoord(dim);
+
+                    Array<OneD, Array<OneD, NekDouble> > newPos(dim);
+
+                    StdRegions::StdExpansion2DSharedPtr faceexp;
+                    StdRegions::Orientation orient = exp->GetForient(j);
 
                     const LibUtilities::BasisKey B0(
                         LibUtilities::eModified_A, nq0,
@@ -190,10 +198,9 @@ namespace SolverUtils {
                     const LibUtilities::BasisKey B1(
                         LibUtilities::eModified_A, nq1,
                         LibUtilities::PointsKey(
-                            nq0, LibUtilities::eGaussLobattoLegendre));
-                    StdRegions::StdExpansion2DSharedPtr faceexp;
+                            nq1, LibUtilities::eGaussLobattoLegendre));
 
-                    if (geom->GetShapeType() == LibUtilities::eTriangle)
+                    if (face->GetShapeType() == LibUtilities::eTriangle)
                     {
                         faceexp = MemoryManager<StdRegions::StdTriExp>::
                             AllocateSharedPtr(B0, B1);
@@ -206,24 +213,47 @@ namespace SolverUtils {
 
                     for (k = 0; k < dim; ++k)
                     {
-                        facePhys [k] = Array<OneD, NekDouble>(nFacePts);
-                        faceCoord[k] = Array<OneD, NekDouble>(nFacePts);
-                        exp->GetFacePhysVals(j, faceexp, phys [k], facePhys [k], exp->GetForient(j));
-                        exp->GetFacePhysVals(j, faceexp, coord[k], faceCoord[k], exp->GetForient(j));
+                        Array<OneD, NekDouble> tmp(nq0*nq1);
+                        newPos[k] = Array<OneD, NekDouble>(nq0*nq1);
+                        exp->GetFacePhysVals(
+                            j, faceexp, phys [k], tmp,       orient);
+                        exp->GetFacePhysVals(
+                            j, faceexp, coord[k], newPos[k], orient);
+                        Vmath::Vadd(
+                            nq0*nq1, tmp, 1, newPos[k], 1, newPos[k], 1);
+                    }
+
+                    // Now interpolate face onto a more reasonable set of
+                    // points.
+                    int nq = max(nq0, nq1);
+                    LibUtilities::PointsKey edgePts(
+                        nq, LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey triPts(
+                        nq, LibUtilities::eNodalTriElec);
+
+                    Array<OneD, Array<OneD, NekDouble> > intPos(dim);
+
+                    for (k = 0; k < dim; ++k)
+                    {
+                        intPos[k] = Array<OneD, NekDouble>(nq*nq);
+                        LibUtilities::Interp2D(
+                            faceexp->GetPointsKeys()[0],
+                            faceexp->GetPointsKeys()[1],
+                            newPos[k], edgePts, edgePts, intPos[k]);
                     }
 
                     int edgeOff[2][4][2] = {
                         {
                             {0,           1},
-                            {nq0-1,       nq0},
-                            {nq0*(nq1-1), -nq0},
+                            {nq-1,       nq},
+                            {nq*(nq-1), -nq},
                             {-1,-1}
                         },
                         {
                             {0,           1},
-                            {nq0-1,       nq0},
-                            {nq0*nq1-1,   -1},
-                            {nq0*(nq1-1), -nq0}
+                            {nq-1,       nq},
+                            {nq*nq-1,    -1},
+                            {nq*(nq-1), -nq}
                         }
                     };
 
@@ -231,18 +261,17 @@ namespace SolverUtils {
                     {
                         // Update verts
                         int id = face->GetVid(k);
-                        const int o = face->GetShapeType() - LibUtilities::eTriangle;
+                        const int o =
+                            face->GetShapeType() - LibUtilities::eTriangle;
 
                         if (updatedVerts.find(id) == updatedVerts.end())
                         {
                             SpatialDomains::PointGeomSharedPtr pt =
                                 face->GetVertex(k);
-
                             pt->UpdatePosition(
-                                (*pt)(0) + facePhys[0][edgeOff[o][k][0]],
-                                (*pt)(1) + facePhys[1][edgeOff[o][k][0]],
-                                (*pt)(2) + facePhys[2][edgeOff[o][k][0]]);
-
+                                intPos[0][edgeOff[o][k][0]],
+                                intPos[1][edgeOff[o][k][0]],
+                                intPos[2][edgeOff[o][k][0]]);
                             updatedVerts.insert(id);
                         }
 
@@ -250,52 +279,42 @@ namespace SolverUtils {
                         id = face->GetEid(k);
                         if (updatedEdges.find(id) == updatedEdges.end())
                         {
-                            SpatialDomains::Geometry1DSharedPtr edge = face->GetEdge(k);
-                            SpatialDomains::CurveSharedPtr curve = MemoryManager<
-                                SpatialDomains::Curve>::AllocateSharedPtr(
+                            SpatialDomains::Geometry1DSharedPtr edge
+                                = face->GetEdge(k);
+                            SpatialDomains::CurveSharedPtr curve =
+                                MemoryManager<SpatialDomains::Curve>
+                                ::AllocateSharedPtr(
                                     edge->GetGlobalID(),
                                     LibUtilities::eGaussLobattoLegendre);
-
-                            int nEdgePts;
-                            if (face->GetNumVerts() == 3)
-                            {
-                                nEdgePts = k > 0 ? nq1 : nq0;
-                            }
-                            else
-                            {
-                                nEdgePts = k % 2 ? nq1 : nq0;
-                            }
 
                             const int offset = edgeOff[o][k][0];
                             const int pos    = edgeOff[o][k][1];
 
                             if (face->GetEorient(k) == StdRegions::eBackwards)
                             {
-                                for (l = nEdgePts-1; l >= 0; --l)
+                                for (l = nq-1; l >= 0; --l)
                                 {
                                     int m = offset + pos*l;
                                     SpatialDomains::PointGeomSharedPtr vert =
                                         MemoryManager<SpatialDomains::PointGeom>
                                         ::AllocateSharedPtr(
                                             dim, edge->GetGlobalID(),
-                                            faceCoord[0][m] + facePhys[0][m],
-                                            faceCoord[1][m] + facePhys[1][m],
-                                            faceCoord[2][m] + facePhys[2][m]);
+                                            intPos[0][m], intPos[1][m],
+                                            intPos[2][m]);
                                     curve->m_points.push_back(vert);
                                 }
                             }
                             else
                             {
-                                for (l = 0; l < nEdgePts; ++l)
+                                for (l = 0; l < nq; ++l)
                                 {
                                     int m = offset + pos*l;
                                     SpatialDomains::PointGeomSharedPtr vert =
                                         MemoryManager<SpatialDomains::PointGeom>
                                         ::AllocateSharedPtr(
                                             dim, edge->GetGlobalID(),
-                                            faceCoord[0][m] + facePhys[0][m],
-                                            faceCoord[1][m] + facePhys[1][m],
-                                            faceCoord[2][m] + facePhys[2][m]);
+                                            intPos[0][m], intPos[1][m],
+                                            intPos[2][m]);
                                     curve->m_points.push_back(vert);
                                 }
                             }
@@ -306,21 +325,70 @@ namespace SolverUtils {
                     }
 
                     // Update face-interior curvature
+                    LibUtilities::PointsType pType =
+                        face->GetShapeType() == LibUtilities::eTriangle ?
+                        LibUtilities::eNodalTriElec :
+                        LibUtilities::eGaussLobattoLegendre;
+
                     SpatialDomains::CurveSharedPtr curve = MemoryManager<
                         SpatialDomains::Curve>::AllocateSharedPtr(
                             face->GetGlobalID(),
-                            LibUtilities::eGaussLobattoLegendre);
+                            pType);
 
-                    for (l = 0; l < nFacePts; ++l)
+                    if (face->GetShapeType() == LibUtilities::eTriangle)
                     {
-                        SpatialDomains::PointGeomSharedPtr vert =
-                            MemoryManager<SpatialDomains::PointGeom>
-                            ::AllocateSharedPtr(
-                                dim, face->GetGlobalID(),
-                                faceCoord[0][l] + facePhys[0][l],
-                                faceCoord[1][l] + facePhys[1][l],
-                                faceCoord[2][l] + facePhys[2][l]);
-                        curve->m_points.push_back(vert);
+                        // This code is probably pretty crappy. Have to go from
+                        // GLL-GLL points -> GLL-Gauss-Radau -> nodal triangle
+                        // points.
+                        const LibUtilities::BasisKey B0(
+                            LibUtilities::eOrtho_A, nq,
+                            LibUtilities::PointsKey(
+                                nq, LibUtilities::eGaussLobattoLegendre));
+                        const LibUtilities::BasisKey B1(
+                            LibUtilities::eOrtho_B, nq,
+                            LibUtilities::PointsKey(
+                                nq, LibUtilities::eGaussRadauMAlpha1Beta0));
+                        StdRegions::StdNodalTriExp nodalTri(B0, B1, pType);
+                        StdRegions::StdTriExp      tri     (B0, B1);
+
+                        for (k = 0; k < dim; ++k)
+                        {
+                            Array<OneD, NekDouble> nodal(nq*nq);
+
+                            LibUtilities::Interp2D(
+                                faceexp->GetBasis(0)->GetBasisKey(),
+                                faceexp->GetBasis(1)->GetBasisKey(),
+                                newPos[k], B0, B1, nodal);
+
+                            Array<OneD, NekDouble> tmp1(nq*(nq+1)/2);
+                            Array<OneD, NekDouble> tmp2(nq*(nq+1)/2);
+
+                            tri.FwdTrans(nodal, tmp1);
+                            nodalTri.ModalToNodal(tmp1, tmp2);
+                            newPos[k] = tmp2;
+                        }
+
+                        for (l = 0; l < nq*(nq+1)/2; ++l)
+                        {
+                            SpatialDomains::PointGeomSharedPtr vert =
+                                MemoryManager<SpatialDomains::PointGeom>
+                                ::AllocateSharedPtr(
+                                    dim, face->GetGlobalID(),
+                                    newPos[0][l], newPos[1][l], newPos[2][l]);
+                            curve->m_points.push_back(vert);
+                        }
+                    }
+                    else
+                    {
+                        for (l = 0; l < nq*nq; ++l)
+                        {
+                            SpatialDomains::PointGeomSharedPtr vert =
+                                MemoryManager<SpatialDomains::PointGeom>
+                                ::AllocateSharedPtr(
+                                    dim, face->GetGlobalID(),
+                                    intPos[0][l], intPos[1][l], intPos[2][l]);
+                            curve->m_points.push_back(vert);
+                        }
                     }
 
                     curvedFaces[face->GetGlobalID()] = curve;
@@ -335,7 +403,6 @@ namespace SolverUtils {
             fields[i]->Reset();
         }
     }
-
 }
 }
 

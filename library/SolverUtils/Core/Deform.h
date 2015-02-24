@@ -47,7 +47,7 @@ namespace SolverUtils {
     /// Adds a summary item to the summary info list
     SOLVER_UTILS_EXPORT void UpdateGeometry(
         SpatialDomains::MeshGraphSharedPtr           graph,
-        Array<OneD, MultiRegions::ExpListSharedPtr> &exp);
+        Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
 }
 }

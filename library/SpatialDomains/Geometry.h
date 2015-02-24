@@ -41,6 +41,7 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
@@ -61,7 +62,7 @@ namespace Nektar
 
         struct Curve;
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef std::vector<CurveSharedPtr> CurveVector;
+        typedef boost::unordered_map<CurveSharedPtr> CurveMap;
 
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
@@ -155,8 +156,8 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
                             GetPointsKeys();
                 SPATIAL_DOMAINS_EXPORT inline void Reset(
-                    CurveVector &curvedEdges,
-                    CurveVector &curvedFaces);
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
 
             protected:
 
@@ -242,8 +243,8 @@ namespace Nektar
                 virtual const LibUtilities::BasisSharedPtr
                              v_GetBasis(const int i);
                 virtual void v_Reset(
-                    CurveVector &curvedEdges,
-                    CurveVector &curvedFaces);
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
                 inline void SetUpCoeffs(const int nCoeffs);
         }; // class Geometry
 
@@ -495,8 +496,8 @@ namespace Nektar
             return m_xmap->GetPointsKeys();
         }
 
-        inline void Geometry::Reset(CurveVector &curvedEdges,
-                                    CurveVector &curvedFaces)
+        inline void Geometry::Reset(CurveMap &curvedEdges,
+                                    CurveMap &curvedFaces)
         {
             v_Reset(curvedEdges, curvedFaces);
         }

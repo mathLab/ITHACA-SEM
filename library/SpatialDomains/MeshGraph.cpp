@@ -1257,7 +1257,7 @@ namespace Nektar
 
                     ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
 
-                    m_curvedEdges.push_back(curve);
+                    m_curvedEdges[edgeid] = curve;
 
                     edgelement = edgelement->NextSiblingElement("E");
 
@@ -1352,7 +1352,7 @@ namespace Nektar
                                 (std::string("Unable to read curve data for FACE: ")
                         + elementStr).c_str());
                     }
-                    m_curvedFaces.push_back(curve);
+                    m_curvedFaces[faceid] = curve;
 
                     facelement = facelement->NextSiblingElement("F");
 

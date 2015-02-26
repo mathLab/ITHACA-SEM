@@ -106,28 +106,17 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
-            int nextElementNumber = -1;
-
             /// All elements are of the form: "<S ID = n> ... </S>", with
             /// ? being the element type.
 
             TiXmlElement *segment = field->FirstChildElement("S");
-
-            // Curved Edges
-            map<int, int> edge_curved;
-            for(int i = 0; i < m_curvedEdges.size(); ++i)
-            {
-                edge_curved[m_curvedEdges[i]->m_curveID] = i;
-            }
+            CurveMap::iterator it;
 
             while (segment)
             {
-                nextElementNumber++;
-
                 int indx;
                 int err = segment->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-//                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 TiXmlNode* elementChild = segment->FirstChild();
                 while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
@@ -152,15 +141,16 @@ namespace Nektar
 
                     PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                     SegGeomSharedPtr seg;
+                    it = m_curvedEdges.find(indx);
 
-                    if(edge_curved.count(indx) == 0)
+                    if (it == m_curvedEdges.end())
                     {
                         seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
                         seg->SetGlobalID(indx); // Set global mesh id
                     }
                     else
                     {
-                        seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
+                        seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
                         seg->SetGlobalID(indx); //Set global mesh id
                     }
                     seg->SetGlobalID(indx);
@@ -175,8 +165,6 @@ namespace Nektar
                 /// Keep looking for additional segments
                 segment = segment->NextSiblingElement("S");
             }
-
-            ASSERTL0(nextElementNumber >= 0, "At least one element must be specified.");
         }
 
         void MeshGraph1D::ReadComposites(TiXmlDocument &doc)

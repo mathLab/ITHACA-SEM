@@ -232,17 +232,17 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     switch(coordim)
     {
     case 3:
-        rng->doZrange = true;
-        rng->zmin = Vmath::Vmin(npts, pts[2],1);
-        rng->zmax = Vmath::Vmax(npts, pts[2],1);
+        rng->m_doZrange = true;
+        rng->m_zmin = Vmath::Vmin(npts, pts[2],1);
+        rng->m_zmax = Vmath::Vmax(npts, pts[2],1);
     case 2:
-        rng->doYrange = true;
-        rng->ymin = Vmath::Vmin(npts, pts[1],1);
-        rng->ymax = Vmath::Vmax(npts, pts[1],1);
+        rng->m_doYrange = true;
+        rng->m_ymin = Vmath::Vmin(npts, pts[1],1);
+        rng->m_ymax = Vmath::Vmax(npts, pts[1],1);
     case 1:
-        rng->doXrange = true;
-        rng->xmin = Vmath::Vmin(npts, pts[0],1);
-        rng->xmax = Vmath::Vmax(npts, pts[0],1);
+        rng->m_doXrange = true;
+        rng->m_xmin = Vmath::Vmin(npts, pts[0],1);
+        rng->m_xmax = Vmath::Vmax(npts, pts[0],1);
         break;
     default:
         ASSERTL0(false,"too many values specfied in range");

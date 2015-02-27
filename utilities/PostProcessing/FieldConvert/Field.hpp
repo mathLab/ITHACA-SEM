@@ -98,6 +98,7 @@ struct Field {
     bool                                    m_fldToBnd;
 
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
+    bool                                    m_setUpEquiSpacedFields;
 
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,

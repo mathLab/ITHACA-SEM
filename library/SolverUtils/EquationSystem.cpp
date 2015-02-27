@@ -816,7 +816,7 @@ namespace Nektar
                     catch (...)
                     {
                         ASSERTL0(false, "Invalid Filename in function \""
-                                + pFunctionName + "\", variable \"" + pFieldName + "\"")
+                                + pFunctionName + "\", variable \"" + fileVar + "\"")
                     }
                 }
 
@@ -835,7 +835,7 @@ namespace Nektar
                         // expansion segment
                         for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
                         {
-                            if (FieldDef[i]->m_fields[j] == pFieldName)
+                            if (FieldDef[i]->m_fields[j] == fileVar)
                             {
                                 idx = j;
                             }
@@ -849,7 +849,7 @@ namespace Nektar
                         }
                         else
                         {
-                            cout << "Field " + pFieldName + " not found." << endl;
+                            cout << "Field " + fileVar + " not found." << endl;
                         }
                     }
 

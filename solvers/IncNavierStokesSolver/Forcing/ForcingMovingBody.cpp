@@ -1758,7 +1758,6 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
 {
     NekDouble tmp1, tmp2, tmp3;
     NekDouble tmp4, tmp5, tmp6, tmp7;
-    NekDouble beta =  2.0 * M_PI/m_lhom;
     tmp1 =     m_timestep * m_timestep;
     tmp2 =  m_structstiff / m_structrho;
     tmp3 =   m_structdamp / m_structrho;
@@ -1780,6 +1779,7 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
                 = MemoryManager<DNekMat>::AllocateSharedPtr(nel,nel);
 
         unsigned int K;
+        NekDouble beta;
         if(!m_homostrip)
         {
             Array<OneD, unsigned int> ZIDs;
@@ -1789,17 +1789,15 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
                     m_supporttype == "Free-Free")
             {
                 K = ZIDs[plane]/2;
+                beta = 2.0 * M_PI/m_lhom;
             }
-            else if(m_supporttype == "PINNED-PINNED" || 
+
+            if(m_supporttype == "PINNED-PINNED" || 
                         m_supporttype == "Pinned-Pinned")
             {
-                K = ZIDs[plane];
+                K = ZIDs[plane]+1;
+                beta = M_PI/m_lhom;
             }
-            else
-            {
-                ASSERTL0(false,
-                            "Unrecognized support type for cable's motion");
-            }          
         }
         else
         {
@@ -1808,16 +1806,14 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
                     m_supporttype == "Free-Free")
             {
                 K = irank/2;
+                beta = 2.0 * M_PI/m_lhom;
             }
-            else if(m_supporttype == "PINNED-PINNED" || 
+
+            if(m_supporttype == "PINNED-PINNED" || 
                         m_supporttype == "Pinned-Pinned")
             {
-                K = irank;
-            }
-            else
-            {
-                ASSERTL0(false,
-                            "Unrecognized support type for cable's motion");
+                K = irank+1;
+                beta = M_PI/m_lhom;
             }
         }
 

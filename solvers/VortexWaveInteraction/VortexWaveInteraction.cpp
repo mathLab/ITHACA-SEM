@@ -1690,7 +1690,7 @@ cout<<"cr="<<cr_str<<endl;
 
     void VortexWaveInteraction::UpdateWaveForceMag(int outeriter)
     {
-        NekDouble wavef_new;
+        NekDouble wavef_new = 0.0;
 
 
         if(outeriter == 1)
@@ -1809,7 +1809,7 @@ cout<<"cr="<<cr_str<<endl;
 
     void VortexWaveInteraction::UpdateAlpha(int outeriter)
     {
-        NekDouble alp_new;
+        NekDouble alp_new = 0.0;
 
 
         if(outeriter == 1)

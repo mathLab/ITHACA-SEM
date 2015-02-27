@@ -1235,7 +1235,7 @@ namespace Nektar
             {
                 SpatialDomains::PointGeomSharedPtr v;
                 SpatialDomains::PointGeom w;
-                NekDouble dist;
+                NekDouble dist = 0.0;
 
                 // Scan all elements and store those which may contain the point
                 for (int i = 0; i < (*m_exp).size(); ++i)
@@ -1625,6 +1625,11 @@ namespace Nektar
             ASSERTL0(false, "Routine not implemented for this expansion.");
         }
 
+        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
+        {
+            ASSERTL0(false, "Routine not implemented for this expansion.");
+        }
+
         void ExpList::WriteVtkPieceFooter(std::ostream &outfile, int expansion)
         {
             outfile << "      </PointData>" << endl;
@@ -1888,7 +1893,10 @@ namespace Nektar
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
         {
-            int startenum, endenum, s;
+            int startenum = (int) LibUtilities::eSegment;
+            int endenum   = (int) LibUtilities::eHexahedron;
+            int s         = 0;
+            LibUtilities::ShapeType shape;
 
             ASSERTL1(NumHomoDir == HomoBasis.num_elements(),"Homogeneous basis is not the same length as NumHomoDir");
             ASSERTL1(NumHomoDir == HomoLen.size(),"Homogeneous length vector is not the same length as NumHomDir");
@@ -1912,7 +1920,6 @@ namespace Nektar
 
             for(s = startenum; s <= endenum; ++s)
             {
-                LibUtilities::ShapeType               shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
@@ -1922,14 +1929,15 @@ namespace Nektar
                 bool UniOrder = true;
                 int n;
 
+                shape = (LibUtilities::ShapeType) s;
+
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[i]->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
+                    if((*m_exp)[i]->GetGeom()->GetShapeType() == shape)
                     {
                         elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
                         if(first)
                         {
-                            shape = (LibUtilities::ShapeType) s;
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());

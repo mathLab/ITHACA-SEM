@@ -563,11 +563,11 @@ namespace Nektar
                 {
                     for(i = 0; i < numPoints; ++i)
                     {
-                        m_bdata[ 2*p   *numPoints+i] = cos(p*M_PI*z[i]);
-                        m_bdata[(2*p+1)*numPoints+i] = -sin(p*M_PI*z[i]);
+                        m_bdata[ 2*p   *numPoints+i] =  cos(p*M_PI* (z[i]+1) );
+                        m_bdata[(2*p+1)*numPoints+i] = -sin(p*M_PI* (z[i]+1) );
 
-                        m_dbdata[ 2*p   *numPoints+i] = -p*M_PI*sin(p*M_PI*z[i]);
-                        m_dbdata[(2*p+1)*numPoints+i] = -p*M_PI*cos(p*M_PI*z[i]);
+                        m_dbdata[ 2*p   *numPoints+i] = -p*M_PI*sin(p*M_PI* (z[i]+1) );
+                        m_dbdata[(2*p+1)*numPoints+i] = -p*M_PI*cos(p*M_PI* (z[i]+1) );
                     }
                 }
 
@@ -579,11 +579,11 @@ namespace Nektar
 					
                 for(i = 0; i < numPoints; ++i)
                 {
-                    m_bdata[i] = cos(M_PI*z[i]);
-                    m_bdata[numPoints+i] = -sin(M_PI*z[i]);
+                    m_bdata[i] = cos(M_PI* (z[i]+1) );
+                    m_bdata[numPoints+i] = -sin(M_PI* (z[i]+1) );
 						
-                    m_dbdata[i] = -M_PI*sin(M_PI*z[i]);
-                    m_dbdata[numPoints+i] = -M_PI*cos(M_PI*z[i]);
+                    m_dbdata[i] = -M_PI*sin(M_PI* (z[i]+1) );
+                    m_dbdata[numPoints+i] = -M_PI*cos(M_PI* (z[i]+1) );
                 }
 					
                 for (p=1; p < numModes/2; ++p)

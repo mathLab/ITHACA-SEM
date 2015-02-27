@@ -182,15 +182,13 @@ namespace Nektar
       {	
 	
 	// Copy the forward trace of the field to the backward trace
-        int e, id1, id2, npts;
+        int e, id2, npts;
         
         for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]
                  ->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));

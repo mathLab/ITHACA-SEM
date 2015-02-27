@@ -140,7 +140,7 @@ namespace Nektar
 
             // determine if geometric ratio is string or a constant.
             LibUtilities::AnalyticExpressionEvaluator rEval;
-            NekDouble r;
+            NekDouble r             =  1;
             int       rExprId       = -1;
             bool      ratioIsString = false;
 

@@ -260,7 +260,6 @@ namespace Nektar
     int ndim       = m_spacedim;
     int nvariables = inarray.num_elements();
     int nq         = GetTotPoints();
-    int ncoeffs    = GetNcoeffs();
   
     
     switch(m_projectionType)

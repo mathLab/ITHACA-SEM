@@ -259,6 +259,7 @@ faster.
 %
 %
 \subsubsection{Interpolate scattered point data to a field: \textit{interppointdatatofld} module}
+\label{s:utilities:fieldconvert:sub:interppointdatatofld}
 To interpolate discrete point data to a field, use the interppointdatatofld module:
 %
 \begin{lstlisting}[style=BashInputStyle]
@@ -287,8 +288,6 @@ Each line defines a point, while the  first column contains its $x$-coordinate,
 the second one contains the $a$-values, the third the $b$-values and so on.
 In case of $n$-dimensional data, the $n$ coordinates are specified in the first $n$
 columns accordingly.
-Note that currently, the \textit{interppointdatatofld} module can only perform
-interpolation in one dimension.
 %
 In order to interpolate 1D data to a $n$D field, specify the matching coordinate in
 the output field using the \inltt{interpcoord} argument:
@@ -301,9 +300,12 @@ FieldConvert -m interppointdatatofld:interppointdatatofld=1 3D-file1.xml \
 This will interpolate the 1D scattered point data from \inltt{1D-file1.pts} to the
 $y$-coordinate of the 3D mesh defined in \inltt{3D-file1.xml}. The resulting field
 will have constant values along the $x$ and $z$ coordinates.
-In the \inlsh{.pts}-file, all data points must be sorted by their location in ascending order.
-The module implements a quadratic interpolation scheme and automatically falls back to a
-linear scheme if only two data points are given.
+For 1D Interpolation, the module implements a quadratic scheme and automatically 
+falls back to a linear method if only two data points are given. 
+A modified inverse distance method is used for 2D and 3D interpolation.
+Linear and quadratic interpolation require the data points in the \inlsh{.pts}-file to be 
+sorted by their location in ascending order. 
+The Inverse Distance implementation has no such requirement.
 %
 %
 %

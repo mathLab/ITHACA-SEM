@@ -84,7 +84,7 @@ namespace Nektar
                 cout << "Processing input fld file" << endl;
             }
 
-            int i;
+            int i,j;
             string fldending;
             //Determine appropriate field input
             if(m_f->m_inputfiles.count("fld") != 0)
@@ -180,7 +180,7 @@ namespace Nektar
                 vector<string> vars = m_f->m_session->GetVariables();
 
                 // declare other fields;
-                for (int i = 1; i < nfields; ++i)
+                for (i = 1; i < nfields; ++i)
                 {
                     if(i < vars.size())
                     {
@@ -200,9 +200,9 @@ namespace Nektar
                     }
                 }
 
-                for (int j = 0; j < nfields; ++j)
+                for (j = 0; j < nfields; ++j)
                 {
-                    for (int i = 0; i < m_f->m_data.size(); ++i)
+                    for (i = 0; i < m_f->m_data.size(); ++i)
                     {
                         m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i],
                                                            m_f->m_data[i],
@@ -221,7 +221,7 @@ namespace Nektar
                         = m_f->m_exp[0]->GetFieldDefinitions();
                     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-                    for (int j = 0; j < nfields; ++j)
+                    for (j = 0; j < nfields; ++j)
                     {
                         for (i = 0; i < FieldDef.size(); ++i)
                         {

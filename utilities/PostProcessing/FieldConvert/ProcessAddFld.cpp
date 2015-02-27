@@ -49,7 +49,7 @@ namespace Utilities
 ModuleKey ProcessAddFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "addfld"),
-        ProcessAddFld::create, "rescale input field by a constant factor.");
+        ProcessAddFld::create, "add two fields together with optional scaling. Must specify fromfld and scaling is optionally specified with input option scale.");
 
 ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
 {
@@ -58,14 +58,14 @@ ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
        (f->m_inputfiles.count("chk") == 0))
     {
         cout << "A fld, chk or rst input file must be specified for the "
-                "scaleinputfld module" << endl;
+            addld module" << endl;
         exit(3);
     }
 
     m_config["scale"]   = ConfigOption(false, "1.0", "scale factor");
 
     m_config["fromfld"] = ConfigOption(false, "NotSet",
-                                "Fld file form which to interpolate field");
+                                "Fld file form which to add field");
 
     ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
              "Need to specify fromfld=file.fld ");

@@ -1541,10 +1541,13 @@ namespace Nektar
 
             // Construct <CURVED> block
             TiXmlElement *curveTag = new TiXmlElement("CURVED");
+            CurveMap::iterator curveIt;
+            int curveId = 0;
 
-            for (int i = 0; i < m_curvedEdges.size(); ++i)
+            for (curveIt  = m_curvedEdges.begin();
+                 curveIt != m_curvedEdges.end(); ++curveIt)
             {
-                CurveSharedPtr curve = m_curvedEdges[i];
+                CurveSharedPtr curve = curveIt->second;
                 TiXmlElement *c = new TiXmlElement("E");
                 stringstream s;
                 s.precision(8);
@@ -1555,7 +1558,7 @@ namespace Nektar
                     s << scientific << (*p)(0) << " " << (*p)(1) << " " << (*p)(2) << "   ";
                 }
 
-                c->SetAttribute("ID", i);
+                c->SetAttribute("ID", curveId++);
                 c->SetAttribute("EDGEID", curve->m_curveID);
                 c->SetAttribute("NUMPOINTS", curve->m_points.size());
                 c->SetAttribute("TYPE", LibUtilities::kPointsTypeStr[curve->m_ptype]);
@@ -1563,9 +1566,10 @@ namespace Nektar
                 curveTag->LinkEndChild(c);
             }
 
-            for (int i = 0; i < m_curvedFaces.size(); ++i)
+            for (curveIt  = m_curvedFaces.begin();
+                 curveIt != m_curvedFaces.end(); ++curveIt)
             {
-                CurveSharedPtr curve = m_curvedFaces[i];
+                CurveSharedPtr curve = curveIt->second;
                 TiXmlElement *c = new TiXmlElement("F");
                 stringstream s;
                 s.precision(8);
@@ -1576,7 +1580,7 @@ namespace Nektar
                     s << scientific << (*p)(0) << " " << (*p)(1) << " " << (*p)(2) << "   ";
                 }
 
-                c->SetAttribute("ID", i);
+                c->SetAttribute("ID", curveId++);
                 c->SetAttribute("FACEID", curve->m_curveID);
                 c->SetAttribute("NUMPOINTS", curve->m_points.size());
                 c->SetAttribute("TYPE", LibUtilities::kPointsTypeStr[curve->m_ptype]);

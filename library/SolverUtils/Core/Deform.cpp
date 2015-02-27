@@ -183,22 +183,22 @@ namespace SolverUtils {
                     }
 
                     // Extract face displacement.
-                    int nq0 = exp->GetNumPoints(0);
-                    int nq1 = exp->GetNumPoints(1);
+                    LibUtilities::BasisKey B0 = exp->DetFaceBasisKey(j,0);
+                    LibUtilities::BasisKey B1 = exp->DetFaceBasisKey(j,1);
+                    int nq0 = B0.GetNumPoints();
+                    int nq1 = B1.GetNumPoints();
+
+                    ASSERTL1(B0.GetPointsType()
+                                 == LibUtilities::eGaussLobattoLegendre &&
+                             B1.GetPointsType()
+                                 == LibUtilities::eGaussLobattoLegendre,
+                             "Deformation requires GLL points in both "
+                             "directions on a face.");
 
                     Array<OneD, Array<OneD, NekDouble> > newPos(dim);
 
                     StdRegions::StdExpansion2DSharedPtr faceexp;
                     StdRegions::Orientation orient = exp->GetForient(j);
-
-                    const LibUtilities::BasisKey B0(
-                        LibUtilities::eModified_A, nq0,
-                        LibUtilities::PointsKey(
-                            nq0, LibUtilities::eGaussLobattoLegendre));
-                    const LibUtilities::BasisKey B1(
-                        LibUtilities::eModified_A, nq1,
-                        LibUtilities::PointsKey(
-                            nq1, LibUtilities::eGaussLobattoLegendre));
 
                     if (face->GetShapeType() == LibUtilities::eTriangle)
                     {

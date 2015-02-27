@@ -57,8 +57,7 @@ ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
        (f->m_inputfiles.count("rst") == 0) &&
        (f->m_inputfiles.count("chk") == 0))
     {
-        cout << "A fld, chk or rst input file must be specified for the "
-            addld module" << endl;
+        cout << "A fld, chk or rst input file must be specified for the addfld module." << endl;
         exit(3);
     }
 

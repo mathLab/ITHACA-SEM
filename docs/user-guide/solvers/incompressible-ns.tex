@@ -849,7 +849,7 @@ The result should look similar to that shown in Figure~\ref{f:incns:kovaflow}.
 \end{figure}
 
 \subsection{Kovasznay Flow 2D using high-order outflow boundary conditions}
-\label{s:incns:kovasznay2D}
+\label{s:incns:kovasznay2D_HOBC}
 In this example, we solve the same case of 2D Kovasznay flow on severely-truncated computational domain but using a high-order outflow boundary condition, which is much more accurate and robust for unbounded flows \cite{DoKa14}. The solver information and parameters used here are similar to the previous one. What only we need to modify in the input file is just the boundary condition type upon the outlet region shown as below 
 \begin{lstlisting}[style=XMLStyle]
 <BOUNDARYCONDITIONS>
@@ -906,14 +906,14 @@ L inf error (variable p) : 2.93085e-07
 \end{lstlisting}
 
 The physical solution visualized in velocity profiles is also illustrated in 
-Figure~\ref{f:incns:kovaflowhobc}.
+Figure~\ref{f:incns:kovaflow2d_hobc}.
 
 \begin{figure}
 \begin{center}
 \includegraphics[width=7cm]{Figures/KF2DCVP8HOBC_U.png}
 \includegraphics[width=7cm]{Figures/KF2DCVP8HOBC_V.png}
 \caption{Velocity profiles for the Kovasznay Flow in truncated domain (2D).}
-\label{f:incns:kovaflowhobc}
+\label{f:incns:kovaflow2d_hobc}
 \end{center}
 \end{figure}
 

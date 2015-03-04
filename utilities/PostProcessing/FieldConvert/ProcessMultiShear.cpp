@@ -85,6 +85,10 @@ namespace Nektar
             vector< boost::shared_ptr<Field> > m_fromField(nfld);
 
 
+
+//            StdRegions::StdExpansion2DSharedPtr bc;
+//            StdRegions::StdExpansionSharedPtr elmt;
+
             // Set up list of input fld files. 
             fromfld = m_config["fromfld"].as<string>();
             basename = fromfld.substr(0, fromfld.find_first_of("_")+1);
@@ -178,17 +182,20 @@ namespace Nektar
             
 
             int npoints = m_fromField[0]->m_exp[0]->GetNpoints();
-            int nout = 5; // TAWSS, OSI, transWSS, AFI, CFI. 
-            Array<OneD, Array<OneD, NekDouble> > shear(spacedim), TemporalMeanVec(spacedim);
-            Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim), outfield(nout);
-            Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0);
-            Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0);
+            int nout = 6; // TAWSS, OSI, transWSS, AFI, CFI, WSSG. 
+            Array<OneD, Array<OneD, NekDouble> > shear(spacedim), TemporalMeanVec(spacedim), normals(spacedim);
+            Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),outfield(nout);
+	    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanPerp(spacedim);
+            Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0),Tm(npoints,0.0);
+            Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0),Tn(npoints,0.0);
             
             for (i = 0; i < spacedim; ++i)
             {
                 shear[i] = Array<OneD, NekDouble>(npoints);
+                normals[i] = Array<OneD, NekDouble>(npoints);
                 TemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
                 normTemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
+                normTemporalMeanPerp[i] = Array<OneD, NekDouble>(npoints);
                 Vmath::Zero(npoints, TemporalMeanVec[i],1);
             }
             
@@ -198,6 +205,8 @@ namespace Nektar
                 Vmath::Zero(npoints, outfield[i],1);
             }
             
+
+
 
             // -----------------------------------------------------
             // Compute temporal average wall shear stress vector,
@@ -224,16 +233,35 @@ namespace Nektar
                 Vmath::Vdiv(npoints, TemporalMeanVec[i], 1, TemporalMeanMag, 1, normTemporalMeanVec[i], 1);
             }
             // -----------------------------------------------------
-         
+        
+            //------------------------------------------------------
+	    // Grab Noramls from first field - same for all fields - Compute the vector perpindicular
+            // to normTemporalMeanVec in plane
+	    for (i = 0; i < spacedim; ++i)
+	    {
+                normals[i] = m_fromField[0]->m_exp[i+4]->GetPhys();
+            }	
+	    // Cross Product
+	    Vmath::Vvtvvtm(npoints,normals[1],normTemporalMeanVec[2],normals[2],normTemporalMeanVec[1]
+                       ,normTemporalMeanPerp[0]) 
 
-            // Compute tawss, trs,  osi, taafi, tacfi. 
+	    Vmath::Vvtvvtm(npoints,normals[0],normTemporalMeanVec[2],normals[2],normTemporalMeanVec[0]
+                       ,normTemporalMeanPerp[1]) 
+	    
+	    Vmath::Vvtvvtm(npoints,normals[0],normTemporalMeanVec[1],normals[1],normTemporalMeanVec[0]
+                       ,normTemporalMeanPerp[0]) 
+           
+	    Vmath::Smul(npoints,-1,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1)
+
+
+            // Compute tawss, trs,  osi, taafi, tacfi, WSSG. 
             for (i = 0; i < nfld; ++i)
             {
                 for (j = 0; j < spacedim; ++j)
                 {
                     shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
                 }
-                wss = m_fromField[i]->m_exp[nfields-1]->GetPhys();
+                wss = m_fromField[i]->m_exp[3]->GetPhys();
                 
                 for (j = 0; j < spacedim; ++j)
                 {
@@ -266,6 +294,15 @@ namespace Nektar
                     {
                         outfield[4][j] = outfield[4][j] + sqrt(temp[j]);
                     }
+                }
+
+                // WSSG
+                for(j = 0; j < spacedim; ++j)
+                {
+                    Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanVec[j],1,
+                                Tm, 1, Tm, 1);
+                    Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanPerp[j],1,
+                                Tn, 1, Tn, 1);
                 }
              
                 Vmath::Zero(npoints, DotProduct,1);

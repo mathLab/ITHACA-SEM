@@ -234,7 +234,7 @@ namespace Nektar
                 {
                     shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
                 }
-                wss = m_fromField[i]->m_exp[nfields-1]->GetPhys();
+                wss = m_fromField[i]->m_exp[3]->GetPhys();
                 
                 for (j = 0; j < spacedim; ++j)
                 {

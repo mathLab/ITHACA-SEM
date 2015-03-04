@@ -13,6 +13,7 @@ SET(FieldConvertHeaders
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
     ProcessEquiSpacedOutput.h
+    ProcessGrad.h
     ProcessInterpField.h
     ProcessInterpPoints.h
     ProcessInterpPointDataToFld.h
@@ -39,6 +40,7 @@ SET(FieldConvertSources
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
     ProcessEquiSpacedOutput.cpp
+    ProcessGrad.cpp
     ProcessInterpField.cpp
     ProcessInterpPoints.cpp
     ProcessInterpPointDataToFld.cpp

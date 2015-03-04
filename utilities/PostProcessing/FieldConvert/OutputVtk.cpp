@@ -64,7 +64,7 @@ namespace Nektar
                 return; 
             }
 
-            int i, j;
+            int i, j, nstrips;
             if (m_f->m_verbose)
             {
                 cout << "OutputVtk: Writing file..." << endl;
@@ -86,19 +86,24 @@ namespace Nektar
             // Write solution.
             ofstream outfile(filename.c_str());
             m_f->m_exp[0]->WriteVtkHeader(outfile);
-            
-            // For each field write out field data for each expansion.
-            for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
-            {
-                m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i);
-                // For this expansion write out each field.
-                for (j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
-                {
-                    m_f->m_exp[j]->WriteVtkPieceData(outfile, i, 
-                                               m_f->m_fielddef[0]->m_fields[j]);
-                }
-                m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
-            }
+
+            m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+
+        	for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
+        	{
+            	// For each field write out field data for each expansion.
+            	for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
+            	{
+                	m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
+                	// For this expansion write out each field.
+                	for (j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+                	{
+                    	m_f->m_exp[j]->WriteVtkPieceData(outfile, i, 
+                        	                       m_f->m_fielddef[0]->m_fields[j]);
+                	}
+                	m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
+            	}
+			}
             m_f->m_exp[0]->WriteVtkFooter(outfile);
             cout << "Written file: " << filename << endl;
         }        

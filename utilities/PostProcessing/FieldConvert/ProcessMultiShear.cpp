@@ -127,7 +127,7 @@ namespace Nektar
                     // Set up ElementGIDs in case of parallel processing
                     Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
                     for (j = 0; j < m_f->m_exp[0]->GetExpSize(); ++j)
-                    {
+			    {
                         ElementGIDs[j] = m_f->m_exp[0]->GetExp(j)->GetGeom()->GetGlobalID();
                     }
                     m_fromField[i]->m_fld->Import(infiles[i],m_fromField[i]->m_fielddef,
@@ -185,14 +185,17 @@ namespace Nektar
             int nout = 6; // TAWSS, OSI, transWSS, AFI, CFI, WSSG. 
             Array<OneD, Array<OneD, NekDouble> > shear(spacedim), TemporalMeanVec(spacedim), normals(spacedim);
             Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),outfield(nout);
-	    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanPerp(spacedim);
+	    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanPerp(spacedim),dTm(spacedim),dTn(spacedim);
             Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0),Tm(npoints,0.0);
-            Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0),Tn(npoints,0.0);
-            
+            Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0),Tn(npoints,0.0), WSSG(npoints,0.0);        
+            Array<OneD, NekDouble> ndTn(npoints,0.0),mdTm(npoints,0.0);
+
             for (i = 0; i < spacedim; ++i)
             {
                 shear[i] = Array<OneD, NekDouble>(npoints);
                 normals[i] = Array<OneD, NekDouble>(npoints);
+                dTm[i] = Array<OneD, NekDouble>(npoints);
+                dTn[i] = Array<OneD, NekDouble>(npoints);
                 TemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
                 normTemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
                 normTemporalMeanPerp[i] = Array<OneD, NekDouble>(npoints);
@@ -242,16 +245,27 @@ namespace Nektar
                 normals[i] = m_fromField[0]->m_exp[i+4]->GetPhys();
             }	
 	    // Cross Product
-	    Vmath::Vvtvvtm(npoints,normals[1],normTemporalMeanVec[2],normals[2],normTemporalMeanVec[1]
-                       ,normTemporalMeanPerp[0]) 
-
-	    Vmath::Vvtvvtm(npoints,normals[0],normTemporalMeanVec[2],normals[2],normTemporalMeanVec[0]
-                       ,normTemporalMeanPerp[1]) 
-	    
-	    Vmath::Vvtvvtm(npoints,normals[0],normTemporalMeanVec[1],normals[1],normTemporalMeanVec[0]
-                       ,normTemporalMeanPerp[0]) 
+//	    Vmath::Vvtvvtm(npoints,normals[1],1,normTemporalMeanVec[2],1,normals[2],1,normTemporalMeanVec[1],1,
+//                       normTemporalMeanPerp[0],1); 
+//
+//	    Vmath::Vvtvvtm(npoints,normals[0],1,normTemporalMeanVec[2],1,normals[2],1,normTemporalMeanVec[0],1,
+//                       normTemporalMeanPerp[1],1);
+//	    
+//	    Vmath::Vvtvvtm(npoints,normals[0],1,normTemporalMeanVec[1],1,normals[1],1,normTemporalMeanVec[0],1,
+//                       normTemporalMeanPerp[2],1) ;
+            Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[0],1);
+	    Vmath::Vvtvm(npoints,normals[1],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[0],1,
+			normTemporalMeanPerp[0],1);
            
-	    Vmath::Smul(npoints,-1,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1)
+            Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[1],1);
+	    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[1],1,
+			normTemporalMeanPerp[1],1);
+            
+	    Vmath::Vmul(npoints,normals[1],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[2],1);
+	    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[2],1,
+			normTemporalMeanPerp[2],1);
+
+	    Vmath::Smul(npoints,-1.0,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1);
 
 
             // Compute tawss, trs,  osi, taafi, tacfi, WSSG. 
@@ -304,8 +318,27 @@ namespace Nektar
                     Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanPerp[j],1,
                                 Tn, 1, Tn, 1);
                 }
-             
+
+		m_fromField[i]->m_exp[0]->PhysDeriv(Tm,dTm[0],dTm[1],dTm[2]);
+		m_fromField[i]->m_exp[0]->PhysDeriv(Tn,dTn[0],dTn[1],dTn[2]);
+
+ 		for(j = 0;j < spacedim; ++j)
+		{
+		    Vmath::Vvtvp(npoints,dTm[j],1,normTemporalMeanVec[j],1,mdTm,1,mdTm,1);
+		    Vmath::Vvtvp(npoints,dTn[j],1,normTemporalMeanPerp[j],1,ndTn,1,ndTn,1);
+		}
+
+		Vmath::Vmul(npoints,mdTm,1,mdTm,1,mdTm,1);
+		Vmath::Vvtvp(npoints,ndTn,1,ndTn,1,mdTm,1,WSSG,1);       	        
+		Vmath::Vsqrt(npoints,WSSG,1,WSSG,1);
+                Vmath::Vadd(npoints, WSSG, 1, outfield[5], 1, outfield[5], 1);
+ 
                 Vmath::Zero(npoints, DotProduct,1);
+                Vmath::Zero(npoints, Tm,1);
+                Vmath::Zero(npoints, Tn,1);
+                Vmath::Zero(npoints, ndTn,1);
+                Vmath::Zero(npoints, mdTm,1);
+
             }
 
             //Divide by nfld
@@ -313,7 +346,8 @@ namespace Nektar
             Vmath::Smul(npoints, 1.0/nfld, outfield[1], 1, outfield[1], 1);
             Vmath::Smul(npoints, 1.0/nfld, outfield[3], 1, outfield[3], 1); 
             Vmath::Smul(npoints, 1.0/nfld, outfield[4], 1, outfield[4], 1);  
-
+            Vmath::Smul(npoints, 1.0/nfld, outfield[5], 1, outfield[5], 1); 
+ 
             //OSI
             for (i = 0; i < npoints; ++i)
             {
@@ -342,6 +376,7 @@ namespace Nektar
             m_f->m_fielddef[0]->m_fields[2] = "OSI";
             m_f->m_fielddef[0]->m_fields[3] = "TAAFI";
             m_f->m_fielddef[0]->m_fields[4] = "TACFI";
+            m_f->m_fielddef[0]->m_fields[5] = "|WSSG|";
             
             for(i = 0; i < nout; ++i)
             {

@@ -131,7 +131,7 @@ namespace Nektar
             int npoints = m_f->m_exp[0]->GetNpoints(); 
             Array<OneD, Array<OneD, NekDouble> > velocity(nfields), grad(ngrad), fgrad(ngrad);
             Array<OneD, Array<OneD, NekDouble> > stress(nstress), fstress(nstress);
-            Array<OneD, Array<OneD, NekDouble> > outfield(newfields), shear(newfields);
+            Array<OneD, Array<OneD, NekDouble> > outfield(newfields), shear(newfields), fshear(newfields);
         
             StdRegions::StdExpansionSharedPtr elmt;
             StdRegions::StdExpansion2DSharedPtr bc;
@@ -220,6 +220,7 @@ namespace Nektar
             for (i = 0; i < newfields; ++i)
             {
                 outfield[i] = Array<OneD, NekDouble>(npoints);
+                shear[i] = Array<OneD, NekDouble>(npoints);
             }
             for (i = 0; i < nfields; ++i)
             {
@@ -266,7 +267,7 @@ namespace Nektar
                             
                             if(nfields == 2)
                             { 
-                                //Not implemented in 2D.   
+                                ASSERTL0(false, "Error: not implemented in 2D.");
                             }
                             else
                             {   
@@ -296,7 +297,7 @@ namespace Nektar
 
                                 for(int j = 0; j < newfields; ++j)
                                 {
-                                    shear[j] = Array<OneD, NekDouble>(nfq);
+                                    fshear[j] = Array<OneD, NekDouble>(nfq);
                                 }
 
                                 if(c0Proj)
@@ -356,70 +357,70 @@ namespace Nektar
                                 {
                                     // Sx
                                     Vmath::Vvtvvtp(nfq,normals[0],1,fstress[0],1,
-                                                   normals[1],1,fstress[3],1,shear[0],1);
-                                    Vmath::Vvtvp  (nfq,normals[2],1,fstress[4],1,shear[0],1,shear[0],1);
+                                                   normals[1],1,fstress[3],1,fshear[0],1);
+                                    Vmath::Vvtvp  (nfq,normals[2],1,fstress[4],1,fshear[0],1,fshear[0],1);
                                     
                                     // Sy
                                     Vmath::Vvtvvtp(nfq,normals[0],1,fstress[3],1,
-                                                   normals[1],1,fstress[1],1,shear[1],1);
-                                    Vmath::Vvtvp  (nfq,normals[2],1,fstress[5],1,shear[1],1,shear[1],1);
+                                                   normals[1],1,fstress[1],1,fshear[1],1);
+                                    Vmath::Vvtvp  (nfq,normals[2],1,fstress[5],1,fshear[1],1,fshear[1],1);
                                     
                                     // Sz
                                     Vmath::Vvtvvtp(nfq,normals[0],1,fstress[4],1,
-                                                   normals[1],1,fstress[5],1,shear[2],1);
-                                    Vmath::Vvtvp  (nfq,normals[2],1,fstress[2],1,shear[2],1,shear[2],1);
+                                                   normals[1],1,fstress[5],1,fshear[2],1);
+                                    Vmath::Vvtvp  (nfq,normals[2],1,fstress[2],1,fshear[2],1,fshear[2],1);
                                 }
                                 else
                                 {
                                     // Sx
                                     Vmath::Svtsvtp(nfq,normals[0][0],fstress[0],1,
-                                                   normals[1][0],fstress[3],1,shear[0],1);
-                                    Vmath::Svtvp(nfq,normals[2][0],fstress[4],1,shear[0],1,shear[0],1);
+                                                   normals[1][0],fstress[3],1,fshear[0],1);
+                                    Vmath::Svtvp(nfq,normals[2][0],fstress[4],1,fshear[0],1,fshear[0],1);
                                     
                                     // Sy
                                     Vmath::Svtsvtp(nfq,normals[0][0],fstress[3],1,
-                                                   normals[1][0],fstress[1],1,shear[1],1);
-                                    Vmath::Svtvp(nfq,normals[2][0],fstress[5],1,shear[1],1,shear[1],1);
+                                                   normals[1][0],fstress[1],1,fshear[1],1);
+                                    Vmath::Svtvp(nfq,normals[2][0],fstress[5],1,fshear[1],1,fshear[1],1);
                                     
                                     // Sz
                                     Vmath::Svtsvtp(nfq,normals[0][0],fstress[4],1,
-                                                   normals[1][0],fstress[5],1,shear[2],1);
-                                    Vmath::Svtvp(nfq,normals[2][0],fstress[2],1,shear[2],1,shear[2],1);
+                                                   normals[1][0],fstress[5],1,fshear[2],1);
+                                    Vmath::Svtvp(nfq,normals[2][0],fstress[2],1,fshear[2],1,fshear[2],1);
                                 }
                                 
                                 // T = T - (T.n)n
                                 if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                                 {
-                                    Vmath::Vvtvvtp(nfq,normals[0],1,shear[0],1,
-                                                   normals[1],1, shear[1],1,shear[3],1);
-                                    Vmath::Vvtvp  (nfq,normals[2],1, shear[2],1,shear[3],1,shear[3],1);
-                                    Vmath::Smul(nfq, -1.0, shear[3], 1, shear[3], 1);
+                                    Vmath::Vvtvvtp(nfq,normals[0],1,fshear[0],1,
+                                                   normals[1],1, fshear[1],1,fshear[3],1);
+                                    Vmath::Vvtvp  (nfq,normals[2],1, fshear[2],1,fshear[3],1,fshear[3],1);
+                                    Vmath::Smul(nfq, -1.0, fshear[3], 1, fshear[3], 1);
                                     
                                     for (j = 0; j < nfields; j++)
                                     {
-                                        Vmath::Vvtvp(nfq,normals[j], 1, shear[3], 1, shear[j], 1, shear[j], 1);
-                                        bc->FwdTrans(shear[j], outfield[j]);
+                                        Vmath::Vvtvp(nfq,normals[j], 1, fshear[3], 1, fshear[j], 1, fshear[j], 1);
+                                        bc->FwdTrans(fshear[j], outfield[j]);
                                     }   
                                 }
                                 else
                                 {
-                                    Vmath::Svtsvtp(nfq,normals[0][0],shear[0],1,
-                                                   normals[1][0],shear[1],1,shear[3],1);
-                                    Vmath::Svtvp(nfq,normals[2][0],shear[2],1,shear[3],1,shear[3],1);
-                                    Vmath::Smul(nfq, -1.0, shear[3], 1, shear[3], 1);
+                                    Vmath::Svtsvtp(nfq,normals[0][0],fshear[0],1,
+                                                   normals[1][0],fshear[1],1,fshear[3],1);
+                                    Vmath::Svtvp(nfq,normals[2][0],fshear[2],1,fshear[3],1,fshear[3],1);
+                                    Vmath::Smul(nfq, -1.0, fshear[3], 1,fshear[3], 1);
                                     
                                     for (j = 0; j < nfields; j++)
                                     {
-                                        Vmath::Svtvp(nfq,normals[1][0],shear[3],1,shear[j],1,shear[j],1);
-                                        bc->FwdTrans(shear[j], outfield[j]);
+                                        Vmath::Svtvp(nfq,normals[j][0],fshear[3],1,fshear[j],1,fshear[j],1);
+                                        bc->FwdTrans(fshear[j], outfield[j]);
                                     }   
                                 }
                                 
                                 // Tw 
-                                Vmath::Vvtvvtp(nfq, shear[0], 1, shear[0], 1, shear[1], 1, shear[1], 1, shear[3], 1);
-                                Vmath::Vvtvp(nfq, shear[2], 1, shear[2], 1, shear[3], 1, shear[3], 1);
-                                Vmath::Vsqrt(nfq, shear[3], 1, shear[3], 1);
-                                bc->FwdTrans(shear[3], outfield[3]); 
+                                Vmath::Vvtvvtp(nfq, fshear[0], 1, fshear[0], 1, fshear[1], 1, fshear[1], 1, fshear[3], 1);
+                                Vmath::Vvtvp(nfq, fshear[2], 1, fshear[2], 1, fshear[3], 1, fshear[3], 1);
+                                Vmath::Vsqrt(nfq, fshear[3], 1, fshear[3], 1);
+                                bc->FwdTrans(fshear[3], outfield[3]); 
                                 
                             }
                         }
@@ -431,12 +432,93 @@ namespace Nektar
                 }
             }
 
+            
+            int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
+            int nGlobal = m_f->m_locToGlobalMap->GetNumGlobalCoeffs();
+            Array<OneD, NekDouble> output(ncoeffs);
+            
+            const Array<OneD,const int>& map = m_f->m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            NekDouble sign;
+
+            for(j = 0; j < newfields; ++j)
+            {
+                output=m_f->m_exp[j]->UpdateCoeffs();
+                
+                Array<OneD, NekDouble> outarray(nGlobal,0.0);
+                int bndcnt=0;
+                                
+                for(i = 0; i < BndExp[j].num_elements(); ++i)
+                {
+                    bool doneBnd = false;
+                    for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
+                    {
+                        if(i == m_f->m_bndRegionsToWrite[b])
+                        {   
+                            doneBnd = true;
+                            const Array<OneD,const NekDouble>& coeffs = BndExp[j][i]->GetCoeffs();
+                            for(int k = 0; k < (BndExp[j][i])->GetNcoeffs(); ++k)
+                            {
+                                sign = m_f->m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                                outarray[map[bndcnt++]] = sign * coeffs[k];
+                            }
+                        }
+                        if(doneBnd == false)
+                        {
+                            bndcnt += BndExp[j][i]->GetNcoeffs();
+                        }
+                    }
+                }
+                m_f->m_locToGlobalMap->GlobalToLocal(outarray,output);
+            }
+            
+            for(int j = 0; j < newfields; ++j)
+            {
+                BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
+            }
+           
+            /*
+            // loop over the types of boundary conditions
+            for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
+            {   
+                bool doneBnd = false;
+                // identify if boundary has been defined
+                for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
+                {
+                    if(n == m_f->m_bndRegionsToWrite[b])
+                    {   
+                        doneBnd = true;
+                        for(int i = 0; i < BndExp[0][n]->GetExpSize(); ++i, cnt++)
+                        {       
+                            // find element and face of this expansion.
+                            elmtid = BoundarytoElmtID[cnt];
+                            elmt   = m_f->m_exp[0]->GetExp(elmtid);
+                            offset = m_f->m_exp[0]->GetPhys_Offset(elmtid);
+                            bc  =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
+                              
+                            for (j = 0; j< newfields; j++)
+                            {
+                                outfield[j] = BndExp[j][n]->UpdateCoeffs() + BndExp[j][n]->GetCoeff_Offset(i);
+                                shear[j] = m_f->m_exp[j]->GetPhys() + offset;
+                                elmt->GetFacePhysVals(boundary,bc,shear[j],fshear[j]); 
+                                bc->FwdTrans(fshear[j], outfield[j]); 
+                            }
+                        }
+                    }
+                }
+                if(doneBnd == false)
+                {
+                    cnt += BndExp[0][n]->GetExpSize();
+                }
+            }
+            */
+
             if(c0Proj)
             {
                 // Output. Resize m_exp to remove temporary fields for gradient expansion. 
                 m_f->m_exp.resize(newfields);
             }
             
+            /*
             for(int j = 0; j < newfields; ++j)
             {
                 for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
@@ -444,7 +526,7 @@ namespace Nektar
                     m_f->m_exp[j]->UpdateBndCondExpansion(m_f->m_bndRegionsToWrite[b]) = BndExp[j][m_f->m_bndRegionsToWrite[b]];
                 }
             }
-          
+            */
         }
     }
 }

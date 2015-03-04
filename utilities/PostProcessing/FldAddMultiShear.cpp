@@ -78,9 +78,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_fields.size();
-    int addfields = 3;
+    int addfields = 7;
     int sfields = nfields - expdim;
-    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields+addfields), shear(sfields);
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields+addfields), shear(sfields), extraVar(addfields);
     MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;   
 
     switch(expdim)
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
             {
                 Exp[i+nfields] = MemoryManager<MultiRegions::ContField3D>
                     ::AllocateSharedPtr(*firstfield, graphShPt, 
-                                        vSession->GetVariable(i));
+                                        vSession->GetVariable(0));
             }
 
         }
@@ -376,7 +376,11 @@ int main(int argc, char *argv[])
                     if (temp2[m]> 0.0) 
                     {
                         trs[m] = trs[m] + sqrt(temp2[m]);
-                    }    
+                    }  /*  
+                    else
+                    {
+                        trs[m] = 0.0;
+                        }*/
                 }
               
                 Vmath::Zero (nbq, temp2, 1);
@@ -396,7 +400,6 @@ int main(int argc, char *argv[])
     Vmath::Smul (nbq, (1.0/nfiles), trs, 1, trs, 1);
     Vmath::Smul (nbq, (1.0/nfiles), TAwss, 1, TAwss, 1);
     
-  
     //Compute osi = 0.5*(1- Save/TAwss)
     Vmath::Vdiv(nbq, Save, 1, TAwss, 1, osi, 1);
     Vmath::Smul(nbq, -0.5, osi, 1, osi, 1);
@@ -469,11 +472,38 @@ int main(int argc, char *argv[])
                         temp[2][j] = osi[bndOffset + j];
                     }
 
-                    for (j = 0; j < addfields; j++)
+                    for (j = 0; j < 3; j++)
                     {
                         values[j] = BndExp[j+nfields][n]->UpdateCoeffs() + BndExp[j+nfields][n]->GetCoeff_Offset(i);
                         bc->FwdTrans(temp[j], values[j]);
+
+                        Vmath::Zero(nbq, temp[j],1);
                     }
+
+                    for (j = 0; j < nfq; j++)
+                    {
+                        temp[0][j] = Sxr[bndOffset + j];                     
+                        temp[1][j] = Syr[bndOffset + j];
+                        temp[2][j] = Szr[bndOffset + j];
+                    }
+
+                    for (j = 0; j < 3; j++)
+                    {
+                        values[j] = BndExp[j+nfields+3][n]->UpdateCoeffs() + BndExp[j+nfields+3][n]->GetCoeff_Offset(i);
+                        bc->FwdTrans(temp[j], values[j]);
+                     
+                        Vmath::Zero(nbq, temp[j],1);
+                    }
+
+
+                    for (j = 0; j < nfq; j++)
+                    {
+                        temp[0][j] = Save[bndOffset + j];                     
+                    }
+                    
+                    values[0] = BndExp[nfields+addfields-1][n]->UpdateCoeffs() + BndExp[nfields+addfields-1][n]->GetCoeff_Offset(i);
+                    bc->FwdTrans(temp[0], values[0]);
+                    
                 }
             }
         }
@@ -530,6 +560,10 @@ int main(int argc, char *argv[])
     outname.push_back("TransWSS");
     outname.push_back("TAWSS");
     outname.push_back("OSI");
+    outname.push_back("norm_mean_x");
+    outname.push_back("norm_mean_y");
+    outname.push_back("norm_mean_z");
+    outname.push_back("mean_mag");
 
     for(j = 0; j < nfields+addfields; ++j)
     {

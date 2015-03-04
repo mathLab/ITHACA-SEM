@@ -166,7 +166,7 @@ namespace Nektar
             // if m_exp defined presume we want to load all field  into expansions
             if(m_f->m_exp.size())
             {
-                int nfields;
+	        int nfields,nstrips;
                 if(vm.count("useSessionVariables"))
                 {
                     nfields = m_f->m_session->GetVariables().size();
@@ -176,6 +176,8 @@ namespace Nektar
                     nfields = m_f->m_fielddef[0]->m_fields.size();
                 }
                 m_f->m_exp.resize(nfields);
+
+		m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
 
                 vector<string> vars = m_f->m_session->GetVariables();
 
@@ -200,18 +202,23 @@ namespace Nektar
                     }
                 }
 
-                for (j = 0; j < nfields; ++j)
-                {
-                    for (i = 0; i < m_f->m_data.size(); ++i)
+		for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
+		{
+		    for (j = 0; j < nfields; ++j)
                     {
-                        m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i],
-                                                           m_f->m_data[i],
-                                                           m_f->m_fielddef[i]->m_fields[j],
-                                                           m_f->m_exp[j]->UpdateCoeffs());
-                    }
-                    m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                            m_f->m_exp[j]->UpdatePhys());
-                }
+		        for (i = 0; i < m_f->m_data.size()/nstrips; ++i)
+			{
+			    m_f->m_exp[j]->
+			      ExtractDataToCoeffs(m_f->m_fielddef[i*nstrips+s],
+						  m_f->m_data[i*nstrips+s],
+						  m_f->m_fielddef[i*nstrips+s]
+						        ->m_fields[j],
+						  m_f->m_exp[j]->UpdateCoeffs());
+			}
+			m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
+						m_f->m_exp[j]->UpdatePhys());
+		    }
+		}
 
                 // if range is defined reset up output field in case or
                 // reducing fld definition

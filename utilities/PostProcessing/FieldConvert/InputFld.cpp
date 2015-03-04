@@ -166,7 +166,10 @@ namespace Nektar
             // if m_exp defined presume we want to load all field  into expansions
             if(m_f->m_exp.size())
             {
-	        int nfields,nstrips;
+                int nfields,nstrips;
+
+                m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+
                 if(vm.count("useSessionVariables"))
                 {
                     nfields = m_f->m_session->GetVariables().size();
@@ -175,51 +178,54 @@ namespace Nektar
                 {
                     nfields = m_f->m_fielddef[0]->m_fields.size();
                 }
-                m_f->m_exp.resize(nfields);
 
-		m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+
+                m_f->m_exp.resize(nfields*nstrips);
 
                 vector<string> vars = m_f->m_session->GetVariables();
-
+                
                 // declare other fields;
-                for (i = 1; i < nfields; ++i)
+                for (int s = 0; s < nstrips; ++s)
                 {
-                    if(i < vars.size())
+                    for (i = 0; i < nfields; ++i)
                     {
-                        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                       if(i < vars.size())
+                       {
+                            m_f->m_exp[s*nfields+i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
                                                            vars[i]);
-                    }
-                    else
-                    {
-                        if(vars.size())
-                        {
-                            m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,vars[0]);
-                        }
-                        else
-                        {
-                            m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-                        }
+                       }
+                       else
+                       {
+                           if(vars.size())
+                           {
+                               m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,vars[0]);
+                           }
+                           else
+                           {
+                               m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+                           }
+                       }
                     }
                 }
-
-		for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
-		{
-		    for (j = 0; j < nfields; ++j)
+                
+                for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
+                {
+                    for (j = 0; j < nfields; ++j)
                     {
-		        for (i = 0; i < m_f->m_data.size()/nstrips; ++i)
-			{
-			    m_f->m_exp[j]->
-			      ExtractDataToCoeffs(m_f->m_fielddef[i*nstrips+s],
-						  m_f->m_data[i*nstrips+s],
-						  m_f->m_fielddef[i*nstrips+s]
-						        ->m_fields[j],
-						  m_f->m_exp[j]->UpdateCoeffs());
-			}
-			m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-						m_f->m_exp[j]->UpdatePhys());
-		    }
-		}
-
+                        for (i = 0; i < m_f->m_data.size()/nstrips; ++i)
+                        {
+                            m_f->m_exp[s*nfields+j]->
+                                      ExtractDataToCoeffs(m_f->m_fielddef[i*nstrips+s],
+                            m_f->m_data[i*nstrips+s],
+                            m_f->m_fielddef[i*nstrips+s]
+                                    ->m_fields[j],
+                            m_f->m_exp[s*nfields+j]->UpdateCoeffs());
+                        }
+                        m_f->m_exp[s*nfields+j]->BwdTrans(m_f->m_exp[s*nfields+j]->GetCoeffs(),
+                                    m_f->m_exp[s*nfields+j]->UpdatePhys());
+                    }
+                }
+            
                 // if range is defined reset up output field in case or
                 // reducing fld definition
                 if(vm.count("range"))

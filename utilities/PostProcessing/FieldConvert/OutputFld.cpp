@@ -38,6 +38,7 @@
 using namespace std;
 
 #include "OutputFld.h"
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 namespace Nektar
 {
@@ -71,8 +72,7 @@ void OutputFld::Process(po::variables_map &vm)
         ModuleKey      module;
         
         // Extract data to boundaryconditions
-        if (m_f->m_fldToBnd)
-        {
+        if (m_f->m_fldToBnd)        {
             for (int i = 0; i < m_f->m_exp.size(); ++i)
             {
                 m_f->m_exp[i]->FillBndCondFromField();
@@ -195,9 +195,25 @@ void OutputFld::Process(po::variables_map &vm)
             cout << "OutputFld: Writing file..." << endl;
         }
 
-        // Write the output file
-        m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+	fs::path writefile(filename);
 
+	bool writefld = true;
+	if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
+	{
+	   string answer;
+	   cout << "Did you wish to overwrite " << filename << " (y/n)? ";
+	   getline(cin,answer);
+	   if(answer.compare("y") != 0)
+	   {
+	     writefld = false; 
+	     cout << "Not writing file " << filename << " because it already exists" << endl;
+	   }
+	}
+        
+        if(writefld == true)
+	{
+            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+	}
 
         // output error for regression checking.
         if (vm.count("error"))

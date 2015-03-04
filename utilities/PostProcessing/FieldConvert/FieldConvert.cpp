@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
                 "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
         ("error,e",
                 "Write error of fields for regression checking")
+        ("forceoutput,f",
+                "Force the output to be written without any checks")
         ("range,r", po::value<string>(),
                 "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
                 "in which any vertex is contained.")

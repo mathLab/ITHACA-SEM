@@ -95,8 +95,8 @@ namespace Nektar
         const int nLocBndCondDofs = cgMap->
             GetBndCondCoeffsToGlobalCoeffsMap().num_elements() * nVel;
 
-        ASSERTL0(nLocBndCondDofs == m_numLocalDirBndCoeffs,
-                 "Only Dirichlet boundary conditions are supported");
+        //ASSERTL0(nLocBndCondDofs == m_numLocalDirBndCoeffs,
+        //         "Only Dirichlet boundary conditions are supported");
 
         // Allocate storage for local to global maps. TODO: Set up global to
         // universal map to support parallel execution.
@@ -223,7 +223,9 @@ namespace Nektar
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
             = fields[0]->GetBndCondExpansions();
 
-        const int nLocalDirBndCoeffs = cgMap->GetNumLocalDirBndCoeffs();
+        //const int nLocalDirBndCoeffs = cgMap->GetNumLocalDirBndCoeffs();
+        const int nLocalDirBndCoeffs =
+            cgMap->GetBndCondCoeffsToGlobalCoeffsMap().num_elements();
 
         cnt1 = 0;
         for (n = 0; n < nVel; ++n)

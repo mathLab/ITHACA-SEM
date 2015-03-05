@@ -37,6 +37,9 @@
 #include <iostream>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
+
 #include <tinyxml.h>
 
 #include "InputDat.h"
@@ -60,7 +63,6 @@ namespace Nektar
         InputDat::InputDat(FieldSharedPtr f) : InputModule(f)
         {
             m_allowedFiles.insert("dat");
-            f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
         }
 
         InputDat::~InputDat()
@@ -94,41 +96,37 @@ namespace Nektar
             }
 
             // read variables
+            // currently assum there are x y and z coordinates
+            int dim = 3;
+            vector<string> fieldNames;
             while (!datFile.eof())
             {
                 getline(datFile, line);
 
                 if(line.find("VARIABLES") != string::npos)
                 {
-                    vector<string> variables;
                     std::size_t  pos = line.find('=');
                     pos++;
 
                     // note this expects a comma separated list but
                     // does not work for white space separated lists!
                     bool valid = ParseUtils::GenerateOrderedStringVector(
-                                        line.substr(pos).c_str(), variables);
+                                        line.substr(pos).c_str(), fieldNames);
                     ASSERTL0(valid,"Unable to process list of field variable in "
                              " VARIABLES list:  "+ line.substr(pos));
 
-
-                    // currently assum there are x y and z coordinates
-                    for(int i = 3; i < variables.size(); ++i)
-                    {
-                        m_f->m_fieldPts->m_fields.push_back(variables[i]);
-                    }
+                    // remove coordinates from fieldNames
+                    fieldNames.erase(fieldNames.begin(), fieldNames.begin() + dim);
 
                     break;
                 }
             }
 
             // set up basic parameters
-            m_f->m_fieldPts->m_ptsDim  = 3;
-            m_f->m_fieldPts->m_nFields = m_f->m_fieldPts->m_fields.size();
-            m_f->m_fieldPts->m_pts     = Array<OneD, Array<OneD, NekDouble> > (
-                                                m_f->m_fieldPts->m_nFields +
-                                                m_f->m_fieldPts->m_ptsDim);
-            m_f->m_fieldPts->m_ptype  = ePtsTriBlock;
+            int nfields = fieldNames.size();
+            int totvars = dim + nfields;
+            Array<OneD, Array<OneD, NekDouble> > pts(totvars);
+            vector<Array<OneD, int> > ptsConn;
 
             // read zones
             while (!datFile.eof())
@@ -139,18 +137,25 @@ namespace Nektar
                    (line.find("Zone") != string::npos)||
                    (line.find("zone") != string::npos))
                 {
-                    ReadTecplotFEBlockZone(datFile,line);
+                    ReadTecplotFEBlockZone(datFile, line, pts, ptsConn);
                 }
             }
 
             datFile.close();
+
+            m_f->m_fieldPts =
+                MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                    dim, fieldNames, pts);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
+            m_f->m_fieldPts->SetConnectivity(ptsConn);
         }
 
         void InputDat::ReadTecplotFEBlockZone(
-                std::ifstream   &datFile,
-                string          &line)
+            std::ifstream   &datFile,
+            string          &line,
+            Array<OneD, Array<OneD, NekDouble> > &pts,
+            vector<Array<OneD, int> > &ptsConn)
         {
-
             ASSERTL0(line.find("FEBlock") != string::npos,
                      "Routine only set up for FEBLock format");
             ASSERTL0(line.find("ET") != string::npos,
@@ -176,16 +181,14 @@ namespace Nektar
             end   = tag.find_first_of(',',start);
             int nelmt = atoi(tag.substr(start+2,end).c_str());
 
-
             // set-up or extend m_pts array;
-            int norigpts  = m_f->m_fieldPts->m_pts[0].num_elements();
-            int totfields = m_f->m_fieldPts->m_pts.num_elements();
+            int norigpts  = pts[0].num_elements();
+            int totfields = pts.num_elements();
             Array<OneD, Array<OneD, NekDouble> > origpts(totfields);
             for(int i = 0; i < totfields; ++i)
             {
-                origpts[i] = m_f->m_fieldPts->m_pts[i];
-                m_f->m_fieldPts->m_pts[i] =
-                                    Array<OneD, NekDouble>(norigpts + nvert);
+                origpts[i] = pts[i];
+                pts[i] = Array<OneD, NekDouble>(norigpts + nvert);
             }
 
             NekDouble value;
@@ -194,12 +197,12 @@ namespace Nektar
 
                 for(int i = 0; i < norigpts; ++i)
                 {
-                    m_f->m_fieldPts->m_pts[n][i] = origpts[n][i];
+                    pts[n][i] = origpts[n][i];
                 }
                 for(int i = 0; i < nvert; ++i)
                 {
                     datFile >> value;
-                    m_f->m_fieldPts->m_pts[n][norigpts+i] = value;
+                    pts[n][norigpts+i] = value;
                 }
             }
 
@@ -212,7 +215,7 @@ namespace Nektar
                 intvalue -=1; // decrement intvalue by 1 for c array convention
                 conn[i] = norigpts + intvalue;
             }
-            m_f->m_fieldPts->m_ptsConn.push_back(conn);
+            ptsConn.push_back(conn);
 
             getline(datFile, line);
         }

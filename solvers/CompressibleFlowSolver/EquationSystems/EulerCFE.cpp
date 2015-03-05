@@ -126,26 +126,10 @@ namespace Nektar
                 break;
             }
         }
-        
-        //insert white noise in initial condition
-        NekDouble Noise;
-        int phystot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> noise(phystot);
-        
-        m_session->LoadParameter("Noise", Noise,0.0);
-        int m_nConvectiveFields =  m_fields.num_elements();
-        
-        if(Noise > 0.0)
-        {
-            for(int i = 0; i < m_nConvectiveFields; i++)
-            {
-                Vmath::FillWhiteNoise(phystot,Noise,noise,1,m_comm->GetColumnComm()->GetRank()+1);
-                Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        
-        if (dumpInitialConditions)
+
+        CompressibleFlowSystem::v_SetInitialConditions();
+
+        if (dumpInitialConditions && m_checksteps)
         {
             // Dump initial conditions to file
             Checkpoint_Output(0);
@@ -172,6 +156,13 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(npoints, outarray[i], 1);
+        }
+        
+        // Add sponge layer if defined in the session file
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray, time);
         }
     }
     
@@ -264,6 +255,34 @@ namespace Nektar
                 RiemannInvariantBC(n, cnt, inarray);
             }
             
+            // Pressure outflow non-reflective Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflowNonReflective)
+            {
+                PressureOutflowNonReflectiveBC(n, cnt, inarray);
+            }
+            
+            // Pressure outflow Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflow)
+            {
+                PressureOutflowBC(n, cnt, inarray);
+            }
+            
+            // Pressure outflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflowFile)
+            {
+                PressureOutflowFileBC(n, cnt, inarray);
+            }
+            
+            // Pressure inflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureInflowFile)
+            {
+                PressureInflowFileBC(n, cnt, inarray);
+            }
+
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eExtrapOrder0)
@@ -323,6 +342,7 @@ namespace Nektar
             }
             default:
             {
+                EquationSystem::v_EvaluateExactSolution(field, outfield, time);
                 break;
             }
         }

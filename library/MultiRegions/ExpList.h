@@ -392,6 +392,12 @@ namespace Nektar
                 v_WriteVtkPieceHeader(outfile, expansion);
             }
 
+            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion,
+                                     int istrip)
+            {
+                v_WriteVtkPieceHeader(outfile, expansion, istrip);
+            }
+
             MULTI_REGIONS_EXPORT void WriteVtkPieceFooter(
                 std::ostream &outfile,
                 int expansion);
@@ -854,7 +860,7 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
-            
+           
             //expansion type
             ExpansionType m_expType;
 
@@ -968,7 +974,7 @@ namespace Nektar
             // it's a bool which determine if the expansion is in the wave space (coefficient space)
             // or not
             bool m_WaveSpace;
-			
+
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
             const DNekScalBlkMatSharedPtr GenBlockMatrix(
@@ -1241,9 +1247,19 @@ namespace Nektar
                                              int expansion);
             virtual void v_WriteTecplotConnectivity(std::ostream &outfile,
                                                     int expansion);
-            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
-            virtual void v_WriteVtkPieceData(std::ostream &outfile, int expansion,
-                                             std::string var);
+            virtual void v_WriteVtkPieceHeader(
+                std::ostream &outfile,
+                int expansion);
+
+            virtual void v_WriteVtkPieceHeader(
+                std::ostream &outfile,
+                int expansion,
+                int istrip);
+
+            virtual void v_WriteVtkPieceData(
+                std::ostream &outfile, 
+                int expansion,
+                std::string var);
 
             virtual NekDouble v_L2(
                 const Array<OneD, const NekDouble> &phys,

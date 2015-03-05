@@ -96,14 +96,7 @@ namespace Nektar
                 // For each field write out field data for each expansion.
                 for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
                 {
-					if(nstrips == 1)
-					{
-                    	m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i);
-					}
-					else
-					{
-						m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
-					}
+			m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
                     
                     // For this expansion write out each field.
                     for (j = 0; j < nfields; ++j)

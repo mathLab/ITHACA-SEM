@@ -138,7 +138,7 @@ namespace Nektar
             virtual void v_ReadGlobalOptimizationParameters();
 
             virtual void v_WriteVtkPieceHeader(
-                        std::ostream &outfile, int expansion);
+                        std::ostream &outfile, int expansion, int istrip);
 
             virtual void v_PhysInterp1DScaled(
                 const NekDouble scale,

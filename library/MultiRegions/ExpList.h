@@ -384,7 +384,7 @@ namespace Nektar
             }
 
             void WriteVtkPieceHeader(std::ofstream &outfile, int expansion,
-                                     int istrip)
+                                     int istrip = 0)
             {
                 v_WriteVtkPieceHeader(outfile, expansion, istrip);
             }

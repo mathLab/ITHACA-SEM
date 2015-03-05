@@ -413,7 +413,8 @@ namespace Nektar
             GetCoords(expansion,coords[0],coords[1],coords[2]);
 
             NekDouble DistStrip;
-            m_session->LoadParameter("DistStrip", DistStrip);
+            m_session->LoadParameter("DistStrip", DistStrip, 0);
+			// Reset the z-coords for homostrips
             for(int i = 0; i < ntot; i++)
             {
                 coords[2][i] += istrip*DistStrip;

@@ -83,6 +83,10 @@ namespace GlobalMapping
                     const LibUtilities::SessionReaderSharedPtr& pSession,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
             
+            // Output function called when a chk or fld file is written
+            GLOBAL_MAPPING_EXPORT void Output( 
+                    LibUtilities::FieldMetaDataMap & fieldMetaDataMap);
+            
             /////////////////////////////////////////////////////////////
             //
             //    Functions for transforming results to and from the
@@ -272,6 +276,12 @@ namespace GlobalMapping
                 m_timeDependent = value;
             }
             
+            // Change the value of m_timeDependent
+            GLOBAL_MAPPING_EXPORT void SetFromEquation( const bool value)
+            {
+                m_fromEquation = value;
+            }
+            
             // Define if the Jacobian of the transformation is constant
             GLOBAL_MAPPING_EXPORT bool HasConstantJacobian()
             {
@@ -320,10 +330,12 @@ namespace GlobalMapping
             // Flags to help the solver
             bool                                        m_constantJacobian;
             bool                                        m_timeDependent;
+            bool                                        m_fromEquation;
             
             // Static variables to load mapping
             static MappingSharedPtr                     m_mappingPtr;
             static bool                                 m_init;
+            static bool                                 m_isDefined;
             
             
 

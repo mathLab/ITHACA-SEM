@@ -40,7 +40,8 @@ namespace Nektar
     namespace GlobalMapping
     {
         MappingSharedPtr Mapping::m_mappingPtr;
-        bool             Mapping::m_init = false;
+        bool             Mapping::m_init      = false;
+        bool             Mapping::m_isDefined = false;
         
         MappingFactory& GetMappingFactory()
         {
@@ -90,7 +91,8 @@ namespace Nektar
                 const TiXmlElement                                *pMapping)
         {   
             int phystot         = m_fields[0]->GetTotPoints();
-            m_timeDependent    = false;
+            m_timeDependent     = false;
+            m_fromEquation      = true;
             // Initialise variables
             m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
             m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
@@ -102,7 +104,8 @@ namespace Nektar
                 coords[i]      = Array<OneD, NekDouble> (phystot);
             }            
             
-            // Load coordinates           
+            // Load coordinates   
+            string fieldNames[3] = {"x", "y", "z"};
             const TiXmlElement* funcNameElmt = pMapping->FirstChildElement("COORDS");
             if (funcNameElmt)
             {
@@ -118,7 +121,7 @@ namespace Nektar
                 //      and evaluate them, otherwise use trivial transformation
                 for(int i = 0; i < 3; i++)
                 {
-                    s_FieldStr = m_session->GetVariable(i);
+                    s_FieldStr = fieldNames[i];
                     if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
                     {
                         EvaluateFunction(m_fields, m_session, s_FieldStr, m_coords[i],
@@ -149,6 +152,7 @@ namespace Nektar
             
             // Load coordinate velocity if they are defined,
             //      otherwise use zero to make it general
+            string velFieldNames[3] = {"vx", "vy", "vz"};
             const TiXmlElement* velFuncNameElmt = pMapping->FirstChildElement("VEL");
             if (velFuncNameElmt)
             {
@@ -161,7 +165,7 @@ namespace Nektar
                 //      and evaluate them, otherwise use 0
                 for(int i = 0; i < 3; i++)
                 {
-                    s_FieldStr = m_session->GetVariable(i);
+                    s_FieldStr = velFieldNames[i];
                     if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
                     {
                         EvaluateFunction(m_fields, m_session, s_FieldStr, 
@@ -206,6 +210,7 @@ namespace Nektar
                 {                
                     vMapping = pSession->GetElement("Nektar/Mapping");
                     vType = vMapping->Attribute("TYPE");
+                    m_isDefined = true;
                 }
                 else
                 {
@@ -220,6 +225,32 @@ namespace Nektar
             }
              
             return m_mappingPtr;
+        }
+        
+        
+        void Mapping::Output( 
+                    LibUtilities::FieldMetaDataMap  &fieldMetaDataMap)
+        {
+            // Only do anything if mapping exists
+            if (m_isDefined)
+            {
+                if (m_fromEquation)
+                {
+                    // Add metadata
+                    fieldMetaDataMap["MappingType"] = std::string("Expression");
+                    fieldMetaDataMap["MappingExpression"] = m_funcName;
+                    if (m_timeDependent)
+                    {
+                        fieldMetaDataMap["MappingVelExpression"] = m_velFuncName;
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,
+                        "Mapping output to file still not implemented.");
+                }
+                 
+            }
         }
 
         void Mapping::EvaluateTimeFunction(

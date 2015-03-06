@@ -209,7 +209,9 @@ void ForcingMovingBody::v_InitObject(
         m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
     {
         InitialiseCableModel(m_session, pFields);
+        m_mapping->SetFromEquation(false);
     }
+    
 }
 
 void ForcingMovingBody::v_Apply(

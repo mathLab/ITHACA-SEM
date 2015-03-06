@@ -54,7 +54,7 @@ class Collection
 {
 public:
 
-    Collection(
+    COLLECTIONS_EXPORT Collection(
             vector<StdRegions::StdExpansionSharedPtr>     pCollExp,
             OperatorImpMap                               &impTypes);
 

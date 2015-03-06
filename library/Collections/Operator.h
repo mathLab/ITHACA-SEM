@@ -118,14 +118,15 @@ public:
     }
 
     /// Perform operation
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output0,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp
+    COLLECTIONS_EXPORT virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output0,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp
                                                 = NullNekDouble1DArray) = 0;
 
-    virtual ~Operator();
+    COLLECTIONS_EXPORT virtual ~Operator();
 
     /// Get the size of the required workspace
     int GetWspSize()

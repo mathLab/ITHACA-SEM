@@ -36,6 +36,7 @@
 #ifndef NEKTAR_LIBRARY_COLLECTIONS_COLLECTIONOPTIMISATION_H
 #define NEKTAR_LIBRARY_COLLECTIONS_COLLECTIONOPTIMISATION_H
 
+#include <Collections/CollectionsDeclspec.h>
 #include <Collections/Collection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <tinyxml.h>
@@ -116,7 +117,7 @@ class CollectionOptimisation
 
 public:
     // Constuctor
-    CollectionOptimisation(
+    COLLECTIONS_EXPORT CollectionOptimisation(
             LibUtilities::SessionReaderSharedPtr pSession,
             ImplementationType defaultType = eStdMat);
 
@@ -138,10 +139,11 @@ public:
     }
 
     /// Get Operator Implementation Map from XMl or using default;
-    OperatorImpMap  GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp);
+    COLLECTIONS_EXPORT OperatorImpMap  GetOperatorImpMap(
+            StdRegions::StdExpansionSharedPtr pExp);
 
     // Get Map by doing autotuning testing.
-    OperatorImpMap SetWithTimings(
+    COLLECTIONS_EXPORT OperatorImpMap SetWithTimings(
             vector<StdRegions::StdExpansionSharedPtr> pGeom,
             OperatorImpMap &impTypes,
             bool verbose = true);

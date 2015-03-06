@@ -38,6 +38,7 @@
 using namespace std;
 
 #include "ProcessMapping.h"
+#include <GlobalMapping/Mapping.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -64,40 +65,48 @@ void ProcessMapping::Process(po::variables_map &vm)
     ASSERTL0(m_f->m_fieldMetaDataMap.count("MappingType"),
             "Failed to get mapping information from fld file.");
     
+    // Get time from metadata
+    string s_time = m_f->m_fieldMetaDataMap["Time"];
+    NekDouble time = atof(s_time.c_str());
+    
+    // Determine dimensions of mesh, solution, etc...
+    int npoints = m_f->m_exp[0]->GetNpoints();
+    int expdim    = m_f->m_graph->GetMeshDimension();
+    int spacedim  = expdim;
+    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
+        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    {
+        spacedim = 3;
+    }
+    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int addfields = spacedim;
+    m_f->m_exp.resize(nfields+addfields);
+    
+    // Declare coordinates storage
+    Array<OneD, Array<OneD, NekDouble> > coords_new(3);
+    for (int i = 0; i < 3; i++)
+    {
+        coords_new[i]  = Array<OneD, NekDouble> (npoints);
+    }    
+    string fieldNames[3] = {"x", "y", "z"};
+    
+    // Evaluate coordinates
     if (m_f->m_fieldMetaDataMap["MappingType"] == "Expression")
     {            
-        int npoints = m_f->m_exp[0]->GetNpoints();
-        int expdim    = m_f->m_graph->GetMeshDimension();
-        int spacedim  = expdim;
-        if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-            (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
-        {
-            spacedim = 3;
-        }
-        int nfields = m_f->m_fielddef[0]->m_fields.size();
-        int addfields = spacedim;
-        m_f->m_exp.resize(nfields+addfields);
-        
         // Get name of the function
         string funcName = m_f->m_fieldMetaDataMap["MappingExpression"];
         ASSERTL0(m_f->m_session->DefinesFunction(funcName),
                         "Function '" + funcName + "' not defined.");
-        // Get time from metadata
-        string s_time = m_f->m_fieldMetaDataMap["Time"];
-        NekDouble time = atof(s_time.c_str());
         
         // Get original coordinates (in case some of them are not changed)
         Array<OneD, Array<OneD, NekDouble> > coords(3);
-        Array<OneD, Array<OneD, NekDouble> > coords_new(3);
         for (int i = 0; i < 3; i++)
         {
             coords[i]      = Array<OneD, NekDouble> (npoints);
-            coords_new[i]  = Array<OneD, NekDouble> (npoints);
         }       
         m_f->m_exp[0]->GetCoords(coords[0], coords[1], coords[2]);
         
         // Load coordinates
-        string fieldNames[3] = {"x", "y", "z"};
         std::string s_FieldStr; 
         for(int i = 0; i < 3; i++)
         {
@@ -114,53 +123,77 @@ void ProcessMapping::Process(po::variables_map &vm)
                 // This coordinate is not defined, so use (x^i)' = x^i
                 Vmath::Vcopy(npoints, coords[i], 1, coords_new[i], 1);
             }
-        }
-        
-        // Add new information to m_f
-        vector<string > outname;
-        for (int i = 0; i < addfields; ++i)
-        {
-            m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-            m_f->m_exp[nfields + i]->UpdatePhys() = coords_new[i];
-            m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(coords_new[i],
-                                m_f->m_exp[nfields + i]->UpdateCoeffs());
-            outname.push_back(fieldNames[i]);
-        }
-
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-            = m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        for (int j = 0; j < nfields + addfields; ++j)
-        {
-            for (int i = 0; i < FieldDef.size(); ++i)
-            {   
-                if (j >= nfields)
-                {
-                    FieldDef[i]->m_fields.push_back(outname[j-nfields]);
-                }
-                else
-                {
-                    FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                }
-                m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-            }
-        }
-
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
-        
-        
+        }                
     }
     else
     {
         ASSERTL0(false,
                 "Loading mapping from file still not implemented.");
     }
+    
+    // Convert velocity to Cartesian system
+    if (m_f->m_fieldMetaDataMap["MappingCorrectVel"] != "True")
+    {
+        m_f->m_fieldMetaDataMap["MappingCorrectVel"] = "True";
+        
+        Array<OneD, MultiRegions::ExpListSharedPtr>  field(1);
+        field[0] = m_f->m_exp[0];
+        GlobalMapping::MappingSharedPtr mapping = 
+                                GlobalMapping::Mapping::Load(m_f->m_session,
+                                field);       
+        Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
+        Array<OneD, Array<OneD, NekDouble> > velCart (spacedim);
+        // Initialize arrays and copy velocity
+        for ( int i =0; i<spacedim; ++i )
+        {
+            vel[i] = Array<OneD, NekDouble> (npoints);
+            velCart[i] = Array<OneD, NekDouble> (npoints);                    
+            Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i], 1);
+        }
+        // Convert velocity to cartesian system
+        mapping->ContravarToCartesian(vel, velCart);            
+        // Copy result back
+        for ( int i =0; i<spacedim; ++i )
+        {
+            Vmath::Vcopy(npoints, velCart[i], 1, m_f->m_exp[i]->UpdatePhys(), 1);
+            m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
+                                                m_f->m_exp[i]->UpdateCoeffs());
+        }        
+    }
+    
+    // Add new information to m_f
+    vector<string > outname;
+    for (int i = 0; i < addfields; ++i)
+    {
+        m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+        m_f->m_exp[nfields + i]->UpdatePhys() = coords_new[i];
+        m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(coords_new[i],
+                            m_f->m_exp[nfields + i]->UpdateCoeffs());
+        outname.push_back(fieldNames[i]);
+    }
 
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
+    for (int j = 0; j < nfields + addfields; ++j)
+    {
+        for (int i = 0; i < FieldDef.size(); ++i)
+        {   
+            if (j >= nfields)
+            {
+                FieldDef[i]->m_fields.push_back(outname[j-nfields]);
+            }
+            else
+            {
+                FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+            }
+            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+        }
+    }
 
-
+    m_f->m_fielddef = FieldDef;
+    m_f->m_data     = FieldData;
 
 }
 

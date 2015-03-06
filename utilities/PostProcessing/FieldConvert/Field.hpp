@@ -203,6 +203,8 @@ struct Field {
 
     FieldPtsSharedPtr                       m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;
+    
+    LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
 
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,

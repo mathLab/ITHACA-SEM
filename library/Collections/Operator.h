@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <SpatialDomains/Geometry.h>
+#include <Collections/CollectionsDeclspec.h>
 
 #define OPERATOR_CREATE(cname)                                  \
     static OperatorKey m_type;                                  \

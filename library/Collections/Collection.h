@@ -38,6 +38,7 @@
 
 #include <StdRegions/StdExpansion.h>
 #include <SpatialDomains/Geometry.h>
+#include <Collections/CollectionDeclspec.h>
 #include <Collections/Operator.h>
 #include <Collections/CoalescedGeomData.h>
 

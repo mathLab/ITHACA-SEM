@@ -270,6 +270,30 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
 
+        /// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
+        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
+
+        /// Storage for nonlinear term in physical space at the outflow for high order outflow BCs 
+        Array<OneD, NekDouble> m_nonlinearterm_phys; ///(if homogeneous)
+
+        ///    Storage for nonlinear term in wave space at the outflow for high order outflow BCs
+        Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
+
+        /// expansion sizes of pressure boundary conditions in each plane 
+        /// at the outflow for high order outflow BCs
+        Array<OneD, unsigned int> m_expsize_per_plane; ///(if homogeneous)
+
+        /// Storage for Fourier Coeffs of Dirichlet pressure condition from the input file
+        Array<OneD, NekDouble> m_PBndCoeffs; ///(if homogeneous)
+
+        /// Storage for Fourier Coeffs of Neumann velocity condition from the input file
+        Array<OneD, Array<OneD, NekDouble> > m_UBndCoeffs; ///(if homogeneous)
+
+        int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
+
+    private:
+        static std::string def;
+
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];

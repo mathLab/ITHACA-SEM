@@ -117,7 +117,7 @@ namespace Nektar
                 m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
                 m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
             
-				
+                
                 // check to see if any user defined boundary condition is
                 // indeed implemented
                 
@@ -132,6 +132,8 @@ namespace Nektar
                             SpatialDomains::eWall_Forces ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eTimeDependent ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eMovingBody ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eRadiation ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
@@ -259,7 +261,6 @@ namespace Nektar
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
-
     }
 
     /**
@@ -270,9 +271,9 @@ namespace Nektar
     }
 
     
-	/**
-	 *
-	 */
+    /**
+     *
+     */
     void IncNavierStokes::v_GetFluxVector(const int i, 
                                           Array<OneD, Array<OneD, NekDouble> > &physfield,
                                             Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -286,8 +287,8 @@ namespace Nektar
     }
 
     /**
-	 * Calcualate numerical fluxes
-	 */
+     * Calcualate numerical fluxes
+     */
     void IncNavierStokes::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                           Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
@@ -331,9 +332,9 @@ namespace Nektar
         }
     }
 
-	/**
-	 * Evaluation -N(V) for all fields except pressure using m_velocity
-	 */
+    /**
+     * Evaluation -N(V) for all fields except pressure using m_velocity
+     */
     void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                                  Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                  Array<OneD, NekDouble> &wk)
@@ -374,8 +375,8 @@ namespace Nektar
     }
     
     /**
-	 * Time dependent boundary conditions updating
-	 */
+     * Time dependent boundary conditions updating
+     */
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
         int i, n;
@@ -387,7 +388,9 @@ namespace Nektar
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eTimeDependent)
+                   SpatialDomains::eTimeDependent ||
+                    m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+                       SpatialDomains::eMovingBody)
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -457,8 +460,9 @@ namespace Nektar
                 cnt1 += BndExp[n]->GetTotPoints();
             }
             else if(type == SpatialDomains::eNoUserDefined ||
-                    type == SpatialDomains::eWall_Forces ||
-                    type == SpatialDomains::eTimeDependent ||
+                    type == SpatialDomains::eWall_Forces || 
+                    type == SpatialDomains::eTimeDependent || 
+                    type == SpatialDomains::eMovingBody ||
                     type == SpatialDomains::eHigh ||
                     type == SpatialDomains::eHighOutflow||
                     type == SpatialDomains::eZeroNormalComponent)
@@ -568,9 +572,9 @@ namespace Nektar
 
     /**
      * Decide if at a steady state if the discrerte L2 sum of the
-	 * coefficients is the same as the previous step to within the
-	 * tolerance m_steadyStateTol;
-	 */
+     * coefficients is the same as the previous step to within the
+     * tolerance m_steadyStateTol;
+     */
     bool IncNavierStokes::CalcSteadyState(void)
     {
         static NekDouble previousL2 = 0.0;
@@ -596,9 +600,9 @@ namespace Nektar
         return returnval;
     }
     
-	/**
-	 *
-	 */
+    /**
+     *
+     */
     Array<OneD, NekDouble> IncNavierStokes::GetElmtCFLVals(void)
     {
         int n_vel     = m_velocity.num_elements();
@@ -644,8 +648,8 @@ namespace Nektar
     }
     
     /**
-	 *
-	 */
+     *
+     */
     NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
     { 
         int n_element = m_fields[0]->GetExpSize(); 

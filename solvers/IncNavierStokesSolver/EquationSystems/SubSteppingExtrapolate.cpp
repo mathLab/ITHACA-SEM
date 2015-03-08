@@ -577,6 +577,6 @@ namespace Nektar
     {
         return m_subStepIntegrationScheme->GetIntegrationMethod();
     }
-
+    
 }
 

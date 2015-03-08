@@ -66,12 +66,12 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                         const LibUtilities::BasisKey &HomoBasis_y,
-														const LibUtilities::BasisKey &HomoBasis_z,
-														const NekDouble lhom_y,
-														const NekDouble lhom_z,
-														const bool useFFT,
-														const bool dealiasing,
-														const Array<OneD, ExpListSharedPtr> &points);
+                                                        const LibUtilities::BasisKey &HomoBasis_z,
+                                                        const NekDouble lhom_y,
+                                                        const NekDouble lhom_z,
+                                                        const bool useFFT,
+                                                        const bool dealiasing,
+                                                        const Array<OneD, ExpListSharedPtr> &points);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D(const ExpList1DHomogeneous2D &In);
@@ -89,9 +89,9 @@ namespace Nektar
                            Array<OneD, NekDouble> &xc0,
                            Array<OneD, NekDouble> &xc1,
                            Array<OneD, NekDouble> &xc2);
-			
-			//MULTI_REGIONS_EXPORT void HomoFwdTrans2D(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
-			
+            
+            //MULTI_REGIONS_EXPORT void HomoFwdTrans2D(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            
         protected:
 
             /// Definition of the total number of degrees of freedom and
@@ -105,11 +105,11 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-            virtual void v_WriteTecplotZone(std::ofstream &outfile,
+            virtual void v_WriteTecplotZone(std::ostream &outfile,
                                             int expansion);
 
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
 
         private:
         };

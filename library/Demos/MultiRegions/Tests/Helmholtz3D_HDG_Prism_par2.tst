@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D HDG for Prism</description>
     <executable>HDGHelmholtz3D</executable>
-    <parameters>Helmholtz3D_Prism.xml</parameters>
+    <parameters>--use-metis Helmholtz3D_Prism.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Helmholtz3D_Prism.xml</file>

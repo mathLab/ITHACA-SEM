@@ -2,7 +2,7 @@
 <test>
     <description> 3D Helmholtz/Steady Diffusion Reaction with Dirichlet  BCs P=5 </description>
     <executable>ADRSolver</executable>
-    <parameters>Helmholtz3D_CubeDir.xml</parameters>
+    <parameters>--use-metis Helmholtz3D_CubeDir.xml</parameters>
     <processes>12</processes>
     <files>
       <file description="Session File">Helmholtz3D_CubeDir.xml</file>

@@ -77,7 +77,8 @@ namespace Nektar
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
             "StandardExtrapolate", "StandardExtrapolate");
 
-    void Extrapolate::CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fie    {
+    void Extrapolate::CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields)    
+    {
         int nHBCs = m_acceleration[0].num_elements();
         
         // Adding extrapolated acceleration term to HOPBCs

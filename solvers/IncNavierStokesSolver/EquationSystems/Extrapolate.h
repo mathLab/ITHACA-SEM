@@ -291,9 +291,6 @@ namespace Nektar
 
         int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
 
-    private:
-        static std::string def;
-
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];

@@ -1539,9 +1539,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
-            
+
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
-            
+
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;

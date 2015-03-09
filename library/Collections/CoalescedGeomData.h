@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Collection.cpp
+// File: CoalescedGeomData.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,47 +29,54 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Collection top class definition
+// Description: Coalesced geometry data definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Collections/Collection.h>
+#ifndef NEKTAR_LIBRARY_COLLECTIONS_COALESCEDGEOMDATA_H
+#define NEKTAR_LIBRARY_COLLECTIONS_COALESCEDGEOMDATA_H
+
+#include <map>
+#include <vector>
+
+#include <StdRegions/StdExpansion.h>
 
 namespace Nektar {
 namespace Collections {
 
-/**
- *
- */
-Collection::Collection(
-        vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
-        OperatorImpMap                              &impTypes)
+enum GeomData
 {
-    OperatorImpMap::iterator it;
+    eJac,
+    eJacWithStdWeights,
+    eDerivFactors
+};
 
-    // Initialise geometry data.
-    m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
+class CoalescedGeomData
+{
+public:
+    CoalescedGeomData(void);
 
-    // Loop over all operator types.
-    for (int i = 0; i < SIZE_OperatorType; ++i)
-    {
-        OperatorType opType = (OperatorType)i;
-        ImplementationType impType;
+    virtual ~CoalescedGeomData(void);
 
-        it = impTypes.find(opType);
-        impType = it == impTypes.end() ? eIterPerExp : it->second;
+    const Array<OneD, const NekDouble> &GetJac(
+            std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
-        OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
-                          pCollExp[0]->IsNodalNonTensorialExp());
+    const Array<OneD, const NekDouble> &GetJacWithStdWeights(
+            std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
-        ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
-                "Requested unknown operator");
+    const Array<TwoD, const NekDouble> &GetDerivFactors(
+            std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
-        m_ops[opType] = GetOperatorFactory().CreateInstance(
-                                                opKey, pCollExp, m_geomData);
-    }
+private:
+    std::map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
+    std::map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
+};
+
+typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+
+static CoalescedGeomDataSharedPtr GeomDataNull;
+
+}
 }
 
-}
-}
-
+#endif

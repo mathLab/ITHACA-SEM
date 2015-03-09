@@ -38,114 +38,135 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <StdRegions/StdExpansion.h>
-#include <SpatialDomains/Geometry.h> 
+#include <SpatialDomains/Geometry.h>
+#include <Collections/CollectionsDeclspec.h>
 
 #define OPERATOR_CREATE(cname)                                  \
     static OperatorKey m_type;                                  \
     static OperatorKey m_typeArr[];                             \
+    friend class MemoryManager<cname>;                          \
     static OperatorSharedPtr create(                            \
-        vector<StdRegions::StdExpansionSharedPtr> pCollExp, \
+        vector<StdRegions::StdExpansionSharedPtr> pCollExp,     \
         boost::shared_ptr<CoalescedGeomData> GeomData)          \
     {                                                           \
         return MemoryManager<cname>                             \
-            ::AllocateSharedPtr(pCollExp, GeomData);         \
+            ::AllocateSharedPtr(pCollExp, GeomData);            \
     }
- 
-namespace Nektar 
+
+namespace Nektar
 {
-    namespace Collections 
+namespace Collections
+{
+
+class CoalescedGeomData;
+typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+
+enum OperatorType
+{
+    eBwdTrans,
+    eIProductWRTBase,
+    eIProductWRTDerivBase,
+    ePhysDeriv,
+    SIZE_OperatorType
+};
+
+const char* const OperatorTypeMap[] =
+{
+    "BwdTrans",
+    "IProductWRTBase",
+    "IProductWRTDerivBase",
+    "PhysDeriv"
+};
+
+enum ImplementationType
+{
+    eNoImpType,
+    eNoCollection,
+    eIterPerExp,
+    eStdMat,
+    eSumFac,
+    SIZE_ImplementationType
+};
+
+const char* const ImplementationTypeMap[] =
+{
+    "NoImplementationType",
+    "NoCollection",
+    "IterPerExp",
+    "StdMat",
+    "SumFac"
+};
+
+typedef bool ExpansionIsNodal;
+
+typedef map<OperatorType, ImplementationType> OperatorImpMap;
+
+/// simple Operator Implementation Map generator
+OperatorImpMap SetFixedImpType(ImplementationType defaultType);
+
+/// Base class for operators on a collection of elements
+class Operator
+{
+public:
+    /// Constructor
+    Operator(
+            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+            boost::shared_ptr<CoalescedGeomData> GeomData)
+        : m_stdExp(pCollExp[0]->GetStdExp()),
+          m_numElmt(pCollExp.size()),
+          m_wspSize(0)
     {
-        class CoalescedGeomData;
-
-        enum OperatorType
-        {
-            eBwdTrans,
-            eIProductWRTBase,
-            eIProductWRTDerivBase,
-            ePhysDeriv,
-            SIZE_OperatorType
-        };
-        
-        const char* const OperatorTypeMap[] =
-        {
-            "BwdTrans",
-            "IProductWRTBase",
-            "IProductWRTDerivBase",
-            "PhysDeriv"
-        };
-
-        enum ImplementationType
-        {
-            eNoImpType,
-            eNoCollection,
-            eIterPerExp,
-            eStdMat,
-            eSumFac,
-            SIZE_ImplementationType
-        };
-        
-        const char* const ImplementationTypeMap[] =
-        {
-            "NoImplementationType",
-            "NoCollection",
-            "IterPerExp",
-            "StdMat",
-            "SumFac"
-        };
-
-        typedef map<OperatorType, ImplementationType> OperatorImpMap;
-        
-        /// simple Operator Implementation Map generator
-        OperatorImpMap SetFixedImpType(ImplementationType defaultType);
-        
-        class Operator;
-        typedef boost::shared_ptr<Operator> OperatorSharedPtr;
-        
-        typedef boost::tuple<
-            LibUtilities::ShapeType, OperatorType, ImplementationType, bool> OperatorKey;
-        bool operator< (OperatorKey const &p1, OperatorKey const &p2);
-        std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
-
-        typedef Nektar::LibUtilities::NekFactory<
-            OperatorKey,
-            Operator,
-            vector<StdRegions::StdExpansionSharedPtr>,
-            boost::shared_ptr<CoalescedGeomData> > OperatorFactory;
-        OperatorFactory& GetOperatorFactory();
-        
-        class Operator
-        {
-        public:
-        Operator(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                 boost::shared_ptr<CoalescedGeomData> GeomData)
-            :   m_stdExp(pCollExp[0]->GetStdExp()),
-                m_numElmt(pCollExp.size()),
-                m_wspSize(0)
-                {
-                }
-
-            Operator(void)
-            {
-            }
-            
-            virtual void operator()(const Array<OneD, const NekDouble> &input,
-                                    Array<OneD,       NekDouble> &output0,
-                                    Array<OneD,       NekDouble> &output1,
-                                    Array<OneD,       NekDouble> &output2,
-                                    Array<OneD,       NekDouble> &wsp = NullNekDouble1DArray) = 0;
-
-            virtual ~Operator(void);
-            
-            int GetWspSize()
-            {
-                return m_wspSize;
-            }
-            
-        protected:
-            StdRegions::StdExpansionSharedPtr m_stdExp;
-            unsigned int m_numElmt;
-            unsigned int m_wspSize;
-        };
     }
+
+    /// Perform operation
+    COLLECTIONS_EXPORT virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output0,
+                  Array<OneD,       NekDouble> &output1,
+                  Array<OneD,       NekDouble> &output2,
+                  Array<OneD,       NekDouble> &wsp
+                                                = NullNekDouble1DArray) = 0;
+
+    COLLECTIONS_EXPORT virtual ~Operator();
+
+    /// Get the size of the required workspace
+    int GetWspSize()
+    {
+        return m_wspSize;
+    }
+
+protected:
+    StdRegions::StdExpansionSharedPtr m_stdExp;
+    unsigned int m_numElmt;
+    unsigned int m_wspSize;
+};
+
+/// Shared pointer to an Operator object
+typedef boost::shared_ptr<Operator> OperatorSharedPtr;
+
+/// Key for describing an Operator
+typedef boost::tuple<
+    LibUtilities::ShapeType,
+    OperatorType,
+    ImplementationType,
+    ExpansionIsNodal> OperatorKey;
+
+/// Less-than comparison operator for OperatorKey objects
+bool operator< (OperatorKey const &p1, OperatorKey const &p2);
+
+/// Stream output operator for OperatorKey objects
+std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
+
+/// Operator factory definition
+typedef Nektar::LibUtilities::NekFactory<
+    OperatorKey,
+    Operator,
+    vector<StdRegions::StdExpansionSharedPtr>,
+    CoalescedGeomDataSharedPtr> OperatorFactory;
+
+/// Returns the singleton Operator factory object
+OperatorFactory& GetOperatorFactory();
+
+}
 }
 #endif

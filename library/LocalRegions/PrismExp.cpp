@@ -445,7 +445,6 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-
         StdRegions::StdExpansionSharedPtr PrismExp::v_GetStdExp(void) const
         {
             return MemoryManager<StdRegions::StdPrismExp>

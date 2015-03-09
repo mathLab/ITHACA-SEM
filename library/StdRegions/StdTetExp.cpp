@@ -198,6 +198,7 @@ namespace Nektar
                             Vmath::Smul(Q0,(1.0+eta_1[j])/2.0,dEta1,1,dEta1,1);
                         }
                     }
+
                     // calculate out_dxi2 =
                     // 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) Out_dEta0 +
                     // (1 + eta_1)/(1 -eta_2)*out_dEta1 + out_dEta2

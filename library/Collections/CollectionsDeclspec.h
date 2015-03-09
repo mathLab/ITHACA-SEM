@@ -1,14 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Collection.cpp
-//
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-// Department of Aeronautics, Imperial College London (UK), and Scientific
-// Computing and Imaging Institute, University of Utah (USA).
+// Copyright (c) 2006 Scientific Computing and Imaging Institute,
+// University of Utah (USA) and Department of Aeronautics, Imperial
+// College London (UK).
 //
 // License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,47 +27,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Collection top class definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Collections/Collection.h>
+#ifndef NEKTAR_COLLECTIONS_DECLSPEC_H
+#define NEKTAR_COLLECTIONS_DECLSPEC_H
 
-namespace Nektar {
-namespace Collections {
+#if defined(_MSC_VER)
+    #ifdef COLLECTIONS_EXPORTS
+        #define COLLECTIONS_EXPORT _declspec(dllexport)
+    #else
+        #define COLLECTIONS_EXPORT _declspec(dllimport)
+    #endif
+#else
+    #define COLLECTIONS_EXPORT
+#endif
 
-/**
- *
- */
-Collection::Collection(
-        vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
-        OperatorImpMap                              &impTypes)
-{
-    OperatorImpMap::iterator it;
-
-    // Initialise geometry data.
-    m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
-
-    // Loop over all operator types.
-    for (int i = 0; i < SIZE_OperatorType; ++i)
-    {
-        OperatorType opType = (OperatorType)i;
-        ImplementationType impType;
-
-        it = impTypes.find(opType);
-        impType = it == impTypes.end() ? eIterPerExp : it->second;
-
-        OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
-                          pCollExp[0]->IsNodalNonTensorialExp());
-
-        ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
-                "Requested unknown operator");
-
-        m_ops[opType] = GetOperatorFactory().CreateInstance(
-                                                opKey, pCollExp, m_geomData);
-    }
-}
-
-}
-}
+#endif //NEKTAR_STD_REGIONS_DECLSPEC_H
 

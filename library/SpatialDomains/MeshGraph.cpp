@@ -2561,8 +2561,6 @@ namespace Nektar
             }
         }
 
-
-
         /** 
          * \brief Reset all points keys to have expansion order of \a
          *  nmodes.  we keep the point distribution the same and make

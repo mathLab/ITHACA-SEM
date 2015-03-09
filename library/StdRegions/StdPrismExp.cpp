@@ -444,8 +444,8 @@ namespace Nektar
             if(multiplybyweights)
             {
                 Array<OneD, NekDouble> tmp(inarray.num_elements());
+
                 MultiplyByQuadratureMetric(inarray,tmp);
-                
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                              m_base[1]->GetBdata(),
                                              m_base[2]->GetBdata(),

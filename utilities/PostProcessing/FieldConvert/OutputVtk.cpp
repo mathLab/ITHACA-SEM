@@ -56,12 +56,12 @@ namespace Nektar
         OutputVtk::~OutputVtk()
         {
         }
-        
+
         void OutputVtk::Process(po::variables_map &vm)
         {
             if(!m_f->m_exp.size()) // do nothing if no expansion defined
             {
-                return; 
+                return;
             }
 
             int i, j;
@@ -72,13 +72,14 @@ namespace Nektar
 
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
-            
-            // amend for parallel output if required 
+
+            // amend for parallel output if required
             if(m_f->m_session->GetComm()->GetSize() != 1)
             {
                 int    dot  = filename.find_last_of('.');
                 string ext = filename.substr(dot,filename.length()-dot);
-                string procId = "_P" + boost::lexical_cast<std::string>(m_f->m_session->GetComm()->GetRank());
+                string procId = "_P" + boost::lexical_cast<std::string>(
+                    m_f->m_session->GetComm()->GetRank());
                 string start = filename.substr(0,dot);
                 filename = start + procId + ext;
             }
@@ -88,27 +89,35 @@ namespace Nektar
             m_f->m_exp[0]->WriteVtkHeader(outfile);
 
             int nfields, nstrips;
-            nfields = m_f->m_fielddef[0]->m_fields.size();
-            m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+            if (m_f->m_fielddef.size() == 0)
+            {
+                nfields = 0;
+            }
+            else
+            {
+                nfields = m_f->m_fielddef[0]->m_fields.size();
+            }
+            m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-            for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
+            // Homogeneous strip variant
+            for(int s = 0; s < nstrips; ++s)
             {
                 // For each field write out field data for each expansion.
                 for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
                 {
-					m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
-                    
+                    m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
+
                     // For this expansion write out each field.
                     for (j = 0; j < nfields; ++j)
                     {
-                        m_f->m_exp[s*nfields+j]->WriteVtkPieceData(outfile, i, 
-                                                   m_f->m_fielddef[0]->m_fields[j]);
+                        m_f->m_exp[s*nfields+j]->WriteVtkPieceData(
+                            outfile, i, m_f->m_fielddef[0]->m_fields[j]);
                     }
                     m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
                 }
             }
             m_f->m_exp[0]->WriteVtkFooter(outfile);
             cout << "Written file: " << filename << endl;
-        }        
+        }
     }
 }

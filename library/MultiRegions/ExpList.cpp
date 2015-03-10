@@ -2680,6 +2680,11 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
+            // Figure out optimisation parameters if provided in
+            // session file or default given
+            Collections::CollectionOptimisation colOpt(m_session, ImpType);
+            ImpType = colOpt.GetDefaultImplementationType();
+
             // If ImpType is not specified by default argument call
             // then set ImpType to eStdMat for large collections or
             // eSumFac for small
@@ -2688,11 +2693,6 @@ namespace Nektar
                 ImpType = (m_exp->size() < 100 ? Collections::eSumFac
                                                : Collections::eStdMat);
             }
-
-            // Figure out optimisation parameters if provided in
-            // session file or default given
-            Collections::CollectionOptimisation colOpt(m_session, ImpType);
-            ImpType = colOpt.GetDefaultImplementationType();
 
             bool autotuning = colOpt.IsUsingAutotuning();
             bool verbose    = (m_session->DefinesCmdLineArgument("verbose")) &&

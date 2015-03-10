@@ -208,21 +208,24 @@ CollectionOptimisation::CollectionOptimisation(
                          << endl;
                 }
 
-                map<OperatorType, map<ElmtOrder,
-                                      ImplementationType> >::iterator mIt;
-                map<ElmtOrder, ImplementationType>::iterator eIt;
-                for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
+                if (m_setByXml)
                 {
-                    cout << "Operator " << OperatorTypeMap[mIt->first]
-                                                           << ":" << endl;
-
-                    for (eIt = mIt->second.begin();
-                            eIt != mIt->second.end(); eIt++)
+                    map<OperatorType, map<ElmtOrder,
+                                          ImplementationType> >::iterator mIt;
+                    map<ElmtOrder, ImplementationType>::iterator eIt;
+                    for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
                     {
-                        cout << "- "
-                             << LibUtilities::ShapeTypeMap[eIt->first.first]
-                             << " order " << eIt->first.second << " -> "
-                             << ImplementationTypeMap[eIt->second] << endl;
+                        cout << "Operator " << OperatorTypeMap[mIt->first]
+                                                               << ":" << endl;
+
+                        for (eIt = mIt->second.begin();
+                                eIt != mIt->second.end(); eIt++)
+                        {
+                            cout << "- "
+                                 << LibUtilities::ShapeTypeMap[eIt->first.first]
+                                 << " order " << eIt->first.second << " -> "
+                                 << ImplementationTypeMap[eIt->second] << endl;
+                        }
                     }
                 }
             }

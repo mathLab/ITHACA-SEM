@@ -185,7 +185,7 @@ namespace Nektar
                 vector<string> vars = m_f->m_session->GetVariables();
                 
                 // declare other fields;
-                for (int s = 0; s < nstrips; ++s)
+                for (int s = 0; s < nstrips; ++s) //homogeneous strip varient
                 {
                     for (i = 0; i < nfields; ++i)
                     {
@@ -198,11 +198,12 @@ namespace Nektar
                        {
                            if(vars.size())
                            {
-                               m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,vars[0]);
+                               m_f->m_exp[s*nfields+i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                                                vars[0]);
                            }
                            else
                            {
-                               m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+                               m_f->m_exp[s*nfields+i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
                            }
                        }
                     }

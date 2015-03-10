@@ -183,14 +183,14 @@ namespace Nektar
             }
         }
         
-	/**
+    /**
          * 
          */
         ExpansionType ExpList::GetExpType(void)
         {
             return m_expType;
         }
-		
+        
         /**
          * 
          */
@@ -519,7 +519,7 @@ namespace Nektar
          *                          array of size \f$N_{\mathrm{eof}}\f$.
          */
         void ExpList::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
-											Array<OneD, NekDouble> &outarray)
+                                            Array<OneD, NekDouble> &outarray)
         {
             Array<OneD,NekDouble> f(m_ncoeffs);
 
@@ -1146,7 +1146,7 @@ namespace Nektar
          *                          \f$Q_{\mathrm{tot}}\f$.
          */
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
-											Array<OneD, NekDouble> &outarray)
+                                            Array<OneD, NekDouble> &outarray)
         {
             // get optimisation information about performing block
             // matrix multiplies
@@ -1763,13 +1763,13 @@ namespace Nektar
             Array<OneD, NekDouble> NoEnergy(1,0.0);
             return NoEnergy;
         }
-		
+        
         LibUtilities::TranspositionSharedPtr ExpList::v_GetTransposition(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             LibUtilities::TranspositionSharedPtr trans;
-			
+            
             return trans;
         }
 
@@ -1786,16 +1786,16 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
-			
+            
             return NoModes;
         }
-		
+        
         Array<OneD, const unsigned int> ExpList::v_GetYIDs(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
-			
+            
             return NoModes;
         }
 
@@ -1888,6 +1888,7 @@ namespace Nektar
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
                                                   int NumHomoDir, 
+                                                  int NumHomoStrip,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
                                                   std::vector<NekDouble> &HomoLen,
                                                   std::vector<unsigned int> &HomoZIDs,
@@ -1977,8 +1978,11 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
-                    fielddef.push_back(fdef);
+                    for(int i = 0; i < NumHomoStrip; ++i)
+                    {
+                        LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
+                        fielddef.push_back(fdef);
+                    }
                 }
             }
         }
@@ -2056,7 +2060,7 @@ namespace Nektar
             std::vector<NekDouble>                    &fielddata,
             std::string                               &field,
             Array<OneD, NekDouble>                    &coeffs)
-        {     	
+        {         
             int i, expId;
             int offset       = 0;
             int modes_offset = 0;
@@ -2127,7 +2131,7 @@ namespace Nektar
         }
         
         void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
-        {     	
+        {         
             int i;
             int offset = 0;
 
@@ -2296,7 +2300,7 @@ namespace Nektar
         {
             ASSERTL0(false, "HelmSolve not implemented.");
         }
-		
+        
         void ExpList::v_LinearAdvectionDiffusionReactionSolve(
                        const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,
@@ -2320,7 +2324,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-		
+        
         void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
                                             CoeffState coeffstate,
@@ -2330,7 +2334,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+    
         void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
                                             CoeffState coeffstate,
@@ -2340,14 +2344,14 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+    
         void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,const Array<OneD, NekDouble> &inarray2,Array<OneD, NekDouble> &outarray,CoeffState coeffstate)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
-	
+    
+    
         void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
                                     const Array<OneD, NekDouble> &TotField, 
                                     int BndID)
@@ -2355,7 +2359,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+    
         void ExpList::v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
                                                   Array<OneD, const NekDouble> &V2,
                                                   Array<OneD, NekDouble> &outarray,
@@ -2364,7 +2368,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-	
+    
         void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
             ASSERTL0(false,
@@ -2394,14 +2398,14 @@ namespace Nektar
 
         void ExpList::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray,
-                                 CoeffState coeffstate)			     
+                                 CoeffState coeffstate)                 
         {
             v_BwdTrans_IterPerExp(inarray,outarray);
         }
         
         void ExpList::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray,
-                                 CoeffState coeffstate)			     
+                                 CoeffState coeffstate)                 
         {
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
@@ -2409,7 +2413,7 @@ namespace Nektar
         void ExpList::v_IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)	   
+                                CoeffState coeffstate)       
         {
             v_IProductWRTBase_IterPerExp(inarray,outarray);
         }
@@ -2418,7 +2422,7 @@ namespace Nektar
                                         const GlobalMatrixKey             &gkey,
                                         const Array<OneD,const NekDouble> &inarray,
                                         Array<OneD,      NekDouble> &outarray,
-                                        CoeffState coeffstate)	 
+                                        CoeffState coeffstate)     
         {
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
@@ -2479,7 +2483,7 @@ namespace Nektar
                 break;
             }
         }
-		
+        
         /**
          */
         void ExpList::v_SetUpPhysNormals()

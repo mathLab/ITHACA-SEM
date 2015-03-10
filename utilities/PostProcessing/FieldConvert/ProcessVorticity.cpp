@@ -66,7 +66,7 @@ namespace Nektar
                 cout << "ProcessVorticity: Calculating vorticity..." << endl;
             }
             
-            int i, j;
+            int i, j, s;
             int expdim    = m_f->m_graph->GetMeshDimension();
             int spacedim  = expdim;
             if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
@@ -85,9 +85,13 @@ namespace Nektar
             int npoints = m_f->m_exp[0]->GetNpoints();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
             Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
-            m_f->m_exp.resize(nfields+addfields);
 
+            int nstrips;
             
+            m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+            
+            m_f->m_exp.resize(nfields*nstrips);
+
             for (i = 0; i < nfields*nfields; ++i)
             {
                 grad[i] = Array<OneD, NekDouble>(npoints);
@@ -97,51 +101,67 @@ namespace Nektar
             {
                 outfield[i] = Array<OneD, NekDouble>(npoints);
             }
-            
-            // Calculate Gradient & Vorticity
-            if (spacedim == 2)
-            {
-                for (i = 0; i < nfields; ++i)
-                {
-                    m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
-                                             grad[i*nfields], 
-                                             grad[i*nfields+1]);
-                }
-                // W_z = Vx - Uy
-                Vmath::Vsub(npoints, grad[1*nfields+0], 1, 
-                            grad[0*nfields+1], 1, 
-                            outfield[0], 1);
-            }
-            else
-            {
-                for (i = 0; i < nfields; ++i)
-                {
+               
+            vector<MultiRegions::ExpListSharedPtr> Exp(nstrips*addfields); 
 
-                    m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
-                                             grad[i*nfields], 
-                                             grad[i*nfields+1],
-                                             grad[i*nfields+2]);
+            for(s = 0; s < nstrips; ++s) //homogeneous strip varient
+            {
+                // Calculate Gradient & Vorticity
+                if (spacedim == 2)
+                {
+                    for (i = 0; i < nfields; ++i)
+                    {
+                        m_f->m_exp[s*nfields+i]->PhysDeriv(m_f->m_exp[s*nfields+i]->GetPhys(), 
+                                                            grad[i*nfields], 
+                                                            grad[i*nfields+1]);
+                    }
+                    // W_z = Vx - Uy
+                    Vmath::Vsub(npoints, grad[1*nfields+0], 1, 
+                                grad[0*nfields+1], 1, 
+                                outfield[0], 1);
                 }
+                else
+                {
+                    for (i = 0; i < nfields; ++i)
+                    {
+
+                        m_f->m_exp[s*nfields+i]->PhysDeriv(m_f->m_exp[s*nfields+i]->GetPhys(), 
+                                                            grad[i*nfields], 
+                                                            grad[i*nfields+1],
+           	                                                grad[i*nfields+2]);
+                    }
                 
-                // W_x = Wy - Vz
-                Vmath::Vsub(npoints, grad[2*nfields+1], 1, grad[1*nfields+2], 1, 
-                            outfield[0],1);
-                // W_y = Uz - Wx
-                Vmath::Vsub(npoints, grad[0*nfields+2], 1, grad[2*nfields+0], 1, 
-                            outfield[1], 1);
-                // W_z = Vx - Uy
-                Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1, 
-                            outfield[2], 1);
+                    // W_x = Wy - Vz
+                    Vmath::Vsub(npoints, grad[2*nfields+1], 1, grad[1*nfields+2], 1, 
+                                outfield[0],1);
+                    // W_y = Uz - Wx
+                    Vmath::Vsub(npoints, grad[0*nfields+2], 1, grad[2*nfields+0], 1, 
+                                outfield[1], 1);
+                    // W_z = Vx - Uy
+                    Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1, 
+                                outfield[2], 1);
+                }
+
+                for (i = 0; i < addfields; ++i)
+                {
+                    int n = s*addfields + i;
+                    Exp[n] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+                    Exp[n]->UpdatePhys() = outfield[i];
+                    Exp[n]->FwdTrans_IterPerExp(outfield[i],
+                                    Exp[n]->UpdateCoeffs());
+                }
             }
 
-            for (i = 0; i < addfields; ++i)
+            vector<MultiRegions::ExpListSharedPtr>::iterator it;
+            for(s = 0; s < nstrips; ++s)
             {
-                m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-                m_f->m_exp[nfields + i]->UpdatePhys() = outfield[i];
-                m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(outfield[i],
-                                    m_f->m_exp[nfields + i]->UpdateCoeffs());
+                for(i = 0; i < addfields; ++i)
+                {
+                    it = m_f->m_exp.begin()+s*(nfields+addfields)+nfields+i;
+                    m_f->m_exp.insert(it, Exp[s*addfields+i]);
+                }
             }
-            
+
             vector<string > outname;
             if (addfields == 1)
             {
@@ -157,27 +177,29 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = m_f->m_exp[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-            
-            for (j = 0; j < nfields + addfields; ++j)
+          	 
+            for(s = 0; s < nstrips; ++s) //homogeneous strip varient
             {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {   
-                    if (j >= nfields)
+                for (j = 0; j < nfields + addfields; ++j)
+                {
+                    for (i = 0; i < FieldDef.size()/nstrips; ++i)
                     {
-                        FieldDef[i]->m_fields.push_back(outname[j-nfields]);
+						int n = s * FieldDef.size()/nstrips + i;
+                        if (j >= nfields)
+                        {
+                            FieldDef[n]->m_fields.push_back(outname[j-nfields]);
+                        }
+                        else
+                        {
+                            FieldDef[n]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                        }
+                        m_f->m_exp[s*(nfields + addfields)+j]->AppendFieldData(FieldDef[n], FieldData[n]);
                     }
-                    else
-                    {
-                        FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                    }
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                 }
             }
-            
+
             m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
-
-
+            m_f->m_data 	= FieldData;
         }
     }
 }

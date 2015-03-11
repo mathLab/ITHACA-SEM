@@ -266,7 +266,7 @@ namespace Nektar
 			normTemporalMeanPerp[2],1);
 
 	    Vmath::Smul(npoints,-1.0,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1);
-
+	    cout << "Test" << '\n';
 
             // Compute tawss, trs,  osi, taafi, tacfi, WSSG. 
             for (i = 0; i < nfld; ++i)
@@ -332,8 +332,9 @@ namespace Nektar
 		Vmath::Vvtvp(npoints,ndTn,1,ndTn,1,mdTm,1,WSSG,1);       	        
 		Vmath::Vsqrt(npoints,WSSG,1,WSSG,1);
                 Vmath::Vadd(npoints, WSSG, 1, outfield[5], 1, outfield[5], 1);
- 
-                Vmath::Zero(npoints, DotProduct,1);
+                
+
+		Vmath::Zero(npoints, DotProduct,1);
                 Vmath::Zero(npoints, Tm,1);
                 Vmath::Zero(npoints, Tn,1);
                 Vmath::Zero(npoints, ndTn,1);
@@ -380,6 +381,7 @@ namespace Nektar
             
             for(i = 0; i < nout; ++i)
             {
+		cout << i << endl;
                 m_f->m_exp[i]->FwdTrans(outfield[i],
                                         m_f->m_exp[i]->UpdateCoeffs());
                 m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(), 

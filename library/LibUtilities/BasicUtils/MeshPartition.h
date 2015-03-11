@@ -205,7 +205,7 @@ namespace Nektar
             std::map<int, NummodesPerField>     m_expansions;
 
             std::map<std::string, int>          m_fieldNameToId;
-            std::vector<MultiWeight>            m_vertWeights;
+            std::map<int, MultiWeight>          m_vertWeights;
 
             BndRegionOrdering                   m_bndRegOrder;
 

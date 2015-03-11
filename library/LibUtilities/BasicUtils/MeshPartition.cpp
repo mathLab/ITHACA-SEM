@@ -315,7 +315,7 @@ namespace Nektar
                 ASSERTL0(y, "Failed to get attribute.");
                 MeshVertex v;
                 v.id = y->IntValue();
-                ASSERTL0(v.id == i++, "Vertex IDs not sequential.");
+                //ASSERTL0(v.id == i++, "Vertex IDs not sequential.");
                 std::vector<std::string> vCoords;
                 std::string vCoordStr = x->FirstChild()->ToText()->Value();
                 boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
@@ -340,7 +340,7 @@ namespace Nektar
                     MeshEntity e;
                     e.id = y->IntValue();
                     e.type = 'E';
-                    ASSERTL0(e.id == i++, "Edge IDs not sequential.");
+                    //ASSERTL0(e.id == i++, "Edge IDs not sequential.");
                     std::vector<std::string> vVertices;
                     std::string vVerticesString = x->FirstChild()->ToText()->Value();
                     boost::split(vVertices, vVerticesString, boost::is_any_of("\t "));
@@ -365,7 +365,7 @@ namespace Nektar
                     MeshEntity f;
                     f.id = y->IntValue();
                     f.type = x->Value()[0];
-                    ASSERTL0(f.id == i++, "Face IDs not sequential.");
+                    //ASSERTL0(f.id == i++, "Face IDs not sequential.");
                     std::vector<std::string> vEdges;
                     std::string vEdgeStr = x->FirstChild()->ToText()->Value();
                     boost::split(vEdges, vEdgeStr, boost::is_any_of("\t "));
@@ -389,7 +389,7 @@ namespace Nektar
                 ASSERTL0(y, "Failed to get attribute.");
                 MeshEntity e;
                 e.id = y->IntValue();
-                ASSERTL0(e.id == i++, "Element IDs not sequential.");
+                //ASSERTL0(e.id == i++, "Element IDs not sequential.");
                 std::vector<std::string> vItems;
                 std::string vItemStr = x->FirstChild()->ToText()->Value();
                 boost::split(vItems, vItemStr, boost::is_any_of("\t "));
@@ -654,9 +654,10 @@ namespace Nektar
         void MeshPartition::WeightElements()
         {
             std::vector<unsigned int> weight(m_numFields, 1);
-            for (int i = 0; i < m_meshElements.size(); ++i)
+            std::map<int, MeshEntity>::iterator eIt;
+            for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
             {
-                m_vertWeights.push_back( weight );
+                m_vertWeights[eIt->first] = weight;
             }
 
             for (unsigned int i = 0; i < m_domain.size(); ++i)
@@ -741,22 +742,24 @@ namespace Nektar
             // Maps edge/face to first mesh element id.
             // On locating second mesh element id, graph edge is created instead.
             std::map<int, int> vGraphEdges;
+            
+            std::map<int, MeshEntity>::iterator eIt;
 
-            for (unsigned int i = 0; i < m_meshElements.size(); ++i)
+            for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
             {
-                int p = m_meshElements[i].id;
+                int p = eIt->first;
                 BoostVertex v = boost::add_vertex(pGraph);
                 pGraph[v].id = p;
                 pGraph[v].partition = 0;
                 if (m_weightingRequired)
                 {
-                    pGraph[v].weight = m_vertWeights[i];
+                    pGraph[v].weight = m_vertWeights[eIt->first];
                 }
 
                 // Process element entries and add graph edges
-                for (unsigned j = 0; j < m_meshElements[i].list.size(); ++j)
+                for (unsigned j = 0; j < eIt->second.list.size(); ++j)
                 {
-                    int eId = m_meshElements[i].list[j];
+                    int eId = eIt->second.list[j];
 
                     // Look to see if we've examined this edge/face before
                     // If so, we've got both graph vertices so add edge
@@ -795,6 +798,17 @@ namespace Nektar
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
+                
+                std::map<int, MeshEntity>::iterator eIt;
+                std::map<int, int> renum;
+
+                for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
+                {
+                    renum[eIt->first] = vcnt++;
+                }
+                
+                vcnt = 0;
+                
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
                       ++vertit)
@@ -803,18 +817,18 @@ namespace Nektar
                           adjvertit != adjvertit_end;
                           ++adjvertit)
                     {
-                        adjncy[acnt++] = *adjvertit;
+                        adjncy[acnt++] = renum[*adjvertit];
 
                     }
                     xadj[++vcnt] = acnt;
 
                     if (m_weightingRequired)
                     {
-                        vwgt[pGraph[*vertit].id ] = pGraph[*vertit].weight[0];
+                        vwgt[renum[pGraph[*vertit].id]] = pGraph[*vertit].weight[0];
                     }
                     else
                     {
-                        vwgt[pGraph[*vertit].id] = 1;
+                        vwgt[renum[pGraph[*vertit].id]] = 1;
                     }
                 }
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessQCriterion.h
+//  File: ProcessAddFld.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,39 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Computes C0 projection.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/**
+ * @brief This processing module scales the input fld file
+ *
+ */
+class ProcessAddFld : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        /**
-         * @brief This processing module calculates the Q Criterion and adds it
-         * as an extra-field to the output file.
-         */
-        class ProcessQCriterion : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessQCriterion(FieldSharedPtr f);
-            virtual ~ProcessQCriterion();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        };
+        return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessAddFld(FieldSharedPtr f);
+    virtual ~ProcessAddFld();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+    FieldSharedPtr m_fromField;
+};
+
+}
 }
 
 #endif

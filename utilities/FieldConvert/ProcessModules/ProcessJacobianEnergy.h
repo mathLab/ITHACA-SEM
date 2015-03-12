@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.h
+//  File: ProcessJacobianEnergy.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,37 +29,41 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Vtk output module
+//  Description: Computes C0 projection.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTVTK
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTVTK
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSJACOBIANENERGY
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSJACOBIANENERGY
 
-#include <tinyxml.h>
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/// This processing module scales the input fld file
+class ProcessJacobianEnergy : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        /// Converter from fld to vtk.
-        class OutputVtk : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
-            }
-            static ModuleKey m_className;
-            
-            OutputVtk(FieldSharedPtr f);
-            virtual ~OutputVtk();
-            
-            /// Write fld to output file.
-            virtual void Process(po::variables_map &vm);
-        };
+        return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessJacobianEnergy(FieldSharedPtr f);
+    virtual ~ProcessJacobianEnergy();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+};
+}
+
 }
 
 #endif

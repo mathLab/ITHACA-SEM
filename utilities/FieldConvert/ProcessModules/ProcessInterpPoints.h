@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.h
+//  File: ProcessInterpPoints.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,46 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Tecplot output module
+//  Description: Computes vorticity field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPPOINTS
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPPOINTS
 
-#include <tinyxml.h>
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        enum TecOutType
-        {
-            eFullBlockZone,
-            eFullBlockZoneEquiSpaced,
-            eSeperateZones
-        };
-    
-        /// Converter from fld to dat.
-        class OutputTecplot : public OutputModule
+        /**
+         * @brief This processing module interpolates one field to another 
+         */
+        class ProcessInterpPoints : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessInterpPoints>::AllocateSharedPtr(f);
             }
-            static ModuleKey m_className;
-            OutputTecplot(FieldSharedPtr f);
-            virtual ~OutputTecplot();
+            static ModuleKey className;
             
-            /// Write fld to output file.
+            ProcessInterpPoints(FieldSharedPtr f);
+            virtual ~ProcessInterpPoints();
+            
+            /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
-        
+
         private:
-            bool m_doError;
-            TecOutType m_outputType;
+            FieldSharedPtr m_fromField;
 
-            void WriteTecplotHeader(std::ofstream &outfile,
-                                    std::string var);
-
-            void WriteTecplotZone(std::ofstream &outfile);
-            
-            int GetNumTecplotBlocks(void);
-
-            void WriteTecplotField(const int field, 
-                                   std::ofstream &outfile);
-
-            void WriteTecplotConnectivity(std::ofstream &outfile);
-        };   
+            void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
+                                       Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                       NekDouble                               clamp_low,
+                                       NekDouble                               clamp_up,
+                                       NekDouble                               def_value);
+        };
     }
 }
 

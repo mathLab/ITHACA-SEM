@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputFld.h
+//  File: ProcessC0Projection.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,38 +29,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: FLD converter.
+//  Description: Computes C0 projection.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSC0PROJECTIO
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSC0PROJECTIO
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
         /**
-         * Converter for Fld files.
+         * @brief This processing module calculates the Q Criterion and adds it
+         * as an extra-field to the output file.
          */
-        class InputFld : public InputModule
+        class ProcessC0Projection : public ProcessModule
         {
         public:
-            InputFld(FieldSharedPtr f);
-            virtual ~InputFld();
-            virtual void Process(po::variables_map &vm);
-
             /// Creates an instance of this class
-            static ModuleSharedPtr create(FieldSharedPtr f) 
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
             {
-                return MemoryManager<InputFld>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
             }
-            /// %ModuleKey for class.
-            static ModuleKey m_className[];
+            static ModuleKey className;
+            
+            ProcessC0Projection(FieldSharedPtr f);
+            virtual ~ProcessC0Projection();
+            
+            /// Write mesh to output file.
+            virtual void Process(po::variables_map &vm);
             
         private:
+            MultiRegions::ExpListSharedPtr m_c0ProjectExp;
+            
         };
     }
 }

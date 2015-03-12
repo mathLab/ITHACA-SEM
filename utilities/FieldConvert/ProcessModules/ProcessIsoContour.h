@@ -36,7 +36,7 @@
 #ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSISOCONTOUR
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSISOCONTOUR
 
-#include "Module.h"
+#include "../Module.h"
 #include "ProcessEquiSpacedOutput.h"
 
 namespace Nektar

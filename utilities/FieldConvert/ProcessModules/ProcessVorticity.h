@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessScaleInFld.h
+//  File: ProcessVorticity.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,40 +29,37 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes C0 projection.
+//  Description: Computes vorticity field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
         /**
-         * @brief This processing module scales the input fld file 
-         *
+         * @brief This processing module calculates the vorticity and adds it
+         * as an extra-field to the output file.
          */
-        class ProcessScaleInFld : public ProcessModule
+        class ProcessVorticity : public ProcessModule
         {
         public:
             /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
-            {
-                return MemoryManager<ProcessScaleInFld>::AllocateSharedPtr(f);
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+                return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
             }
             static ModuleKey className;
             
-            ProcessScaleInFld(FieldSharedPtr f);
-            virtual ~ProcessScaleInFld();
+            ProcessVorticity(FieldSharedPtr f);
+            virtual ~ProcessVorticity();
             
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
-            
-        private:
         };
     }
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessAddFld.h
+//  File: InputFld.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,40 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes C0 projection.
+//  Description: FLD converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTFLD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTFLD
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
-{
-
-/**
- * @brief This processing module scales the input fld file
- *
- */
-class ProcessAddFld : public ProcessModule
-{
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    namespace Utilities
     {
-        return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
+        /**
+         * Converter for Fld files.
+         */
+        class InputFld : public InputModule
+        {
+        public:
+            InputFld(FieldSharedPtr f);
+            virtual ~InputFld();
+            virtual void Process(po::variables_map &vm);
+
+            /// Creates an instance of this class
+            static ModuleSharedPtr create(FieldSharedPtr f) 
+            {
+                return MemoryManager<InputFld>::AllocateSharedPtr(f);
+            }
+            /// %ModuleKey for class.
+            static ModuleKey m_className[];
+            
+        private:
+        };
     }
-    static ModuleKey className;
-
-    ProcessAddFld(FieldSharedPtr f);
-    virtual ~ProcessAddFld();
-
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-private:
-    FieldSharedPtr m_fromField;
-};
-
-}
 }
 
 #endif

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputDat.h
+//  File: OutputInfo.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,42 +29,38 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Reader for tecplot dat file and fill fieldPts structure
+//  Description: Info output module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTDAT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTDAT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTINFO
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTINFO
 
-#include "Module.h"
+#include <tinyxml.h>
+#include "../Module.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-/// Input module for Xml files.
-class InputDat : public InputModule
+class OutputInfo : public OutputModule
 {
 public:
-    InputDat(FieldSharedPtr f);
-    virtual ~InputDat();
-    virtual void Process(po::variables_map &vm);
-
     /// Creates an instance of this class
-    static ModuleSharedPtr create(FieldSharedPtr f)
-    {
-        return MemoryManager<InputDat>::AllocateSharedPtr(f);
+    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+        return MemoryManager<OutputInfo>::AllocateSharedPtr(f);
     }
-    /// %ModuleKey for class.
-    static ModuleKey m_className[];
+    static ModuleKey m_className;
 
-private:
-    void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line,
-                                Array<OneD, Array<OneD, NekDouble> > &pts,
-                                vector<Array<OneD, int> > &ptsConn);
+    OutputInfo(FieldSharedPtr f);
+    virtual ~OutputInfo();
+
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 };
 
 }
 }
+
 #endif

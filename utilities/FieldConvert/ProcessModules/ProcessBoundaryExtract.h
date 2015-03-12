@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: ProcessBoundaryExtract.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,37 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes C0 projection.
+//  Description: Process Boundary field extraction
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSJACOBIANENERGY
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSJACOBIANENERGY
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSBOUNDARYEXTRACT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSBOUNDARYEXTRACT
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
-{
-
-/// This processing module scales the input fld file
-class ProcessJacobianEnergy : public ProcessModule
-{
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    namespace Utilities
     {
-        return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
+        /**
+         * @brief This processing module sets up for the boundary field to be extracted 
+         */
+        class ProcessBoundaryExtract : public ProcessModule
+        {
+        public:
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+                return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
+            }
+            static ModuleKey className;
+            
+            ProcessBoundaryExtract(FieldSharedPtr f);
+            virtual ~ProcessBoundaryExtract();
+            
+            virtual void Process(po::variables_map &vm);
+        };
     }
-    static ModuleKey className;
-
-    ProcessJacobianEnergy(FieldSharedPtr f);
-    virtual ~ProcessJacobianEnergy();
-
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-private:
-};
-}
-
 }
 
 #endif

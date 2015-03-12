@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputPts.h
+//  File: InputXml.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,38 +33,36 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTPTS
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTPTS
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTXML
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTXML
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
-{
-
-/**
- *  Input module for Xml files.
- */
-class InputPts : public InputModule
-{
-public:
-    InputPts(FieldSharedPtr f);
-    virtual ~InputPts();
-    virtual void Process(po::variables_map &vm);
-
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(FieldSharedPtr f)
+    namespace Utilities
     {
-        return MemoryManager<InputPts>::AllocateSharedPtr(f);
+        /**
+         *  Input module for Xml files.
+         */
+        class InputXml : public InputModule
+        {
+        public:
+            InputXml(FieldSharedPtr f);
+            virtual ~InputXml();
+            virtual void Process(po::variables_map &vm);
+
+            /// Creates an instance of this class
+            static ModuleSharedPtr create(FieldSharedPtr f) 
+            {
+                return MemoryManager<InputXml>::AllocateSharedPtr(f);
+            }
+            /// %ModuleKey for class.
+            static ModuleKey m_className[];
+            
+        private:
+        };
     }
-    /// %ModuleKey for class.
-    static ModuleKey m_className[];
-
-private:
-};
-
-}
 }
 
 #endif

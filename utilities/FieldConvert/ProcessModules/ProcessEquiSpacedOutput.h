@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessGrad.h
+//  File: ProcessEquiSpacedOutput.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,37 +29,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes gradient of fields.
+//  Description: Computes vorticity field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSGRAD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSGRAD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
         /**
-         * @brief This processing module calculates the vorticity and adds it
-         * as an extra-field to the output file.
+         * @brief This processing module interpolates one field to another
          */
-        class ProcessGrad : public ProcessModule
+        class ProcessEquiSpacedOutput : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessGrad>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessEquiSpacedOutput>::
+                                                        AllocateSharedPtr(f);
             }
             static ModuleKey className;
-            
-            ProcessGrad(FieldSharedPtr f);
-            virtual ~ProcessGrad();
-            
+
+            ProcessEquiSpacedOutput(FieldSharedPtr f);
+            virtual ~ProcessEquiSpacedOutput();
+
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
+        protected:
+            ProcessEquiSpacedOutput(){};
+            void SetupEquiSpacedField(void);
+
+        private:
         };
     }
 }

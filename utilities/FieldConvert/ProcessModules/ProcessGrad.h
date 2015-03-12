@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputInfo.h
+//  File: ProcessGrad.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,38 +29,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Info output module
+//  Description: Computes gradient of fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTINFO
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTINFO
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSGRAD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSGRAD
 
-#include <tinyxml.h>
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
-{
-
-class OutputInfo : public OutputModule
-{
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-        return MemoryManager<OutputInfo>::AllocateSharedPtr(f);
+    namespace Utilities
+    {
+        /**
+         * @brief This processing module calculates the vorticity and adds it
+         * as an extra-field to the output file.
+         */
+        class ProcessGrad : public ProcessModule
+        {
+        public:
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+                return MemoryManager<ProcessGrad>::AllocateSharedPtr(f);
+            }
+            static ModuleKey className;
+            
+            ProcessGrad(FieldSharedPtr f);
+            virtual ~ProcessGrad();
+            
+            /// Write mesh to output file.
+            virtual void Process(po::variables_map &vm);
+        };
     }
-    static ModuleKey m_className;
-
-    OutputInfo(FieldSharedPtr f);
-    virtual ~OutputInfo();
-
-    /// Write fld to output file.
-    virtual void Process(po::variables_map &vm);
-};
-
-}
 }
 
 #endif

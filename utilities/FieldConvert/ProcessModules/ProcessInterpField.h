@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessVorticity.h
+//  File: ProcessInterpField.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,33 +33,45 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
+
         /**
-         * @brief This processing module calculates the vorticity and adds it
-         * as an extra-field to the output file.
+         * @brief This processing module interpolates one field to another 
          */
-        class ProcessVorticity : public ProcessModule
+        class ProcessInterpField : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
             }
             static ModuleKey className;
             
-            ProcessVorticity(FieldSharedPtr f);
-            virtual ~ProcessVorticity();
+            ProcessInterpField(FieldSharedPtr f);
+            virtual ~ProcessInterpField();
             
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
+
+        private:
+            FieldSharedPtr m_fromField;
+
+            void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
+                                  vector<MultiRegions::ExpListSharedPtr> &field1,
+                                  Array<OneD, NekDouble>                  x,
+                                  Array<OneD, NekDouble>                  y,
+                                  Array<OneD, NekDouble>                  z,
+                                  NekDouble                               clamp_low,
+                                  NekDouble                               clamp_up,
+                                  NekDouble                               def_value);
         };
     }
 }

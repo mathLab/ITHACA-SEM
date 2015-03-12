@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessEquiSpacedOutput.h
+//  File: OutputVtk.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,43 +29,58 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Tecplot output module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
 
-#include "Module.h"
+#include <tinyxml.h>
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /**
-         * @brief This processing module interpolates one field to another
-         */
-        class ProcessEquiSpacedOutput : public ProcessModule
+        enum TecOutType
+        {
+            eFullBlockZone,
+            eFullBlockZoneEquiSpaced,
+            eSeperateZones
+        };
+    
+        /// Converter from fld to dat.
+        class OutputTecplot : public OutputModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessEquiSpacedOutput>::
-                                                        AllocateSharedPtr(f);
+                return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
             }
-            static ModuleKey className;
-
-            ProcessEquiSpacedOutput(FieldSharedPtr f);
-            virtual ~ProcessEquiSpacedOutput();
-
-            /// Write mesh to output file.
+            static ModuleKey m_className;
+            OutputTecplot(FieldSharedPtr f);
+            virtual ~OutputTecplot();
+            
+            /// Write fld to output file.
             virtual void Process(po::variables_map &vm);
-        protected:
-            ProcessEquiSpacedOutput(){};
-            void SetupEquiSpacedField(void);
-
+        
         private:
-        };
+            bool m_doError;
+            TecOutType m_outputType;
+
+            void WriteTecplotHeader(std::ofstream &outfile,
+                                    std::string var);
+
+            void WriteTecplotZone(std::ofstream &outfile);
+            
+            int GetNumTecplotBlocks(void);
+
+            void WriteTecplotField(const int field, 
+                                   std::ofstream &outfile);
+
+            void WriteTecplotConnectivity(std::ofstream &outfile);
+        };   
     }
 }
 

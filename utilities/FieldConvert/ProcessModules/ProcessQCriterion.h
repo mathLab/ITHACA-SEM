@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessInterpPointDataToFld.h
+//  File: ProcessQCriterion.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,49 +29,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Computes Q Criterion field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPDATATOFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPDATATOFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
 
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
-
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
-{
-
-/**
- * @brief This processing module interpolates one field to another
- */
-class ProcessInterpPointDataToFld : public ProcessModule
-{
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-        return MemoryManager<ProcessInterpPointDataToFld>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
-
-    ProcessInterpPointDataToFld(FieldSharedPtr f);
-    virtual ~ProcessInterpPointDataToFld();
-
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    void PrintProgressbar(const int position, const int goal) const
+    namespace Utilities
     {
-        LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+        /**
+         * @brief This processing module calculates the Q Criterion and adds it
+         * as an extra-field to the output file.
+         */
+        class ProcessQCriterion : public ProcessModule
+        {
+        public:
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+                return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
+            }
+            static ModuleKey className;
+            
+            ProcessQCriterion(FieldSharedPtr f);
+            virtual ~ProcessQCriterion();
+            
+            /// Write mesh to output file.
+            virtual void Process(po::variables_map &vm);
+        };
     }
-
-private:
-};
-
-}
 }
 
 #endif

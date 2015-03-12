@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputXml.h
+//  File: ProcessScaleInFld.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,36 +29,38 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Xml reader and expansion setup
+//  Description: Computes C0 projection.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTXML
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTXML
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
         /**
-         *  Input module for Xml files.
+         * @brief This processing module scales the input fld file 
+         *
          */
-        class InputXml : public InputModule
+        class ProcessScaleInFld : public ProcessModule
         {
         public:
-            InputXml(FieldSharedPtr f);
-            virtual ~InputXml();
-            virtual void Process(po::variables_map &vm);
-
             /// Creates an instance of this class
-            static ModuleSharedPtr create(FieldSharedPtr f) 
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
             {
-                return MemoryManager<InputXml>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessScaleInFld>::AllocateSharedPtr(f);
             }
-            /// %ModuleKey for class.
-            static ModuleKey m_className[];
+            static ModuleKey className;
+            
+            ProcessScaleInFld(FieldSharedPtr f);
+            virtual ~ProcessScaleInFld();
+            
+            /// Write mesh to output file.
+            virtual void Process(po::variables_map &vm);
             
         private:
         };

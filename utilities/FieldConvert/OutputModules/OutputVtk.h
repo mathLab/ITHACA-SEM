@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessBoundaryExtract.h
+//  File: OutputVtk.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,34 +29,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Process Boundary field extraction
+//  Description: Vtk output module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSBOUNDARYEXTRACT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSBOUNDARYEXTRACT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTVTK
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTVTK
 
-#include "Module.h"
+#include <tinyxml.h>
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /**
-         * @brief This processing module sets up for the boundary field to be extracted 
-         */
-        class ProcessBoundaryExtract : public ProcessModule
+        /// Converter from fld to vtk.
+        class OutputVtk : public OutputModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
+                return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
             }
-            static ModuleKey className;
+            static ModuleKey m_className;
             
-            ProcessBoundaryExtract(FieldSharedPtr f);
-            virtual ~ProcessBoundaryExtract();
+            OutputVtk(FieldSharedPtr f);
+            virtual ~OutputVtk();
             
+            /// Write fld to output file.
             virtual void Process(po::variables_map &vm);
         };
     }

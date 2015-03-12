@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputFld.h
+//  File: ProcessConcatenate.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,34 +29,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Fld output module
+//  Description: Process Boundary field extraction
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCONCATENATE
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCONCATENATE
 
-#include <tinyxml.h>
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /// Converter from fld to vtk.
-        class OutputFld : public OutputModule
+        /**
+         * @brief This processing module sets up for the boundary field to be extracted 
+         */
+        class ProcessConcatenateFld : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<OutputFld>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessConcatenateFld>::AllocateSharedPtr(f);
             }
-            static ModuleKey m_className[];
+            static ModuleKey className;
             
-            OutputFld(FieldSharedPtr f);
-            virtual ~OutputFld();
+            ProcessConcatenateFld(FieldSharedPtr f);
+            virtual ~ProcessConcatenateFld();
             
-            /// Write fld to output file.
             virtual void Process(po::variables_map &vm);
         };
     }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessC0Projection.h
+//  File: InputDat.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,44 +29,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes C0 projection.
+//  Description: Reader for tecplot dat file and fill fieldPts structure
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSC0PROJECTIO
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSC0PROJECTIO
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTDAT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTDAT
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the Q Criterion and adds it
-         * as an extra-field to the output file.
-         */
-        class ProcessC0Projection : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
-            {
-                return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessC0Projection(FieldSharedPtr f);
-            virtual ~ProcessC0Projection();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-            
-        private:
-            MultiRegions::ExpListSharedPtr m_c0ProjectExp;
-            
-        };
-    }
-}
+namespace Utilities
+{
 
+/// Input module for Xml files.
+class InputDat : public InputModule
+{
+public:
+    InputDat(FieldSharedPtr f);
+    virtual ~InputDat();
+    virtual void Process(po::variables_map &vm);
+
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(FieldSharedPtr f)
+    {
+        return MemoryManager<InputDat>::AllocateSharedPtr(f);
+    }
+    /// %ModuleKey for class.
+    static ModuleKey m_className[];
+
+private:
+    void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line,
+                                Array<OneD, Array<OneD, NekDouble> > &pts,
+                                vector<Array<OneD, int> > &ptsConn);
+};
+
+}
+}
 #endif

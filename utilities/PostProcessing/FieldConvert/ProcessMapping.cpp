@@ -127,8 +127,33 @@ void ProcessMapping::Process(po::variables_map &vm)
     }
     else
     {
-        ASSERTL0(false,
-                "Loading mapping from file still not implemented.");
+        string fileName = m_f->m_fieldMetaDataMap["FileName"];
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;    
+        std::vector<std::vector<NekDouble> > FieldData;
+        
+        m_f->m_fld->Import(fileName,
+                            FieldDef,
+                            FieldData);
+
+        for (int j = 0; j < spacedim; ++j)
+        {
+            int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
+            Array<OneD, NekDouble> fieldcoeffs(ncoeffs,0.0);
+            for (int i = 0; i < FieldData.size(); ++i)
+            {
+                m_f->m_exp[j]->ExtractDataToCoeffs(FieldDef[i],
+                                                    FieldData[i],
+                                                    fieldNames[j],
+                                                           fieldcoeffs);
+            }
+            bool wavespace = m_f->m_exp[0]->GetWaveSpace();
+            m_f->m_exp[0]->SetWaveSpace(false);
+            
+            m_f->m_exp[0]->BwdTrans(fieldcoeffs,
+                                    coords_new[j]);
+            
+            m_f->m_exp[0]->SetWaveSpace(wavespace);
+        }             
     }
     
     // Convert velocity to Cartesian system
@@ -140,7 +165,17 @@ void ProcessMapping::Process(po::variables_map &vm)
         field[0] = m_f->m_exp[0];
         GlobalMapping::MappingSharedPtr mapping = 
                                 GlobalMapping::Mapping::Load(m_f->m_session,
-                                field);       
+                                field);
+        // Update mapping with coordinates
+        //     the coordinates velocity don't affect the transformation,
+        //      so they can be set to zero
+        Array<OneD, Array<OneD, NekDouble> > coords_vel(3);
+        for (int i = 0; i < 3; i++)
+        {
+            coords_vel[i]  = Array<OneD, NekDouble> (npoints,0.0);
+        }        
+        mapping->UpdateMapping(time, false, coords_new,coords_vel);
+        
         Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
         Array<OneD, Array<OneD, NekDouble> > velCart (spacedim);
         // Initialize arrays and copy velocity

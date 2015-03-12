@@ -1991,9 +1991,10 @@ namespace Nektar
             fields[0] = field;           
             GlobalMapping::MappingSharedPtr mapping = 
                     GlobalMapping::Mapping::Load(m_session, fields);
-            mapping->Output( m_fieldMetaDataMap);
-
-            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
+            mapping->Output( fieldMetaDataMap, outname);
+            
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap);
         }
 
 

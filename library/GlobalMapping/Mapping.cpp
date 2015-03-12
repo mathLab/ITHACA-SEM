@@ -81,6 +81,8 @@ namespace Nektar
                     ASSERTL0(0,"Dimension not supported");
                 break;
             }
+            
+            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
         }
 
         /**
@@ -229,7 +231,8 @@ namespace Nektar
         
         
         void Mapping::Output( 
-                    LibUtilities::FieldMetaDataMap  &fieldMetaDataMap)
+                    LibUtilities::FieldMetaDataMap  &fieldMetaDataMap,
+                    const std::string                    &outname)
         {
             // Only do anything if mapping exists
             if (m_isDefined)
@@ -245,9 +248,58 @@ namespace Nektar
                     }
                 }
                 else
-                {
-                    ASSERTL0(false,
-                        "Mapping output to file still not implemented.");
+                {                    
+                    string fieldNames[3] = {"x", "y", "z"};
+                    string velFieldNames[3] = {"vx", "vy", "vz"};
+                    
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                        = m_fields[0]->GetFieldDefinitions();
+                    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+                    int ncoeffs = m_fields[0]->GetNcoeffs();
+                    Array<OneD, NekDouble> fieldcoeffs(ncoeffs);
+
+                    bool wavespace = m_fields[0]->GetWaveSpace();
+                    m_fields[0]->SetWaveSpace(false);
+                    // copy coordinates Data into FieldData and set variable
+                    for(int j = 0; j < m_nConvectiveFields; ++j)
+                    {                
+                        m_fields[0]->FwdTrans_IterPerExp(m_coords[j], fieldcoeffs);
+
+                        for(int i = 0; i < FieldDef.size(); ++i)
+                        {
+                            // Could do a search here to find correct variable
+                            FieldDef[i]->m_fields.push_back(fieldNames[j]);
+                            m_fields[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs);
+                        }
+                    }
+                    if (m_timeDependent)
+                    {
+                        // copy coordinates velocity Data into FieldData and set variable
+                        for(int j = 0; j < m_nConvectiveFields; ++j)
+                        {                
+                            m_fields[0]->BwdTrans(m_coordsVel[j], fieldcoeffs);
+
+                            for(int i = 0; i < FieldDef.size(); ++i)
+                            {
+                                // Could do a search here to find correct variable
+                                FieldDef[i]->m_fields.push_back(velFieldNames[j]);
+                                m_fields[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs);
+                            }
+                        }
+                    }
+                 
+                    std::string outfile = outname;
+                    outfile.erase(outfile.end()-4, outfile.end());
+                    outfile += ".map";
+
+                    m_fld->Write(outfile,FieldDef,FieldData,fieldMetaDataMap);
+                    
+                    // Write metadata to orginal output
+                    fieldMetaDataMap["MappingType"] = std::string("File");
+                    fieldMetaDataMap["FileName"] = outfile;
+                    
+                    m_fields[0]->SetWaveSpace(wavespace);
                 }
                  
             }

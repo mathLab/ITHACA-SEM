@@ -85,7 +85,8 @@ namespace GlobalMapping
             
             // Output function called when a chk or fld file is written
             GLOBAL_MAPPING_EXPORT void Output( 
-                    LibUtilities::FieldMetaDataMap & fieldMetaDataMap);
+                    LibUtilities::FieldMetaDataMap & fieldMetaDataMap,
+                    const std::string                    &outname);
             
             /////////////////////////////////////////////////////////////
             //
@@ -313,6 +314,8 @@ namespace GlobalMapping
         protected:
             /// Session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
+            
+            LibUtilities::FieldIOSharedPtr              m_fld;
             /// Fields
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             // Arrays with coordinates and coordinates velocity
@@ -326,6 +329,7 @@ namespace GlobalMapping
             // Name of the function containing the coordinates
             string                                      m_funcName;
             string                                      m_velFuncName;
+            
             
             // Flags to help the solver
             bool                                        m_constantJacobian;

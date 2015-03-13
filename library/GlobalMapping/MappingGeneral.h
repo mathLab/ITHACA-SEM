@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingGeneralFixed.h
+// File: MappingGeneral.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_GLOBALMAPPING_MAPPINGXYOFXY
-#define NEKTAR_GLOBALMAPPING_MAPPINGXYOFXY
+#ifndef NEKTAR_GLOBALMAPPING_MAPPINGGENERAL
+#define NEKTAR_GLOBALMAPPING_MAPPINGGENERAL
 
 #include <string>
 
@@ -49,11 +49,11 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-    class MappingGeneralFixed: public Mapping
+    class MappingGeneral: public Mapping
     {
     public:
 
-        friend class MemoryManager<MappingGeneralFixed> ;
+        friend class MemoryManager<MappingGeneral> ;
 
         /// Creates an instance of this class
         GLOBAL_MAPPING_EXPORT
@@ -63,7 +63,7 @@ namespace GlobalMapping
             const TiXmlElement                                *pMapping)
         {
             MappingSharedPtr p =
-                    MemoryManager<MappingGeneralFixed>::AllocateSharedPtr(pSession,
+                    MemoryManager<MappingGeneral>::AllocateSharedPtr(pSession,
                                                                     pFields);
             p->InitObject(pFields, pMapping);
             return p;
@@ -87,7 +87,7 @@ namespace GlobalMapping
         Array<OneD, NekDouble>                      m_jac;
 
         // Constructor
-        MappingGeneralFixed(const LibUtilities::SessionReaderSharedPtr  &pSession,
+        MappingGeneral(const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields); 
         
         // Virtual functions

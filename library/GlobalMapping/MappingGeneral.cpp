@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MappingGeneralFixed.cpp
+// File: MappingGeneral.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <GlobalMapping/MappingGeneralFixed.h>
+#include <GlobalMapping/MappingGeneral.h>
 #include <MultiRegions/ExpList.h>
 #include <iomanip> 
 
@@ -42,14 +42,14 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-    std::string MappingGeneralFixed::className =
-            GetMappingFactory().RegisterCreatorFunction("GeneralFixed",
-                    MappingGeneralFixed::create, "X = X(x,y,z), Y = Y(x,y,z), Z=Z(x,y,z)");
+    std::string MappingGeneral::className =
+            GetMappingFactory().RegisterCreatorFunction("General",
+                    MappingGeneral::create, "X = X(x,y,z), Y = Y(x,y,z), Z=Z(x,y,z)");
 
     /**
      *
      */
-    MappingGeneralFixed::MappingGeneralFixed(
+    MappingGeneral::MappingGeneral(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
         : Mapping(pSession, pFields)
@@ -60,7 +60,7 @@ namespace GlobalMapping
     /**
      *
      */
-    void MappingGeneralFixed::v_InitObject(
+    void MappingGeneral::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement                                *pMapping)
     {
@@ -72,7 +72,7 @@ namespace GlobalMapping
                 "General Mapping needs at least 2 velocity components.");   
     }
 
-    void MappingGeneralFixed::v_ContravarToCartesian(
+    void MappingGeneral::v_ContravarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -93,7 +93,7 @@ namespace GlobalMapping
         }    
     }
 
-    void MappingGeneralFixed::v_CovarToCartesian(
+    void MappingGeneral::v_CovarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -114,7 +114,7 @@ namespace GlobalMapping
         }           
     }
 
-    void MappingGeneralFixed::v_ContravarFromCartesian(
+    void MappingGeneral::v_ContravarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -135,7 +135,7 @@ namespace GlobalMapping
         }
     }
 
-    void MappingGeneralFixed::v_CovarFromCartesian(
+    void MappingGeneral::v_CovarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -156,14 +156,14 @@ namespace GlobalMapping
         } 
     }
 
-    void MappingGeneralFixed::v_GetJacobian(
+    void MappingGeneral::v_GetJacobian(
         Array<OneD, NekDouble>               &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
         Vmath::Vcopy(physTot, m_jac, 1, outarray, 1);
     }
 
-    void MappingGeneralFixed::v_GetMetricTensor(
+    void MappingGeneral::v_GetMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
@@ -181,7 +181,7 @@ namespace GlobalMapping
         }
     }
 
-    void MappingGeneralFixed::v_GetInvMetricTensor(
+    void MappingGeneral::v_GetInvMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
@@ -199,7 +199,7 @@ namespace GlobalMapping
         }            
     }
 
-    void MappingGeneralFixed::v_ApplyChristoffelContravar(
+    void MappingGeneral::v_ApplyChristoffelContravar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -224,7 +224,7 @@ namespace GlobalMapping
         
     }
 
-    void MappingGeneralFixed::v_ApplyChristoffelCovar(
+    void MappingGeneral::v_ApplyChristoffelCovar(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
     {
@@ -248,13 +248,13 @@ namespace GlobalMapping
         } 
     }
 
-    void MappingGeneralFixed::v_UpdateGeomInfo()
+    void MappingGeneral::v_UpdateGeomInfo()
     {
         CalculateMetricTerms();
         CalculateChristoffel();
     }
     
-    void MappingGeneralFixed::CalculateMetricTerms()
+    void MappingGeneral::CalculateMetricTerms()
     {
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
@@ -392,7 +392,7 @@ namespace GlobalMapping
         m_fields[0]->SetWaveSpace(wavespace);
     }
     
-    void MappingGeneralFixed::CalculateChristoffel()
+    void MappingGeneral::CalculateChristoffel()
     {
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;

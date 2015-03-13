@@ -5,7 +5,7 @@ SET(GLOBAL_MAPPING_SOURCES
   MappingXYofZ.cpp
   MappingXYofT.cpp
   MappingXYofXY.cpp
-  MappingGeneralFixed.cpp
+  MappingGeneral.cpp
   MappingTranslation.cpp
 )
 
@@ -16,7 +16,7 @@ SET(GLOBAL_MAPPING_HEADERS
   MappingXYofZ.h
   MappingXYofT.h
   MappingXYofXY.h
-  MappingGeneralFixed.h
+  MappingGeneral.h
   MappingTranslation.h
 )
 

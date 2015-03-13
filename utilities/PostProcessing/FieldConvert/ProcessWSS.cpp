@@ -122,7 +122,7 @@ namespace Nektar
             int npoints = m_f->m_exp[0]->GetNpoints(); 
             Array<OneD, Array<OneD, NekDouble> > velocity(nfields), grad(ngrad), fgrad(ngrad);
             Array<OneD, Array<OneD, NekDouble> > stress(nstress), fstress(nstress);
-            Array<OneD, Array<OneD, NekDouble> > outfield(newfields), shear(nshear), fshear(nshear);
+            Array<OneD, Array<OneD, NekDouble> > outfield(newfields), fshear(nshear);
         
             StdRegions::StdExpansionSharedPtr elmt;
             StdRegions::StdExpansion2DSharedPtr bc;
@@ -164,10 +164,6 @@ namespace Nektar
             for (i = 0; i < nfields; ++i)
             {
                 velocity[i] = Array<OneD, NekDouble>(npoints);
-            }
-            for (i = 0; i < nshear; ++i)
-            {
-                shear[i] = Array<OneD, NekDouble>(npoints);
             }
 
             m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
@@ -370,52 +366,7 @@ namespace Nektar
                 }
             }
 
-            /*
-            int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
-            int nGlobal = m_f->m_locToGlobalMap->GetNumGlobalCoeffs();
-            Array<OneD, NekDouble> output(ncoeffs);
-            
-            const Array<OneD,const int>& map = m_f->m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsMap();
-            NekDouble sign;
 
-            for(j = 0; j < newfields; ++j)
-            {
-                output=m_f->m_exp[j]->UpdateCoeffs();
-                
-                Array<OneD, NekDouble> outarray(nGlobal,0.0);
-                int bndcnt=0;
-                                
-                for(i = 0; i < BndExp[j].num_elements(); ++i)
-                {
-                    bool doneBnd = false;
-                    for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
-                    {
-                        if(i == m_f->m_bndRegionsToWrite[b])
-                        {   
-                            doneBnd = true;
-                            const Array<OneD,const NekDouble>& coeffs = BndExp[j][i]->GetCoeffs();
-                            for(int k = 0; k < (BndExp[j][i])->GetNcoeffs(); ++k)
-                            {
-                                sign = m_f->m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                                outarray[map[bndcnt++]] = sign * coeffs[k];
-                            }
-                        }
-                        if(doneBnd == false)
-                        {
-                            bndcnt += BndExp[j][i]->GetNcoeffs();
-                        }
-                    }
-                }
-                m_f->m_locToGlobalMap->GlobalToLocal(outarray,output);
-            }
-            
-            for(int j = 0; j < newfields; ++j)
-            {
-                BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
-            }
-            */
-           
-            
             for(int j = 0; j < newfields; ++j)
             {
                 for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)

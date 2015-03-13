@@ -278,7 +278,7 @@ namespace Nektar
                         // copy coordinates velocity Data into FieldData and set variable
                         for(int j = 0; j < m_nConvectiveFields; ++j)
                         {                
-                            m_fields[0]->BwdTrans(m_coordsVel[j], fieldcoeffs);
+                            m_fields[0]->FwdTrans_IterPerExp(m_coordsVel[j], fieldcoeffs);
 
                             for(int i = 0; i < FieldDef.size(); ++i)
                             {
@@ -932,6 +932,7 @@ namespace Nektar
             for (int dir=0; dir < 3; dir++)
             {
                 coords[dir] = Array<OneD, NekDouble> (physTot, 0.0);
+                values[dir] = Array<OneD, NekDouble> (physTot, 0.0);
             }                       
             GetCartesianCoordinates(coords[0],coords[1],coords[2]);
                        

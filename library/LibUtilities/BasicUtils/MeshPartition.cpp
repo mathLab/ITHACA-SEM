@@ -792,10 +792,6 @@ namespace Nektar
                       vertit != vertit_end;
                       ++vertit)
                 {
-                    if (m_comm->GetRank() == 0)
-                    {
-                        std::cout << *vertit << std::endl;
-                    }
                     for ( boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
                           adjvertit != adjvertit_end;
                           ++adjvertit)

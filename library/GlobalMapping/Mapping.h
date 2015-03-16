@@ -278,9 +278,9 @@ namespace GlobalMapping
             }
             
             // Change the value of m_timeDependent
-            GLOBAL_MAPPING_EXPORT void SetFromEquation( const bool value)
+            GLOBAL_MAPPING_EXPORT void SetFromFunction( const bool value)
             {
-                m_fromEquation = value;
+                m_fromFunction = value;
             }
             
             // Define if the Jacobian of the transformation is constant
@@ -298,11 +298,10 @@ namespace GlobalMapping
             }
             
             GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time,
-                const bool      fromFunction,
                 const Array<OneD, Array<OneD, NekDouble> > &coords    = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &coordsVel = NullNekDoubleArrayofArray)
             {
-                v_UpdateMapping( time, fromFunction, coords, coordsVel);
+                v_UpdateMapping( time, coords, coordsVel);
             }
             
             GLOBAL_MAPPING_EXPORT void UpdateGeomInfo()
@@ -334,7 +333,7 @@ namespace GlobalMapping
             // Flags to help the solver
             bool                                        m_constantJacobian;
             bool                                        m_timeDependent;
-            bool                                        m_fromEquation;
+            bool                                        m_fromFunction;
             
             // Static variables to load mapping
             static MappingSharedPtr                     m_mappingPtr;
@@ -441,7 +440,6 @@ namespace GlobalMapping
             
             GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
                 const NekDouble time,
-                const bool      fromFunction,
                 const Array<OneD, Array<OneD, NekDouble> > &coords    = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &coordsVel = NullNekDoubleArrayofArray);
             

@@ -94,7 +94,7 @@ namespace Nektar
         {   
             int phystot         = m_fields[0]->GetTotPoints();
             m_timeDependent     = false;
-            m_fromEquation      = true;
+            m_fromFunction      = true;
             // Initialise variables
             m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
             m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
@@ -237,7 +237,7 @@ namespace Nektar
             // Only do anything if mapping exists
             if (m_isDefined)
             {
-                if (m_fromEquation)
+                if (m_fromFunction)
                 {
                     // Add metadata
                     fieldMetaDataMap["MappingType"] = std::string("Expression");
@@ -1193,11 +1193,10 @@ namespace Nektar
         
         void Mapping::v_UpdateMapping(
                 const NekDouble time,
-                const bool      fromFunction,
                 const Array<OneD, Array<OneD, NekDouble> > &coords  ,
                 const Array<OneD, Array<OneD, NekDouble> > &coordsVel)
         {
-            if (fromFunction)
+            if (m_fromFunction)
             {
                 std::string s_FieldStr; 
                 // Check if function from session file defines each component

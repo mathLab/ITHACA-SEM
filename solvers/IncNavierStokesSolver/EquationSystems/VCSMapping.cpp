@@ -162,7 +162,7 @@ namespace Nektar
         if (m_mapping->IsTimeDependent())
         {
             // Update mapping is now done by the MovingBody forcing
-            //m_mapping->UpdateMapping(time, true);
+            //m_mapping->UpdateMapping(time);
             m_mapping->UpdateBCs(time);
         }       
         

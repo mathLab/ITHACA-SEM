@@ -174,7 +174,8 @@ void ProcessMapping::Process(po::variables_map &vm)
         {
             coords_vel[i]  = Array<OneD, NekDouble> (npoints,0.0);
         }        
-        mapping->UpdateMapping(time, false, coords_new,coords_vel);
+        mapping->SetFromFunction(false);
+        mapping->UpdateMapping(time, coords_new,coords_vel);
         
         Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
         Array<OneD, Array<OneD, NekDouble> > velCart (spacedim);

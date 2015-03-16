@@ -209,7 +209,11 @@ void ForcingMovingBody::v_InitObject(
         m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
     {
         InitialiseCableModel(m_session, pFields);
-        m_mapping->SetFromEquation(false);
+        m_mapping->SetFromFunction(false);
+    }
+    else
+    {
+        m_mapping->SetFromFunction(true);
     }
     
 }
@@ -276,7 +280,7 @@ void ForcingMovingBody::UpdateMotion(
         Vmath::Vcopy(physTot, m_eta[1], 1, coordsVel[1], 1);       
         
         // Update mapping
-        m_mapping->UpdateMapping(time, false, coords, coordsVel);
+        m_mapping->UpdateMapping(time, coords, coordsVel);
         
     }
     else if(m_vibrationtype == "Forced" || m_vibrationtype == "FORCED")
@@ -293,7 +297,7 @@ void ForcingMovingBody::UpdateMotion(
             }
         }
         // Update mapping
-        m_mapping->UpdateMapping(time, true);
+        m_mapping->UpdateMapping(time);
 
         for(int var = 0; var < m_NumVariable; var++)
         {

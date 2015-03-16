@@ -1,3 +1,6 @@
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/Tester.cpp.in
+               ${CMAKE_BINARY_DIR}/tests/Tester.cpp
+	       @ONLY)
 SET(TESTER_SOURCES
   Metric.cpp
   MetricFile.cpp
@@ -5,7 +8,7 @@ SET(TESTER_SOURCES
   MetricLInf.cpp
   MetricRegex.cpp
   TestData.cpp
-  Tester.cpp
+  ${CMAKE_BINARY_DIR}/tests/Tester.cpp
   sha1.cpp
 )
 
@@ -33,9 +36,9 @@ TARGET_LINK_LIBRARIES(Tester
   ${Boost_REGEX_LIBRARY}
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${Boost_THREAD_LIBRARY}
-  optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
+  optimized ${TINYXML_LIBRARY} debug ${TINYXML_LIBRARY}
 )
-ADD_DEPENDENCIES(Tester boost tinyxml)
+ADD_DEPENDENCIES(Tester boost tinyxml-2.6.2)
 
 IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
   TARGET_LINK_LIBRARIES(Tester optimized rt debug rt)

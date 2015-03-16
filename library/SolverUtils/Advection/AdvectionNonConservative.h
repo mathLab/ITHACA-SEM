@@ -54,13 +54,18 @@ namespace Nektar
             
         protected:
             AdvectionNonConservative();
-            
+
+            virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+
             virtual void v_Advect(
-                const int                                          nConvectiveFields,
+                const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble                                   &time);
         }; 
     }
 }

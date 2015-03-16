@@ -49,20 +49,20 @@ namespace Nektar
             {0,1,3},{0,1,2},{0,2,3},{1,2,3}};
         const unsigned int TetGeom::EdgeFaceConnectivity  [6][2] = {
             {0,1},{0,2},{0,3},{1,3},{1,2},{2,3}};
-
+        
         TetGeom::TetGeom()
         {
             m_shapeType = LibUtilities::eTetrahedron;
         }
-
+        
         TetGeom::TetGeom(const TriGeomSharedPtr faces[]) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_shapeType = LibUtilities::eTetrahedron;
-
+            
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+TetGeom::kNfaces);
-
+            
             /// Set up orientation vectors with correct amount of elements.
             m_eorient.resize(kNedges);
             m_forient.resize(kNfaces);
@@ -71,23 +71,22 @@ namespace Nektar
             SetUpLocalVertices();
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
-
+            
             /// Determine necessary order for standard region.
             vector<int> tmp;
-
             tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(0));
             int order0 = *max_element(tmp.begin(), tmp.end());
-
+            
             tmp.clear();
             tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
             int points0 = *max_element(tmp.begin(), tmp.end());
-
+            
             tmp.clear();
             tmp.push_back(order0);
             tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(1));
             tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(2));
             int order1 = *max_element(tmp.begin(), tmp.end());
-
+            
             tmp.clear();
             tmp.push_back(points0);
             tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
@@ -140,13 +139,22 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &locCoord,
+                                      NekDouble tol)
+        {
+            NekDouble resid; 
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
         /**
          * @brief Determines if a point specified in global coordinates is
          * located within this tetrahedral geometry and return local caretsian coordinates
          */
         bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
                                       Array<OneD, NekDouble> &locCoord,
-                                      NekDouble tol)
+                                      NekDouble tol,
+                                      NekDouble &resid)
         {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
@@ -158,8 +166,9 @@ namespace Nektar
             if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
-                NekDouble mincoord, maxcoord,diff;
-                
+                Array<OneD, NekDouble> mincoord(3), maxcoord(3);
+                NekDouble diff = 0.0;
+
                 v_FillGeom();
 
                 const int npts = m_xmap->GetTotPoints();
@@ -169,12 +178,16 @@ namespace Nektar
                 {
                     m_xmap->BwdTrans(m_coeffs[i], pts);
 
-                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
-                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
                     
-                    diff = maxcoord - mincoord; 
-                    
-                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    diff = max(maxcoord[i] - mincoord[i],diff); 
+                }
+
+                for(i = 0; i < 3; ++i)
+                {
+                    if((gloCoord[i] < mincoord[i] - 0.2*diff)||
+                       (gloCoord[i] > maxcoord[i] + 0.2*diff))
                     {
                         return false;
                     }
@@ -182,7 +195,7 @@ namespace Nektar
             }
             
             // Convert to the local (eta) coordinates.
-            v_GetLocCoords(gloCoord, locCoord);
+            resid = v_GetLocCoords(gloCoord, locCoord);
             
             // Check local coordinate is within cartesian bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
@@ -197,10 +210,12 @@ namespace Nektar
 
 
         /// Get Local cartesian points 
-        void TetGeom::v_GetLocCoords(
+        NekDouble TetGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
         {
+            NekDouble resid = 0.0;
+
             // calculate local coordinates (eta) for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {   
@@ -272,8 +287,9 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(-Lcoords[1]-Lcoords[2])/2 -1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
             }
+            return resid;
         }
         
         int TetGeom::v_GetNumVerts() const

@@ -82,11 +82,12 @@ namespace Nektar
 	  }
 		   
 	 // Set up locations of velocity vector.
-        m_velLoc = Array<OneD, NekDouble>(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            m_velLoc[i] = i+1;
-        }
+	 m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
+	 m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
+	 for (int i = 0; i < m_spacedim; ++i)
+	 {
+			m_vecLocs[0][i] = 1 + i;
+	 }
 
  	// Load generic input parameters
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -181,15 +182,13 @@ namespace Nektar
       {	
 	
 	// Copy the forward trace of the field to the backward trace
-        int e, id1, id2, npts;
+        int e, id2, npts;
         
         for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]
                  ->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));

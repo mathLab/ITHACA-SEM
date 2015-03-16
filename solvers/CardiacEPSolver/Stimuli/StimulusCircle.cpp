@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <CardiacEPSolver/Stimuli/StimulusCircle.h>
 
@@ -67,6 +67,8 @@ namespace Nektar
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
+        m_chiCapMembrane = m_session->GetParameter("chi")
+                            * m_session->GetParameter("Cm");
         
         if (!pXml)
         {

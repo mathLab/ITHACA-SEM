@@ -68,6 +68,7 @@ namespace Nektar
             ePtsFilled      ///< Geometric information has been generated.
         };
 
+        
     }; // end of namespace
 }; // end of namespace
 

@@ -37,9 +37,9 @@
 
 namespace Nektar
 {
-    string NavierStokesCFE::className = 
+    string NavierStokesCFE::className =
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "NavierStokesCFE", NavierStokesCFE::create, 
+            "NavierStokesCFE", NavierStokesCFE::create,
             "NavierStokes equations in conservative variables.");
 
     NavierStokesCFE::NavierStokesCFE(
@@ -56,8 +56,7 @@ namespace Nektar
         {
 
             std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
-            int i;
-            for(i = 0; i < (int) SIZE_ProblemType; ++i)
+            for(int i = 0; i < (int) SIZE_ProblemType; ++i)
             {
                 if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
                 {
@@ -80,7 +79,6 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
-
     }
 
     NavierStokesCFE::~NavierStokesCFE()
@@ -91,14 +89,39 @@ namespace Nektar
     void NavierStokesCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
+        SolverUtils::AddSummaryItem(s, "Problem Type",
+                                    ProblemTypeMap[m_problemType]);
     }
 
     void NavierStokesCFE::v_SetInitialConditions(
-        NekDouble initialtime, 
-        bool dumpInitialConditions)
+        NekDouble initialtime,
+        bool dumpInitialConditions,
+        const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
+
+        // insert white noise in initial condition
+        NekDouble Noise;
+        int phystot = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> noise(phystot);
+
+        m_session->LoadParameter("Noise", Noise,0.0);
+        int m_nConvectiveFields =  m_fields.num_elements();
+
+        if (Noise > 0.0)
+        {
+            for (int i = 0; i < m_nConvectiveFields; i++)
+            {
+                Vmath::FillWhiteNoise(phystot, Noise, noise, 1,
+                                      m_comm->GetColumnComm()->GetRank()+1);
+                Vmath::Vadd(phystot, m_fields[i]->GetPhys(), 1,
+                            noise, 1, m_fields[i]->UpdatePhys(), 1);
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+                                                 m_fields[i]->UpdateCoeffs());
+            }
+        }
+
+        CompressibleFlowSystem::v_SetInitialConditions();
 
         if (dumpInitialConditions)
         {
@@ -115,8 +138,9 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-        
-        Array<OneD, Array<OneD, NekDouble> > advVel;
+
+
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
 
@@ -128,56 +152,59 @@ namespace Nektar
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-        
+
         for (i = 0; i < nvariables-1; ++i)
         {
             inarrayTemp[i] = Array<OneD, NekDouble>(npoints, 0.0);
-            inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);        
+            inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-        
+
         // Advection term in physical rhs form
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
-        
-        for (i = 0; i < nvariables; ++i)
-        {
-            Vmath::Neg(npoints, outarrayAdv[i], 1);
-        }
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                            outarrayAdv, time);
 
         // Extract pressure and temperature
         Array<OneD, NekDouble > pressure   (npoints, 0.0);
         Array<OneD, NekDouble > temperature(npoints, 0.0);
         GetPressure(inarray, pressure);
         GetTemperature(inarray, pressure, temperature);
-        
+
         // Extract velocities
         for (i = 1; i < nvariables-1; ++i)
         {
-            Vmath::Vdiv(npoints, 
-                        inarray[i], 1, 
-                        inarray[0], 1, 
+            Vmath::Vdiv(npoints,
+                        inarray[i], 1,
+                        inarray[0], 1,
                         inarrayTemp[i-1], 1);
         }
-        
+
         // Copy velocities into new inarrayDiff
         for (i = 0; i < nvariables-2; ++i)
         {
             Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiff[i], 1);
         }
-        
+
         // Copy temperature into new inarrayDiffusion
-        Vmath::Vcopy(npoints, 
-                     temperature, 1, 
+        Vmath::Vcopy(npoints,
+                     temperature, 1,
                      inarrayDiff[nvariables-2], 1);
-        
+
         // Diffusion term in physical rhs form
         m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
-            
+
         for (i = 0; i < nvariables; ++i)
         {
-            Vmath::Vadd(npoints, 
-                        outarrayAdv[i], 1, 
-                        outarrayDiff[i], 1, 
+            Vmath::Vsub(npoints,
+                        outarrayDiff[i], 1,
+                        outarrayAdv[i], 1,
                         outarray[i], 1);
+        }
+
+        // Add sponge layer if defined in the session file
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray, time);
         }
     }
 
@@ -188,14 +215,14 @@ namespace Nektar
     {
         int i;
         int nvariables = inarray.num_elements();
-        
+
         switch(m_projectionType)
         {
             case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -215,14 +242,15 @@ namespace Nektar
                 break;
         }
     }
-    
+
     void NavierStokesCFE::SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble                             time)
     {
+        std::string varName;
         int nvariables = m_fields.num_elements();
         int cnt        = 0;
-        
+
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
@@ -233,52 +261,74 @@ namespace Nektar
                 ASSERTL0(false, "Wall is a wrong bc for the full "
                                 "compressible Navier-Stokes equations");
             }
-            
+
             // Wall Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eWallViscous)
             {
-                WallBoundaryViscous(n, cnt, inarray);
+                WallViscousBC(n, cnt, inarray);
             }
-            
+
             // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eSymmetry)
             {
-                SymmetryBoundary(n, cnt, inarray);
+                SymmetryBC(n, cnt, inarray);
             }
-            
-            // Inflow characteristic Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eInflowCFS)
+
+            // Riemann invariant characteristic Boundary Condition (CBC)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eRiemannInvariant)
             {
-                InflowCFSBoundary(n, cnt, inarray);
+                RiemannInvariantBC(n, cnt, inarray);
             }
-            
-            // Outflow characteristic Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eOutflowCFS)
+
+            // Pressure outflow non-reflective Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflowNonReflective)
             {
-                OutflowCFSBoundary(n, cnt, inarray);
+                PressureOutflowNonReflectiveBC(n, cnt, inarray);
             }
-            
+
+            // Pressure outflow Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflow)
+            {
+                PressureOutflowBC(n, cnt, inarray);
+            }
+
+            // Pressure outflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflowFile)
+            {
+                PressureOutflowFileBC(n, cnt, inarray);
+            }
+
+            // Pressure inflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureInflowFile)
+            {
+                PressureInflowFileBC(n, cnt, inarray);
+            }
+
             // Extrapolation of the data at the boundaries
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eExtrapOrder0)
             {
-                ExtrapOrder0Boundary(n, cnt, inarray);
+                ExtrapOrder0BC(n, cnt, inarray);
             }
-            
+
             // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() 
-                == SpatialDomains::eTimeDependent)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eTimeDependent)
             {
                 for (int i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->EvaluateBoundaryConditions(time);
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
             }
-    
+
             cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }

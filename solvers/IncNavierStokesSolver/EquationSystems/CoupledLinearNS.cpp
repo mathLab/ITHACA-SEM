@@ -43,10 +43,10 @@
 
 namespace Nektar
 {
-    
+
     string CoupledLinearNS::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
-    
-    
+
+
     /**
      *  @class CoupledLinearNS 
      *
@@ -55,23 +55,23 @@ namespace Nektar
      * coupled matrix system
      */ 
     CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
+        UnsteadySystem(pSession),
         IncNavierStokes(pSession),
         m_singleMode(false),
         m_zeroMode(false)
     {
     }
-    
+
     void CoupledLinearNS::v_InitObject()
     {
-        EquationSystem::v_InitObject();
         IncNavierStokes::v_InitObject();
-        
+
         int  i;
         int  expdim = m_graph->GetMeshDimension();
-        
+
         // Get Expansion list for orthogonal expansion at p-2
         const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
-        
+
         m_nConvectiveFields = m_fields.num_elements();
         if(boost::iequals(m_boundaryConditions->GetVariable(m_nConvectiveFields-1), "p"))
         {
@@ -81,17 +81,17 @@ namespace Nektar
         if(expdim == 2)
         {
             int nz; 
-            
+
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 ASSERTL0(m_fields.num_elements() > 2,"Expect to have three at least three components of velocity variables");
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
-                
+
                 m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_homogen_dealiasing, pressure_exp);
-                
+
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                
-                
+
             }
             else
             {
@@ -99,19 +99,19 @@ namespace Nektar
                 m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session, pressure_exp);
                 nz = 1;
             }
-            
+
             Array<OneD, MultiRegions::ExpListSharedPtr> velocity(m_velocity.num_elements());
             for(i =0 ; i < m_velocity.num_elements(); ++i)
             {
                 velocity[i] = m_fields[m_velocity[i]];
             }
-            
+
             // Set up Array of mappings
             m_locToGloMap = Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> (nz);
-            
+
             if(m_session->DefinesSolverInfo("SingleMode"))
             {
-                
+
                 ASSERTL0(nz <=2 ,"For single mode calculation can only have  nz <= 2");
                 m_singleMode = true;
                 if(m_session->DefinesSolverInfo("BetaZero"))
@@ -126,7 +126,7 @@ namespace Nektar
                 // base mode
                 int nz_loc = 1;
                 m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc);
-                
+
                 if(nz > 1)
                 {
                     nz_loc = 2;
@@ -149,6 +149,26 @@ namespace Nektar
         {
             ASSERTL0(false,"Exp dimension not recognised");
         }
+
+        // creation of the extrapolation object
+        if(m_equationType == eUnsteadyNavierStokes)
+        {
+            std::string vExtrapolation = "Standard";
+
+            if (m_session->DefinesSolverInfo("Extrapolation"))
+            {
+                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+            }
+
+            m_extrapolation = GetExtrapolateFactory().CreateInstance(
+                vExtrapolation,
+                m_session,
+                m_fields,
+                m_pressure,
+                m_velocity,
+                m_advObject);
+        }
+
     }
     
     /**
@@ -637,7 +657,8 @@ namespace Nektar
                 // the same time resusing differential of velocity
                 // space
                 
-                DNekScalMat &HelmMat = *(boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(helmkey));
+                DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
@@ -649,7 +670,8 @@ namespace Nektar
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
                                                     locExp->DetShapeType(),
                                                     *locExp);
-                    MassMat = boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
+                    MassMat = locExp->as<LocalRegions::Expansion>()
+                                    ->GetLocMatrix(masskey);
                 }
                 
                 Array<OneD, NekDouble> Advtmp;
@@ -1173,6 +1195,7 @@ namespace Nektar
         // since this then makes the matrix storage of type eFull
         MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,locToGloMap);
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
+        mat.m_CoupledBndSys->Initialise(locToGloMap);
         timer.Stop();
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
@@ -1337,7 +1360,7 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, outarray, outarray);
+            (*x)->Apply(m_fields, outarray, outarray, time);
         }
     }
     
@@ -1484,7 +1507,8 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, forcing_phys, forcing_phys);
+            const NekDouble time = 0;
+            (*x)->Apply(m_fields, forcing_phys, forcing_phys, time);
         }
         for (unsigned int i = 0; i < ncmpt; ++i)
         {
@@ -2160,8 +2184,8 @@ namespace Nektar
     
     void CoupledLinearNS::v_Output(void)
     {    
-        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
-        Array<OneD, std::string> variables(m_fields.num_elements()+1);
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
         int i;
         
         for(i = 0; i < m_fields.num_elements(); ++i)

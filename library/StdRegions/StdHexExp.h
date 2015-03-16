@@ -65,28 +65,6 @@ namespace Nektar
 
 
         protected:
-            //-------------------------------
-            // Integration Methods
-            //-------------------------------
-            STD_REGIONS_EXPORT void TripleTensorProduct(
-                    const Array<OneD, const NekDouble>& fx,
-                    const Array<OneD, const NekDouble>& gy,
-                    const Array<OneD, const NekDouble>& hz,
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD,       NekDouble>& outarray );
-            STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
-                    const Array<OneD, const NekDouble>& fxyz,
-                    const Array<OneD, const NekDouble>& wx,
-                    const Array<OneD, const NekDouble>& wy,
-                    const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT NekDouble Integral3D(
-                    const Array<OneD, const NekDouble>& inarray,
-                    const Array<OneD, const NekDouble>& wx,
-                    const Array<OneD, const NekDouble>& wy,
-                    const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
-                    const Array<OneD, const NekDouble>& inarray);
-
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -181,9 +159,9 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& Lcoords,
-                    const Array<OneD, const NekDouble>& physvals);
+            STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
+                                              const Array<OneD, const NekDouble>& xi,
+                                              Array<OneD, NekDouble>& eta);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(
                     const int mode,
@@ -227,25 +205,28 @@ namespace Nektar
             //--------------------------
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
                     const int                  fid,
-                    const Orientation      faceOrient,
+                    const Orientation          faceOrient,
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD,          int> &signarray,
                     int                        nummodesA = -1,
                     int                        nummodesB = -1);
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
-                                                          bool useCoeffPacking = false);            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
-                    const Orientation edgeOrient,
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
+                    int                        localVertexId,
+                    bool                       useCoeffPacking = false);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
+                    const int                  eid,
+                    const Orientation          edgeOrient,
                     Array<OneD, unsigned int> &maparray,
-                    Array<OneD, int> &signarray);
+                    Array<OneD, int>          &signarray);
             STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(
-                    const int fid,
-                    const Orientation faceOrient,
+                    const int                  fid,
+                    const Orientation          faceOrient,
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD, int>& signarray);
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
-                    Array<OneD, unsigned int>& outarray);
+                    Array<OneD, unsigned int> &outarray);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
-                    Array<OneD, unsigned int>& outarray);
+                    Array<OneD, unsigned int> &outarray);
 
 
             //---------------------------------------
@@ -284,16 +265,6 @@ namespace Nektar
                     const StdMatrixKey &mkey);
             
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray,
-                    const StdMatrixKey &mkey);
-            
-            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray,
-                    const StdMatrixKey &mkey);
-            
-            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);

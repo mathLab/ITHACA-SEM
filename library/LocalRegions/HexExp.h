@@ -163,9 +163,6 @@ namespace Nektar
                                                                     NekDouble * coeffs);
 
             LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::Orientation v_GetFaceOrient(int face);
-
-            LOCAL_REGIONS_EXPORT virtual 
                 bool v_GetFaceDGForwards(const int i) const;
 
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
@@ -229,6 +226,10 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey); 
             
+            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                int                                 numMin,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             //---------------------------------------
             // Matrix creation functions

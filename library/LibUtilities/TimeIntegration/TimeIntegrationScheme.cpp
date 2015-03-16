@@ -1174,7 +1174,7 @@ namespace Nektar
                 // current scheme
                 int n;
                 DoubleArray  y_n;
-                NekDouble    t_n;
+                NekDouble    t_n = 0;
                 DoubleArray  dtFy_n;
                 unsigned int nCurSchemeVals  = m_numMultiStepValues; // number of required values of the current scheme
                 unsigned int nCurSchemeDers  = m_numMultiStepDerivs; // number of required derivs of the current scheme

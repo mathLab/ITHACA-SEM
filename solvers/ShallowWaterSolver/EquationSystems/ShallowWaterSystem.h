@@ -38,7 +38,7 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
-#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 namespace Nektar
@@ -82,7 +82,7 @@ namespace Nektar
 	/// Coriolis force     
 	Array<OneD, NekDouble>                          m_coriolis;
 	// Location of velocity vector.
-	Array<OneD, NekDouble>                          m_velLoc;
+    Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Initialises UnsteadySystem class members.
         ShallowWaterSystem(const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -109,9 +109,9 @@ namespace Nektar
             return m_g;
         }
       
-	const Array<OneD, NekDouble> &GetVelLoc()
+    const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs()
         {
-            return m_velLoc;
+            return m_vecLocs;
         }
 
 	const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()

@@ -63,13 +63,13 @@ namespace Nektar
          */
         ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["surf1"]  = ConfigOption(false, "-1",
+            m_config["surf1"]  = ConfigOption(false, "-1",
                 "Tag identifying first surface.");
-            config["surf2"]  = ConfigOption(false, "-1",
+            m_config["surf2"]  = ConfigOption(false, "-1",
                 "Tag identifying first surface.");
-            config["dir"]    = ConfigOption(false, "",
+            m_config["dir"]    = ConfigOption(false, "",
                 "Direction in which to align (either x, y, or z)");
-            config["orient"] = ConfigOption(true,  "0",
+            m_config["orient"] = ConfigOption(true,  "0",
                 "Attempt to reorient tets and prisms");
         }
 
@@ -83,10 +83,10 @@ namespace Nektar
 
         void ProcessPerAlign::Process()
         {
-            int    surf1  = config["surf1"]. as<int>   ();
-            int    surf2  = config["surf2"]. as<int>   ();
-            string dir    = config["dir"].   as<string>();
-            bool   orient = config["orient"].as<bool>  ();
+            int    surf1  = m_config["surf1"]. as<int>   ();
+            int    surf2  = m_config["surf2"]. as<int>   ();
+            string dir    = m_config["dir"].   as<string>();
+            bool   orient = m_config["orient"].as<bool>  ();
 
             if (surf1 == -1)
             {
@@ -114,17 +114,17 @@ namespace Nektar
             vec[1] = dir == "y" ? 1.0 : 0.0;
             vec[2] = dir == "z" ? 1.0 : 0.0;
 
-            CompositeMap::iterator it1 = m->composite.find(surf1);
-            CompositeMap::iterator it2 = m->composite.find(surf2);
+            CompositeMap::iterator it1 = m_mesh->m_composite.find(surf1);
+            CompositeMap::iterator it2 = m_mesh->m_composite.find(surf2);
 
-            if (it1 == m->composite.end())
+            if (it1 == m_mesh->m_composite.end())
             {
                 cerr << "WARNING: Couldn't find surface " << surf1
                      << ". Skipping periodic alignment." << endl;
                 return;
             }
 
-            if (it2 == m->composite.end())
+            if (it2 == m_mesh->m_composite.end())
             {
                 cerr << "WARNING: Couldn't find surface " << surf2 << ", "
                      << "skipping periodic alignment." << endl;
@@ -134,7 +134,7 @@ namespace Nektar
             CompositeSharedPtr c1 = it1->second;
             CompositeSharedPtr c2 = it2->second;
 
-            if (c1->items.size() != c2->items.size())
+            if (c1->m_items.size() != c2->m_items.size())
             {
                 cerr << "WARNING: Surfaces " << surf1 << " and " << surf2
                      << " have different numbers of elements. Skipping periodic"
@@ -142,22 +142,22 @@ namespace Nektar
                 return;
             }
 
-            c1->reorder = false;
-            c2->reorder = false;
+            c1->m_reorder = false;
+            c2->m_reorder = false;
 
             map<int, pair<FaceSharedPtr, vector<int> > > perFaces;
 
             // Loop over elements, calculate centroids of elements in c2.
             map<int, Node> centroidMap;
             map<int, Node>::iterator it;
-            for (int i = 0; i < c2->items.size(); ++i)
+            for (int i = 0; i < c2->m_items.size(); ++i)
             {
                 Node centroid;
-                for (int j = 0; j < c2->items[i]->GetVertexCount(); ++j)
+                for (int j = 0; j < c2->m_items[i]->GetVertexCount(); ++j)
                 {
-                    centroid += *(c2->items[i]->GetVertex(j));
+                    centroid += *(c2->m_items[i]->GetVertex(j));
                 }
-                centroid /= (NekDouble)c2->items[i]->GetVertexCount();
+                centroid /= (NekDouble)c2->m_items[i]->GetVertexCount();
                 centroidMap[i] = centroid;
             }
 
@@ -165,14 +165,14 @@ namespace Nektar
             map<int, int> elmtPairs;
             map<int, int> vertCheck;
             
-            for (int i = 0; i < c1->items.size(); ++i)
+            for (int i = 0; i < c1->m_items.size(); ++i)
             {
                 Node centroid;
-                for (int j = 0; j < c1->items[i]->GetVertexCount(); ++j)
+                for (int j = 0; j < c1->m_items[i]->GetVertexCount(); ++j)
                 {
-                    centroid += *(c1->items[i]->GetVertex(j));
+                    centroid += *(c1->m_items[i]->GetVertex(j));
                 }
-                centroid /= (NekDouble)c1->items[i]->GetVertexCount();
+                centroid /= (NekDouble)c1->m_items[i]->GetVertexCount();
 
                 for (it = centroidMap.begin(); it != centroidMap.end(); ++it)
                 {
@@ -182,42 +182,52 @@ namespace Nektar
                     }
 
                     Node dx = it->second - centroid;
-                    if (fabs(fabs(dx.x*vec[0] + dx.y*vec[1] + dx.z*vec[2])/
+                    if (fabs(fabs(dx.m_x*vec[0] + dx.m_y*vec[1] + dx.m_z*vec[2])/
                              sqrt(dx.abs2()) - 1.0) < 1e-8)
                     {
                         // Found match
-                        int id1 = c1->items[i]        ->GetFaceLink()->id;
-                        int id2 = c2->items[it->first]->GetFaceLink()->id;
+                        int id1, id2;
+
+                        if (c1->m_items[i]->GetConf().m_e == LibUtilities::eSegment)
+                        {
+                            id1 = c1->m_items[i]        ->GetEdgeLink()->m_id;
+                            id2 = c2->m_items[it->first]->GetEdgeLink()->m_id;
+                        }
+                        else
+                        {
+                            id1 = c1->m_items[i]        ->GetFaceLink()->m_id;
+                            id2 = c2->m_items[it->first]->GetFaceLink()->m_id;
+                        }
 
                         elmtDone.insert(it->first);
                         elmtPairs[i] = it->first;
 
                         // Identify periodic vertices
-                        int nVerts = c1->items[i]->GetVertexCount();
+                        int nVerts = c1->m_items[i]->GetVertexCount();
                         vector<int> perVerts(nVerts, 0), perVertsInv(nVerts, 0);
 
                         if (orient)
                         {
                             for (int k = 0; k < nVerts; ++k)
                             {
-                                NodeSharedPtr n1 = c1->items[i]->GetFaceLink()->vertexList[k];
+                                NodeSharedPtr n1 = c1->m_items[i]->GetFaceLink()->m_vertexList[k];
                                 int l;
                                 
                                 for (l = 0; l < nVerts; ++l)
                                 {
                                     NodeSharedPtr n2 =
-                                        c2->items[it->first]->GetFaceLink()->vertexList[l];
+                                        c2->m_items[it->first]->GetFaceLink()->m_vertexList[l];
                                     
                                     Node dn = *n2 - *n1;
-                                    if (fabs(fabs(dn.x*vec[0] + dn.y*vec[1] +
-                                                  dn.z*vec[2])/
+                                    if (fabs(fabs(dn.m_x*vec[0] + dn.m_y*vec[1] +
+                                                  dn.m_z*vec[2])/
                                              sqrt(dn.abs2()) - 1.0) < 1e-8)
                                     {
                                         perVerts   [k] = l;
                                         perVertsInv[l] = k;
                                         
-                                        int id1 = n1->id;
-                                        int id2 = n2->id;
+                                        int id1 = n1->m_id;
+                                        int id2 = n2->m_id;
                                         if (vertCheck.count(id1) == 0)
                                         {
                                             vertCheck[id1] = id2;
@@ -246,10 +256,13 @@ namespace Nektar
                                      "Error identifying periodic vertices");
                         }
 
-                        perFaces[id1] = make_pair(
-                            c2->items[it->first]->GetFaceLink(), perVerts);
-                        perFaces[id2] = make_pair(
-                            c1->items[i]        ->GetFaceLink(), perVertsInv);
+                        if (c2->m_items[i]->GetConf().m_e != LibUtilities::eSegment)
+                        {
+                            perFaces[id1] = make_pair(
+                                c2->m_items[it->first]->GetFaceLink(), perVerts);
+                            perFaces[id2] = make_pair(
+                                c1->m_items[i]        ->GetFaceLink(), perVertsInv);
+                        }
                         break;
                     }
                 }
@@ -257,20 +270,20 @@ namespace Nektar
                 if (it == centroidMap.end())
                 {
                     cerr << "WARNING: Could not find matching edge for surface "
-                         << "element " << c1->items[i]->GetId() << ". "
+                         << "element " << c1->m_items[i]->GetId() << ". "
                          << "Skipping periodic alignment." << endl;
                     return;
                 }
             }
 
             // Reorder vectors.
-            vector<ElementSharedPtr> tmp = c2->items;
+            vector<ElementSharedPtr> tmp = c2->m_items;
 
             map<int, int>::iterator mIt;
 
             for (int i = 0; i < tmp.size(); ++i)
             {
-                c2->items[i] = tmp[elmtPairs[i]];
+                c2->m_items[i] = tmp[elmtPairs[i]];
             }
 
             if (orient)

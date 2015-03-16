@@ -82,6 +82,17 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
+            
+            virtual ExpListSharedPtr &v_GetTrace()
+            {
+                if(m_trace == NullExpListSharedPtr)
+                {
+                    SetUpDG();
+                }
+                
+                return m_trace;
+            }
+
 
         protected:
             /**
@@ -108,7 +119,7 @@ namespace Nektar
             
             Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
             Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
-            Array<OneD,StdRegions::Orientation>    m_edgedir;
+            Array<OneD,StdRegions::Orientation>         m_edgedir;
 
             /**
              * @brief A set storing the global IDs of any boundary edges.
@@ -176,6 +187,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
+            virtual void v_FillBndCondFromField();
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
@@ -205,16 +217,7 @@ namespace Nektar
                 periodicEdges = m_periodicEdges;
             }
 
-            virtual ExpListSharedPtr &v_GetTrace()
-            {
-                if(m_trace == NullExpListSharedPtr)
-                {
-                    SetUpDG();
-                }
-
-                return m_trace;
-            }
-
+            
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
@@ -246,9 +249,10 @@ namespace Nektar
             }
 
             virtual void v_EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+                const NekDouble   time    = 0.0,
+                const std::string varName = "",
+                const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
+                const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };

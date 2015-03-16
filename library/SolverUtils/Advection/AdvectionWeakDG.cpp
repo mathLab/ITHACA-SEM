@@ -43,70 +43,98 @@ namespace Nektar
     {
         std::string AdvectionWeakDG::type = GetAdvectionFactory().
             RegisterCreatorFunction("WeakDG", AdvectionWeakDG::create);
-        
+
         AdvectionWeakDG::AdvectionWeakDG()
         {
         }
-        
+
+        /**
+         * @brief Initialise AdvectionWeakDG objects and store them before
+         * starting the time-stepping.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionWeakDG::v_InitObject(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            Advection::v_InitObject(pSession, pFields);
+        }
+
+        /**
+         * @brief Compute the advection term at each time-step using the
+         * Discontinuous Glaerkin approach (DG).
+         *
+         * @param nConvectiveFields   Number of fields.
+         * @param fields              Pointer to fields.
+         * @param advVel              Advection velocities.
+         * @param inarray             Solution at the previous time-step.
+         * @param outarray            Advection term to be passed at the
+         *                            time integration class.
+         */
         void AdvectionWeakDG::v_Advect(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const NekDouble                                   &time)
         {
-            int i, j;
-            int nVelDim         = fields[0]->GetCoordim(0);
+            int nDim            = fields[0]->GetCoordim(0);
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
-
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                fluxvector(nConvectiveFields);
+            int i, j;
+            
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(
+                nConvectiveFields);
 
-            ASSERTL1(m_riemann, 
-                     "Riemann solver must be provided for AdvectionWeakDG.");
-
+            // Allocate storage for flux vector F(u).
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
-                for(j = 0; j < nVelDim; ++j)
+                fluxvector[i] =
+                    Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+                for (j = 0; j < m_spaceDim; ++j)
                 {
                     fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
                 }
             }
+
+            ASSERTL1(m_riemann,
+                     "Riemann solver must be provided for AdvectionWeakDG.");
 
             m_fluxVector(inarray, fluxvector);
 
             // Get the advection part (without numerical flux)
             for(i = 0; i < nConvectiveFields; ++i)
             {
-                tmp[i] = Array<OneD,NekDouble>(nCoeffs, 0.0);
-                
-                for (j = 0; j < nVelDim; ++j)
+                tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+
+                for (j = 0; j < nDim; ++j)
                 {
-                    fields[i]->IProductWRTDerivBase(j, fluxvector[i][j], 
+                    fields[i]->IProductWRTDerivBase(j, fluxvector[i][j],
                                                        outarray[i]);
                     Vmath::Vadd(nCoeffs, outarray[i], 1, tmp[i], 1, tmp[i], 1);
                 }
             }
-            
+
             // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
-            
+
             for(i = 0; i < nConvectiveFields; ++i)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot);
-                numflux[i] = Array<OneD, NekDouble>(nTracePointsTot);
+                Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
-            
-            m_riemann->Solve(Fwd, Bwd, numflux);
-            
+
+            m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
+
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
             {
@@ -116,5 +144,5 @@ namespace Nektar
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
         }
-    }
-}
+    }//end of namespace SolverUtils
+}//end of namespace Nektar

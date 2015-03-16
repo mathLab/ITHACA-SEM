@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField1D.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG1D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
@@ -117,22 +117,21 @@ namespace Nektar
         ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  const std::string &variable):
-            DisContField1D(pSession,graph1D,variable),
+            DisContField1D(pSession,graph1D,variable,false),
             m_locToGloMap(),
             m_globalLinSysManager(
                     boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
-            map<int,int> periodicVertices;
-            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
-            m_locToGloMap = MemoryManager<AssemblyMapCG1D>
+            m_locToGloMap = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    periodicVertices,
-                                    variable);
+                                    false,
+                                    variable,
+                                    m_periodicVerts);
         }
 
 
@@ -162,8 +161,8 @@ namespace Nektar
                     boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            m_locToGloMap = MemoryManager<AssemblyMapCG1D>
-                ::AllocateSharedPtr(pSession,m_ncoeffs, In);
+            m_locToGloMap = MemoryManager<AssemblyMapCG>
+                ::AllocateSharedPtr(pSession, m_ncoeffs, In);
 
         }
 

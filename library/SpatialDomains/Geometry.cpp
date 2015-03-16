@@ -172,6 +172,13 @@ namespace Nektar
                     return StdRegions::eFwd;
         }
 
+        StdRegions::Orientation Geometry::v_GetForient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is not valid for this geometry.");
+                    return StdRegions::eFwd;
+        }
+
         int Geometry::v_GetNumEdges() const
         {
             NEKERROR(ErrorUtil::efatal,
@@ -217,6 +224,17 @@ namespace Nektar
             return false;
         }
 
+        bool Geometry::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble>& locCoord,
+                NekDouble tol,
+                NekDouble &resid)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
         int Geometry::v_GetVertexEdgeMap(const int i, const int j) const
         {
             NEKERROR(ErrorUtil::efatal,
@@ -247,12 +265,13 @@ namespace Nektar
             return 0.0;
         }
 
-        void Geometry::v_GetLocCoords(
+        NekDouble Geometry::v_GetLocCoords(
                 const Array<OneD,const NekDouble> &coords,
                       Array<OneD,NekDouble> &Lcoords)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
+            return 0.0;
         }
 
         void Geometry::v_FillGeom()

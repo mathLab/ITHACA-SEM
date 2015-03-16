@@ -1,0 +1,308 @@
+\chapter{Cardiac Electrophysiology Solver}
+
+\section{Synopsis}
+
+The CardiacEPSolver is intended to model the electrophysiology of cardiac
+tissue, specifically using the monodomain or bidomain model. These models are
+continuum models and represent an average of the electrical activity over many
+cells. The system is a reaction-diffusion system, with the reaction term
+modeling the flow of current in and out of the cells using a separate set of
+ODEs.
+
+\subsection{Bidomain Model}
+The Bidomain model is given by the following PDEs,
+\begin{align*}
+g_{ix}\frac{\partial^2 V_i}{\partial x^2} + g_{iy}\frac{\partial^2 V_i}{\partial y^2} &=  \chi \left[ C_m \frac{\partial(V_i-V_e)}{\partial t} + G_m(V_i-V_e) \right] \\
+g_{ex}\frac{\partial^2 V_e}{\partial x^2} + g_{ey}\frac{\partial^2 V_e}{\partial y^2} &= -\chi\left[ C_m \frac{\partial(V_i-V_e)}{\partial t} + G_m(V_i-V_e) \right].
+\end{align*}
+However, when solving numerically, one often rewrites these equations in terms
+of the transmembrane potential and extracellular potential,
+\begin{align*}
+\chi \left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= g_{ex}\frac{\partial^2 V_e}{\partial x^2} + g_{ey}\frac{\partial^2 V_e}{\partial y^2}\\
+(g_{ix} + g_{ex})\frac{\partial^2 V_e}{\partial x^2} + (g_{iy} + g_{ey})\frac{\partial^2 V_e}{\partial y^2} 
+  &= -g_{ix} \frac{\partial^2 V_m}{\partial x^2} - g_{iy} \frac{\partial^2 V_m}{\partial y^2}
+\end{align*}
+
+\subsection{Monodomain Model}
+In the case where the intracellular and extracellular conductivities are
+proportional, that is $g_{ix} = kg_{ex}$ for some $k$,
+then the above two PDEs can be reduced to a single PDE:
+\begin{align*}
+\chi\left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= \nabla \cdot (\sigma \nabla V_m)
+\end{align*}
+
+\subsection{Cell Models}
+The action potential of a cardiac cell can be modelled at either a biophysical
+level of detail, including a number of transmembrane currents, or as a
+phenomenological model, to reproduce the features of the action potential, with
+fewer variables. Each cell model will include a unique system of ODEs to
+represent the gating variables of that model.
+
+A number of ionic cell models are currently supported by the solver including:
+\begin{itemize}
+    \item Courtemanche, Ramirez, Nattel, 1998 
+    \item Luo, Rudy, 1991
+    \item ten Tusscher, Panfilov, 2006 (epicardial, endocardial and
+    mid-myocardial variants)
+\end{itemize}
+
+Phenomological cell models are also supported:
+\begin{itemize}
+    \item Aliev-Panfilov
+    \item Fitzhugh-Nagumo
+\end{itemize}
+
+It is important to ensure that the units of the voltage and currents from the
+cell model are consistent with the units expected by the tissue level solver
+(monodomain/bidomain). We will show as an example the Courtemanche, Ramirez,
+Nattel, 1998 human atrial model.
+
+The monodomain equation:
+\begin{align*}
+\chi \left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= \nabla \cdot (\sigma \nabla V_m)
+\end{align*}
+
+\section{Usage}
+
+\begin{lstlisting}[style=BashInputStyle]
+CardiacEPSolver session.xml
+\end{lstlisting}
+
+\section{Session file configuration}
+\subsection{Solver Info}
+\begin{itemize}
+    \item \inltt{Eqtype} Specifies the PDE system to solve. The following values
+        are supported:
+    \begin{itemize}
+        \item \inltt{Monodomain}: solve the monodomain equation.
+        \item \inltt{BidomainRoth}: solve the bidomain equations using the Roth
+            formulation.
+    \end{itemize}
+    \item \inltt{CellModel} Specifies the cell model to use. Available cell
+    models are
+
+    \begin{center}
+    \begin{tabular}{l|l|l|l}
+    \toprule
+    Value & Description & No. of Var. & Ref. \\
+    \midrule
+    \inltt{AlievPanfilov} & Phenomological & 1 & \cite{AlPa96} \\
+    \inltt{CourtemancheRamirezNattel98} & Human atrial & 20 & \cite{CoRaNa98} \\
+    \inltt{FitzHughNagumo} & & & \\
+    \inltt{Fox02} & & & \\
+    \inltt{LuoRudy91} & Mammalian ventricular & 7 & \cite{LuRu91} \\
+    \inltt{PanditGilesDemir03} & & & \\
+    \inltt{TenTusscher06} & Human ventricular & 18 & \cite{TuPa06} \\
+    \inltt{Winslow99} & & & \\
+    \bottomrule
+    \end{tabular}
+    \end{center}
+    
+    \item \inltt{Projection} Specifies the Galerkin projection type to use. Only
+\inltt{Continuous} has been extensively tested.
+    \item \inltt{TimeIntegrationMethod} Specifies the time integration
+    scheme to use for advancing the PDE system. This must be an IMEX scheme. 
+    Suitable choices are: \inltt{IMEXOrder1}, \inltt{IMEXOrder2},
+    \inltt{IMEXOrder3}, \inltt{IMEXdirk\_3\_4\_3}. The cell model state
+    variables are time advanced using Forward Euler for the ion concentrations, and 
+    Rush-Larsen for the cell model gating variables.
+    \item \inltt{DiffusionAdvancement} Specifies whether the diffusion is
+    handled implicitly or explicitly in the time integration scheme. The current
+    code only supports \inltt{Implicit} integration of the diffusion term. The
+    cell model is always integrated explicitly.
+\end{itemize}
+
+
+\subsection{Parameters}
+The following parameters can be specified in the \inltt{PARAMETERS} section of
+the session file. Example values are taken from \cite{NiKeBeBeBe11}.
+\begin{itemize}
+    \item \inltt{Chi} sets the surface-to-volume ratio (Units:
+ $\mathrm{mm}^{-1}$).\\ Example: $\chi= 140 \mathrm{mm}^{-1}$
+    \item \inltt{Cm} sets the specific membrane capacitance (Units:
+ $\mathrm{\mu F\,mm}^{-2}$).\\ Example: $C_m= 0.01 \mathrm{\mu F\,mm}^{-2}$
+    \item \inltt{Substeps} sets the number of substeps taken in time
+    integrating the cell model for each PDE timestep.\\ Example: 4
+    \item \inltt{d\_min}, \inltt{d\_max}, \inltt{o\_min}, \inltt{o\_max}
+    specifies a bijective map to assign conductivity values $\sigma$ to
+    intensity values $\mu$ when using the \inltt{IsotropicConductivity}
+    function. The intensity map is first thresholded to the range
+    $[d_{\min},d_{\max}]$ and then the conductivity is calculated as
+\begin{align*}
+\sigma = \frac{o_{\max} - o_{\min}}{d_{\max}-d_{\min}} (1 - \mu) + o_{\min}
+\end{align*}
+\end{itemize}
+
+\subsection{Functions}
+The following functions can be specified inside the \inltt{CONDITIONS} section
+of the session file. If both are specified, the effect is multiplicative.
+Example values are taken from \cite{NiKeBeBeBe11}.
+\begin{itemize}
+	\item \inltt{IsotropicConductivity} specifies the conductivity
+	$\sigma$ of the tissue. \\ 
+	Example: $\sigma =0.13341 \ \mathrm{mS\,mm}^{-1}$, based on $\sigma
+	= \frac{\sigma_i \sigma_e} {\sigma_i + \sigma_e}, \ \  \sigma_i=0.17, \sigma_e=0.62  \mathrm{mS\,mm}^{-1} $
+  
+  The variable name to use is \inltt{intensity} since the conductivity may be
+  derived from late-Gadolinium enhanced MRA imaging. Example specifications are 
+\begin{lstlisting}[style=XmlStyle]
+<E VAR="intensity" VALUE="0.13341" />
+<F VAR="intensity" FILE="scarmap.con" />
+\end{lstlisting}
+  where \inltt{scarmap.con} is a Nektar++ field file containing a variable
+  \inltt{intensity} describing the conductivity across the domain.
+
+    \item \inltt{AnisotropicConductivity} specifies the conductivity
+$\mathbf{\sigma}$ of the tissue.
+\end{itemize}
+
+
+\subsection{Filters}
+\begin{itemize}
+    \item \inltt{CheckpointCellModel} checkpoints the cell model. Can be
+    used along with the \inltt{Checkpoint} filter to record complete simulation
+    state and regular intervals.
+\begin{lstlisting}[style=XmlStyle]
+<FILTER TYPE="CheckpointCellModel">
+  <PARAM NAME="OutputFile"> session </PARAM>
+  <PARAM NAME="OutputFrequency"> 1 </PARAM>
+</FILTER>
+\end{lstlisting}
+    \begin{itemize}
+        \item \inltt{OutputFile} (optional) specifies the base filename to use.
+    If not specified, the session name is used. Checkpoint files are suffixed with the process ID and the extension `.chk`.
+        \item \inltt{OutputFrequency} specifies the number of timesteps between
+    checkpoints.
+    \end{itemize}
+    
+    \item \inltt{Electrogram} Computes virtual unipolar electrograms at a
+     prescribed set of points.
+\begin{lstlisting}[style=XmlStyle]
+<FILTER TYPE="Electrogram">
+  <PARAM NAME="OutputFile"> session </PARAM>
+  <PARAM NAME="OutputFrequency"> 1 </PARAM>
+  <PARAM NAME="Points">
+      0.0  0.5  0.7
+      1.0  0.5  0.7
+      2.0  0.5  0.7
+  </PARAM>
+</FILTER>
+\end{lstlisting}
+    \begin{itemize}
+    \item \inltt{OutputFile} (optional) specifies the base filename to use. If
+    not specified, the session name is used. The extension `.ecg` is appended if not already specified.
+    \item \inltt{OutputFrequency} specifies the number of resolution of the
+    electrogram data.
+    \item \inltt{Points} specifies a list of coordinates at which electrograms
+    are desired. \emph{They must not lie within the domain.}
+    \end{itemize}
+
+\item \inltt{Benchmark} Records spatially distributed event times for 
+    activation and repolarisation (recovert) during a simulation, for
+    undertaking benchmark test problems.
+\begin{lstlisting}[style=XmlStyle]
+<FILTER TYPE="Benchmark">
+  <PARAM NAME="ThresholdValue"> -40.0 </PARAM>
+  <PARAM NAME="InitialValue">     0.0 </PARAM>
+  <PARAM NAME="OutputFile"> benchmark </PARAM>
+  <PARAM NAME="StartTime">        0.0 </PARAM>
+</FILTER>
+\end{lstlisting}
+    \begin{itemize}
+        \item \inltt{ThresholdValue} specifies the value above which tissue is
+            considered to be depolarised and below which is considered
+            repolarised.
+        \item \inltt{InitialValue} specifies the initial value of the
+            activation or repolarisation time map.
+        \item \inltt{OutputFile} specifies the base filename of activation and
+            repolarisation maps output from the filter. This name is appended
+            with the index of the event and the suffix `.fld`.
+        \item \inltt{StartTime} (optional) specifies the simulation time at
+            which to start detecting events.
+    \end{itemize}
+\end{itemize}
+
+
+\subsection{Stimuli}
+Electrophysiological propagaion is initiated through the stimulus current 
+$I_{\mathrm{ion}}$. The \inltt{STIMULI} section describes one or more regions of
+stimulus and the time-dependent protocol with which they are applied.
+\begin{lstlisting}[style=XmlStyle]
+<STIMULI>
+  ...
+</STIMULI>
+\end{lstlisting}
+A number of stimulus types are available
+
+\subsubsection{Stimulus types}
+\begin{itemize}
+    \item \inltt{StimulusRect} stimulates a cuboid-shaped region of the domain,
+    specified by two coordinates $(x_1,y_1,z_1)$ and $(x_2,y_2,z_2)$.
+    An additional parameter specifies the "smoothness" of the boundaries of the
+    region; higher values produce a sharper boundary. Finally, the maximum 
+    strength of the stimulus current is specified in $\mu \mathrm{A} / \mathrm{mm}^3$
+\begin{lstlisting}[style=XmlStyle]
+<STIMULUS TYPE="StimulusRect" ID="0">
+  <p_x1> -15.24 </p_x1>
+  <p_y1>  14.02 </p_y1>
+  <p_z1>   6.87 </p_z1>
+  <p_x2>  12.23 </p_x2>
+  <p_y2>  16.56 </p_y2>
+  <p_z2>   8.88 </p_z2>
+  <p_is> 100.00 </p_is>
+  <p_strength> 50.0 </p_strength>
+</STIMULUS>
+\end{lstlisting}
+
+    \item \inltt{StimulusCirc} stimulates a spherical region of the domain, as
+    specified by a centre and radius. The smoothness and strength parameters are also specified as for `StimulusRect`.
+\begin{lstlisting}[style=XmlStyle]
+<STIMULUS TYPE="StimulusCirc" ID="0">
+  <p_x1> -15.24 </p_x1>
+  <p_y1>  14.02 </p_y1>
+  <p_z1>   6.87 </p_z1>
+  <p_r1>  12.23 </p_r1>
+  <p_is> 100.00 </p_is>
+  <p_strength> 50.0 </p_strength>
+</STIMULUS>
+\end{lstlisting}
+\end{itemize}
+
+
+\subsubsection{Protocols}
+A protocol specifies the time-dependent function indicating the strength of the
+stimulus and one such \inltt{PROTOCOL} section should be included within each
+\inltt{STIMULUS}. This can be expressed as one of:
+\begin{itemize}
+    \item \inltt{ProtocolSingle} a single stimulus is applied at a given start
+    time and for a given duration
+\begin{lstlisting}[style=XmlStyle]
+<PROTOCOL TYPE="ProtocolSingle">
+  <START>    0.0   </START>
+  <DURATION> 2.0   </DURATION>
+</PROTOCOL>
+\end{lstlisting}
+
+    \item \inltt{ProtocolS1} a train of pulses of fixed duration applied at a
+    given start time and with a given cycle length.
+\begin{lstlisting}[style=XmlStyle]
+<PROTOCOL TYPE="ProtocolS1">
+  <START>    0.0   </START>
+  <DURATION> 2.0   </DURATION>
+  <S1CYCLELENGTH> 300.0 </S1CYCLELENGTH>
+  <NUM_S1>   5     </NUM_S1>
+</PROTOCOL>
+\end{lstlisting}
+
+    \item \inltt{ProtocolS1S2} same as `ProtocolS1` except with an additional
+    single pulse applied at a different cycle length at the end of the train of S1 pulses.
+\begin{lstlisting}[style=XmlStyle]
+<PROTOCOL TYPE="ProtocolS1S2">
+  <START>    0.0   </START>
+  <DURATION> 2.0   </DURATION>
+  <S1CYCLELENGTH> 300.0 </S1CYCLELENGTH>
+  <NUM_S1>   5     </NUM_S1>
+  <S2CYCLELENGTH> 100.0 </S2CYCLELENGTH>
+</PROTOCOL>
+\end{lstlisting}
+\end{itemize}

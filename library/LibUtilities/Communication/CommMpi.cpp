@@ -52,11 +52,16 @@ namespace Nektar
         CommMpi::CommMpi(int narg, char* arg[])
                 : Comm(narg,arg)
         {
+            int init = 0;
+            MPI_Initialized(&init);
+            ASSERTL0(!init, "MPI has already been initialised.");
+
             int retval = MPI_Init(&narg, &arg);
             if (retval != MPI_SUCCESS)
             {
                 ASSERTL0(false, "Failed to initialise MPI");
             }
+
             m_comm = MPI_COMM_WORLD;
             MPI_Comm_size( m_comm, &m_size );
             MPI_Comm_rank( m_comm, &m_rank );
@@ -114,6 +119,21 @@ namespace Nektar
             return m_rank;
         }
 
+        /**
+         * 
+         */
+        bool CommMpi::v_TreatAsRankZero(void)
+        {
+            if(m_rank == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+            return true; 
+        }
 
         /**
          *

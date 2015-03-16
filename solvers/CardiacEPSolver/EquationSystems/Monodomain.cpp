@@ -110,9 +110,20 @@ namespace Nektar
         const int nVarDiffCmpts = m_spacedim * (m_spacedim + 1) / 2;
 
         // Allocate storage for variable coeffs and initialize to 1.
-        for (int i = 0; i < nVarDiffCmpts; ++i)
+        for (int i = 0, k = 0; i < m_spacedim; ++i)
         {
-            m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq, 1.0);
+            for (int j = 0; j < i+1; ++j)
+            {
+                if (i == j)
+                {
+                    m_vardiff[varCoeffEnum[k]] = Array<OneD, NekDouble>(nq, 1.0);
+                }
+                else
+                {
+                    m_vardiff[varCoeffEnum[k]] = Array<OneD, NekDouble>(nq, 0.0);
+                }
+                ++k;
+            }
         }
 
         // Apply fibre map f \in [0,1], scale to conductivity range
@@ -185,6 +196,18 @@ namespace Nektar
                 }
             }
         }
+        else
+        {
+            // Otherwise apply isotropic conductivity value (o_max) to
+            // diagonal components of tensor
+            NekDouble o_max = m_session->GetParameter("o_max");
+            for (int i = 0; i < nVarDiffCmpts; ++i)
+            {
+                Vmath::Smul(nq,o_max,
+                                m_vardiff[varCoeffEnum[i]], 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
+            }
+        }
 
         // Scale by scar map (range 0->1) derived from intensity map
         // (range d_min -> d_max)
@@ -195,27 +218,37 @@ namespace Nektar
                 cout << "Loading Isotropic Conductivity map." << endl;
             }
 
-            std::string varName = "intensity";
-            NekDouble   f_min   = m_session->GetParameter("d_min");
-            NekDouble   f_max   = m_session->GetParameter("d_max");
-
+            const std::string varName  = "intensity";
             Array<OneD, NekDouble> vTemp;
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
 
-            // Threshold based on d_min, d_max
-            for (int j = 0; j < nq; ++j)
-            {
-                vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
-                vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
+            // If the d_min and d_max parameters are defined, then we need to
+            // rescale the isotropic conductivity to convert from the source
+            // domain (e.g. late-gad intensity) to conductivity
+            if ( m_session->DefinesParameter("d_min") ||
+                 m_session->DefinesParameter("d_max") ) {
+                const NekDouble   f_min    = m_session->GetParameter("d_min");
+                const NekDouble   f_max    = m_session->GetParameter("d_max");
+                const NekDouble   scar_min = 0.0;
+                const NekDouble   scar_max = 1.0;
+
+                // Threshold based on d_min, d_max
+                for (int j = 0; j < nq; ++j)
+                {
+                    vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
+                    vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
+                }
+
+                // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)
+                Vmath::Sadd(nq, -f_min, vTemp, 1, vTemp, 1);
+                Vmath::Smul(nq, -1.0/(f_max-f_min), vTemp, 1, vTemp, 1);
+                Vmath::Sadd(nq, 1.0, vTemp, 1, vTemp, 1);
+                Vmath::Smul(nq, scar_max - scar_min, vTemp, 1, vTemp, 1);
+                Vmath::Sadd(nq, scar_min, vTemp, 1, vTemp, 1);
             }
 
-            // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)
-            Vmath::Sadd(nq, -f_min, vTemp, 1, vTemp, 1);
-            Vmath::Smul(nq, -1.0/(f_max-f_min), vTemp, 1, vTemp, 1);
-            Vmath::Sadd(nq, 1.0, vTemp, 1, vTemp, 1);
-
             // Scale anisotropic conductivity values
-            for (int i = 0; i < m_spacedim; ++i)
+            for (int i = 0; i < nVarDiffCmpts; ++i)
             {
                 Vmath::Vmul(nq, vTemp, 1,
                                 m_vardiff[varCoeffEnum[i]], 1,
@@ -344,10 +377,12 @@ namespace Nektar
      *
      */
     void Monodomain::v_SetInitialConditions(NekDouble initialtime,
-                        bool dumpInitialConditions)
+                        bool dumpInitialConditions,
+                        const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime,
-                                               dumpInitialConditions);
+                                               dumpInitialConditions,
+                                               domain);
         m_cell->Initialise();
     }
 

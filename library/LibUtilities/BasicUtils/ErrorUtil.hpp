@@ -52,7 +52,7 @@ namespace ErrorUtil
     
     inline static bool HasCustomErrorStream()
     {
-        return outStream;
+        return outStream ? true : false;
     }
 
     enum ErrType
@@ -138,6 +138,12 @@ namespace ErrorUtil
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 0); \
 }
 
+#define WARNINGL0(condition,msg) \
+    if(!(condition)) \
+{ \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+}
+
 
 /// Assert Level 1 -- Debugging which is used whether in FULLDEBUG or
 /// DEBUG compilation mode.  This level assert is designed for aiding
@@ -149,9 +155,15 @@ namespace ErrorUtil
 { \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 1); \
 }
+#define WARNINGL1(condition,msg) \
+    if(!(condition)) \
+{ \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+}
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 #define ASSERTL1(condition,msg)
+#define WARNINGL1(condition,msg)
 #endif //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 
 
@@ -165,9 +177,15 @@ namespace ErrorUtil
 { \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 2); \
 }
+#define WARNINGL2(condition,msg) \
+    if(!(condition)) \
+{ \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+}
 
 #else //NEKTAR_FULLDEBUG
 #define ASSERTL2(condition,msg)
+#define WARNINGL2(condition,msg)
 #endif //NEKTAR_FULLDEBUG
 
 #endif //ERRORUTIL_HPP

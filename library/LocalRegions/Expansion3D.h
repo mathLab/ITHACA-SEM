@@ -76,54 +76,48 @@ namespace Nektar
                 Array<OneD, NekDouble>            &outarray);
 
             inline void AddNormTraceInt(
-                const int                                      dir,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                Array<OneD, Array<OneD, NekDouble> >          &faceCoeffs,
-                Array<OneD,NekDouble>                         &outarray);
+                const int                             dir,
+                Array<OneD, ExpansionSharedPtr>      &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> > &faceCoeffs,
+                Array<OneD,NekDouble>                &outarray);
 
             inline void AddNormTraceInt(
-                const int                                      dir,
-                Array<OneD, const NekDouble>                  &inarray,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                Array<OneD,NekDouble>                         &outarray,
-                const StdRegions::VarCoeffMap                 &varcoeffs);
+                const int                        dir,
+                Array<OneD, const NekDouble>    &inarray,
+                Array<OneD, ExpansionSharedPtr> &FaceExp,
+                Array<OneD,NekDouble>           &outarray,
+                const StdRegions::VarCoeffMap   &varcoeffs);
 
             inline void AddFaceBoundaryInt(
-                const int                          face,
-                StdRegions::StdExpansionSharedPtr &FaceExp,
-                Array<OneD, NekDouble>            &facePhys,
-                Array<OneD, NekDouble>            &outarray,
-                const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
+                const int                      face,
+                ExpansionSharedPtr            &FaceExp,
+                Array<OneD, NekDouble>        &facePhys,
+                Array<OneD, NekDouble>        &outarray,
+                const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
-            static Expansion3DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
-            {
-                return boost::dynamic_pointer_cast<Expansion3D>(pSrc);
-            }
-
         protected:
             virtual void v_DGDeriv(
-                const int                                       dir,
-                const Array<OneD, const NekDouble>             &incoeffs,
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
-                Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
-                Array<OneD, NekDouble>                         &out_d);
+                const int                            dir,
+                const Array<OneD, const NekDouble>  &incoeffs,
+                Array<OneD, ExpansionSharedPtr>      &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> > &faceCoeffs,
+                Array<OneD, NekDouble>               &out_d);
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
             virtual void v_AddFaceNormBoundaryInt(
                 const int                            face,
-                StdRegions::StdExpansionSharedPtr   &FaceExp,
+                const ExpansionSharedPtr            &FaceExp,
                 const Array<OneD, const NekDouble>  &Fn,
                       Array<OneD,       NekDouble>  &outarray);
             virtual void v_AddRobinMassMatrix(
                 const int                           face, 
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
+            virtual StdRegions::Orientation v_GetForient(int face);
 
-            virtual NekDouble v_Integrate(
-                const Array<OneD, const NekDouble>& inarray);
-
+            
             //-----------------------------
             // Low Energy Basis functions
             //-----------------------------

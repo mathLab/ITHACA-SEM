@@ -49,9 +49,10 @@ namespace Nektar
     SubSteppingExtrapolate::SubSteppingExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+        MultiRegions::ExpListSharedPtr  pPressure,
         const Array<OneD, int> pVel,
-        const AdvectionTermSharedPtr advObject)
-        : Extrapolate(pSession,pFields,pVel,advObject)
+        const SolverUtils::AdvectionSharedPtr advObject)
+        : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
         m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.5);
@@ -153,7 +154,7 @@ namespace Nektar
 
         SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
         
-        m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        m_advObject->Advect(m_velocity.num_elements(), m_fields, Velfields, inarray, outarray, time);
         
         for(i = 0; i < nVariables; ++i)
         {
@@ -620,7 +621,9 @@ namespace Nektar
                 }
             }
             // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
+            else if(type == SpatialDomains::eNoUserDefined || 
+					type == SpatialDomains::eTimeDependent ||
+					type == SpatialDomains::eMovingBody) 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }
@@ -730,7 +733,9 @@ namespace Nektar
                 }
             }
             // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
+            else if(type == SpatialDomains::eNoUserDefined || 
+					type == SpatialDomains::eTimeDependent ||
+					type == SpatialDomains::eMovingBody) 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }

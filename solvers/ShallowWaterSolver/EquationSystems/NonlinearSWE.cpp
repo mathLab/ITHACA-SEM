@@ -108,16 +108,16 @@ namespace Nektar
 	  //                                 .CreateInstance("UpwindLDG");
 	  
 	  // Setting up parameters for advection operator Riemann solver 
-	  m_riemannSolver->AddParam (
+	  m_riemannSolver->SetParam (
                                      "gravity",  
-                                     &NonlinearSWE::GetGravity,   this);
-	  m_riemannSolver->AddScalar(
-                                     "velLoc", 
-                                     &NonlinearSWE::GetVelLoc,  this);
-	  m_riemannSolver->AddVector(
+                                     &NonlinearSWE::GetGravity, this);
+          m_riemannSolver->SetAuxVec(
+                                     "vecLocs",
+                                     &NonlinearSWE::GetVecLocs, this);
+	  m_riemannSolver->SetVector(
 				     "N",
 				     &NonlinearSWE::GetNormals, this);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
 				     "depth",
 				     &NonlinearSWE::GetDepth, this);
 	  
@@ -125,9 +125,9 @@ namespace Nektar
 	  // m_riemannSolverLDG->AddParam (
 	  //                     "gravity",  
 	  //                     &NonlinearSWE::GetGravity,   this);
-	  // m_riemannSolverLDG->AddScalar(
-	  //                     "velLoc", 
-	  //                     &NonlinearSWE::GetVelLoc,  this);
+      // m_riemannSolverLDG->SetAuxVec(
+      //                     "vecLocs",
+      //                     &NonlinearSWE::GetVecLocs,  this);
 	  // m_riemannSolverLDG->AddVector(
 	  //                     "N",
 	  //                     &NonlinearSWE::GetNormals, this);
@@ -273,7 +273,8 @@ namespace Nektar
 	  // Input and output in physical space
 	  Array<OneD, Array<OneD, NekDouble> > advVel;
 	  
-	  m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+	  m_advection->Advect(nvariables, m_fields, advVel, inarray,
+	                      outarray, time);
 	  //-------------------------------------------------------
 	  
 	  
@@ -324,11 +325,12 @@ namespace Nektar
             }
 	  
 	  NonlinearSWE::GetFluxVector(inarray, fluxvector);
-	  //-------------------------------------------------------
+	  //------------------------------------------------------- 
 
-	  
-	  //-------------------------------------------------------
-	  // Take the derivative of the flux terms
+
+
+ 	  //-------------------------------------------------------
+	  // Take the derivative of the flux terms 
 	  // and negate the outarray since moving terms to the rhs
 	  Array<OneD,NekDouble> tmp(nq);
 	  Array<OneD, NekDouble>tmp1(nq);           
@@ -340,6 +342,7 @@ namespace Nektar
 	      Vmath::Vadd(nq,tmp,1,tmp1,1,outarray[i],1);
 	      Vmath::Neg(nq,outarray[i],1);
 	    }
+
 	  
 	  //-------------------------------------------------
 	  // Add "source terms"
@@ -411,33 +414,36 @@ namespace Nektar
   
 
    //----------------------------------------------------
-  void NonlinearSWE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time)
+  void NonlinearSWE::SetBoundaryConditions(
+    Array<OneD, Array<OneD, NekDouble> > &inarray, 
+    NekDouble time)
   {
-    
-    int nvariables = m_fields.num_elements();
-    int cnt = 0;
+      std::string varName;
+      int nvariables = m_fields.num_elements();
+      int cnt = 0;
 
-    // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+      // Loop over Boundary Regions
+      for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
 	
-	// Wall Boundary Condition
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-	    SpatialDomains::eWall)
-	  {
-	    WallBoundary2D(n,cnt,inarray);
-	  }
+          // Wall Boundary Condition
+          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+              SpatialDomains::eWall)
+          {
+              WallBoundary2D(n, cnt, inarray);
+          }
 	
-	// Time Dependent Boundary Condition (specified in meshfile)
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-	    SpatialDomains::eTimeDependent)
-	  {
-	    for (int i = 0; i < nvariables; ++i)
-	      {
-		m_fields[i]->EvaluateBoundaryConditions(time);
-	      }
-	  }
-	cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+          // Time Dependent Boundary Condition (specified in meshfile)
+          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+              SpatialDomains::eTimeDependent)
+          {
+              for (int i = 0; i < nvariables; ++i)
+              {
+                  varName = m_session->GetVariable(i);
+                  m_fields[i]->EvaluateBoundaryConditions(time, varName);
+              }
+          }
+          cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
       }
   }
   

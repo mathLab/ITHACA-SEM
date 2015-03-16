@@ -56,6 +56,9 @@ namespace Nektar
         typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
+        class PointGeom;
+        typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
+
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
         SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
@@ -89,6 +92,10 @@ namespace Nektar
                 //---------------------------------------
 
                 SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
+                SPATIAL_DOMAINS_EXPORT void SetCoordim(int coordim) 
+                {
+                    m_coordim = coordim;
+                }
                 SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors();
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
@@ -99,11 +106,15 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetVid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetTid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
+                SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetEorient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetPorient(const int i) const;
+                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
+                            GetForient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
@@ -117,15 +128,20 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                               Array<OneD, NekDouble> &locCoord,
-                              NekDouble tol = 0.0);
+                              NekDouble tol);
+                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                        Array<OneD, NekDouble> &locCoord,
+                        NekDouble tol,
+                        NekDouble &resid);
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetEdgeFaceMap(int i, int j) const;
 
                 SPATIAL_DOMAINS_EXPORT inline void FillGeom();
-                SPATIAL_DOMAINS_EXPORT inline void GetLocCoords(
+                SPATIAL_DOMAINS_EXPORT inline NekDouble GetLocCoords(
                         const Array<OneD, const NekDouble> &coords,
-                              Array<OneD,       NekDouble> &Lcoords);
+                        Array<OneD,       NekDouble> &Lcoords);
                 SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
                         const int i, const Array<OneD, const NekDouble> &Lcoord);
 
@@ -177,10 +193,13 @@ namespace Nektar
                 virtual int  v_GetFid(int i) const;
                 virtual void v_GenGeomFactors() = 0;
                 virtual int  v_GetNumVerts() const;
+                virtual PointGeomSharedPtr v_GetVertex(int i) const = 0;
                 virtual StdRegions::Orientation
                              v_GetEorient(const int i) const;
                 virtual StdRegions::Orientation
                              v_GetPorient(const int i) const;
+                virtual StdRegions::Orientation
+                             v_GetForient(const int i) const;
                 virtual int  v_GetNumEdges() const;
                 virtual int  v_GetNumFaces() const;
                 virtual int  v_GetShapeDim() const;
@@ -193,7 +212,12 @@ namespace Nektar
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                         Array<OneD, NekDouble>& locCoord,
-                        NekDouble tol = 0.0);
+                        NekDouble tol);
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                        Array<OneD, NekDouble>& locCoord,
+                        NekDouble tol,
+                        NekDouble &resid);
 
                 virtual int v_GetVertexEdgeMap(int i,int j) const;
                 virtual int v_GetVertexFaceMap(int i,int j) const;
@@ -203,9 +227,9 @@ namespace Nektar
                 virtual NekDouble v_GetCoord(
                             const int i,
                             const Array<OneD,const NekDouble>& Lcoord);
-                virtual void v_GetLocCoords(
+                virtual NekDouble v_GetLocCoords(
                             const Array<OneD,const NekDouble>& coords,
-                                  Array<OneD,NekDouble>& Lcoords);
+                            Array<OneD,NekDouble>& Lcoords);
 
                 virtual void v_SetOwnData();
                 virtual const LibUtilities::BasisSharedPtr
@@ -223,7 +247,7 @@ namespace Nektar
                 size_t seed  = 0;
                 int nVert = p->GetNumVerts();
                 std::vector<unsigned int> ids(nVert);
-
+                
                 for (i = 0; i < nVert; ++i)
                 {
                     ids[i] = p->GetVid(i);
@@ -297,9 +321,23 @@ namespace Nektar
             return v_GetFid(i);
         }
 
+        inline int Geometry::GetTid(int i) const
+        {
+            const int nDim = GetShapeDim();
+            return
+                nDim == 1 ? v_GetVid(i) :
+                nDim == 2 ? v_GetEid(i) :
+                nDim == 3 ? v_GetFid(i) : 0;
+        }
+
         inline int Geometry::GetNumVerts() const
         {
             return v_GetNumVerts();
+        }
+
+        inline PointGeomSharedPtr Geometry::GetVertex(int i) const
+        {
+            return v_GetVertex(i);
         }
 
         inline StdRegions::Orientation Geometry::GetEorient(const int i) const
@@ -310,6 +348,11 @@ namespace Nektar
         inline StdRegions::Orientation Geometry::GetPorient(const int i) const
         {
             return v_GetPorient(i);
+        }
+
+        inline StdRegions::Orientation Geometry::GetForient(const int i) const
+        {
+            return v_GetForient(i);
         }
 
         inline int Geometry::GetNumEdges() const
@@ -352,11 +395,21 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
+        inline bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                      Array<OneD, NekDouble> &locCoord,
+                NekDouble tol,
+                NekDouble &resid)
+        {
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
         inline int Geometry::GetVertexEdgeMap(int i, int j) const
         {
             return v_GetVertexEdgeMap(i,j);
         }
 
+        /// return the id of the \f$j^{th}\f$ face attached to the \f$ i^{th}\f$ vertex
         inline int Geometry::GetVertexFaceMap(int i, int j) const
         {
             return v_GetVertexFaceMap(i,j);
@@ -384,11 +437,11 @@ namespace Nektar
             v_FillGeom();
         }
 
-        inline void Geometry::GetLocCoords(
+        inline NekDouble Geometry::GetLocCoords(
             const Array<OneD, const NekDouble> &coords,
-                  Array<OneD,       NekDouble> &Lcoords)
+            Array<OneD,       NekDouble> &Lcoords)
         {
-            v_GetLocCoords(coords, Lcoords);
+            return v_GetLocCoords(coords, Lcoords);
         }
 
         /**

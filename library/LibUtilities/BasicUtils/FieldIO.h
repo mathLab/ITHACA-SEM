@@ -42,7 +42,7 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Points.h>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 // These are required for the Write(...) and Import(...) functions.
 #include <boost/archive/iterators/base64_from_binary.hpp>
@@ -51,6 +51,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 namespace Nektar
 {
@@ -63,7 +64,7 @@ namespace Nektar
 
         typedef std::map<std::string, std::string>  FieldMetaDataMap;
         static  FieldMetaDataMap  NullFieldMetaDataMap;
-        
+        static std::vector<std::vector< NekDouble> > NullVectorNekDoubleVector = boost::assign::list_of(NullNekDoubleVector);
 
         struct FieldDefinitions
         {
@@ -141,7 +142,7 @@ namespace Nektar
         LIB_UTILITIES_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
+                        std::vector<std::vector<NekDouble> > &fielddata = NullVectorNekDoubleVector,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 
@@ -165,7 +166,7 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
+                        std::vector<std::vector<NekDouble> > &fielddata = NullVectorNekDoubleVector,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 
@@ -191,6 +192,13 @@ namespace Nektar
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata);
 
+                LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(
+                        const std::string &outfile,
+                        const std::vector<std::string> fileNames,
+                        std::vector<std::vector<unsigned int> > &elementList,
+                        const FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
+
+
             private:
                 /// Communicator to use when writing parallel format
                 LibUtilities::CommSharedPtr    m_comm;
@@ -207,12 +215,6 @@ namespace Nektar
                         const std::string outname,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         const FieldMetaDataMap &fieldmetadatamap);
-
-                LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(
-                        const std::string &outfile,
-                        const std::vector<std::string> fileNames,
-                        std::vector<std::vector<unsigned int> > &elementList,
-                        const FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
 
                 LIB_UTILITIES_EXPORT void ImportMultiFldFileIDs(
                         const std::string &inFile,

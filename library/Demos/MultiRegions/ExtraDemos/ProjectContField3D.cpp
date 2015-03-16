@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     int nq, coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
-    std::string meshfile(vSession->GetFilename());
     
     if(argc != 3)
     {

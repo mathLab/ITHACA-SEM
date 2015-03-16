@@ -106,9 +106,17 @@ namespace Nektar
             int nSolutionPts = pFields[0]->GetTotPoints();
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
             
-            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(nDim);
+            m_spaceDim = nDim;
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                m_spaceDim = 3;
+            }
             
-            for (i = 0; i < nDim; ++i)
+            m_diffDim = m_spaceDim - nDim;
+
+            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+            
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_traceVel[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
             }
@@ -136,12 +144,13 @@ namespace Nektar
             m_divFD = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             m_divFC = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             
-            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  (nDim);
-            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
-                                                                        nDim);
+            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                (m_spaceDim);
+            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                (m_spaceDim);
             for (i = 0; i < nScalars; ++i)
             {
-                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
                 m_DU1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
                 m_DFC1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
                 m_tmp1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
@@ -174,7 +183,7 @@ namespace Nektar
                 }
             }
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_D1[i] = Array<OneD, Array<OneD, NekDouble> >(nScalars);
 
@@ -184,7 +193,7 @@ namespace Nektar
                 }
             }
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_viscTensor[i] = Array<OneD, Array<OneD, NekDouble> >(nScalars+1);
                 
@@ -227,7 +236,7 @@ namespace Nektar
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for (i = 0; i < nDimensions; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
             }
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
             
@@ -249,9 +258,9 @@ namespace Nektar
                         ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
-                        jac = LocalRegions::Expansion1D::FromStdExp(
-                            pFields[0]->GetExp(n))->GetGeom1D()->
-                                GetMetricInfo()->GetJac(ptsKeys);
+                        jac = pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion1D>()->GetGeom1D()
+                                ->GetMetricInfo()->GetJac(ptsKeys);
                         for (i = 0; i < nLocalSolutionPts; ++i)
                         {
                             m_jac[i+phys_offset] = jac[0];
@@ -297,16 +306,16 @@ namespace Nektar
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
-                        jac  = LocalRegions::Expansion2D::FromStdExp(
-                            pFields[0]->GetExp(n))->GetGeom2D()
+                        jac  = pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D()
                                 ->GetMetricInfo()->GetJac(ptsKeys);
-                        gmat = LocalRegions::Expansion2D::FromStdExp(
-                            pFields[0]->GetExp(n))->GetGeom2D()
+                        gmat = pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D()
                                 ->GetMetricInfo()->GetDerivFactors(ptsKeys);
                         
-                        if (LocalRegions::Expansion2D::FromStdExp(
-                                pFields[0]->GetExp(n))->GetGeom2D()
-                                    ->GetMetricInfo()->GetGtype()
+                        if (pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D()
+                                ->GetMetricInfo()->GetGtype()
                             == SpatialDomains::eDeformed)
                         {
                             for (i = 0; i < nLocalSolutionPts; ++i)
@@ -366,7 +375,9 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {        
             int i, n;
-            NekDouble c0, c1, c2;
+            NekDouble c0 = 0.0;
+            NekDouble c1 = 0.0;
+            NekDouble c2 = 0.0;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
@@ -1115,6 +1126,16 @@ namespace Nektar
                                         &m_D1[j][i][0], 1);
                         }
                     }// Close loop on nScalars
+                    
+                    // For 3D Homogeneous 1D only take derivatives in 3rd direction
+                    if (m_diffDim == 1)
+                    {
+                        for (i = 0; i < nScalars; ++i)
+                        {
+                            m_D1[2][i] = m_homoDerivs[i];
+                        }
+                        
+                    }
                                         
                     // Computing the viscous tensor
                     m_fluxVectorNS(inarray, m_D1, m_viscTensor); 
@@ -1311,7 +1332,7 @@ namespace Nektar
                     for (e = 0; e < nBndEdges; ++e)
                     {
                         nBndEdgePts = fields[i+1]->
-                        GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
+                        GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
                         
                         id1 = fields[i+1]->
                         GetBndCondExpansions()[j]->GetPhys_Offset(e);
@@ -1393,7 +1414,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[nScalars]->
-                    GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[nScalars]->
                     GetBndCondExpansions()[j]->GetPhys_Offset(e);
@@ -1427,13 +1448,11 @@ namespace Nektar
                                       GetPhys())[id1], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                         
-                        /*
-                         // Subtract kinetic energy to E/rho
-                         Vmath::Vsub(nBndEdgePts, 
-                         &scalarVariables[nScalars-1][id2], 1,
-                         &tmp2[id2], 1,
-                         &scalarVariables[nScalars-1][id2], 1);
-                         */
+                        // Subtract kinetic energy to E/rho
+                        Vmath::Vsub(nBndEdgePts, 
+                                    &scalarVariables[nScalars-1][id2], 1,
+                                    &tmp2[id2], 1,
+                                    &scalarVariables[nScalars-1][id2], 1);
                         
                         // Multiply by constant factor (gamma-1)/R 
                         Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,
@@ -1563,7 +1582,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
@@ -1663,9 +1682,9 @@ namespace Nektar
                 ptsKeys = fields[0]->GetExp(n)->GetPointsKeys();
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                 phys_offset       = fields[0]->GetPhys_Offset(n);
-                jac               = LocalRegions::Expansion1D
-                    ::FromStdExp(fields[0]->GetExp(n))->GetGeom1D()
-                        ->GetMetricInfo()->GetJac(ptsKeys);
+                jac               = fields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion1D>()->GetGeom1D()
+                                ->GetMetricInfo()->GetJac(ptsKeys);
                 
                 JumpL[n] = JumpL[n] * jac[0];
                 JumpR[n] = JumpR[n] * jac[0];
@@ -1720,7 +1739,7 @@ namespace Nektar
             LibUtilities::PointsKeyVector ptsKeys;
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements
@@ -1731,9 +1750,8 @@ namespace Nektar
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                 ptsKeys = fields[0]->GetExp(n)->GetPointsKeys();
                 
-                jac  = LocalRegions::Expansion2D::FromStdExp(
-                    fields[0]->GetExp(n))->GetGeom2D()
-                        ->GetMetricInfo()->GetJac(ptsKeys);
+                jac  = fields[0]->GetExp(n)->as<LocalRegions::Expansion2D>()
+                        ->GetGeom2D()->GetMetricInfo()->GetJac(ptsKeys);
                 
                 base = fields[0]->GetExp(n)->GetBase();
                 nquad0 = base[0]->GetNumPoints();
@@ -1791,9 +1809,8 @@ namespace Nektar
                     }
                     
                     // Deformed elements                        
-                    if (LocalRegions::Expansion2D::FromStdExp(
-                            fields[0]->GetExp(n))->GetGeom2D()
-                                ->GetMetricInfo()->GetGtype()
+                    if (fields[0]->GetExp(n)->as<LocalRegions::Expansion2D>()
+                            ->GetGeom2D()->GetMetricInfo()->GetGtype()
                         == SpatialDomains::eDeformed)
                     {
                         // Extract the Jacobians along edge 'e'
@@ -1943,7 +1960,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
                         
             // Loop on the elements
@@ -2018,10 +2035,13 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
                     
+                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                    -1.0 : 1.0;
+
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != normals[0][i] 
-                            || m_traceNormals[1][trace_offset+i] != normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i] 
+                            || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }
@@ -2136,7 +2156,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements

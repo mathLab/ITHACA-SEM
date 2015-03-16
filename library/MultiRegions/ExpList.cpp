@@ -41,6 +41,7 @@
 #include <LocalRegions/Expansion.h>     // for Expansion
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>  // for AssemblyMapCG, etc
 #include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
@@ -177,8 +178,8 @@ namespace Nektar
             
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
         }
         
@@ -1207,58 +1208,149 @@ namespace Nektar
          */
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
-                                 NekDouble tol)
+                                 NekDouble tol,
+                                 bool returnNearestElmt)
         {
             Array<OneD, NekDouble> Lcoords(gloCoord.num_elements()); 
             
-            return GetExpIndex(gloCoord,Lcoords,tol);
+            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt);
         }
         
 
         int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
                                  Array<OneD, NekDouble> &locCoords,
-                                 NekDouble tol)
+                                 NekDouble tol,
+                                 bool returnNearestElmt)
         {
-            static int start = 0;
-            // start search at previous element or 0 
-            for (int i = start; i < (*m_exp).size(); ++i)
+            NekDouble resid;
+
+            if (GetNumElmts() == 0)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
+                return -1;
+            }
+            std::vector<std::pair<int,NekDouble> > elmtIdDist;
+
+            // Manifold case (point may match multiple elements)
+            if (GetExp(0)->GetCoordim() > GetExp(0)->GetShapeDimension())
+            {
+                SpatialDomains::PointGeomSharedPtr v;
+                SpatialDomains::PointGeom w;
+                NekDouble dist = 0.0;
+
+                // Scan all elements and store those which may contain the point
+                for (int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    start = i;
-                    return i;
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
+                                                              locCoords,
+                                                              tol, resid))
+                    {
+                        w.SetX(gloCoords[0]);
+                        w.SetY(gloCoords[1]);
+                        w.SetZ(gloCoords[2]);
+
+                        // Find closest vertex
+                        for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j) {
+                            v = m_graph->GetVertex(
+                                            (*m_exp)[i]->GetGeom()->GetVid(j));
+                            if (j == 0 || dist > v->dist(w))
+                            {
+                                dist = v->dist(w);
+                            }
+                        }
+                        elmtIdDist.push_back(
+                                    std::pair<int, NekDouble>(i, dist));
+                    }
+                }
+
+                // Find nearest element
+                if (!elmtIdDist.empty())
+                {
+                    int         min_id = elmtIdDist[0].first;
+                    NekDouble   min_d  = elmtIdDist[0].second;
+
+                    for (int i = 1; i < elmtIdDist.size(); ++i)
+                    {
+                        if (elmtIdDist[i].second < min_d) {
+                            min_id = elmtIdDist[i].first;
+                            min_d = elmtIdDist[i].second;
+                        }
+                    }
+
+                    // retrieve local coordinate of point
+                    (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
+                                                          locCoords);
+                    return min_id;
+                }
+                else 
+                {
+                    return -1;
                 }
             }
-
-            for (int i = 0; i < start; ++i)
+            // non-embedded mesh (point can only match one element)
+            else
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
+                static int start = 0;
+                int min_id  = 0;
+                NekDouble resid_min = 1e6;
+                Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
+                
+                // restart search from last found value
+                for (int i = start; i < (*m_exp).size(); ++i)
                 {
-                    start = i;
-                    return i;
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                              tol, resid))
+                    {
+                        start = i;
+                        return i;
+                    }
+                    else
+                    {
+                        if(resid < resid_min)
+                        {
+                            min_id    = i;
+                            resid_min = resid;
+                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                        }
+                    }
                 }
+                
+                for (int i = 0; i < start; ++i)
+                {
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                              tol, resid))
+                    {
+                        start = i;
+                        return i;
+                    }
+                    else
+                    {
+                        if(resid < resid_min)
+                        {
+                            min_id    = i;
+                            resid_min = resid;
+                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                        }
+                    }
+                }
+
+                std::string msg = "Failed to find point in element to tolerance of "
+                                + boost::lexical_cast<std::string>(resid)
+                                + " using nearest point found";
+                WARNINGL0(true,msg.c_str());
+
+                if(returnNearestElmt)
+                {
+                    Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
+                    return min_id;
+                }
+                else
+                {
+                    return -1;
+                }
+
             }
-            return -1;
         }
 
-
-        /**
-         * The operation is evaluated locally by the elemental
-         * function StdRegions#StdExpansion#GetSurfaceNormal.
-         */
-        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                const int k)
-        {
-            int i;
-            Array<OneD, NekDouble> normals;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                //e_SN = SurfaceNormal + m_phys_offset[i];
-                normals = (*m_exp)[i]->GetSurfaceNormal()[k];
-                Vmath::Vcopy(normals.num_elements(), &normals[0], 1, &SurfaceNormal[0] + m_phys_offset[i], 1);
-            }
-        }
 
         /**
          * Configures geometric info, such as tangent direction, on each
@@ -1275,7 +1367,7 @@ namespace Nektar
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
-        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotHeader(std::ostream &outfile,
                                            std::string    var)
         {
             int coordim  = GetExp(0)->GetCoordim();
@@ -1309,7 +1401,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotZone(std::ostream &outfile, int expansion)
         {
             int i, j;
             int coordim = GetCoordim(0);
@@ -1403,7 +1495,7 @@ namespace Nektar
             }
         }
 
-        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotConnectivity(std::ostream &outfile,
                                                  int expansion)
         {
             int i,j,k,l;
@@ -1480,7 +1572,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotField(std::ostream &outfile, int expansion)
         {
             if (expansion == -1)
             {
@@ -1514,7 +1606,7 @@ namespace Nektar
             }
         }
 
-        void ExpList::WriteVtkHeader(std::ofstream &outfile)
+        void ExpList::WriteVtkHeader(std::ostream &outfile)
         {
             outfile << "<?xml version=\"1.0\"?>" << endl;
             outfile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" "
@@ -1522,31 +1614,36 @@ namespace Nektar
             outfile << "  <UnstructuredGrid>" << endl;
         }
 
-        void ExpList::WriteVtkFooter(std::ofstream &outfile)
+        void ExpList::WriteVtkFooter(std::ostream &outfile)
         {
             outfile << "  </UnstructuredGrid>" << endl;
             outfile << "</VTKFile>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             ASSERTL0(false, "Routine not implemented for this expansion.");
         }
 
-        void ExpList::WriteVtkPieceFooter(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
+        {
+            ASSERTL0(false, "Routine not implemented for this expansion.");
+        }
+
+        void ExpList::WriteVtkPieceFooter(std::ostream &outfile, int expansion)
         {
             outfile << "      </PointData>" << endl;
             outfile << "    </Piece>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+        void ExpList::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
             int i;
             int nq = (*m_exp)[expansion]->GetTotPoints();
 
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion];
@@ -1676,6 +1773,13 @@ namespace Nektar
             return trans;
         }
 
+        NekDouble ExpList::v_GetHomoLen(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            NekDouble len = 0.0;
+            return len;
+        }
 
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
@@ -1706,7 +1810,45 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-		
+
+        void ExpList::ExtractFileBCs(
+            const std::string               &fileName,
+            const std::string               &varName,
+            const boost::shared_ptr<ExpList> locExpList)
+        {
+            string varString = fileName.substr(0, fileName.find_last_of("."));
+            int j, k, len = varString.length();
+            varString = varString.substr(len-1, len);
+
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<std::vector<NekDouble> > FieldData;
+
+            LibUtilities::FieldIO f(m_session->GetComm());
+            f.Import(fileName, FieldDef, FieldData);
+
+            bool found = false;
+            for (j = 0; j < FieldDef.size(); ++j)
+            {
+                for (k = 0; k < FieldDef[j]->m_fields.size(); ++k)
+                {
+                    if (FieldDef[j]->m_fields[k] == varName)
+                    {
+                        // Copy FieldData into locExpList
+                        locExpList->ExtractDataToCoeffs(
+                            FieldDef[j], FieldData[j],
+                            FieldDef[j]->m_fields[k],
+                            locExpList->UpdateCoeffs());
+                        found = true;
+                    }
+                }
+            }
+
+            ASSERTL0(found, "Could not find variable '"+varName+
+                            "' in file boundary condition "+fileName);
+            locExpList->BwdTrans_IterPerExp(
+                locExpList->GetCoeffs(), 
+                locExpList->UpdatePhys());
+        }
 
         /**
          * Given a spectral/hp approximation
@@ -1745,13 +1887,16 @@ namespace Nektar
         }
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
-												  int NumHomoDir, 
-												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
-												  std::vector<NekDouble> &HomoLen,
-												  std::vector<unsigned int> &HomoZIDs,
-												  std::vector<unsigned int> &HomoYIDs)
+                                                  int NumHomoDir, 
+                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+                                                  std::vector<NekDouble> &HomoLen,
+                                                  std::vector<unsigned int> &HomoZIDs,
+                                                  std::vector<unsigned int> &HomoYIDs)
         {
-            int startenum, endenum, s;
+            int startenum = (int) LibUtilities::eSegment;
+            int endenum   = (int) LibUtilities::eHexahedron;
+            int s         = 0;
+            LibUtilities::ShapeType shape;
 
             ASSERTL1(NumHomoDir == HomoBasis.num_elements(),"Homogeneous basis is not the same length as NumHomoDir");
             ASSERTL1(NumHomoDir == HomoLen.size(),"Homogeneous length vector is not the same length as NumHomDir");
@@ -1775,7 +1920,6 @@ namespace Nektar
 
             for(s = startenum; s <= endenum; ++s)
             {
-                LibUtilities::ShapeType               shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
@@ -1785,14 +1929,15 @@ namespace Nektar
                 bool UniOrder = true;
                 int n;
 
+                shape = (LibUtilities::ShapeType) s;
+
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[i]->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
+                    if((*m_exp)[i]->GetGeom()->GetShapeType() == shape)
                     {
                         elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
                         if(first)
                         {
-                            shape = (LibUtilities::ShapeType) s;
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());
@@ -1837,6 +1982,7 @@ namespace Nektar
                 }
             }
         }
+
 
         //
         // Virtual functions
@@ -2055,20 +2201,17 @@ namespace Nektar
             return returnVal;
         }
 
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace(int i)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
-            return returnVal;
-        }
-
         boost::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             static boost::shared_ptr<AssemblyMapDG> result;
             return result;
+        }
+
+        const Array<OneD, const int> &ExpList::v_GetTraceBndMap()
+        {
+            return GetTraceMap()->GetBndCondTraceToGlobalTraceMap();
         }
 
         void ExpList::v_GetNormals(
@@ -2228,6 +2371,14 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        /**
+         */
+        void ExpList::v_FillBndCondFromField()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_LocalToGlobal(void)
         {
             ASSERTL0(false,
@@ -2329,43 +2480,7 @@ namespace Nektar
             }
         }
 		
-		/**
-         */
-		void ExpList::v_SetCoeff(NekDouble val)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		void ExpList::v_SetPhys(NekDouble val)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-		}
-		
-		/**
-         */
-		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-		}
-		
-		/**
+        /**
          */
         void ExpList::v_SetUpPhysNormals()
         {
@@ -2373,7 +2488,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-		/**
+        /**
          */
         void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                             Array<OneD,int> &EdgeID)
@@ -2382,46 +2497,49 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-		/**
+        /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
-		/**
+        
+        /**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                                             &ExpList::v_GetBndConditions(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+            static Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                         result;
             return result;
         }
-
-		/**
+        
+        /**
          */
         Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,SpatialDomains::BoundaryConditionShPtr>
-                                                                        result;
+            static Array<OneD, SpatialDomains::BoundaryConditionShPtr> result;
             return result;
         }
 
-		/**
+        /**
          */
-        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in, const NekDouble x3_in)
+        void ExpList::v_EvaluateBoundaryConditions(
+            const NekDouble time,
+            const std::string varName,
+            const NekDouble x2_in, 
+            const NekDouble x3_in)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
-		/**
+        /**
          */
         map<int, RobinBCInfoSharedPtr> ExpList::v_GetRobinBCInfo(void)
         {
@@ -2431,7 +2549,7 @@ namespace Nektar
             return result;
         }
 
-		/**
+        /**
          */
         void ExpList::v_GetPeriodicEntities(
             PeriodicMap &periodicVerts,

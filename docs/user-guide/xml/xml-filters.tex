@@ -1,0 +1,340 @@
+\section{Filters}
+
+Filters are a method for calculating a variety of useful quantities from the
+field variables as the solution evolves in time, such as time-averaged fields
+and extracting the field variables at certain points inside the domain. Each
+filter is defined in a \inltt{FILTER} tag inside a \inltt{FILTERS} block which
+lies in the main \inltt{NEKTAR} tag. In this section we give an overview of the
+modules currently available and how to set up these filters in the session file.
+
+Here is an example \inltt{FILTER}:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="FilterName">
+      <PARAM NAME="Param1"> Value1 </PARAM>
+      <PARAM NAME="Param2"> Value2 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+A filter has a name -- in this case, \inltt{FilterName} -- together with
+parameters which are set to user-defined values. Each filter expects different
+parameter inputs, although where functionality is similar, the same parameter
+names are shared between filter types for consistency.
+
+In the following we document the filters implemented. Note that some filters are
+solver-specific and will therefore only work for a given subset of the available
+solvers.
+
+\subsection{Time-averaged fields}
+
+This filter computes time-averaged fields for each variable defined in the
+session file. Time averages are computed by either taking a snapshot of the
+field every timestep, or alternatively at a user-defined number of timesteps
+$N$. An output is produced at the end of the simulation into
+\inltt{session\_avg.fld}, or alternatively every $M$ timesteps as defined by the
+user, into a sequence of files \inltt{session\_*\_avg.fld}, where \inltt{*} is
+replaced by a counter. This latter option can be useful to observe statistical
+convergence rates of the averaged variables.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \texttt{session} &
+    Prefix of the output filename to which average fields are written.\\
+    \inltt{SampleFrequency} & \xmark   & 1 &
+    Number of timesteps at which the average is calculated, $N$.\\
+    \inltt{OutputFrequency} & \xmark   & \texttt{NumSteps} &
+    Number of timesteps after which output is written, $M$.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+As an example, consider:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="AverageFields">
+      <PARAM NAME="OutputFile">MyAverageField</PARAM>
+      <PARAM NAME="OutputFrequency">100</PARAM>
+      <PARAM NAME="SampleFrequency"> 10 </PARAM>		
+  </FILTER>
+\end{lstlisting}
+
+This will create a file named \inltt{MyAverageField.fld} averaging the
+instantaneous fields every 10 time steps. The averaged field is however only
+output every 100 time steps.
+
+\subsection{Checkpoint fields}
+ 
+The checkpoint filter writes a checkpoint file, containing the instantaneous
+state of the solution fields at at given timestep. This can subsequently be used
+for restarting the simulation or examining time-dependent behaviour. This
+produces a sequence of files, by default named \inltt{session\_*.chk}, where
+\inltt{*} is replaced by a counter. The initial condition is written to
+\inltt{session\_0.chk}.
+
+\begin{notebox}
+  This functionality is equivalent to setting the \inltt{IO\_CheckSteps}
+  parameter in the session file.
+\end{notebox}
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \texttt{session} &
+    Prefix of the output filename to which the checkpoints are written.\\
+    \inltt{OutputFrequency} & \cmark   & - &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+For example, to output the fields every 100 timesteps we can specify:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Checkpoint">
+      <PARAM NAME="OutputFile">IntermediateFields</PARAM>
+      <PARAM NAME="OutputFrequency">100</PARAM>
+  </FILTER>
+\end{lstlisting}
+ 
+\subsection{History points}
+
+The history points filter can be used to evaluate the value of the fields in
+specific points of the domain as the solution evolves in time. By default this 
+produces a file called \inltt{session.his}. For each timestep, and then each 
+history point, a line is output containing the current solution time, followed 
+by the value of each of the field variables. Commented lines are created at the
+top of the file containing the location of the history points and the order of 
+the variables.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \texttt{session} &
+    Prefix of the output filename to which the checkpoints are written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \inltt{OutputPlane}     & \xmark   & 0 &
+    If the simulation is homogeneous, the plane on which to evaluate the 
+    history point. (No Fourier interpolation is currently implemented.)\\
+    \inltt{Points      }    & \cmark   & - &
+    A list of the history points. These should always be given in three
+    dimensions. \\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+For example, to output the value of the solution fields at three points
+$(1,0.5,0)$, $(2,0.5,0)$ and $(3,0.5,0)$ into a file \inltt{TimeValues.his}
+every 10 timesteps, we use the syntax:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="HistoryPoints">
+      <PARAM NAME="OutputFile">TimeValues</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+      <PARAM NAME="Points">
+          1 0.5 0
+          2 0.5 0
+          3 0.5 0
+      </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+\subsection {ThresholdMax}
+
+The threshold value filter writes a field output containing a variable $m$,
+defined by the time at which the selected variable first exceeds a specified
+threshold value. The default name of the output file is the name of the session
+with the suffix \inlsh{\_max.fld}. Thresholding is applied based on the first
+variable listed in the session by default.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \emph{session}\_max.fld &
+    Output filename to which the threshold times are written.\\
+    \inltt{ThresholdVar}    & \xmark   & \emph{first variable name} &
+    Specifies the variable on which the threshold will be applied.\\
+    \inltt{ThresholdValue}  & \cmark   & - &
+    Specifies the threshold value.\\
+    \inltt{InitialValue}    & \cmark   & - &
+    Specifies the initial time.\\
+    \inltt{StartTime}       & \xmark   & 0.0 &
+    Specifies the time at which to start recording.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+ 
+An example is given below:
+ 
+\begin{lstlisting}[style=XMLStyle]
+  <FILTER TYPE="ThresholdMax">
+      <PARAM NAME="OutputFile"> threshold_max.fld </PARAM>
+      <PARAM NAME="ThresholdVar"> u </PARAM>
+      <PARAM NAME="ThresholdValue"> 0.1 </PARAM>
+      <PARAM NAME="InitialValue">  0.4 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+which produces a field file \inlsh{threshold\_max.fld}.
+
+\subsection{ThresholdMin value}
+
+Performs the same function as the \inltt{ThresholdMax} filter but records the
+time at which the threshold variable drops below a prescribed value.
+
+\subsection{Modal energy}
+
+\begin{notebox}
+  This filter is only supported for the incompressible Navier-Stokes solver.
+\end{notebox}
+
+This filter calculates the time-evolution of the kinetic energy. In the case of
+a two- or three-dimensional simulation this is defined as
+\[
+E_k(t) = \frac{1}{2} \int_{\Omega} \|\mathbf{u}\|^2\, dx
+\]
+However if the simulation is written as a one-dimensional homogeneous expansion
+so that
+\[
+\mathbf{u}(\mathbf{x},t) = \sum_{k=0}^N \mathbf{\hat{u}}_k(t)e^{2\pi ik\mathbf{x}}
+\]
+then we instead calculate the energy spectrum
+\[
+E_k(t) = \frac{1}{2} \int_{\Omega} \|\mathbf{\hat{u}}_k\|^2\, dx.
+\]
+Note that in this case, each component of $\mathbf{\hat{u}}_k$ is a complex
+number and therefore $N = \inltt{HomModesZ}/2$ lines are output for each
+timestep. This is a particularly useful tool in examining turbulent and
+transitional flows which use the homogeneous extension. In either case, the
+resulting output is written into a file called \inltt{session.mdl} by default.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the energy spectrum is written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example syntax is given below:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="ModalEnergy">
+      <PARAM NAME="OutputFile">EnergyFile</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+  </FILTER>
+\end{lstlisting}
+
+\subsection{Aerodynamic forces}
+
+\begin{notebox}
+  This filter is only supported for the incompressible Navier-Stokes solver.
+\end{notebox}
+
+This filter evaluates the aerodynamic forces along a specific surface. The
+forces are projected along the Cartesian axes and the pressure and viscous
+contributions are computed in each direction.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the forces are written.\\
+    \inltt{Frequency}       & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \inltt{Boundary}        & \cmark   & - &
+    Boundary surfaces on which the forces are to be evaluated.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example is given below:
+
+\begin{lstlisting}[style=XMLStyle]
+  <FILTER TYPE="AeroForces">
+      <PARAM NAME="OutputFile">DragLift.frc</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+      <PARAM NAME="Boundary"> B[1,2] </PARAM>		
+  </FILTER>
+\end{lstlisting}
+
+During the execution a file named \inltt{DragLift.frc} will be created and the
+value of the aerodynamic forces on boundaries 1 and 2, defined in the
+\inltt{GEOMETRY} section, will be output every 10 time steps.
+
+\subsection{Kinetic energy and enstrophy}
+
+\begin{notebox}
+  This filter is only supported for the incompressible and compressible
+  Navier-Stokes solvers \textbf{in three dimensions}.
+\end{notebox}
+
+The purpose of this filter is to calculate the kinetic energy and enstrophy
+%
+\[
+E_k = \frac{1}{2\mu(\Omega)}\int_{\Omega} \|\mathbf{u}\|^2\, dx, \qquad
+\mathcal{E} = \frac{1}{2\mu(\Omega)}\int_{\Omega} \|\mathbf{\omega}\|^2\, dx
+\]
+%
+where $\mu(\Omega)$ is the volume of the domain $\Omega$. This produces a file
+containing the time-evolution of the kinetic energy and enstrophy fields. By
+default this file is called \inltt{session.eny} where \inltt{session} is the
+session name.
+
+The following parameters are supported:
+%
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \texttt{session.eny} &
+    Output file name to which the energy and enstrophy are written.\\
+    \inltt{OutputFrequency} & \cmark   & - &
+    Number of timesteps at which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+%
+To enable the filter, add the following to the \inltt{FILTERS} tag:
+%
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Energy">
+      <PARAM NAME="OutputFrequency"> 1 </PARAM>
+  </FILTER>
+\end{lstlisting}

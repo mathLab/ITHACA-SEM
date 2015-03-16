@@ -157,8 +157,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
             /// Returns the global index of the boundary trace giving the
-            /// index on the boundary  expansion
+            /// index on the boundary expansion
             MULTI_REGIONS_EXPORT int GetBndCondTraceToGlobalTraceMap(const int i);
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>
+                &GetBndCondTraceToGlobalTraceMap();
  
             /// Returns the number of global Dirichlet boundary coefficients.
             MULTI_REGIONS_EXPORT int GetNumGlobalDirBndCoeffs() const;
@@ -250,10 +252,12 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
 
+            MULTI_REGIONS_EXPORT void PrintStats(std::ostream &out, std::string variable) const;
+
             MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
                 GetExtraDirEdges();
 
-            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> XxtLinearSpaceMap(const ExpList &locexp);
+            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType);
 
             /// Returns the bandwidth of the boundary system.
             MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
@@ -469,8 +473,8 @@ namespace Nektar
                 v_GetExtraDirEdges();
             
             /// Generate a linear space mapping from existing mapping 
-            virtual boost::shared_ptr<AssemblyMap> v_XxtLinearSpaceMap
-                (const ExpList &locexp);
+            virtual boost::shared_ptr<AssemblyMap> v_LinearSpaceMap(
+                const ExpList &locexp, GlobalSysSolnType solnType);
         };
 
 

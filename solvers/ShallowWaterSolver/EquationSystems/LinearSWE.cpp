@@ -112,13 +112,13 @@ namespace Nektar
 	  //                                 .CreateInstance("UpwindLDG");
 	  
 	  // Setting up parameters for advection operator Riemann solver 
-	  m_riemannSolver->AddParam (
+	  m_riemannSolver->SetParam (
                                      "gravity",  
                                      &LinearSWE::GetGravity,   this);
-	  m_riemannSolver->AddScalar(
-                                     "velLoc", 
-                                     &LinearSWE::GetVelLoc,  this);
-	  m_riemannSolver->AddVector(
+      m_riemannSolver->SetAuxVec(
+                                     "vecLocs",
+                                     &LinearSWE::GetVecLocs,  this);
+	  m_riemannSolver->SetVector(
 				     "N",
 				     &LinearSWE::GetNormals, this);
 	
@@ -128,10 +128,10 @@ namespace Nektar
 	  m_dBwd = Array<OneD, NekDouble>(nTracePointsTot);
 	  m_fields[0]->GetFwdBwdTracePhys(m_depth, m_dFwd, m_dBwd);
 	  CopyBoundaryTrace(m_dFwd,m_dBwd);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
 				     "depthFwd",
 				     &LinearSWE::GetDepthFwd, this);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
 				     "depthBwd",
 				     &LinearSWE::GetDepthBwd, this);
 
@@ -139,9 +139,9 @@ namespace Nektar
 	  // m_riemannSolverLDG->AddParam (
 	  //                     "gravity",  
 	  //                     &NonlinearSWE::GetGravity,   this);
-	  // m_riemannSolverLDG->AddScalar(
-	  //                     "velLoc", 
-	  //                     &NonlinearSWE::GetVelLoc,  this);
+      // m_riemannSolverLDG->SetAuxVec(
+      //                     "vecLocs",
+      //                     &NonlinearSWE::GetVecLocs,  this);
 	  // m_riemannSolverLDG->AddVector(
 	  //                     "N",
 	  //                     &NonlinearSWE::GetNormals, this);
@@ -241,7 +241,8 @@ namespace Nektar
 	  // Input and output in physical space
 	  Array<OneD, Array<OneD, NekDouble> > advVel;
 	  
-	  m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+	  m_advection->Advect(nvariables, m_fields, advVel, inarray,
+	                      outarray, time);
 	  //-------------------------------------------------------
 	  
 	  
@@ -367,33 +368,35 @@ namespace Nektar
   
 
    //----------------------------------------------------
-  void LinearSWE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time)
-  {
-    
-    int nvariables = m_fields.num_elements();
-    int cnt = 0;
+  void LinearSWE::SetBoundaryConditions(
+    Array<OneD, Array<OneD, NekDouble> > &inarray,
+    NekDouble time)
+  { 
+      std::string varName;
+      int nvariables = m_fields.num_elements();
+      int cnt = 0;
 
-    // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+      // loop over Boundary Regions
+      for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
+          // Wall Boundary Condition
+          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+              SpatialDomains::eWall)
+          {
+              WallBoundary2D(n, cnt, inarray);
+          }
 	
-	// Wall Boundary Condition
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-	    SpatialDomains::eWall)
-	  {
-	    WallBoundary2D(n,cnt,inarray);
-	  }
-	
-	// Time Dependent Boundary Condition (specified in meshfile)
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-	    SpatialDomains::eTimeDependent)
-	  {
-	    for (int i = 0; i < nvariables; ++i)
-	      {
-		m_fields[i]->EvaluateBoundaryConditions(time);
-	      }
-	  }
-	cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+          // Time Dependent Boundary Condition (specified in meshfile)
+          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+              SpatialDomains::eTimeDependent)
+          {
+              for (int i = 0; i < nvariables; ++i)
+              {
+                  varName = m_session->GetVariable(i);
+                  m_fields[i]->EvaluateBoundaryConditions(time, varName);
+              }
+          }
+          cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
       }
   }
   

@@ -65,50 +65,52 @@ namespace Nektar
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList2D(  const ExpList2D &In,
-                        const bool DeclareCoeffPhysArrays = true);
+                const bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2D(
-                      const LibUtilities::SessionReaderSharedPtr &pSession,
-                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      const bool DelcareCoeffPhysArrays = true,
-                      const std::string &var = "DefaultVar");
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const bool DelcareCoeffPhysArrays = true,
+                const std::string &var = "DefaultVar");
 
-            /// Sets up a list of local expansions based on an expansion  Mapr
+            /// Sets up a list of local expansions based on an expansion  Map
             MULTI_REGIONS_EXPORT ExpList2D(
-                      const LibUtilities::SessionReaderSharedPtr &pSession,
-                      const SpatialDomains::ExpansionMap &expansions,
-                      const bool DeclareCoeffPhysArrays = true);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::ExpansionMap &expansions,
+                const bool DeclareCoeffPhysArrays = true);
             
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
             MULTI_REGIONS_EXPORT ExpList2D(
-                      const LibUtilities::SessionReaderSharedPtr &pSession,
-                      const LibUtilities::BasisKey &TriBa,
-                      const LibUtilities::BasisKey &TriBb,
-                      const LibUtilities::BasisKey &QuadBa,
-                      const LibUtilities::BasisKey &QuadBb,
-                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      const LibUtilities::PointsType
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const LibUtilities::BasisKey &TriBa,
+                const LibUtilities::BasisKey &TriBb,
+                const LibUtilities::BasisKey &QuadBa,
+                const LibUtilities::BasisKey &QuadBb,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const LibUtilities::PointsType
                       TriNb = LibUtilities::SIZE_PointsType);
 
 			//Specialized constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList2D(
-                      const Array<OneD,const ExpListSharedPtr> &bndConstraint,
-                      const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
-                      const LocalRegions::ExpansionVector &locexp,
-                      const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                      const PeriodicMap &periodicFaces,
-                      const bool DeclareCoeffPhysArrays = true,
-                      const std::string variable = "DefaultVar");
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+                const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                                                                       &bndCond,
+                const LocalRegions::ExpansionVector &locexp,
+                const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                const PeriodicMap &periodicFaces,
+                const bool DeclareCoeffPhysArrays = true,
+                const std::string variable = "DefaultVar");
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             MULTI_REGIONS_EXPORT ExpList2D(  
-                        const LibUtilities::SessionReaderSharedPtr &pSession,
-                        const SpatialDomains::CompositeMap &domain,
-                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string variable = "DefaultVar");
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::CompositeMap &domain,
+                const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                const std::string variable = "DefaultVar");
             
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();
@@ -135,16 +137,23 @@ namespace Nektar
 
             virtual void v_ReadGlobalOptimizationParameters();
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(
+                        std::ostream &outfile, int expansion);
 
-            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            virtual void v_PhysInterp1DScaled(
+                const NekDouble scale,
+                const Array<OneD, NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
 
-            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            virtual void v_PhysGalerkinProjection1DScaled(
+                const NekDouble scale,
+                const Array<OneD, NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
         };
 
         /// Empty ExpList2D object.
         const static Array<OneD, ExpList2DSharedPtr>
-                                                NullExpList2DSharedPtrArray;
+            NullExpList2DSharedPtrArray;
     } //end of namespace
 } //end of namespace
 

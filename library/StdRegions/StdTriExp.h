@@ -56,35 +56,35 @@ namespace Nektar
                 const LibUtilities::BasisKey &Bb);
             STD_REGIONS_EXPORT StdTriExp(const StdTriExp &T);
             STD_REGIONS_EXPORT ~StdTriExp();
-            
+
         protected:
             //-------------------------------
             // Integration Methods
             //-------------------------------
             STD_REGIONS_EXPORT virtual NekDouble v_Integral(
                 const Array<OneD, const NekDouble>& inarray);
-            
-            
+
+
             //----------------------------
             // Differentiation Methods
             //----------------------------
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
-                const Array<OneD, const NekDouble>& inarray, 
+                const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& out_d0,
                       Array<OneD,       NekDouble>& out_d1,
                       Array<OneD,       NekDouble>& out_d2 = NullNekDouble1DArray);
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
-                const int                           dir, 
+                const int                           dir,
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
-                const Array<OneD, const NekDouble>& inarray, 
+                const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& out_d0,
                       Array<OneD,       NekDouble>& out_d1,
                       Array<OneD,       NekDouble>& out_d2 = NullNekDouble1DArray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
-                const int dir, 
-                const Array<OneD, const NekDouble>& inarray, 
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
 
 
@@ -109,7 +109,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
-                const Array<OneD, const NekDouble>& inarray, 
+                const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
 
 
@@ -150,13 +150,13 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords,
-                const Array<OneD, const NekDouble>& physvals);
+            STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
+                                           const Array<OneD, const NekDouble>& xi,
+                                           Array<OneD, NekDouble>& eta);
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int               mode,
                 Array<OneD, NekDouble> &outarray);
-            
+
 
             //---------------------------
             // Helper functions
@@ -181,8 +181,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey
                 v_DetEdgeBasisKey(const int edge) const;
-            
-            
+
+
             //--------------------------
             // Mappings
             //--------------------------
@@ -202,8 +202,8 @@ namespace Nektar
                 Array<OneD, unsigned int>& outarray);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                 Array<OneD, unsigned int>& outarray);
-            
-            
+
+
             //---------------------------------------
             // Wrapper functions
             //---------------------------------------
@@ -227,6 +227,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
                       Array<OneD, NekDouble> &array,
                 const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                      int numMin,
+                      const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                 const int                           k1,
                 const int                           k2,
@@ -246,10 +250,17 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const StdMatrixKey                 &mkey);
-            
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
+
+            //---------------------------------------
+            // Output interpolation functions
+            //---------------------------------------
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(
+                      Array<OneD, int>             &conn,
+                      bool                          standard = true);
         };
         typedef boost::shared_ptr<StdTriExp> StdTriExpSharedPtr;
     } //end of namespace

@@ -80,7 +80,7 @@ namespace Nektar
          */
         void OutputGmsh::Process()
         {
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "OutputGmsh: Writing file..." << endl;
             }
@@ -89,45 +89,44 @@ namespace Nektar
             OpenStream();
             
             // Write MSH header
-            mshFile << "$MeshFormat" << endl
+            m_mshFile << "$MeshFormat" << endl
                     << "2.2 0 8" << endl
                     << "$EndMeshFormat" << endl;
             
-            int id = m->vertexSet.size();
+            int id = m_mesh->m_vertexSet.size();
             vector<ElementSharedPtr> toComplete;
             
             int maxOrder = -1;
             
             // Do first pass over elements of expansion dimension to determine
             // which elements need completion.
-            for (int i = 0; i < m->element[m->expDim].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
             {
-                ElementSharedPtr e = m->element[m->expDim][i];
+                ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
                 if (e->GetMaxOrder() > maxOrder)
                 {
                     maxOrder = e->GetMaxOrder();
                 }
             }
-            
+
             //maxOrder = 2;
-            
             for (int d = 1; d <= 3; ++d)
             {
-                for (int i = 0; i < m->element[d].size(); ++i)
+                for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
                 {
-                    ElementSharedPtr e = m->element[d][i];
-                    if ((e->GetConf().order <= 1        && maxOrder > 1) ||
-                        (e->GetConf().order == maxOrder && e->GetConf().faceNodes == false))
+                    ElementSharedPtr e = m_mesh->m_element[d][i];
+                    if ((e->GetConf().m_order <= 1        && maxOrder > 1) ||
+                        (e->GetConf().m_order == maxOrder && e->GetConf().m_faceNodes == false))
                     {
                         toComplete.push_back(e);
                     }
                     // Generate geometry information for this element. This will
                     // be stored locally inside each element.
                     SpatialDomains::GeometrySharedPtr geom =
-                        m->element[d][i]->GetGeom(m->spaceDim);
+                        m_mesh->m_element[d][i]->GetGeom(m_mesh->m_spaceDim);
                 }
             }
-            
+
             // Complete these elements.
             for (int i = 0; i < toComplete.size(); ++i)
             {
@@ -137,53 +136,44 @@ namespace Nektar
             // Do second pass over elements to enumerate high-order vertices.
             for (int d = 1; d <= 3; ++d)
             {
-                //cout << "D = " << d << endl;
-                for (int i = 0; i < m->element[d].size(); ++i)
+                for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
                 {
                     // Keep track of faces and edges to ensure that high-order
                     // nodes are only added once on common faces/edges.
                     boost::unordered_set<int> edgesDone;
                     boost::unordered_set<int> facesDone;
-                    ElementSharedPtr e = m->element[d][i];
-                    
-                    //cout << "Element " << i << ": ";
-                    
-                    if (e->GetConf().order > 1)
+                    ElementSharedPtr e = m_mesh->m_element[d][i];
+
+                    if (e->GetConf().m_order > 1)
                     {
                         vector<NodeSharedPtr> tmp;
                         vector<EdgeSharedPtr> edgeList = e->GetEdgeList();
                         vector<FaceSharedPtr> faceList = e->GetFaceList();
                         vector<NodeSharedPtr> volList  = e->GetVolumeNodes();
                         
-                        /*
-                        cout << " edge = " << edgeList.size() << " "
-                             << " face = " << faceList.size() << " "
-                             << " vol  = " << volList.size()  << endl;
-                        */
-                        
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
                             boost::unordered_set<int>::iterator it = 
-                                edgesDone.find(edgeList[j]->id);
+                                edgesDone.find(edgeList[j]->m_id);
                             if (it == edgesDone.end() || d != 3)
                             {
                                 tmp.insert(tmp.end(), 
-                                           edgeList[j]->edgeNodes.begin(),
-                                           edgeList[j]->edgeNodes.end());
-                                edgesDone.insert(edgeList[j]->id);
+                                           edgeList[j]->m_edgeNodes.begin(),
+                                           edgeList[j]->m_edgeNodes.end());
+                                edgesDone.insert(edgeList[j]->m_id);
                             }
                         }
                         
                         for (int j = 0; j < faceList.size(); ++j)
                         {
                             boost::unordered_set<int>::iterator it = 
-                                facesDone.find(faceList[j]->id);
+                                facesDone.find(faceList[j]->m_id);
                             if (it == facesDone.end() || d != 3)
                             {
                                 tmp.insert(tmp.end(), 
-                                           faceList[j]->faceNodes.begin(),
-                                           faceList[j]->faceNodes.end());
-                                facesDone.insert(faceList[j]->id);
+                                           faceList[j]->m_faceNodes.begin(),
+                                           faceList[j]->m_faceNodes.end());
+                                facesDone.insert(faceList[j]->m_id);
                             }
                         }
                         
@@ -197,55 +187,56 @@ namespace Nektar
                         for (int j = 0; j < tmp.size(); ++j)
                         {
                             pair<NodeSet::iterator, bool> testIns =
-                                m->vertexSet.insert(tmp[j]);
+                                m_mesh->m_vertexSet.insert(tmp[j]);
                             
                             if (testIns.second)
                             {
-                                (*(testIns.first))->id = id++;
+                                (*(testIns.first))->m_id = id++;
                             }
                             else
                             {
-                                tmp[j]->id = (*(testIns.first))->id;
+                                tmp[j]->m_id = (*(testIns.first))->m_id;
                             }
                         }
                     }
                 }
             }
-            
+
             // Create ordered set of nodes - not required but looks nicer.
             std::set<NodeSharedPtr>::iterator it;
-            std::set<NodeSharedPtr> tmp(m->vertexSet.begin(), m->vertexSet.end());
+            std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
+                                        m_mesh->m_vertexSet.end());
 
             // Write out nodes section.
-            mshFile << "$Nodes"            << endl
-                    << m->vertexSet.size() << endl;
+            m_mshFile << "$Nodes"                   << endl
+                      << m_mesh->m_vertexSet.size() << endl;
             
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
-                mshFile << (*it)->id << " " << scientific << setprecision(10)
-                        << (*it)->x << " " 
-                        << (*it)->y  << " " << (*it)->z 
-                        << endl;
+                m_mshFile << (*it)->m_id << " " << scientific << setprecision(10)
+                          << (*it)->m_x  << " "
+                          << (*it)->m_y  << " " << (*it)->m_z 
+                          << endl;
             }
             
-            mshFile << "$EndNodes" << endl;
+            m_mshFile << "$EndNodes" << endl;
             
             // Write elements section. All other sections are not currently
             // supported (physical names etc).
-            mshFile << "$Elements" << endl;
-            mshFile << m->GetNumEntities() << endl;
+            m_mshFile << "$Elements" << endl;
+            m_mshFile << m_mesh->GetNumEntities() << endl;
             
             id = 0;
             
             for (int d = 1; d <= 3; ++d)
             {
-                for (int i = 0; i < m->element[d].size(); ++i, ++id)
+                for (int i = 0; i < m_mesh->m_element[d].size(); ++i, ++id)
                 {
-                    ElementSharedPtr e = m->element[d][i];
+                    ElementSharedPtr e = m_mesh->m_element[d][i];
                     
                     // First output element ID and type.
-                    mshFile << id                   << " " 
-                            << elmMap[e->GetConf()] << " ";
+                    m_mshFile << id                   << " " 
+                              << elmMap[e->GetConf()] << " ";
                     
                     // Write out number of element tags and then the tags
                     // themselves.
@@ -257,11 +248,11 @@ namespace Nektar
                         tags.push_back(0);
                     }
                     
-                    mshFile << tags.size() << " ";
+                    m_mshFile << tags.size() << " ";
                     
                     for (int j = 0; j < tags.size(); ++j)
                     {
-                        mshFile << tags[j] << " ";
+                        m_mshFile << tags[j] << " ";
                     }
                     
                     // Finally write out node list. First write vertices, then
@@ -275,42 +266,42 @@ namespace Nektar
                     
                     for (int j = 0; j < nodeList.size(); ++j)
                     {
-                        tags.push_back(nodeList[j]->id);
+                        tags.push_back(nodeList[j]->m_id);
                     }
                     
-                    if (e->GetConf().order > 1)
+                    if (e->GetConf().m_order > 1)
                     {
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
-                            nodeList = edgeList[j]->edgeNodes;
+                            nodeList = edgeList[j]->m_edgeNodes;
                             for (int k = 0; k < nodeList.size(); ++k)
                             {
-                                tags.push_back(nodeList[k]->id);
+                                tags.push_back(nodeList[k]->m_id);
                                 //cout << "EDGENODE" << endl;
                             }
                         }
                         
                         for (int j = 0; j < faceList.size(); ++j)
                         {
-                            nodeList = faceList[j]->faceNodes;
+                            nodeList = faceList[j]->m_faceNodes;
                             for (int k = 0; k < nodeList.size(); ++k)
                             {
                                 //cout << "FACENODE" << endl;
-                                tags.push_back(nodeList[k]->id);
+                                tags.push_back(nodeList[k]->m_id);
                             }
                         }
                         
                         for (int j = 0; j < volList.size(); ++j)
                         {
                             //cout << "VOLNODE" << endl;
-                            tags.push_back(volList[j]->id);
+                            tags.push_back(volList[j]->m_id);
                         }
                     }
 
                     // Re-order tetrahedral vertices.
-                    if (e->GetConf().e == eTetrahedron)
+                    if (e->GetConf().m_e == LibUtilities::eTetrahedron)
                     {
-                        int order = e->GetConf().order;
+                        int order = e->GetConf().m_order;
                         if (order > 4)
                         {
                             cerr << "Temporary error: Gmsh tets only supported "
@@ -395,9 +386,9 @@ namespace Nektar
                         }
                     }
                     // Re-order prism vertices.
-                    else if (e->GetConf().e == ePrism)
+                    else if (e->GetConf().m_e == LibUtilities::ePrism)
                     {
-                        int order = e->GetConf().order;
+                        int order = e->GetConf().m_order;
                         if (order > 2)
                         {
                             cerr << "Temporary error: Gmsh prisms only "
@@ -434,13 +425,13 @@ namespace Nektar
                     // Finally write element nodes.
                     for (int j = 0; j < tags.size(); ++j)
                     {
-                        mshFile << tags[j] << " ";
+                        m_mshFile << tags[j] << " ";
                     }
                     
-                    mshFile << endl;
+                    m_mshFile << endl;
                 }
             }
-            mshFile << "$EndElements" << endl;
+            m_mshFile << "$EndElements" << endl;
         }
     }
 }

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
@@ -75,7 +75,7 @@ namespace Nektar
         
         m_Protocol = GetProtocolFactory().CreateInstance(
                                 vTypeP, pSession, vProtocol);
- 
+
     }
     
     

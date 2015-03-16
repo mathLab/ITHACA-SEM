@@ -46,6 +46,12 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        enum LinearPreconSolver
+        {
+            eLinearPreconXxt,
+            eLinearPreconPETSc
+        };
+
         class PreconditionerLinear;
         typedef boost::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
 
@@ -72,13 +78,14 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerLinear() {}
-
-        
+            
 	protected:
             GlobalLinSysSharedPtr                       m_vertLinsys;
             boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
 
 	private:
+            static std::string                       solveType;
+            static std::string                       solveTypeIds[];
 
             virtual void v_InitObject();
 
@@ -86,7 +93,8 @@ namespace Nektar
             virtual void v_DoPreconditionerWithNonVertOutput(
                                   const Array<OneD, NekDouble>& pInput,
                                   Array<OneD, NekDouble>& pOutput,
-                                  const Array<OneD, NekDouble>& pNonVertOutput);
+                                  const Array<OneD, NekDouble>& pNonVertOutput,
+                                  Array<OneD, NekDouble>& pVertForce);
             
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

@@ -95,27 +95,9 @@ namespace Nektar
                     const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
-            // Get vector sizes
-            int nNonDir = nGlobal - nDir;
-            Array<OneD, NekDouble> tmp;
-
             if (m_useProjection)
             {
                 DoAconjugateProjection(nGlobal, pInput, pOutput, plocToGloMap, nDir);
-
-                if (0)
-                {
-                    // check correctness: solve the same system with plain CG and compare
-                    Array<OneD, NekDouble> cg_s   (nGlobal, 0.0);
-                    NekVector<NekDouble>   cg     (nNonDir, tmp = cg_s + nDir, eWrapper);
-                    NekVector<NekDouble>   x      (nNonDir, tmp = pOutput + nDir, eWrapper);
-
-                    DoConjugateGradient(nGlobal, pInput, cg_s, plocToGloMap, nDir);
-
-                    cg -= x;
-                    NekDouble norm = CalculateAnorm(nGlobal, cg_s, nDir);
-                    std::cout << "norm of solutions difference is = " << norm << std::endl;
-                }
             }
             else
             {
@@ -130,7 +112,6 @@ namespace Nektar
          * in order to speed up successive linear solves with
          * right-hand sides arising from time-dependent discretisations.
          * (P.F.Fischer, Comput. Methods Appl. Mech. Engrg. 163, 1998)
-         *
          */
         void GlobalLinSysIterative::DoAconjugateProjection(
                     const int nGlobal,
@@ -372,19 +353,22 @@ namespace Nektar
          * @param       pOutput     Solution vector of all DOFs.  
          */
         void GlobalLinSysIterative::DoConjugateGradient(
-                                                        const int nGlobal,
-                                                        const Array<OneD,const NekDouble> &pInput,
-                                                        Array<OneD,      NekDouble> &pOutput,
-                                                        const AssemblyMapSharedPtr &plocToGloMap,
-                                                        const int nDir)
+            const int                          nGlobal,
+            const Array<OneD,const NekDouble> &pInput,
+                  Array<OneD,      NekDouble> &pOutput,
+            const AssemblyMapSharedPtr        &plocToGloMap,
+            const int                          nDir)
         {
             if (!m_precon)
             {
-                MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
-                std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+                MultiRegions::PreconditionerType pType
+                    = plocToGloMap->GetPreconType();
+                std::string PreconType
+                    = MultiRegions::PreconditionerTypeMap[pType];
                 v_UniqueMap();
-                m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
-                m_precon -> BuildPreconditioner();
+                m_precon = GetPreconFactory().CreateInstance(
+                    PreconType,GetSharedThisPtr(),plocToGloMap);
+                m_precon->BuildPreconditioner();
             }
 
             // Get the communicator for performing data exchanges

@@ -83,7 +83,7 @@ namespace Nektar
             func(PFD3 p) : func3(p), size(3) {};
             func(PFD4 p) : func4(p), size(4) {};
 
-            union	// Pointer to a function 
+            union	// Pointer to a function
             {
                 PFD1 func1;
                 PFD2 func2;
@@ -113,7 +113,6 @@ namespace Nektar
             return _normal();
         }
 
-
         /** This struct creates a parser that matches the function
         definitions from math.h. All of the functions accept one
         of more NekDoubles as arguments and returns a NekDouble. **/
@@ -121,12 +120,14 @@ namespace Nektar
         {
             functions()
             {
-                // Add all of the functions from math.h 
+                // Add all of the functions from math.h
                 add
                     ("abs",		std::abs)
                     ("asin",	asin)
                     ("acos",	acos)
                     ("atan",	atan)
+                    ("atan2",	atan2)
+                    ("ang",	ang)
                     ("ceil",	ceil)
                     ("cos",		cos)
                     ("cosh",	cosh)
@@ -135,6 +136,7 @@ namespace Nektar
                     ("floor",	floor)
                     ("log",		log)
                     ("log10",	log10)
+                    ("rad",	rad)
                     ("sin",		sin)
                     ("sinh",	sinh)
                     ("sqrt",	sqrt)
@@ -189,7 +191,7 @@ namespace Nektar
             |	(root_node_d[ch_p('-')] >> factor);
 
             parameter	=	leaf_node_d[ lexeme_d[
-                (alpha_p | '_' | '$') >> *(alnum_p | '_' | '$') 
+                (alpha_p | '_' | '$') >> *(alnum_p | '_' | '$')
             ] ] >> op;
 
             function	=	root_node_d[functions_p] >>
@@ -207,7 +209,7 @@ namespace Nektar
                 *self.constants_p
             ] ] >> op;
 
-            op = eps_p( end_p | "||" | "&&" | "==" | "<=" | ">=" | '<' | '>' | '+' | '-' | '*' | '/' | '^' | ')' );
+            op = eps_p( end_p | "||" | "&&" | "==" | "<=" | ">=" | '<' | '>' | '+' | '-' | '*' | '/' | '^' | ')' | ',' );
         }
 
         // =========================================================================
@@ -243,6 +245,8 @@ namespace Nektar
             m_functionMapNameToInstanceType["asin"]  =  E_ASIN;
             m_functionMapNameToInstanceType["acos"]  =  E_ACOS;
             m_functionMapNameToInstanceType["atan"]  =  E_ATAN;
+            m_functionMapNameToInstanceType["atan2"] =  E_ATAN2;
+            m_functionMapNameToInstanceType["ang"]   =  E_ANG;
             m_functionMapNameToInstanceType["ceil"]  =  E_CEIL;
             m_functionMapNameToInstanceType["cos"]   =  E_COS;
             m_functionMapNameToInstanceType["cosh"]  =  E_COSH;
@@ -251,6 +255,7 @@ namespace Nektar
             m_functionMapNameToInstanceType["floor"] =  E_FLOOR;
             m_functionMapNameToInstanceType["log"]   =  E_LOG;
             m_functionMapNameToInstanceType["log10"] =  E_LOG10;
+            m_functionMapNameToInstanceType["rad"]   =  E_RAD;
             m_functionMapNameToInstanceType["sin"]   =  E_SIN;
             m_functionMapNameToInstanceType["sinh"]  =  E_SINH;
             m_functionMapNameToInstanceType["sqrt"]  =  E_SQRT;
@@ -277,6 +282,9 @@ namespace Nektar
             m_function[ E_TAN  ] = tan;
             m_function[ E_TANH ] = tanh;
             m_function[ E_SIGN ] = sign;
+            m_function2[E_ATAN2] = atan2;
+            m_function2[E_ANG]   = ang;
+            m_function2[E_RAD]   = rad;
             // there is no entry to m_function that correspond to awgn function.
             // this is made in purpose. This function need not be pre-evaluated once!
         }
@@ -327,7 +335,7 @@ namespace Nektar
 	      if(m_constant[it->second] != value)
 		  {
 		    std::string errormsg("Attempt to add numerically different constants under the same name: ");
-		    errormsg += name; 
+		    errormsg += name;
 		    std::cout << errormsg << std::endl;
 		  }
 	    //ASSERTL1(m_constant[it->second] == value, "Attempt to add numerically different constants under the same name: " + name);
@@ -431,6 +439,12 @@ namespace Nektar
 
             ASSERTL1(parseInfo.full != false, "Unable to fully parse function. Stopped just before: "
                                          + std::string(parseInfo.stop, parseInfo.stop + 15));
+            if (!parseInfo.full)
+            {
+                throw std::runtime_error("Unable to fully parse function at: "
+                                        + std::string(parseInfo.stop, parseInfo.stop + 15));
+            }
+
 
             // ----------------------------------------------
             // Data parsed, start setting up internal data structures.
@@ -567,6 +581,7 @@ namespace Nektar
         }
 
 
+        // wrapper function call 
        void AnalyticExpressionEvaluator::Evaluate(
                     const int expression_id,
                     const Array<OneD, const NekDouble>& x,
@@ -577,9 +592,34 @@ namespace Nektar
         {
             m_timer.Start();
 
-            const int num_points = x.num_elements();
-            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
-            ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
+            std::vector<Array<OneD, const NekDouble> >points;
+
+            points.push_back(x);
+            points.push_back(y);
+            points.push_back(z);
+            points.push_back(t);
+            
+            Evaluate(expression_id,points,result);
+
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
+        }
+
+
+       void AnalyticExpressionEvaluator::Evaluate(
+                    const int expression_id,
+                    const std::vector<Array<OneD, const NekDouble> > points,
+                    Array<OneD, NekDouble>& result)
+        {
+            m_timer.Start();
+
+            const int num_points = points[0].num_elements();
+            ASSERTL1(m_executionStack.size() > expression_id,
+                     "unknown analytic expression, it must first be defined "
+                     "with DefineFunction(...)");
+            ASSERTL1(result.num_elements() >= num_points,
+                     "destination array must have enough capacity to store "
+                     "expression values at each given point");
 
             ExecutionStack &stack = m_executionStack[expression_id];
 
@@ -588,16 +628,16 @@ namespace Nektar
             /// Lets split the work into cache-sized chunks.
             /// Ahtung, magic constant!
             const int max_chunk_size = 1024;
-
-            /// please don't remove brackets around std::min, it screws up windows compilation
+            const int nvals = points.size();
             const int chunk_size = (std::min)(max_chunk_size, num_points);
-            if (m_state.size() < chunk_size * m_state_sizes[expression_id] )
+
+            if (m_state.size() < chunk_size * m_state_sizes[expression_id])
             {
-                m_state.resize( m_state_sizes[expression_id] * chunk_size, 0.0 );
+                m_state.resize(m_state_sizes[expression_id] * chunk_size, 0.0);
             }
-            if (m_variable.size() < 4 * chunk_size )
+            if (m_variable.size() < nvals * chunk_size)
             {
-                m_variable.resize( 4 * chunk_size, 0.0);
+                m_variable.resize( nvals * chunk_size, 0.0);
             }
             if (result.num_elements() < num_points)
             {
@@ -611,10 +651,10 @@ namespace Nektar
                 const int this_chunk_size = (std::min)(work_left, 1024);
                 for (int i = 0; i < this_chunk_size; i++)
                 {
-                    m_variable[i+this_chunk_size*0] = x[offset + i];
-                    m_variable[i+this_chunk_size*1] = y[offset + i];
-                    m_variable[i+this_chunk_size*2] = z[offset + i];
-                    m_variable[i+this_chunk_size*3] = t[offset + i];
+                    for(int j = 0; j < nvals; ++j)
+                    {
+                        m_variable[i+this_chunk_size*j] = points[j][offset + i];
+                    }
                 }
                 for (int i = 0; i < stack.size(); i++)
                 {
@@ -630,48 +670,6 @@ namespace Nektar
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);
         }
-
-
-        void AnalyticExpressionEvaluator::EvaluateAtPoints(
-                    const int expression_id,
-                    const std::vector<Array<OneD, const NekDouble> > points,
-                    Array<OneD, NekDouble>& result)
-        {
-            m_timer.Start();
-
-            /// \todo test this function properly/update as the method above
-
-            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
-
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
-
-            const int num = points[0].num_elements();
-            m_state.resize(m_state_sizes[expression_id]*num);
-
-            // assuming all points have same # of coordinates
-            m_variable.resize(4*num,0.0);
-
-            for (int i = 0; i < points.size(); i++)
-            {
-                for (VariableMap::const_iterator it = variableMap.begin(); it != variableMap.end(); ++it)
-                {
-                    m_variable[it->second] = points[i][it->second];
-                }
-            }
-            for (int j = 0; j < stack.size(); j++)
-            {
-                (*stack[j]).run_many(num);
-            }
-            for (int i = 0; i < num; ++i)
-            {
-                result[i] = m_state[i];
-            }
-
-            m_timer.Stop();
-            m_total_eval_time += m_timer.TimePerTest(1);
-        }
-
 
 
         AnalyticExpressionEvaluator::PrecomputedValue AnalyticExpressionEvaluator::PrepareExecutionAsYouParse(
@@ -728,25 +726,37 @@ namespace Nektar
             {
                 FunctionNameMap::const_iterator it = m_functionMapNameToInstanceType.find(valueStr);
                 ASSERTL1(it != m_functionMapNameToInstanceType.end(), "Invalid function specified: " + valueStr);
-                ASSERTL1(num_children == 1, "Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
+                ASSERTL1(num_children == 1 || num_children == 2, "Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
 
-                PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
-
-                // additive white gaussian noise function
-                if (it->second == E_AWGN)
+                if (location->children.size() == 1)
                 {
-                    int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), v.second);
-                    stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
-                    stack.push_back ( makeStep<EvalAWGN>( stateIndex, stateIndex ) );
-                    return std::make_pair(false,0);
-                }
+                    PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
 
-                // if precomputed value is valid, return function(value).
-                if (true == v.first)
+                    // additive white gaussian noise function
+                    if (it->second == E_AWGN)
+                    {
+                        int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), v.second);
+                        stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
+                        stack.push_back ( makeStep<EvalAWGN>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    }
+
+                    if (true == v.first)
+                    {
+                        return std::make_pair( true, m_function[it->second](v.second) );
+                    }
+                }
+                else
                 {
-                    return std::make_pair( true, m_function[it->second](v.second) );
-                }
+                    PrecomputedValue v1 = PrepareExecutionAsYouParse(location->children.begin()+0, stack, variableMap, stateIndex);
+                    PrecomputedValue v2 = PrepareExecutionAsYouParse(location->children.begin()+1, stack, variableMap, stateIndex+1);
+                    m_state_size++;
 
+                    if (true == v1.first && true == v2.first)
+                    {
+                        return std::make_pair( true, m_function2[it->second](v1.second, v2.second) );
+                    }
+                }
 
                 // if somewhere down the parse tree there is a variable or parameter, set up an
                 // evaluation sequence.
@@ -764,6 +774,12 @@ namespace Nektar
                     case E_ATAN:
                         stack.push_back ( makeStep<EvalAtan>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
+                    case E_ATAN2:
+                        stack.push_back ( makeStep<EvalAtan2>( stateIndex, stateIndex, stateIndex+1 ) );
+                        return std::make_pair(false,0);
+                    case E_ANG:
+                        stack.push_back ( makeStep<EvalAng>( stateIndex, stateIndex, stateIndex+1 ) );
+                        return std::make_pair(false,0);
                     case E_CEIL:
                         stack.push_back ( makeStep<EvalCeil>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
@@ -773,7 +789,7 @@ namespace Nektar
                     case E_COSH:
                         stack.push_back ( makeStep<EvalCosh>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_EXP: 
+                    case E_EXP:
                         stack.push_back ( makeStep<EvalExp>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_FABS:
@@ -782,13 +798,16 @@ namespace Nektar
                     case E_FLOOR:
                         stack.push_back ( makeStep<EvalFloor>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_LOG: 
+                    case E_LOG:
                         stack.push_back ( makeStep<EvalLog>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_LOG10:
                         stack.push_back ( makeStep<EvalLog10>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_SIN: 
+                    case E_RAD:
+                        stack.push_back ( makeStep<EvalRad>( stateIndex, stateIndex, stateIndex+1 ) );
+                        return std::make_pair(false,0);
+                    case E_SIN:
                         stack.push_back ( makeStep<EvalSin>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_SINH:
@@ -797,7 +816,7 @@ namespace Nektar
                     case E_SQRT:
                         stack.push_back ( makeStep<EvalSqrt>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_TAN: 
+                    case E_TAN:
                         stack.push_back ( makeStep<EvalTan>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_TANH:

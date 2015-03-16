@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -47,10 +47,11 @@ namespace Nektar
         {
         }
 
-        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
-            ReadGeometry(pSession->GetDocument());
+            ReadGeometry  (pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
         }
 
@@ -121,7 +122,7 @@ namespace Nektar
 //                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 TiXmlNode* elementChild = segment->FirstChild();
-                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     elementChild = elementChild->NextSibling();
                 }
@@ -197,7 +198,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }

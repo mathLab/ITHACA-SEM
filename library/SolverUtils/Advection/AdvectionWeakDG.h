@@ -49,22 +49,25 @@ namespace Nektar
             {
                 return AdvectionSharedPtr(new AdvectionWeakDG());
             }
-            
+
             static std::string type;
-            
+
         protected:
             AdvectionWeakDG();
-            
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-            
+
+            virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+
             virtual void v_Advect(
                 const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
-        }; 
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble                                   &time);
+        };
     }
 }
-    
+
 #endif

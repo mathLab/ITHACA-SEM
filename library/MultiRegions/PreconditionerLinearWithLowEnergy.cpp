@@ -96,10 +96,10 @@ namespace Nektar
         }
 
 
-        DNekScalBlkMatSharedPtr PreconditionerLinearWithLowEnergy::
-        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
+        DNekScalMatSharedPtr PreconditionerLinearWithLowEnergy::
+        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat)
 	{
-            DNekScalBlkMatSharedPtr returnval;
+            DNekScalMatSharedPtr returnval;
             returnval=m_lowEnergyPrecon->TransformedSchurCompl(offset,loc_mat);
             return returnval;
         }
@@ -136,10 +136,8 @@ namespace Nektar
 
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear, tmp);
-            //m_linSpacePrecon->DoPreconditioner(InputLinear, OutputLinear);
 
             m_lowEnergyPrecon->DoMultiplybyInverseTransposedTransformationMatrix(OutputLinear,pOutput);
-            //m_lowEnergyPrecon->DoTransformToLowEnergy(OutputLinear,pOutput);
 
             Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }

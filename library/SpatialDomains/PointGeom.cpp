@@ -63,6 +63,7 @@ namespace Nektar
             m_shapeType = LibUtilities::ePoint;
             m_coordim = coordim;
             m_vid     = vid;
+            m_globalID = vid;
 
             (*this)(0) = x;
             (*this)(1) = y;
@@ -76,6 +77,7 @@ namespace Nektar
             m_shapeType = T.m_shapeType;
             m_vid = T.m_vid;
             m_coordim = T.m_coordim;
+            m_globalID = T.m_globalID;
 
             std::list<CompToElmt>::const_iterator def;
             for(def = T.m_elmtMap.begin(); def != T.m_elmtMap.end(); def++)
@@ -239,6 +241,14 @@ namespace Nektar
             return m_vid;
         }
 
+        PointGeomSharedPtr PointGeom::v_GetVertex(int i) const
+        {
+            ASSERTL0(i == 0, "Index other than 0 is meaningless.");
+            // shared_this_ptr() returns const PointGeom, which cannot be
+            // returned.
+            return PointGeomSharedPtr(new PointGeom(*this));
+        }
+
         /// \brief Get the orientation of point1; to be used later 
         /// for normal convention
         ///
@@ -290,9 +300,9 @@ namespace Nektar
             return GetCoord(i,Lcoord);
         }
 
-        void PointGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        NekDouble PointGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
-            GetLocCoords(coords,Lcoords);
+            return GetLocCoords(coords,Lcoords);
         }
 
     }; //end of namespace

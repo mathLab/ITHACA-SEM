@@ -63,8 +63,7 @@ namespace Nektar
          */
         void DriverArnoldi::v_InitObject(ostream &out)
         {
-            Driver::v_InitObject(out);
-    	
+            Driver::v_InitObject(out);    	
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
 
             if(m_timeSteppingAlgorithm)
@@ -102,38 +101,47 @@ namespace Nektar
 
         void DriverArnoldi::ArnoldiSummary(std::ostream &out)
         {
+            if (m_comm->GetRank() == 0)
+            {
+                if(m_session->DefinesSolverInfo("SingleMode"))
+                {
+                    out << "\tSingle Fourier mode    : true " << endl;
+                    ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),
+                             "Expected a homogeneous expansion to be defined "
+                             "with single mode");
+                }
+                else
+                {
+                    out << "\tSingle Fourier mode    : false " << endl;
+                }
+                if(m_session->DefinesSolverInfo("BetaZero"))           
+                {
+                    out << "\tBeta set to Zero       : true (overrides LHom)" 
+                        << endl;
+                }
+                else
+                {
+                    out << "\tBeta set to Zero       : false " << endl;
+                }
 
-            if(m_session->DefinesSolverInfo("SingleMode"))
-            {
-                out << "\tSingle Fourier mode    : true " << endl;
-                ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
+                if(m_timeSteppingAlgorithm)
+                {
+                    out << "\tEvolution operator     : " 
+                        << m_session->GetSolverInfo("EvolutionOperator") 
+                        << endl;
+                }
+                else
+                {
+                    out << "\tShift (Real,Imag)      : " << m_realShift 
+                        << "," << m_imagShift <<  endl;
+                }
+                out << "\tKrylov-space dimension : " << m_kdim << endl;
+                out << "\tNumber of vectors      : " << m_nvec << endl;
+                out << "\tMax iterations         : " << m_nits << endl;
+                out << "\tEigenvalue tolerance   : " << m_evtol << endl;
+                out << "======================================================" 
+                    << endl;
             }
-            else
-            {
-                out << "\tSingle Fourier mode    : false " << endl;
-            }
-            if(m_session->DefinesSolverInfo("BetaZero"))           
-            {
-                out << "\tBeta set to Zero       : true (overrides LHom)" << endl;
-            }
-            else
-            {
-                out << "\tBeta set to Zero       : false " << endl;
-            }
-
-            if(m_timeSteppingAlgorithm)
-            {
-                out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
-            }
-            else
-            {
-                out << "\tShift (Real,Imag)      : " << m_realShift <<"," << m_imagShift <<  endl;
-            }
-            out << "\tKrylov-space dimension : " << m_kdim << endl;
-            out << "\tNumber of vectors      : " << m_nvec << endl;
-            out << "\tMax iterations         : " << m_nits << endl;
-            out << "\tEigenvalue tolerance   : " << m_evtol << endl;
-            out << "=======================================================================" << endl;
         }
 
         /**
@@ -159,15 +167,26 @@ namespace Nektar
          */
         void DriverArnoldi::CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
         {
-
+            
             Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-            fields = m_equ[m_nequ-1]->UpdateFields();
+            
+            if (m_EvolutionOperator == eAdaptiveSFD)
+            {
+                //This matters for the Adaptive SFD method
+                //because m_equ[1] is the nonlinear problem with non homogeneous BCs.
+                fields = m_equ[0]->UpdateFields(); 
+            }
+            else
+            {
+                fields = m_equ[m_nequ-1]->UpdateFields();
+            }
+            
             for (int k = 0; k < m_nfields; ++k)
             {
                 int nq = fields[0]->GetNcoeffs();
                 Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1, &array[k*nq], 1);
                 fields[k]->SetPhysState(false);
-            
+                
             }
         };
     
@@ -198,12 +217,12 @@ namespace Nektar
             }
         };
 
-        void DriverArnoldi::WriteFld(std::string file, Array<OneD, Array<OneD, NekDouble> > coeffs)
+        void DriverArnoldi::WriteFld(std::string file, std::vector<Array<OneD, NekDouble> > coeffs)
         {
         
-            Array<OneD, std::string>  variables(m_nfields);
+            std::vector<std::string>  variables(m_nfields);
         
-            ASSERTL1(coeffs.num_elements() >= m_nfields, "coeffs is not of the correct length");
+            ASSERTL1(coeffs.size() >= m_nfields, "coeffs is not of the correct length");
             for(int i = 0; i < m_nfields; ++i)
             {
                 variables[i] = m_equ[0]->GetVariable(i);
@@ -216,8 +235,8 @@ namespace Nektar
         void DriverArnoldi::WriteFld(std::string file, Array<OneD, NekDouble> coeffs)
         {
         
-            Array<OneD, std::string>  variables(m_nfields);
-            Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
+            std::vector<std::string>  variables(m_nfields);
+            std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
         
             int ncoeffs = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
             ASSERTL1(coeffs.num_elements() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");

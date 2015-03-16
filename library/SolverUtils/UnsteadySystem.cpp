@@ -101,6 +101,9 @@ namespace Nektar
                         boost::lexical_cast<std::string>(m_time);
             }
 
+            // By default attempt to forward transform initial condition.
+            m_homoInitialFwd = true;
+
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
             LibUtilities::FilterMap f = m_session->GetFilters();
@@ -183,7 +186,7 @@ namespace Nektar
             }
 
             // Integrate in wave-space if using homogeneous1D
-            if(m_HomogeneousType == eHomogeneous1D)
+            if(m_HomogeneousType == eHomogeneous1D && m_homoInitialFwd)
             {
                 for(i = 0; i < nfields; ++i)
                 {
@@ -299,14 +302,7 @@ namespace Nektar
                     ss << cpuTime << "s";
                     cout << " CPU Time: " << setw(8) << left
                          << ss.str() << endl;
-
                     cpuTime = 0.0;
-                }
-                
-                // Perform any solver-specific post-integration steps
-                if (v_PostIntegrate(step))
-                {
-                    break;
                 }
 
                 // Transform data into coefficient space
@@ -318,7 +314,13 @@ namespace Nektar
                         m_fields[m_intVariables[i]]->UpdateCoeffs());
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-                
+
+                // Perform any solver-specific post-integration steps
+                if (v_PostIntegrate(step))
+                {
+                    break;
+                }
+
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
@@ -332,21 +334,29 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-                        for(i = 0; i< nfields; i++)
+                        vector<bool> transformed(nfields, false);
+                        for(i = 0; i < nfields; i++)
                         {
-                            m_fields[i]->SetWaveSpace(false);
-                            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
-                                                  m_fields[i]->UpdatePhys());
-                            m_fields[i]->SetPhysState(true);
+                            if (m_fields[i]->GetWaveSpace())
+                            {
+                                m_fields[i]->SetWaveSpace(false);
+                                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                                      m_fields[i]->UpdatePhys());
+                                m_fields[i]->SetPhysState(true);
+                                transformed[i] = true;
+                            }
                         }
                         Checkpoint_Output(nchk++);
-                        for(i = 0; i< nfields; i++)
+                        for(i = 0; i < nfields; i++)
                         {
-                            m_fields[i]->SetWaveSpace(true);
-                            m_fields[i]->HomogeneousFwdTrans(
+                            if (transformed[i])
+                            {
+                                m_fields[i]->SetWaveSpace(true);
+                                m_fields[i]->HomogeneousFwdTrans(
                                     m_fields[i]->GetPhys(),
                                     m_fields[i]->UpdatePhys());
-                            m_fields[i]->SetPhysState(false);
+                                m_fields[i]->SetPhysState(false);
+                            }
                         }
                     }
                     else
@@ -355,7 +365,7 @@ namespace Nektar
                     }
                     doCheckTime = false;
                 }
-                
+
                 // Step advance
                 ++step;
             }
@@ -368,17 +378,25 @@ namespace Nektar
                     cout << "CFL safety factor : " << m_cflSafetyFactor << endl
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
-                cout << "Time-integration  : " << intTime  << "s"   << endl;
+
+                if (m_session->GetSolverInfo("Driver") != "SteadyState")
+                {
+                    cout << "Time-integration  : " << intTime  << "s"   << endl;
+                }
             }
             
-            // If homogeneous, transform back into physical space
+            // If homogeneous, transform back into physical space if necessary.
             if(m_HomogeneousType == eHomogeneous1D)
             {
-                for(i = 0 ; i< nfields; i++)
+                for(i = 0; i < nfields; i++)
                 {
-                    m_fields[i]->SetWaveSpace(false);
-                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-                    m_fields[i]->SetPhysState(true);
+                    if (m_fields[i]->GetWaveSpace())
+                    {
+                        m_fields[i]->SetWaveSpace(false);
+                        m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                              m_fields[i]->UpdatePhys());
+                        m_fields[i]->SetPhysState(true);
+                    }
                 }
             }
             else
@@ -872,6 +890,11 @@ namespace Nektar
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
+        {
+            return false;
+        }
+
+        bool UnsteadySystem::v_SteadyStateCheck(int step)
         {
             return false;
         }

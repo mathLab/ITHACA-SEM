@@ -7,11 +7,6 @@
 #include <SpatialDomains/MeshGraph3D.h>
 #include <MultiRegions/ContField3D.h>
 
-#ifdef NEKTAR_USING_CHUD
-#include <CHUD/CHUD.h>
-//#define SHARK
-#endif
-
 using namespace Nektar;
 
 NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
@@ -436,16 +431,6 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
         NumCalls = 1;
     }
 
-#ifdef SHARK
-    NumCalls *= 20;
-
-    chudInitialize();
-    chudSetErrorLogFile(stderr);
-    chudUmarkPID(getpid(), TRUE);
-    chudAcquireRemoteAccess();
-    chudStartRemotePerfMonitor("TimingCGHelmSolve2D");
-#endif
-
     gettimeofday(&timer1, NULL);
     if (type == StdRegions::eBwdTrans)
     {
@@ -475,13 +460,6 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
         }
     }
     gettimeofday(&timer2, NULL);
-
-#ifdef SHARK
-    chudStopRemotePerfMonitor();
-    chudReleaseRemoteAccess();
-    chudCleanup();
-#endif
-
 
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
     time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);

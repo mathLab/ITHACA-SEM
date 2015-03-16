@@ -364,11 +364,11 @@ namespace Nektar
                 // Read the restart file containing this variable
                 LibUtilities::FieldIOSharedPtr fld =
                     MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
-                fld->Import(file, FieldDef, FieldData);
-
                 LibUtilities::FieldMetaDataMap fieldMetaDataMap;
+                fld->Import(file, FieldDef, FieldData, fieldMetaDataMap);
+
+
                 LibUtilities::FieldMetaDataMap::iterator iter;
-                fld->ImportFieldMetaData(file,fieldMetaDataMap);
                 iter = fieldMetaDataMap.find("Time");
                 if(iter != fieldMetaDataMap.end())
                 {

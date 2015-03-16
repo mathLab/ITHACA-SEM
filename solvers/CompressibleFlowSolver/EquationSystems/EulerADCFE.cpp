@@ -44,17 +44,17 @@ namespace Nektar
         "EulerADCFE", EulerADCFE::create,
         "Euler equations in conservative variables with "
         "artificial diffusion.");
-    
+
     EulerADCFE::EulerADCFE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleFlowSystem(pSession)
     {
     }
-    
+
     void EulerADCFE::v_InitObject()
     {
         CompressibleFlowSystem::v_InitObject();
-        
+
         if (m_shockCaptureType == "Smooth")
         {
             ASSERTL0(m_fields.num_elements() == m_spacedim + 3,
@@ -62,10 +62,10 @@ namespace Nektar
                      "make sure you have added eps to variable list.");
             m_smoothDiffusion = true;
         }
-        
+
         m_diffusion->SetArtificialDiffusionVector(
             &EulerADCFE::GetArtificialDynamicViscosity, this);
-        
+
         if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
         {
             std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
@@ -83,7 +83,7 @@ namespace Nektar
         {
             m_problemType = (ProblemType)0;
         }
-        
+
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs    (&EulerADCFE::
@@ -96,33 +96,34 @@ namespace Nektar
             ASSERTL0(false, "Implicit CFE not set up.");
         }
     }
-    
+
     EulerADCFE::~EulerADCFE()
     {
-        
+
     }
-    
+
     void EulerADCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
         SolverUtils::AddSummaryItem(
             s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
-    
+
     void EulerADCFE::v_SetInitialConditions(
-        NekDouble initialtime, 
+        NekDouble initialtime,
         bool      dumpInitialConditions,
         const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
-        
+        CompressibleFlowSystem::v_SetInitialConditions();
+
         if(dumpInitialConditions)
         {
             // Dump initial conditions to file
             Checkpoint_Output(0);
         }
     }
-    
+
     void EulerADCFE::DoOdeRhs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
         Array<OneD,       Array<OneD, NekDouble> > &outarray,
@@ -131,7 +132,7 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-        
+
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -141,17 +142,17 @@ namespace Nektar
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-        
+
         m_advection->Advect(nvariables, m_fields, advVel, inarray,
                                         outarrayAdv, m_time);
-        
+
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(npoints, outarrayAdv[i], 1);
         }
-        
+
         m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff);
-        
+
         if (m_shockCaptureType == "NonSmooth")
         {
             for (i = 0; i < nvariables; ++i)
@@ -165,37 +166,37 @@ namespace Nektar
         if(m_shockCaptureType == "Smooth")
         {
             const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
-            
+
             NekDouble pOrder = Vmath::Vmax(ExpOrder.num_elements(), ExpOrder, 1);
-            
+
             Array <OneD, NekDouble > a_vel  (npoints, 0.0);
             Array <OneD, NekDouble > u_abs  (npoints, 0.0);
             Array <OneD, NekDouble > pres   (npoints, 0.0);
             Array <OneD, NekDouble > wave_sp(npoints, 0.0);
-            
+
             GetPressure(inarray, pres);
             GetSoundSpeed(inarray, pres, a_vel);
             GetAbsoluteVelocity(inarray, u_abs);
-            
+
             Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, wave_sp, 1);
-            
+
             NekDouble max_wave_sp = Vmath::Vmax(npoints, wave_sp, 1);
-            
+
             Vmath::Smul(npoints,
                         m_C2,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
-            
+
             Vmath::Smul(npoints,
                         max_wave_sp,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
-            
+
             Vmath::Smul(npoints,
                         pOrder,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
-            
+
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(npoints,
@@ -203,16 +204,16 @@ namespace Nektar
                             outarrayDiff[i], 1,
                             outarray[i], 1);
             }
-            
+
             Array<OneD, Array<OneD, NekDouble> > outarrayForcing(nvariables);
-            
+
             for (i = 0; i < nvariables; ++i)
             {
                 outarrayForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
             }
-            
+
             GetForcingTerm(inarray, outarrayForcing);
-            
+
             for (i = 0; i < nvariables; ++i)
             {
                 // Add Forcing Term
@@ -222,8 +223,15 @@ namespace Nektar
                             outarray[i], 1);
             }
         }
+
+        // Add sponge layer if defined in the session file
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray, time);
+        }
     }
-    
+
     void EulerADCFE::DoOdeProjection(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
         Array<OneD,       Array<OneD, NekDouble> > &outarray,
@@ -231,14 +239,14 @@ namespace Nektar
     {
         int i;
         int nvariables = inarray.num_elements();
-        
+
         switch(m_projectionType)
         {
             case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -257,15 +265,15 @@ namespace Nektar
                 break;
         }
     }
-    
+
     void EulerADCFE::SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble                             time)
-    {    
+    {
         std::string varName;
         int nvariables = m_fields.num_elements();
         int cnt        = 0;
-        
+
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
@@ -275,7 +283,7 @@ namespace Nektar
             {
                 WallBC(n, cnt, inarray);
             }
-            
+
             // Wall Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eWallViscous)
@@ -283,30 +291,58 @@ namespace Nektar
                 ASSERTL0(false, "WallViscous is a wrong bc for the "
                 "Euler equations");
             }
-            
+
             // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eSymmetry)
             {
                 SymmetryBC(n, cnt, inarray);
             }
-            
+
             // Riemann invariant characteristic Boundary Condition (CBC)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eRiemannInvariant)
             {
                 RiemannInvariantBC(n, cnt, inarray);
             }
-            
+
+            // Pressure outflow non-reflective Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflowNonReflective)
+            {
+                PressureOutflowNonReflectiveBC(n, cnt, inarray);
+            }
+
+            // Pressure outflow Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflow)
+            {
+                PressureOutflowBC(n, cnt, inarray);
+            }
+
+            // Pressure outflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflowFile)
+            {
+                PressureOutflowFileBC(n, cnt, inarray);
+            }
+
+            // Pressure inflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureInflowFile)
+            {
+                PressureInflowFileBC(n, cnt, inarray);
+            }
+
             // Extrapolation of the data at the boundaries
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eExtrapOrder0)
             {
                 ExtrapOrder0BC(n, cnt, inarray);
             }
-            
+
             // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() 
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
                 == SpatialDomains::eTimeDependent)
             {
                 for (int i = 0; i < nvariables; ++i)
@@ -315,7 +351,7 @@ namespace Nektar
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
             }
-            
+
             cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }

@@ -409,6 +409,9 @@ namespace Nektar
             int s = 0;                       // iteration counter
             NekDouble error;                 // L2 error at current iteration
             NekDouble forcing_L2 = 0.0;      // L2 norm of F
+            
+            int maxIter;
+            m_session->LoadParameter("MappingMaxIter",maxIter,5000);
 
             // rhs of the equation at current iteration
             Array< OneD, NekDouble> F_corrected(physTot, 0.0);
@@ -439,7 +442,10 @@ namespace Nektar
             {
                 // Update iteration counter and set previous iteration field
                 // (use previous timestep solution for first iteration)
-                s++;            
+                s++;         
+                ASSERTL0(s < maxIter,
+                         "VCSMapping exceeded maximum number of iterations.");
+                
                 Vmath::Vcopy(physTot, m_pressure->GetPhys(), 1, previous_iter, 1);
                 
                 // Correct pressure bc to account for iteration
@@ -515,7 +521,7 @@ namespace Nektar
                     }                
                 }                    
             }
-            if (m_verbose)
+            if (m_verbose && m_session->GetComm()->GetRank()==0)
             {
                 std::cout << " Pressure system (mapping) converged in " << s <<
                             " iterations with error = " << error << std::endl;
@@ -542,6 +548,9 @@ namespace Nektar
             bool converged = false;          // flag to mark if system converged
             int s = 0;                       // iteration counter
             NekDouble error, max_error;      // L2 error at current iteration
+            
+            int maxIter;
+            m_session->LoadParameter("MappingMaxIter",maxIter,5000);
             
             //L2 norm of F
             Array<OneD, NekDouble> forcing_L2(m_nConvectiveFields,0.0); 
@@ -580,6 +589,9 @@ namespace Nektar
                 converged = true;
                 // Iteration counter
                 s++;
+                ASSERTL0(s < maxIter,
+                         "VCSMapping exceeded maximum number of iterations.");
+                
                 max_error = 0.0;
 
                 //
@@ -674,7 +686,7 @@ namespace Nektar
                     Vmath::Vcopy(physTot, outarray[i], 1, previous_iter[i], 1); 
                 }           
             }
-            if (m_verbose)
+            if (m_verbose && m_session->GetComm()->GetRank()==0)
             {
                 std::cout << " Velocity system (mapping) converged in " << s <<
                         " iterations with error = " << max_error << std::endl;

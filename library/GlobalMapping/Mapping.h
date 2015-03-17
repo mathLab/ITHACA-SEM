@@ -98,34 +98,22 @@ namespace GlobalMapping
             /// Convert a contravariant vector to the Cartesian system
             GLOBAL_MAPPING_EXPORT void ContravarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_ContravarToCartesian( inarray, outarray);
-            }
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             /// Convert a covariant vector to the Cartesian system
             GLOBAL_MAPPING_EXPORT void CovarToCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_CovarToCartesian( inarray, outarray);
-            }
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             /// Convert a contravariant vector to the transformed system
             GLOBAL_MAPPING_EXPORT void ContravarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_ContravarFromCartesian( inarray, outarray);
-            }
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             /// Convert a covariant vector to the transformed system
             GLOBAL_MAPPING_EXPORT void CovarFromCartesian(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_CovarFromCartesian( inarray, outarray);
-            }
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             /// Get the Cartesian coordinates in the field
             GLOBAL_MAPPING_EXPORT void GetCartesianCoordinates(
@@ -174,18 +162,12 @@ namespace GlobalMapping
             /// Lower index using v_(i) = g_(i,j)*v^(j)
             GLOBAL_MAPPING_EXPORT void LowerIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_LowerIndex( inarray, outarray);
-            }     
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);  
             
             /// Raise index using v^(i) = g^(i,j)*v_(j)
             GLOBAL_MAPPING_EXPORT void RaiseIndex(
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_RaiseIndex( inarray, outarray);
-            }
+                Array<OneD, Array<OneD, NekDouble> >              &outarray);
             
             // Apply the Christoffel symbols to a contravariant vector
             //          outarray = {i,pk}*u^p

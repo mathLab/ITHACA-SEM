@@ -400,6 +400,144 @@ namespace Nektar
             }
         }
         
+        void Mapping::ContravarToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            if(inarray == outarray)
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                
+                Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
+                for (int i=0; i< nvel; i++)
+                {
+                    tmp[i] = Array<OneD, NekDouble>(physTot);
+                    Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+                }
+                v_ContravarToCartesian( tmp, outarray);
+            }
+            else
+            {
+                v_ContravarToCartesian( inarray, outarray);
+            }          
+        }
+        
+        void Mapping::CovarToCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            if(inarray == outarray)
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                
+                Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
+                for (int i=0; i< nvel; i++)
+                {
+                    tmp[i] = Array<OneD, NekDouble>(physTot);
+                    Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+                }
+                v_CovarToCartesian( tmp, outarray);
+            }
+            else
+            {
+                v_CovarToCartesian( inarray, outarray);
+            }          
+        }
+        
+        void Mapping::ContravarFromCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            if(inarray == outarray)
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                
+                Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
+                for (int i=0; i< nvel; i++)
+                {
+                    tmp[i] = Array<OneD, NekDouble>(physTot);
+                    Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+                }
+                v_ContravarFromCartesian( tmp, outarray);
+            }
+            else
+            {
+                v_ContravarFromCartesian( inarray, outarray);
+            }          
+        }
+        
+        void Mapping::CovarFromCartesian(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            if(inarray == outarray)
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                
+                Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
+                for (int i=0; i< nvel; i++)
+                {
+                    tmp[i] = Array<OneD, NekDouble>(physTot);
+                    Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+                }
+                v_CovarFromCartesian( tmp, outarray);
+            }
+            else
+            {
+                v_CovarFromCartesian( inarray, outarray);
+            }          
+        }
+        
+        void Mapping::LowerIndex(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            if(inarray == outarray)
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                
+                Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
+                for (int i=0; i< nvel; i++)
+                {
+                    tmp[i] = Array<OneD, NekDouble>(physTot);
+                    Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+                }
+                v_LowerIndex( tmp, outarray);
+            }
+            else
+            {
+                v_LowerIndex( inarray, outarray);
+            }          
+        }
+        
+        void Mapping::RaiseIndex(
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            if(inarray == outarray)
+            {
+                int physTot = m_fields[0]->GetTotPoints();
+                int nvel = m_nConvectiveFields;
+                
+                Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
+                for (int i=0; i< nvel; i++)
+                {
+                    tmp[i] = Array<OneD, NekDouble>(physTot);
+                    Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+                }
+                v_RaiseIndex( tmp, outarray);
+            }
+            else
+            {
+                v_RaiseIndex( inarray, outarray);
+            }          
+        }
+        
         void Mapping::v_GetCartesianCoordinates(
                     Array<OneD, NekDouble>               &out0,
                     Array<OneD, NekDouble>               &out1,

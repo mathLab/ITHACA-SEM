@@ -108,14 +108,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time );
 
-        void CalculateForcing(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
-
-        void EvaluateAccelaration(
-            const Array<OneD, NekDouble> &input,
-                  Array<OneD, NekDouble> &output,
-                  int npoints);
-
         void SetDynEqCoeffMatrix(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
@@ -125,7 +117,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
 
-        int m_intSteps;
         int m_movingBodyCalls;
         int m_NumLocPlane;
         int m_VarArraysize;
@@ -161,7 +152,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, NekDouble> m_MotionVars;
         Array<OneD, Array<OneD, NekDouble> > m_zeta;
         Array<OneD, Array<OneD, NekDouble> > m_eta;
-        Array<OneD, Array<OneD, NekDouble> > m_W;
         /// fictitious velocity storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
         /// fictitious acceleration storage

@@ -237,6 +237,7 @@ namespace Nektar
             // Only do anything if mapping exists
             if (m_isDefined)
             {
+                fieldMetaDataMap["MappingCartesianVel"] = std::string("False");
                 if (m_fromFunction)
                 {
                     // Add metadata

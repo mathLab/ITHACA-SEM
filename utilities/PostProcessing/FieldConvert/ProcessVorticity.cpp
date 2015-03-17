@@ -38,6 +38,8 @@
 using namespace std;
 
 #include "ProcessVorticity.h"
+#include "ProcessMapping.h"
+#include <GlobalMapping/Mapping.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -98,14 +100,71 @@ namespace Nektar
                 outfield[i] = Array<OneD, NekDouble>(npoints);
             }
             
+            //
+            // Get mapping
+            //
+            GlobalMapping::MappingSharedPtr mapping = 
+                                    ProcessMapping::GetMapping(m_f);
+            
+            // Get velocity and convert to Cartesian system,
+            //      if it is still in transformed system
+            Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
+            if(m_f->m_fieldMetaDataMap["MappingCorrectVel"] == "False")
+            {
+                // Initialize arrays and copy velocity
+                for ( int i =0; i<spacedim; ++i )
+                {
+                    vel[i] = Array<OneD, NekDouble> (npoints);      
+                    if (m_f->m_exp[0]->GetWaveSpace())
+                    {
+                        m_f->m_exp[0]->HomogeneousBwdTrans(m_f->m_exp[i]->GetPhys(), vel[i]);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i], 1);
+                    }
+
+                }
+                // Convert velocity to cartesian system
+                mapping->ContravarToCartesian(vel, vel);            
+                // Convert back to wavespace if necessary
+                if (m_f->m_exp[0]->GetWaveSpace())
+                {
+                    for ( int i =0; i<spacedim; ++i )
+                    {
+                        m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
+                    }
+                }        
+            }
+            else
+            {
+                for ( int i =0; i<spacedim; ++i )
+                {
+                    vel[i] = Array<OneD, NekDouble> (npoints); 
+                    Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i], 1);
+                }
+            }
+            
             // Calculate Gradient & Vorticity
+            Array<OneD, Array<OneD, NekDouble> >   tmp(spacedim);
+            for( int i = 0; i<spacedim; i++)
+            {
+                tmp[i] = Array<OneD, NekDouble> (npoints);
+            }
+            
             if (spacedim == 2)
             {
-                for (i = 0; i < nfields; ++i)
+                for (i = 0; i < spacedim; ++i)
                 {
-                    m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
-                                             grad[i*nfields], 
-                                             grad[i*nfields+1]);
+                    m_f->m_exp[i]->PhysDeriv(vel[i], 
+                                             tmp[0], 
+                                             tmp[1]);
+                    
+                    mapping->ContravarToCartesian(tmp, tmp);
+                    for( int j = 0; j<spacedim; j++)
+                    {
+                        Vmath::Vcopy(npoints, tmp[j], 1, grad[i*nfields+j], 1 );
+                    }
                 }
                 // W_z = Vx - Uy
                 Vmath::Vsub(npoints, grad[1*nfields+0], 1, 
@@ -114,13 +173,19 @@ namespace Nektar
             }
             else
             {
-                for (i = 0; i < nfields; ++i)
+                for (i = 0; i < spacedim; ++i)
                 {
 
-                    m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
-                                             grad[i*nfields], 
-                                             grad[i*nfields+1],
-                                             grad[i*nfields+2]);
+                    m_f->m_exp[i]->PhysDeriv(vel[i], 
+                                             tmp[0], 
+                                             tmp[1],
+                                             tmp[2]);
+                    
+                    mapping->ContravarToCartesian(tmp, tmp);
+                    for( int j = 0; j<spacedim; j++)
+                    {
+                        Vmath::Vcopy(npoints, tmp[j], 1, grad[i*nfields+j], 1 );
+                    }
                 }
                 
                 // W_x = Wy - Vz

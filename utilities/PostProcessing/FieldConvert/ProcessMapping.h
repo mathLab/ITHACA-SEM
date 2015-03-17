@@ -37,6 +37,7 @@
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMAPPING
 
 #include "Module.h"
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -62,6 +63,8 @@ public:
 
     /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);
+    
+    static GlobalMapping::MappingSharedPtr GetMapping(FieldSharedPtr f);
 
 private:
     FieldSharedPtr m_fromField;

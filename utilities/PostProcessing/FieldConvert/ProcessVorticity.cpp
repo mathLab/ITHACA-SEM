@@ -185,6 +185,7 @@ namespace Nektar
                     for (i = 0; i < FieldDef.size()/nstrips; ++i)
                     {
 						int n = s * FieldDef.size()/nstrips + i;
+
                         if (j >= nfields)
                         {
                             FieldDef[n]->m_fields.push_back(outname[j-nfields]);

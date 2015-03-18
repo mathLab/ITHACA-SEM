@@ -52,19 +52,19 @@ ModuleKey OutputTecplot::m_className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eOutputModule, "dat"), OutputTecplot::create,
         "Writes a Tecplot file.");
-
-OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
-{
-    m_requireEquiSpaced = true;
-            if(f->m_setUpEquiSpacedFields)
-            {
-                m_outputType = eFullBlockZoneEquiSpaced;
-            }
-            else
-            {
-                m_outputType = eFullBlockZone;
-            }
-        }
+    
+      OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
+      {
+          if(f->m_setUpEquiSpacedFields)
+          {
+              m_outputType = eFullBlockZoneEquiSpaced;
+          }
+          else
+          {
+              m_requireEquiSpaced = true;
+              m_outputType = eFullBlockZone;
+          }
+      }
 
         OutputTecplot::~OutputTecplot()
         {
@@ -85,6 +85,7 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
             {
                 return;
             }
+
 
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();

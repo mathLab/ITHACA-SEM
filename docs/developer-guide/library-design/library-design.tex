@@ -458,3 +458,31 @@ the Quasi-3D approach usage can be found in Section~\ref{s:xml}.
 \begin{center}
 \includegraphics{img/Quasi3d.png}
 \end{center}
+
+
+\section{SolverUtils}
+
+\subsection{Drivers}
+Drivers govern the high-level execution of a solver.
+
+\subsubsection{Implementing a new Driver}
+To take advantage of the Nektar++ architecture and implement an algorithm 
+which will wrap around an existing solver, new drivers can be created. This can
+be done in a few steps by using DriverStandard.cpp (and .h) as a template:
+\begin{itemize}
+\item Create the new files called DriverMyAlgorithm.cpp (and .h)
+\item Implement constructor and destructor
+\item Provide implementation for \texttt{v\_InitObject} and \texttt{v\_Execute}
+as necessary.
+\item Register the new driver with the driver factory.
+\begin{lstlisting}[style=C++Style]
+string DriverMyAlgorithm::className = 
+    GetDriverFactory().RegisterCreatorFunction("MyAlgorithm",
+                                               DriverMyAlgorithm::create); 
+string DriverMyAlgorithm::driverLookupId = 
+    LibUtilities::SessionReader::RegisterEnumValue("Driver","MyAlgorithm",0);
+\end{lstlisting}
+\item Add the new driver to the library. In \inlsh{CMakeLists.txt}, 
+DriverMyAlgorithm.cpp must be added in the \inlsh{SOLVER\_UTILS\_SOURCES} 
+section and DriverMyAlgorithm.h in the \inlsh{SOLVER\_UTILS\_HEADERS} section.
+\end{itemize}

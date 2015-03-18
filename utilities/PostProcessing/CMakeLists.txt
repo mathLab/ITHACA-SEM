@@ -1,5 +1,6 @@
 ADD_UTILITIES_EXECUTABLE(FldAddFld         util FldAddFld.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddScalGrad    util FldAddScalGrad.cpp)
+ADD_UTILITIES_EXECUTABLE(FldAddScalGrad_elmt    util FldAddScalGrad_elmt.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddWSS	   util FldAddWSS.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddMultiShear    util FldAddMultiShear.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToTecplot      util FldToTecplot.cpp)

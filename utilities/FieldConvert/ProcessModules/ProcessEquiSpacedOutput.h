@@ -64,6 +64,10 @@ namespace Nektar
             ProcessEquiSpacedOutput(){};
             void SetupEquiSpacedField(void);
 
+            void GenOrthoModes(int n,
+                               const Array<OneD,const NekDouble> &phys,
+                               Array<OneD, NekDouble> &coeffs);
+
         private:
         };
     }

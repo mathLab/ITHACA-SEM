@@ -40,7 +40,10 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/Foundations/Interp.h>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTriExp.h>
 
 namespace Nektar
 {
@@ -61,6 +64,8 @@ ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)
 
     m_config["tetonly"] = ConfigOption(true, "NotSet",
                                 "Only process tetrahedral elements");
+
+    m_config["modalenergy"] = ConfigOption(true,"NotSet","Write output as modal energy");
 
 }
 
@@ -357,7 +362,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     m_f->m_exp[0]->GetCoords(x1, y1, z1);
 
 
-
     Array<OneD, NekDouble> tmp;
 
     for(int n = 0; n < coordim; ++n)
@@ -383,14 +387,29 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
         {
             cnt = 0;
             int cnt1 = 0;
-            Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
-            for(int i = 0; i < nel; ++i)
+
+            if(m_config["modalenergy"].m_beenSet)
             {
-                m_f->m_exp[0]->GetExp(i)->PhysInterpToSimplexEquiSpaced(
+                
+                Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys(); 
+                for(int i = 0; i < nel; ++i)
+                {
+                    GenOrthoModes(i,phys+cnt,tmp = pts[coordim + n] + cnt1);
+                    cnt1 += ppe[i];
+                    cnt  += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
+                }
+            }
+            else
+            {
+                Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
+                for(int i = 0; i < nel; ++i)
+                {
+                    m_f->m_exp[0]->GetExp(i)->PhysInterpToSimplexEquiSpaced(
                             phys + cnt,
                             tmp = pts[coordim + n] + cnt1);
-                cnt1 += ppe[i];
-                cnt  += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
+                    cnt1 += ppe[i];
+                    cnt  += m_f->m_exp[0]->GetExp(i)->GetTotPoints();
+                }
             }
 
             // Set up Variable string.
@@ -409,6 +428,70 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     }
     m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
+
+
+    void ProcessEquiSpacedOutput::GenOrthoModes(int n,
+                                                const Array<OneD,const NekDouble> &phys,
+                                                Array<OneD, NekDouble> &coeffs)
+    {
+        LocalRegions::ExpansionSharedPtr e;
+        e = m_f->m_exp[0]->GetExp(n);
+        
+                switch(e->DetShapeType())
+        {
+        case LibUtilities::eTriangle:
+            {
+                int np0 = e->GetBasis(0)->GetNumPoints();
+                int np1 = e->GetBasis(1)->GetNumPoints();
+                int np = max(np0,np1);
+
+                // to ensure points are correctly projected to np need
+                // to increase the order slightly of coordinates
+                LibUtilities::PointsKey pa(np+1,e->GetPointsType(0));
+                LibUtilities::PointsKey pb(np,e->GetPointsType(1));
+                Array<OneD, NekDouble> tophys(np*(np+1));
+
+                LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,np,pa);
+                LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,np,pb);
+                StdRegions::StdTriExp OrthoExp(Ba,Bb);
+               
+                // interpolate points to new phys points!
+                LibUtilities::Interp2D(e->GetBasis(0)->GetBasisKey(),
+                                       e->GetBasis(1)->GetBasisKey(),
+                                       phys,Ba,Bb,tophys);
+
+                OrthoExp.FwdTrans(tophys,coeffs);
+            }
+            break;
+        case LibUtilities::eQuadrilateral:
+            {
+                int np0 = e->GetBasis(0)->GetNumPoints();
+                int np1 = e->GetBasis(1)->GetNumPoints();
+                int np = max(np0,np1);
+
+                LibUtilities::PointsKey pa(np+1,e->GetPointsType(0));
+                LibUtilities::PointsKey pb(np+1,e->GetPointsType(1));
+                Array<OneD, NekDouble> tophys((np+1)*(np+1));
+                
+                LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,np,pa);
+                LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,np,pb);
+                StdRegions::StdQuadExp OrthoExp(Ba,Bb);
+
+                // interpolate points to new phys points!
+                LibUtilities::Interp2D(e->GetBasis(0)->GetBasisKey(),
+                                       e->GetBasis(1)->GetBasisKey(),
+                                       phys,Ba,Bb,tophys);
+
+                OrthoExp.FwdTrans(phys,coeffs);
+            }
+            break;
+        default: 
+            ASSERTL0(false,"Shape needs setting up");
+            break;
+            
+        }
+    }
+
 }
 }
 

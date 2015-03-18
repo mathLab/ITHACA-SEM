@@ -22,6 +22,9 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessPrintFldNorms.h
     ProcessModules/ProcessScaleInFld.h
     ProcessModules/ProcessVorticity.h
+    ProcessModules/ProcessScalGrad.h
+    ProcessModules/ProcessMultiShear.h
+    ProcessModules/ProcessC0Projection.h
     ProcessModules/ProcessC0Projection.h
     ProcessModules/ProcessQCriterion.h
 )
@@ -50,6 +53,9 @@ SET(FieldConvertSources
     ProcessModules/ProcessPrintFldNorms.cpp
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp
+    ProcessModules/ProcessScalGrad.cpp
+    ProcessModules/ProcessMultiShear.cpp
+    ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessQCriterion.cpp
 )

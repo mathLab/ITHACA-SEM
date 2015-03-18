@@ -36,7 +36,7 @@
 #ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSWSS
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSWSS
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {

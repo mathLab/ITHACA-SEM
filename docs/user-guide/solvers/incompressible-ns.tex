@@ -850,7 +850,7 @@ The result should look similar to that shown in Figure~\ref{f:incns:kovaflow}.
 
 \subsection{Kovasznay Flow 2D using high-order outflow boundary conditions}
 \label{s:incns:kovasznay2D_HOBC}
-In this example, we solve the same case of 2D Kovasznay flow on severely-truncated computational domain but using a high-order outflow boundary condition, which is much more accurate and robust for unbounded flows \cite{DoKa14}. The solver information and parameters used here are similar to the previous one. What only we need to modify in the input file is just the boundary condition type upon the outlet region shown as below 
+In this example, we solve the same case of 2D Kovasznay flow on severely-truncated computational domain but using a high-order outflow boundary condition, which is much more accurate and robust for unbounded flows~\cite{DoKa14}. The solver information and parameters used here are similar to the previous one. What only we need to modify in the input file is just the boundary condition type upon the outlet region shown as below 
 \begin{lstlisting}[style=XMLStyle]
 <BOUNDARYCONDITIONS>
     <REGION REF="0">

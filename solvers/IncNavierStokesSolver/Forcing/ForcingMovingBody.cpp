@@ -726,17 +726,19 @@ void ForcingMovingBody::TensionedCableModel(
             {
                 Vmath::Vcopy(m_NumLocPlane, MotionPhys[var], 1, fft_in[var+1], 1);
             }
-
-            for(int j = 0; j < m_NumVariable+1; j++)
+            if(nproc > 0)
             {
-                for (int i = 1; i < nproc; ++i)
+                for(int j = 0; j < m_NumVariable+1; j++)
                 {
-                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+                    for (int i = 1; i < nproc; ++i)
+                    {
+                        Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
 
-                    m_comm->GetColumnComm()->Recv(i, tmp = fft_in[j] + i*m_NumLocPlane);
+                        m_comm->GetColumnComm()->Recv(i, tmp = fft_in[j] + i*m_NumLocPlane);
+                    }
                 }
             }
-
+            
             if(m_supporttype == "FREE-FREE" || m_supporttype == "Free-Free")
             {
                 for(int j = 0 ; j < m_NumVariable+1; ++j)
@@ -776,20 +778,23 @@ void ForcingMovingBody::TensionedCableModel(
             {
                 Vmath::Vcopy(m_NumLocPlane, fft_out[var+1], 1, MotionCoeffs[var], 1);
             }
-
-            for(int j = 0; j < m_NumVariable+1; j++)
+        
+            if(nproc > 0)
             {
-                for (int i = 1; i < nproc; i++)
+                for(int j = 0; j < m_NumVariable+1; j++)
                 {
-                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+                    for (int i = 1; i < nproc; i++)
+                    {
+                        Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
 
-                    Vmath::Vcopy(m_NumLocPlane, fft_out[j] + i*m_NumLocPlane, 1, tmp, 1);
+                        Vmath::Vcopy(m_NumLocPlane, fft_out[j] + i*m_NumLocPlane, 1, tmp, 1);
 
-                    m_comm->GetColumnComm()->Send(i, tmp);
+                        m_comm->GetColumnComm()->Send(i, tmp);
+                    }
                 }
             }
         }
-        else
+        else if (nproc > 0)
         {
             m_comm->GetColumnComm()->Send(0, FcePhysinArray);
 
@@ -846,16 +851,19 @@ void ForcingMovingBody::TensionedCableModel(
                 Vmath::Vcopy(m_NumLocPlane, MotionCoeffs[var], 1, fft_in[var], 1);
             }
 
-            for(int j = 0; j < m_NumVariable; j++)
+            if (nproc > 0)
             {
-                for (int i = 1; i < nproc; ++i)
+                for(int j = 0; j < m_NumVariable; j++)
                 {
-                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+                    for (int i = 1; i < nproc; ++i)
+                    {
+                        Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
 
-                    m_comm->GetColumnComm()->Recv(i, tmp = fft_in[j]+i*m_NumLocPlane);
+                        m_comm->GetColumnComm()->Recv(i, tmp = fft_in[j]+i*m_NumLocPlane);
+                    }
                 }
             }
-
+    
             if(m_supporttype == "FREE-FREE" || m_supporttype == "Free-Free")
             {
                 for(int j = 0 ; j < m_NumVariable; ++j)
@@ -894,20 +902,23 @@ void ForcingMovingBody::TensionedCableModel(
                 Vmath::Vcopy(m_NumLocPlane, fft_out[var], 1, MotionPhys[var], 1);
             }
 
-            for(int j = 0; j < m_NumVariable; j++)
+            if (nproc > 0)
             {
-                for (int i = 1; i < nproc; ++i)
+                for(int j = 0; j < m_NumVariable; j++)
                 {
-                    Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
+                    for (int i = 1; i < nproc; ++i)
+                    {
+                        Array <OneD, NekDouble> tmp(m_NumLocPlane, 0.0);
 
-                    Vmath::Vcopy(m_NumLocPlane, fft_out[j]+i*m_NumLocPlane, 1, tmp, 1);
+                        Vmath::Vcopy(m_NumLocPlane, fft_out[j]+i*m_NumLocPlane, 1, tmp, 1);
 
-                    m_comm->GetColumnComm()->Send(i, tmp);
+                        m_comm->GetColumnComm()->Send(i, tmp);
+                    }
                 }
             }
         }
-        else
-        {
+        else if (nproc > 0)
+        {   
             for (int var = 0; var < m_NumVariable; var++)
             {
                 m_comm->GetColumnComm()->Send(0, MotionCoeffs[var]);

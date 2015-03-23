@@ -1029,10 +1029,24 @@ namespace Nektar
                 // the trace expansion.
                 StdRegions::Orientation orient = exp3D->GetForient(faceNum);
 
-                LibUtilities::BasisKey faceBasis0
-                    = exp3D->DetFaceBasisKey(faceNum, 0);
-                LibUtilities::BasisKey faceBasis1
-                    = exp3D->DetFaceBasisKey(faceNum, 1);
+
+                int fromid0,fromid1;
+
+                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                {
+                    fromid0 = 0;
+                    fromid1 = 1;
+                }
+                else
+                {
+                    fromid0 = 1;
+                    fromid1 = 0;
+                }
+
+                LibUtilities::BasisKey faceBasis0 
+                    = exp3D->DetFaceBasisKey(faceNum, fromid0);
+                LibUtilities::BasisKey faceBasis1 
+                    = exp3D->DetFaceBasisKey(faceNum, fromid1);
                 LibUtilities::BasisKey traceBasis0
                     = traceExp->GetBasis(0)->GetBasisKey();
                 LibUtilities::BasisKey traceBasis1

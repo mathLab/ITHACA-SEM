@@ -136,6 +136,8 @@ namespace Nektar
             // Perform solve for this iteration and update geometry accordingly.
             LinearElasticSystem::v_DoSolve();
             UpdateGeometry(m_graph, m_fields);
+            
+            WriteGeometry(i);
 
             // Check for invalid elements.
             for (j = 0; j < m_fields[0]->GetExpSize(); ++j)
@@ -159,13 +161,12 @@ namespace Nektar
                 if (m_session->GetComm()->GetRank() == 0)
                 {
                     cout << "- Detected negative Jacobian in element "
-                         << invalidElmtId << "; terminating" << endl;
+                         << invalidElmtId << "; terminating at"
+                         " step: "<<i<< endl;
                 }
 
                 break;
             }
-
-            WriteGeometry(i);
 
             if (m_session->GetComm()->GetRank() == 0)
             {

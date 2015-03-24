@@ -141,7 +141,6 @@ namespace Nektar
             {
                 int id;             ///< Universal ID of the vertex
                 int partition;      ///< Index of the partition to which it belongs
-                int partid;         ///< Global ID of the vertex in the partition
                 MultiWeight weight; ///< Weightings to this graph vertex
             };
 

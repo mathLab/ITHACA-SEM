@@ -88,28 +88,29 @@ namespace Nektar
                 }
             }
 
-            ASSERTL0(m_toDeform.size() > 0, "Must tag at least one boundary "
-                                            "with the WALL user-defined type");
-
-            m_savedBCs  = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
-                m_toDeform.size());
-
-            for (int i = 0; i < m_toDeform.size(); ++i)
+            if(m_toDeform.size() > 0)
             {
-                m_savedBCs[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
-                for (int j = 0; j < nVel; ++j)
-                {
-                    const int id = m_toDeform[i];
-                    MultiRegions::ExpListSharedPtr bndCondExp =
-                        m_fields[j]->GetBndCondExpansions()[id];
-                    int nCoeffs = bndCondExp->GetNcoeffs();
 
-                    m_savedBCs[i][j] = Array<OneD, NekDouble>(nCoeffs);
-                    Vmath::Smul(nCoeffs, 1.0/m_numSteps,
-                                bndCondExp->GetCoeffs(),    1,
-                                bndCondExp->UpdateCoeffs(), 1);
-                    Vmath::Vcopy(nCoeffs, bndCondExp->GetCoeffs(), 1,
-                                 m_savedBCs[i][j], 1);
+                m_savedBCs  = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                    m_toDeform.size());
+
+                for (int i = 0; i < m_toDeform.size(); ++i)
+                {
+                    m_savedBCs[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
+                    for (int j = 0; j < nVel; ++j)
+                    {
+                        const int id = m_toDeform[i];
+                        MultiRegions::ExpListSharedPtr bndCondExp =
+                            m_fields[j]->GetBndCondExpansions()[id];
+                        int nCoeffs = bndCondExp->GetNcoeffs();
+
+                        m_savedBCs[i][j] = Array<OneD, NekDouble>(nCoeffs);
+                        Vmath::Smul(nCoeffs, 1.0/m_numSteps,
+                                    bndCondExp->GetCoeffs(),    1,
+                                    bndCondExp->UpdateCoeffs(), 1);
+                        Vmath::Vcopy(nCoeffs, bndCondExp->GetCoeffs(), 1,
+                                     m_savedBCs[i][j], 1);
+                    }
                 }
             }
         }

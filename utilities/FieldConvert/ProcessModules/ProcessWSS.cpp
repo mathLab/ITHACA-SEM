@@ -173,7 +173,6 @@ namespace Nektar
                 BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
             }
           
-	    cout << "Test" << '\n';
             // loop over the types of boundary conditions
             for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
             {   

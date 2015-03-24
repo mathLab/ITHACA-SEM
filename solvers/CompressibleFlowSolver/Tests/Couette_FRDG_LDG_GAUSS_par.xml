@@ -88,7 +88,7 @@
     <SOLVERINFO>
         <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
         <I PROPERTY="Projection"            VALUE="DisContinuous"       />
-        <I PROPERTY="AdvectionType"         VALUE="FRDG"              />
+        <I PROPERTY="AdvectionType"         VALUE="FRDG"                />
         <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
         <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
         <I PROPERTY="UpwindType"            VALUE="HLLC"                />

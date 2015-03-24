@@ -151,6 +151,76 @@ void OutputFld::Process(po::variables_map &vm)
                     }
                 }
 
+                if(m_f->m_addNormals)
+                {
+                    ASSERTL0(m_f->m_exp[0]->GetCoordim(0) == 3,
+                             "Add normals to extracted boundaries only set up in 3 dimensions");
+                    int normdim = 3; // currently assuming 3D normals; 
+                    string normstr[3] = {"Norm_x","Norm_y","Norm_z"};
+                    
+                    // Add normal information
+                    StdRegions::StdExpansionSharedPtr elmt;
+                    StdRegions::StdExpansion2DSharedPtr bc;
+                    Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
+                    
+                    m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, 
+                                                        BoundarytoTraceID);
+                    
+                    // determine offset of this Bnd Expansion Border
+                    int cnt = 0;
+                    for(int n = 0; n < Border; ++n)
+                    {
+                        cnt += BndExp[0][n]->GetExpSize();
+                    }
+                    
+                    Array<OneD, NekDouble> tmp_array;
+                    Array<OneD, Array<OneD, NekDouble> > NormCoeff(normdim);
+                    
+                    for(int j = 0; j < normdim; ++j)
+                    {
+                        NormCoeff[j] = Array<OneD, NekDouble>(BndExp[0][Border]->GetNcoeffs(),0.0);
+                    }
+                    
+                    // setup coeff arrays of normals. 
+                    for(int j = 0; j < BndExp[0][Border]->GetExpSize();
+                        ++j, cnt++)
+                    {       
+                        // find element and face of this expansion.
+                        int elmtid = BoundarytoElmtID[cnt];
+                        elmt = m_f->m_exp[0]->GetExp(elmtid);
+                        
+                        // Get face 2D expansion from element expansion
+                        bc  =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][Border]->GetExp(j));
+
+                        //identify boundary of element looking at.
+                        int boundary = BoundarytoTraceID[cnt];
+                                
+                        //Get face normals
+                        const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetFaceNormal(boundary);
+
+                        for(int k = 0; k < normdim; ++k)
+                        {
+                            bc->FwdTrans(normals[k],tmp_array = NormCoeff[k]+BndExp[0][Border]->GetCoeff_Offset(j));
+                        }
+                    }
+
+                    // add normal coefficients to list to be dumped
+                    for (int j = 0; j < normdim; ++j)
+                    {
+                        Vmath::Vcopy(BndExp[0][Border]->GetNcoeffs(),
+                                     NormCoeff[j],1,
+                                     BndExp[0][Border]->UpdateCoeffs(),1);
+
+                        for (int k = 0; k < FieldDef.size(); ++k)
+                        {
+                            int st = FieldData[k].size();
+                            BndExp[0][Border]->AppendFieldData(FieldDef[k],
+                                                               FieldData[k]);
+                            FieldDef[k]->m_fields.push_back(normstr[j]);
+                        }
+                    }
+                }
+
                 // output error for regression checking. 
                 if (vm.count("error"))
                 {

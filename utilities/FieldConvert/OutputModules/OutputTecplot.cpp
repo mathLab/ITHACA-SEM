@@ -101,7 +101,7 @@ ModuleKey OutputTecplot::m_className =
                 filename = start + procId + ext;
             }
 
-            if(fPts != NullFieldPts)
+            if(fPts != LibUtilities::NullPtsField)
             {
                 int i   = 0;
                 int j   = 0;

@@ -96,6 +96,7 @@ struct Field {
     bool                                    m_writeBndFld;
     vector<unsigned int>                    m_bndRegionsToWrite;
     bool                                    m_fldToBnd;
+    bool                                    m_addNormals;
 
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;

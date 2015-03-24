@@ -183,32 +183,38 @@ namespace Nektar
                 m_f->m_exp.resize(nfields*nstrips);
 
                 vector<string> vars = m_f->m_session->GetVariables();
-                
+
                 // declare other fields;
                 for (int s = 0; s < nstrips; ++s) //homogeneous strip varient
                 {
                     for (i = 0; i < nfields; ++i)
                     {
-                       if(i < vars.size())
-                       {
-                            m_f->m_exp[s*nfields+i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                                                           vars[i]);
-                       }
-                       else
-                       {
-                           if(vars.size())
-                           {
-                               m_f->m_exp[s*nfields+i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                                                                vars[0]);
-                           }
-                           else
-                           {
-                               m_f->m_exp[s*nfields+i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-                           }
-                       }
+                        if(i < vars.size())
+                        {
+                             m_f->m_exp[s*nfields+i] = m_f->AppendExpList(
+                                     m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                     vars[i]);
+                        }
+                        else
+                        {
+                            if(vars.size())
+                            {
+                                m_f->m_exp[s*nfields+i] =
+                                    m_f->AppendExpList(
+                                        m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                        vars[0]);
+                            }
+                            else
+                            {
+                                m_f->m_exp[s*nfields+i] =
+                                    m_f->AppendExpList(
+                                        m_f->m_fielddef[0]->m_numHomogeneousDir
+                                    );
+                            }
+                        }
                     }
                 }
-                
+
                 for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
                 {
                     for (j = 0; j < nfields; ++j)

@@ -81,16 +81,23 @@ namespace Nektar
             vector<bool>                    m_boundaryRegionIsInList;
             unsigned int                    m_index;
             unsigned int                    m_outputFrequency;
-            /// plane to take history point from if using a homogeneous1D
-            /// expansion
-            unsigned int                    m_outputPlane;
+            /// if using a homogeneous1D expansion, determine if should output
+            ///     all planes or just the average
+            bool                            m_outputAllPlanes;
             bool                            m_isHomogeneous1D;
             std::string                     m_outputFile;
             std::ofstream                   m_outputStream;
             LibUtilities::BasisSharedPtr    m_homogeneousBasis;
             std::string                     m_BoundaryString;
+            Array<OneD, int>                m_BCtoElmtID;
+            Array<OneD, int>                m_BCtoTraceID;
             /// number of planes for homogeneous1D expansion
-            int                             m_nplanes;
+            int                             m_nPlanes;
+            int                             m_nLocPlanes;
+            // Time when we start calculating the forces
+            NekDouble                       m_startTime;
+            // Directions on which the forces will be projected
+            Array<OneD, Array<OneD, NekDouble> >    m_directions;
         };
     }
 }

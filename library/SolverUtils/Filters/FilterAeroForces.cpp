@@ -35,6 +35,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
+#include <boost/algorithm/string.hpp>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
@@ -44,7 +45,9 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string FilterAeroForces::className = GetFilterFactory().RegisterCreatorFunction("AeroForces", FilterAeroForces::create);
+        std::string FilterAeroForces::className =
+                GetFilterFactory().RegisterCreatorFunction("AeroForces",
+                                                    FilterAeroForces::create);
 
         /**
          *
@@ -54,6 +57,7 @@ namespace Nektar
             const std::map<std::string, std::string> &pParams) :
             Filter(pSession)
         {
+            // Load name of output file
             if (pParams.find("OutputFile") == pParams.end())
             {
                 m_outputFile = m_session->GetSessionName();
@@ -70,6 +74,7 @@ namespace Nektar
                 m_outputFile += ".fce";
             }
 
+            // Load frequency (in time-steps) of output
             if (pParams.find("OutputFrequency") == pParams.end())
             {
                 m_outputFrequency = 1;
@@ -80,21 +85,38 @@ namespace Nektar
                     atoi(pParams.find("OutputFrequency")->second.c_str());
             }
 
+            // Load time after which we need to calculate the forces
+            if (pParams.find("StartTime") == pParams.end())
+            {
+                m_startTime = 0;
+            }
+            else
+            {
+                m_startTime = atof(pParams.find("StartTime")->second.c_str());
+            }
 
             m_session->MatchSolverInfo("Homogeneous", "1D",
                                        m_isHomogeneous1D, false);
 
+            // For 3DH1D, determine if we should calculate the forces in each
+            //    plane, or just the average force
             if(m_isHomogeneous1D)
             {
-                if (pParams.find("OutputPlane") == pParams.end())
+                if (pParams.find("OutputAllPlanes") == pParams.end())
                 {
-                    m_outputPlane = 0;
+                    m_outputAllPlanes = false;
                 }
                 else
                 {
-                    m_outputPlane =
-                        atoi(pParams.find("OutputPlane")->second.c_str());
+                    std::string sOption =
+                            pParams.find("OutputAllPlanes")->second.c_str();
+                    m_outputAllPlanes = ( boost::iequals(sOption,"true")) ||
+                                        ( boost::iequals(sOption,"yes"));
                 }
+            }
+            else
+            {
+                m_outputAllPlanes = false;
             }
 
             //specify the boundary to calculate the forces
@@ -107,6 +129,63 @@ namespace Nektar
                 ASSERTL0(!(pParams.find("Boundary")->second.empty()),
                          "Missing parameter 'Boundary'.");
                 m_BoundaryString = pParams.find("Boundary")->second;
+            }
+
+            //Get directions on which the forces will be calculated
+            //    default is the coordinate axes orientation
+
+            // Allocate m_directions
+            m_directions = Array<OneD, Array<OneD, NekDouble> > (3);
+            //Initialise directions to default values (ex, ey, ez)
+            for (int i = 0; i < 3; ++i)
+            {
+                m_directions[i] = Array<OneD, NekDouble>(3, 0.0);
+                m_directions[i][i] = 1.0;
+            }
+            std::stringstream       directionStream;
+            std::string             directionString;
+            //Override with input from xml file (if defined)
+            for (int i = 0; i < 3; ++i)
+            {
+                std::stringstream tmp;
+                tmp << i+1;
+                std::string dir = "Direction" + tmp.str();
+                if ( pParams.find(dir) != pParams.end() )
+                {
+                    ASSERTL0(!(pParams.find(dir)->second.empty()),
+                             "Missing parameter '"+dir+"'.");
+                    directionStream.str(pParams.find(dir)->second);
+                    // Guarantee the stream is in its start position
+                    //      before extracting
+                    directionStream.clear();
+                    // normalisation factor
+                    NekDouble norm = 0.0;
+                    for (int j = 0; j < 3; j++)
+                    {
+                        directionStream >> directionString;
+                        if (!directionString.empty())
+                        {
+                            try
+                            {
+                                LibUtilities::Equation expression(
+                                        pSession, directionString);
+                                m_directions[i][j] = expression.Evaluate();
+                                norm += m_directions[i][j]*m_directions[i][j];
+                            }
+                            catch (const std::runtime_error &)
+                            {
+                                ASSERTL0(false,
+                                        "Error evaluating parameter expression"
+                                        " '" + directionString + "'." );
+                            }
+                        }
+                    }
+                    //Normalise direction
+                    for( int j = 0; j < 3; j++)
+                    {
+                        m_directions[i][j] /= sqrt(norm);
+                    }
+                }
             }
         }
 
@@ -169,6 +248,32 @@ namespace Nektar
                 }
             }
 
+            // Create map for element and edge/face of each boundary expansion
+            if(m_isHomogeneous1D)
+            {
+                pFields[0]->GetPlane(0)->GetBoundaryToElmtMap
+                                                (m_BCtoElmtID,m_BCtoTraceID);
+            }
+            else
+            {
+                pFields[0]->GetBoundaryToElmtMap(m_BCtoElmtID,m_BCtoTraceID);
+            }
+
+            // Define number of planes  to calculate the forces 
+            //     in the Homogeneous direction ( if m_outputAllPlanes is false,
+            //      consider only first plane in wave space)
+            // If flow has no Homogeneous direction, use 1 to make code general
+            if(m_isHomogeneous1D && m_outputAllPlanes)
+            {
+                m_nPlanes = pFields[0]->GetHomogeneousBasis()->GetZ().num_elements();
+                m_nLocPlanes = pFields[0]->GetZIDs().num_elements();
+            }
+            else
+            {
+                m_nplanes = 1;
+                m_nLocPlanes = 1;
+            }
+
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
             if (vComm->GetRank() == 0)
@@ -199,6 +304,7 @@ namespace Nektar
                 m_outputStream << endl;
             }
 
+            m_index = 0;
             v_Update(pFields, time);
         }
 
@@ -211,7 +317,7 @@ namespace Nektar
             const NekDouble &time)
         {
             // Only output every m_outputFrequency.
-            if ((m_index++) % m_outputFrequency)
+            if ((m_index++) % m_outputFrequency  || (time < m_startTime))
             {
                 return;
             }

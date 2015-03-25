@@ -108,6 +108,7 @@ namespace Nektar
             enum FunctionType m_type;
             std::string       m_filename;
             EquationSharedPtr m_expression;
+            std::string       m_fileVariable;
         };
         
         typedef std::map<std::pair<std::string,int>, FunctionVariableDefinition>  
@@ -186,7 +187,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT bool DefinesElement(
                 const std::string& pPath) const;
             /// Returns the filename of the loaded XML document.
-            LIB_UTILITIES_EXPORT const std::string &GetFilename() const;
+            LIB_UTILITIES_EXPORT const std::vector<std::string>
+                                                    &GetFilenames() const;
             /// Returns the session name of the loaded XML document.
             LIB_UTILITIES_EXPORT const std::string &GetSessionName() const;
             /// Returns the session name with process rank
@@ -366,6 +368,12 @@ namespace Nektar
                 const std::string  &name, 
                 const unsigned int &var,
                 const int pDomain = 0) const;
+            /// Returns the filename variable to be loaded for a given variable
+            /// index.
+            LIB_UTILITIES_EXPORT std::string GetFunctionFilenameVariable(
+                const std::string  &name,
+                const std::string &variable,
+                const int pDomain = 0) const;
 
             /// Returns the instance of AnalyticExpressionEvaluator specific to
             /// this session.
@@ -425,8 +433,6 @@ namespace Nektar
             CommSharedPtr                             m_comm;
             /// Filenames
             std::vector<std::string>                  m_filenames;
-            /// Filename of the loaded XML document.
-            std::string                               m_filename;
             /// Session name of the loaded XML document (filename minus ext).
             std::string                               m_sessionName;
             /// Pointer to the loaded XML document.
@@ -479,6 +485,9 @@ namespace Nektar
             std::vector<std::string> ParseCommandLineArguments(
                 int argc, char *argv[]);
 
+            /// Parse the session name.
+            std::string ParseSessionName(std::vector<std::string> &filenames);
+
             /// Loads an xml file into a tinyxml doc and decompresses if needed
             LIB_UTILITIES_EXPORT void LoadDoc(
                 const std::string &pFilename,
@@ -506,8 +515,6 @@ namespace Nektar
             /// Reads the GLOBALSYSSOLNINFO section of the XML document.
             LIB_UTILITIES_EXPORT void ReadGlobalSysSolnInfo(
                     TiXmlElement *conditions);
-            /// Reads the GEOMETRICINFO section of the XML document.
-            LIB_UTILITIES_EXPORT void ReadGeometricInfo(TiXmlElement *geometry);
             /// Reads the EXPRESSIONS section of the XML document.
             LIB_UTILITIES_EXPORT void ReadExpressions(TiXmlElement *conditions);
             /// Reads the VARIABLES section of the XML document.

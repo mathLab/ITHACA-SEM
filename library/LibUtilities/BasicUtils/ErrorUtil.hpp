@@ -52,7 +52,7 @@ namespace ErrorUtil
     
     inline static bool HasCustomErrorStream()
     {
-        return outStream;
+        return outStream ? true : false;
     }
 
     enum ErrType

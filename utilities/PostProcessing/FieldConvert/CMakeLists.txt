@@ -1,6 +1,7 @@
 SET(FieldConvertHeaders 
     Module.h
     Field.hpp
+    InputDat.h
     InputFld.h
     InputXml.h
     InputPts.h
@@ -11,9 +12,12 @@ SET(FieldConvertHeaders
     ProcessAddFld.h
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
+    ProcessEquiSpacedOutput.h
     ProcessInterpField.h
     ProcessInterpPoints.h
     ProcessInterpPointDataToFld.h
+    ProcessIsoContour.h
+    ProcessJacobianEnergy.h
     ProcessScaleInFld.h
     ProcessVorticity.h
     ProcessC0Projection.h
@@ -23,6 +27,7 @@ SET(FieldConvertHeaders
 SET(FieldConvertSources 
     Module.cpp
     FieldConvert.cpp
+    InputDat.cpp
     InputFld.cpp
     InputXml.cpp
     InputPts.cpp
@@ -33,9 +38,12 @@ SET(FieldConvertSources
     ProcessAddFld.cpp
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
+    ProcessEquiSpacedOutput.cpp
     ProcessInterpField.cpp
     ProcessInterpPoints.cpp
     ProcessInterpPointDataToFld.cpp
+    ProcessIsoContour.cpp
+    ProcessJacobianEnergy.cpp
     ProcessScaleInFld.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp
@@ -53,6 +61,19 @@ ADD_NEKTAR_TEST(chan3D_vort)
 #ADD_NEKTAR_TEST(bfs_tec_rng)
 ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
+# ADD_NEKTAR_TEST(chan3D_pts)
+
+# windows produces slightly differently formatted files which results in
+# different hashes
+IF(WIN32)
+    ADD_NEKTAR_TEST(chan3D_probe_win)
+    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
+    ADD_NEKTAR_TEST(chan3D_isocontour_win)
+ELSE(WIN32)
+    ADD_NEKTAR_TEST(chan3D_probe)
+    ADD_NEKTAR_TEST(chan3D_equispacedoutput)
+    ADD_NEKTAR_TEST(chan3D_isocontour)
+ENDIF(WIN32)
 
 
 IF (NEKTAR_USE_MPI)

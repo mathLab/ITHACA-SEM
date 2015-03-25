@@ -134,20 +134,23 @@ namespace Nektar
         typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
         typedef boost::shared_ptr<ElementFaceVector> ElementFaceVectorSharedPtr;
 
-        // set restriction on domain range for post-processing. 
+        // set restriction on domain range for post-processing.
         struct DomainRange
         {
-            bool doXrange; 
-            NekDouble xmin;
-            NekDouble xmax;
-            bool doYrange; 
-            NekDouble ymin;
-            NekDouble ymax;
-            bool doZrange; 
-            NekDouble zmin;
-            NekDouble zmax;
+            bool                    m_doXrange;
+            NekDouble               m_xmin;
+            NekDouble               m_xmax;
+            bool                    m_doYrange;
+            NekDouble               m_ymin;
+            NekDouble               m_ymax;
+            bool                    m_doZrange;
+            NekDouble               m_zmin;
+            NekDouble               m_zmax;
+
+            bool                    m_checkShape;
+            LibUtilities::ShapeType m_shapeType;
         };
-        
+
         typedef boost::shared_ptr<DomainRange> DomainRangeShPtr;
         static DomainRangeShPtr NullDomainRangeShPtr;
 
@@ -248,10 +251,10 @@ namespace Nektar
 
                 /* Range definitions for postprorcessing */
                 SPATIAL_DOMAINS_EXPORT void SetDomainRange
-                    (NekDouble xmin, NekDouble xmax, 
-                     NekDouble ymin = NekConstants::kNekUnsetDouble, 
+                    (NekDouble xmin, NekDouble xmax,
+                     NekDouble ymin = NekConstants::kNekUnsetDouble,
                      NekDouble ymax = NekConstants::kNekUnsetDouble,
-                     NekDouble zmin = NekConstants::kNekUnsetDouble, 
+                     NekDouble zmin = NekConstants::kNekUnsetDouble,
                      NekDouble zmax = NekConstants::kNekUnsetDouble);
 
                 /// Check if goemetry is in range definition if activated
@@ -299,7 +302,7 @@ namespace Nektar
                         std::vector< std::vector<LibUtilities::PointsType> >
                                                                 &pointstype );
 
-                /// Sets expansions to have equispaced points 
+                /// Sets expansions to have equispaced points
                 SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
                                                         int npoints = 0);
 
@@ -349,8 +352,8 @@ namespace Nektar
                         NekDouble y,
                         NekDouble z);
 
-                /// \brief Adds an edge between two points.  If curveDefinition is 
-                /// null, then the edge is straight, otherwise it is curved according 
+                /// \brief Adds an edge between two points.  If curveDefinition is
+                /// null, then the edge is straight, otherwise it is curved according
                 /// to the curveDefinition.
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(PointGeomSharedPtr v0, PointGeomSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
@@ -487,7 +490,7 @@ namespace Nektar
         /**
          *
          */
-        void  MeshGraph::SetExpansions(const std::string variable, ExpansionMapShPtr &exp) 
+        void  MeshGraph::SetExpansions(const std::string variable, ExpansionMapShPtr &exp)
         {
             if(m_expansionMapShPtrMap.count(variable) != 0)
             {
@@ -503,14 +506,14 @@ namespace Nektar
         /**
          *
          */
-        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2) 
+        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2)
         {
             ExpansionMapShPtr expVec1 = m_expansionMapShPtrMap.find(var1)->second;
             ExpansionMapShPtr expVec2 = m_expansionMapShPtrMap.find(var2)->second;
 
             if(expVec1.get() == expVec2.get())
             {
-                return true; 
+                return true;
             }
 
             return false;

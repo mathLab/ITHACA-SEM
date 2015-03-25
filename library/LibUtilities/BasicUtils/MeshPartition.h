@@ -239,6 +239,7 @@ namespace Nektar
 
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
             void CheckPartitions(int nParts, Array<OneD, int> &pPart);
+            int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

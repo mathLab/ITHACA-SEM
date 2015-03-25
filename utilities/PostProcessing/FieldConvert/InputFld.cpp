@@ -47,7 +47,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputFld::m_className[5] = {
+        ModuleKey InputFld::m_className[3] = {
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "fld"), InputFld::create,
                 "Reads Fld file."),
@@ -58,7 +58,7 @@ namespace Nektar
                 ModuleKey(eInputModule, "rst"), InputFld::create,
                 "Reads Fld file."),
         };
-        
+
         /**
          * @brief Set up InputFld object.
          *
@@ -84,9 +84,9 @@ namespace Nektar
                 cout << "Processing input fld file" << endl;
             }
 
-            int i;
+            int i,j;
             string fldending;
-            //Determine appropriate field input 
+            //Determine appropriate field input
             if(m_f->m_inputfiles.count("fld") != 0)
             {
                 fldending = "fld";
@@ -103,8 +103,8 @@ namespace Nektar
             {
                 ASSERTL0(false,"no input file found");
             }
-            
-            if(!m_f->m_fld) 
+
+            if(!m_f->m_fld)
             {
                 if(m_f->m_session)
                 {
@@ -118,15 +118,15 @@ namespace Nektar
                         ::AllocateSharedPtr(c);
                 }
             }
-            
+
 
             if(m_f->m_graph)  // all for restricted expansion defintion when loading field
             {
                 // currently load all field (possibly could read data from expansion list
-                // but it is re-arranged in expansion) 
-            
+                // but it is re-arranged in expansion)
+
                 const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
-                
+
                 // if Range has been speficied it is possible to have a
                 // partition which is empty so ccheck this and return if
                 // no elements present.
@@ -134,33 +134,38 @@ namespace Nektar
                 {
                     return;
                 }
-                
+
                 m_f->m_exp.resize(1);
-                
+
                 Array<OneD,int> ElementGIDs(expansions.size());
                 SpatialDomains::ExpansionMap::const_iterator expIt;
-                
+
                 i = 0;
                 for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
                 {
                     ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
                 }
-                
+
                 m_f->m_fielddef.clear();
                 m_f->m_data.clear();
 
-                m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,m_f->m_data,
-                                   LibUtilities::NullFieldMetaDataMap,
+                m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                                   m_f->m_fielddef,
+                                   m_f->m_data,
+                                   m_f->m_fieldMetaDataMap,
                                    ElementGIDs);
             }
-            else // load all data. 
+            else // load all data.
             {
-                m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,m_f->m_data);
+                m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                                   m_f->m_fielddef,
+                                   m_f->m_data,
+                                   m_f->m_fieldMetaDataMap);
             }
 
 
             // if m_exp defined presume we want to load all field  into expansions
-            if(m_f->m_exp.size()) 
+            if(m_f->m_exp.size())
             {
                 int nfields;
                 if(vm.count("useSessionVariables"))
@@ -172,11 +177,11 @@ namespace Nektar
                     nfields = m_f->m_fielddef[0]->m_fields.size();
                 }
                 m_f->m_exp.resize(nfields);
-                
+
                 vector<string> vars = m_f->m_session->GetVariables();
-                
-                // declare other fields; 
-                for (int i = 1; i < nfields; ++i)
+
+                // declare other fields;
+                for (i = 1; i < nfields; ++i)
                 {
                     if(i < vars.size())
                     {
@@ -193,22 +198,22 @@ namespace Nektar
                         {
                             m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
                         }
-                    }                   
+                    }
                 }
-                
-                for (int j = 0; j < nfields; ++j)
+
+                for (j = 0; j < nfields; ++j)
                 {
-                    for (int i = 0; i < m_f->m_data.size(); ++i)
+                    for (i = 0; i < m_f->m_data.size(); ++i)
                     {
-                        m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i], 
+                        m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i],
                                                            m_f->m_data[i],
                                                            m_f->m_fielddef[i]->m_fields[j],
                                                            m_f->m_exp[j]->UpdateCoeffs());
                     }
-                    m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(), 
+                    m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
                                             m_f->m_exp[j]->UpdatePhys());
                 }
-                
+
                 // if range is defined reset up output field in case or
                 // reducing fld definition
                 if(vm.count("range"))
@@ -216,15 +221,15 @@ namespace Nektar
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                         = m_f->m_exp[0]->GetFieldDefinitions();
                     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-                    
-                    for (int j = 0; j < nfields; ++j)
+
+                    for (j = 0; j < nfields; ++j)
                     {
                         for (i = 0; i < FieldDef.size(); ++i)
-                        {   
+                        {
                             FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
                             m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                         }
-                    }   
+                    }
                     m_f->m_fielddef = FieldDef;
                     m_f->m_data     = FieldData;
                 }

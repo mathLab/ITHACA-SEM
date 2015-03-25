@@ -21,6 +21,9 @@ SET(BasicUtilsHeaders
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/Progressbar.hpp
+    ./BasicUtils/PtsField.h
+    ./BasicUtils/PtsIO.h
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
@@ -39,6 +42,8 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/PtsField.cpp
+    ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
@@ -348,7 +353,7 @@ ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
-ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.4.3 zlib-1.2.7)
+ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 
 
 ### Libraries needed specifically by LibUtilities ###
@@ -356,7 +361,7 @@ ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.4.3 zlib-1.2.7)
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
-        ${SCOTCH_LIB} ${SCOTCHERR_LIB})
+        ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
     ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
 ENDIF ()
 
@@ -365,7 +370,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 
 # FFTW
 IF( NEKTAR_USE_FFTW )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIB})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIBRARY})
     ADD_DEPENDENCIES(LibUtilities fftw-3.2.2)
     SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp 
         PROPERTY COMPILE_FLAGS "-I${FFTW_INCLUDE_DIR}")
@@ -373,7 +378,7 @@ ENDIF( NEKTAR_USE_FFTW )
 
 # ARPACK
 IF( NEKTAR_USE_ARPACK )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIB})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIBRARY})
 ENDIF( NEKTAR_USE_ARPACK )
 
 # Boost
@@ -388,7 +393,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
 )
 
 # TinyXML
-TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${TINYXML_LIB})
+TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${TINYXML_LIBRARY})
 IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC rt)
 ENDIF()
@@ -421,10 +426,6 @@ IF( NEKTAR_USE_BLAS_LAPACK )
     IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
         TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACCELERATE_FRAMEWORK_LINK_FLAGS})
     ENDIF ( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-
-    IF( NEKTAR_USE_CHUD_FRAMEWORK )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CHUD_FRAMEWORK_LINK_FLAGS})
-    ENDIF ( NEKTAR_USE_CHUD_FRAMEWORK )
 
     IF( NEKTAR_USE_WIN32_LAPACK )
         TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${WIN32_LAPACK} ${WIN32_BLAS})

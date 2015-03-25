@@ -36,6 +36,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/MeshGraph.h>
@@ -62,117 +64,12 @@ namespace Nektar
 namespace Utilities
 {
 
-enum PtsType{
-    ePtsFile,
-    ePtsLine,
-    ePtsPlane,
-    ePtsBlock
-};
-
-struct FieldPts
-{
-    FieldPts(void): m_ptsDim(0),
-                    m_ptype(ePtsFile) {}
-
-    int                                     m_ptsDim;
-    int                                     m_nFields;
-    Array<OneD, Array<OneD, NekDouble> >    m_pts;
-    PtsType                                 m_ptype;
-    vector<int>                             m_npts;
-    vector<std::string>                     m_fields;
-
-
-    // Interpolate field_id (which is the id after the coordinates)
-    void Interp1DPts(
-            const NekDouble          coord,
-            Array<OneD, NekDouble > &intfields)
-    {
-        // currently assume first field is coordinate
-        WARNINGL1(m_ptsDim == 1,
-                 "Assumed only one coordinate given taking first coordinate "
-                 "for interpolation");
-        int npts = m_pts[0].num_elements();
-        int i;
-
-        for(i = 0; i < npts-1; ++i)
-        {
-            if((m_pts[0][i] <= coord) && (coord <= m_pts[0][i+1]))
-            {
-                NekDouble pdiff = m_pts[0][i+1]-m_pts[0][i];
-
-                if(npts <= 2)
-                {
-                    //  linear interpolation
-                    for(int j = 0; j < m_nFields; ++j)
-                    {
-                        intfields[j] = m_pts[m_ptsDim+j][i]
-                                        * (m_pts[0][i+1] - coord) / pdiff
-                                     + m_pts[m_ptsDim+j][i+1]
-                                        * (coord - m_pts[0][i]) / pdiff;
-                    }
-                }
-                else // quadratic interpolation
-                {
-                    if(i < npts-2)
-                    { // forwards stencil
-                        NekDouble pdiff2 = m_pts[0][i+2] - m_pts[0][i+1];
-
-                        NekDouble h1 = (m_pts[0][i+1]-coord)
-                                        * (m_pts[0][i+2] - coord)
-                                        / (pdiff * (pdiff+pdiff2));
-                        NekDouble h2 = (coord-m_pts[0][i])
-                                        * (m_pts[0][i+2] - coord)
-                                        / (pdiff * pdiff2);
-                        NekDouble h3 = (coord-m_pts[0][i])
-                                        * (coord - m_pts[0][i+1])
-                                        / ((pdiff + pdiff2) * pdiff2);
-                        for(int j = 0; j < m_nFields; ++j)
-                        {
-                            intfields[j] = m_pts[m_ptsDim+j][i] * h1
-                                        +  m_pts[m_ptsDim+j][i+1] * h2
-                                        +  m_pts[m_ptsDim+j][i+2] * h3;
-                        }
-                    }
-                    else
-                    { // backwards stencil
-                        NekDouble pdiff2 = m_pts[0][i] - m_pts[0][i-1];
-
-                        NekDouble h1 = (m_pts[0][i+1]-coord)
-                                        * (coord - m_pts[0][i-1])
-                                        / (pdiff * pdiff2);
-                        NekDouble h2 = (coord - m_pts[0][i])
-                                        * (coord - m_pts[0][i-1])
-                                        / (pdiff * (pdiff + pdiff2));
-                        NekDouble h3 = (m_pts[0][i]-coord)
-                                        * (m_pts[0][i+1] - coord)
-                                        / ((pdiff + pdiff2) * pdiff);
-                        for(int j = 0; j < m_nFields; ++j)
-                        {
-                            intfields[j] = m_pts[m_ptsDim+j][i] * h1
-                                        +  m_pts[m_ptsDim+j][i+1] * h2
-                                        +  m_pts[m_ptsDim+j][i-1] * h3;
-                        }
-                    }
-                }
-                break;
-            }
-        }
-        ASSERTL0(i != npts-1, "Failed to find coordinate " +
-                              boost::lexical_cast<string>(coord) +
-                              " within provided input points");
-    };
-
-};
-
-typedef boost::shared_ptr<FieldPts> FieldPtsSharedPtr;
-static FieldPtsSharedPtr NullFieldPts;
-
 struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_writeBndFld(false),
-              m_fieldPts(NullFieldPts){}
+              m_fieldPts(LibUtilities::NullPtsField){}
 
     ~Field()
     {
@@ -193,14 +90,17 @@ struct Field {
     LibUtilities::SessionReaderSharedPtr    m_session;
     SpatialDomains::MeshGraphSharedPtr      m_graph;
     LibUtilities::FieldIOSharedPtr          m_fld;
+    LibUtilities::PtsIOSharedPtr            m_ptsIO;
     map<string, vector<string> >            m_inputfiles;
 
     bool                                    m_writeBndFld;
     vector<unsigned int>                    m_bndRegionsToWrite;
     bool                                    m_fldToBnd;
 
-    FieldPtsSharedPtr                       m_fieldPts;
+    LibUtilities::PtsFieldSharedPtr         m_fieldPts;
+    bool                                    m_setUpEquiSpacedFields;
 
+    LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
                                                      bool fldfilegiven = false)
@@ -364,7 +264,7 @@ struct Field {
             {
                 ASSERTL0(NumHomogeneousDir <= 1,
                          "NumHomogeneousDir is only set up for 1");
-                
+
                 if (NumHomogeneousDir == 1)
                 {
                     MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
@@ -449,7 +349,7 @@ struct Field {
         case 3:
             {
                 MultiRegions::ExpList3DSharedPtr Exp3D;
-                
+
                 if(m_declareExpansionAsContField)
                 {
                     Exp3D = MemoryManager<MultiRegions::ContField3D>
@@ -467,7 +367,7 @@ struct Field {
                     Exp3D = MemoryManager<MultiRegions::ExpList3D>
                         ::AllocateSharedPtr(m_session, m_graph);
                 }
-                
+
                 exp = Exp3D;
             }
             break;
@@ -556,7 +456,7 @@ struct Field {
                         MultiRegions::DisContField1DSharedPtr tmp2 =
                             boost::dynamic_pointer_cast<MultiRegions::
                             DisContField1D>(m_exp[0]);
-                        
+
                         tmp = MemoryManager<MultiRegions::DisContField1D>::
                             AllocateSharedPtr(m_session,m_graph,var);
                     }
@@ -565,7 +465,7 @@ struct Field {
                         MultiRegions::ExpList1DSharedPtr tmp2 =
                             boost::dynamic_pointer_cast<MultiRegions::
                             ExpList1D>(m_exp[0]);
-                        
+
                         tmp = MemoryManager<MultiRegions::ExpList1D>::
                             AllocateSharedPtr(*tmp2);
                     }
@@ -597,7 +497,7 @@ struct Field {
                             MultiRegions::ContField3DHomogeneous1DSharedPtr tmp2 =
                                 boost::dynamic_pointer_cast<MultiRegions::
                                 ContField3DHomogeneous1D>(m_exp[0]);
-                            
+
                             ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
                             tmp = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -625,7 +525,7 @@ struct Field {
                                 boost::dynamic_pointer_cast<MultiRegions::
                                 DisContField3DHomogeneous1D>(m_exp[0]);
                             ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
-                            
+
                             tmp = MemoryManager<MultiRegions::
                                 DisContField3DHomogeneous1D>::
                                 AllocateSharedPtr(*tmp2);
@@ -637,7 +537,7 @@ struct Field {
                         {
                             bool useFFT     = false;
                             bool dealiasing = false;
-                            
+
                             tmp  = MemoryManager<MultiRegions::
                                 ExpList3DHomogeneous1D>::AllocateSharedPtr(
                                         m_session,
@@ -692,7 +592,7 @@ struct Field {
                             MultiRegions::DisContField2DSharedPtr tmp2 =
                                 boost::dynamic_pointer_cast<MultiRegions::
                                 DisContField2D>(m_exp[0]);
-                            
+
                             tmp = MemoryManager<MultiRegions::DisContField2D>::
                                 AllocateSharedPtr(*tmp2,m_graph,var);
                         }

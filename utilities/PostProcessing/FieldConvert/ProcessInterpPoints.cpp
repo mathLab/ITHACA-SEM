@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Interpolate  field to a series of specified points. 
+//  Description: Interpolate  field to a series of specified points.
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <string>
@@ -106,9 +106,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 
     // Check for command line point specification if no .pts file specified
-    if(m_f->m_fieldPts == NullFieldPts)
+    if(m_f->m_fieldPts == LibUtilities::NullPtsField)
     {
-        int dim = 0;
         if(m_config["line"].as<string>().compare("NotSet") != 0)
         {
             string help = m_config["line"].as<string>();
@@ -121,37 +120,38 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "line string should contain 2Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
-            m_f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
-
-            dim = m_f->m_fieldPts->m_ptsDim = (values.size()-1)/2;
-
+            int dim = (values.size()-1)/2;
             int npts = values[0];
-            m_f->m_fieldPts->m_npts.push_back(values[0]);
-            m_f->m_fieldPts->m_ptype = Utilities::ePtsLine;
-
-            m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> > (m_f->m_fieldPts->m_ptsDim);
+            Array<OneD, Array<OneD, NekDouble> > pts(dim);
 
             for(int i = 0; i < dim; ++i)
             {
-                m_f->m_fieldPts->m_pts[i] = Array<OneD,NekDouble>(npts);
+                pts[i] = Array<OneD,NekDouble>(npts);
             }
 
             for(int i = 0; i < npts; ++i)
             {
-                m_f->m_fieldPts->m_pts[0][i] = values[1]
+                pts[0][i] = values[1]
                         + i/((NekDouble)(npts-1))*(values[dim+1] - values[1]);
                 if(dim > 1)
                 {
-                    m_f->m_fieldPts->m_pts[1][i] = values[2]
+                    pts[1][i] = values[2]
                         + i/((NekDouble)(npts-1))*(values[dim+2] - values[2]);
 
                     if(dim > 2)
                     {
-                        m_f->m_fieldPts->m_pts[2][i] = values[3]
+                        pts[2][i] = values[3]
                         + i/((NekDouble)(npts-1))*(values[dim+3] - values[3]);
                     }
                 }
             }
+
+            vector<int> ppe;
+            ppe.push_back(npts);
+            m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
+
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
         {
@@ -165,45 +165,49 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "line string should contain 2Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
-            m_f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
 
-            dim = m_f->m_fieldPts->m_ptsDim = (values.size()-1)/4;
+            int dim = (values.size()-1)/4;
 
             int npts1 = values[0];
             int npts2 = values[1];
-            m_f->m_fieldPts->m_npts.push_back(npts1);
-            m_f->m_fieldPts->m_npts.push_back(npts2);
-            m_f->m_fieldPts->m_ptype = Utilities::ePtsPlane;
 
-            m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> > (m_f->m_fieldPts->m_ptsDim);
+            Array<OneD, Array<OneD, NekDouble> > pts(dim);
 
             for(int i = 0; i < dim; ++i)
             {
-                m_f->m_fieldPts->m_pts[i] = Array<OneD,NekDouble>(npts1*npts2);
+                pts[i] = Array<OneD,NekDouble>(npts1*npts2);
             }
 
             for(int j = 0; j < npts2; ++j)
             {
                 for(int i = 0; i < npts1; ++i)
                 {
-                    m_f->m_fieldPts->m_pts[0][i+j*npts1] =
+                    pts[0][i+j*npts1] =
                         (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
                         (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
                     if(dim > 1)
                     {
-                        m_f->m_fieldPts->m_pts[1][i+j*npts1] =
+                        pts[1][i+j*npts1] =
                             (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
                             (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
 
                         if(dim > 2)
                         {
-                            m_f->m_fieldPts->m_pts[2][i+j*npts1] =
+                            pts[2][i+j*npts1] =
                                 (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
                                 (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
                         }
                     }
                 }
             }
+
+            vector<int> ppe;
+            ppe.push_back(npts1);
+            ppe.push_back(npts2);
+            m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsPlane);
+
         }
     }
 
@@ -219,24 +223,26 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     // Set up range based on min and max of local parallel partition
     SpatialDomains::DomainRangeShPtr rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
 
-    int coordim = m_f->m_fieldPts->m_ptsDim;
-    int npts    = m_f->m_fieldPts->m_pts[0].num_elements();
-    Array<OneD, Array<OneD, NekDouble> > coords = m_f->m_fieldPts->m_pts;
+    int coordim = m_f->m_fieldPts->GetDim();
+    int npts    = m_f->m_fieldPts->GetNpoints();
+    Array<OneD, Array<OneD, NekDouble> > pts;
+    m_f->m_fieldPts->GetPts(pts);
 
+    rng->m_checkShape   = false;
     switch(coordim)
     {
     case 3:
-        rng->doZrange = true;
-        rng->zmin = Vmath::Vmin(npts,coords[2],1);
-        rng->zmax = Vmath::Vmax(npts,coords[2],1);
+        rng->m_doZrange = true;
+        rng->m_zmin = Vmath::Vmin(npts, pts[2],1);
+        rng->m_zmax = Vmath::Vmax(npts, pts[2],1);
     case 2:
-        rng->doYrange = true;
-        rng->ymin = Vmath::Vmin(npts,coords[1],1);
-        rng->ymax = Vmath::Vmax(npts,coords[1],1);
+        rng->m_doYrange = true;
+        rng->m_ymin = Vmath::Vmin(npts, pts[1],1);
+        rng->m_ymax = Vmath::Vmax(npts, pts[1],1);
     case 1:
-        rng->doXrange = true;
-        rng->xmin = Vmath::Vmin(npts,coords[0],1);
-        rng->xmax = Vmath::Vmax(npts,coords[0],1);
+        rng->m_doXrange = true;
+        rng->m_xmin = Vmath::Vmin(npts, pts[0],1);
+        rng->m_xmax = Vmath::Vmax(npts, pts[0],1);
         break;
     default:
         ASSERTL0(false,"too many values specfied in range");
@@ -299,8 +305,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
         m_fromField->m_exp[j]->BwdTrans(m_fromField->m_exp[j]->GetCoeffs(),
                                         m_fromField->m_exp[j]->UpdatePhys());
-        m_f->m_fieldPts->m_fields.push_back(m_fromField->m_fielddef[0]->m_fields[j]);
 
+        Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+        m_f->m_fieldPts->AddField(newPts, m_fromField->m_fielddef[0]->m_fields[j]);
     }
 
     if(m_fromField->m_session->GetComm()->GetRank() == 0)
@@ -312,7 +319,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(m_fromField->m_exp, m_f->m_fieldPts->m_pts,
+    InterpolateFieldToPts(m_fromField->m_exp, pts,
                           clamp_low, clamp_up, def_value);
 
     if(m_fromField->m_session->GetComm()->GetRank() == 0)

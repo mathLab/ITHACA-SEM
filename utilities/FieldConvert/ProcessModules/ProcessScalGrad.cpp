@@ -51,14 +51,13 @@ namespace Nektar
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "scalargrad"), 
                 ProcessScalGrad::create, "Computes scalar gradient field.");
-
+        
         ProcessScalGrad::ProcessScalGrad(FieldSharedPtr f) : ProcessModule(f)
         {
             m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
-            m_config["c0"]  = ConfigOption(false,"0","Perform c0 projection on gradients-boolean option 1/0");
             f->m_writeBndFld = true;
             f->m_declareExpansionAsContField = true;
-            m_f->m_fldToBnd = true;
+            m_f->m_fldToBnd = false;
         }
 
         ProcessScalGrad::~ProcessScalGrad()
@@ -72,16 +71,6 @@ namespace Nektar
                 cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
             }
             
-            int c0ProjInt = m_config["c0"].as<NekDouble>();
-            ASSERTL0(c0ProjInt == 0 || c0ProjInt == 1,
-                     "c0 option either 1 (turn on) or 0 (turn off, default).");
-            
-            bool c0Proj = false;
-            if(c0ProjInt == 1)
-            {
-                c0Proj = true;
-            }
-          
             // Set up Field options to output boundary fld
             string bvalues =  m_config["bnd"].as<string>();
             
@@ -121,10 +110,6 @@ namespace Nektar
             
             int ngrad     = spacedim;
             int newfields = 1; 
-            if(c0Proj)
-            {
-                newfields = newfields + ngrad; 
-            }
             
             int n, cnt, elmtid, nq, offset, boundary, nfq;
             int npoints = m_f->m_exp[0]->GetNpoints();
@@ -137,63 +122,16 @@ namespace Nektar
             Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(newfields);
          
             m_f->m_exp.resize(newfields);
-            m_f->m_fielddef[0]->m_fields.resize(newfields);
-          
-            m_f->m_fielddef[0]->m_fields[0] = "scalar gradient";
-            m_f->m_exp[0] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, "DefaultVar", true);
-            
-            if(c0Proj)
+            string var = "u";
+            for(i = nfields; i < newfields; ++i)
             {
-                m_f->m_fielddef[0]->m_fields[1] = "du/dx";
-                m_f->m_fielddef[0]->m_fields[2] = "du/dy";
-                m_f->m_fielddef[0]->m_fields[3] = "du/dz";
-                
-                for(i = 1; i < newfields; ++i)
-                {
-                    bool NewField = true;
-                    m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                                                       "DefaultVar", NewField);
-                }                
-                
-                if (m_f->m_verbose)
-                {
-                    cout << "ProcessScalGrad: Computing c0 projection on gradients..." << endl;
-                }
-                
-                // Calculate Gradients
-                if(spacedim == 2)
-                {
-                    m_f->m_exp[0]->PhysDeriv(m_f->m_exp[0]->GetPhys(), 
-                                             m_f->m_exp[1]->UpdatePhys(),
-                                             m_f->m_exp[2]->UpdatePhys());
-                }
-                else if(spacedim == 3)
-                {
-                    m_f->m_exp[0]->PhysDeriv(m_f->m_exp[0]->GetPhys(), 
-                                             m_f->m_exp[1]->UpdatePhys(),
-                                             m_f->m_exp[2]->UpdatePhys(),
-                                             m_f->m_exp[3]->UpdatePhys());
-                }
-                
-                for (i = 1; i < ngrad+1; ++i)
-                {
-                    m_f->m_exp[i]->FwdTrans(m_f->m_exp[i]->GetPhys(), 
-                                            m_f->m_exp[i]->UpdateCoeffs());
-                }
-                
-                // C0 projection on gradient field. 
-                for (i = 1; i < ngrad+1; ++i)
-                {
-                    m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(), 
-                                            m_f->m_exp[i]->UpdatePhys());
-                    m_f->m_exp[i]->FwdTrans(m_f->m_exp[i]->GetPhys(), 
-                                            m_f->m_exp[i]->UpdateCoeffs());
-                }
-            }
-           
+                m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, var);
+            }  
+            
+            m_f->m_fielddef[0]->m_fields.resize(newfields);
+            m_f->m_fielddef[0]->m_fields[0] = "scalar gradient";
 
             m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
-            
             for (i = 0; i < newfields; i++)
             {
                 BndExp[i] = m_f->m_exp[i]->GetBndCondExpansions();
@@ -231,9 +169,9 @@ namespace Nektar
                             }
                             else
                             {   
-                                for(i = 0; i < newfields; i++)
+                                for(j = 0; j < newfields; j++)
                                 {
-                                    outfield[i] = BndExp[i][n]->UpdateCoeffs() + BndExp[i][n]->GetCoeff_Offset(i);
+                                    outfield[j] = BndExp[j][n]->UpdateCoeffs() + BndExp[j][n]->GetCoeff_Offset(i);
                                 }
 
                                 // Get face 2D expansion from element expansion
@@ -257,24 +195,12 @@ namespace Nektar
                                 Array<OneD, NekDouble>  gradnorm(nfq, 0.0);
                                 
                                 
-                                if(c0Proj)
+                                scalar = m_f->m_exp[0]->GetPhys() + offset;
+                                elmt->PhysDeriv(scalar, grad[0],grad[1],grad[2]);
+                                
+                                for(j = 0; j < ngrad; ++j)
                                 {
-                                    for(int j = 0; j < ngrad; ++j)
-                                    {
-                                        grad[j] = m_f->m_exp[j+1]->GetPhys() + offset;
-                                        elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]); 
-                                        bc->FwdTrans(fgrad[j], outfield[j+1]); 
-                                    }
-                                }
-                                else
-                                {
-                                    scalar = m_f->m_exp[0]->GetPhys() + offset;
-                                    elmt->PhysDeriv(scalar, grad[0],grad[1],grad[2]);
-                                    
-                                    for(j = 0; j < ngrad; ++j)
-                                    {
-                                        elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]); 
-                                    }
+                                    elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]); 
                                 }
                                 
                                 //surface curved 
@@ -302,13 +228,6 @@ namespace Nektar
                 {
                     cnt += BndExp[0][n]->GetExpSize();
                 }
-            }
-            
-            
-            if(c0Proj)
-            {
-                newfields = newfields - ngrad;
-                m_f->m_exp.resize(newfields);
             }
             
             for(int j = 0; j < newfields; ++j)

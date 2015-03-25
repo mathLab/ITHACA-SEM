@@ -93,7 +93,7 @@ namespace Nektar
             Array<OneD, int>                m_BCtoTraceID;
             /// number of planes for homogeneous1D expansion
             int                             m_nPlanes;
-            int                             m_nLocPlanes;
+            Array<OneD, int>                m_planesID;
             // Time when we start calculating the forces
             NekDouble                       m_startTime;
             // Directions on which the forces will be projected

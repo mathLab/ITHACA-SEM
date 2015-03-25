@@ -265,17 +265,49 @@ namespace Nektar
             // If flow has no Homogeneous direction, use 1 to make code general
             if(m_isHomogeneous1D && m_outputAllPlanes)
             {
-                m_nPlanes = pFields[0]->GetHomogeneousBasis()->GetZ().num_elements();
-                m_nLocPlanes = pFields[0]->GetZIDs().num_elements();
+                m_nPlanes = pFields[0]->GetHomogeneousBasis()->
+                                                    GetZ().num_elements();
             }
             else
             {
-                m_nplanes = 1;
-                m_nLocPlanes = 1;
+                m_nPlanes = 1;
             }
+            
+            // Create map for Planes ID for Homogeneous direction
+            //    If flow has no Homogeneous direction, create trivial map  
+            int j;
+            m_planesID = Array<OneD, int> (m_nPlanes,-1);
+            if(m_isHomogeneous1D)
+            {
+                Array<OneD, const unsigned int> IDs = pFields[0]->GetZIDs();
+                //Loop through all planes
+                for(cnt = 0; cnt < m_nPlanes; cnt++)
+                {
+                    for(j = 0; j < IDs.num_elements(); ++j)
+                    {
+                        //Look for current plane ID in this process
+                        if(IDs[j] == cnt)
+                        {
+                            break;
+                        }
+                    }
+                    // Assign ID to planesID
+                    // If plane is not found in this process, leave it with -1
+                    if(j != IDs.num_elements())
+                    {
+                        m_planesID[cnt] = j;
+                    }
+                }
+            }
+            else
+            {
+                m_planesID[0] = 0;
+            }            
 
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
+            // Write header
+            int expdim = pFields[0]->GetGraph()->GetMeshDimension();
             if (vComm->GetRank() == 0)
             {
                 // Open output stream
@@ -283,24 +315,20 @@ namespace Nektar
                 m_outputStream << "#";
                 m_outputStream.width(7);
                 m_outputStream << "Time";
-                m_outputStream.width(25);
-                m_outputStream << "Fx (press)";
-                m_outputStream.width(25);
-                m_outputStream << "Fx (visc)";
-                m_outputStream.width(25);
-                m_outputStream << "Fx (tot)";
-                m_outputStream.width(25);
-                m_outputStream << "Fy (press)";
-                m_outputStream.width(25);
-                m_outputStream << "Fy (visc)";
-                m_outputStream.width(25);
-                m_outputStream << "Fy (tot)";
-                m_outputStream.width(25);
-                m_outputStream << "Fz (press)";
-                m_outputStream.width(25);
-                m_outputStream << "Fz (visc)";
-                m_outputStream.width(25);
-                m_outputStream << "Fz (tot)";
+                for( int i = 1; i <= expdim; i++ )
+                {
+                    m_outputStream.width(25);
+                    m_outputStream <<  "F" << i << "-press";
+                    m_outputStream.width(25);
+                    m_outputStream <<  "F" << i << "-visc";
+                    m_outputStream.width(25);
+                    m_outputStream <<  "F" << i << "-total";
+                }
+                if( m_outputAllPlanes )
+                {
+                    m_outputStream.width(10);
+                    m_outputStream << "Plane";                   
+                }
                 m_outputStream << endl;
             }
 
@@ -322,571 +350,325 @@ namespace Nektar
                 return;
             }
 
-            int n, cnt, elmtid, nq, offset, nt, boundary;
-            nt = pFields[0]->GetNpoints();
-            int dim = pFields.num_elements()-1;
-
+            int i, j, k, n, cnt, elmtid, nq, offset, boundary, plane;
+            
+            // Get number of quadrature points and dimensions
+            int physTot = pFields[0]->GetNpoints();
+            int expdim = pFields[0]->GetGraph()->GetMeshDimension();
+            int nVel = expdim;
+            if( m_isHomogeneous1D )
+            {
+                nVel = nVel + 1;
+            }
+            
             StdRegions::StdExpansionSharedPtr elmt;
-            Array<OneD, int> BoundarytoElmtID;
-            Array<OneD, int> BoundarytoTraceID;
-            Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+            
+            // Fields used to calculate forces (a single plane for 3DH1D)
+            Array<OneD, MultiRegions::ExpListSharedPtr>  
+                                            fields( pFields.num_elements() );
+            
+            // Arrays of variables in the element
+            Array<OneD, Array<OneD, NekDouble> >       velocity(expdim);
+            Array<OneD, NekDouble>                     P(physTot);
+            
+            // Velocity gradient
+            Array<OneD, Array<OneD, NekDouble> >       grad( expdim*expdim);
+            
+            // Values at the boundary
+            Array<OneD, NekDouble>                     Pb; 
+            Array<OneD, Array<OneD, NekDouble> >       gradb( expdim*expdim);
 
-            Array<OneD, const NekDouble> P(nt);
-            Array<OneD, const NekDouble> U(nt);
-            Array<OneD, const NekDouble> V(nt);
-            Array<OneD, const NekDouble> W(nt);
-
-            Array<OneD, Array<OneD, NekDouble> > gradU(dim);
-            Array<OneD, Array<OneD, NekDouble> > gradV(dim);
-            Array<OneD, Array<OneD, NekDouble> > gradW(dim);
-
-            Array<OneD, Array<OneD, NekDouble> > fgradU(dim);
-            Array<OneD, Array<OneD, NekDouble> > fgradV(dim);
-            Array<OneD, Array<OneD, NekDouble> > fgradW(dim);
-
-            Array<OneD, NekDouble> values;
+            // Communicator to exchange results
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+            
+            // Arrays with forces in each plane
+            Array<OneD, Array<OneD, NekDouble> > Fpplane (expdim);
+            Array<OneD, Array<OneD, NekDouble> > Fvplane (expdim);
+            Array<OneD, Array<OneD, NekDouble> > Ftplane (expdim);
+            for( i = 0; i < expdim; i++)
+            {
+                Fpplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
+                Fvplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
+                Ftplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
+            }
+            
+            // Arrays with force
+            Array<OneD, NekDouble>  Fp(expdim,0.0);
+            Array<OneD, NekDouble>  Fv(expdim,0.0);
+            Array<OneD, NekDouble>  Ft(expdim,0.0);
+            
+            // Forces per element length in a boundary
+            Array<OneD, Array<OneD, NekDouble> >       fp( expdim );
+            Array<OneD, Array<OneD, NekDouble> >       fv( expdim );
 
-            NekDouble Fx,Fy,Fz,Fxp,Fxv,Fyp,Fyv,Fzp,Fzv;
-
-            Fxp = 0.0; // x-component of the force due to pressure difference
-            Fxv = 0.0; // x-component of the force due to viscous stress
-            Fx = 0.0;  // x-component of the force (total) Fx = Fxp + Fxv (Drag) 
-
-            Fyp = 0.0; // y-component of the force due to pressure difference
-            Fyv = 0.0; // y-component of the force due to viscous stress
-            Fy = 0.0;  // y-component of the force (total) Fy = Fyp + Fyv (Lift)
-
-            Fzp = 0.0; // z-component of the force due to pressure difference
-            Fzv = 0.0; // z-component of the force due to viscous stress
-            Fz = 0.0;  // z-component of the force (total) Fz = Fzp + Fzv (Side)
-
+            // Get viscosity
             NekDouble rho = (m_session->DefinesParameter("rho"))
                     ? (m_session->GetParameter("rho"))
                     : 1;
             NekDouble mu = rho*m_session->GetParameter("Kinvis");
             
-            for(int i = 0; i < pFields.num_elements(); ++i)
+            // Perform BwdTrans: when we only want the mean force in a 3DH1D
+            //     we work in wavespace, otherwise we use physical space            
+            for(i = 0; i < pFields.num_elements(); ++i)
             {
-                pFields[i]->SetWaveSpace(false);
+                if (m_isHomogeneous1D && m_outputAllPlanes)
+                {
+                    pFields[i]->SetWaveSpace(false);
+                }
                 pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
                                      pFields[i]->UpdatePhys());
                 pFields[i]->SetPhysState(true);
             }
-
-            // Homogeneous 1D case  Compute forces on all WALL boundaries
-            // This only has to be done on the zero (mean) Fourier mode.
+            
+            // Define boundary expansions
+            Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+            Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+            MultiRegions::ExpListSharedPtr               Bnd;
             if(m_isHomogeneous1D)
             {
-                if(vComm->GetColumnComm()->GetRank() == 0)
+                BndConds = pFields[0]->GetPlane(0)->GetBndConditions();
+                BndExp   = pFields[0]->GetPlane(0)->GetBndCondExpansions();                
+            }
+            else
+            {
+                BndConds = pFields[0]->GetBndConditions();
+                BndExp   = pFields[0]->GetBndCondExpansions();                
+            }
+            
+            // For Homogeneous, calculate force on each 2D plane
+            // Otherwise, m_nPlanes = 1, and loop only runs once
+            for(plane = 0; plane < m_nPlanes; plane++ )
+            {
+                // Check if plane is in this proc
+                if( m_planesID[plane] != -1 )
                 {
-                    pFields[0]->GetPlane(0)->GetBoundaryToElmtMap(
-                                         BoundarytoElmtID,BoundarytoTraceID);
-                    BndExp = pFields[0]->GetPlane(0)->GetBndCondExpansions();
-                    StdRegions::StdExpansion1DSharedPtr bc;
-
-                    // loop over the types of boundary conditions
-                    for(cnt = n = 0; n < BndExp.num_elements(); ++n)
+                    // For Homogeneous, consider the 2D expansion
+                    //      on the current plane
+                    if(m_isHomogeneous1D)
+                    {
+                        for(n = 0; n < pFields.num_elements(); n++)
+                        {
+                            fields[n] = pFields[n]->GetPlane(m_planesID[plane]);
+                        }
+                    }
+                    else
+                    {
+                        for(n = 0; n < pFields.num_elements(); n++)
+                        {
+                            fields[n] = pFields[n];
+                        }
+                    } 
+                    
+                    //Loop all the Boundary Regions
+                    for( cnt = n = 0; n < BndConds.num_elements(); n++)
                     {
                         if(m_boundaryRegionIsInList[n] == 1)
                         {
-                            for(int i = 0; i <  BndExp[n]->GetExpSize(); 
-                                    ++i, cnt++)
+                            for (i=0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
                             {
-                                // find element of this expansion.
-                                elmtid = BoundarytoElmtID[cnt];
-                                elmt   = pFields[0]->GetPlane(0)->GetExp(elmtid);
+                                elmtid = m_BCtoElmtID[cnt];
+                                elmt   = fields[0]->GetExp(elmtid);
                                 nq     = elmt->GetTotPoints();
-                                offset = pFields[0]->GetPlane(0)->GetPhys_Offset(elmtid);
-                            
-                                // Initialise local arrays for the velocity
-                                // gradients size of total number of quadrature
-                                // points for each element (hence local).
-                                for(int j = 0; j < dim; ++j)
+                                offset = fields[0]->GetPhys_Offset(elmtid);
+                                
+                                // Extract  fields on this element
+                                for( j=0; j<expdim; j++)
                                 {
-                                    gradU[j] = Array<OneD, NekDouble>(nq,0.0);
-                                    gradV[j] = Array<OneD, NekDouble>(nq,0.0);
-                                    gradW[j] = Array<OneD, NekDouble>(nq,0.0);
+                                    velocity[j] = fields[j]->GetPhys() + offset;
                                 }
-
+                                P = fields[nVel]->GetPhys() + offset;
+                                
+                                // Compute the velocity gradients
+                                for (j=0; j<expdim; j++)
+                                {
+                                    for (k=0; k<expdim; k++)
+                                    {
+                                        grad[j*expdim+k] = 
+                                                Array<OneD, NekDouble>(nq,0.0);
+                                        elmt->PhysDeriv(k,velocity[j],
+                                                grad[j*expdim+k]);
+                                    }
+                                }
+                                
                                 // identify boundary of element
-                                boundary = BoundarytoTraceID[cnt];
-
-                                // Extract  fields
-                                U = pFields[0]->GetPlane(0)->GetPhys() + offset;
-                                V = pFields[1]->GetPlane(0)->GetPhys() + offset;
-                                P = pFields[3]->GetPlane(0)->GetPhys() + offset;
-
-                                // compute the gradients
-                                elmt->PhysDeriv(U,gradU[0],gradU[1]);
-                                elmt->PhysDeriv(V,gradV[0],gradV[1]);
-
-                                // Get face 1D expansion from element expansion
-                                bc =  BndExp[n]->GetExp(i)
-                                        ->as<LocalRegions::Expansion1D> ();
-
-                                // number of points on the boundary
-                                int nbc = bc->GetTotPoints();
-
-                                // several vectors for computing the forces
-                                Array<OneD, NekDouble> Pb(nbc,0.0);
-
-                                for(int j = 0; j < dim; ++j)
+                                boundary = m_BCtoTraceID[cnt];
+                                
+                                // Dimension specific part for obtaining values
+                                //   at boundary and normal vector
+                                Array<OneD, Array<OneD, NekDouble> > normals;
+                                int nbc;
+                                switch(expdim)
                                 {
-                                    fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
-                                    fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
+                                    case 2:
+                                    {
+                                        // Get expansion on boundary
+                                        LocalRegions::Expansion1DSharedPtr bc;
+                                        bc =  BndExp[n]->GetExp(i)->
+                                               as<LocalRegions::Expansion1D> ();
+                                        
+                                        // Get number of points on the boundary
+                                        nbc = bc->GetTotPoints();
+                                        
+                                        // Get normals
+                                        normals = elmt->GetEdgeNormal(boundary);
+                                        
+                                        // Extract values at boundary
+                                        elmt->GetEdgePhysVals(boundary,bc,P,Pb);
+                                        for(int j = 0; j < expdim*expdim; ++j)
+                                        {
+                                            elmt->GetEdgePhysVals(boundary,
+                                                           bc,grad[j],gradb[j]);
+                                        }
+                                    }
+                                    break;
+                                    
+                                    case 3:
+                                    {
+                                        // Get expansion on boundary
+                                        LocalRegions::Expansion2DSharedPtr bc;
+                                        bc =  BndExp[n]->GetExp(i)->
+                                               as<LocalRegions::Expansion2D> ();
+ 
+                                        // Get number of points on the boundary
+                                        nbc = bc->GetTotPoints();
+                                        
+                                        // Get normals
+                                        normals = elmt->GetFaceNormal(boundary);
+                                        
+                                        // Extract values at boundary
+                                        elmt->GetFacePhysVals(boundary,bc,P,Pb);
+                                        for(int j = 0; j < expdim*expdim; ++j)
+                                        {
+                                            elmt->GetFacePhysVals(boundary,
+                                                           bc,grad[j],gradb[j]);
+                                        }                                        
+                                    }
+                                    break;
+                                    
+                                    default:
+                                        ASSERTL0(false,
+                                            "Expansion not supported by FilterForces");
+                                    break;
+                                }
+                                
+                                // Calculate forces per unit length
+                                
+                                // Pressure component: fp[j] = p*n[j]
+                                for ( j = 0; j < expdim; j++)
+                                {
+                                    fp[j] = Array<OneD, NekDouble> (nbc,0.0);
+                                    Vmath::Vmul (nbc, Pb, 1, 
+                                                      normals[j], 1, 
+                                                      fp[j], 1);
+                                }
+                                
+                                // Viscous component:
+                                //     fv[j] = -mu*{(grad[k,j]+grad[j,k]) *n[k]}
+                                for ( j = 0; j < expdim; j++ )
+                                {
+                                    fv[j] = Array<OneD, NekDouble> (nbc,0.0);
+                                    for ( k = 0; k < expdim; k++ )
+                                    {
+                                        Vmath::Vvtvp (nbc, gradb[k*expdim+j], 1,
+                                                           normals[k], 1,
+                                                           fv[j], 1,
+                                                           fv[j], 1);
+                                        Vmath::Vvtvp (nbc, gradb[j*expdim+k], 1,
+                                                           normals[k], 1,
+                                                           fv[j], 1, 
+                                                           fv[j], 1);                                                
+                                    }
+                                    Vmath::Smul(nq, -mu, fv[j], 1, fv[j], 1);
                                 }
 
-                                Array<OneD, NekDouble>  drag_t(nbc,0.0);
-                                Array<OneD, NekDouble>  lift_t(nbc,0.0);
-                                Array<OneD, NekDouble>  drag_p(nbc,0.0);
-                                Array<OneD, NekDouble>  lift_p(nbc,0.0);
-                                Array<OneD, NekDouble>  temp(nbc,0.0);
-                                Array<OneD, NekDouble>  temp2(nbc,0.0);
-
-                                // identify boundary of element .
-                                boundary = BoundarytoTraceID[cnt];
-
-                                // extraction of the pressure and wss on the
-                                // boundary of the element
-                                elmt->GetEdgePhysVals(boundary,bc,P,Pb);
-
-                                for(int j = 0; j < dim; ++j)
+                                // Integrate to obtain force
+                                for ( j = 0; j < expdim; j++)
                                 {
-                                    elmt->GetEdgePhysVals(boundary,bc,gradU[j],
-                                                          fgradU[j]);
-                                    elmt->GetEdgePhysVals(boundary,bc,gradV[j],
-                                                          fgradV[j]);
-                                }
-
-                                //normals of the element
-                                const Array<OneD, Array<OneD, NekDouble> > &normals
-                                            = elmt->GetEdgeNormal(boundary);
-
-                                //
-                                // Compute viscous tractive forces on wall from
-                                //
-                                //  t_i  = - T_ij * n_j  (minus sign for force 
-                                //                        exerted BY fluid ON wall),
-                                //
-                                // where
-                                //
-                                //  T_ij = viscous stress tensor (here in Cartesian
-                                //         coords)
-                                //                          dU_i    dU_j
-                                //       = RHO * KINVIS * ( ----  + ---- ) .
-                                //                          dx_j    dx_i
-
-                                //a) DRAG TERMS
-                                //-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny
-
-                                Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-                                Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
-
-                                Vmath::Smul(nbc,2.0,fgradU[0],1,fgradU[0],1);
-                                Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
-                                Vmath::Smul(nbc,0.5,fgradU[0],1,fgradU[0],1);
-
-                                Vmath::Vadd(nbc,temp2,1,drag_t,1,drag_t,1);
-                                Vmath::Smul(nbc,-mu,drag_t,1,drag_t,1);
-
-                                //zero temporary storage vector
-                                Vmath::Zero(nbc,temp,0);
-                                Vmath::Zero(nbc,temp2,0);
-
-
-                                //b) LIFT TERMS
-                                //-rho*kinvis*(2*dv/dy*nx+(du/dy+dv/dx)*nx
-
-                                Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-                                Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-
-                                Vmath::Smul(nbc,2.0,fgradV[1],1,fgradV[1],1);
-                                Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
-                                Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
-
-
-                                Vmath::Vadd(nbc,temp2,1,lift_t,1,lift_t,1);
-                                Vmath::Smul(nbc,-mu,lift_t,1,lift_t,1);
-
-                                // Compute normal tractive forces on all WALL
-                                // boundaries
-
-                                Vmath::Vvtvp(nbc,Pb,1,normals[0],1,
-                                                drag_p,1,drag_p, 1);
-                                Vmath::Vvtvp(nbc,Pb,1,normals[1],1,
-                                                lift_p,1,lift_p,1);
-
-                                //integration over the boundary
-                                Fxv += bc->Integral(drag_t);
-                                Fyv += bc->Integral(lift_t);
-
-                                Fxp += bc->Integral(drag_p);
-                                Fyp += bc->Integral(lift_p);
+                                    Fpplane[j][plane] += BndExp[n]->GetExp(i)->
+                                                            Integral(fp[j]);
+                                    Fvplane[j][plane] += BndExp[n]->GetExp(i)->
+                                                            Integral(fv[j]);
+                                }    
                             }
                         }
                         else
                         {
-                                cnt += BndExp[n]->GetExpSize();
+                            cnt += BndExp[n]->GetExpSize();
                         }
                     }
                 }
-                
-                for(int i = 0; i < pFields.num_elements(); ++i)
-                {
-                    pFields[i]->SetWaveSpace(true);
-                    pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
-                                         pFields[i]->UpdatePhys());
-                    pFields[i]->SetPhysState(false);
-                }
             }
-            //3D WALL case
-            else if(dim==3 && !m_isHomogeneous1D)
+            
+            // Combine contributions from different processes
+            for( i = 0; i < expdim; i++)
             {
-                pFields[0]->GetBoundaryToElmtMap(BoundarytoElmtID,
-                                                 BoundarytoTraceID);
-                BndExp = pFields[0]->GetBndCondExpansions();
-                LocalRegions::Expansion2DSharedPtr bc;
-
-                // loop over the types of boundary conditions
-                for(cnt = n = 0; n < BndExp.num_elements(); ++n)
-                {
-                    if(m_boundaryRegionIsInList[n] == 1)
-                    {
-                        for(int i = 0; i <  BndExp[n]->GetExpSize(); ++i, cnt++)
-                        {
-                            // find element of this expansion.
-                            elmtid = BoundarytoElmtID[cnt];
-                            elmt   = pFields[0]->GetExp(elmtid);
-                            nq     = elmt->GetTotPoints();
-                            offset = pFields[0]->GetPhys_Offset(elmtid);
-
-                            // Initialise local arrays for the velocity
-                            // gradients size of total number of quadrature
-                            // points for each element (hence local).
-                            for(int j = 0; j < dim; ++j)
-                            {
-                                gradU[j] = Array<OneD, NekDouble>(nq,0.0);
-                                gradV[j] = Array<OneD, NekDouble>(nq,0.0);
-                                gradW[j] = Array<OneD, NekDouble>(nq,0.0);
-                            }
-
-                            //identify boundary of element
-                            boundary = BoundarytoTraceID[cnt];
-
-                            //Extract  fields
-                            U = pFields[0]->GetPhys() + offset;
-                            V = pFields[1]->GetPhys() + offset;
-                            W = pFields[2]->GetPhys() + offset;
-                            P = pFields[3]->GetPhys() + offset;
-
-                            //compute the gradients
-                            elmt->PhysDeriv(U,gradU[0],gradU[1],gradU[2]);
-                            elmt->PhysDeriv(V,gradV[0],gradV[1],gradV[2]);
-                            elmt->PhysDeriv(W,gradW[0],gradW[1],gradW[2]);
-
-                            // Get face 2D expansion from element expansion
-                            bc =  BndExp[n]->GetExp(i)
-                                    ->as<LocalRegions::Expansion2D> ();
-
-                            //number of points on the boundary
-                            int nbc = bc->GetTotPoints();
-
-                            //several vectors for computing the forces
-                            Array<OneD, NekDouble> Pb(nbc,0.0);
-
-                            for(int j = 0; j < dim; ++j)
-                            {
-                                fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
-                                fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
-                                fgradW[j] = Array<OneD, NekDouble>(nbc,0.0);
-
-                            }
-
-                            Array<OneD, NekDouble>  drag_t(nbc,0.0);
-                            Array<OneD, NekDouble>  lift_t(nbc,0.0);
-                            Array<OneD, NekDouble>  side_t(nbc,0.0);
-                            Array<OneD, NekDouble>  drag_p(nbc,0.0);
-                            Array<OneD, NekDouble>  lift_p(nbc,0.0);
-                            Array<OneD, NekDouble>  side_p(nbc,0.0);
-                            Array<OneD, NekDouble>  temp(nbc,0.0);
-                            Array<OneD, NekDouble>  temp2(nbc,0.0);
-
-                            // identify boundary of element .
-                            boundary = BoundarytoTraceID[cnt];
-
-                            // extraction of the pressure and wss on the
-                            // boundary of the element
-                            elmt->GetFacePhysVals(boundary,bc,P,Pb);
-
-                            for(int j = 0; j < dim; ++j)
-                            {
-                                elmt->GetFacePhysVals(boundary,bc,gradU[j],
-                                                      fgradU[j]);
-                                elmt->GetFacePhysVals(boundary,bc,gradV[j],
-                                                      fgradV[j]);
-                                elmt->GetFacePhysVals(boundary,bc,gradW[j],
-                                                      fgradW[j]);
-                            }
-
-                            // normals of the element
-                            const Array<OneD, Array<OneD, NekDouble> > &normals
-                                                = elmt->GetFaceNormal(boundary);
-
-                            //
-                            // Compute viscous tractive forces on wall from
-                            //
-                            //  t_i  = - T_ij * n_j  (minus sign for force
-                            //                        exerted BY fluid ON wall),
-                            //
-                            // where
-                            //
-                            //  T_ij = viscous stress tensor (here in Cartesian
-                            //         coords)
-                            //                          dU_i    dU_j
-                            //       = RHO * KINVIS * ( ----  + ---- ) .
-                            //                          dx_j    dx_i
-
-                            //a) DRAG TERMS
-                            //-rho*kinvis*
-                            //    (2*du/dx*nx+(du/dy+dv/dx)*ny+(du/dz+dw/dx)*nz)
-                            Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
-                            Vmath::Neg(nbc,temp,1);
-                            Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-                            
-                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-                            Vmath::Neg(nbc,drag_t,1);
-                            Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
-                            
-                            Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
-                            Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
-                            Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
-                            
-                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-                            Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
-                            Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
-                            
-                            //zero temporary storage vector
-                            Vmath::Zero(nbc,temp,0);
-                            Vmath::Zero(nbc,temp2,0);
-                            
-                            
-                            //b) LIFT TERMS
-                            //-rho*kinvis*
-                            //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-                            Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-                            Vmath::Neg(nbc,temp,1);
-                            Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-                            
-                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-                            Vmath::Neg(nbc,lift_t,1);
-                            Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-                            
-                            Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
-                            Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
-                            Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
-                            
-                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-                            Vmath::Vadd(nbc,temp,1,lift_t,1,lift_t,1);
-                            Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
-                            
-                            //zero temporary storage vector
-                            Vmath::Zero(nbc,temp,0);
-                            Vmath::Zero(nbc,temp2,0);
-                            
-                            //b) SIDE TERMS
-                            //-rho*kinvis*
-                            //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-                            Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-                            Vmath::Neg(nbc,temp,1);
-                            Vmath::Vmul(nbc,temp,1,normals[1],1,temp,1);
-                            
-                            Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,side_t,1);
-                            Vmath::Neg(nbc,side_t,1);
-                            Vmath::Vmul(nbc,side_t,1,normals[0],1,side_t,1);
-                            
-                            Vmath::Smul(nbc,-2.0,fgradW[2],1,fgradW[2],1);
-                            Vmath::Vmul(nbc,fgradW[2],1,normals[2],1,temp2,1);
-                            Vmath::Smul(nbc,-0.5,fgradW[2],1,fgradW[2],1);
-                            
-                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-                            Vmath::Vadd(nbc,temp,1,side_t,1,side_t,1);
-                            Vmath::Smul(nbc,mu,side_t,1,side_t,1);
-
-
-                            // Compute normal tractive forces on all WALL
-                            // boundaries
-                            Vmath::Vvtvp(nbc,Pb,1,normals[0],1,
-                                             drag_p,1,drag_p,1);
-                            Vmath::Vvtvp(nbc,Pb,1,normals[1],1,
-                                             lift_p,1,lift_p,1);
-                            Vmath::Vvtvp(nbc,Pb,1,normals[2],1,
-                                         side_p,1,side_p,1);
-
-                            //integration over the boundary
-                            Fxv += bc->Expansion::Integral(drag_t);
-                            Fyv += bc->Expansion::Integral(lift_t);
-                            Fzv += bc->Expansion::Integral(side_t);
-
-                            Fxp += bc->Expansion::Integral(drag_p);
-                            Fyp += bc->Expansion::Integral(lift_p);
-                            Fzp += bc->Expansion::Integral(side_p);
-                        }
-                    }
-                    else
-                    {
-                        cnt += BndExp[n]->GetExpSize();
-                    }
-                }
+                vComm->AllReduce(Fpplane[i], LibUtilities::ReduceSum);
+                vComm->AllReduce(Fvplane[i], LibUtilities::ReduceSum);
             }
-            //2D WALL Condition
-            else
+            
+            // Project results to new directions
+            for(plane = 0; plane < m_nPlanes; plane++)
             {
-                pFields[0]->GetBoundaryToElmtMap(BoundarytoElmtID,
-                                                 BoundarytoTraceID);
-                BndExp = pFields[0]->GetBndCondExpansions();
-                StdRegions::StdExpansion1DSharedPtr bc;
-
-                // loop over the types of boundary conditions
-                for(cnt = n = 0; n < BndExp.num_elements(); ++n)
-                {
-                    if(m_boundaryRegionIsInList[n] == 1)
+                Array< OneD, NekDouble> tmpP(expdim, 0.0);
+                Array< OneD, NekDouble> tmpV(expdim, 0.0);
+                for( i = 0; i < expdim; i++)
+                {   
+                    for( j = 0; j < expdim; j++ )
                     {
-                        for(int i = 0; i <  BndExp[n]->GetExpSize(); ++i, cnt++)
-                        {
-
-                            elmtid = BoundarytoElmtID[cnt];
-                            elmt   = pFields[0]->GetExp(elmtid);
-                            nq     = elmt->GetTotPoints();
-                            offset = pFields[0]->GetPhys_Offset(elmtid);
-
-                            for(int j = 0; j < dim; ++j)
-                            {
-                                gradU[j] = Array<OneD, NekDouble>(nq,0.0);
-                                gradV[j] = Array<OneD, NekDouble>(nq,0.0);
-                            }
-
-                            boundary = BoundarytoTraceID[cnt];
-
-                            U = pFields[0]->GetPhys() + offset;
-                            V = pFields[1]->GetPhys() + offset;
-                            P = pFields[2]->GetPhys() + offset;
-
-                            elmt->PhysDeriv(U,gradU[0],gradU[1]);
-                            elmt->PhysDeriv(V,gradV[0],gradV[1]);
-
-                            bc =  BndExp[n]->GetExp(i)
-                                    ->as<LocalRegions::Expansion1D> ();
-
-                            int nbc = bc->GetTotPoints();
-                            Array<OneD, NekDouble> Pb(nbc,0.0);
-
-                            Array<OneD, NekDouble>  drag_t(nbc,0.0);
-                            Array<OneD, NekDouble>  lift_t(nbc,0.0);
-                            Array<OneD, NekDouble>  drag_p(nbc,0.0);
-                            Array<OneD, NekDouble>  lift_p(nbc,0.0);
-                            Array<OneD, NekDouble>  temp(nbc,0.0);
-
-                            boundary = BoundarytoTraceID[cnt];
-
-                            elmt->GetEdgePhysVals(boundary,bc,P,Pb);
-
-                            for(int j = 0; j < dim; ++j)
-                            {
-                                fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
-                                fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
-
-                            }
-
-                            for(int j = 0; j < dim; ++j)
-                            {
-                                elmt->GetEdgePhysVals(boundary,bc,gradU[j],
-                                                      fgradU[j]);
-                                elmt->GetEdgePhysVals(boundary,bc,gradV[j],
-                                                      fgradV[j]);
-                            }
-
-                            const Array<OneD, Array<OneD, NekDouble> > &normals
-                                                = elmt->GetEdgeNormal(boundary);
-
-                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-                            Vmath::Neg(nbc,drag_t,1);
-                            Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
-
-                            Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
-                            Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp,1);
-                            Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
-                            Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
-
-                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-                            Vmath::Neg(nbc,lift_t,1);
-                            Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-                            Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
-                            Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp,1);
-                            Vmath::Vadd(nbc,temp,1,lift_t,1,lift_t,1);
-                            Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
-
-                            Vmath::Vvtvp(nbc,Pb,1,normals[0],1,
-                                             drag_p,1,drag_p,1);
-                            Vmath::Vvtvp(nbc,Pb,1,normals[1],1,
-                                             lift_p,1,lift_p,1);
-
-                            Fxp += bc->Integral(drag_p);
-                            Fyp += bc->Integral(lift_p);
-
-                            Fxv += bc->Integral(drag_t);
-                            Fyv += bc->Integral(lift_t);
-                        }
+                        tmpP[i] += Fpplane[j][plane]*m_directions[i][j];
+                        tmpV[i] += Fpplane[j][plane]*m_directions[i][j];
                     }
-                    else
-                    {
-                        cnt += BndExp[n]->GetExpSize();
-                    }
-
                 }
-
+                // Copy result
+                for( i = 0; i < expdim; i++)
+                {
+                    Fpplane[i][plane] = tmpP[i];
+                    Fvplane[i][plane] = tmpV[i];
+                }
             }
-
-            vComm->AllReduce(Fxp, LibUtilities::ReduceSum);
-            vComm->AllReduce(Fxv, LibUtilities::ReduceSum);
-            Fx = Fxp + Fxv;
             
-            vComm->AllReduce(Fyp, LibUtilities::ReduceSum);
-            vComm->AllReduce(Fyv, LibUtilities::ReduceSum);
-            Fy = Fyp + Fyv;
+            // Sum viscous and pressure components
+            for(plane = 0; plane < m_nPlanes; plane++)
+            {
+                for( i = 0; i < expdim; i++)
+                {
+                    Ftplane[i][plane] = Fpplane[i][plane] + Fvplane[i][plane];
+                }
+            }
+            // Calculate forces including all planes
+            for( i = 0; i < expdim; i++)
+            {
+                Fp[i] = Vmath::Vsum(m_nPlanes, Fpplane[i], 1) / m_nPlanes;
+                Fv[i] = Vmath::Vsum(m_nPlanes, Fvplane[i], 1) / m_nPlanes;
+                Ft[i] = Fp[i] + Fv[i];
+            }            
             
-            vComm->AllReduce(Fzp, LibUtilities::ReduceSum);
-            vComm->AllReduce(Fzv, LibUtilities::ReduceSum);
-            Fz = Fzp + Fzv;
-            
-
+            //Write Results
             if (vComm->GetRank() == 0)
             {
                 m_outputStream.width(8);
                 m_outputStream << setprecision(6) << time;
-
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fxp;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fxv;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fx;
-
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fyp;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fyv;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fy;
-
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fzp;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fzv;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << Fz;
-
+                for( i = 0; i < expdim; i++)
+                {
+                    m_outputStream.width(25);
+                    m_outputStream << setprecision(8) << Fp[i];
+                    m_outputStream.width(25);
+                    m_outputStream << setprecision(8) << Fv[i];
+                    m_outputStream.width(25);
+                    m_outputStream << setprecision(8) << Ft[i];
+                }
                 m_outputStream << endl;
+            }
+            
+            // Put results back to wavespace, if necessary
+            if( m_isHomogeneous1D && m_outputAllPlanes )
+            {
+                for (i = 0; i < pFields.num_elements(); ++i)
+                {
+                    pFields[i]->SetWaveSpace(true);
+                    pFields[i]->HomogeneousFwdTrans(pFields[i]->GetPhys(),
+                                                    pFields[i]->UpdatePhys());
+                }
             }
         }
 

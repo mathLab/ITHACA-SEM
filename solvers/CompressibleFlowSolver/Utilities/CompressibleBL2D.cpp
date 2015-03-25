@@ -3,7 +3,6 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <sys/dir.h>
 #include <cmath>
 
 #include <MultiRegions/ExpList.h>

@@ -312,16 +312,29 @@ namespace Nektar
             {
                 // Open output stream
                 m_outputStream.open(m_outputFile.c_str());
+                m_outputStream << "# Forces acting on bodies" << endl;
+                for( int i = 0; i < expdim; i++ )
+                {
+                    m_outputStream << "#" << " Direction" << i+1 << " = (";
+                    m_outputStream.width(8);
+                    m_outputStream << setprecision(4) << m_directions[i][0];
+                    m_outputStream.width(8);
+                    m_outputStream << setprecision(4) << m_directions[i][1];
+                    m_outputStream.width(8);
+                    m_outputStream << setprecision(4) << m_directions[i][2];
+                    m_outputStream << ")" << endl;
+                }
+                m_outputStream << "# Boundary regions: " << IndString.c_str() << endl;
                 m_outputStream << "#";
                 m_outputStream.width(7);
                 m_outputStream << "Time";
                 for( int i = 1; i <= expdim; i++ )
                 {
-                    m_outputStream.width(25);
+                    m_outputStream.width(8);
                     m_outputStream <<  "F" << i << "-press";
-                    m_outputStream.width(25);
+                    m_outputStream.width(9);
                     m_outputStream <<  "F" << i << "-visc";
-                    m_outputStream.width(25);
+                    m_outputStream.width(8);
                     m_outputStream <<  "F" << i << "-total";
                 }
                 if( m_outputAllPlanes )
@@ -423,7 +436,6 @@ namespace Nektar
             // Define boundary expansions
             Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
             Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
-            MultiRegions::ExpListSharedPtr               Bnd;
             if(m_isHomogeneous1D)
             {
                 BndConds = pFields[0]->GetPlane(0)->GetBndConditions();
@@ -652,16 +664,48 @@ namespace Nektar
             //Write Results
             if (vComm->GetRank() == 0)
             {
+                // Write result in each plane
+                if( m_outputAllPlanes)
+                {
+                    for( plane = 0; plane < m_nPlanes; plane++)
+                    {
+                        // Write time
+                        m_outputStream.width(8);
+                        m_outputStream << setprecision(6) << time;
+                        // Write forces
+                        for( i = 0; i < expdim; i++ )
+                        {
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) 
+                                           << Fpplane[i][plane];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8)
+                                           << Fvplane[i][plane];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8)  
+                                           << Ftplane[i][plane];
+                        }
+                        m_outputStream.width(10);
+                        m_outputStream << plane;
+                        m_outputStream << endl;
+                    }                       
+                }
+                // Output average (or total) force
                 m_outputStream.width(8);
                 m_outputStream << setprecision(6) << time;
                 for( i = 0; i < expdim; i++)
                 {
-                    m_outputStream.width(25);
+                    m_outputStream.width(15);
                     m_outputStream << setprecision(8) << Fp[i];
-                    m_outputStream.width(25);
+                    m_outputStream.width(15);
                     m_outputStream << setprecision(8) << Fv[i];
-                    m_outputStream.width(25);
+                    m_outputStream.width(15);
                     m_outputStream << setprecision(8) << Ft[i];
+                }
+                if( m_outputAllPlanes)
+                {
+                    m_outputStream.width(10);
+                    m_outputStream << "average";
                 }
                 m_outputStream << endl;
             }

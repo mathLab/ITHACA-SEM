@@ -246,6 +246,10 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
 
+    // workaround a bug in cwipi: receiving_field_name should be const char* but is char*
+    char recFN[m_recvFieldName.length() + 1];
+    strcpy(recFN, m_recvFieldName.c_str());
+
     int nNotLoc;
     cwipi_exchange(m_coupling->GetName().c_str(),
                    m_name.c_str(),
@@ -254,7 +258,7 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                    time,
                    "",
                    NULL,
-                   m_recvFieldName.c_str(),
+                   recFN,
                    m_rValsInterl,
                    &nNotLoc);
 

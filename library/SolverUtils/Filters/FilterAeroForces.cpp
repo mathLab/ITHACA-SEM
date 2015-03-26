@@ -513,9 +513,12 @@ namespace Nektar
                                         normals = elmt->GetEdgeNormal(boundary);
                                         
                                         // Extract values at boundary
+                                        Pb = Array<OneD, NekDouble>(nbc,0.0);
                                         elmt->GetEdgePhysVals(boundary,bc,P,Pb);
                                         for(int j = 0; j < expdim*expdim; ++j)
                                         {
+                                            gradb[j] = Array<OneD, NekDouble>
+                                                            (nbc,0.0);
                                             elmt->GetEdgePhysVals(boundary,
                                                            bc,grad[j],gradb[j]);
                                         }
@@ -536,9 +539,12 @@ namespace Nektar
                                         normals = elmt->GetFaceNormal(boundary);
                                         
                                         // Extract values at boundary
+                                        Pb = Array<OneD, NekDouble>(nbc,0.0);
                                         elmt->GetFacePhysVals(boundary,bc,P,Pb);
                                         for(int j = 0; j < expdim*expdim; ++j)
                                         {
+                                            gradb[j] = Array<OneD, NekDouble>
+                                                            (nbc,0.0);
                                             elmt->GetFacePhysVals(boundary,
                                                            bc,grad[j],gradb[j]);
                                         }                                        
@@ -578,7 +584,7 @@ namespace Nektar
                                                            fv[j], 1, 
                                                            fv[j], 1);                                                
                                     }
-                                    Vmath::Smul(nq, -mu, fv[j], 1, fv[j], 1);
+                                    Vmath::Smul(nbc, -mu, fv[j], 1, fv[j], 1);
                                 }
 
                                 // Integrate to obtain force
@@ -616,7 +622,7 @@ namespace Nektar
                     for( j = 0; j < expdim; j++ )
                     {
                         tmpP[i] += Fpplane[j][plane]*m_directions[i][j];
-                        tmpV[i] += Fpplane[j][plane]*m_directions[i][j];
+                        tmpV[i] += Fvplane[j][plane]*m_directions[i][j];
                     }
                 }
                 // Copy result

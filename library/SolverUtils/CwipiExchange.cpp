@@ -46,7 +46,10 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     m_outputFormat("Ensight Gold"),
     m_outputFormatOption("text"),
     m_outputFreq(outputFreq),
-    m_geomTol(geomTol)
+    m_geomTol(geomTol),
+    m_coords(NULL),
+    m_connecIdx(NULL),
+    m_connec(NULL)
 {
     cwipi_dump_application_properties();
 
@@ -209,7 +212,8 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
 CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling,
                                    string name, int nEVars) :
     Exchange(coupling,  name),
-    m_nEVars(nEVars)
+    m_nEVars(nEVars),
+    m_rValsInterl(NULL)
 {
     int nPoints = m_coupling->GetNPoints();
 

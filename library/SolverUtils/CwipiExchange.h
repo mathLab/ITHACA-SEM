@@ -62,9 +62,9 @@ protected:
     int m_outputFreq;
     double m_geomTol;
 
-    double *m_coords = NULL;
-    int *m_connecIdx = NULL;
-    int *m_connec = NULL;
+    double *m_coords;
+    int *m_connecIdx;
+    int *m_connec;
 
     map< int, int > m_vertMap;
 
@@ -104,7 +104,7 @@ protected:
     string m_sendFieldName;
     string m_recvFieldName;
 
-    double *m_rValsInterl = NULL;
+    double *m_rValsInterl;
 
     virtual void v_SendFields(const int step, const NekDouble time,
                               Array<OneD, Array<OneD, NekDouble> > &field);

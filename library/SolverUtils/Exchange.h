@@ -58,6 +58,7 @@ public:
 
     Coupling(MultiRegions::ExpListSharedPtr field, string name) :
         m_field(field),
+        m_points(NULL),
         m_name(name)
     {
     };
@@ -90,7 +91,7 @@ protected:
 
     MultiRegions::ExpListSharedPtr m_field;
     int m_nPoints;
-    double *m_points = NULL;
+    double *m_points;
 
     string m_name;
 

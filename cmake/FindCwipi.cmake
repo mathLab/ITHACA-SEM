@@ -5,42 +5,35 @@
 #  CWIPI_LIBRARIES - The libraries needed to use cwipi
 #  CWIPI_DEFINITIONS - Compiler switches required for using cwipi
 
-set(CWIPI_DEFINITIONS "")
 
-find_path(CWIPI_INCLUDE_DIR cwipi.h
-          HINTS ${CWIPI_DIR}/include/
-)
+SET(CWIPI_SEARCH_PATHS
+    ${CMAKE_SOURCE_DIR}/ThirdParty/cwipi/build/lib
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/cwipi/build/lib
+    ${CMAKE_SOURCE_DIR}/ThirdParty/dist/build/lib
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/dist/build/lib)
 
-find_library(CWIPI_LIBRARY
-          NAMES "libcwipi.so"
-          HINTS "${CWIPI_DIR}/lib64/" "${CWIPI_DIR}/lib/"
-)
+FIND_PATH(CWIPI_INCLUDE_DIR NAMES cwipi.h PATHS ${CWIPI_SEARCH_PATHS})
+FIND_LIBRARY(CWIPI_LIBRARY NAMES cwipi PATHS ${CWIPI_SEARCH_PATHS})
+FIND_LIBRARY(CWIPI_LIBRARY_FVMC NAMES fvmc PATHS ${CWIPI_SEARCH_PATHS})
+FIND_LIBRARY(CWIPI_LIBRARY_BFTC NAMES BFTC PATHS ${CWIPI_SEARCH_PATHS})
 
-find_library(CWIPI_LIBRARY_FVMC
-          NAMES "libfvmc.so"
-          HINTS "${CWIPI_DIR}/lib64/" "${CWIPI_DIR}/lib/"
-)
 
-find_library(CWIPI_LIBRARY_BFTC
-          NAMES "libbftc.so"
-          HINTS "${CWIPI_DIR}/lib64/" "${CWIPI_DIR}/lib/"
-)
+SET(CWIPI_FOUND FALSE)
+IF (CWIPI_LIBRARY)
+  SET(CWIPI_FOUND TRUE)
+  INCLUDE_DIRECTORIES(${CWIPI_INCLUDE_DIR})
+  MARK_AS_ADVANCED(CWIPI_LIBRARY)
+  MARK_AS_ADVANCED(CWIPI_LIBRARY_FVMC)
+  MARK_AS_ADVANCED(CWIPI_LIBRARY_BFTC)
+  MARK_AS_ADVANCED(CWIPI_INCLUDE_DIR)
+ENDIF (CWIPI_LIBRARY)
 
-set(CWIPI_LIBRARIES
-    ${CWIPI_LIBRARY}
-    ${CWIPI_LIBRARY_FVMC}
-    ${CWIPI_LIBRARY_BFTC}
-)
-set(CWIPI_INCLUDE_DIRS ${CWIPI_INCLUDE_DIR})
-
-include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set CWIPI_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(cwipi DEFAULT_MSG
-                                  CWIPI_LIBRARY
-                                  CWIPI_LIBRARY_FVMC
-                                  CWIPI_LIBRARY_BFTC
-                                  CWIPI_INCLUDE_DIR
-                                 )
-
-mark_as_advanced(CWIPI_LIBRARY CWIPI_INCLUDE_DIR)
+IF (CWIPI_FOUND)
+  IF (NOT CWIPI_FIND_QUIETLY)
+     MESSAGE(STATUS "Found CWIPI: ${CWIPI_INCLUDE_DIR}")
+  ENDIF (NOT CWIPI_FIND_QUIETLY)
+ELSE(CWIPI_FOUND)
+  IF (CWIPI_FIND_REQUIRED)
+     MESSAGE(FATAL_ERROR "Could not find CWIPI")
+  ENDIF (CWIPI_FIND_REQUIRED)
+ENDIF (CWIPI_FOUND)

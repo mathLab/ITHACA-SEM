@@ -373,6 +373,13 @@ ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
 ### Static libraries do not need to be linked by
+
+# CWIPI
+IF ( NEKTAR_USE_CWIPI )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${CWIPI_LIBRARY} ${CWIPI_LIBRARY_FVMC} ${CWIPI_LIBRARY_BFTC})
+    ADD_DEPENDENCIES(LibUtilities cwipi-0.8.2)
+ENDIF ()
+
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE

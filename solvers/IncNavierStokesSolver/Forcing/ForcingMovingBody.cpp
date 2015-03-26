@@ -36,7 +36,6 @@
 
 #include <IncNavierStokesSolver/Forcing/ForcingMovingBody.h>
 #include <MultiRegions/ExpList.h>
-#include <iomanip>
 
 namespace Nektar
 {
@@ -1084,19 +1083,19 @@ void ForcingMovingBody::TensionedCableModel(
 
                 for(int var = 0; var < m_NumVariable; var++)
                 {
-                       tmp0[var] = MotionCoeffs[var][0];
-                   }
+                    tmp0[var] = MotionCoeffs[var][0];
+                }
 
-                   tmp2[0] = ForceCoeffs[0];
+                tmp2[0] = ForceCoeffs[0];
 
-                   Blas::Dgemv('N', nrows, nrows, 1.0,
-                                  &(m_CoeffMat_B[0]->GetPtr())[0],
+                Blas::Dgemv('N', nrows, nrows, 1.0,
+                            &(m_CoeffMat_B[0]->GetPtr())[0],
                             nrows, &tmp0[0], 1,
-                               0.0,   &tmp1[0], 1);
-                   Blas::Dgemv('N', nrows, nrows, 1.0/m_structrho,
-                               &(m_CoeffMat_A[0]->GetPtr())[0],
-                               nrows, &tmp2[0], 1,
-                               1.0,   &tmp1[0], 1);
+                            0.0,   &tmp1[0], 1);
+                Blas::Dgemv('N', nrows, nrows, 1.0/m_structrho,
+                            &(m_CoeffMat_A[0]->GetPtr())[0],
+                            nrows, &tmp2[0], 1,
+                            1.0,   &tmp1[0], 1);
 
                 for(int var = 0; var < m_NumVariable; var++)
                 {
@@ -1340,14 +1339,15 @@ void ForcingMovingBody::EvaluateStructDynModel(
         for(int plane = 0; plane < m_NumLocPlane; plane++)
         {
             int NumPhyPoints = pFields[0]->GetPlane(plane)->GetTotPoints();
-            int offset = plane * NumPhyPoints;
-            for(int point = 0; point < NumPhyPoints; point++)
-            {
-                int xoffset = var*m_NumLocPlane+plane;
-                int yoffset = m_VarArraysize+xoffset;
-                m_zeta[var][point + offset] = m_MotionVars[xoffset];
-                m_eta [var][point + offset] = m_MotionVars[yoffset];
-            }
+
+            Array<OneD, NekDouble> tmp;
+
+            int offset  = plane * NumPhyPoints;
+            int xoffset = var * m_NumLocPlane+plane;
+            int yoffset = m_VarArraysize +  xoffset;
+
+            Vmath::Fill(NumPhyPoints, m_MotionVars[xoffset], tmp = m_zeta[var] + offset, 1);
+            Vmath::Fill(NumPhyPoints, m_MotionVars[yoffset], tmp =  m_eta[var] + offset, 1);
         }
     }
 
@@ -1608,10 +1608,38 @@ void ForcingMovingBody::InitialiseCableModel(
 
                 // Close inputstream for cable motions
                 inputStream.close();
-
+                
                 if(!m_homostrip)
                 {
-                    //TODO
+                    int nproc = m_comm->GetColumnComm()->GetSize();
+                    for (int i = 1; i < nproc; ++i)
+                    {
+                        for(int plane = 0; plane < m_NumLocPlane; plane++)
+                        {
+                            for (int var = 0; var < m_NumVariable; var++)
+                            {
+                                int xoffset = var*m_NumLocPlane+plane;
+                                int yoffset = m_NumVariable*m_NumLocPlane+xoffset;
+                                m_MotionVars[xoffset] = 
+                                            motion_x[plane+i*m_NumLocPlane+var*nzpoints];
+                                m_MotionVars[yoffset] = 
+                                            motion_y[plane+i*m_NumLocPlane+var*nzpoints];
+                            }
+                        }
+
+                        m_comm->GetColumnComm()->Send(i, m_MotionVars);
+                    }
+
+                    for(int plane = 0; plane < m_NumLocPlane; plane++)
+                    {
+                        for (int var = 0; var < m_NumVariable; var++)
+                        {
+                            int xoffset = var*m_NumLocPlane+plane;
+                            int yoffset = m_NumVariable*m_NumLocPlane+xoffset;
+                            m_MotionVars[xoffset] = motion_x[plane+var*nzpoints];
+                            m_MotionVars[yoffset] = motion_y[plane+var*nzpoints];
+                        }
+                    }
                 }
                 else //for strip model, make sure that each processor gets its motion values correctly
                 {
@@ -1660,7 +1688,16 @@ void ForcingMovingBody::InitialiseCableModel(
             {
                 if(!m_homostrip)
                 {
-                    //TODO
+                    int colrank = m_comm->GetColumnComm()->GetRank();
+                    int nproc   = m_comm->GetColumnComm()->GetSize();
+
+                    for (int j = 1; j < nproc; j++)
+                    {
+                        if(colrank == j)
+                        {
+                            m_comm->GetColumnComm()->Recv(0, m_MotionVars);
+                        }
+                    }
                 }
                 else //for strip model
                 {
@@ -1802,12 +1839,16 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
                 K = ZIDs[plane]/2;
                 beta = 2.0 * M_PI/m_lhom;
             }
-
-            if(m_supporttype == "PINNED-PINNED" || 
+            else if(m_supporttype == "PINNED-PINNED" || 
                         m_supporttype == "Pinned-Pinned")
             {
                 K = ZIDs[plane]+1;
                 beta = M_PI/m_lhom;
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
             }
         }
         else
@@ -1819,12 +1860,16 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
                 K = irank/2;
                 beta = 2.0 * M_PI/m_lhom;
             }
-
-            if(m_supporttype == "PINNED-PINNED" || 
+            else if(m_supporttype == "PINNED-PINNED" || 
                         m_supporttype == "Pinned-Pinned")
-            {
+            {   
                 K = irank+1;
                 beta = M_PI/m_lhom;
+            }
+            else
+            {
+                ASSERTL0(false,
+                            "Unrecognized support type for cable's motion");
             }
         }
 

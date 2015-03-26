@@ -145,7 +145,7 @@ void RK4(
 
 	
 /**
- * Calculate ....
+ * Calculate initial guess for RK4
  */	
 void RKDUMB(
 	Array<OneD, NekDouble>               vstart,
@@ -192,7 +192,7 @@ void RKDUMB(
 }
 
 /**
- * Creating the output file 
+ * Create the output file
  */
 void OUTPUT(
 	int                                  m_xpoints,
@@ -319,6 +319,11 @@ void OUTPUT(
 	}
 }
 
+
+/**
+ * Calculate the compressible boundary layer solution for a given 2D mesh
+ * and dump the solution into a .rst file.
+ */
 int main (int argc, char *argv[])
 {
 	// Variable initialisation
@@ -401,7 +406,7 @@ int main (int argc, char *argv[])
 	
 	m_Suth = 110.4 / m_Tinf;
 	m_Tw   = m_Twall / m_Tinf;
-	m_Re   = m_Re / m_long ;
+	m_Re   = m_Re / m_long;
 	
 	cout << "Number of points" << "   " << m_xpoints << endl;
 

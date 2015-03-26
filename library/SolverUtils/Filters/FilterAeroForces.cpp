@@ -342,6 +342,14 @@ namespace Nektar
                     m_outputStream.width(10);
                     m_outputStream << "Plane";                   
                 }
+                if (m_session->DefinesSolverInfo("HomoStrip"))
+                {
+                    ASSERTL0(m_outputAllPlanes==false,
+                            "Output forces on all planes not compatible with HomoStrips");
+                    m_outputStream.width(10);
+                    m_outputStream << "Strip";                    
+                }
+                
                 m_outputStream << endl;
             }
 
@@ -391,8 +399,13 @@ namespace Nektar
             Array<OneD, NekDouble>                     Pb; 
             Array<OneD, Array<OneD, NekDouble> >       gradb( expdim*expdim);
 
-            // Communicator to exchange results
+            // Communicators to exchange results
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+            LibUtilities::CommSharedPtr rowComm = vComm->GetRowComm();
+            LibUtilities::CommSharedPtr colComm = 
+                                    m_session->DefinesSolverInfo("HomoStrip") ?
+                                        vComm->GetColumnComm()->GetColumnComm():
+                                        vComm->GetColumnComm();
             
             // Arrays with forces in each plane
             Array<OneD, Array<OneD, NekDouble> > Fpplane (expdim);
@@ -618,10 +631,15 @@ namespace Nektar
             }
             
             // Combine contributions from different processes
+            //    this is split between row and col comm because of
+            //      homostrips case, which only keeps its own strip
             for( i = 0; i < expdim; i++)
             {
-                vComm->AllReduce(Fpplane[i], LibUtilities::ReduceSum);
-                vComm->AllReduce(Fvplane[i], LibUtilities::ReduceSum);
+                rowComm->AllReduce(Fpplane[i], LibUtilities::ReduceSum);
+                colComm->AllReduce(Fpplane[i], LibUtilities::ReduceSum);
+                
+                rowComm->AllReduce(Fvplane[i], LibUtilities::ReduceSum);
+                colComm->AllReduce(Fvplane[i], LibUtilities::ReduceSum);
             }
             
             // Project results to new directions
@@ -707,7 +725,54 @@ namespace Nektar
                     m_outputStream.width(10);
                     m_outputStream << "average";
                 }
-                m_outputStream << endl;
+                
+                if( m_session->DefinesSolverInfo("HomoStrip"))
+                {
+                    // The result we already wrote is for strip 0
+                    m_outputStream.width(10);
+                    m_outputStream << 0;
+                    m_outputStream << endl;
+                    
+                    // Now get result from other strips
+                    int nstrips;
+                    m_session->LoadParameter("Strip_Z", nstrips);
+                    for(i = 1; i<nstrips; i++)
+                    {
+                        vComm->GetColumnComm()->Recv(i, Fp);
+                        vComm->GetColumnComm()->Recv(i, Fv);
+                        vComm->GetColumnComm()->Recv(i, Ft);
+                        
+                        m_outputStream.width(8);
+                        m_outputStream << setprecision(6) << time;
+                        for( j = 0; j < expdim; j++)
+                        {
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) << Fp[j];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) << Fv[j];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) << Ft[j];
+                        }
+                    m_outputStream.width(10);
+                    m_outputStream << i;
+                    m_outputStream << endl;                            
+                    }                    
+                }
+                else
+                {
+                    m_outputStream << endl;
+                }
+            }
+            else
+            {
+                // In the homostrips case, we need to send result to root
+                if (m_session->DefinesSolverInfo("HomoStrip") &&
+                        (rowComm->GetRank() == 0) )
+                {
+                        vComm->GetColumnComm()->Send(0, Fp);
+                        vComm->GetColumnComm()->Send(0, Fv);
+                        vComm->GetColumnComm()->Send(0, Ft);                    
+                }
             }
             
             // Put results back to wavespace, if necessary

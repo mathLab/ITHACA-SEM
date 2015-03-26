@@ -353,6 +353,7 @@ namespace Nektar
                 m_outputStream << endl;
             }
 
+            m_lastTime = -1;
             m_index = 0;
             v_Update(pFields, time);
         }
@@ -370,8 +371,200 @@ namespace Nektar
             {
                 return;
             }
+            // Calculate the forces
+            CalculateForces(pFields, time);
+            
+            // Calculate forces including all planes
+            int expdim = pFields[0]->GetGraph()->GetMeshDimension();
+            Array<OneD, NekDouble>  Fp(expdim,0.0);
+            Array<OneD, NekDouble>  Fv(expdim,0.0);
+            Array<OneD, NekDouble>  Ft(expdim,0.0);
+            for( int i = 0; i < expdim; i++)
+            {
+                Fp[i] = Vmath::Vsum(m_nPlanes, m_Fpplane[i], 1) / m_nPlanes;
+                Fv[i] = Vmath::Vsum(m_nPlanes, m_Fvplane[i], 1) / m_nPlanes;
+                Ft[i] = Fp[i] + Fv[i];
+            }   
 
+            // Communicators to exchange results
+            LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();                   
+            
+            //Write Results
+            if (vComm->GetRank() == 0)
+            {
+                // Write result in each plane
+                if( m_outputAllPlanes)
+                {
+                    for( int plane = 0; plane < m_nPlanes; plane++)
+                    {
+                        // Write time
+                        m_outputStream.width(8);
+                        m_outputStream << setprecision(6) << time;
+                        // Write forces
+                        for( int i = 0; i < expdim; i++ )
+                        {
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) 
+                                           << m_Fpplane[i][plane];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8)
+                                           << m_Fvplane[i][plane];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8)  
+                                           << m_Ftplane[i][plane];
+                        }
+                        m_outputStream.width(10);
+                        m_outputStream << plane;
+                        m_outputStream << endl;
+                    }                       
+                }
+                // Output average (or total) force
+                m_outputStream.width(8);
+                m_outputStream << setprecision(6) << time;
+                for( int i = 0; i < expdim; i++)
+                {
+                    m_outputStream.width(15);
+                    m_outputStream << setprecision(8) << Fp[i];
+                    m_outputStream.width(15);
+                    m_outputStream << setprecision(8) << Fv[i];
+                    m_outputStream.width(15);
+                    m_outputStream << setprecision(8) << Ft[i];
+                }
+                if( m_outputAllPlanes)
+                {
+                    m_outputStream.width(10);
+                    m_outputStream << "average";
+                }
+                
+                if( m_session->DefinesSolverInfo("HomoStrip"))
+                {
+                    // The result we already wrote is for strip 0
+                    m_outputStream.width(10);
+                    m_outputStream << 0;
+                    m_outputStream << endl;
+                    
+                    // Now get result from other strips
+                    int nstrips;
+                    m_session->LoadParameter("Strip_Z", nstrips);
+                    for(int i = 1; i<nstrips; i++)
+                    {
+                        vComm->GetColumnComm()->Recv(i, Fp);
+                        vComm->GetColumnComm()->Recv(i, Fv);
+                        vComm->GetColumnComm()->Recv(i, Ft);
+                        
+                        m_outputStream.width(8);
+                        m_outputStream << setprecision(6) << time;
+                        for( int j = 0; j < expdim; j++)
+                        {
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) << Fp[j];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) << Fv[j];
+                            m_outputStream.width(15);
+                            m_outputStream << setprecision(8) << Ft[j];
+                        }
+                    m_outputStream.width(10);
+                    m_outputStream << i;
+                    m_outputStream << endl;                            
+                    }                    
+                }
+                else
+                {
+                    m_outputStream << endl;
+                }
+            }
+            else
+            {
+                // In the homostrips case, we need to send result to root
+                if (m_session->DefinesSolverInfo("HomoStrip") &&
+                        (vComm->GetRowComm()->GetRank() == 0) )
+                {
+                        vComm->GetColumnComm()->Send(0, Fp);
+                        vComm->GetColumnComm()->Send(0, Fv);
+                        vComm->GetColumnComm()->Send(0, Ft);                    
+                }
+            }
+
+        }
+
+
+        /**
+         *
+         */
+        void FilterAeroForces::v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+            const NekDouble &time)
+        {
+            if (pFields[0]->GetComm()->GetRank() == 0)
+            {
+                m_outputStream.close();
+            }
+        }
+
+
+        /**
+         *
+         */
+        bool FilterAeroForces::v_IsTimeDependent()
+        {
+            return true;
+        }
+        
+        /**
+         *     This function outputs the force on all planes of the current
+         *          process, in the format required by ForcingMovingBody
+         */        
+        void FilterAeroForces::GetForces(
+                            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                            Array<OneD, NekDouble> &Aeroforces,
+                            const NekDouble &time)
+        {
+            // Calculate forces if the result we have is not up-to-date
+            if(time > m_lastTime)
+            {
+                CalculateForces(pFields, time);
+            }
+            // Get information to write result
+            Array<OneD, unsigned int> ZIDs = pFields[0]->GetZIDs();
+            int local_planes = ZIDs.num_elements();
+            int expdim = pFields[0]->GetGraph()->GetMeshDimension();
+            
+            // Copy results to Aeroforces
+            if (m_outputAllPlanes)
+            {
+                for(int plane = 0 ; plane < local_planes; plane++)
+                {
+                    for(int dir =0; dir < expdim; dir++)
+                    {
+                        Aeroforces[plane + dir*local_planes] = 
+                                m_Ftplane[dir][ZIDs[plane]];
+                    }
+                }     
+            }
+            else
+            {
+                for(int plane = 0 ; plane < local_planes; plane++)
+                {
+                    for(int dir =0; dir < expdim; dir++)
+                    {
+                        Aeroforces[plane + dir*local_planes] = 
+                                m_Ftplane[dir][0];
+                    }
+                }                  
+            }
+        }
+                            
+        /**
+         *     This function calculates the forces
+         */        
+        void FilterAeroForces::CalculateForces(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
+        {
             int i, j, k, n, cnt, elmtid, nq, offset, boundary, plane;
+            
+            // Store time so we can check if result is up-to-date
+            m_lastTime = time;
             
             // Get number of quadrature points and dimensions
             int physTot = pFields[0]->GetNpoints();
@@ -408,14 +601,14 @@ namespace Nektar
                                         vComm->GetColumnComm();
             
             // Arrays with forces in each plane
-            Array<OneD, Array<OneD, NekDouble> > Fpplane (expdim);
-            Array<OneD, Array<OneD, NekDouble> > Fvplane (expdim);
-            Array<OneD, Array<OneD, NekDouble> > Ftplane (expdim);
+            m_Fpplane = Array<OneD, Array<OneD, NekDouble> >  (expdim);
+            m_Fvplane = Array<OneD, Array<OneD, NekDouble> >  (expdim);
+            m_Ftplane = Array<OneD, Array<OneD, NekDouble> >  (expdim);
             for( i = 0; i < expdim; i++)
             {
-                Fpplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
-                Fvplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
-                Ftplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
+                m_Fpplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
+                m_Fvplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
+                m_Ftplane[i] = Array<OneD, NekDouble>(m_nPlanes,0.0);
             }
             
             // Arrays with force
@@ -615,9 +808,9 @@ namespace Nektar
                                 // Integrate to obtain force
                                 for ( j = 0; j < expdim; j++)
                                 {
-                                    Fpplane[j][plane] += BndExp[n]->GetExp(i)->
+                                    m_Fpplane[j][plane] += BndExp[n]->GetExp(i)->
                                                             Integral(fp[j]);
-                                    Fvplane[j][plane] += BndExp[n]->GetExp(i)->
+                                    m_Fvplane[j][plane] += BndExp[n]->GetExp(i)->
                                                             Integral(fv[j]);
                                 }    
                             }
@@ -635,11 +828,11 @@ namespace Nektar
             //      homostrips case, which only keeps its own strip
             for( i = 0; i < expdim; i++)
             {
-                rowComm->AllReduce(Fpplane[i], LibUtilities::ReduceSum);
-                colComm->AllReduce(Fpplane[i], LibUtilities::ReduceSum);
+                rowComm->AllReduce(m_Fpplane[i], LibUtilities::ReduceSum);
+                colComm->AllReduce(m_Fpplane[i], LibUtilities::ReduceSum);
                 
-                rowComm->AllReduce(Fvplane[i], LibUtilities::ReduceSum);
-                colComm->AllReduce(Fvplane[i], LibUtilities::ReduceSum);
+                rowComm->AllReduce(m_Fvplane[i], LibUtilities::ReduceSum);
+                colComm->AllReduce(m_Fvplane[i], LibUtilities::ReduceSum);
             }
             
             // Project results to new directions
@@ -651,15 +844,15 @@ namespace Nektar
                 {   
                     for( j = 0; j < expdim; j++ )
                     {
-                        tmpP[i] += Fpplane[j][plane]*m_directions[i][j];
-                        tmpV[i] += Fvplane[j][plane]*m_directions[i][j];
+                        tmpP[i] += m_Fpplane[j][plane]*m_directions[i][j];
+                        tmpV[i] += m_Fvplane[j][plane]*m_directions[i][j];
                     }
                 }
                 // Copy result
                 for( i = 0; i < expdim; i++)
                 {
-                    Fpplane[i][plane] = tmpP[i];
-                    Fvplane[i][plane] = tmpV[i];
+                    m_Fpplane[i][plane] = tmpP[i];
+                    m_Fvplane[i][plane] = tmpV[i];
                 }
             }
             
@@ -668,110 +861,7 @@ namespace Nektar
             {
                 for( i = 0; i < expdim; i++)
                 {
-                    Ftplane[i][plane] = Fpplane[i][plane] + Fvplane[i][plane];
-                }
-            }
-            // Calculate forces including all planes
-            for( i = 0; i < expdim; i++)
-            {
-                Fp[i] = Vmath::Vsum(m_nPlanes, Fpplane[i], 1) / m_nPlanes;
-                Fv[i] = Vmath::Vsum(m_nPlanes, Fvplane[i], 1) / m_nPlanes;
-                Ft[i] = Fp[i] + Fv[i];
-            }            
-            
-            //Write Results
-            if (vComm->GetRank() == 0)
-            {
-                // Write result in each plane
-                if( m_outputAllPlanes)
-                {
-                    for( plane = 0; plane < m_nPlanes; plane++)
-                    {
-                        // Write time
-                        m_outputStream.width(8);
-                        m_outputStream << setprecision(6) << time;
-                        // Write forces
-                        for( i = 0; i < expdim; i++ )
-                        {
-                            m_outputStream.width(15);
-                            m_outputStream << setprecision(8) 
-                                           << Fpplane[i][plane];
-                            m_outputStream.width(15);
-                            m_outputStream << setprecision(8)
-                                           << Fvplane[i][plane];
-                            m_outputStream.width(15);
-                            m_outputStream << setprecision(8)  
-                                           << Ftplane[i][plane];
-                        }
-                        m_outputStream.width(10);
-                        m_outputStream << plane;
-                        m_outputStream << endl;
-                    }                       
-                }
-                // Output average (or total) force
-                m_outputStream.width(8);
-                m_outputStream << setprecision(6) << time;
-                for( i = 0; i < expdim; i++)
-                {
-                    m_outputStream.width(15);
-                    m_outputStream << setprecision(8) << Fp[i];
-                    m_outputStream.width(15);
-                    m_outputStream << setprecision(8) << Fv[i];
-                    m_outputStream.width(15);
-                    m_outputStream << setprecision(8) << Ft[i];
-                }
-                if( m_outputAllPlanes)
-                {
-                    m_outputStream.width(10);
-                    m_outputStream << "average";
-                }
-                
-                if( m_session->DefinesSolverInfo("HomoStrip"))
-                {
-                    // The result we already wrote is for strip 0
-                    m_outputStream.width(10);
-                    m_outputStream << 0;
-                    m_outputStream << endl;
-                    
-                    // Now get result from other strips
-                    int nstrips;
-                    m_session->LoadParameter("Strip_Z", nstrips);
-                    for(i = 1; i<nstrips; i++)
-                    {
-                        vComm->GetColumnComm()->Recv(i, Fp);
-                        vComm->GetColumnComm()->Recv(i, Fv);
-                        vComm->GetColumnComm()->Recv(i, Ft);
-                        
-                        m_outputStream.width(8);
-                        m_outputStream << setprecision(6) << time;
-                        for( j = 0; j < expdim; j++)
-                        {
-                            m_outputStream.width(15);
-                            m_outputStream << setprecision(8) << Fp[j];
-                            m_outputStream.width(15);
-                            m_outputStream << setprecision(8) << Fv[j];
-                            m_outputStream.width(15);
-                            m_outputStream << setprecision(8) << Ft[j];
-                        }
-                    m_outputStream.width(10);
-                    m_outputStream << i;
-                    m_outputStream << endl;                            
-                    }                    
-                }
-                else
-                {
-                    m_outputStream << endl;
-                }
-            }
-            else
-            {
-                // In the homostrips case, we need to send result to root
-                if (m_session->DefinesSolverInfo("HomoStrip") &&
-                        (rowComm->GetRank() == 0) )
-                {
-                        vComm->GetColumnComm()->Send(0, Fp);
-                        vComm->GetColumnComm()->Send(0, Fv);
-                        vComm->GetColumnComm()->Send(0, Ft);                    
+                    m_Ftplane[i][plane] = m_Fpplane[i][plane] + m_Fvplane[i][plane];
                 }
             }
             
@@ -784,30 +874,8 @@ namespace Nektar
                     pFields[i]->HomogeneousFwdTrans(pFields[i]->GetPhys(),
                                                     pFields[i]->UpdatePhys());
                 }
-            }
+            }            
         }
-
-
-        /**
-         *
-         */
-        void FilterAeroForces::v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
-            const NekDouble &time)
-        {
-            if (pFields[0]->GetComm()->GetRank() == 0)
-            {
-                m_outputStream.close();
-            }
-        }
-
-
-        /**
-         *
-         */
-        bool FilterAeroForces::v_IsTimeDependent()
-        {
-            return true;
-        }
+                 
     }
 }

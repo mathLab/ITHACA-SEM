@@ -78,12 +78,6 @@ class FilterMovingBody : public SolverUtils::Filter
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
             const NekDouble &time) {}
 
-        void UpdateForce(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-                  Array<OneD, NekDouble> &Aeroforces,
-            const NekDouble &time);
-
         void UpdateMotion(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -99,25 +93,10 @@ class FilterMovingBody : public SolverUtils::Filter
     private:
         LibUtilities::SessionReaderSharedPtr m_session;
 
-        /// ID's of boundary regions where we want the forces
-        vector<unsigned int>            m_boundaryRegionsIdList;
-        /// Determines if a given Boundary Region is in
-        /// m_boundaryRegionsIdList
-        vector<bool>                    m_boundaryRegionIsInList;
-        unsigned int                    m_index_f;
-        unsigned int                    m_index_v;
+        unsigned int                    m_index;
         unsigned int                    m_outputFrequency;
-        /// plane to take history point from if using a homogeneous1D
-        /// expansion
-        unsigned int                    m_outputPlane;
-        bool                            m_isHomogeneous1D;
-        LibUtilities::BasisSharedPtr    m_homogeneousBasis;
-        std::string                     m_BoundaryString;
-        /// number of planes for homogeneous1D expansion
-        int                             m_planes;
-        Array<OneD, std::ofstream>      m_outputStream;
-        std::string                     m_outputFile_fce;
-        std::string                     m_outputFile_mot;
+        std::ofstream                   m_outputStream;
+        std::string                     m_outputFile;
 };
 
 }

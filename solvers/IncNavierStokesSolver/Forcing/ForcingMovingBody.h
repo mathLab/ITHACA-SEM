@@ -42,6 +42,7 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <IncNavierStokesSolver/Filters/FilterMovingBody.h>
+#include <SolverUtils/Filters/FilterAeroForces.h>
 #include <GlobalMapping/Mapping.h>
 
 namespace Nektar
@@ -141,7 +142,10 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         LibUtilities::NektarFFTSharedPtr m_FFT;
         LibUtilities::CommSharedPtr m_comm;
-        FilterMovingBodySharedPtr m_filter;
+        FilterMovingBodySharedPtr m_filterMoving;
+        SolverUtils::FilterAeroForcesSharedPtr m_filterForces;
+        
+        int             m_index;
 
         /// free vibration or forced vibration types are available
         std::string m_vibrationtype;

@@ -84,6 +84,8 @@ void ForcingMovingBody::v_InitObject(
 
     m_session->LoadParameter("Kinvis",m_kinvis);
     m_session->LoadParameter("TimeStep", m_timestep, 0.01);
+    
+    m_session->MatchSolverInfo("HomoStrip","True",m_homostrip,false);
 
     // Loading the x-displacement (m_zeta) and the y-displacement (m_eta)
     // Those two variables are both functions of z and t and the may come
@@ -152,14 +154,24 @@ void ForcingMovingBody::v_InitObject(
         param = param->NextSiblingElement("PARAM");
     }
 
-    // Creat the filter for MovingBody, where we performed the calculation of
-    // fluid forces and write both the aerodynamic forces and motion variables
+    // Create the filter for MovingBody, where we write  motion variables
     // into the output files
-    m_filter = MemoryManager<FilterMovingBody>::
+    m_filterMoving = MemoryManager<FilterMovingBody>::
                                     AllocateSharedPtr(m_session, vParams);
 
     // Initialise the object of MovingBody filter
-    m_filter->Initialise(pFields, 0.0);
+    m_filterMoving->Initialise(pFields, 0.0);
+    
+    // Create a FilterAeroForces object to calculate the forces required for
+    //    the structural model
+    if (!m_homostrip)
+    {
+        vParams["OutputAllPlanes"] = "yes";
+    }
+    m_filterForces = MemoryManager<SolverUtils::FilterAeroForces>::
+                                AllocateSharedPtr(m_session, vParams);
+
+    m_filterForces->Initialise(pFields, 0.0);        
 
     // create the storage space for the body motion description
     int phystot = pFields[0]->GetTotPoints();
@@ -205,6 +217,8 @@ void ForcingMovingBody::v_InitObject(
         m_mapping->SetFromFunction(true);
     }
     
+    m_index = 0;
+    
 }
 
 void ForcingMovingBody::v_Apply(
@@ -225,8 +239,13 @@ void ForcingMovingBody::UpdateMotion(
               NekDouble                                     time)
 {
     // Update the forces from the calculation of fluid field, which is
-    // implemented in the movingbody filter
-    m_filter->UpdateForce(m_session, pFields, m_Aeroforces, time);
+    // implemented in the AeroForces filter
+    //     don't call update on first time-step because it was already done
+    if (m_index++)
+    {
+        m_filterForces->Update(pFields, time);
+    }
+    m_filterForces->GetForces(pFields,m_Aeroforces, time);
 
     // for "free" type, the cable vibrates both in streamwise and crossflow
     // directions, for "constrained" type, the cable only vibrates in crossflow
@@ -326,7 +345,7 @@ void ForcingMovingBody::UpdateMotion(
     }
 
     // Pass the variables of the cable's motion to the movingbody filter
-    m_filter->UpdateMotion(m_session, pFields, m_MotionVars, time);
+    m_filterMoving->UpdateMotion(m_session, pFields, m_MotionVars, time);
 }
 
 /**
@@ -815,8 +834,6 @@ void ForcingMovingBody::InitialiseCableModel(
     {
         m_NumD = 2;
     }
-
-    m_session->MatchSolverInfo("HomoStrip","True",m_homostrip,false);
 
     Array<OneD, unsigned int> ZIDs;
     ZIDs           = pFields[0]->GetZIDs();

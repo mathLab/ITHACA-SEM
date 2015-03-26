@@ -66,6 +66,11 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams);
             SOLVER_UTILS_EXPORT ~FilterAeroForces();
+            
+            SOLVER_UTILS_EXPORT void GetForces(
+                            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                            Array<OneD, NekDouble> &Aeroforces,
+                            const NekDouble &time);
 
         protected:
             virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
@@ -98,7 +103,19 @@ namespace Nektar
             NekDouble                       m_startTime;
             // Directions on which the forces will be projected
             Array<OneD, Array<OneD, NekDouble> >    m_directions;
+            // Arrays storing the last forces that were calculated
+            Array<OneD, Array<OneD, NekDouble> >    m_Fpplane;
+            Array<OneD, Array<OneD, NekDouble> >    m_Fvplane;
+            Array<OneD, Array<OneD, NekDouble> >    m_Ftplane;
+            
+            NekDouble                       m_lastTime;
+            
+            void CalculateForces(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time);
         };
+        
+        typedef boost::shared_ptr<FilterAeroForces>  FilterAeroForcesSharedPtr;
     }
 }
 

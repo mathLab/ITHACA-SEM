@@ -299,18 +299,18 @@ void DriverSteadyState::v_Execute(ostream &out)
     
     ///We save the final solution into a .fld file
     m_equ[m_nequ - 1]->Output();
-    
+
     for(int j = 0; j < m_equ[m_nequ - 1]->GetNvariables(); ++j)
     {
-	NekDouble vL2Error = m_equ[m_nequ - 1]->L2Error(j,false);
-	NekDouble vLinfError = m_equ[m_nequ - 1]->LinfError(j);
-	if (m_comm->GetRank() == 0)
-	{
-	    out << "L 2 error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
-	    << ") : " << vL2Error << endl;
-	    out << "L inf error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
-	    << ") : " << vLinfError << endl;
-	}
+        NekDouble vL2Error = m_equ[m_nequ - 1]->L2Error(j,false);
+        NekDouble vLinfError = m_equ[m_nequ - 1]->LinfError(j);
+        if (m_comm->GetRank() == 0)
+        {
+            out << "L 2 error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
+                << ") : " << vL2Error << endl;
+            out << "L inf error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
+                << ") : " << vLinfError << endl;
+        }
     }
 }
 

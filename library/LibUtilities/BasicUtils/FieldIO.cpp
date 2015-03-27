@@ -406,7 +406,7 @@ namespace Nektar
                 
                 // Load metadata
                 ImportFieldMetaData(infile,fieldmetadatamap);
-                
+
                 if(ElementIDs == NullInt1DArray) //load all fields
                 {
                     for(int i = 0; i < filenames.size(); ++i)

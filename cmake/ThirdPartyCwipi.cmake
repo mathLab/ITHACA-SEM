@@ -36,9 +36,9 @@ IF (NEKTAR_USE_CWIPI)
     IF (THIRDPARTY_BUILD_CWIPI)
         INCLUDE(ExternalProject)
 
-        get_filename_component(MPI_LIBRARY_PATH ${MPI_LIBRARY} DIRECTORY)
-        get_filename_component(MPI_BIN_PATH ${MPI_C_COMPILER} DIRECTORY)
-        get_filename_component(MPI_INC_PATH ${MPI_LIBRARY_PATH} DIRECTORY)
+        get_filename_component(MPI_LIBRARY_PATH ${MPI_LIBRARY} PATH)
+        get_filename_component(MPI_BIN_PATH ${MPI_C_COMPILER} PATH)
+        get_filename_component(MPI_INC_PATH ${MPI_LIBRARY_PATH} PATH)
         set(MPI_INC_PATH "${MPI_INC_PATH}/include")
 
         EXTERNALPROJECT_ADD(

@@ -20,18 +20,22 @@ IF ( MKL_LAPACK_FOUND )
     IF ( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
         FIND_LIBRARY(MKL
             NAMES mkl_ia64
-            HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
+            HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} 
+                  $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
         )
     ELSE ( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
         FIND_LIBRARY(MKL
             NAMES mkl_ia32
-            HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
+            HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} 
+                  $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
         )
     ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
-        FIND_LIBRARY(MKL_GUIDE
-            NAMES guide
-            HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
-        )
+
+    FIND_LIBRARY(MKL_GUIDE
+        NAMES guide
+        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} 
+              $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
+    )
 
     SET (MKL ${MKL} ${MKL_LAPACK} ${MKL_GUIDE} )
 ELSE (MKL_LAPACK_FOUND )
@@ -39,15 +43,18 @@ ELSE (MKL_LAPACK_FOUND )
     SET (MKL_LAPACK "")
     FIND_LIBRARY(MKL_INTEL
         NAMES mkl_intel_lp64
-        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
+        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} 
+              $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
     )
     FIND_LIBRARY(MKL_SEQUENTIAL
         NAMES mkl_sequential
-        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
+        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} 
+              $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
     )
     FIND_LIBRARY(MKL_CORE
         NAMES mkl_core
-        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
+        HINTS $ENV{MKL_HOME}/lib/${INTEL_LIBDIR} 
+              $ENV{MKLROOT}/lib/${INTEL_LIBDIR}
     )
     SET (MKL ${MKL_INTEL} ${MKL_SEQUENTIAL} ${MKL_CORE} )
 ENDIF ( MKL_LAPACK_FOUND )

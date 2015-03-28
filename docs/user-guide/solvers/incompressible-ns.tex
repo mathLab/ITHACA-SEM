@@ -32,17 +32,23 @@ where $V$ is the velocity, $p$ the pressure and $\nu$ the kinematic viscosity. T
 with consistent Neumann boundary conditions prescribed as
 
 \begin{equation}
- \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{V}}{\partial t}^{n+1} + \nu \sum_{q=0}^{J-1}\beta_q(\nabla \times \nabla \times   \mathbf{V})^{n-q} + \sum_{q=0}^{J-1}\beta_q [(\mathbf{V} \cdot \nabla)\mathbf{V}]^{n-q}\Bigr]\cdot n
+ \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{V}}{\partial t}^{n+1} + \nu \sum_{q=0}^{J-1}\beta_q(\nabla \times \nabla \times   \mathbf{V})^{n-q} + \sum_{q=0}^{J-1}\beta_q [(\mathbf{V} \cdot \nabla)\mathbf{V}]^{n-q}\Bigr]\cdot \mathbf{n}
 \end{equation}
 
 and on the outflow boundary, either setting $ p^{n+1}=0$ or using high order Dirichlet boundary condition, which is given as\cite{DoKa14}
 
 \begin{equation}
- p^{n+1}= \nu n \cdot \sum_{q=0}^{J-1}\nabla\mathbf{V}^{n-q}\cdot n-\frac{1}{2}
-\mid \sum_{q=0}^{J-1}\mathbf{V}^{n-q} \mid^2 S_o(n\cdot \sum_{q=0}^{J-1}\mathbf{V}^{n-q})-\mathbf{f}_b^{n+1}\cdot n
+ p^{n+1}= \nu \sum_{q=0}^{J-1}\nabla\mathbf{V}^{n-q}\cdot \mathbf{n}-\frac{1}{2}
+\mid \sum_{q=0}^{J-1}\mathbf{V}^{n-q} \mid^2 S_o(\mathbf{n}\cdot \sum_{q=0}^{J-1}\mathbf{V}^{n-q})-\mathbf{f}_b^{n+1}\cdot \mathbf{n}
 \end{equation}
 
-with a step function defined by $S_o(n\cdot \mathbf{V})=\frac{1}{2}(1-tanh\frac{n\cdot\mathbf{V}}{\mathbf{V_0}\delta})$, where $\mathbf{V_0}$ is the characteristic velocity scale and $\delta$ is a non-dimensional positive constant chosen to be sufficiently small. $\mathbf{f}_b$ is the forcing term in this case the analytical conditions can be given but if these are not known explicitly, it is set to zero, i.e. $\mathbf{f}_b=0$.
+with a step function defined by $S_o(n\cdot
+\mathbf{V})=\frac{1}{2}(1-\tanh\frac{n\cdot\mathbf{V}}{\mathbf{V_0}\delta})$,
+where $\mathbf{V_0}$ is the characteristic velocity scale and $\delta$
+is a non-dimensional positive constant chosen to be sufficiently
+small. $\mathbf{f}_b$ is the forcing term in this case the analytical
+conditions can be given but if these are not known explicitly, it is
+set to zero, i.e. $\mathbf{f}_b=0$.
 
 \item  Calculate a second intermediate velocity field:
 
@@ -59,8 +65,9 @@ with a step function defined by $S_o(n\cdot \mathbf{V})=\frac{1}{2}(1-tanh\frac{
 with the outflow boundary conditions either set as $n\cdot\nabla\mathbf{V}^{n+1}=0$ or as high order Neumann boundary conditions prescribed by\cite{DoKa14}:
 
  \begin{equation}
- n\cdot\nabla\mathbf{V}^{n+1}=\frac{1}{\nu}\Bigl[p^{n+1}n+\frac{1}{2}
-\mid\sum_{q=0}^{J-1} \mathbf{V}^{n-q} \mid^2 S_o(n\cdot \sum_{q=0}^{J-1}\mathbf{V}^{n-q})n-\nu\sum_{q=0}^{J-1}(\nabla\cdot\mathbf{V}^{n-q})n+\mathbf{f}_b^{n+1}\Bigr]
+ \mathbf{n}\cdot\nabla\mathbf{V}^{n+1}=\frac{1}{\nu}\Bigl[p^{n+1}\mathbf{n}+\frac{1}{2}
+   \mid\sum_{q=0}^{J-1} \mathbf{V}^{n-q} \mid^2 S_o(\mathbf{n}\cdot
+   \sum_{q=0}^{J-1}\mathbf{V}^{n-q})\mathbf{n}-\nu\sum_{q=0}^{J-1}(\nabla\cdot\mathbf{V}^{n-q})\mathbf{n}+\mathbf{f}_b^{n+1}\Bigr]
  \end{equation}
 
  \end{enumerate}
@@ -865,7 +872,13 @@ The result should look similar to that shown in Figure~\ref{f:incns:kovaflow}.
 
 \subsection{Kovasznay Flow 2D using high-order outflow boundary conditions}
 \label{s:incns:kovasznay2D_HOBC}
-In this example, we solve the same case of 2D Kovasznay flow on severely-truncated computational domain but using a high-order outflow boundary condition, which is much more accurate and robust for unbounded flows~\cite{DoKa14}. The solver information and parameters used here are similar to the previous one. What only we need to modify in the input file is just the boundary condition type upon the outlet region shown as below 
+In this example, we solve the same case of 2D Kovasznay flow on
+severely-truncated computational domain but using a high-order outflow
+boundary condition, which is much more accurate and robust for
+unbounded flows~\cite{DoKa14}. The solver information and parameters
+used here are similar to the previous one. What only we need to modify
+in the input file is just the boundary condition type upon the outlet
+region shown as below
 \begin{lstlisting}[style=XMLStyle]
 <BOUNDARYCONDITIONS>
     <REGION REF="0">
@@ -896,7 +909,10 @@ In this example, we solve the same case of 2D Kovasznay flow on severely-truncat
     </REGION>
 </BOUNDARYCONDITIONS>
 \end{lstlisting} 
-% %
+We note that in this example the ``VALUE'' property is set based on
+the analytic solution but this is not typically known and so often a
+VALUE of zero will be specified.
+
 Instead of loading an initial condition from a specified file, we initialized the flow fields in this example by using following expressions
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="InitialConditions">

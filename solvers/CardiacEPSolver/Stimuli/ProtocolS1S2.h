@@ -58,8 +58,7 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
-        ProtocolS1S2(const LibUtilities::SessionReaderSharedPtr& pSession,
-                     const TiXmlElement* pXml);
+        friend class MemoryManager<ProtocolS1S2>;
 
         virtual ~ProtocolS1S2() {}
 
@@ -79,6 +78,10 @@ namespace Nektar
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         virtual void v_SetInitialConditions();
+
+    private:
+        ProtocolS1S2(const LibUtilities::SessionReaderSharedPtr& pSession,
+                     const TiXmlElement* pXml);
     };
 
 }

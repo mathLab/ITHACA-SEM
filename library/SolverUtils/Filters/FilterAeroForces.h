@@ -38,6 +38,7 @@
 
 #include <SolverUtils/Filters/Filter.h>
 #include <LocalRegions/Expansion3D.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -109,8 +110,13 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >    m_Ftplane;
             
             NekDouble                       m_lastTime;
+            GlobalMapping::MappingSharedPtr               m_mapping;
             
             void CalculateForces(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time);
+            
+            void CalculateForcesMapping(
                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
                 const NekDouble &time);
         };

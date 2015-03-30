@@ -271,6 +271,12 @@ namespace GlobalMapping
                 return m_constantJacobian;
             }
             
+            // Define if the Jacobian of the transformation is constant
+            GLOBAL_MAPPING_EXPORT bool IsDefined()
+            {
+                return m_isDefined;
+            }
+            
             //
             //  Function to update time-dependent mappings
             //            

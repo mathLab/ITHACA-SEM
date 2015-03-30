@@ -9,22 +9,22 @@
 
     <CONDITIONS>
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-            <I PROPERTY="AdvectionForm" VALUE="Convective" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
-            <I PROPERTY="solvertype" VALUE="VelocityCorrectionScheme" />
-            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"    />
+            <I PROPERTY="AdvectionForm"         VALUE="Convective"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"              />
+            <I PROPERTY="solvertype"            VALUE="VelocityCorrectionScheme"/>
+            <I PROPERTY="Projection"            VALUE="Galerkin"                />
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep = 0.001 </P>
-            <P> NumSteps = 1000     </P>
-            <P> IO_CheckSteps = 10000  </P>
-            <P> IO_InfoSteps = 10    </P>
-            <P> Kinvis = 1     </P>
-            <P> gamma =2     </P>
-            <P> C =20    </P>
-            <P> p =3.14  </P>
+            <P> TimeStep      = 0.001 </P>
+            <P> NumSteps      = 1000  </P>
+            <P> IO_CheckSteps = 10000 </P>
+            <P> IO_InfoSteps  = 10    </P>
+            <P> Kinvis        = 1     </P>
+            <P> gamma         = 2     </P>
+            <P> C             = 20    </P>
+            <P> p             = 3.14  </P>
         </PARAMETERS>
 
         <VARIABLES>
@@ -42,27 +42,24 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="0" />
-                <D VAR="v" VALUE="0" />
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+                <D VAR="u"                     VALUE="0"/>
+                <D VAR="v"                     VALUE="0"/>
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
             </REGION>
             <REGION REF="1">
-                <D VAR="u" FILE="ChanFlow2D_bcsfromfiles_u_1.bc" />
-                        <!-- y*(10-y) -->
-                <D VAR="v" VALUE="0" />
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+                <D VAR="u" FILE="ChanFlow2D_bcsfromfiles_u1_0.bc"/> <!-- y*(10-y) -->
+                <D VAR="v"                     VALUE="0"         />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"         />
             </REGION>
             <REGION REF="2">
-                <N VAR="u" VALUE="0" />
-                <N VAR="v" VALUE="0" />
-                <D VAR="p" VALUE="0" />
+                <N VAR="u" VALUE="0"/>
+                <N VAR="v" VALUE="0"/>
+                <D VAR="p" VALUE="0"/>
             </REGION>
             <REGION REF="3">
-                <N VAR="u" FILE="ChanFlow2D_bcsfromfiles_u_3.bc"/>
-                        <!-- 10-2*y (y=5.0) -->
-                <D VAR="v" FILE="ChanFlow2D_bcsfromfiles_v_3.bc" />
-                        <!-- zero field -->
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+                <N VAR="u" FILE="ChanFlow2D_bcsfromfiles_u3_0.bc"/> <!-- 10-2*y (y=5.0) -->
+                <D VAR="v" FILE="ChanFlow2D_bcsfromfiles_v3_0.bc"/> <!-- zero field -->
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"         />
             </REGION>
         </BOUNDARYCONDITIONS>
 

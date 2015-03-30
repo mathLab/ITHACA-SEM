@@ -2443,7 +2443,7 @@ namespace Nektar
                                   Array<OneD, NekDouble> &coord_1,
                                   Array<OneD, NekDouble> &coord_2)
         {
-            if ( GetNumElmts() == 0 )
+            if (GetNumElmts() == 0)
             {
                 return;
             }

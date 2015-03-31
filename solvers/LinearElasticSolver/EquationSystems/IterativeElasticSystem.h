@@ -63,10 +63,13 @@ namespace Nektar
         static std::string className;
 
     protected:
+        /// Number of steps to split deformation across.
         int m_numSteps;
+        /// Flag determining whether to repeat boundary conditions.
         bool m_repeatBCs;
-
+        /// Storage for boundary conditions.
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_savedBCs;
+        /// Vector of boundary regions to deform.
         vector<int> m_toDeform;
 
         IterativeElasticSystem(

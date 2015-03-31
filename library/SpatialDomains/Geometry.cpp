@@ -300,6 +300,10 @@ namespace Nektar
             return m_coordim;
         }
 
+        /**
+         * @brief Reset this geometry object: unset the current state and remove
+         * allocated GeomFactors.
+         */
         void Geometry::v_Reset(CurveMap &curvedEdges,
                                CurveMap &curvedFaces)
         {

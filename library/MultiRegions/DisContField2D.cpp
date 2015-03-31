@@ -1666,6 +1666,9 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
         void DisContField2D::v_Reset()
         {
             ExpList::v_Reset();

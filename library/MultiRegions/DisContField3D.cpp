@@ -2011,6 +2011,9 @@
             }
         }
 
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
         void DisContField3D::v_Reset()
         {
             ExpList::v_Reset();

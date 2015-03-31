@@ -241,13 +241,8 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
 
         // Calculate various constants
-
-        // mu
-        NekDouble a = m_E * (1.0 - m_nu) / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
-        // lambda
-        NekDouble b = m_E * 0.5 / (1.0 + m_nu);
-        // lambda + mu?
-        NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
+        NekDouble mu     = m_E * 0.5  / (1.0 + m_nu);
+        NekDouble lambda = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
 
         bool verbose = m_session->DefinesCmdLineArgument("verbose");
         bool root    = m_session->GetComm()->GetRank() == 0;
@@ -259,8 +254,8 @@ namespace Nektar
             {
                 exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
                 const int nPhys = exp->GetTotPoints();
-                Array<OneD, NekDouble> aArr(nPhys, a);
-                Array<OneD, NekDouble> bArr(nPhys, b);
+                Array<OneD, NekDouble> aArr(nPhys, lambda + 2*mu);
+                Array<OneD, NekDouble> bArr(nPhys, mu);
 
                 StdRegions::VarCoeffMap varcoeffA, varcoeffD;
                 varcoeffA[StdRegions::eVarCoeffD00] = aArr;
@@ -281,7 +276,7 @@ namespace Nektar
                  */
                 Array<TwoD, DNekMatSharedPtr> mat(2,2);
                 mat[0][0] = exp->GenMatrix(matkeyA);
-                mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
+                mat[0][1] = BuildLaplacianIJMatrix(1, 0, mu+lambda, exp);
                 mat[1][0] = mat[0][1];
                 mat[1][1] = exp->GenMatrix(matkeyD);
 
@@ -301,8 +296,8 @@ namespace Nektar
             {
                 exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
                 const int nPhys = exp->GetTotPoints();
-                Array<OneD, NekDouble> aArr(nPhys, a);
-                Array<OneD, NekDouble> bArr(nPhys, b);
+                Array<OneD, NekDouble> aArr(nPhys, lambda + 2*mu);
+                Array<OneD, NekDouble> bArr(nPhys, mu);
 
                 StdRegions::VarCoeffMap varcoeffA, varcoeffE, varcoeffI;
                 varcoeffA[StdRegions::eVarCoeffD00] = aArr;
@@ -332,12 +327,12 @@ namespace Nektar
                  */
                 Array<TwoD, DNekMatSharedPtr> mat(3,3);
                 mat[0][0] = exp->GenMatrix(matkeyA);
-                mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
-                mat[0][2] = BuildLaplacianIJMatrix(2, 0, c, exp);
+                mat[0][1] = BuildLaplacianIJMatrix(1, 0, mu + lambda, exp);
+                mat[0][2] = BuildLaplacianIJMatrix(2, 0, mu + lambda, exp);
 
                 mat[1][0] = mat[0][1];
                 mat[1][1] = exp->GenMatrix(matkeyE);
-                mat[1][2] = BuildLaplacianIJMatrix(2, 1, c, exp);
+                mat[1][2] = BuildLaplacianIJMatrix(2, 1, mu + lambda, exp);
 
                 mat[2][0] = mat[0][2];
                 mat[2][1] = mat[1][2];
@@ -436,8 +431,6 @@ namespace Nektar
         // Add temperature term
         string tempEval;
         m_session->LoadSolverInfo("Temperature", tempEval, "None");
-        string refElement;
-        m_session->LoadSolverInfo("RefElement", refElement, "None");
 
         if (tempEval == "Jacobian")
         {

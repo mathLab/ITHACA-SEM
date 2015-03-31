@@ -39,6 +39,8 @@
 #include <string>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <SpatialDomains/MeshGraph.h>
+#include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar {

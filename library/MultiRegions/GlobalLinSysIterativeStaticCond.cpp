@@ -528,6 +528,8 @@ namespace Nektar
         {
             if (scLevel == 0)
             {
+                // When matrices are supplied to the constructor at the top
+                // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
                     MultiRegions::PreconditionerType pType

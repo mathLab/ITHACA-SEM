@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CoupledLcoalToGlobalC0ContMap.h
+// File CoupledAssemblyMap.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,8 +34,8 @@
 // solver.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
-#define NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
+#ifndef NEKTAR_SOLVERS_COUPLEDASSEMBLYMAP_H
+#define NEKTAR_SOLVERS_COUPLEDASSEMBLYMAP_H
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <SpatialDomains/MeshGraph.h>

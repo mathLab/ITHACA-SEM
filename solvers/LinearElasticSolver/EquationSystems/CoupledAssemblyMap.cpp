@@ -125,9 +125,6 @@ namespace Nektar
             m_bndCondCoeffsToGlobalCoeffsSign = NullNekDouble1DArray;
         }
 
-        const int nGlobBndCoeffs = cgMap->GetNumGlobalBndCoeffs();
-        const int nGlobDirCoeffs = cgMap->GetNumGlobalDirBndCoeffs();
-
         const LocalRegions::ExpansionVector &locExpVector
             = *(fields[0]->GetExp());
 

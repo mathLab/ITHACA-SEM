@@ -33,14 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_CORE_DEFORM_H
-#define NEKTAR_SOLVERUTILS_CORE_DEFORM_H
-
 #include <string>
 
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/Core/Deform.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdQuadExp.h>
@@ -53,17 +50,23 @@ namespace SolverUtils {
     /**
      * @brief Update geometry according to displacement that is in current
      * fields.
+     *
+     * @param graph   The MeshGraph of the current geometry.
+     * @param fields  The fields containing the displacement.
      */
     void UpdateGeometry(
         SpatialDomains::MeshGraphSharedPtr           graph,
         Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
     {
+        // Clear existing curvature.
         SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
         SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
         curvedEdges.clear();
         curvedFaces.clear();
 
         int i, j, k, l, dim;
+
+        // Sets to hold IDs of updated vertices to avoid duplicating effort.
         set<int> updatedVerts, updatedEdges, updatedFaces;
 
         dim = graph->GetSpaceDimension();
@@ -76,6 +79,8 @@ namespace SolverUtils {
             int offset = fields[0]->GetPhys_Offset(i);
             int nquad  = exp->GetTotPoints();
 
+            // Extract displacement for this element, allocate storage for
+            // elemental coordinates.
             for (j = 0; j < dim; ++j)
             {
                 phys[j] = Array<OneD, NekDouble>(
@@ -97,7 +102,8 @@ namespace SolverUtils {
                     SpatialDomains::Geometry1DSharedPtr edge = geom->GetEdge(j);
 
                     // This edge has already been processed.
-                    if (updatedEdges.find(edge->GetGlobalID()) != updatedEdges.end())
+                    if (updatedEdges.find(edge->GetGlobalID()) !=
+                            updatedEdges.end())
                     {
                         continue;
                     }
@@ -177,7 +183,8 @@ namespace SolverUtils {
                     SpatialDomains::Geometry2DSharedPtr face = geom->GetFace(j);
 
                     // This edge has already been processed.
-                    if (updatedFaces.find(face->GetGlobalID()) != updatedFaces.end())
+                    if (updatedFaces.find(face->GetGlobalID()) !=
+                            updatedFaces.end())
                     {
                         continue;
                     }
@@ -405,5 +412,3 @@ namespace SolverUtils {
     }
 }
 }
-
-#endif

@@ -1363,7 +1363,12 @@ namespace Nektar
         }
 
         /**
-         * @brief Reset geometry information and reset matrix managers.
+         * @brief Reset geometry information, metrics, matrix managers and
+         * geometry information.
+         *
+         * This routine clears all matrix managers and resets all geometry
+         * information, which allows the geometry information to be dynamically
+         * updated as the solver is run.
          */
         void ExpList::v_Reset()
         {

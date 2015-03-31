@@ -222,7 +222,7 @@ namespace Nektar
                 pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
 
-                // Copy curvature (why didn't I do this before...)
+                // Copy curvature to edge.
                 if ((*it)->m_edgeNodes.size() > 0)
                 {
                     ElementSharedPtr edge = m_mesh->m_element[1][i];

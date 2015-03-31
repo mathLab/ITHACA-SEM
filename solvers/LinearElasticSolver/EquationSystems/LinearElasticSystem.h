@@ -79,20 +79,27 @@ namespace Nektar
         LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
+        /// Poisson ratio.
         NekDouble m_nu;
+        /// Young's modulus
         NekDouble m_E;
+        /// Parameter dictating amount of thermal stress to add.
         NekDouble m_beta;
-        
+        /// Assembly map for the coupled (u,v,w) system.
         CoupledAssemblyMapSharedPtr m_assemblyMap;
-
+        /// Schur complement boundary-boundary matrix.
         DNekScalBlkMatSharedPtr m_schurCompl;
+        /// Matrix of elemental \f$ B^{-1}D \f$ components
         DNekScalBlkMatSharedPtr m_BinvD;
+        /// Matrix of elemental \f$ C \f$ components
         DNekScalBlkMatSharedPtr m_C;
+        /// Matrix of elemental \f$ D^{-1} \f$ components
         DNekScalBlkMatSharedPtr m_Dinv;
-
         Array<OneD, Array<OneD, unsigned int> > m_bmap;
         Array<OneD, Array<OneD, unsigned int> > m_imap;
+        /// Storage for the temperature terms.
         Array<OneD, Array<OneD, NekDouble> > m_temperature;
+        /// Storage for the thermal stress terms.
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_stress;
 
         virtual void v_InitObject();

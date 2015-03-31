@@ -847,7 +847,7 @@ namespace Nektar
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
 
-            int dir; 
+            int dir = k;
             switch(i)
             {
                 case 0:

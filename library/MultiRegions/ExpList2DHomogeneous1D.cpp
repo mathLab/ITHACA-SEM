@@ -330,7 +330,7 @@ namespace Nektar
          * @param   expansion  Expansion that is considered
          */
         void ExpList2DHomogeneous1D::v_WriteTecplotZone(
-            std::ofstream &outfile,
+            std::ostream &outfile,
             int expansion)
         {
             int i, j;
@@ -361,7 +361,7 @@ namespace Nektar
 
 
         void ExpList2DHomogeneous1D::v_WriteVtkPieceHeader(
-            std::ofstream &outfile,
+            std::ostream &outfile,
             int expansion)
         {
             int i, j;

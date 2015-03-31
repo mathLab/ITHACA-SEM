@@ -621,7 +621,9 @@ namespace Nektar
                 }
             }
             // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
+            else if(type == SpatialDomains::eNoUserDefined || 
+					type == SpatialDomains::eTimeDependent ||
+					type == SpatialDomains::eMovingBody) 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }
@@ -731,7 +733,9 @@ namespace Nektar
                 }
             }
             // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
+            else if(type == SpatialDomains::eNoUserDefined || 
+					type == SpatialDomains::eTimeDependent ||
+					type == SpatialDomains::eMovingBody) 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }

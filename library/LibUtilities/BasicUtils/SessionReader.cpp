@@ -331,6 +331,8 @@ namespace Nektar
                                  "number of procs in Y-dir")
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
+                ("nsz",          po::value<int>(),
+                                 "number of slices in Z-dir")
                 ("part-only",    po::value<int>(),
                                  "only partition mesh into N partitions.")
                 ("part-info",    "Output partition information")
@@ -1812,9 +1814,10 @@ namespace Nektar
         {
             if (m_comm->GetSize() > 1)
             {
-                int nProcZ = 1;
-                int nProcY = 1;
-                int nProcX = 1;
+                int nProcZ  = 1;
+                int nProcY  = 1;
+                int nProcX  = 1;
+                int nStripZ = 1;
                 if (DefinesCmdLineArgument("npx")) {
                     nProcX = GetCmdLineArgument<int>("npx");
                 }
@@ -1824,25 +1827,29 @@ namespace Nektar
                 if (DefinesCmdLineArgument("npz")) {
                     nProcZ = GetCmdLineArgument<int>("npz");
                 }
-
+                if (DefinesCmdLineArgument("nsz")) {
+                    nStripZ = GetCmdLineArgument<int>("nsz");
+                }
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0,
                          "Cannot exactly partition using PROC_Z value.");
                 ASSERTL0(nProcZ % nProcY == 0,
                          "Cannot exactly partition using PROC_Y value.");
                 ASSERTL0(nProcY % nProcX == 0,
                          "Cannot exactly partition using PROC_X value.");
-                
+
                 // Number of processes associated with the spectral method
                 int nProcSm  = nProcZ * nProcY * nProcX;
-				
+
                 // Number of processes associated with the spectral element
                 // method.
                 int nProcSem = m_comm->GetSize() / nProcSm;
-                
+
                 m_comm->SplitComm(nProcSm,nProcSem);
-                m_comm->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ);
+                m_comm->GetColumnComm()->SplitComm(nProcZ/nStripZ,nStripZ);
                 m_comm->GetColumnComm()->GetColumnComm()->SplitComm(
-                    nProcX,nProcY);
+                                            (nProcY*nProcX),nProcZ/nStripZ);
+                m_comm->GetColumnComm()->GetColumnComm()->GetColumnComm()
+                                            ->SplitComm(nProcX,nProcY);
             }
         }
 
@@ -1879,7 +1886,7 @@ namespace Nektar
                     tagcontent << *parameter;
                     TiXmlNode *node = parameter->FirstChild();
 
-                    while (node && node->Type() != TiXmlNode::TEXT)
+                    while (node && node->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         node = node->NextSibling();
                     }
@@ -2253,7 +2260,7 @@ namespace Nektar
                     // Comments appear as nodes just like elements.  We are
                     // specifically looking for text in the body of the
                     // definition.
-                    while(varChild && varChild->Type() != TiXmlNode::TEXT)
+                    while(varChild && varChild->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         varChild = varChild->NextSibling();
                     }

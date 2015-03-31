@@ -356,45 +356,51 @@ namespace Nektar
                 v_Reset();
             }
 
-            void WriteTecplotHeader(std::ofstream &outfile,
+            void WriteTecplotHeader(std::ostream &outfile,
                                     std::string var = "")
             {
                 v_WriteTecplotHeader(outfile, var);
             }
 
             void WriteTecplotZone(
-                std::ofstream &outfile,
+                std::ostream &outfile,
                 int expansion = -1)
             {
                 v_WriteTecplotZone(outfile, expansion);
             }
 
-            void WriteTecplotField(std::ofstream &outfile,
+            void WriteTecplotField(std::ostream &outfile,
                                    int expansion = -1)
             {
                 v_WriteTecplotField(outfile, expansion);
             }
 
-            void WriteTecplotConnectivity(std::ofstream &outfile,
+            void WriteTecplotConnectivity(std::ostream &outfile,
                                           int expansion = -1)
             {
                 v_WriteTecplotConnectivity(outfile, expansion);
             }
 
-            MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
-            MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
+            MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ostream &outfile);
+            MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ostream &outfile);
 
-            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+            void WriteVtkPieceHeader(std::ostream &outfile, int expansion)
             {
                 v_WriteVtkPieceHeader(outfile, expansion);
             }
 
+            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion,
+                                     int istrip)
+            {
+                v_WriteVtkPieceHeader(outfile, expansion, istrip);
+            }
+
             MULTI_REGIONS_EXPORT void WriteVtkPieceFooter(
-                std::ofstream &outfile,
+                std::ostream &outfile,
                 int expansion);
 
             void WriteVtkPieceData  (
-                std::ofstream &outfile,
+                std::ostream &outfile,
                 int expansion,
                 std::string var = "v")
             {
@@ -851,7 +857,7 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
-            
+           
             //expansion type
             ExpansionType m_expType;
 
@@ -955,7 +961,7 @@ namespace Nektar
             // it's a bool which determine if the expansion is in the wave space (coefficient space)
             // or not
             bool m_WaveSpace;
-			
+
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
             const DNekScalBlkMatSharedPtr GenBlockMatrix(
@@ -1221,17 +1227,27 @@ namespace Nektar
 
             virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
-            virtual void v_WriteTecplotHeader(std::ofstream &outfile,
+            virtual void v_WriteTecplotHeader(std::ostream &outfile,
                                               std::string var = "");
-            virtual void v_WriteTecplotZone(std::ofstream &outfile,
+            virtual void v_WriteTecplotZone(std::ostream &outfile,
                                             int expansion);
-            virtual void v_WriteTecplotField(std::ofstream &outfile,
+            virtual void v_WriteTecplotField(std::ostream &outfile,
                                              int expansion);
-            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile,
+            virtual void v_WriteTecplotConnectivity(std::ostream &outfile,
                                                     int expansion);
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
-            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
-                                             std::string var);
+            virtual void v_WriteVtkPieceHeader(
+                std::ostream &outfile,
+                int expansion);
+
+            virtual void v_WriteVtkPieceHeader(
+                std::ostream &outfile,
+                int expansion,
+                int istrip);
+
+            virtual void v_WriteVtkPieceData(
+                std::ostream &outfile, 
+                int expansion,
+                std::string var);
 
             virtual NekDouble v_L2(
                 const Array<OneD, const NekDouble> &phys,

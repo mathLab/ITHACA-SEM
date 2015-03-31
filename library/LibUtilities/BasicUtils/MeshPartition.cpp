@@ -92,7 +92,10 @@ namespace Nektar
                      "Too few elements for this many processes.");
             m_shared = shared;
 
-            if (m_weightingRequired)  WeightElements();
+            if (m_weightingRequired)
+            {
+                WeightElements();
+            }
             CreateGraph(m_mesh);
             PartitionGraph(m_mesh, nParts, m_localPartition);
         }
@@ -504,45 +507,10 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int weight = 0;
-                    int bndWeight = 0;
-                    switch (m_meshComposites[cId].type)
-                    {
-                        case 'A':
-                            weight    = StdTetData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdTetData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'R':
-                            weight    = StdPrismData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdPrismData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'H':
-                            weight    = StdHexData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdHexData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'P':
-                            weight    = StdPyrData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdPyrData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'Q':
-                            weight    = StdQuadData::getNumberOfCoefficients(na, nb);
-                            bndWeight = StdQuadData::getNumberOfBndCoefficients(na, nb);
-                            break;
-                        case 'T':
-                            weight    = StdTriData::getNumberOfCoefficients(na, nb);
-                            bndWeight = StdTriData::getNumberOfBndCoefficients(na, nb);
-                            break;
-                        case 'S':
-                            weight    = StdSegData::getNumberOfCoefficients(na);
-                            bndWeight = StdSegData::getNumberOfBndCoefficients(na);
-                            break;
-                        case 'V':
-                            weight    = 1;
-                            bndWeight = 1;
-                            break;
-                        default:
-                            break;
-                    }
+                    int weight    = CalculateElementWeight(
+                        m_meshComposites[cId].type, false, na, nb, nc);
+                    int bndWeight = CalculateElementWeight(
+                        m_meshComposites[cId].type, true,  na, nb, nc);
 
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
@@ -673,51 +641,13 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int weight = 0;
-                    int bndWeight = 0;
-                    switch (m_meshComposites[cId].type)
-                    {
-                        case 'A':
-                            weight    = StdTetData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdTetData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'R':
-                            weight    = StdPrismData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdPrismData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'H':
-                            weight    = StdHexData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdHexData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'P':
-                            weight    = StdPyrData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = StdPyrData::getNumberOfBndCoefficients(na, nb, nc);
-                            break;
-                        case 'Q':
-                            weight    = StdQuadData::getNumberOfCoefficients(na, nb);
-                            bndWeight = StdQuadData::getNumberOfBndCoefficients(na, nb);
-                            break;
-                        case 'T':
-                            weight    = StdTriData::getNumberOfCoefficients(na, nb);
-                            bndWeight = StdTriData::getNumberOfBndCoefficients(na, nb);
-                            break;
-                        case 'S':
-                            weight    = StdSegData::getNumberOfCoefficients(na);
-                            bndWeight = StdSegData::getNumberOfBndCoefficients(na);
-                            break;
-                        case 'V':
-                            weight    = 1;
-                            bndWeight = 1;
-                            break;
-                        default:
-                            break;
-                    }
+                    int bndWeight = CalculateElementWeight(
+                        m_meshComposites[cId].type, true, na, nb, nc);
 
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
                         int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][ m_fieldNameToId[it->first]] = bndWeight;
-                        //m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 1 ] = weight*weight;
+                        m_vertWeights[elmtId][m_fieldNameToId[it->first]] = bndWeight;
                     }
                 }
             } // for i
@@ -887,7 +817,6 @@ namespace Nektar
         {
             unsigned int       i     = 0;
             unsigned int       cnt   = 0;
-            const unsigned int npart = m_comm->GetRowComm()->GetSize();
             bool               valid = true;
 
             // Check that every process has at least one element assigned
@@ -1011,8 +940,8 @@ namespace Nektar
                 x->SetAttribute("ID", vVertIt->first);
                 std::stringstream vCoords;
                 vCoords.precision(12);
-                vCoords << std::setw(15) << vVertIt->second.x
-                        << std::setw(15) << vVertIt->second.y
+                vCoords << std::setw(15) << vVertIt->second.x << " "
+                        << std::setw(15) << vVertIt->second.y << " "
                         << std::setw(15) << vVertIt->second.z << " ";
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);
@@ -1326,6 +1255,62 @@ namespace Nektar
             {
                 elmtid.push_back(m_meshElements[m_localPartition[procid][*vertit].id].id);
             }
+        }
+
+        int MeshPartition::CalculateElementWeight(
+            char elmtType,
+            bool bndWeight,
+            int  na,
+            int  nb,
+            int  nc)
+        {
+            int weight = 0;
+
+            switch (elmtType)
+            {
+                case 'A':
+                    weight = bndWeight ?
+                        StdTetData  ::getNumberOfBndCoefficients(na, nb, nc) :
+                        StdTetData  ::getNumberOfCoefficients   (na, nb, nc);
+                    break;
+                case 'R':
+                    weight = bndWeight ?
+                        StdPrismData::getNumberOfBndCoefficients(na, nb, nc) :
+                        StdPrismData::getNumberOfCoefficients   (na, nb, nc);
+                    break;
+                case 'H':
+                    weight = bndWeight ?
+                        StdHexData  ::getNumberOfBndCoefficients(na, nb, nc) :
+                        StdHexData  ::getNumberOfCoefficients   (na, nb, nc);
+                    break;
+                case 'P':
+                    weight = bndWeight ?
+                        StdPyrData  ::getNumberOfBndCoefficients(na, nb, nc) :
+                        StdPyrData  ::getNumberOfCoefficients   (na, nb, nc);
+                    break;
+                case 'Q':
+                    weight = bndWeight ?
+                        StdQuadData ::getNumberOfBndCoefficients(na, nb) :
+                        StdQuadData ::getNumberOfCoefficients   (na, nb);
+                    break;
+                case 'T':
+                    weight = bndWeight ?
+                        StdTriData  ::getNumberOfBndCoefficients(na, nb) :
+                        StdTriData  ::getNumberOfCoefficients   (na, nb);
+                    break;
+                case 'S':
+                    weight = bndWeight ?
+                        StdSegData  ::getNumberOfBndCoefficients(na) :
+                        StdSegData  ::getNumberOfCoefficients   (na);
+                    break;
+                case 'V':
+                    weight = 1;
+                    break;
+                default:
+                    break;
+            }
+
+            return weight;
         }
     }
 }

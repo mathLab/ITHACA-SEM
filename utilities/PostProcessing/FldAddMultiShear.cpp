@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >  BndExp(nfields+addfields);
 
     // Copy data from field file
-    for(int i = 0; i < fielddata.size(); ++i)
+    for(i = 0; i < fielddata.size(); ++i)
     {
         Exp[0]->ExtractDataToCoeffs(fielddef[i],
                                     fielddata[i],

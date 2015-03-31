@@ -1378,20 +1378,47 @@ namespace Nektar
             ReadCurves(doc);
         }
 
-        void MeshGraph::WriteGeometry(std::string &outfilename)
+        /**
+         * @brief Populate a TinyXML document with a GEOMETRY tag inside the
+         * NEKTAR tag.
+         *
+         * This routine will create a GEOMETRY XML tag which represents the
+         * MeshGraph object. If a NEKTAR tag does not already exist, it will
+         * create one. If a GEOMETRY block already exists inside the NEKTAR tag,
+         * it will overwrite it.
+         */
+        void MeshGraph::WriteGeometry(TiXmlDocument &doc)
         {
-            TiXmlDocument doc;
-            TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "");
-            doc.LinkEndChild(decl);
+            TiXmlElement *root = doc.FirstChildElement("NEKTAR");
+            TiXmlElement *geomTag;
 
-            TiXmlElement *root = new TiXmlElement("NEKTAR");
-            doc.LinkEndChild(root);
+            // Try to find existing NEKTAR tag.
+            if (!root)
+            {
+                root = new TiXmlElement("NEKTAR");
+                doc.LinkEndChild(root);
 
-            // Begin <GEOMETRY> section
-            TiXmlElement *geomTag = new TiXmlElement("GEOMETRY");
-            geomTag->SetAttribute("DIM", m_meshDimension);
+                geomTag = new TiXmlElement("GEOMETRY");
+                root->LinkEndChild(geomTag);
+            }
+            else
+            {
+                // Try to find existing GEOMETRY tag.
+                geomTag = root->FirstChildElement("GEOMETRY");
+
+                if (!geomTag)
+                {
+                    geomTag = new TiXmlElement("GEOMETRY");
+                    root->LinkEndChild(geomTag);
+                }
+            }
+
+            // Update attributes with dimensions.
+            geomTag->SetAttribute("DIM",   m_meshDimension);
             geomTag->SetAttribute("SPACE", m_spaceDimension);
-            root->LinkEndChild(geomTag);
+
+            // Clear existing elements.
+            geomTag->Clear();
 
             // Construct <VERTEX> block
             TiXmlElement *vertTag = new TiXmlElement("VERTEX");
@@ -1594,6 +1621,8 @@ namespace Nektar
             TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
             CompositeMap::iterator cIt;
 
+            // Create a map that gets around the issue of mapping faces -> F and
+            // edges -> E inside the tag.
             map<LibUtilities::ShapeType, pair<string, string> > compMap;
             compMap[LibUtilities::eSegment]       = make_pair("S", "E");
             compMap[LibUtilities::eQuadrilateral] = make_pair("Q", "F");
@@ -1680,7 +1709,23 @@ namespace Nektar
             domString << "] ";
             domTag->LinkEndChild(new TiXmlText(domString.str()));
             geomTag->LinkEndChild(domTag);
+        }
 
+        /**
+         * @brief Write out an XML file containing the GEOMETRY block
+         * representing this MeshGraph instance inside a NEKTAR tag.
+         */
+        void MeshGraph::WriteGeometry(std::string &outfilename)
+        {
+            // Create empty TinyXML document.
+            TiXmlDocument doc;
+            TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "");
+            doc.LinkEndChild(decl);
+
+            // Write out geometry information.
+            WriteGeometry(doc);
+
+            // Save file.
             doc.SaveFile(outfilename);
         }
 

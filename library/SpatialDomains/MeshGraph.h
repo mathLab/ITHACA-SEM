@@ -244,6 +244,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void WriteGeometry(
                         std::string &outfilename);
 
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(
+                        TiXmlDocument &doc);
+
                 /* ---- Helper functions ---- */
                 /// Dimension of the mesh (can be a 1D curve in 3D space).
                 inline int GetMeshDimension() const;

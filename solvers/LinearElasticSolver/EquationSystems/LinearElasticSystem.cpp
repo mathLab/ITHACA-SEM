@@ -637,11 +637,13 @@ namespace Nektar
 
                 for (j = 0; j < nBnd; ++j)
                 {
-                    forCoeffs[nVel*offset + nv*nBnd + j] = tmp[offset+m_bmap[i][j]];
+                    forCoeffs[nVel*offset + nv*nBnd + j] =
+                        tmp[offset+m_bmap[i][j]];
                 }
                 for (j = 0; j < nInt; ++j)
                 {
-                    forCoeffs[nVel*(offset + nBnd) + nv*nInt + j] = tmp[offset+m_imap[i][j]];
+                    forCoeffs[nVel*(offset + nBnd) + nv*nInt + j] =
+                        tmp[offset+m_imap[i][j]];
                 }
             }
         }

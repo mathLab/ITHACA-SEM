@@ -43,11 +43,11 @@
 #include <iomanip>
 
 namespace Nektar
-{    
-    /** 
+{
+    /**
      * @brief Take an existing assembly map and create a coupled version
      * suitable for use in the linear elasticity solver.
-     * 
+     *
      * The linear elasticity solver requires a slight reordering of local and
      * global coefficients to support problems of the form
      *
@@ -127,9 +127,10 @@ namespace Nektar
 
         const int nGlobBndCoeffs = cgMap->GetNumGlobalBndCoeffs();
         const int nGlobDirCoeffs = cgMap->GetNumGlobalDirBndCoeffs();
-        const int nNonDirBndCoeffs = nGlobBndCoeffs - nGlobDirCoeffs;
 
-        const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
+        const LocalRegions::ExpansionVector &locExpVector
+            = *(fields[0]->GetExp());
+
         map<int, int> newGlobalIds;
         int i, j, n, cnt1, cnt2;
 
@@ -218,12 +219,6 @@ namespace Nektar
 
         ASSERTL1(globalId == m_numGlobalCoeffs, "Consistency error");
 
-        // Set up boundary condition mapping: this is straightforward since we
-        // only consider Dirichlet boundary conditions.
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
-            = fields[0]->GetBndCondExpansions();
-
-        //const int nLocalDirBndCoeffs = cgMap->GetNumLocalDirBndCoeffs();
         const int nLocalDirBndCoeffs =
             cgMap->GetBndCondCoeffsToGlobalCoeffsMap().num_elements();
 

@@ -1,0 +1,90 @@
+\chapter{Linear elasticity solver}
+
+\section{Synopsis}
+The LinearElasticSolver is a solver for solving the linear elasticity equations
+in two and three dimensions. Whilst this may be suitable for simple solid
+mechanics problems, its main purpose is for use for mesh deformation and
+high-order mesh generation, whereby the finite element mesh is treated as a
+solid body, and the deformation is applied at the boundary in order to curve the
+interior of the mesh.
+
+Currently the following equation systems are supported:
+%
+\begin{center}
+\begin{tabular}{lp{8cm}}
+  \toprule
+  Value & Description \\
+  \midrule
+  \inltt{LinearElasticSystem} & Solves the linear elastic equations. \\
+  \inltt{IterativeElasticSystem} & A multi-step variant of the elasticity solver,
+                                   which breaks a given deformation into multiple
+                                   steps, and applies the deformation to a mesh. \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{The linear elasticity equations}
+
+The linear elasticity equations model how a solid body deforms under the
+application of a `small' deformation or strain. The formulation starts with the
+equilibrium of forces represented by the equation
+%
+\begin{equation}
+\nabla \cdot \mathbf{S} + \mathbf{f} = \mathbf{0} \quad \textrm{in} \quad \Omega
+\label{eq:strong}
+\end{equation}
+%
+where $\mathbf{S}$ is the stress tensor and $\mathbf{f}$ denotes a
+spatially-varying force. We further assume that the stress tensor $\mathbf{S}$
+incorporates elastic and, optionally, thermal stresses that can be switched on
+to assist in mesh deformation applications. We assume these can be decomposed so
+that $\mathbf{S}$ is written as
+%
+\[
+\mathbf{S} = \mathbf{S}_e + \mathbf{S}_t,
+\]
+%
+where the subscripts $e$ and $t$ denote the elastic and thermal terms
+respectively. We adopt the usual linear form of the elastic stress tensor as
+%
+\[
+\mathbf{S}_e = \lambda\mbox{Tr}(\mathbf{E}) \, \mathbf{I} +\mu \mathbf{E},
+\]
+%
+where $\lambda$ and $\mu$ are the Lam\'e constants, $\mathbf{E}$ represents the
+strain tensor, and $\mathbf{I}$ is the identity tensor. For small deformations,
+the strain tensor $\mathbf{E}$ is given as
+%
+\begin{equation}
+\mathbf{E} =\frac{1}{2} \left ( \nabla \mathbf{u}+ \nabla \mathbf{u}^t \right )
+\end{equation}
+%
+where $\mathbf{u}$ is the two- or three-dimensional vector of displacements. The
+boundary conditions required to close the problem consist of prescribed
+displacements at the boundary $\partial \Omega$, i.e.
+\begin{equation}
+  \mathbf{u} = \hat{\mathbf{u}} \quad \textrm{in}\ \partial \Omega.
+\end{equation}
+
+We further express the Lam\'e constants in terms of the Young's modulus $E$ and
+Poisson ratio $\nu$ as
+%
+\[
+\lambda = \frac{\nu E}{(1+\nu)(1-2\nu)}, \qquad \mu = \frac{E}{2(1+\nu)}.
+\]
+%
+The Poisson ratio, valid in the range $\nu < \tfrac{1}{2}$, is a measure of the
+compressibility of the body, and the Young's modulus $E > 0$ is a measure of its
+stiffness.
+
+\section{Usage}
+\begin{lstlisting}[style=BashInputStyle]
+LinearElasticSolver [arguments] session.xml [another.xml] ...
+\end{lstlisting}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End:

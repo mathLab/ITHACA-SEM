@@ -1052,23 +1052,48 @@ namespace Nektar
                     returnval[4] = indx4;
                 }
  
+                // check to see if two vertices are shared between one of the other faces
+                // to define which is indx2 and indx3
                 
-                // calculate 2-3,
-                Node d = *(Vnodes[indx3]) - *(Vnodes[indx2]);
-                Node ccurld  = c.curl(d);
+                int cnt = 0; 
+                for(int i = 0; i < 4; ++i)
+                {
+                    if((FaceNodes[ElementFaces[quadface1]][i] == returnval[1])||
+                       (FaceNodes[ElementFaces[quadface1]][i] == indx2))
+                    {
+                        cnt++;
+                    }
+                }
 
-                NekDouble ccurld_dotb = ccurld.dot(b);
-                
-                if(ccurld_dotb > 0.0)
+                if(cnt == 2)  // have two matching vertices 
                 {
                     returnval[2] = indx2;
                     returnval[3] = indx3;
                 }
                 else
                 {
-                    returnval[2] = indx3;
-                    returnval[3] = indx2;
+                    cnt = 0; 
+                    for(int i = 0; i < 4; ++i)
+                    {
+                        if((FaceNodes[ElementFaces[quadface2]][i] == returnval[1])||
+                           (FaceNodes[ElementFaces[quadface2]][i] == indx2))
+                        {
+                            cnt++;
+                        }
+                    }
+
+                    if(cnt != 2) // neither of the other faces has two matching nodes so reverse
+                    {
+                        returnval[2] = indx3;
+                        returnval[3] = indx2;
+                    }
+                    else // have two matching vertices 
+                    {
+                        returnval[2] = indx2;
+                        returnval[3] = indx3;
+                    }
                 }
+
 
                 if(isPrism == true)
                 {

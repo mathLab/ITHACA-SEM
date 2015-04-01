@@ -142,9 +142,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT bool GetSignChange();
 
             /// Retrieve the sign change of a given local boundary mode.
-            NekDouble GetLocalToGlobalBndSign(const int i) const;
+            MULTI_REGIONS_EXPORT NekDouble GetLocalToGlobalBndSign(const int i) const;
             /// Retrieve the sign change for all local boundary modes.
-            Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
+            MULTI_REGIONS_EXPORT Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
             /// Retrieves the global index corresponding to a boundary expansion
             /// mode.
             MULTI_REGIONS_EXPORT int GetBndCondCoeffsToGlobalCoeffsMap(const int i);

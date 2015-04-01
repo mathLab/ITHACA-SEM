@@ -927,12 +927,13 @@ namespace Nektar
             else if(ElementFaces.size() == 5) //prism or pyramid
             {
                 int triface0, triface1;
-                int quadface0 = -1;
+                int quadface0, quadface1, quadface2;
                 bool isPrism =  true;
 
                 
                 //find ids of tri faces and first quad face 
                 triface0 = triface1 = -1;
+                quadface0 = quadface1 = quadface2 = -1;
                 for(i = 0; i < 5; ++i)
                 {
                     if(FaceNodes[ElementFaces[i]].size() == 3)
@@ -957,6 +958,14 @@ namespace Nektar
                         if(quadface0 == -1)
                         {
                             quadface0 = i;
+                        }
+                        else if (quadface1 == -1)
+                        {
+                            quadface1 = i;
+                        }
+                        else if (quadface2 == -1)
+                        {
+                            quadface2 = i;
                         }
                     }
                 }

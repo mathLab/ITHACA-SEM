@@ -1190,7 +1190,10 @@ namespace Nektar
                                                 const int nmode_offset,
                                                 NekDouble *coeffs);
 
-            STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT  virtual void v_NormVectorIProductWRTBase(
+                     const Array<OneD, const NekDouble> &Fx, 
+                     const Array<OneD, const NekDouble> &Fy, 
+                     Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray);
 

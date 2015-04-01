@@ -105,7 +105,6 @@ namespace Nektar
                         const Array<OneD, const NekDouble > &primCoeffs,
                               Array<OneD, NekDouble> &coeffs);
 			
-                virtual void v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray);
             private:
                 Expansion2DWeakPtr m_elementLeft;
                 Expansion2DWeakPtr m_elementRight;

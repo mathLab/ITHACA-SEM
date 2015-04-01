@@ -870,6 +870,8 @@ namespace Nektar
                     Collections::ImplementationType ImpType
                                                     = Collections::eNoImpType);
 
+            MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
@@ -1289,6 +1291,8 @@ namespace Nektar
                 const NekDouble scale,
                 const Array<OneD, NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray);
+
+            virtual void v_ClearGlobalLinSysManager(void);
 
             void ExtractFileBCs(const std::string                &fileName,
                                 const std::string                &varName,

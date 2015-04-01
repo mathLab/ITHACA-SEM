@@ -83,6 +83,7 @@ namespace Nektar
 											  const NekDouble time);
 
     protected:
+        void SetSVVDiffCoeff(void);
 
     private:
         /// bool to identify if spectral vanishing viscosity is active.
@@ -93,6 +94,12 @@ namespace Nektar
         NekDouble m_sVVCutoffRatio;
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
+
+        /// Save aiiDt value to use as a trip to reset global matrix setup
+        Array<OneD, NekDouble> m_saved_aii_Dt;
+
+        /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
+        StdRegions::VarCoeffMap m_varCoeffLap; 
 
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

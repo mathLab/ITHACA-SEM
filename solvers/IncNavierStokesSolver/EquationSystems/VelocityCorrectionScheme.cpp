@@ -55,9 +55,10 @@ namespace Nektar
     VelocityCorrectionScheme::VelocityCorrectionScheme(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession),
-          IncNavierStokes(pSession)
+          IncNavierStokes(pSession),
+          m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
-
+        
     }
 
     void VelocityCorrectionScheme::v_InitObject()
@@ -103,14 +104,22 @@ namespace Nektar
             m_intVariables.push_back(n);
         }
         
+        m_saved_aii_Dt = Array<OneD, NekDouble>(m_nConvectiveFields,
+                                                NekConstants::kNekUnsetDouble);
+
         // Load parameters for Spectral Vanishing Viscosity
-        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
+                                   m_useSpecVanVisc,false);
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
-        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
-
         // Needs to be set outside of next if so that it is turned off by default
-        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
+        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",
+                                   m_useHomo1DSpecVanVisc,false);
+
+        
+        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",
+                                   m_specHP_dealiasing,false);
+
 
         if(m_HomogeneousType == eHomogeneous1D)
         {
@@ -358,12 +367,19 @@ namespace Nektar
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
             factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
         }
-
+        
+        
         // Solve Helmholtz system and put in Physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
+            if(m_saved_aii_Dt[i] != aii_Dt)
+            {
+                // reset global manager
+                m_fields[i]->ClearGlobalLinSysManager();
+                m_saved_aii_Dt[i] = aii_Dt; 
+            }
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors);
+                                   NullFlagList, factors,m_varCoeffLap);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
     }
@@ -425,5 +441,6 @@ namespace Nektar
             Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
         }
     }
+
     
 } //end of namespace

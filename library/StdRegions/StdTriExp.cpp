@@ -1343,6 +1343,7 @@ namespace Nektar
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes = min(nmodes_a,nmodes_b);
 
             // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
@@ -1352,37 +1353,72 @@ namespace Nektar
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             StdTriExp OrthoExp(Ba,Bb);
 
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j, k , cnt = 0;
-
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
 
-            NekDouble epsilon = 1.0;
-            int nmodes = min(nmodes_a,nmodes_b);
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
-            //To avoid the fac[j] from blowing up
-            //NekDouble epsilon = 0.001;
 
-            // project onto physical space.
-            OrthoExp.FwdTrans(array,orthocoeffs);
-
-            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
-            // apply SVV filter (JEL)
-            for(j = 0; j < nmodes_a; ++j)
+            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping 
             {
-                for(k = 0; k < nmodes_b-j; ++k)
-                {
-                    if(j + k >= cutoff)
-                    {
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
-                    }
-                    cnt++;
-                }
-            }
+                Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
+                Array<OneD, NekDouble> tmp(qa*qb);
 
-            // backward transform to physical space
-            OrthoExp.BwdTrans(orthocoeffs,array);
+                Vmath::Vsqrt(qa*qb,mkey.GetVarCoeff(eVarCoeffLaplacian),1,sqrt_varcoeff,1);
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p 
+                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
+                
+                // project onto modal  space.
+                OrthoExp.FwdTrans(tmp,orthocoeffs);
+
+                for(int j = 0; j < nmodes_a; ++j)
+                {
+                    for(int k = 0; k < nmodes_b; ++k)
+                    {
+                        orthocoeffs[j*nmodes_b+k] *=
+                            (1.0+SvvDiffCoeff*pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
+                    }
+                }
+
+                // backward transform to physical space
+                OrthoExp.BwdTrans(orthocoeffs,tmp);
+                
+                // multiply by sqrt(Variable Coefficient) containing h v /p  - split to keep symmetry
+                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
+                
+            }
+            else
+            {
+                int j, k , cnt = 0;
+                
+                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+                
+                NekDouble epsilon = 1.0;
+                int nmodes = min(nmodes_a,nmodes_b);
+                
+                //To avoid the fac[j] from blowing up
+                //NekDouble epsilon = 0.001;
+                
+                // project onto physical space.
+                OrthoExp.FwdTrans(array,orthocoeffs);
+                
+                //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+                // apply SVV filter (JEL)
+                for(j = 0; j < nmodes_a; ++j)
+                {
+                    for(k = 0; k < nmodes_b-j; ++k)
+                    {
+                        if(j + k >= cutoff)
+                        {
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
+                        }
+                        cnt++;
+                    }
+                }
+                
+                // backward transform to physical space
+                OrthoExp.BwdTrans(orthocoeffs,array);
+            }
         }
 
         void StdTriExp::v_ReduceOrderCoeffs(

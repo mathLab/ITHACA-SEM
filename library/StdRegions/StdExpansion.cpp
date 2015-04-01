@@ -660,7 +660,8 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
-            if (mkey.GetNVarCoeff())
+            if (mkey.GetNVarCoeff()&&
+                (!mkey.ConstFactorExists(eFactorSVVDiffCoeff)))
             {
                 if (k1 == k2)
                 {
@@ -688,7 +689,7 @@ namespace Nektar
             else
             {
                 // Multiply by svv tensor
-                if(mkey.ConstFactorExists(eFactorSVVCutoffRatio))
+                if(mkey.ConstFactorExists(eFactorSVVDiffCoeff))
                 {
                     SVVLaplacianFilter(dtmp,mkey);
                 }
@@ -707,7 +708,7 @@ namespace Nektar
             Array<OneD,NekDouble> store(m_ncoeffs);
             Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
 
-            if(mkey.GetNVarCoeff() == 0)
+            if(mkey.GetNVarCoeff() == 0||mkey.ConstFactorExists(eFactorSVVDiffCoeff))
             {
                 // just call diagonal matrix form of laplcian operator
                 for(i = 0; i < dim; ++i)

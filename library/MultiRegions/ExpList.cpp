@@ -1823,7 +1823,13 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+        
+        void ExpList::v_ClearGlobalLinSysManager(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
             const std::string               &varName,
@@ -2858,6 +2864,11 @@ namespace Nektar
             }
 
             return (size1 < size2) ? -1 : 1;
+        }
+        
+        void ExpList::ClearGlobalLinSysManager(void)
+        {
+            v_ClearGlobalLinSysManager();
         }
 
     } //end of namespace

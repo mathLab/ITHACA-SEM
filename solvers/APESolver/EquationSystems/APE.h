@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -30,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Acoustic perturbation equations in conservative variables
+// Description: APE1/APE4 (Acoustic Perturbation Equations)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -73,11 +73,10 @@ class APE : public UnsteadySystem
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
         Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
-        /// Constant incompressible density (APE)
-        NekDouble                                       m_Rho0;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
         Array<OneD, Array<OneD, NekDouble> >            m_basefield;
+        Array<OneD, NekDouble>                          m_sourceTerms;
         std::vector<std::string>                        m_basefield_names;
 
         /// Initialises UnsteadySystem class members.
@@ -113,9 +112,8 @@ class APE : public UnsteadySystem
 
         NekDouble GetGamma();
 
-        NekDouble GetRho();
-
         void UpdateBasefield();
+        void UpdateSourceTerms();
 
     private:
 

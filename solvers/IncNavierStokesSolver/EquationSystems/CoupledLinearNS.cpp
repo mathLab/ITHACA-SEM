@@ -1513,13 +1513,6 @@ namespace Nektar
         for (unsigned int i = 0; i < ncmpt; ++i)
         {
             m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
-            if(m_HomogeneousType == eHomogeneous1D)
-            {
-                if(!m_singleMode) // Do not want to Fourier transoform in case of single mode stability an
-                {
-                    m_fields[i]->HomogeneousFwdTrans(forcing[i], forcing[i]);
-                }
-            }
         }
 
         SolveLinearNS(forcing);

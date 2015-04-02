@@ -402,7 +402,7 @@ void LinearisedAdvection::v_Advect(
 
             Array<OneD, NekDouble> tmp;
             tmp = Array<OneD, NekDouble> (nPointsTot);
-        
+
             bool oldwavespace = fields[0]->GetWaveSpace();
             fields[0]->SetWaveSpace(false);
             fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
@@ -456,17 +456,20 @@ void LinearisedAdvection::v_Advect(
                 {
                     //Evaluate U du'/dx
                     fields[0]->HomogeneousBwdTrans(grad0,tmp);
-                    Vmath::Vmul (nPointsTot,tmp,1,m_baseflow[0],1,outarray[n],1);
+                    Vmath::Vmul (nPointsTot, tmp,         1,  m_baseflow[0], 1,
+                                             outarray[n], 1);
                     //Evaluate U du'/dx+ V du'/dy
                     fields[0]->HomogeneousBwdTrans(grad1,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, tmp,         1,  m_baseflow[1], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
                     Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
                     Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx +v' dU/dy) + W du'/dz
                     fields[0]->HomogeneousBwdTrans(grad2,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, tmp,         1,  m_baseflow[2], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx +v' dU/dy + W du'/dz)+ w' dU/dz
                     Vmath::Vvtvp(nPointsTot,grad_base_u2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
@@ -498,17 +501,20 @@ void LinearisedAdvection::v_Advect(
                 {
                     //Evaluate U dv'/dx
                     fields[0]->HomogeneousBwdTrans(grad0,tmp);
-                    Vmath::Vmul (nPointsTot,tmp,1,m_baseflow[0],1,outarray[n],1);
+                    Vmath::Vmul (nPointsTot, tmp,         1,  m_baseflow[0], 1,
+                                             outarray[n], 1);
                     //Evaluate U dv'/dx+ V dv'/dy
                     fields[0]->HomogeneousBwdTrans(grad1,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, tmp,         1,  m_baseflow[1], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
                     Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dV/dx)+v' dV/dy
                     Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy) + W du'/dz
                     fields[0]->HomogeneousBwdTrans(grad2,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, tmp,         1,  m_baseflow[2], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy + W dv'/dz)+ w' dV/dz
                     Vmath::Vvtvp(nPointsTot,grad_base_v2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
@@ -541,23 +547,26 @@ void LinearisedAdvection::v_Advect(
                 {
                     //Evaluate U dw'/dx
                     fields[0]->HomogeneousBwdTrans(grad0,tmp);
-                    Vmath::Vmul (nPointsTot,tmp,1,m_baseflow[0],1,outarray[n],1);
+                    Vmath::Vmul (nPointsTot, tmp,          1, m_baseflow[0], 1,
+                                             outarray[n],  1);
                     //Evaluate U dw'/dx+ V dw'/dx
                     fields[0]->HomogeneousBwdTrans(grad1,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, tmp,          1, m_baseflow[1], 1,
+                                             outarray[n],  1, outarray[n],   1);
                     //Evaluate (U dw'/dx+ V dw'/dx)+u' dW/dx
                     Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +w' dW/dx)+v' dW/dy
                     Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy) + W dw'/dz
                     fields[0]->HomogeneousBwdTrans(grad2,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, tmp,          1, m_baseflow[2], 1,
+                                             outarray[n],  1, outarray[n],   1);
                     //Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy + W dw'/dz)+ w' dW/dz
                     Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
                 break;
             }
-                
+
             if (oldwavespace) {
                 fields[0]->HomogeneousFwdTrans(outarray[n],outarray[n]);
             }

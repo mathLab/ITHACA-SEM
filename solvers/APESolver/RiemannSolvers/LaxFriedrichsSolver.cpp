@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -41,8 +41,10 @@ using namespace std;
 namespace Nektar
 {
 
-std::string LaxFriedrichsSolver::solverName = SolverUtils::GetRiemannSolverFactory().
-        RegisterCreatorFunction("LaxFriedrichs", LaxFriedrichsSolver::create, "Lax-Friedrichs Solver");
+std::string LaxFriedrichsSolver::solverName =
+    SolverUtils::GetRiemannSolverFactory().
+    RegisterCreatorFunction("LaxFriedrichs", LaxFriedrichsSolver::create,
+                            "Lax-Friedrichs Solver");
 
 
 /**
@@ -57,52 +59,54 @@ LaxFriedrichsSolver::LaxFriedrichsSolver() :
 /**
  * @brief Lax-Friedrichs Riemann solver
  *
- * @param pL     Perturbation pressure left state.
- * @param pR     Perturbation pressure right state.
- * @param uL     x perturbation verlocity component left state.
- * @param uR     x perturbation verlocity component right state.
- * @param vL     y perturbation verlocity component left state.
- * @param vR     y perturbation verlocity component right state.
- * @param wL     z perturbation verlocity component left state.
- * @param wR     z perturbation verlocity component right state.
- * @param p0     Base pressure.
- * @param u0     Base x verlocity component
- * @param v0     Base y verlocity component
- * @param w0     Base z verlocity component
- * @param pF     Computed Riemann flux for perturbation pressure.
- * @param uF     Computed Riemann flux for x perturbation verlocity component
- * @param vF     Computed Riemann flux for y perturbation verlocity component
- * @param wF     Computed Riemann flux for z perturbation verlocity component
+ * @param pL     Perturbation pressure left state
+ * @param rhoL   Perturbation density left state
+ * @param pR     Perturbation pressure right state
+ * @param rhoR   Perturbation density right state
+ * @param uL     x perturbation velocity component left state
+ * @param uR     x perturbation velocity component right state
+ * @param vL     y perturbation velocity component left state
+ * @param vR     y perturbation velocity component right state
+ * @param wL     z perturbation velocity component left state
+ * @param wR     z perturbation velocity component right state
+ * @param p0     Base pressure
+ * @param rho0   Base density
+ * @param u0     Base x velocity component
+ * @param v0     Base y velocity component
+ * @param w0     Base z velocity component
+ * @param pF     Computed Riemann flux for perturbation pressure
+ * @param rhoF   Computed Riemann flux for perturbation density
+ * @param uF     Computed Riemann flux for x perturbation velocity component
+ * @param vF     Computed Riemann flux for y perturbation velocity component
+ * @param wF     Computed Riemann flux for z perturbation velocity component
  */
 void LaxFriedrichsSolver::v_PointSolve(
-    NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
-    NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-    NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
-    NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
+    NekDouble  pL, NekDouble  rhoL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
+    NekDouble  pR, NekDouble  rhoR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
+    NekDouble  p0, NekDouble  rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+    NekDouble &pF, NekDouble &rhoF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
 {
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    ASSERTL1(CheckParams("Rho"), "Rho not defined.");
-    const NekDouble &gamma= m_params["Gamma"]();
-    const NekDouble &rho = m_params["Rho"]();
+    const NekDouble &gamma = m_params["Gamma"]();
 
     // Speed of sound
-    NekDouble c = sqrt(gamma*p0/rho);
+    NekDouble c = sqrt(gamma * p0 / rho0);
 
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = std::max(std::abs(u0 - c), std::abs(u0 + c));
 
-    NekDouble pFL = gamma*p0*uL + pL*u0;
-    NekDouble uFL = pL/rho + u0*uL + v0*vL + w0*wL;
+    NekDouble pFL = rho0*uL + u0*pL/(c*c);
+    NekDouble uFL = pL/rho0 + u0*uL + v0*vL + w0*wL;
     NekDouble vFL = 0;
     NekDouble wFL = 0;
 
-    NekDouble pFR = gamma*p0*uR + pR*u0;
-    NekDouble uFR = pR/rho + u0*uR + v0*vR + w0*wR;
+    NekDouble pFR = rho0*uR + u0*pR/(c*c);
+    NekDouble uFR = pR/rho0 + u0*uR + v0*vR + w0*wR;
     NekDouble vFR = 0;
     NekDouble wFR = 0;
 
     // assemble the face-normal fluxes
-    pF = 0.5*(pFL + pFR - a_1_max*(pR - pL));
+    pF = 0.5*(pFL + pFR - a_1_max*(pR/(c*c) - pL/(c*c)));
     uF = 0.5*(uFL + uFR - a_1_max*(uR - uL));
     vF = 0.5*(vFL + vFR - a_1_max*(vR - vL));
     wF = 0.5*(wFL + wFR - a_1_max*(wR - wL));

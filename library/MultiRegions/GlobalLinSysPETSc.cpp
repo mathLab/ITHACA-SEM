@@ -55,9 +55,6 @@ namespace Nektar
             const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
-            // Initialise PETSc
-            PetscInitialize(0, NULL, NULL, NULL);
-
             // Create matrix
             MatCreate(PETSC_COMM_WORLD, &m_matrix);
         }

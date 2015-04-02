@@ -270,30 +270,36 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                    m_rValsInterl,
                    &nNotLoc);
 
+    int tmp = -1;
+    const int *notLoc = &tmp;
     if (nNotLoc !=  0)
     {
-        cout << "WARNING: " << nNotLoc << " not located points found" <<  endl;
-
-        int *notLoc;
-        notLoc = (int *) malloc(sizeof(int) * nNotLoc);
-        ASSERTL1(notLoc != NULL, "malloc failed for notLoc");
-
-//         retVal = PCW_Get_not_located_points(cp_name, nNotLoc, notLoc);
-//         ASSERTL0(retVal == 0, "ERROR: PCW_Get_not_located_points failed with code" + retVal);
-//         retVal = PCW_Reorder(m_rValsInterl, nPoints, m_nEVars, 0.0, notLoc, nNotLoc);
-//         ASSERTL0(retVal == 0, "ERROR: PCW_Reorder failed with code" + retVal);
-
-        free(notLoc);
+        cout << "WARNING: relocating " << nNotLoc << " points" <<  endl;
+        notLoc = cwipi_get_not_located_points(m_coupling->GetName().c_str());
     }
 
-    // retain proper fields from the interlaced array
+    int n = 0;
+    int intPos = 0;
     for (int j = 0; j < m_nEVars; ++j)
     {
+        n = 0;
+        intPos = 0;
+
         for (int i = 0; i < nPoints; ++i)
         {
-            field[j][i] = m_rValsInterl[i * m_nEVars + j];
+            if (notLoc[n] == i)
+            {
+                field[j][i] = 0.0;
+                n++;
+            }
+            else
+            {
+                field[j][i] = m_rValsInterl[intPos * m_nEVars + j];
+                intPos++;
+            }
         }
     }
+
 }
 
 

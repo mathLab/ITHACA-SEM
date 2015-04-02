@@ -241,6 +241,11 @@ function.
 
 
 \section{Threading}
+\begin{notebox}
+Threading is not currently included in the main code distribution. However, this
+hybrid MPI/pthread functionality should be available within the next few months.
+\end{notebox}
+
 We investigated adding threaded parallelism to the already MPI parallel
 Nektar++.  MPI parallelism has multiple processes that exchange data using
 network or network-like communications.  Each process retains its own memory

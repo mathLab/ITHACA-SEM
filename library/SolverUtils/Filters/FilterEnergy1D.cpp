@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs solution fields during time-stepping.
+// Description: Outputs orthogonal expansion of 1D elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,9 +46,37 @@ namespace Nektar
         FilterEnergy1D::FilterEnergy1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams) :
-            Filter(pSession)
+            Filter(pSession),
+            m_index(0)
         {
-            m_out.open("energy-out.txt");
+            std::string outName;
+            if (pParams.find("OutputFile") == pParams.end())
+            {
+                outName = m_session->GetSessionName();
+            }
+            else
+            {
+                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                         "Missing parameter 'OutputFile'.");
+                outName = pParams.find("OutputFile")->second;
+            }
+
+            if (pParams.find("OutputFrequency") == pParams.end())
+            {
+                m_outputFrequency = 1;
+            }
+            else
+            {
+                m_outputFrequency =
+                    atoi(pParams.find("OutputFrequency")->second.c_str());
+            }
+
+            outName += ".eny";
+
+            ASSERTL0(pSession->GetComm()->GetSize() == 1,
+                     "The 1D energy filter currently only works in serial.");
+
+            m_out.open(outName);
         }
 
         FilterEnergy1D::~FilterEnergy1D()
@@ -60,15 +88,27 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
+            ASSERTL0(pFields[0]->GetExp(0)->GetNumBases() == 1,
+                     "The Energy 1D filter is only valid in 1D.");
         }
 
         void FilterEnergy1D::v_Update(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
+            // Only output every m_outputFrequency
+            if ((m_index++) % m_outputFrequency)
+            {
+                return;
+            }
+
             int nElmt = pFields[0]->GetExpSize();
 
             // Loop over all elements
+            m_out << "##" << endl;
+            m_out << "## Time = " << time << endl;
+            m_out << "##" << endl;
+
             for (int i = 0; i < nElmt; ++i)
             {
                 // Figure out number of modes in this expansion.
@@ -87,7 +127,8 @@ namespace Nektar
                     exp->GetBasis(0)->GetPointsKey());
 
                 // Find coeffs for this element in the list of all coefficients
-                Array<OneD, NekDouble> coeffs = pFields[0]->GetCoeffs() + pFields[0]->GetCoeff_Offset(i);
+                Array<OneD, NekDouble> coeffs =
+                    pFields[0]->GetCoeffs() + pFields[0]->GetCoeff_Offset(i);
 
                 // Storage for orthogonal coefficients
                 Array<OneD, NekDouble> coeffsOrth(nModes);
@@ -96,11 +137,14 @@ namespace Nektar
                 LibUtilities::InterpCoeff1D(bkey, coeffs, bkeyOrth, coeffsOrth);
 
                 // Write coeffs to file
+                m_out << "# Element " << i << " (ID "
+                      << exp->GetGeom()->GetGlobalID() << ")" << endl;
                 for (int j = 0; j < nModes; ++j)
                 {
                     m_out << coeffsOrth[j] << endl;
                 }
             }
+            m_out << endl;
         }
 
         void FilterEnergy1D::v_Finalise(

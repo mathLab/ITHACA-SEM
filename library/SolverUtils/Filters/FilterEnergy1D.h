@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterCheckpoint.h
+// File FilterEnergy1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs solution fields during time-stepping.
+// Description: Outputs orthogonal expansion of 1D elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGY1D_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGY1D_H
 
 #include <SolverUtils/Filters/Filter.h>
 
@@ -51,8 +51,8 @@ namespace Nektar
             static FilterSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterEnergy1D>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
+                FilterSharedPtr p = MemoryManager<FilterEnergy1D>
+                    ::AllocateSharedPtr(pSession, pParams);
                 return p;
             }
 
@@ -65,15 +65,26 @@ namespace Nektar
             SOLVER_UTILS_EXPORT ~FilterEnergy1D();
 
         protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual void v_Initialise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+                const NekDouble                                         &time);
+            virtual void v_Update(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+                const NekDouble                                         &time);
+            virtual void v_Finalise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+                const NekDouble                                         &time);
             virtual bool v_IsTimeDependent();
 
         private:
+            /// Output file.
             ofstream m_out;
+            /// Output frequency.
+            unsigned int m_outputFrequency;
+            /// Current index counter.
+            unsigned int m_index;
         };
     }
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif

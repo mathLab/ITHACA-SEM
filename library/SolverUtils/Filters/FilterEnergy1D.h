@@ -42,6 +42,14 @@ namespace Nektar
 {
     namespace SolverUtils
     {
+        /**
+         * @brief Filter for one-dimensional energy spectrum.
+         *
+         * This filter transforms the coefficients of each element into an
+         * orthogonal basis and outputs these coefficients at each timestep. It
+         * can be used to, for example, detect high-order oscillations in the
+         * solution field.
+         */
         class FilterEnergy1D : public Filter
         {
         public:

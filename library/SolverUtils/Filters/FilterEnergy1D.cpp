@@ -43,6 +43,12 @@ namespace Nektar
         std::string FilterEnergy1D::className = GetFilterFactory().
             RegisterCreatorFunction("Energy1D", FilterEnergy1D::create);
 
+        /**
+         * @brief Set up filter with output file and frequency parameters.
+         *
+         * @param pSession  Current session.
+         * @param pParams   Map of parameters defined in XML file.
+         */
         FilterEnergy1D::FilterEnergy1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams) :
@@ -79,11 +85,17 @@ namespace Nektar
             m_out.open(outName);
         }
 
+        /**
+         * @brief Destructor.
+         */
         FilterEnergy1D::~FilterEnergy1D()
         {
 
         }
 
+        /**
+         * @brief Initialize filter.
+         */
         void FilterEnergy1D::v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
@@ -92,6 +104,10 @@ namespace Nektar
                      "The Energy 1D filter is only valid in 1D.");
         }
 
+        /**
+         * @brief Update filter output with the current timestep's orthogonal
+         * coefficients.
+         */
         void FilterEnergy1D::v_Update(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)

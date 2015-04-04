@@ -156,8 +156,9 @@ used within the code. We then initialise it in \inlsh{MyConceptImpl1.cpp}
 \begin{lstlisting}[style=C++Style] 
 string MyConceptImpl1::className
         = GetMyConceptFactory().RegisterCreatorFunction(
-            "Impl1", MyConceptImpl1::create, "First implementation of my
-            concept.");
+                                "Impl1", 
+                                MyConceptImpl1::create, 
+                                "First implementation of my concept.");
 \end{lstlisting}
 The first parameter specifies the value of the key which should be used to
 select this implementation. The second parameter is a function pointer to our

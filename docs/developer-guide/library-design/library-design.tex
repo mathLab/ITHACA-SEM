@@ -14,11 +14,12 @@ Five different sublibraries, employing this characteristic pattern, are provided
 in the full \nekpp library:
 
 \begin{itemize}
+\item the supporting utilities sublibrary (LibUtilities library)
 \item the standard elemental region sublibrary (StdRegions library)
 \item the parametric mapping sublibrary (SpatialDomains library)
 \item the local elemental region sublibrary (LocalRegions library)
 \item the global region sublibrary (MultiRegions library)
-\item the supporting utilities sublibrary (LibUtilities library)
+\item the solver support sublibrary (SolverUtils library)
 \end{itemize}
 
 This structure can also be related to the formulation of a global spectral/hp
@@ -31,9 +32,16 @@ element expansion, i.e.
   library}}}\hat{u}^e_n}_{\mbox{\scriptsize{StdRegions library}}}
 \end{align*}
 
-A more detailed overview of the \nekpp structure, including an overview of
-the most important classes per sublibrary, is depicted in the
-Figure~\ref{f:library:overview}.
+A more detailed overview of the \nekpp structure is given in
+Figure~\ref{f:library:structure}. A diagram showing the most important classes
+in the core sub-libraries, is depicted in the Figure~\ref{f:library:overview}.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{img/architecture}
+\caption{Structural overview of the Nektar++ libraries}
+\label{f:library:structure}
+\end{figure}
 
 \begin{figure}
 \centering

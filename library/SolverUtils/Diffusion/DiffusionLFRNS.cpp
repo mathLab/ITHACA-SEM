@@ -1618,16 +1618,7 @@ namespace Nektar
                             GetBoundaryConditionType() == SpatialDomains::eNeumann)
                     {
                         ASSERTL0(false,
-                                 "Neumann bcs not implemented for LDGNS");
-                        
-                        /*
-                         Vmath::Vmul(nBndEdgePts,
-                         &m_traceNormals[dir][id2], 1,
-                         &(fields[var]->
-                         GetBndCondExpansions()[i]->
-                         UpdatePhys())[id1], 1,
-                         &penaltyflux[id2], 1);
-                         */
+                                 "Neumann bcs not implemented for LFRNS");
                     }
                     else if(fields[var]->GetBndConditions()[i]->
                             GetUserDefined() == SpatialDomains::eWallAdiabatic)

@@ -362,9 +362,8 @@ namespace Nektar
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
         LibUtilities::FieldMetaDataMap::iterator iter;
         std::set<std::string>::const_iterator setIt;
-        LibUtilities::FieldIOSharedPtr fld =
-                MemoryManager<LibUtilities::FieldIO>::
-                                AllocateSharedPtr(m_session->GetComm());
+        LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeDefaultFieldIO(m_session);
+	
         for (setIt = filelist.begin(); setIt != filelist.end(); ++setIt)
         {
             if (root)

@@ -68,8 +68,7 @@ FilterThresholdMin::FilterThresholdMin(
         m_startTime = atof(pParams.find("StartTime")->second.c_str());
     }
 
-    m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                        pSession->GetComm());
+    m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
 
 }
 

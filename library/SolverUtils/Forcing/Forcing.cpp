@@ -178,8 +178,7 @@ namespace Nektar
                 Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
 
-                LibUtilities::FieldIOSharedPtr fld =
-                    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+                LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeDefaultFieldIO(m_session);
                 fld->Import(filename, FieldDef, FieldData);
 
                 int idx = -1;

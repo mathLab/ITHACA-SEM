@@ -78,7 +78,7 @@ namespace Nektar
             m_numAverages = 0;
             m_index       = 0;
             m_outputIndex = 0;
-            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+            m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
 
         }
 

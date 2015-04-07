@@ -53,6 +53,8 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/assign/list_of.hpp>
 
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
 namespace Nektar
 {
     namespace LibUtilities
@@ -146,9 +148,16 @@ namespace Nektar
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 
+        // Forward declare
+        class FieldIO;
+
+        /// Datatype of the NekFactory used to instantiate classes
+        typedef LibUtilities::NekFactory< std::string, FieldIO, LibUtilities::CommSharedPtr > FieldIOFactory;
+
+        LIB_UTILITIES_EXPORT FieldIOFactory& GetFieldIOFactory();
 
         /// Class for operating on FLD files
-        class FieldIO
+        class FieldIO : public boost::enable_shared_from_this<FieldIO>
         {
             public:
                 /// Constructor
@@ -156,7 +165,7 @@ namespace Nektar
                         LibUtilities::CommSharedPtr pComm);
 
                 /// Write data in FLD format
-                LIB_UTILITIES_EXPORT void Write(
+                LIB_UTILITIES_EXPORT inline void Write(
                         const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> >   &fielddata,
@@ -186,7 +195,7 @@ namespace Nektar
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         bool expChild);
 
-                /// Imports the data fileds.
+                /// Imports the data fields.
                 LIB_UTILITIES_EXPORT void ImportFieldData(
                         TiXmlDocument &doc,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -199,7 +208,7 @@ namespace Nektar
                         const FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
 
 
-            private:
+            protected:
                 /// Communicator to use when writing parallel format
                 LibUtilities::CommSharedPtr    m_comm;
 
@@ -225,15 +234,36 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr  &fielddefs);
 
-                LIB_UTILITIES_EXPORT int Deflate(
-                        std::vector<NekDouble>& in,
-                        string& out);
-
                 LIB_UTILITIES_EXPORT int Inflate(string& in,
                         std::vector<NekDouble>& out);
+
+                LIB_UTILITIES_EXPORT virtual void v_Write(
+                        const std::string &outFile,
+                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        std::vector<std::vector<NekDouble> >   &fielddata,
+                        const FieldMetaDataMap &fieldinfomap) = 0;
+
+
         };
 
         typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
+
+        inline FieldIOSharedPtr MakeDefaultFieldIO(const LibUtilities::SessionReaderSharedPtr session) {
+            std::string iofmt("Xml");
+            if (session->DefinesSolverInfo("FieldIO_Format")) {
+                iofmt = session->GetSolverInfo("FieldIO_Format");
+            }
+            return GetFieldIOFactory().CreateInstance(iofmt, session->GetComm());
+        }
+
+        inline void FieldIO::Write(
+                                const std::string &outFile,
+                                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                                std::vector<std::vector<NekDouble> >   &fielddata,
+                                const FieldMetaDataMap &fieldinfomap)
+        {
+            v_Write(outFile, fielddefs, fielddata, fieldinfomap);
+        }
     }
 }
 #endif

@@ -109,8 +109,7 @@ namespace Nektar
             m_sessionName = m_session->GetSessionName();
 
             // Instantiate a field reader/writer
-            m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(m_session->GetComm());
+            m_fld = LibUtilities::MakeDefaultFieldIO(m_session);
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);

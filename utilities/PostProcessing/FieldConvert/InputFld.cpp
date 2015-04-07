@@ -108,14 +108,12 @@ namespace Nektar
             {
                 if(m_f->m_session)
                 {
-                    m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                        ::AllocateSharedPtr(m_f->m_session->GetComm());
+                    m_f->m_fld = LibUtilities::MakeDefaultFieldIO(m_f->m_session);
                 }
                 else // serial communicator
                 {
                     LibUtilities::CommSharedPtr c = LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-                    m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                        ::AllocateSharedPtr(c);
+                    m_f->m_fld = LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c);
                 }
             }
 

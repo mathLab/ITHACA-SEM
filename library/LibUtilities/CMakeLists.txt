@@ -12,6 +12,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
+    ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
@@ -39,6 +40,7 @@ SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
+    ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp

@@ -225,8 +225,7 @@ namespace Nektar
 
 
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
-            m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                            ::AllocateSharedPtr(m_f->m_session->GetComm());
+            m_f->m_fld = LibUtilities::MakeDefaultFieldIO(m_f->m_session);
 
             // currently load all field (possibly could read data from
             // expansion list but it is re-arranged in expansion)

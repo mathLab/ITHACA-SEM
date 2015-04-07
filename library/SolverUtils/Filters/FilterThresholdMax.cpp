@@ -76,7 +76,7 @@ namespace Nektar
                 m_thresholdVar = x - varlist.begin();
             }
 
-            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+            m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
 
         }
 

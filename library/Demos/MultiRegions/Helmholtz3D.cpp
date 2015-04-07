@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        LibUtilities::FieldIOSharedPtr fld =
-            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+        LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeDefaultFieldIO(vSession);
 
         //----------------------------------------------
         // Read in mesh from input file

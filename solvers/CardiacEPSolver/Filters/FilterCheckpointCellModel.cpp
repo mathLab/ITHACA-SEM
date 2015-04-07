@@ -59,7 +59,7 @@ namespace Nektar
         m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
         m_outputIndex = 0;
         m_index = 0;
-        m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+        m_fld = LibUtilities::MakeDefaultFieldIO(m_session);
 
     }
 

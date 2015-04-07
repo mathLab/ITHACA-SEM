@@ -254,8 +254,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     // Read in local from field partitions
     const SpatialDomains::ExpansionMap &expansions = m_fromField->m_graph->GetExpansions();
 
-    m_fromField->m_fld = MemoryManager<LibUtilities::FieldIO>
-        ::AllocateSharedPtr(m_fromField->m_session->GetComm());
+    m_fromField->m_fld = LibUtilities::MakeDefaultFieldIO(m_fromField->m_session);
 
     Array<OneD,int> ElementGIDs(expansions.size());
     SpatialDomains::ExpansionMap::const_iterator expIt;

@@ -106,8 +106,7 @@ namespace Nektar
                 }
             }
 
-            m_fld = MemoryManager<LibUtilities::FieldIO>::
-                AllocateSharedPtr(pSession->GetComm());
+            m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
 
         }
 

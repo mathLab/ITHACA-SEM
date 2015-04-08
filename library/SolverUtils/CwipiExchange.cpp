@@ -287,7 +287,8 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
 
         for (int i = 0; i < nPoints; ++i)
         {
-            if (notLoc[locPos] == i)
+            // cwipi indices start from 1
+            if (notLoc[locPos] - 1 == i)
             {
                 // keep the original value of field[j][i]
                 locPos++;

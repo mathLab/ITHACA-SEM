@@ -184,7 +184,8 @@ void OutputFld::Process(po::variables_map &vm)
                 }
             }
 
-            m_f->m_fld->Write(outname, FieldDef, FieldData);
+            m_f->m_fld->Write(outname, FieldDef, FieldData,
+                                                 m_f->m_fieldMetaDataMap);
 
         }
     }
@@ -196,7 +197,8 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         // Write the output file
-        m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+        m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                                                     m_f->m_fieldMetaDataMap);
 
 
         // output error for regression checking.

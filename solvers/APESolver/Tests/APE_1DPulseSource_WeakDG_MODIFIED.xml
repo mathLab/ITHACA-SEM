@@ -70,8 +70,9 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-      <E VAR="U0" VALUE="0"/>
-      <E VAR="P0" VALUE="Pinfinity"/>
+      <E VAR="u0" VALUE="0"/>
+      <E VAR="p0" VALUE="Pinfinity"/>
+      <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
       <E VAR="S" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>

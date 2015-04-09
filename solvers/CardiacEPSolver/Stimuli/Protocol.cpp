@@ -44,7 +44,7 @@ namespace Nektar
         Loki::NoDestroy > Type;
         return Type::Instance();
     }
-    
+
     /**
      * @class Protocol
      *
@@ -54,25 +54,22 @@ namespace Nektar
      * Stimulus, at specified frequencies determined by the derived classes of
      * Protocol.
      */
-    
+
     /**
      * Protocol base class constructor.
      */
     Protocol::Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
                        const TiXmlElement* pXml)
+        : m_session(pSession)
     {
-        m_session = pSession;
     }
-    
-    
+
+
     /**
      * Initialise the protocol. Allocate workspace and variable storage.
      */
     void Protocol::Initialise()
     {
-        
-        
     }
-    
-    
+
 }

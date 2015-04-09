@@ -48,33 +48,31 @@
 
 namespace Nektar
 {
-    
+
     /// Protocol base class.
     class StimulusCirc: public Stimulus
     {
     public:
         /// Creates an instance of this class
         static StimulusSharedPtr create(
-                                        const LibUtilities::SessionReaderSharedPtr& pSession,
-                                        const MultiRegions::ExpListSharedPtr& pField,
-                                        const TiXmlElement* pXml)
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField,
+                const TiXmlElement* pXml)
         {
             return MemoryManager<StimulusCirc>
-            ::AllocateSharedPtr(pSession, pField, pXml);
+                ::AllocateSharedPtr(pSession, pField, pXml);
         }
-        
+
         /// Name of class
         static std::string className;
-        
-        StimulusCirc(const LibUtilities::SessionReaderSharedPtr& pSession,
-                     const MultiRegions::ExpListSharedPtr& pField,
-                     const TiXmlElement* pXml);
-        
+
+        friend class MemoryManager<StimulusCirc>;
+
         virtual ~StimulusCirc() {}
-        
+
         /// Initialise the protocol storage and set initial conditions
         void Initialise();
-        
+
     protected:
         NekDouble m_px1;
         NekDouble m_py1;
@@ -87,11 +85,15 @@ namespace Nektar
 
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time);
-        
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        
+
+    private:
+        StimulusCirc(const LibUtilities::SessionReaderSharedPtr& pSession,
+                     const MultiRegions::ExpListSharedPtr& pField,
+                     const TiXmlElement* pXml);
     };
-    
+
 }
 
-#endif 
+#endif

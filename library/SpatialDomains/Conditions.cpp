@@ -182,16 +182,17 @@ namespace Nektar
 
                 TiXmlElement *conditionElement = regionElement->FirstChildElement();
                 std::vector<std::string> vars = m_session->GetVariables();
+                bool IsTimeDependent = false;
 
                 while (conditionElement)
                 {
                     // Check type.
                     std::string conditionType = conditionElement->Value();
                     std::string attrData;
-
+                    
                     // All have var specified, or else all variables are zero.
                     TiXmlAttribute *attr = conditionElement->FirstAttribute();
-
+                    
                     std::vector<std::string>::iterator iter;
                     std::string attrName;
 
@@ -200,9 +201,11 @@ namespace Nektar
                     if (!attrData.empty())
                     {
                         iter = std::find(vars.begin(), vars.end(), attrData);
-                        ASSERTL0(iter != vars.end(), (std::string("Cannot find variable: ") + attrData).c_str());
+                        ASSERTL0(iter != vars.end(), 
+                                 (std::string("Cannot find variable: ")
+                                  + attrData).c_str());
                     }
-
+                    
                     if (conditionType == "N")
                     {
                         if (attrData.empty())
@@ -211,7 +214,7 @@ namespace Nektar
                             for (std::vector<std::string>::iterator varIter = vars.begin();
                                 varIter != vars.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session,"00.0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session,"0.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
                         }                       
@@ -234,19 +237,27 @@ namespace Nektar
 
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();
-                                        ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
+                                        ASSERTL0(!attrData.empty(), 
+                                                 "USERDEFINEDTYPE attribute must have associated value.");
 
                                         // Suppose to go here?
                                         m_session->SubstituteExpressions(attrData);
 
                                         userDefined = attrData;
+                                        if(attrData == "TimeDependent")
+                                        {
+                                            IsTimeDependent = true;
+                                        }
                                      }
                                      else if(attrName=="VALUE")
                                      {
-                                        ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
+                                        ASSERTL0(attrName == "VALUE", 
+                                                 (std::string("Unknown attribute: ") 
+                                                  + attrName).c_str());
 
                                         attrData = attr->Value();
-                                        ASSERTL0(!attrData.empty(), "VALUE attribute must be specified.");
+                                        ASSERTL0(!attrData.empty(), 
+                                                 "VALUE attribute must be specified.");
 
                                         m_session->SubstituteExpressions(attrData);
 
@@ -254,7 +265,9 @@ namespace Nektar
                                       }
                                      else if(attrName=="FILE")
                                      {
-                                        ASSERTL0(attrName == "FILE", (std::string("Unknown attribute: ") + attrName).c_str());
+                                        ASSERTL0(attrName == "FILE", 
+                                                 (std::string("Unknown attribute: ") 
+                                                  + attrName).c_str());
 
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), "FILE attribute must be specified.");
@@ -266,12 +279,13 @@ namespace Nektar
                                       attr = attr->Next();
                                 }
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
+                                neumannCondition->SetIsTimeDependent(IsTimeDependent);
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, "0.0"));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                         }
@@ -310,6 +324,10 @@ namespace Nektar
                                         m_session->SubstituteExpressions(attrData);
 
                                         userDefined = attrData;
+                                        if(attrData == "TimeDependent")
+                                        {
+                                            IsTimeDependent = true;
+                                        }
                                     }
                                     else if(attrName=="VALUE")
                                     {
@@ -337,6 +355,7 @@ namespace Nektar
                                 }
 
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
+                                dirichletCondition->SetIsTimeDependent(IsTimeDependent);
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
@@ -386,7 +405,11 @@ namespace Nektar
                                     m_session->SubstituteExpressions(attrData1);
 
                                     userDefined = attrData1;
-
+                                    if(attrData == "TimeDependent")
+                                    {
+                                        IsTimeDependent = true;
+                                    }
+                                    
                                  }
                                  else if(attrName1 == "VALUE"){
 
@@ -435,6 +458,7 @@ namespace Nektar
                             {
                                 // This variable's condition is zero.
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, "0", "0"));
+                                robinCondition->SetIsTimeDependent(IsTimeDependent);
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                         }

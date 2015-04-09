@@ -653,13 +653,17 @@ namespace Nektar
 
                     m_bndCondExpansions[cnt]  = locExpList;
                     m_bndConditions[cnt]      = bc;
+
+#if 0 // needs to be defined in local solver setup
                     SpatialDomains::BndUserDefinedType type = 
-                        m_bndConditions[cnt++]->GetUserDefined();
+                        m_bndConditions[cnt]->GetUserDefined();
                     if (type == SpatialDomains::eI || 
                         type == SpatialDomains::eCalcBC)
                     {
                         SetUpPhysNormals();
                     }
+#endif
+                    cnt++;
                 }
             }
         }
@@ -2126,8 +2130,7 @@ namespace Nektar
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || 
-                    m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                    m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
@@ -2239,6 +2242,7 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
+#if 0 
                 else if (m_bndConditions[i]->GetUserDefined()
                             == SpatialDomains::eMovingBody)
                 {
@@ -2255,6 +2259,7 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
+#endif
             }
         }
     } // end of namespace

@@ -182,8 +182,11 @@ namespace Nektar
 
                 for(int j = 0; j < 2; ++j)
                 {	
-                    std::string BCType = vessel[0]->GetBndConditions()[j]->
-                        GetBndTypeAsString(vessel[0]->GetBndConditions()[j]->GetUserDefined());
+                    std::string BCType =vessel[0]->GetBndConditions()[j]->GetUserDefined();
+                    if(BCType.empty())
+                    {
+                        BCType = "NoUserDefined";
+                    }
                     m_Boundary[2*omega+j]=GetBoundaryFactory().CreateInstance(BCType,m_vessels,m_session,m_pressureArea);
                 }
             }

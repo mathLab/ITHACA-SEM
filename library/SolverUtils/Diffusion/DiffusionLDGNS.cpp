@@ -327,8 +327,7 @@ namespace Nektar
 
                         // Reinforcing bcs for velocity in case of Wall bcs
                         if (fields[i]->GetBndConditions()[j]->
-                            GetUserDefined() == 
-                            SpatialDomains::eWallViscous)
+                            GetUserDefined() == "WallViscous")
                         {
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
@@ -407,8 +406,7 @@ namespace Nektar
                     
                     // Imposing Temperature Twall at the wall 
                     if (fields[i]->GetBndConditions()[j]->
-                        GetUserDefined() == 
-                        SpatialDomains::eWallViscous)
+                        GetUserDefined() == "WallViscous")
                     {                        
                         Vmath::Vcopy(nBndEdgePts, 
                                      &Tw[0], 1, 

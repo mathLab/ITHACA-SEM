@@ -100,27 +100,30 @@ namespace Nektar
 
             for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
             {
-                ElementSharedPtr el1 = (*fIt)->m_elLink[0].first;
-                ElementSharedPtr el2 = (*fIt)->m_elLink[1].first;
-
-                if ((el1->GetConf().m_e == LibUtilities::ePrism &&
-                     el2->GetConf().m_e == LibUtilities::eTetrahedron) ||
-                    (el2->GetConf().m_e == LibUtilities::ePrism &&
-                     el1->GetConf().m_e == LibUtilities::eTetrahedron))
-                {
-                    // Create a new linear triangle from face
-                    vector<NodeSharedPtr> nodeList(3);
-                    vector<int> tags(1);
-                    tags[0] = 123;
-
-                    nodeList = (*fIt)->m_vertexList;
-                    ElmtConfig conf(LibUtilities::eTriangle, 1, true, true, false);
-                    ElementSharedPtr tri = GetElementFactory().
-                        CreateInstance(
-                            LibUtilities::eTriangle, conf, nodeList, tags);
-
+                if ((*fIt)->m_elLink.size() != 1)
+                {                    
+                    ElementSharedPtr el1 = (*fIt)->m_elLink[0].first;
+                    ElementSharedPtr el2 = (*fIt)->m_elLink[1].first;
                     
-                    m_mesh->m_element[m_mesh->m_expDim-1].push_back(tri);
+                    if ((el1->GetConf().m_e == LibUtilities::ePrism &&
+                         el2->GetConf().m_e == LibUtilities::eTetrahedron) ||
+                        (el2->GetConf().m_e == LibUtilities::ePrism &&
+                         el1->GetConf().m_e == LibUtilities::eTetrahedron))
+                    {
+                        // Create a new linear triangle from face
+                        vector<NodeSharedPtr> nodeList(3);
+                        vector<int> tags(1);
+                        tags[0] = 123;
+                        
+                        nodeList = (*fIt)->m_vertexList;
+                        ElmtConfig conf(LibUtilities::eTriangle, 1, true, true, false);
+                        ElementSharedPtr tri = GetElementFactory().
+                            CreateInstance(
+                                LibUtilities::eTriangle, conf, nodeList, tags);
+                        
+                        
+                        m_mesh->m_element[m_mesh->m_expDim-1].push_back(tri);
+                    }
                 }
             }
 

@@ -158,7 +158,7 @@ namespace Nektar
         {
             // PressureOutflowFile Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureOutflowFile)
+                "PressureOutflowFile")
             {
                 int numBCPts = m_fields[0]->
                     GetBndCondExpansions()[n]->GetNpoints();
@@ -182,7 +182,7 @@ namespace Nektar
         {
             // PressureInflowFile Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureInflowFile)
+                "PressureInflowFile")
             {
                 int numBCPts = m_fields[0]->
                     GetBndCondExpansions()[n]->GetNpoints();

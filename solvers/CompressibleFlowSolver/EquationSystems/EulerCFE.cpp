@@ -228,14 +228,14 @@ namespace Nektar
         {
             // Wall Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWall)
+                "Wall")
             {
                 WallBC(n, cnt, inarray);
             }
             
             // Wall Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWallViscous)
+                "WallViscous")
             {
                 ASSERTL0(false, "WallViscous is a wrong bc for the "
                 "Euler equations");
@@ -243,56 +243,56 @@ namespace Nektar
             
             // Symmetric Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eSymmetry)
+                "Symmetry")
             {
                 SymmetryBC(n, cnt, inarray);
             }
             
             // Riemann invariant characteristic Boundary Condition (CBC)
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eRiemannInvariant)
+                "RiemannInvariant")
             {
                 RiemannInvariantBC(n, cnt, inarray);
             }
             
             // Pressure outflow non-reflective Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::ePressureOutflowNonReflective)
+                "PressureOutflowNonReflective")
             {
                 PressureOutflowNonReflectiveBC(n, cnt, inarray);
             }
             
             // Pressure outflow Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::ePressureOutflow)
+                "PressureOutflow")
             {
                 PressureOutflowBC(n, cnt, inarray);
             }
             
             // Pressure outflow Boundary Condition from file
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::ePressureOutflowFile)
+                "PressureOutflowFile")
             {
                 PressureOutflowFileBC(n, cnt, inarray);
             }
             
             // Pressure inflow Boundary Condition from file
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::ePressureInflowFile)
+                "PressureInflowFile")
             {
                 PressureInflowFileBC(n, cnt, inarray);
             }
 
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eExtrapOrder0)
+                "ExtrapOrder0")
             {
                 ExtrapOrder0BC(n, cnt, inarray);
             }
             
             // Time Dependent Boundary Condition (specified in meshfile)
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eTimeDependent)
+                "TimeDependent")
             {
                 for (int i = 0; i < nvariables; ++i)
                 {
@@ -303,14 +303,14 @@ namespace Nektar
             
             // Isentropic Vortex Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eIsentropicVortex)
+                "IsentropicVortex")
             {
                 SetBoundaryIsentropicVortex(n, time, cnt, inarray);
             }
             
             // Ringleb Flow Inflow and outflow Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eRinglebFlow)
+                "RinglebFlow")
             {
                 SetBoundaryRinglebFlow(n, time, cnt, inarray);
             }

@@ -123,8 +123,8 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         int m_intSteps;
         int m_movingBodyCalls;
-        int m_NumLocPlane;
-        int m_VarArraysize;
+        int m_np;
+        int m_vsize;
         int m_NumD;
         bool m_FictitiousMass;
         bool m_homostrip;

@@ -279,7 +279,7 @@ namespace Nektar
         {
             // Wall Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "Wall")
+                UserDefMap[eWall])
             {
                 WallBC(n, cnt, inarray);
             }
@@ -336,7 +336,7 @@ namespace Nektar
 
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "ExtrapOrder0")
+                UserDefMap[eExtrapOrder0])
             {
                 ExtrapOrder0BC(n, cnt, inarray);
             }

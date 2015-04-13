@@ -182,13 +182,13 @@ namespace Nektar
 
                 TiXmlElement *conditionElement = regionElement->FirstChildElement();
                 std::vector<std::string> vars = m_session->GetVariables();
-                bool IsTimeDependent = false;
 
                 while (conditionElement)
                 {
                     // Check type.
                     std::string conditionType = conditionElement->Value();
                     std::string attrData;
+                    bool IsTimeDependent = false;
                     
                     // All have var specified, or else all variables are zero.
                     TiXmlAttribute *attr = conditionElement->FirstAttribute();

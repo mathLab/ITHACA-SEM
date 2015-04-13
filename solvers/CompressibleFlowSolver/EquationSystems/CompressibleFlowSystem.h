@@ -44,8 +44,50 @@
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdHexExp.h>
 
+#include <boost/assign/list_of.hpp>
+
 namespace Nektar
 {
+
+    enum UserDefEnum
+    {
+        eArtificialViscosity,
+        eExtrapOrder0,
+        eIsentropicVortexBc,
+        ePressureInflowFile,
+        ePressureOutflow,
+        ePressureOutflowFile,
+        ePressureOutflowNonReflective,
+        eRiemannInvariant,
+        eRinglebFlowBc,
+        eSymmetry,
+        eWall,
+        eWallViscous
+    };
+
+
+    /** 
+     *   Declare a list of static maps to help reduce the number of
+     *   string errors in checking for UserDefined string of BC's
+     *   
+     *   Note: probably need to get rid of static declaration for threading? 
+     */
+    static map<UserDefEnum, std::string> UserDefMap = boost::assign::map_list_of
+        (eArtificialViscosity,          "ArtificialVisc")
+        (eExtrapOrder0,                 "ExtrapOrder0")
+        (eIsentropicVortexBc,             "IsentropicVortex")
+        (ePressureInflowFile,           "PressureInflowFile")
+        (ePressureOutflow,              "PressureOutflow")
+        (ePressureOutflowFile,          "PressureOutflowFile")
+        (ePressureOutflowNonReflective, "PressureOutflowNonReflective")
+        (eRiemannInvariant,             "RiemannInvariant")
+        (eRinglebFlowBc,                 "RinglebFlow")
+        (eSymmetry,                     "Symmetry")
+        (eWall,                         "Wall")
+        (eWallViscous,                  "WallViscous");
+
+
+
     /**
      *
      */

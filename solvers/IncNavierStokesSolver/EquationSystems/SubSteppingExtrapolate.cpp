@@ -566,9 +566,9 @@ namespace Nektar
         
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
+            std::string type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == SpatialDomains::eHigh)
+            if(type == "H")
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -621,9 +621,9 @@ namespace Nektar
                 }
             }
             // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || 
-					type == SpatialDomains::eTimeDependent ||
-					type == SpatialDomains::eMovingBody) 
+            else if(type == "NoUserDefined" || 
+                    type == "TimeDependent" ||
+                    type == "MovingBody") 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }
@@ -669,9 +669,9 @@ namespace Nektar
         
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
+            std::string type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == SpatialDomains::eHigh)
+            if(type == "H")
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -733,9 +733,9 @@ namespace Nektar
                 }
             }
             // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || 
-					type == SpatialDomains::eTimeDependent ||
-					type == SpatialDomains::eMovingBody) 
+            else if(type == "NoUserDefined" || 
+                    type == "TimeDependent" ||
+                    type == "MovingBody") 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }

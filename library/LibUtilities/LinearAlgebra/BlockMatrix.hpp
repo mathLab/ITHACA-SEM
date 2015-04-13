@@ -177,9 +177,6 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfColumnsInBlockColumn(unsigned int blockCol) const;
 
-            LIB_UTILITIES_EXPORT unsigned int GetRowIndexFromBlockRow(unsigned int blockRow) const;
-            LIB_UTILITIES_EXPORT unsigned int GetColumnIndexFromBlockColumn(unsigned int blockCol) const;
-
             LIB_UTILITIES_EXPORT iterator begin();
             LIB_UTILITIES_EXPORT iterator end();
             LIB_UTILITIES_EXPORT const_iterator begin() const;

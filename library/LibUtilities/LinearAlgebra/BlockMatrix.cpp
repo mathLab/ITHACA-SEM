@@ -362,18 +362,6 @@ namespace Nektar
     }
 
     template<typename DataType, typename InnerMatrixType>
-    unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetRowIndexFromBlockRow(unsigned int blockRow) const
-	{
-    	return blockRow > 0 ? m_rowSizes[blockRow-1] +1 : 0;
-	}
-
-    template<typename DataType, typename InnerMatrixType>
-    unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetColumnIndexFromBlockColumn(unsigned int blockCol) const
-    {
-    	return blockCol > 0 ? m_columnSizes[blockCol-1] +1 : 0;
-    }
-
-    template<typename DataType, typename InnerMatrixType>
     typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::iterator NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::begin() { return iterator(*this, 0, 0); }
 
     template<typename DataType, typename InnerMatrixType>

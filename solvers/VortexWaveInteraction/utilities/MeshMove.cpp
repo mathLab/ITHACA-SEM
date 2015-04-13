@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     int nbnd= bndConditions.num_elements();
     for(int r=0; r<nbnd; r++)
     {
-        if(bndConditions[r]->GetUserDefined()==SpatialDomains::eCalcBC)
+        if(bndConditions[r]->GetUserDefined()=="CalcBC")
         {
             lastIregion=r;
             Iregions[r]=r;

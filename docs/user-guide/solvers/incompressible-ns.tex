@@ -8,7 +8,7 @@ A useful tool implemented in Nektar++ is the incompressible Navier Stokes solver
 
 \begin{subequations}
 \begin{equation}
-   \frac{\partial \mathbf{V}}{\partial t} + \mathbf{V} \cdot \nabla \mathbf{V} = -\nabla p + \nu \nabla^2 \mathbf{V} + f
+   \frac{\partial \mathbf{V}}{\partial t} + \mathbf{V} \cdot \nabla \mathbf{V} = -\nabla p + \nu \nabla^2 \mathbf{V} +  \mathbf{f}
  \end{equation}
 
  \begin{equation}
@@ -22,19 +22,33 @@ where $V$ is the velocity, $p$ the pressure and $\nu$ the kinematic viscosity. T
 \begin{enumerate}
 \item Calculate a first intermediate velocity field evaluating the advection term explicitly and combining it with the solution at previous time-steps:
 \begin{equation}
- \frac{\tilde{\mathbf{V}}-\sum_{q=0}^{J-1}\frac{\alpha_q}{\gamma_0}\mathbf{V}^{n-q}}{\Delta t}=\sum_{q=0}^{J-1}\frac{\beta_q}{\gamma_0}[-(\mathbf{V}\cdot\nabla)\mathbf{V}]^{n-q} + f^{n+1}\end{equation}
+ \frac{\tilde{\mathbf{V}}-\sum_{q=0}^{J-1}\frac{\alpha_q}{\gamma_0}\mathbf{V}^{n-q}}{\Delta t}=\sum_{q=0}^{J-1}\frac{\beta_q}{\gamma_0}[-(\mathbf{V}\cdot\nabla)\mathbf{V}]^{n-q} +  \mathbf{f}^{n+1}\end{equation}
 
  \item Solve a Poisson equation to obtain the pressure solution at the new time level:
  \begin{equation}
   \Delta p^{n+1}=\Bigl(\frac{\gamma_0}{\Delta t}\Bigr)\nabla\cdot\tilde{\mathbf{V}}
  \end{equation}
 
-with consistent boundary conditions:
+with consistent Neumann boundary conditions prescribed as
 
 \begin{equation}
- \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{V}}{\partial t}^{n+1} + \nu \sum_{q=0}^{J-1}\beta_q(\nabla \times \nabla \times   \mathbf{V})^{n-q} + \sum_{q=0}^{J-1}\beta_q [(\mathbf{V} \cdot \nabla)\mathbf{V}]^{n-q}\Bigr]\cdot n
+ \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{V}}{\partial t}^{n+1} + \nu \sum_{q=0}^{J-1}\beta_q(\nabla \times \nabla \times   \mathbf{V})^{n-q} + \sum_{q=0}^{J-1}\beta_q [(\mathbf{V} \cdot \nabla)\mathbf{V}]^{n-q}\Bigr]\cdot \mathbf{n}
 \end{equation}
 
+and on the outflow boundary, either setting $ p^{n+1}=0$ or using high order Dirichlet boundary condition, which is given as\cite{DoKa14}
+
+\begin{equation}
+ p^{n+1}= \nu \sum_{q=0}^{J-1}\nabla\mathbf{V}^{n-q}\cdot \mathbf{n}-\frac{1}{2}
+\mid \sum_{q=0}^{J-1}\mathbf{V}^{n-q} \mid^2 S_o(\mathbf{n}\cdot \sum_{q=0}^{J-1}\mathbf{V}^{n-q})-\mathbf{f}_b^{n+1}\cdot \mathbf{n}
+\end{equation}
+
+with a step function defined by $S_o(n\cdot
+\mathbf{V})=\frac{1}{2}(1-\tanh\frac{n\cdot\mathbf{V}}{\mathbf{V_0}\delta})$,
+where $\mathbf{V_0}$ is the characteristic velocity scale and $\delta$
+is a non-dimensional positive constant chosen to be sufficiently
+small. $\mathbf{f}_b$ is the forcing term in this case the analytical
+conditions can be given but if these are not known explicitly, it is
+set to zero, i.e. $\mathbf{f}_b=0$.
 
 \item  Calculate a second intermediate velocity field:
 
@@ -48,9 +62,17 @@ with consistent boundary conditions:
   \Bigl(\Delta-\frac{\gamma_0}{\Delta t \nu}\Bigr)\mathbf{V}^{n+1}=-\Bigl(\frac{\gamma_0}{\Delta t \nu}\Bigr)\tilde{\tilde{\mathbf{V}}}
  \end{equation}
 
+with the outflow boundary conditions either set as $n\cdot\nabla\mathbf{V}^{n+1}=0$ or as high order Neumann boundary conditions prescribed by\cite{DoKa14}:
+
+ \begin{equation}
+ \mathbf{n}\cdot\nabla\mathbf{V}^{n+1}=\frac{1}{\nu}\Bigl[p^{n+1}\mathbf{n}+\frac{1}{2}
+   \mid\sum_{q=0}^{J-1} \mathbf{V}^{n-q} \mid^2 S_o(\mathbf{n}\cdot
+   \sum_{q=0}^{J-1}\mathbf{V}^{n-q})\mathbf{n}-\nu\sum_{q=0}^{J-1}(\nabla\cdot\mathbf{V}^{n-q})\mathbf{n}+\mathbf{f}_b^{n+1}\Bigr]
+ \end{equation}
+
  \end{enumerate}
 
-Here, $J$ is the integration order and $\gamma_0$, $alpha_q$, $\beta_q$
+Here, $J$ is the integration order and $\gamma_0$, $\alpha_q$, $\beta_q$
 are the stiffly stable time integration coefficients given in the table below.
 
 \begin{equation}
@@ -66,7 +88,7 @@ are the stiffly stable time integration coefficients given in the table below.
  \end{array}
  \end{equation}
 
- This multi-step implicit-explicit splitting scheme decouples the velocity field $mathbf{V}$ from the pressure $p$, leading to an
+ This multi-step implicit-explicit splitting scheme decouples the velocity field $\mathbf{V}$ from the pressure $p$, leading to an
 explicit treatment of the advection term and an implicit treatment of the pressure and the diffusion term.
 
 \subsection{Direct solver (coupled approach)}
@@ -848,6 +870,83 @@ The result should look similar to that shown in Figure~\ref{f:incns:kovaflow}.
 \end{center}
 \end{figure}
 
+\subsection{Kovasznay Flow 2D using high-order outflow boundary conditions}
+\label{s:incns:kovasznay2D_HOBC}
+In this example, we solve the same case of 2D Kovasznay flow on
+severely-truncated computational domain but using a high-order outflow
+boundary condition, which is much more accurate and robust for
+unbounded flows~\cite{DoKa14}. The solver information and parameters
+used here are similar to the previous one. What only we need to modify
+in the input file is just the boundary condition type upon the outlet
+region shown as below
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+    <REGION REF="0">
+        <D VAR="u" VALUE="1-exp(KovLam*x)*cos(2*PI*y)" />
+        <D VAR="v" VALUE="(KovLam/2/PI)*exp(KovLam*x)*sin(2*PI*y)" />
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+    </REGION>
+    <REGION REF="1">
+        <N VAR="u" USERDEFINEDTYPE="HOutflow" 
+              VALUE="-Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y) 
+		- 0.5*(1-exp(2*KovLam*x))-0.5*(((1-exp(KovLam*x)*cos(2*PI*y))
+		*(1-exp(KovLam*x)*cos(2*PI*y))+(KovLam/(2*PI)*exp(KovLam*x)
+		*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))
+		*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
+        <N VAR="v" USERDEFINEDTYPE="HOutflow" 
+              VALUE="Kinvis*KovLam*KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y)" />
+        <D VAR="p" USERDEFINEDTYPE="HOutflow" 
+              VALUE="-Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y)
+		- 0.5*(1-exp(2*KovLam*x)) -0.5*(((1-exp(KovLam*x)*cos(2*PI*y))
+		*(1-exp(KovLam*x)*cos(2*PI*y))+(KovLam/(2*PI)*exp(KovLam*x)
+		*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))
+		*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
+    </REGION>
+    <REGION REF="2">
+        <N VAR="u" VALUE="0" />
+        <D VAR="v" VALUE="0" />
+        <N VAR="p" VALUE="0" />
+    </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting} 
+We note that in this example the ``VALUE'' property is set based on
+the analytic solution but this is not typically known and so often a
+VALUE of zero will be specified.
+
+Instead of loading an initial condition from a specified file, we initialized the flow fields in this example by using following expressions
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="InitialConditions">
+    <E VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+    <E VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+    <E VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+</FUNCTION>
+\end{lstlisting}
+\subsubsection{Running the simulation}
+We then launch the simulation by the same solver as that in the previous example
+\begin{lstlisting}[style=BashInputStyle]
+IncNavierStokesSolver KovaFlow_m8_short_HOBC.xml
+\end{lstlisting} 
+ The solution with errors displayed as below
+\begin{lstlisting}[style=BashInputStyle]
+L 2 error (variable u) : 2.51953e-08
+L inf error (variable u) : 9.56014e-09
+L 2 error (variable v) : 1.10694e-08
+L inf error (variable v) : 9.47464e-08
+L 2 error (variable p) : 5.59175e-08
+L inf error (variable p) : 2.93085e-07
+\end{lstlisting}
+
+The physical solution visualized in velocity profiles is also illustrated in 
+Figure~\ref{f:incns:kovaflow2d_hobc}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=7cm]{Figures/KF2DCVP8HOBC_U.png}
+\includegraphics[width=7cm]{Figures/KF2DCVP8HOBC_V.png}
+\caption{Velocity profiles for the Kovasznay Flow in truncated domain (2D).}
+\label{f:incns:kovaflow2d_hobc}
+\end{center}
+\end{figure}
 
 \subsection{Steady Kovasznay Oseen Flow using the direct solver}
 \label{s:incns:kovasznay2Ddirect}

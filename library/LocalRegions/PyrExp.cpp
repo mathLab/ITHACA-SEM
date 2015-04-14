@@ -626,6 +626,7 @@ namespace Nektar
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
+                Array<OneD, NekDouble> faceJac(nqtot);
                 Array<OneD, NekDouble> normals(vCoordDim*nqtot,0.0);
 
                 // Extract Jacobian along face and recover local derivatives
@@ -640,6 +641,7 @@ namespace Nektar
                             normals[j]         = -df[2][j]*jac[j];
                             normals[nqtot+j]   = -df[5][j]*jac[j];
                             normals[2*nqtot+j] = -df[8][j]*jac[j];
+                            faceJac[j]         = jac[j];
                         }
 
                         points0 = ptsKeys[0];
@@ -660,6 +662,7 @@ namespace Nektar
                                     -df[4][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq0]  =
                                     -df[7][tmp]*jac[tmp];
+                                faceJac[j+k*nq0] = jac[tmp];
                             }
                         }
 
@@ -681,6 +684,7 @@ namespace Nektar
                                     (df[3][tmp]+df[5][tmp])*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
                                     (df[6][tmp]+df[8][tmp])*jac[tmp];
+                                faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
 
@@ -702,6 +706,7 @@ namespace Nektar
                                     (df[4][tmp]+df[5][tmp])*jac[tmp];
                                 normals[2*nqtot+j+k*nq0] =
                                     (df[7][tmp]+df[8][tmp])*jac[tmp];
+                                faceJac[j+k*nq0] = jac[tmp];
                             }
                         }
 
@@ -723,6 +728,7 @@ namespace Nektar
                                     -df[3][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
                                     -df[6][tmp]*jac[tmp];
+                                faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
 
@@ -737,7 +743,7 @@ namespace Nektar
 
                 Array<OneD, NekDouble> work   (nq_face, 0.0);
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0, points1, jac,
+                LibUtilities::Interp2D(points0, points1, faceJac,
                                        tobasis0.GetPointsKey(),
                                        tobasis1.GetPointsKey(),
                                        work);

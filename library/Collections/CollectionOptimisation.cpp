@@ -60,16 +60,6 @@ CollectionOptimisation::CollectionOptimisation(
     m_maxCollSize = 0;
     m_defaultType = defaultType;
 
-    // Default all elements to eStdMat
-    defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eTriangle,      -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eQuadrilateral, -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eTetrahedron,   -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::ePyramid,       -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::ePrism,         -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eHexahedron,    -1)] = defaultType;
-
-
     map<string, LibUtilities::ShapeType> elTypes;
     map<string, LibUtilities::ShapeType>::iterator it2;
     elTypes["S"] = LibUtilities::eSegment;
@@ -79,6 +69,12 @@ CollectionOptimisation::CollectionOptimisation(
     elTypes["P"] = LibUtilities::ePyramid;
     elTypes["R"] = LibUtilities::ePrism;
     elTypes["H"] = LibUtilities::eHexahedron;
+
+    // Set defaults for all element types.
+    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+    {
+        defaults[ElmtOrder(it2->second, -1)] = defaultType;
+    }
 
     map<string, OperatorType> opTypes;
     for (i = 0; i < SIZE_OperatorType; ++i)
@@ -123,6 +119,20 @@ CollectionOptimisation::CollectionOptimisation(
                             m_defaultType = (Collections::ImplementationType) i;
                             break;
                         }
+                    }
+
+                    ASSERTL0(i != Collections::SIZE_ImplementationType,
+                             "Unknown default collection scheme: "+collinfo);
+
+                    // Override default types
+                    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+                    {
+                        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+                    }
+
+                    for (i = 0; i < SIZE_OperatorType; ++i)
+                    {
+                        m_global[(OperatorType)i] = defaults;
                     }
                 }
             }

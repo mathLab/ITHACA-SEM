@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Collections/Collection.h>
+#include <sstream>
 
 namespace Nektar {
 namespace Collections {
@@ -62,8 +63,10 @@ Collection::Collection(
         OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
                           pCollExp[0]->IsNodalNonTensorialExp());
 
+        stringstream ss;
+        ss << opKey;
         ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
-                "Requested unknown operator");
+                 "Requested unknown operator "+ss.str());
 
         m_ops[opType] = GetOperatorFactory().CreateInstance(
                                                 opKey, pCollExp, m_geomData);

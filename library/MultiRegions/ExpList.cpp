@@ -2626,7 +2626,7 @@ namespace Nektar
             case LibUtilities::eTriangle:
                 {
                     StdRegions::StdNodalTriExpSharedPtr nexp;
-                    if((nexp = boost::dynamic_pointer_cast<StdRegions::StdNodalTriExp>(exp)))
+                    if((nexp = exp->as<StdRegions::StdNodalTriExp>()))
                     {
                         stdExp = MemoryManager<StdRegions::StdNodalTriExp>
                             ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
@@ -2634,11 +2634,11 @@ namespace Nektar
                                                 nexp->GetNodalPointsKey().GetPointsType());
                     }
                     else
-                        {
-                            stdExp = MemoryManager<StdRegions::StdTriExp>
-                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                                    exp->GetBasis(1)->GetBasisKey());
-                        }
+                    {
+                        stdExp = MemoryManager<StdRegions::StdTriExp>
+                            ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                exp->GetBasis(1)->GetBasisKey());
+                    }
                 }
                 break;
             case LibUtilities::eQuadrilateral:

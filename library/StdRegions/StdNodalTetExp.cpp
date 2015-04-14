@@ -45,12 +45,12 @@ namespace Nektar
             const LibUtilities::BasisKey &Bb, 
             const LibUtilities::BasisKey &Bc,
             LibUtilities::PointsType Ntype):
-            StdExpansion  (StdTetData::getNumberOfCoefficients(
+            StdExpansion  (LibUtilities::StdTetData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            3,Ba,Bb,Bc),
-            StdExpansion3D(StdTetData::getNumberOfCoefficients(
+            StdExpansion3D(LibUtilities::StdTetData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
@@ -89,16 +89,11 @@ namespace Nektar
         // Nodal basis specific routines
         //-------------------------------
         
-        void StdNodalTetExp::NodalToModal()
-        {
-            NodalToModal(m_coeffs,m_coeffs); 
-        }
-
         void StdNodalTetExp::NodalToModal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
@@ -108,17 +103,12 @@ namespace Nektar
             modal = (*inv_vdm) * nodal;
         }
 
-        void StdNodalTetExp::NodalToModalTranspose()
-        {
-            NodalToModalTranspose(m_coeffs,m_coeffs); 
-        }
-
         // Operate with transpose of NodalToModal transformation
         void StdNodalTetExp::NodalToModalTranspose(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
@@ -128,16 +118,11 @@ namespace Nektar
             modal = Transpose(*inv_vdm) * nodal;
         }
 
-        void StdNodalTetExp::ModalToNodal()
-        {
-            ModalToNodal(m_coeffs,m_coeffs);
-        }
-
         void StdNodalTetExp::ModalToNodal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey      Nkey(eNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
                                     NullConstFactorMap, NullVarCoeffMap,
                                     m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
@@ -218,7 +203,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
             
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass, DetExpansionType(), *this,
+            StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
                                       m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
@@ -357,7 +342,8 @@ namespace Nektar
         }
         */
 
-        int StdNodalTetExp::v_GetVertexMap(const int localVertexId)
+        int StdNodalTetExp::v_GetVertexMap(const int localVertexId,
+                                           bool useCoeffPacking)
         {
             ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
                      "Local Vertex ID must be between 0 and 3");                

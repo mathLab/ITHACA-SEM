@@ -43,7 +43,7 @@
 #include <sstream>
 #include <map>
 #include <iomanip>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 using namespace std;
 using namespace Nektar;
@@ -59,7 +59,7 @@ void ExpandComposites(TiXmlElement* mesh, map<int,int> fullEdges, int nOrigElmts
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    int i;
     
     if(argc !=3)
     {
@@ -83,9 +83,11 @@ int main(int argc, char *argv[])
     int compsize = composite->size();
     for(i = 0; i < compsize; ++i)
     {
-        jointEdges[(*composite)[i]->GetEid() ] = (*composite)[compsize-1-i]->GetEid();
-        jointVerts[(*composite)[i]->GetVid(0)] = (*composite)[compsize-1-i]->GetVid(1);
-        jointVerts[(*composite)[i]->GetVid(1)] = (*composite)[compsize-1-i]->GetVid(0);
+        SpatialDomains::Geometry1DSharedPtr tmp1 = boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>((*composite)[i]);
+        SpatialDomains::Geometry1DSharedPtr tmp2 = boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>((*composite)[compsize-1-i]);
+        jointEdges[tmp1->GetEid() ] = tmp2->GetEid();
+        jointVerts[tmp1->GetVid(0)] = tmp2->GetVid(1);
+        jointVerts[tmp1->GetVid(1)] = tmp2->GetVid(0);
     }
 
 
@@ -146,7 +148,7 @@ void ExpandVertices(TiXmlElement* mesh, map<int,int> jointVerts, map<int,int> &n
         while (vertexBody)
         {
             // Accumulate all non-comment body data.
-            if (vertexBody->Type() == TiXmlNode::TEXT)
+            if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
             {
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";
@@ -218,14 +220,13 @@ void ExpandEdges(TiXmlElement* mesh, map<int,int> &newVerts, map<int,int> jointE
     TiXmlElement *edge = field->FirstChildElement("E");
     
     /// Since all edge data is one big text block, we need to
-    /// accumulate all TEXT data and then parse it.  This
+    /// accumulate all TINYXML_TEXT data and then parse it.  This
     /// approach effectively skips all comments or other node
     /// types since we only care about the edge list.  We
     /// cannot handle missing edge numbers as we could with
     /// missing element numbers due to the text block format.
     std::string edgeStr;
-    int i,indx;
-    int err = 0;
+    int indx;
     int nextEdgeNumber = -1;
 
     map<int,int> edgeVert0,edgeVert1;
@@ -238,7 +239,7 @@ void ExpandEdges(TiXmlElement* mesh, map<int,int> &newVerts, map<int,int> jointE
         
         TiXmlNode *child = edge->FirstChild();
         edgeStr.clear();
-        if (child->Type() == TiXmlNode::TEXT)
+        if (child->Type() == TiXmlNode::TINYXML_TEXT)
         {
             edgeStr += child->ToText()->ValueStr();
         }
@@ -325,7 +326,7 @@ void ExpandElmts(TiXmlElement* mesh, map<int,int> &newEdges, int &nelmts)
         std::string elementStr;
         while(elementChild)
         {
-            if (elementChild->Type() == TiXmlNode::TEXT)
+            if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
             {
                 elementStr += elementChild->ToText()->ValueStr();
             }
@@ -493,7 +494,7 @@ void  ExpandComposites(TiXmlElement * mesh, map<int,int> newEdges, int nOrigElmt
         // Comments appear as nodes just like elements.
         // We are specifically looking for text in the body
         // of the definition.
-        while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+        while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
         {
             compositeChild = compositeChild->NextSibling();
         }

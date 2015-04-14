@@ -52,7 +52,7 @@ namespace Nektar
 
             int index=0,isum=0;
             const int offset = 3; //offset to match Datafile
-            NekDouble a,b,c;
+            NekDouble b,c;
             unsigned int numPoints = GetNumPoints();
 
             // initialize values
@@ -65,7 +65,6 @@ namespace Nektar
             {
                 if(int(NodalTriElecData[index][0]))
                 {
-                    a = NodalTriElecData[index][3]; 
                     b = NodalTriElecData[index][4]; 
                     c = NodalTriElecData[index][5]; 
 
@@ -80,7 +79,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 3; ++j)
                     {
-                        a = NodalTriElecData[index][offset+perm3A_2d[j][0]];
                         b = NodalTriElecData[index][offset+perm3A_2d[j][1]];
                         c = NodalTriElecData[index][offset+perm3A_2d[j][2]];
                         m_points[0][isum] = 2.0*b - 1.0;
@@ -94,7 +92,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 3; ++j)
                     {
-                        a = NodalTriElecData[index][offset+perm3B_2d[j][0]];
                         b = NodalTriElecData[index][offset+perm3B_2d[j][1]];
                         c = NodalTriElecData[index][offset+perm3B_2d[j][2]];
                         m_points[0][isum] = 2.0*b - 1.0;
@@ -109,7 +106,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 6; ++j)
                     {
-                        a = NodalTriElecData[index][offset+perm6_2d[j][0]];
                         b = NodalTriElecData[index][offset+perm6_2d[j][1]];
                         c = NodalTriElecData[index][offset+perm6_2d[j][2]];
                         m_points[0][isum] = 2.0*b - 1.0;

@@ -2,7 +2,7 @@
 <test>
     <description>StdProject3D Hexahedron Modified basis P=6 Q=7</description>
     <executable>StdProject3D</executable>
-    <parameters>7 4 4 4 6 6 6 7 7 7</parameters>
+    <parameters>8 4 4 4 6 6 6 7 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-8">4.76767e-11</value>

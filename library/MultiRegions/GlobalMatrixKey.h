@@ -56,7 +56,7 @@ namespace Nektar
 
             /// Copy constructor with change in expansion type
             GlobalMatrixKey(const GlobalMatrixKey &key,
-                            const StdRegions::ExpansionType expType);
+                            const LibUtilities::ShapeType shapeType);
             /// Copy constructor.
             MULTI_REGIONS_EXPORT GlobalMatrixKey(const GlobalMatrixKey &key);
 
@@ -68,11 +68,11 @@ namespace Nektar
                                   const GlobalMatrixKey &rhs);
 
             /// Return the matrix type.
-            MULTI_REGIONS_EXPORT const StdRegions::MatrixType GetMatrixType() const;
+            MULTI_REGIONS_EXPORT StdRegions::MatrixType GetMatrixType() const;
             /// Return the expansion type associated with key
-            MULTI_REGIONS_EXPORT const StdRegions::ExpansionType GetExpansionType()  const;
+            MULTI_REGIONS_EXPORT LibUtilities::ShapeType GetShapeType()  const;
             /// Returns true if a local to global map is defined.
-            MULTI_REGIONS_EXPORT const bool LocToGloMapIsDefined() const;
+            MULTI_REGIONS_EXPORT bool LocToGloMapIsDefined() const;
             /// Returns the number of constants defined for this matrix.
             MULTI_REGIONS_EXPORT int GetNConstFactors() const;
             /// Returns the requested constant.
@@ -94,7 +94,7 @@ namespace Nektar
             
             /// Stores the expansion/shape type that the matrix is to
             /// be based on
-            StdRegions::ExpansionType m_expansionType;
+            LibUtilities::ShapeType     m_shapeType;
 
             StdRegions::ConstFactorMap  m_constFactors;
             StdRegions::VarCoeffMap     m_varCoeffs;
@@ -112,19 +112,19 @@ namespace Nektar
         /// A pointer to a GlobalMatrixKey.
         typedef  boost::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;
 
-        inline const StdRegions::MatrixType
+        inline StdRegions::MatrixType
                         GlobalMatrixKey::GetMatrixType() const
         {
             return m_matrixType;
         }
 
-        inline const StdRegions::ExpansionType
-                        GlobalMatrixKey::GetExpansionType() const
+        inline LibUtilities::ShapeType
+                        GlobalMatrixKey::GetShapeType() const
         {
-            return m_expansionType;
+            return m_shapeType;
         }
 
-        inline const bool GlobalMatrixKey::LocToGloMapIsDefined(void) const
+        inline bool GlobalMatrixKey::LocToGloMapIsDefined(void) const
         {
             if( m_locToGloMap.get() == 0) //NullAssemblyMapSharedPtr)
             {

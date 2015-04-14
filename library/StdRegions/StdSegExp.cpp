@@ -33,8 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/StdSegExp.h>
-
+#include <StdRegions/StdSegExp.h> 
 
 namespace Nektar
 {
@@ -78,9 +77,9 @@ namespace Nektar
         /** \brief Return Shape of region, using  ShapeType enum list.
          *  i.e. Segment
          */
-        ExpansionType StdSegExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdSegExp::v_DetShapeType() const
         {
-            return eSegment;
+            return LibUtilities::eSegment;
         }
 
         bool StdSegExp::v_IsBoundaryInteriorExpansion()
@@ -234,7 +233,7 @@ namespace Nektar
 
                 NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
@@ -273,7 +272,7 @@ namespace Nektar
                 v_IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,v_DetExpansionType(),*this);
+                StdMatrixKey      masskey(eInvMass,v_DetShapeType(),*this);
                 DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
                 NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
@@ -303,6 +302,12 @@ namespace Nektar
                         offset = 1;
                     }
                     break;
+                case LibUtilities::eGauss_Lagrange:
+                {
+                    nInteriorDofs = m_ncoeffs;
+                    offset = 0;
+                }
+                break;
                 case LibUtilities::eModified_A:
                 case LibUtilities::eModified_B:
                     {
@@ -314,28 +319,37 @@ namespace Nektar
                 }
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
-
-                outarray[GetVertexMap(0)] = inarray[0];
-                outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
-
-                if(m_ncoeffs>2)
+                
+                if(m_base[0]->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
-                    // ideally, we would like to have tmp0 to be replaced by
-                    // outarray (currently MassMatrixOp does not allow aliasing)
-                    Array<OneD, NekDouble> tmp0(m_ncoeffs);
-                    Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                    outarray[GetVertexMap(0)] = inarray[0];
+                    outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
 
-                    StdMatrixKey      masskey(eMass,v_DetExpansionType(),*this);
-                    MassMatrixOp(outarray,tmp0,masskey);
-                    v_IProductWRTBase(inarray,tmp1);
+                    if(m_ncoeffs>2)
+                    {
+                        // ideally, we would like to have tmp0 to be replaced by
+                        // outarray (currently MassMatrixOp does not allow aliasing)
+                        Array<OneD, NekDouble> tmp0(m_ncoeffs);
+                        Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-                    Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                        StdMatrixKey      masskey(eMass,v_DetShapeType(),*this);
+                        MassMatrixOp(outarray,tmp0,masskey);
+                        v_IProductWRTBase(inarray,tmp1);
 
-                    // get Mass matrix inverse (only of interior DOF)
-                    DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
+                        Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
 
-                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
-                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);
+                        // get Mass matrix inverse (only of interior DOF)
+                        DNekMatSharedPtr  matsys =
+                        (m_stdStaticCondMatrixManager[masskey])-> GetBlock(1,1);
+
+                        Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0,
+                                &(matsys->GetPtr())[0],nInteriorDofs,tmp1.get()
+                                +offset,1,0.0,outarray.get()+offset,1);
+                    }
+                }
+                else
+                {
+                    StdSegExp::v_FwdTrans(inarray, outarray);
                 }
             }
 
@@ -457,11 +471,6 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
-        NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords)
-        {
-            return  StdExpansion1D::v_PhysEvaluate(coords, m_phys);
-        }
 
         NekDouble StdSegExp::v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coords,
@@ -470,8 +479,10 @@ namespace Nektar
             return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
         }
 
-        void StdSegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
+        void StdSegExp::v_LaplacianMatrixOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -487,9 +498,9 @@ namespace Nektar
 
 
         void StdSegExp::v_HelmholtzMatrixOp(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray,
-                const double lambda)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -505,7 +516,7 @@ namespace Nektar
             // Laplacian matrix operation
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+            Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
 
@@ -525,60 +536,6 @@ namespace Nektar
         //---------------------------------------------------------------------
         // Helper functions
         //---------------------------------------------------------------------
-
-
-        void StdSegExp::v_WriteToFile(
-                std::ofstream &outfile,
-                OutputFormat format,
-                const bool dumpVar,
-                std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z";   
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << z[i] << " " << m_phys[i] << std::endl;
-                }
-            }
-            else if(format==eGmsh)
-            {
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile<<"View.Type = 2;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
- 
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << "SP(" << z[i] <<",  0.0, 0.0){" << m_phys[i] << "};" << endl;
-                }
-
-                if(dumpVar)
-                { 
-                    outfile << "};" << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
 
         int StdSegExp::v_GetNverts() const
         {
@@ -619,15 +576,12 @@ namespace Nektar
             case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-                    StdMatrixKey iprodkey(eIProductWRTBase,v_DetExpansionType(),*this);
+                    StdMatrixKey iprodkey(eIProductWRTBase,v_DetShapeType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
-                    StdMatrixKey imasskey(eInvMass,v_DetExpansionType(),*this);
+                    StdMatrixKey imasskey(eInvMass,v_DetShapeType(),*this);
                     DNekMat &Imass = *GetStdMatrix(imasskey);
 
                     (*Mat) = Imass*Iprod;
-					
-					
-					
                 }
                 break;
             default:
@@ -724,7 +678,7 @@ namespace Nektar
             }
         }
 
-        int StdSegExp::v_GetVertexMap(int localVertexId)
+        int StdSegExp::v_GetVertexMap(int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
                      "must be between 0 or 1");

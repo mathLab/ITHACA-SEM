@@ -59,6 +59,8 @@ namespace Nektar
         m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
         m_outputIndex = 0;
         m_index = 0;
+        m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+
     }
 
     FilterCheckpointCellModel::~FilterCheckpointCellModel()
@@ -73,45 +75,48 @@ namespace Nektar
 
         m_index = 0;
         m_outputIndex = 0;
+
+        v_Update(pFields, 0.0);
     }
 
     void FilterCheckpointCellModel::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
     {
-        m_index++;
-        if (m_index % m_outputFrequency > 0)
+        if (m_index++ % m_outputFrequency > 0)
         {
             return;
         }
 
         std::stringstream vOutputFilename;
-        vOutputFilename << m_outputFile << "_" << m_outputIndex;
-
-        if (m_session->GetComm()->GetSize() > 1)
-        {
-            vOutputFilename << "_P" << m_session->GetComm()->GetRank();
-        }
-        vOutputFilename << ".chk";
+        vOutputFilename << m_outputFile << "_" << m_outputIndex << ".chk";
 
         SpatialDomains::MeshGraphSharedPtr vGraph = pFields[0]->GetGraph();
 
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
             = pFields[0]->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
         // copy Data into FieldData and set variable
-        for(int j = 0; j < m_cell->GetNumCellVariables(); ++j)
+        std::string varName;
+        for(int j = 1; j < m_cell->GetNumCellVariables(); ++j)
         {
+            varName = m_cell->GetCellVarName(j);
+
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // Retrieve data from cell model
                 Array<OneD, NekDouble> data = m_cell->GetCellSolutionCoeffs(j);
 
                 // Could do a search here to find correct variable
-                FieldDef[i]->m_fields.push_back(boost::lexical_cast<std::string>(j));
+                FieldDef[i]->m_fields.push_back(varName);
                 pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], data);
             }
         }
-        vGraph->Write(vOutputFilename.str(),FieldDef,FieldData);
+
+        // Update time in field info if required
+        LibUtilities::FieldMetaDataMap fieldMetaDataMap;
+        fieldMetaDataMap["Time"] =  boost::lexical_cast<std::string>(time);
+
+        m_fld->Write(vOutputFilename.str(),FieldDef,FieldData,fieldMetaDataMap);
         m_outputIndex++;
     }
 

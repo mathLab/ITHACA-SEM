@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.h
+// File: GlobalLinSysIterativeStaticCond.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -37,6 +37,9 @@
 
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
+#include <MultiRegions/GlobalLinSysStaticCond.h>
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
+
 
 namespace Nektar
 {
@@ -49,10 +52,32 @@ namespace Nektar
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
             GlobalLinSysIterativeStaticCondSharedPtr;
 
+        enum LocalMatrixStorageStrategy
+        {
+            eNoStrategy,
+            eContiguous,
+            eNonContiguous,
+            eSparse
+        };
+
+        const char* const LocalMatrixStorageStrategyMap[] =
+        {
+            "Contiguous",
+            "Non-contiguous",
+            "Sparse"
+        };
+
+
         /// A global linear system.
-        class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
+        class GlobalLinSysIterativeStaticCond : virtual public GlobalLinSysIterative,
+                                                virtual public GlobalLinSysStaticCond
         {
         public:
+            typedef NekSparseDiagBlkMatrix<StorageSmvBsr<NekDouble> >
+                                            DNekSmvBsrDiagBlkMat;
+            typedef boost::shared_ptr<DNekSmvBsrDiagBlkMat>
+                                            DNekSmvBsrDiagBlkMatSharedPtr;
+
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                 const GlobalLinSysKey                &pLinSysKey,
@@ -84,70 +109,56 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pBinvD,
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap);
+                const boost::shared_ptr<AssemblyMap> &locToGloMap,
+                const PreconditionerSharedPtr         pPrecon);
 
             virtual ~GlobalLinSysIterativeStaticCond();
 
         protected:
-            virtual int v_GetNumBlocks();
             virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
+            virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
+                const GlobalLinSysKey                &mkey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const DNekScalBlkMatSharedPtr         pSchurCompl,
+                const DNekScalBlkMatSharedPtr         pBinvD,
+                const DNekScalBlkMatSharedPtr         pC,
+                const DNekScalBlkMatSharedPtr         pInvD,
+                const boost::shared_ptr<AssemblyMap> &locToGloMap);
+
+            virtual DNekScalBlkMatSharedPtr v_PreSolve(
+                int                     scLevel,
+                NekVector<NekDouble>   &F_GlobBnd);
+            virtual void v_BasisTransform(
+                Array<OneD, NekDouble>& pInOut,
+                int                     offset);
+            virtual void v_BasisInvTransform(
+                Array<OneD, NekDouble>& pInOut);
 
         private:
-            /// Schur complement for Direct Static Condensation.
-            GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;
-            /// Block Schur complement matrix.
-            DNekScalBlkMatSharedPtr                  m_schurCompl;
-            /// Block \f$ BD^{-1} \f$ matrix.
-            DNekScalBlkMatSharedPtr                  m_BinvD;
-            /// Block \f$ C \f$ matrix.
-            DNekScalBlkMatSharedPtr                  m_C;
-            /// Block \f$ D^{-1} \f$ matrix.
-            DNekScalBlkMatSharedPtr                  m_invD;
-	    // Block matrices for low energy
-            DNekScalBlkMatSharedPtr                  m_RBlk;
-            DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
-            /// Globally assembled Schur complement matrix at this level
-            GlobalMatrixSharedPtr                    m_globalSchurCompl;
-            /// Local to global map.
-            boost::shared_ptr<AssemblyMap>           m_locToGloMap;
-            /// Workspace array for matrix multiplication
-            Array<OneD, NekDouble>                   m_wsp;
-            /// Preconditioner object.
-            PreconditionerSharedPtr                  m_precon;
-            /// Wrapper for block matrices.
-            Array<OneD, DNekScalBlkMatSharedPtr>     m_schurComplBlock;
-
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            virtual void v_Solve(
-                const Array<OneD, const NekDouble> &in,
-                      Array<OneD,       NekDouble> &out,
-                const AssemblyMapSharedPtr         &locToGloMap,
-                const Array<OneD, const NekDouble>  &dirForcing
-                    = NullNekDouble1DArray);
+            /// Dense storage for block Schur complement matrix
+            std::vector<double>                      m_storage;
+            /// Vector of pointers to local matrix data
+            std::vector<const double*>               m_denseBlocks;
+            /// Ranks of local matrices
+            Array<OneD, unsigned int>                m_rows;
+            /// Scaling factors for local matrices
+            Array<OneD, NekDouble>                   m_scale;
+            /// Sparse representation of Schur complement matrix at this level
+            DNekSmvBsrDiagBlkMatSharedPtr            m_sparseSchurCompl;
+            /// Utility strings
+            static std::string                       storagedef;
+            static std::string                       storagelookupIds[];
 
             virtual void v_InitObject();
 
-            /// Initialise this object
-            void Initialise(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
-            /// Set up the storage for the Schur complement or the top level
-            /// of the multi-level Schur complement.
-            void SetupTopLevel(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
-            void SetupLowEnergyTopLevel(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
             /// Assemble the Schur complement matrix.
-            void AssembleSchurComplement(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+            void v_AssembleSchurComplement(
+                const boost::shared_ptr<AssemblyMap> locToGloMap);
 
-            ///
-            void ConstructNextLevelCondensedSystem(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+            /// Prepares local representation of Schur complement
+            /// stored as a sparse block-diagonal matrix.
+            void PrepareLocalSchurComplement();
 
             /// Perform a Shur-complement matrix multiply operation.
             virtual void v_DoMatrixMultiply(

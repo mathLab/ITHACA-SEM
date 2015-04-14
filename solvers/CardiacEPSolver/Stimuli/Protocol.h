@@ -37,6 +37,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
@@ -74,9 +75,9 @@ namespace Nektar
         }
         
         /// Print a summary of the cell model
-        void PrintSummary(std::ostream &out)
+        void GenerateSummary(SolverUtils::SummaryList& s)
         {
-            v_PrintSummary(out);
+            v_GenerateSummary(s);
         }
         
     protected:
@@ -85,7 +86,7 @@ namespace Nektar
 
         virtual NekDouble v_GetAmplitude(const NekDouble time) = 0;
         
-        virtual void v_PrintSummary(std::ostream &out) = 0;
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s) = 0;
         
     };
     

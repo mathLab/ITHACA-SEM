@@ -37,7 +37,7 @@
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -51,14 +51,15 @@ namespace Nektar
         {
         }
 
-        MeshGraph2D::MeshGraph2D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph2D::MeshGraph2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
             ReadGeometry(pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
         }
 
-        void MeshGraph2D::ReadGeometry(std::string &infilename)
+        void MeshGraph2D::ReadGeometry(const std::string &infilename)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
@@ -79,7 +80,6 @@ namespace Nektar
             MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
 
             /// Look for all geometry related data in GEOMETRY block.
@@ -112,14 +112,13 @@ namespace Nektar
             TiXmlElement *edge = field->FirstChildElement("E");
 
             /// Since all edge data is one big text block, we need to
-            /// accumulate all TEXT data and then parse it.  This
+            /// accumulate all TINYXML_TEXT data and then parse it.  This
             /// approach effectively skips all comments or other node
             /// types since we only care about the edge list.  We
             /// cannot handle missing edge numbers as we could with
             /// missing element numbers due to the text block format.
             std::string edgeStr;
             int i,indx;
-            int err = 0;
             int nextEdgeNumber = -1;
 
             // Curved Edges
@@ -139,7 +138,7 @@ namespace Nektar
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
-                if (child->Type() == TiXmlNode::TEXT)
+                if (child->Type() == TiXmlNode::TINYXML_TEXT)
                 {
                     edgeStr += child->ToText()->ValueStr();
                 }
@@ -160,7 +159,7 @@ namespace Nektar
                         // entry if we don't check here.
                         if (!edgeDataStrm.fail())
                         {
-                            VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
 
                             SegGeomSharedPtr edge;
 
@@ -237,7 +236,7 @@ namespace Nektar
                     std::string elementStr;
                     while(elementChild)
                     {
-                        if (elementChild->Type() == TiXmlNode::TEXT)
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
                             elementStr += elementChild->ToText()->ValueStr();
                         }
@@ -396,7 +395,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }
@@ -521,16 +520,7 @@ namespace Nektar
                     break;
 
                 case 'T':   // Triangle
-#if 1
                     {
-                        // Set up inverse maps of tris which takes global id
-                        // back to local storage in m_triGeoms;
-//                        map<int, int> tri_id_map;
-//                        for(int i = 0; i < m_triGeoms.size(); ++i)
-//                        {
-//                            tri_id_map[m_triGeoms[i]->GetGlobalID()] = i;
-//                        }
-
                         for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                         {
                             if (m_triGeoms.count(*seqIter) == 0 )
@@ -541,38 +531,17 @@ namespace Nektar
                             }
                             else
                             {
-                                composite->push_back(m_triGeoms[*seqIter]);
+                                if(CheckRange(*m_triGeoms[*seqIter]))
+                                {
+                                    composite->push_back(m_triGeoms[*seqIter]);
+                                }
                             }
                         }
                     }
-#else
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_triGeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr+std::string(" in Composite section")).c_str());
-                        }
-                        else
-                        {
-                            composite->push_back(m_triGeoms[*seqIter]);
-                        }
-                    }
-#endif
                     break;
 
                 case 'Q':   // Quad
-#if 1
                     {
-                        // Set up inverse maps of tris which takes global id
-                        // back to local storage in m_triGeoms;
-//                        map<int, int> quad_id_map;
-//                        for(int i = 0; i < m_quadGeoms.size(); ++i)
-//                        {
-//                            quad_id_map[m_quadGeoms[i]->GetGlobalID()] = i;
-//                        }
-
                         for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                         {
                             if (m_quadGeoms.count(*seqIter) == 0)
@@ -583,25 +552,13 @@ namespace Nektar
                             }
                             else
                             {
-                                composite->push_back(m_quadGeoms[*seqIter]);
+                                if(CheckRange(*m_quadGeoms[*seqIter]))
+                                {
+                                    composite->push_back(m_quadGeoms[*seqIter]);
+                                }
                             }
                         }
                     }
-#else
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_quadGeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr).c_str());
-                        }
-                        else
-                        {
-                            composite->push_back(m_quadGeoms[*seqIter]);
-                        }
-                    }
-#endif
                     break;
 
                 case 'V':   // Vertex
@@ -660,81 +617,58 @@ namespace Nektar
 
             GeometryVectorIter geomIter;
 
-            for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
+            for(int d = 0; d < m_domain.size(); ++d)
             {
-                for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
+                for (compIter = m_domain[d].begin(); compIter != m_domain[d].end(); ++compIter)
                 {
-                    triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
-                    quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
-
-                    if (triGeomShPtr || quadGeomShPtr)
+                    for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
                     {
-                        int edgeNum;
-                        if (triGeomShPtr)
+                        triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
+                        quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
+                        
+                        if (triGeomShPtr || quadGeomShPtr)
                         {
-                            if ((edgeNum = triGeomShPtr->WhichEdge(edge)) > -1)
+                            int edgeNum;
+                            if (triGeomShPtr)
                             {
-                                elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                                elementEdge->m_Element = triGeomShPtr;
-                                elementEdge->m_EdgeIndx = edgeNum;
-                                returnval->push_back(elementEdge);
+                                if ((edgeNum = triGeomShPtr->WhichEdge(edge)) > -1)
+                                {
+                                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                                    elementEdge->m_Element = triGeomShPtr;
+                                    elementEdge->m_EdgeIndx = edgeNum;
+                                    returnval->push_back(elementEdge);
+                                }
                             }
-                        }
-                        else if (quadGeomShPtr)
-                        {
-                            if ((edgeNum = quadGeomShPtr->WhichEdge(edge)) > -1)
+                            else if (quadGeomShPtr)
                             {
-                                elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                                elementEdge->m_Element = quadGeomShPtr;
-                                elementEdge->m_EdgeIndx = edgeNum;
-                                returnval->push_back(elementEdge);
+                                if ((edgeNum = quadGeomShPtr->WhichEdge(edge)) > -1)
+                                {
+                                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                                    elementEdge->m_Element = quadGeomShPtr;
+                                    elementEdge->m_EdgeIndx = edgeNum;
+                                    returnval->push_back(elementEdge);
+                                }
                             }
                         }
                     }
                 }
             }
 
-                //for(triIter = m_triGeoms.begin(); triIter != m_triGeoms.end(); ++triIter)
-        //{
-                //    int edgeNum;
-                //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
-        //    {
-                //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                //        elementEdge->m_Element = *triIter;
-                //        elementEdge->m_EdgeIndx = edgeNum;
-                //        returnval->push_back(elementEdge);
-                //    }
-                //}
-
-                //QuadGeomVector::iterator quadIter;
-
-                //for(quadIter = m_quadGeoms.begin(); quadIter != m_quadGeoms.end(); ++quadIter)
-        //{
-                //    int edgeNum;
-                //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
-        //    {
-                //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                //        elementEdge->m_Element = *quadIter;
-                //        elementEdge->m_EdgeIndx = edgeNum;
-                //        returnval->push_back(elementEdge);
-                //    }
-                //}
-
-                return returnval;
+            return returnval;
         }
 
-        LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge)
+        LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge, const std::string variable)
         {
             ElementEdgeVectorSharedPtr elements = GetElementsFromEdge(edge);
             // Perhaps, a check should be done here to ensure that
             // in case elements->size!=1, all elements to which
             // the edge belongs have the same type and order of
             // expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element, variable);
 
             int edge_id = (*elements)[0]->m_EdgeIndx;
 
-            if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
+            if((*elements)[0]->m_Element->GetShapeType() == LibUtilities::eTriangle)
             {
                 edge_id = (edge_id)? 1:0;
             }
@@ -746,7 +680,7 @@ namespace Nektar
             int nummodes  = expansion->m_basisKeyVector[edge_id].GetNumModes();
             int numpoints = expansion->m_basisKeyVector[edge_id].GetNumPoints();
 
-            if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
+            if((*elements)[0]->m_Element->GetShapeType() == LibUtilities::eTriangle)
             {
                 // Use edge 0 to define basis of order relevant to edge
                 switch(expansion->m_basisKeyVector[edge_id].GetBasisType())
@@ -757,7 +691,7 @@ namespace Nektar
                         {
                         case LibUtilities::eGaussLobattoLegendre:
                             {
-                                const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
@@ -769,7 +703,7 @@ namespace Nektar
                             // here since the ASSERT will stop
                             // execution.  Just return something
                             // to prevent warnings messages.
-                            const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }
@@ -809,6 +743,12 @@ namespace Nektar
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
+                        case LibUtilities::eGaussLobattoLegendre:
+                            {
+                                const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            }
+                            break;
 
                         default:
                             ASSERTL0(false,"Unexpected points distribution");
@@ -839,7 +779,7 @@ namespace Nektar
                             // since the ASSERT will stop execution.
                             // Just return something to prevent
                             // warnings messages.
-                            const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }
@@ -861,6 +801,9 @@ namespace Nektar
                 const LibUtilities::PointsKey pkey(numpoints,expansion->m_basisKeyVector[edge_id].GetPointsType());
                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
             }
+            
+            ASSERTL0(false, "Unable to determine edge points type.");
+            return LibUtilities::NullBasisKey;
         }
     }; //end of namespace
 }; //end of namespace

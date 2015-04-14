@@ -1119,17 +1119,17 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> FinTime        = 0          </P>
-            <P> TimeStep       = 0          </P>
-            <P> NumSteps       = 10         </P>
-            <P> IO_CheckSteps  = 1000       </P>
-            <P> IO_InfoSteps   = 100        </P>
-            <P> Gamma          = 1.4        </P>
-            <P> rho0           = 1.225      </P>
-            <P> rhou0          = 0.1225     </P>
-            <P> rhov0          = 0.0        </P>
-            <P> E0             = 0.149875   </P>
-            <P> CFL            = 0.02       </P>
+            <P> FinTime         = 0         </P>
+            <P> TimeStep        = 0         </P>
+            <P> NumSteps        = 10        </P>
+            <P> IO_CheckSteps   = 1000      </P>
+            <P> IO_InfoSteps    = 100       </P>
+            <P> Gamma           = 1.4       </P>
+            <P> pInf            = 101325    </P>
+            <P> rhoInf          = 1.225     </P>
+            <P> uInf            = 0.1       </P>
+            <P> vInf            = 0.0       </P>
+            <P> CFL             = 0.02      </P>
         </PARAMETERS>
 
         <SOLVERINFO>
@@ -1137,7 +1137,7 @@
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-            <I PROPERTY="UpwindType"            VALUE="Exact"               />
+            <I PROPERTY="UpwindType"            VALUE="ExactToro"               />
             <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"    />
         </SOLVERINFO>
 
@@ -1161,12 +1161,14 @@
             </REGION>
         </BOUNDARYCONDITIONS>
 
-        <FUNCTION NAME="InitialConditions">
+        <!-- Initial conditions not necessary
+         since they are imposed analitically -->
+        <!--FUNCTION NAME="InitialConditions">
             <E VAR="rho"    VALUE="1"/>
             <E VAR="rhou"   VALUE="1"/>
             <E VAR="rhov"   VALUE="1"/>
             <E VAR="E"      VALUE="1"/>
-        </FUNCTION>
+        </FUNCTION-->
 
     </CONDITIONS>
 

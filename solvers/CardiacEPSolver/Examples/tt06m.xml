@@ -512,27 +512,18 @@
             <P> IO_CheckSteps  = 1/TimeStep      </P>
             <P> IO_InfoSteps   = 1              </P>
             <P> IO_HistorySteps = 0.05/TimeStep </P>
-            <P> StimulusDuration = 2.0 </P> <!-- ms -->
-            <P> StimulusStrength = 3 </P>
-            <P> ix = 1.0 </P>
-            <P> iy = 0.5 </P>
-            <P> iz = 0.0 </P>
-            <P> ir = 0.05 </P>
-            <P> is = 1 </P>
-            <P> C = StimulusStrength </P>
-            <P> D = StimulusDuration/4.0 </P>
             <P> IterativeSolverTolerance = 1e-05 </P>
-            <P> Chi = 28 </P>   <!-- larger: wavefront moves slower -->
-            <P> Cm = 0.125 </P> <!-- smaller: higher peak mag. of act. -->
+            <P> Chi = 28 </P>
+            <P> Cm = 0.125 </P>
         </PARAMETERS>
         
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="Monodomain" />
-            <I PROPERTY="CellModel" VALUE="TenTusscher06M" />
+            <I PROPERTY="CellModel" VALUE="TenTusscher06" />
+            <I PROPERTY="CellModelVariant" VALUE="Mid" />
             <I PROPERTY="Projection" VALUE="Continuous"/>
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3"/>
-            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"/>
         </SOLVERINFO>
         
         <VARIABLES>
@@ -553,35 +544,35 @@
             <E VAR="u" VALUE="-85.23" />
         </FUNCTION>
 
-        <FUNCTION NAME="d00">
+        <FUNCTION NAME="IsotropicConductivity">
             <E VAR="intensity" VALUE="0.13341" />
-        </FUNCTION>
-
-        <FUNCTION NAME="d11">
-            <E VAR="intensity" VALUE="0.13341" />
-        </FUNCTION>
-
-        <FUNCTION NAME="d22">
-            <E VAR="intensity" VALUE="0.13341" />
-        </FUNCTION>
-
-        <EXPRESSIONS>
-            <E NAME="P" VALUE="1.0/(1.0 + exp( 32*(x-1)))" />
-            <E NAME="Q" VALUE="(-tanh((is*x-ix+ir)*(is*x-ix-ir)+(is*y-iy+ir)*   (is*y-iy-ir)+(is*z-iz+ir)*(is*z-iz-ir))/2.0+0.5)" />
-            <E NAME="R" VALUE="exp(-4*(t-D)*(t-D))" />
-        </EXPRESSIONS>
-
-        <FUNCTION NAME="Stimulus">
-            <E VAR="u" VALUE="C*P" />
-            <!--<E VAR="u" VALUE="(-tanh((is*x-ix+ir)*(is*x-ix-ir)+(is*y-iy+ir)*
-                (is* y-iy-ir)+(is*z-iz+ir)*(is*z-iz-ir))/2.0+0.5)*100-81" />-->
-            <!--<E VAR="u" VALUE="100.0/(1.0 + exp( 32*(x-2.0)))" />-->
         </FUNCTION>
     </CONDITIONS>
 
+    <STIMULI>
+        <STIMULUS ID="0" TYPE = "StimulusRect">
+            <p_x1> 0.3</p_x1>
+            <p_y1> 0.3</p_y1>
+            <p_z1> 0.0</p_z1>
+            <p_x2> 0.7</p_x2>
+            <p_y2> 0.7</p_y2>
+            <p_z2> 0.0</p_z2>
+            <p_is> 1.0</p_is>
+            <p_strength> 300.0 </p_strength>
+            
+            <PROTOCOL TYPE = "ProtocolS1S2">
+                <START> 2.0  </START>
+                <DURATION>  2.0 </DURATION>
+                <S1CYCLELENGTH> 300.0 </S1CYCLELENGTH>
+                <NUM_S1> 2.0 </NUM_S1>
+                <S2CYCLELENGTH>100.0 </S2CYCLELENGTH>
+            </PROTOCOL>
+        </STIMULUS>
+    </STIMULI>
+
     <FILTERS>
         <FILTER TYPE="HistoryPoints">
-            <PARAM NAME="OutputFile">tt06m.his</PARAM>
+            <PARAM NAME="OutputFile">tt06endo.his</PARAM>
             <PARAM NAME="OutputFrequency">10</PARAM>
             <PARAM NAME="Points">
                 1 0.5 0
@@ -596,5 +587,6 @@
             </PARAM>
         </FILTER>
     </FILTERS>
+
 
 </NEKTAR>

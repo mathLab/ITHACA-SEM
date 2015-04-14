@@ -5,7 +5,7 @@
 #include <vector>
 #include <list>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 using namespace std;
 
 
@@ -241,7 +241,6 @@ void WriteToXMLFile(const char* outfile, const vector<Vertex> & nodes, const vec
 
     list<int>::iterator it;
     list<int> compList;
-    int id = 0;
 
     stringstream st;
     st << " T[0-" << twoDElements.size()-1 << "]";

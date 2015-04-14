@@ -69,8 +69,8 @@ namespace Nektar
          * @param   key         Existing key to duplicate.
          */
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
-            m_solnType(key.m_solnType),
-            GlobalMatrixKey(key)
+            GlobalMatrixKey(key),
+            m_solnType(key.m_solnType)
         {
         }
 
@@ -117,7 +117,7 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
             os << "MatrixType: " << StdRegions::MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: "
-                            << StdRegions::ExpansionTypeMap[rhs.GetExpansionType()]
+               << LibUtilities::ShapeTypeMap[rhs.GetShapeType()]
                             << std::endl;
             os << "Solution Type: " 
                << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;

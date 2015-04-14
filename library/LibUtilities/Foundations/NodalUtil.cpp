@@ -154,7 +154,7 @@ namespace Nektar
         }
 
         // Formatted version of matrix ostream output
-        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision, double expSigFigs )
+        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision, NekDouble expSigFigs )
         {
             stringstream s;
             s << setprecision(precision);
@@ -164,7 +164,7 @@ namespace Nektar
             {
                 for(int j=0; j<N; ++j)
                 {
-                    double a = MakeRound(expSigFigs * A(i, j)) / expSigFigs;
+                    NekDouble a = MakeRound(expSigFigs * A(i, j)) / expSigFigs;
                     s << setw(7) << right << a;
                     if( j < N-1 )
                     {
@@ -180,14 +180,14 @@ namespace Nektar
         }
 
         // Formatted version of vector ostream output
-        std::string VectorToString( const NekVector<NekDouble> & v, int precision, double expSigFigs )
+        std::string VectorToString( const NekVector<NekDouble> & v, int precision, NekDouble expSigFigs )
         {
             stringstream s;
             s << setprecision(precision) << "[ ";
             int N = int(v.GetRows());
             for(int j=0; j<N; ++j )
             {
-                double x = MakeRound(expSigFigs * v(j)) / expSigFigs;
+                NekDouble x = MakeRound(expSigFigs * v(j)) / expSigFigs;
                 s << setw(7) << right << x;
                 if( j < N-1 )
                 {
@@ -221,7 +221,7 @@ namespace Nektar
         // Get Tetrahedral number, where Tn = (d+1)(d+2)(d+3)/6
         int GetTetDegree(int nBasisFunc)
         {
-            double eq = pow( 81.0 * nBasisFunc + 3.0 * sqrt(-3.0 + 729.0 * nBasisFunc * nBasisFunc), 1.0/3.0);
+            NekDouble eq = pow( 81.0 * nBasisFunc + 3.0 * sqrt(-3.0 + 729.0 * nBasisFunc * nBasisFunc), 1.0/3.0);
             int degree = int(MakeRound(eq/3.0 + 1.0/eq - 1.0)) - 1;
 
             ASSERTL1( GetTetNumPoints(degree) == nBasisFunc, "The number of points defines an expansion of fractional degree, which is not supported." );
@@ -422,7 +422,7 @@ namespace Nektar
             // Initialize the horizontal coordinate of the Tetrahedral 
             for(int el=0; el<size; ++el)
             {
-                if( z[el] < -y[el] - numeric_limits<double>::epsilon() )
+                if( z[el] < -y[el] - numeric_limits<NekDouble>::epsilon() )
                 {
                     eta_1[el] = 2.0*(1.0 + x[el])/(-y[el]-z[el]) - 1.0;
                 }
@@ -435,7 +435,7 @@ namespace Nektar
              // Initialize the  coordinate of the Tetrahedral 
             for(int el=0; el<size; ++el)
             {
-                if( z[el] < 1.0 - numeric_limits<double>::epsilon())
+                if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
                 {
                     eta_2[el] = 2.0*(1.0 + y[el]) / (1.0 - z[el]) - 1.0;
                 }
@@ -719,7 +719,7 @@ namespace Nektar
                 // Initialize the horizontal coordinate of the Tetrahedral (beta in Barycentric coordinate)
                 for(int el=0; el<size; ++el)
                 {
-                    if( y[el] < -z[el] - numeric_limits<double>::epsilon())
+                    if( y[el] < -z[el] - numeric_limits<NekDouble>::epsilon())
                     {
                         eta_1[el] = 2.0*(1.0 + x[el])/(-y[el]-z[el]) - 1.0;
                     } else
@@ -731,7 +731,7 @@ namespace Nektar
                     // Initialize the  coordinate of the Tetrahedral (gamma in Barycentric coordinate)
                 for(int el=0; el<size; ++el)
                 {
-                    if( z[el] < 1.0 - numeric_limits<double>::epsilon())
+                    if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
                     {
                         eta_2[el] = 2.0*(1.0 + y[el]) / (1.0 - z[el]) - 1.0;
                     }
@@ -894,7 +894,7 @@ namespace Nektar
             // Initialize the collapsed horizontal coordinate of the Tetrahedral
             for(int el=0; el<size; ++el)
             {
-                if( y[el] < -z[el] - numeric_limits<double>::epsilon())
+                if( y[el] < -z[el] - numeric_limits<NekDouble>::epsilon())
                 {
                     eta_1[el]       = 2.0*(1.0 + x[el])/(-y[el]-z[el]) - 1.0;
                     eta_1_dy[el]    = 2.0*(1.0 + x[el])/((y[el]+z[el])*(y[el]+z[el]));
@@ -909,7 +909,7 @@ namespace Nektar
             // Initialize the collapsed depth coordinate of the Tetrahedral
             for(int el=0; el<size; ++el)
             {
-                if( z[el] < 1.0 - numeric_limits<double>::epsilon())
+                if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
                 {
                     eta_2[el]       = 2.0*(1.0 + y[el]) / (1.0 - z[el]) - 1.0;
                     eta_2_dy[el]    = 2.0/(1.0 - z[el]);
@@ -974,7 +974,7 @@ namespace Nektar
             // Fix singularity at z=1
             for(int k=0; k<size; ++k)
             {
-                if( z[k] >= 1.0 - numeric_limits<double>::epsilon() )
+                if( z[k] >= 1.0 - numeric_limits<NekDouble>::epsilon() )
                 {
                     if( p + q > 0 )
                     {
@@ -1071,7 +1071,7 @@ namespace Nektar
              // Initialize the collapsed horizontal coordinate of the Tetrahedral 
             for(int el=0; el<size; ++el)
             {
-                if( y[el] < -z[el] - numeric_limits<double>::epsilon())
+                if( y[el] < -z[el] - numeric_limits<NekDouble>::epsilon())
                 {
                     eta_1[el]       = 2.0*(1.0 + x[el]) / (-y[el]-z[el]) - 1.0;
                     eta_1_dz[el]    = 2.0*(1.0 + x[el]) / ((y[el]+z[el])*(y[el]+z[el]));
@@ -1086,7 +1086,7 @@ namespace Nektar
             // Initialize the collapsed depth coordinate of the Tetrahedral
             for(int el=0; el<size; ++el)
             {
-                if( z[el] < 1.0 - numeric_limits<double>::epsilon())
+                if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
                 {
                     eta_2[el]       = 2.0*(1.0 + y[el]) / (1.0 - z[el])  -  1.0;
                     eta_2_dz[el]    = 2.0*(1.0 + y[el]) / ((1.0 - z[el])*(1.0 - z[el]));

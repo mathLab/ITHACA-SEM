@@ -45,7 +45,7 @@ namespace Nektar
         TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
         {
             TimeIntegrationSchemeManagerT& m = Loki::SingletonHolder<TimeIntegrationSchemeManagerT>::Instance();
-            static bool reg = m.RegisterGlobalCreator(TimeIntegrationScheme::Create);
+            m.RegisterGlobalCreator(TimeIntegrationScheme::Create);
             return m;
         }
         
@@ -142,7 +142,8 @@ namespace Nektar
         
         TimeIntegrationSchemeSharedPtr TimeIntegrationScheme::Create(const TimeIntegrationSchemeKey &key)
         {
-            TimeIntegrationSchemeSharedPtr returnval(MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
+            TimeIntegrationSchemeSharedPtr returnval(
+                MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
             return returnval;
         }
 
@@ -1045,9 +1046,8 @@ namespace Nektar
             int i;
             int j;
             int m;
-            bool returnval = false;
-            int  IMEXdim   = A.num_elements();
-            int  dim       = A[0].GetRows();
+            int  IMEXdim = A.num_elements();
+            int  dim     = A[0].GetRows();
 
             Array<OneD, TimeIntegrationSchemeType> vertype(IMEXdim,eExplicit);
 
@@ -1174,14 +1174,13 @@ namespace Nektar
                 // current scheme
                 int n;
                 DoubleArray  y_n;
-                NekDouble    t_n;
+                NekDouble    t_n = 0;
                 DoubleArray  dtFy_n;
                 unsigned int nCurSchemeVals  = m_numMultiStepValues; // number of required values of the current scheme
                 unsigned int nCurSchemeDers  = m_numMultiStepDerivs; // number of required derivs of the current scheme
                 unsigned int nCurSchemeSteps = m_numsteps;  // number of steps in the current scheme
                 unsigned int nMasterSchemeVals  = solvector->GetNvalues(); // number of values of the master scheme
                 unsigned int nMasterSchemeDers  = solvector->GetNderivs(); // number of derivs of the master scheme
-                unsigned int nMasterSchemeSteps = solvector->GetNsteps();  // number of steps in the master scheme
                 // The arrays below contains information to which
                 // time-level the values and derivatives of the
                 // schemes belong
@@ -1370,7 +1369,6 @@ namespace Nektar
             
             unsigned int i,j,k;
             TimeIntegrationSchemeType type = GetIntegrationSchemeType();
-            NekDouble T;
 
             // Check if storage has already been initialised.
             // If so, we just zero the temporary storage.
@@ -1569,7 +1567,7 @@ namespace Nektar
                 {
                     // ensure solution is in correct space
                     op.DoProjection(m_Y,m_Y,m_T); 
-                    op.DoOdeRhs(m_Y, m_F[i], m_T);                   
+                    op.DoOdeRhs(m_Y, m_F[i], m_T);        
                 }
             }
             

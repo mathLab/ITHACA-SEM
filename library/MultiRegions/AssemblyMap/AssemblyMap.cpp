@@ -78,34 +78,85 @@ namespace Nektar
             m_session(),
             m_comm(),
             m_hash(0),
-            m_solnType(eNoSolnType),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
+            m_solnType(eNoSolnType),
             m_bndSystemBandWidth(0),
+            m_successiveRHS(0),
             m_gsh(0),
             m_bndGsh(0)
         {
         }
 
-        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession):
+        AssemblyMap::AssemblyMap(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
-            m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
-            m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
             m_bndSystemBandWidth(0),
+            m_successiveRHS(0),
             m_gsh(0),
             m_bndGsh(0)
         {
+            // Default value from Solver Info
+            m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>(
+                                                            "GlobalSysSoln");
+            m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
+                                                            "Preconditioner");
+
+            // Override values with data from GlobalSysSolnInfo section 
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
+            {
+                std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "GlobalSysSoln");
+                m_solnType = pSession->GetValueAsEnum<GlobalSysSolnType>(
+                                                    "GlobalSysSoln", sysSoln);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "Preconditioner"))
+            {
+                std::string precon = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "Preconditioner");
+                m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
+                                                    "Preconditioner", precon);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "IterativeSolverTolerance"))
+            {
+                m_iterativeTolerance = boost::lexical_cast<NekDouble>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "IterativeSolverTolerance").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("IterativeSolverTolerance",
+                                        m_iterativeTolerance,
+                                        NekConstants::kNekIterativeTol);
+            }
+
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
+            {
+                m_successiveRHS = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "SuccessiveRHS").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("SuccessiveRHS",
+                                        m_successiveRHS,0);
+            }
+
         }
-
-
+        
         /** 
          * Create a new level of mapping using the information in
          * multiLevelGraph and performing the following steps:
@@ -117,11 +168,11 @@ namespace Nektar
             m_comm(oldLevelMap->GetComm()),
             m_hash(0),
             m_solnType(oldLevelMap->m_solnType),
-            m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
-            m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
+            m_preconType(oldLevelMap->m_preconType),
+            m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
+            m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
-            m_preconType(oldLevelMap->m_preconType),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
         {
             int i;
@@ -132,7 +183,6 @@ namespace Nektar
             // -- Extract information from the input argument
             int numGlobalBndCoeffsOld    = oldLevelMap->GetNumGlobalBndCoeffs();
             int numGlobalDirBndCoeffsOld = oldLevelMap->GetNumGlobalDirBndCoeffs();
-            int numGlobalHomBndCoeffsOld = numGlobalBndCoeffsOld - numGlobalDirBndCoeffsOld;
             int numLocalBndCoeffsOld     = oldLevelMap->GetNumLocalBndCoeffs();
             int numLocalDirBndCoeffsOld  = oldLevelMap->GetNumLocalDirBndCoeffs();
             bool signChangeOld           = oldLevelMap->GetSignChange();
@@ -257,7 +307,8 @@ namespace Nektar
             m_solnType              = solnTypeOld;
             ASSERTL1(m_solnType==eDirectMultiLevelStaticCond
                     ||m_solnType==eIterativeMultiLevelStaticCond
-                    ||m_solnType==eXxtMultiLevelStaticCond,
+                    ||m_solnType==eXxtMultiLevelStaticCond
+                    ||m_solnType==ePETScMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
@@ -275,6 +326,11 @@ namespace Nektar
             }
             
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
+
+            m_globalToUniversalBndMap = Array<OneD, int>(
+                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMap());
+            m_globalToUniversalBndMapUnique = Array<OneD, int>(
+                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMapUnique());
 
             // Set up an offset array that denotes the offset of the local
             // boundary degrees of freedom of the next level
@@ -468,63 +524,63 @@ namespace Nektar
             return result;
         }
 
-        const void AssemblyMap::v_LocalToGlobal(
+        void AssemblyMap::v_LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
                       Array<OneD,       NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMap::v_LocalToGlobal(
+        void AssemblyMap::v_LocalToGlobal(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMap::v_GlobalToLocal(
+        void AssemblyMap::v_GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMap::v_GlobalToLocal(
+        void AssemblyMap::v_GlobalToLocal(
                 const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMap::v_Assemble(
+        void AssemblyMap::v_Assemble(
                 const Array<OneD, const NekDouble> &loc,
                       Array<OneD,       NekDouble> &global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMap::v_Assemble(
+        void AssemblyMap::v_Assemble(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMap::v_UniversalAssemble(
+        void AssemblyMap::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
 
-        const void AssemblyMap::v_UniversalAssemble(
+        void AssemblyMap::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             // Do nothing here since multi-level static condensation uses a
             // AssemblyMap and thus will call this routine in serial.
         }
 
-        const void AssemblyMap::v_UniversalAssemble(
+        void AssemblyMap::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal,
                       int                         offset) const
         {
@@ -532,7 +588,7 @@ namespace Nektar
             // AssemblyMap and thus will call this routine in serial.
         }
 
-        const int AssemblyMap::v_GetFullSystemBandWidth() const
+        int AssemblyMap::v_GetFullSystemBandWidth() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
@@ -556,7 +612,44 @@ namespace Nektar
             return 0;
         }
 
+        int AssemblyMap::v_GetNumDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
 
+        int AssemblyMap::v_GetNumDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
+        }
+        
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
+            const ExpList &locexp, GlobalSysSolnType solnType)
+        {
+            ASSERTL0(false, "Not defined for this sub class");
+            static boost::shared_ptr<AssemblyMap> result;
+            return result;
+        }
 
         LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
@@ -608,68 +701,68 @@ namespace Nektar
             return v_GetLocalToGlobalSign();
         }
 
-        const void AssemblyMap::LocalToGlobal(
+        void AssemblyMap::LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
                       Array<OneD,       NekDouble>& global) const
         {
             v_LocalToGlobal(loc,global);
         }
 
-        const void AssemblyMap::LocalToGlobal(
+        void AssemblyMap::LocalToGlobal(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             v_LocalToGlobal(loc,global);
         }
 
-        const void AssemblyMap::GlobalToLocal(
+        void AssemblyMap::GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
         {
             v_GlobalToLocal(global,loc);
         }
 
-        const void AssemblyMap::GlobalToLocal(
+        void AssemblyMap::GlobalToLocal(
                 const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
             v_GlobalToLocal(global,loc);
         }
 
-        const void AssemblyMap::Assemble(
+        void AssemblyMap::Assemble(
                 const Array<OneD, const NekDouble> &loc,
                       Array<OneD,       NekDouble> &global) const
         {
             v_Assemble(loc,global);
         }
 
-        const void AssemblyMap::Assemble(
+        void AssemblyMap::Assemble(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             v_Assemble(loc,global);
         }
 
-        const void AssemblyMap::UniversalAssemble(
+        void AssemblyMap::UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             v_UniversalAssemble(pGlobal);
         }
 
-        const void AssemblyMap::UniversalAssemble(
+        void AssemblyMap::UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             v_UniversalAssemble(pGlobal);
         }
 
-        const void AssemblyMap::UniversalAssemble(
+        void AssemblyMap::UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal,
                       int                         offset) const
         {
             v_UniversalAssemble(pGlobal, offset);
         }
 
-        const int AssemblyMap::GetFullSystemBandWidth() const
+        int AssemblyMap::GetFullSystemBandWidth() const
         {
             return v_GetFullSystemBandWidth();
         }
@@ -689,11 +782,40 @@ namespace Nektar
             return v_GetNumNonDirFaceModes();
         }
 
+        int AssemblyMap::GetNumDirEdges() const
+        {
+            return v_GetNumDirEdges();
+        }
+
+        int AssemblyMap::GetNumDirFaces() const
+        {
+            return v_GetNumDirFaces();
+        }
+
+        int AssemblyMap::GetNumNonDirEdges() const
+        {
+            return v_GetNumNonDirEdges();
+        }
+
+        int AssemblyMap::GetNumNonDirFaces() const
+        {
+            return v_GetNumNonDirFaces();
+        }
+
+        const Array<OneD, const int>& AssemblyMap::GetExtraDirEdges()
+        {
+            return v_GetExtraDirEdges();
+        }
+
+        boost::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
+        {
+            return v_LinearSpaceMap(locexp, solnType);
+        }
+
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
         }
-
 
         const Array<OneD,const int>&
                     AssemblyMap::GetLocalToGlobalBndMap(void)
@@ -746,9 +868,16 @@ namespace Nektar
         int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
                     const int i)
         {
+            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
+                     "Index out of range.");
             return m_bndCondTraceToGlobalTraceMap[i];
         }
 
+        const Array<OneD, const int> &AssemblyMap
+            ::GetBndCondTraceToGlobalTraceMap()
+        {
+            return m_bndCondTraceToGlobalTraceMap;
+        }
 
         NekDouble AssemblyMap::GetBndCondCoeffsToGlobalCoeffsSign(const int i)
         {
@@ -889,8 +1018,36 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
+
+            UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
+        
+        void AssemblyMap::LocalBndToGlobal(
+                    const NekVector<NekDouble>& loc,
+                    NekVector<NekDouble>& global) const
+        {
+            LocalBndToGlobal(loc.GetPtr(), global.GetPtr());
+        }
+
+
+        void AssemblyMap::LocalBndToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD,NekDouble>& global)  const
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+        }
+
 
         void AssemblyMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,
@@ -950,7 +1107,7 @@ namespace Nektar
             UniversalAssembleBnd(global);
         }
 
-        const void AssemblyMap::UniversalAssembleBnd(
+        void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
@@ -958,13 +1115,13 @@ namespace Nektar
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
         }
 
-        const void AssemblyMap::UniversalAssembleBnd(
+        void AssemblyMap::UniversalAssembleBnd(
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssembleBnd(pGlobal.GetPtr());
         }
 
-        const void AssemblyMap::UniversalAssembleBnd(
+        void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal,
                       int                         offset) const
         {
@@ -1021,16 +1178,24 @@ namespace Nektar
         }
 
 
-        const GlobalSysSolnType
-                    AssemblyMap::GetGlobalSysSolnType() const
+        GlobalSysSolnType AssemblyMap::GetGlobalSysSolnType() const
         {
             return m_solnType;
         }
 
-        const PreconditionerType
-                    AssemblyMap::GetPreconType() const
+        PreconditionerType  AssemblyMap::GetPreconType() const
         {
             return m_preconType;
+        }
+
+        NekDouble AssemblyMap::GetIterativeTolerance() const
+        {
+            return m_iterativeTolerance;
+        }
+
+        int AssemblyMap::GetSuccessiveRHS() const
+        {
+            return m_successiveRHS;
         }
 
         void AssemblyMap::GlobalToLocalBndWithoutSign(
@@ -1041,6 +1206,157 @@ namespace Nektar
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
+        }
+
+        void AssemblyMap::PrintStats(
+            std::ostream &out, std::string variable) const
+        {
+            LibUtilities::CommSharedPtr vRowComm
+                = m_session->GetComm()->GetRowComm();
+            bool isRoot = vRowComm->GetRank() == 0;
+            int n = vRowComm->GetSize();
+            int i;
+
+            // Determine number of global degrees of freedom.
+            int globBndCnt = 0, globDirCnt = 0;
+
+            for (i = 0; i < m_numGlobalBndCoeffs; ++i)
+            {
+                if (m_globalToUniversalBndMapUnique[i] > 0)
+                {
+                    globBndCnt++;
+
+                    if (i < m_numGlobalDirBndCoeffs)
+                    {
+                        globDirCnt++;
+                    }
+                }
+            }
+
+            int globCnt = m_numGlobalCoeffs - m_numGlobalBndCoeffs + globBndCnt;
+
+            // Calculate maximum valency
+            Array<OneD, NekDouble> tmpLoc (m_numLocalBndCoeffs,  1.0);
+            Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
+
+            Vmath::Assmb(m_numLocalBndCoeffs, tmpLoc.get(), m_localToGlobalBndMap.get(), tmpGlob.get());
+            UniversalAssembleBnd(tmpGlob);
+
+            int totGlobDof     = globCnt;
+            int totGlobBndDof  = globBndCnt;
+            int totGlobDirDof  = globDirCnt;
+            int totLocalDof    = m_numLocalCoeffs;
+            int totLocalBndDof = m_numLocalBndCoeffs;
+            int totLocalDirDof = m_numLocalDirBndCoeffs;
+
+            int meanValence = 0;
+            int maxValence = 0;
+            int minValence = 10000000;
+            for (int i = 0; i < m_numGlobalBndCoeffs; ++i)
+            {
+                if (!m_globalToUniversalBndMapUnique[i])
+                {
+                    continue;
+                }
+
+                if (tmpGlob[i] > maxValence)
+                {
+                    maxValence = tmpGlob[i];
+                }
+                if (tmpGlob[i] < minValence)
+                {
+                    minValence = tmpGlob[i];
+                }
+                meanValence += tmpGlob[i];
+            }
+
+            vRowComm->AllReduce(maxValence,     LibUtilities::ReduceMax);
+            vRowComm->AllReduce(minValence,     LibUtilities::ReduceMin);
+            vRowComm->AllReduce(meanValence,    LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totGlobDof,     LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totGlobBndDof,  LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totGlobDirDof,  LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totLocalDof,    LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totLocalBndDof, LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totLocalDirDof, LibUtilities::ReduceSum);
+
+            meanValence /= totGlobBndDof;
+
+            if (isRoot)
+            {
+                out << "Assembly map statistics for field " << variable << ":"
+                    << endl;
+                out << "  - Number of local/global dof             : "
+                    << totLocalDof << " " << totGlobDof << endl;
+                out << "  - Number of local/global boundary dof    : "
+                    << totLocalBndDof << " " << totGlobBndDof << endl;
+                out << "  - Number of local/global Dirichlet dof   : "
+                    << totLocalDirDof << " " << totGlobDirDof << endl;
+                out << "  - dof valency (min/max/mean)             : "
+                    << minValence << " " << maxValence << " " << meanValence
+                    << endl;
+
+                if (n > 1)
+                {
+                    NekDouble mean = m_numLocalCoeffs, mean2 = mean * mean;
+                    NekDouble minval = mean, maxval = mean;
+                    Array<OneD, NekDouble> tmp(1);
+
+                    for (i = 1; i < n; ++i)
+                    {
+                        vRowComm->Recv(i, tmp);
+                        mean     += tmp[0];
+                        mean2    += tmp[0]*tmp[0];
+
+                        if (tmp[0] > maxval)
+                        {
+                            maxval = tmp[0];
+                        }
+                        if (tmp[0] < minval)
+                        {
+                            minval = tmp[0];
+                        }
+                    }
+
+                    out << "  - Local dof dist. (min/max/mean/dev)     : "
+                        << minval << " " << maxval << " " << (mean / n) << " "
+                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+
+                    vRowComm->Block();
+
+                    mean = minval = maxval = m_numLocalBndCoeffs;
+                    mean2 = mean * mean;
+
+                    for (i = 1; i < n; ++i)
+                    {
+                        vRowComm->Recv(i, tmp);
+                        mean     += tmp[0];
+                        mean2    += tmp[0]*tmp[0];
+
+                        if (tmp[0] > maxval)
+                        {
+                            maxval = tmp[0];
+                        }
+                        if (tmp[0] < minval)
+                        {
+                            minval = tmp[0];
+                        }
+                    }
+
+                    out << "  - Local bnd dof dist. (min/max/mean/dev) : "
+                        << minval << " " << maxval << " " << (mean / n) << " "
+                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+                }
+            }
+            else
+            {
+                Array<OneD, NekDouble> tmp(1);
+                tmp[0] = m_numLocalCoeffs;
+                vRowComm->Send(0, tmp);
+                vRowComm->Block();
+                tmp[0] = m_numLocalBndCoeffs;
+                vRowComm->Send(0, tmp);
+            }
         }
     } // namespace
 } // namespace

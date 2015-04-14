@@ -89,12 +89,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous1D();
 
             MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, 
-														 Array<OneD, NekDouble> &outarray, 
-														 bool IsForwards, 
+                                                         Array<OneD, NekDouble> &outarray, 
+                                                         bool IsForwards, 
                                                          
                                  CoeffState coeffstate = eLocal,
-														 bool Shuff = true,
-														 bool UnShuff = true);
+                                                         bool Shuff = true,
+                                                         bool UnShuff = true);
 
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
@@ -108,7 +108,7 @@ namespace Nektar
                                             CoeffState coeffstate = eLocal,
                                             bool Shuff = true,
                                             bool UnShuff = true);
-			
+            
             inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                       const Array<OneD, NekDouble> &inarray2,
                                       Array<OneD, NekDouble> &outarray, 
@@ -118,12 +118,12 @@ namespace Nektar
             {
                 return m_homogeneousBasis;
             }
-			
+            
             MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD, NekDouble> &out_d0,
                                                 Array<OneD, NekDouble> &out_d1, 
                                                 Array<OneD, NekDouble> &out_d2);
-			
+            
             MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
                                                 const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD, NekDouble> &out_d);
@@ -134,7 +134,7 @@ namespace Nektar
             }
             
             LibUtilities::TranspositionSharedPtr      m_transposition;
-            
+            LibUtilities::CommSharedPtr               m_StripZcomm;
         protected:
             
             /// FFT variables
@@ -158,7 +158,25 @@ namespace Nektar
             
             DNekBlkMatSharedPtr GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate = eLocal) const;
 
+            
+            NekDouble GetSpecVanVisc(const int k)
+            {
+                NekDouble returnval = 0.0;
+
+                if(m_specVanVisc.num_elements())
+                {
+                    returnval = m_specVanVisc[k];
+                }
+                
+                return returnval; 
+            }
+            
             //  virtual functions
+            virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
+            {
+                m_specVanVisc = visc;
+            }
+
             virtual int v_GetNumElmts(void)
             {
                 return m_planes[0]->GetExpSize();
@@ -179,7 +197,7 @@ namespace Nektar
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     CoeffState coeffstate);
-			
+            
             virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
                                                Array<OneD,      NekDouble> &outarray);
             
@@ -189,27 +207,28 @@ namespace Nektar
             
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                                       Array<OneD, NekDouble> &outarray);
-			
+                        
+            virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
             
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
+            virtual void v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
             
-            virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
             
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
             
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
+            virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
-            
-            virtual void v_WriteTecplotHeader(std::ofstream &outfile,
-                                              std::string var = "v");
-            
-            virtual void v_WriteTecplotField(std::ofstream &outfile,
-                                             int expansion);
-            
-            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+            virtual void v_ExtractCoeffsToCoeffs(
+                                                 const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
+
+            virtual void v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                              std::string var);
-			
+
+            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
                                                CoeffState coeffstate = eLocal,
@@ -236,18 +255,25 @@ namespace Nektar
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d);
             
-            virtual Array<OneD, unsigned int> v_GetZIDs(void);
+            virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
+
+            virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             
             virtual ExpListSharedPtr &v_GetPlane(int n)
             {
                 return GetPlane(n);
             }
             
+            virtual NekDouble v_GetHomoLen(void);
+            
         private:
             
             //Padding operations variables
             bool m_dealiasing;
             int m_padsize;
+
+            /// Spectral vanishing Viscosity coefficient for stabilisation 
+            Array<OneD, NekDouble> m_specVanVisc;
         };
         
         inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
@@ -258,7 +284,7 @@ namespace Nektar
         {
             v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-	
+    
         inline void ExpListHomogeneous1D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
                                                               CoeffState coeffstate,

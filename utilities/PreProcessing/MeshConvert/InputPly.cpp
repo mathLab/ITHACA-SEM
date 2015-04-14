@@ -66,20 +66,32 @@ namespace Nektar
          */
         void InputPly::Process()
         {
+
             // Open the file stream.
             OpenStream();
-            
-            m->expDim = 0;
+           
+            ReadPly(m_mshFile);
+
+            m_mshFile.close();
+
+            ProcessVertices();
+            ProcessEdges();
+            ProcessFaces();
+            ProcessElements();
+            ProcessComposites();
+        }
+
+        void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
+        {
+            m_mesh->m_expDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
-            int nElements = 0;
-            int nBoundaryElements = 0;
             int nProperties = 0;
-            ElementType elType = eTriangle;
+            LibUtilities::ShapeType elType = LibUtilities::eTriangle;
             map<string, int> propMap;
 
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputPly: Start reading file..." << endl;
             }
@@ -126,15 +138,21 @@ namespace Nektar
                         double y = data[propMap["y"]];
                         double z = data[propMap["z"]];
                         
-                        if ((y * y) > 0.000001 && m->spaceDim != 3)
+                        if ((y * y) > 0.000001 && m_mesh->m_spaceDim != 3)
                         {
-                            m->spaceDim = 2;
+                            m_mesh->m_spaceDim = 2;
                         }
                         if ((z * z) > 0.000001)
                         {
-                            m->spaceDim = 3;
+                            m_mesh->m_spaceDim = 3;
                         }
-                        m->node.push_back(
+                        
+                        x *= scale;
+                        y *= scale;
+                        z *= scale;
+
+
+                        m_mesh->m_node.push_back(
                             boost::shared_ptr<Node>(new Node(i, x, y, z)));
                         
                         // Read vertex normals.
@@ -143,7 +161,7 @@ namespace Nektar
                             double nx = data[propMap["nx"]];
                             double ny = data[propMap["ny"]];
                             double nz = data[propMap["nz"]];
-                            m->vertexNormals[i] = Node(0, nx, ny, nz);
+                            m_mesh->m_vertexNormals[i] = Node(0, nx, ny, nz);
                         }
                     }
 
@@ -152,7 +170,7 @@ namespace Nektar
                     {
                         getline(mshFile, line);
                         stringstream st(line);
-                        int id = 0, num_tag = 0, num_nodes = 0;
+                        int id = 0;
 
                         // Create element tags
                         vector<int> tags;
@@ -165,7 +183,7 @@ namespace Nektar
                         {
                             int node = 0;
                             st >> node;
-                            nodeList.push_back(m->node[node]);
+                            nodeList.push_back(m_mesh->m_node[node]);
                         }
                         
                         // Create element
@@ -174,40 +192,15 @@ namespace Nektar
                             CreateInstance(elType,conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m->expDim) 
+                        if (E->GetDim() > m_mesh->m_expDim) 
                         {
-                            m->expDim = E->GetDim();
+                            m_mesh->m_expDim = E->GetDim();
                         }
-                        m->element[E->GetDim()].push_back(E);
+                        m_mesh->m_element[E->GetDim()].push_back(E);
                     }
-
-                    /*
-                    // Compute the number of full-dimensional elements and
-                    // boundary elements.
-                    for (int i = 0; i < m_element.size(); ++i) {
-                        if (m_element[i]->GetDim() == m_expDim) {
-                            nElements++;
-                        }
-                        if (m_element[i]->GetDim() == m_expDim - 1) {
-                            nBoundaryElements++;
-                        }
-                    }
-                    cout << "Expansion dimension is " << m_expDim << endl;
-                    cout << "Space dimension is " << m_spaceDim << endl;
-                    cout << "Read " << m_node.size() << " nodes" << endl;
-                    cout << "Read " << m_element.size() << " geometric entities" << endl;
-                    cout << "Read " << nElements << " " << m_expDim << "-D elements" << endl;
-                    cout << "Read " << nBoundaryElements << " boundary entities" << endl;
-                    */
                 }
             }
-            mshFile.close();
+    }
 
-            ProcessVertices();
-            ProcessEdges();
-            ProcessFaces();
-            ProcessElements();
-            ProcessComposites();
-        }
     }
 }

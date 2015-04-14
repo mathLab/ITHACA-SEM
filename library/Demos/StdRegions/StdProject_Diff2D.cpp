@@ -30,10 +30,11 @@ int main(int argc, char *argv[])
 
     int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
-    LibUtilities::BasisType     btype1,btype2;
-    LibUtilities::PointsType     NodalType;
-    StdRegions::ExpansionType     regionshape;
-    StdRegions::StdExpansion          *E;
+    LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
+    LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
+    LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
+    LibUtilities::ShapeType     regionshape;
+    StdRegions::StdExpansion          *E = NULL;
     Array<OneD, NekDouble>  sol,dx,dy,x,y;
 
     if(argc != 8)
@@ -43,8 +44,8 @@ int main(int argc, char *argv[])
 
         fprintf(stderr,"Where RegionShape is an integer value which "
                 "dictates the region shape:\n");
-        fprintf(stderr,"\t Triangle      = 2\n");
-        fprintf(stderr,"\t Quadrilateral = 3\n");
+        fprintf(stderr,"\t Triangle      = 3\n");
+        fprintf(stderr,"\t Quadrilateral = 4\n");
 
 
         fprintf(stderr,"Where type is an integer value which "
@@ -56,20 +57,21 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Modified_B = 5\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+        fprintf(stderr,"\t Gauss Lagrange = 9\n");
+        fprintf(stderr,"\t Legendre   = 10\n");
+        fprintf(stderr,"\t Chebyshev  = 11\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
 
         fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
 
         exit(1);
     }
 
-    regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
+    regionshape = (LibUtilities::ShapeType) atoi(argv[1]);
 
     // Check to see if 2D region
-    if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
+    if((regionshape != LibUtilities::eTriangle)&&(regionshape != LibUtilities::eQuadrilateral))
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
     }
@@ -77,17 +79,17 @@ int main(int argc, char *argv[])
     int btype1_val =  atoi(argv[2]);
     int btype2_val =  atoi(argv[3]);
 
-    if(( btype1_val <= 10)&&( btype2_val <= 10))
+    if(( btype1_val <= 11)&&( btype2_val <= 11))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
     }
-    else if(( btype1_val >=11)&&(btype2_val <= 12))
+    else if(( btype1_val >=13)&&(btype2_val <= 14))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;
 
-        if(btype1_val == 11)
+        if(btype1_val == 13)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }
@@ -101,39 +103,39 @@ int main(int argc, char *argv[])
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-        case StdRegions::eTriangle:
-            if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Basis 1 cannot be of type Ortho_B or Modified_B");
-            }
+    case LibUtilities::eTriangle:
+        if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 1 cannot be of type Ortho_B or Modified_B");
+        }
 
-            if((btype2 != LibUtilities::eOrtho_B)&&(btype2 != LibUtilities::eModified_B))
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Basis 2 must be of type Ortho_B or Modified_B");
-            }
-            break;
-        case StdRegions::eQuadrilateral:
-            if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_B)||
-               (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Basis 1 is for 2 or 3D expansions");
-            }
-
-            if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_B)||
-               (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
-            {
-                NEKERROR(ErrorUtil::efatal, "Basis 2 is for 2 or 3D expansions");
-            }
-            break;
-
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
-            break;
+        if((btype2 != LibUtilities::eOrtho_B)&&(btype2 != LibUtilities::eModified_B))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 2 must be of type Ortho_B or Modified_B");
+        }
+        break;
+    case LibUtilities::eQuadrilateral:
+        if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_B)||
+           (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 1 is for 2 or 3D expansions");
+        }
+        
+        if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_B)||
+           (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal, "Basis 2 is for 2 or 3D expansions");
+        }
+        break;
+        
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
-
+    
     order1 =   atoi(argv[4]);
     order2 =   atoi(argv[5]);
     nq1    =   atoi(argv[6]);
@@ -156,7 +158,8 @@ int main(int argc, char *argv[])
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTriangle) {
+        if (regionshape == LibUtilities::eTriangle) 
+        {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -175,7 +178,7 @@ int main(int argc, char *argv[])
 
     switch(regionshape)
     {
-        case StdRegions::eTriangle:
+        case LibUtilities::eTriangle:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -183,7 +186,7 @@ int main(int argc, char *argv[])
             const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
 
-            if(btype1_val >= 10)
+            if(btype1_val >= 11)
             {
                 E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
             }
@@ -203,7 +206,7 @@ int main(int argc, char *argv[])
             //----------------------------------------------
         }
         break;
-        case StdRegions::eQuadrilateral:
+        case LibUtilities::eQuadrilateral:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -227,6 +230,9 @@ int main(int argc, char *argv[])
             break;
     }
 
+    Array<OneD, NekDouble> phys (nq1*nq2);
+    Array<OneD, NekDouble> coeffs(order1*order2);
+
     //---------------------------------------------
     // Evaluate derivative of solution, add together and put in sol
     E->PhysDeriv(sol,dx,dy);
@@ -235,19 +241,19 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
     //----------------------------------------------
     // Define exact solution of differential
     switch(regionshape)
     {
-        case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         {
             //----------------------------------------------
             // Define solution to be differentiated
@@ -258,7 +264,7 @@ int main(int argc, char *argv[])
             //----------------------------------------------
         }
         break;
-        case StdRegions::eQuadrilateral:
+    case LibUtilities::eQuadrilateral:
         {
             for(i = 0; i < nq1*nq2; ++i)
             {
@@ -267,15 +273,15 @@ int main(int argc, char *argv[])
         }
         //---------------------------------------------
         break;
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
-            break;
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
     return 0;
 }

@@ -61,7 +61,8 @@ namespace Nektar
                     const boost::weak_ptr<ExpList> &pExp,
                     const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysXxt(pLinSysKey, pExp, pLocToGloMap)
+            : GlobalLinSys   (pLinSysKey, pExp, pLocToGloMap),
+              GlobalLinSysXxt(pLinSysKey, pExp, pLocToGloMap)
         {
 
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eXxtFullMatrix,
@@ -92,7 +93,7 @@ namespace Nektar
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
 
-            Array<OneD, NekDouble> tmp(nGlobDofs);
+            Array<OneD, NekDouble> tmp (nGlobDofs);
             Array<OneD, NekDouble> tmp2(nGlobDofs);
             Array<OneD, NekDouble> tmp3 = pOutput + nDirDofs;
 
@@ -152,10 +153,9 @@ namespace Nektar
         {
             const Array<OneD, const int> &vMap
                                     = pLocToGloMap->GetLocalToGlobalMap();
-            unsigned int nGloBnd    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             unsigned int nGlo       = pLocToGloMap->GetNumGlobalCoeffs();
             unsigned int nEntries   = pLocToGloMap->GetNumLocalCoeffs();
-            unsigned int i,j;
+            unsigned int i;
 
             // Count the multiplicity of each global DOF on this process
             Array<OneD, NekDouble> vCounts(nGlo, 0.0);
@@ -204,11 +204,26 @@ namespace Nektar
 
             // First construct a map of the number of local DOFs in each block
             // and the number of matrix entries for each block
-            for (n = 0; n < nElmt; ++n)
+
+            // Dimension of matrix is just the linear vertex space
+            if((m_linSysKey.GetMatrixType() == StdRegions::ePreconLinearSpace)
+               ||(m_linSysKey.GetMatrixType() == StdRegions::ePreconLinearSpaceMass))
             {
-                i = vExp->GetOffset_Elmt_Id(n);
-                vSizes[n] = vExp->GetExp(i)->GetNcoeffs();
-                nEntries += vSizes[n]*vSizes[n];
+                for (n = 0; n < nElmt; ++n)
+                {
+                    i = vExp->GetOffset_Elmt_Id(n);
+                    vSizes[n] = vExp->GetExp(i)->GetNverts();
+                    nEntries += vSizes[n]*vSizes[n];
+                }
+            }
+            else
+            {
+                for (n = 0; n < nElmt; ++n)
+                {
+                    i = vExp->GetOffset_Elmt_Id(n);
+                    vSizes[n] = vExp->GetExp(i)->GetNcoeffs();
+                    nEntries += vSizes[n]*vSizes[n];
+                }
             }
 
             // Set up i-index, j-index and value arrays
@@ -231,16 +246,16 @@ namespace Nektar
                     gid1 = pLocToGloMap->GetLocalToGlobalMap(iCount + i);
                     for(j = 0; j < nRows; ++j)
                     {
-                            k = rCount + i*vSizes[n] + j;
-                            m_Ai[k] = iCount + i;
-                            m_Aj[k] = iCount + j;
-                            m_Ar[k] = (*loc_mat)(i,j);
-                            if (doSign)
-                            {
-                                m_Ar[k] *= vMapSign[iCount+i]*vMapSign[iCount+j];
-                            }
+                        k = rCount + i*vSizes[n] + j;
+                        m_Ai[k] = iCount + i;
+                        m_Aj[k] = iCount + j;
+                        m_Ar[k] = (*loc_mat)(i,j);
+                        if (doSign)
+                        {
+                            m_Ar[k] *= vMapSign[iCount+i]*vMapSign[iCount+j];
+                        }
                     }
-
+                    
                     // Dirichlet DOFs are not included in the solve, so we set
                     // these to the special XXT id=0.
                     if (gid1 < numDirBnd)

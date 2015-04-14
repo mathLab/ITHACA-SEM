@@ -780,6 +780,7 @@ namespace Nektar
         std::copy(source.data(), source.data() + n, dest.data());
     }
 
+    static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
 

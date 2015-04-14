@@ -114,31 +114,35 @@ namespace Nektar
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
-            void             SetCoeffPhys(void);
+            void   SetCoeffPhys(void);
 
             //  virtual functions
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-            virtual void v_WriteTecplotZone(std::ofstream &outfile,
-                                            int expansion);
+            virtual void v_WriteTecplotConnectivity(std::ostream &outfile,
+                                                    int expansion);
 
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile,
+                                               int expansion);
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile,
+                                               int expansion, int istrip);
 
-            virtual NekDouble v_L2(void);
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+            virtual NekDouble v_L2(
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
 			
-			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+            virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
 
-            virtual void v_GetPeriodicEdges(
-                vector<map<int,int> > &periodicVertices,
-                map<int,int>          &periodicEdges)
+            virtual void v_GetPeriodicEntities(
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces)// default argument for dimension compatibility
                                             
             {
-                m_planes[0]->GetPeriodicEdges(
-                    periodicVertices,periodicEdges);
+                m_planes[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
             }
 
         private:

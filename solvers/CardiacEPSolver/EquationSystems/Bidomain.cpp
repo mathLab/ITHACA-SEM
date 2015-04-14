@@ -157,7 +157,7 @@ namespace Nektar
             if (x->first == "CheckpointCellModel")
             {
                 boost::shared_ptr<FilterCheckpointCellModel> c
-                    = boost::shared_dynamic_cast<FilterCheckpointCellModel>(
+                    = boost::dynamic_pointer_cast<FilterCheckpointCellModel>(
                                                                 m_filters[k]);
                 c->SetCellModel(m_cell);
             }
@@ -382,7 +382,6 @@ namespace Nektar
             const NekDouble time)
     {
         int nq = m_fields[0]->GetNpoints();
-        int nvar = inarray.num_elements();
         m_cell->TimeIntegrate(inarray, outarray, time);
         if (m_stimDuration > 0 && time < m_stimDuration)
         {
@@ -405,63 +404,68 @@ namespace Nektar
 
 
     void Bidomain::v_SetInitialConditions(NekDouble initialtime,
-            bool dumpInitialConditions)
+            bool dumpInitialConditions,
+            const int domain)
     {
-        EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions);
+        EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions, domain);
         m_cell->Initialise();
     }
 
     /**
      *
      */
-    void Bidomain::v_PrintSummary(std::ostream &out)
+    void Bidomain::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
-        out << "\tChi       	: " << m_chi << endl;
-        out << "\tCm       	: " << m_capMembrane << endl;
-        if (m_session->DefinesFunction("IntracellularConductivity", "AnisotropicConductivityX") &&
-            m_session->GetFunctionType("IntracellularConductivity", "AnisotropicConductivityX") == LibUtilities::eFunctionTypeExpression)
-        {
-            out << "\tIntra-Diffusivity-x   : "
-                << m_session->GetFunction("IntracellularConductivity", "AnisotropicConductivityX")->GetExpression()
-                << endl;
-        }
-        if (m_session->DefinesFunction("IntracellularConductivity", "AnisotropicConductivityY") &&
-            m_session->GetFunctionType("IntracellularConductivity", "AnisotropicConductivityY") == LibUtilities::eFunctionTypeExpression)
-        {
-            out << "\tIntra-Diffusivity-y   : "
-                << m_session->GetFunction("IntracellularConductivity", "AnisotropicConductivityY")->GetExpression()
-                << endl;
-        }
-        if (m_session->DefinesFunction("IntracellularConductivity", "AnisotropicConductivityZ") &&
-            m_session->GetFunctionType("IntracellularConductivity", "AnisotropicConductivityZ") == LibUtilities::eFunctionTypeExpression)
-        {
-            out << "\tIntra-Diffusivity-z   : "
-                << m_session->GetFunction("IntracellularConductivity", "AnisotropicConductivityZ")->GetExpression()
-                << endl;
-        }
-        if (m_session->DefinesFunction("ExtracellularConductivity", "AnisotropicConductivityX") &&
-            m_session->GetFunctionType("ExtracellularConductivity", "AnisotropicConductivityX") == LibUtilities::eFunctionTypeExpression)
-        {
-            out << "\tExtra-Diffusivity-x   : "
-                << m_session->GetFunction("ExtracellularConductivity", "AnisotropicConductivityX")->GetExpression()
-                << endl;
-        }
-        if (m_session->DefinesFunction("ExtracellularConductivity", "AnisotropicConductivityY") &&
-            m_session->GetFunctionType("ExtracellularConductivity", "AnisotropicConductivityY") == LibUtilities::eFunctionTypeExpression)
-        {
-            out << "\tExtra-Diffusivity-y   : "
-                << m_session->GetFunction("ExtracellularConductivity", "AnisotropicConductivityY")->GetExpression()
-                << endl;
-        }
-        if (m_session->DefinesFunction("ExtracellularConductivity", "AnisotropicConductivityZ") &&
-            m_session->GetFunctionType("ExtracellularConductivity", "AnisotropicConductivityZ") == LibUtilities::eFunctionTypeExpression)
-        {
-            out << "\tExtra-Diffusivity-z   : "
-                << m_session->GetFunction("ExtracellularConductivity", "AnisotropicConductivityZ")->GetExpression()
-                << endl;
-        }        
-        m_cell->PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
+
+        /// @TODO Update summary
+        ASSERTL0(false, "Update the generate summary");
+//
+//        out << "\tChi       	: " << m_chi << endl;
+//        out << "\tCm       	: " << m_capMembrane << endl;
+//        if (m_session->DefinesFunction("IntracellularConductivity", "AnisotropicConductivityX") &&
+//            m_session->GetFunctionType("IntracellularConductivity", "AnisotropicConductivityX") == LibUtilities::eFunctionTypeExpression)
+//        {
+//            out << "\tIntra-Diffusivity-x   : "
+//                << m_session->GetFunction("IntracellularConductivity", "AnisotropicConductivityX")->GetExpression()
+//                << endl;
+//        }
+//        if (m_session->DefinesFunction("IntracellularConductivity", "AnisotropicConductivityY") &&
+//            m_session->GetFunctionType("IntracellularConductivity", "AnisotropicConductivityY") == LibUtilities::eFunctionTypeExpression)
+//        {
+//            out << "\tIntra-Diffusivity-y   : "
+//                << m_session->GetFunction("IntracellularConductivity", "AnisotropicConductivityY")->GetExpression()
+//                << endl;
+//        }
+//        if (m_session->DefinesFunction("IntracellularConductivity", "AnisotropicConductivityZ") &&
+//            m_session->GetFunctionType("IntracellularConductivity", "AnisotropicConductivityZ") == LibUtilities::eFunctionTypeExpression)
+//        {
+//            out << "\tIntra-Diffusivity-z   : "
+//                << m_session->GetFunction("IntracellularConductivity", "AnisotropicConductivityZ")->GetExpression()
+//                << endl;
+//        }
+//        if (m_session->DefinesFunction("ExtracellularConductivity", "AnisotropicConductivityX") &&
+//            m_session->GetFunctionType("ExtracellularConductivity", "AnisotropicConductivityX") == LibUtilities::eFunctionTypeExpression)
+//        {
+//            out << "\tExtra-Diffusivity-x   : "
+//                << m_session->GetFunction("ExtracellularConductivity", "AnisotropicConductivityX")->GetExpression()
+//                << endl;
+//        }
+//        if (m_session->DefinesFunction("ExtracellularConductivity", "AnisotropicConductivityY") &&
+//            m_session->GetFunctionType("ExtracellularConductivity", "AnisotropicConductivityY") == LibUtilities::eFunctionTypeExpression)
+//        {
+//            out << "\tExtra-Diffusivity-y   : "
+//                << m_session->GetFunction("ExtracellularConductivity", "AnisotropicConductivityY")->GetExpression()
+//                << endl;
+//        }
+//        if (m_session->DefinesFunction("ExtracellularConductivity", "AnisotropicConductivityZ") &&
+//            m_session->GetFunctionType("ExtracellularConductivity", "AnisotropicConductivityZ") == LibUtilities::eFunctionTypeExpression)
+//        {
+//            out << "\tExtra-Diffusivity-z   : "
+//                << m_session->GetFunction("ExtracellularConductivity", "AnisotropicConductivityZ")->GetExpression()
+//                << endl;
+//        }
+        m_cell->GenerateSummary(s);
     }
 
 }

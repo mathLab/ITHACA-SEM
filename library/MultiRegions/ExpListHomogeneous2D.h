@@ -51,13 +51,13 @@ namespace Nektar
         enum Homogeneous2DMatType
         {
             eForwardsCoeffSpaceY1D,
-			eForwardsCoeffSpaceZ1D,
+            eForwardsCoeffSpaceZ1D,
             eBackwardsCoeffSpaceY1D,
-			eBackwardsCoeffSpaceZ1D,
+            eBackwardsCoeffSpaceZ1D,
             eForwardsPhysSpaceY1D,
-			eForwardsPhysSpaceZ1D,
+            eForwardsPhysSpaceZ1D,
             eBackwardsPhysSpaceY1D,
-			eBackwardsPhysSpaceZ1D
+            eBackwardsPhysSpaceZ1D
         };
 
         /// A map between homo matrix keys and their associated block
@@ -187,21 +187,15 @@ namespace Nektar
             
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
             
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
+            virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
             
-            virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
+            virtual void v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
             
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
             
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
             
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
-            
-            virtual void v_WriteTecplotHeader(std::ofstream &outfile,std::string var = "v");
-            
-            virtual void v_WriteTecplotField(std::ofstream &outfile,int expansion);
-            
-            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion, std::string var);
+            virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
@@ -219,7 +213,7 @@ namespace Nektar
                                          const Array<OneD, NekDouble> &inarray2,
                                          Array<OneD, NekDouble> &outarray, 
                                          CoeffState coeffstate = eLocal);
-			
+            
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
                                      Array<OneD, NekDouble> &out_d1, 
@@ -247,7 +241,7 @@ namespace Nektar
         {
             v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-		
+        
         inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
                                                               CoeffState coeffstate,
@@ -256,7 +250,7 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-	
+    
         inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                         const Array<OneD, NekDouble> &inarray2,
                                                         Array<OneD, NekDouble> &outarray, 

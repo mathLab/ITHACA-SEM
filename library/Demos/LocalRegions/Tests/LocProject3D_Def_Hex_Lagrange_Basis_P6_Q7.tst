@@ -2,7 +2,7 @@
 <test>
     <description>Project3D Deformed Hex Lagrange basis P=6 Q=7</description>
     <executable>LocProject3D</executable>
-    <parameters>7 8 8 8 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5</parameters>
+    <parameters>8 8 8 8 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">0.00820104</value>

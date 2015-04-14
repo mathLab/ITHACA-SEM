@@ -62,7 +62,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT friend bool operator<(const GlobalLinSysKey &lhs, 
                                   const GlobalLinSysKey &rhs);
             /// Return the associated solution type.
-            inline const GlobalSysSolnType  GetGlobalSysSolnType() const;
+            inline GlobalSysSolnType  GetGlobalSysSolnType() const;
 
         protected:
             /// Store the solution type associated with the linear system. This
@@ -77,7 +77,7 @@ namespace Nektar
         /// Writes information about the object to a given stream.
         MULTI_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs);
 
-        inline const GlobalSysSolnType GlobalLinSysKey::GetGlobalSysSolnType() 
+        inline GlobalSysSolnType GlobalLinSysKey::GetGlobalSysSolnType() 
                                                                         const
         {
             return m_solnType; 

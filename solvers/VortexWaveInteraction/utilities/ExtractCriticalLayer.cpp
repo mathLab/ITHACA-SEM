@@ -43,7 +43,7 @@
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    int i;
     NekDouble cr = 0;
     
     if(argc !=3)
@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("NumCriticalLayerPts",npts,30);
     Array<OneD, NekDouble> x_c(npts);
     Array<OneD, NekDouble> y_c(npts);       
-    NekDouble xc, yc;
     
     NekDouble trans;
     vSession->LoadParameter("WidthOfLayers",trans,0.1);

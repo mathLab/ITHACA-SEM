@@ -47,16 +47,19 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous1D::ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In):
-            DisContField3DHomogeneous1D (In,false)
+        ContField3DHomogeneous1D::ContField3DHomogeneous1D(
+                                const ContField3DHomogeneous1D &In):
+                                DisContField3DHomogeneous1D (In,false)
         {
             
             bool False = false;
-            ContField2DSharedPtr zero_plane = boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+            ContField2DSharedPtr zero_plane =
+                    boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
             
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*zero_plane,False);
+                m_planes[n] =   MemoryManager<ContField2D>::
+                                        AllocateSharedPtr(*zero_plane,False);
             }
             
             SetCoeffPhys();
@@ -67,23 +70,22 @@ namespace Nektar
         }
 
         ContField3DHomogeneous1D::ContField3DHomogeneous1D(
-                                       const LibUtilities::SessionReaderSharedPtr &pSession,
-                                       const LibUtilities::BasisKey &HomoBasis,
-                                       const NekDouble lhom,
-									   const bool useFFT,
-									   const bool dealiasing,
-                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                       const std::string &variable,
-									   const bool CheckIfSingularSystem):
+                            const LibUtilities::SessionReaderSharedPtr &pSession,
+                            const LibUtilities::BasisKey &HomoBasis,
+                            const NekDouble lhom,
+                            const bool useFFT,
+                            const bool dealiasing,
+                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                            const std::string &variable,
+                            const bool CheckIfSingularSystem):
             DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             int i,n,nel;
-            bool False = false;
             ContField2DSharedPtr plane_zero;
             ContField2DSharedPtr plane_two;
 
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-	    m_graph = graph2D;
+            m_graph = graph2D;
 
             // Plane zero (k=0 - cos) - singularaty check required for Poisson
             // problems
@@ -95,7 +97,7 @@ namespace Nektar
                                         pSession, graph2D, variable, false,
                                         false);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>
                                         ::AllocateSharedPtr();
 
             for(n = 0; n < m_planes.num_elements(); ++n)
@@ -105,7 +107,7 @@ namespace Nektar
                 if(m_transposition->GetK(n) == 0)
                 {
                     m_planes[n] = MemoryManager<ContField2D>
-                            ::AllocateSharedPtr(*plane_zero, graph2D, variable,
+                        ::AllocateSharedPtr(*plane_zero, graph2D, variable,
                                                 false, CheckIfSingularSystem);
                 }
                 else
@@ -129,15 +131,21 @@ namespace Nektar
 
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr(nel);
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::
+                                                        AllocateSharedPtr(nel);
 
             SetCoeffPhys();
 
-            SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
+            // Do not set up BCs if default variable
+            if(variable.compare("DefaultVar") != 0)
+            {
+                SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
+            }
         }
 
 
-        void ContField3DHomogeneous1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        void ContField3DHomogeneous1D::v_ImposeDirichletConditions(
+                                                Array<OneD,NekDouble>& outarray)
         {
             Array<OneD, NekDouble> tmp; 
             int ncoeffs = m_planes[0]->GetNcoeffs();
@@ -216,29 +224,35 @@ namespace Nektar
             }
             else 
             {
-                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+                HomogeneousFwdTrans(inarray, fce,
+                                    (flags.isSet(eUseGlobal))?eGlobal:eLocal);
             }
 			
-			bool smode = false;
-			
-			if (m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
-				m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm )
-			{
-				smode = true;
-			}
+            bool smode = false;
+            
+            if (m_homogeneousBasis->GetBasisType() ==
+                LibUtilities::eFourierHalfModeRe ||
+                m_homogeneousBasis->GetBasisType() ==
+                LibUtilities::eFourierHalfModeIm )
+            {
+                smode = true;
+            }
             
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-				if(n != 1 || m_transposition->GetK(n) != 0 || smode)
-				{
-					beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-					new_factors = factors;
-					new_factors[StdRegions::eFactorLambda] += beta*beta;
-                
-					m_planes[n]->HelmSolve(fce + cnt,
-                                       e_out = outarray + cnt1,
-                                       flags, new_factors, varcoeff, dirForcing);
-				}
+                if(n != 1 || m_transposition->GetK(n) != 0 || smode)
+                {
+                    beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+                    new_factors = factors;
+                    // add in Homogeneous Fourier direction and SVV if turned on
+                    new_factors[StdRegions::eFactorLambda] +=
+                                                beta*beta*(1+GetSpecVanVisc(n));
+                    
+                    m_planes[n]->HelmSolve(fce + cnt,
+                                           e_out = outarray + cnt1,
+                                           flags, new_factors, varcoeff,
+                                           dirForcing);
+                }
                 
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();

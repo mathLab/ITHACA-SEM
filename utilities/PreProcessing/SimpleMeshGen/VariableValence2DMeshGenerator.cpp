@@ -657,9 +657,7 @@ Mesh generateStarcutSingleQuadMesh(int split_param)
 
     int vertex_id  = 0;
     int segment_id = 0;
-    int i = 0;
     int j = 0;
-    int k = 0;
 
 
     // prepare boundary vertices
@@ -792,7 +790,7 @@ int main(int argc, char *argv[])
     double         sy = 1.0;
     int            nummodes = 7;
     int            splits   = 0;
-    int            i,j,k;
+    int            i;
     int            type;
     string         output_file;
     ofstream       output;

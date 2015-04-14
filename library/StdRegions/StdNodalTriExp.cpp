@@ -50,11 +50,11 @@ namespace Nektar
             const LibUtilities::BasisKey &Ba, 
             const LibUtilities::BasisKey &Bb, 
             LibUtilities::PointsType Ntype):
-            StdExpansion  (StdTriData::getNumberOfCoefficients(
+            StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes()),
                            2,Ba,Bb),
-            StdExpansion2D(StdTriData::getNumberOfCoefficients(
+            StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes()),
                            Ba,Bb),
@@ -86,16 +86,11 @@ namespace Nektar
         // Nodal basis specific routines
         //-------------------------------
         
-        void StdNodalTriExp::NodalToModal()
-        {
-            NodalToModal(m_coeffs,m_coeffs); 
-        }
-
         void StdNodalTriExp::NodalToModal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
@@ -105,17 +100,12 @@ namespace Nektar
             modal = (*inv_vdm) * nodal;
         }
 
-        void StdNodalTriExp::NodalToModalTranspose()
-        {
-            NodalToModalTranspose(m_coeffs,m_coeffs); 
-        }
-
         // Operate with transpose of NodalToModal transformation
         void StdNodalTriExp::NodalToModalTranspose(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
@@ -125,16 +115,11 @@ namespace Nektar
             modal = Transpose(*inv_vdm) * nodal;
         }
 
-        void StdNodalTriExp::ModalToNodal()
-        {
-            ModalToNodal(m_coeffs,m_coeffs);
-        }
-
         void StdNodalTriExp::ModalToNodal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey      Nkey(eNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
                                     NullConstFactorMap, NullVarCoeffMap,
                                     m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
@@ -165,13 +150,12 @@ namespace Nektar
 
             //Store the values of m_phys in a temporary array
             int nqtot = GetTotPoints();
-            Array<OneD,NekDouble> tmp_phys(nqtot);
-            Vmath::Vcopy(nqtot,m_phys,1,tmp_phys,1);
+            Array<OneD,NekDouble> phys(nqtot);
 
             for(i = 0; i < m_ncoeffs; ++i)
             {
                 // fill physical space with mode i
-                StdTriExp::v_FillMode(i,m_phys);
+                StdTriExp::v_FillMode(i,phys);
 
                 // interpolate mode i to the Nodal points 'j' and
                 // store in outarray
@@ -179,11 +163,9 @@ namespace Nektar
                 {
                     c[0] = r[j];
                     c[1] = s[j];
-                    (*Mat)(j,i) = StdTriExp::v_PhysEvaluate(c);
+                    (*Mat)(j,i) = StdTriExp::v_PhysEvaluate(c,phys);
                 }
             }
-            // Restore the original values of m_phys
-            Vmath::Vcopy(nqtot,tmp_phys,1,m_phys,1);
             return Mat;
         }
 
@@ -215,7 +197,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
             
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass, DetExpansionType(), *this,
+            StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
                                       m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
@@ -290,193 +272,6 @@ namespace Nektar
             return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
         } 
 
-        void StdNodalTriExp::v_WriteToFile(
-            std::ofstream &outfile, 
-            OutputFormat   format, 
-            const bool     dumpVar, 
-            std::string    var)
-        { 
-            if(format==eTecplot)
-            {
-                int i,j;
-                int nquad0 = m_base[0]->GetNumPoints();
-                int nquad1 = m_base[1]->GetNumPoints();
-                Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-                Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
-                                                
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2"; 
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                
-                outfile << "Zone, I=" << nquad0 << ", J=" << 
-                    nquad1 <<", F=Point" << std::endl;
-
-                for(j = 0; j < nquad1; ++j)
-                {
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << 
-                            z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                    }
-                }
-            }
-            else if(format==eGmsh)
-            {   
-                if(dumpVar)
-                {
-                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
-                    outfile<<"View.TargetError = 0.00;"<<endl;
-                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
-
-                outfile<<"ST("<<endl;                
-                // write the coordinates of the vertices of the triangle
-                outfile<<"-1.0, -1.0, 0.0,"<<endl;
-                outfile<<" 1.0, -1.0, 0.0,"<<endl;
-                outfile<<"-1.0,  1.0, 0.0" <<endl;
-                outfile<<")"<<endl;
-
-                // calculate the coefficients (monomial format)
-                int i,j;
-
-                Array<OneD,NekDouble> xi1(GetNcoeffs());
-                Array<OneD,NekDouble> xi2(GetNcoeffs());
-                GetNodalPoints(xi1,xi2);
-                
-                Array<OneD,NekDouble> x(GetNcoeffs());
-                Array<OneD,NekDouble> y(GetNcoeffs());
-                
-                for(i=0;i<GetNcoeffs();i++)
-                {
-                    x[i] = 0.5*(1.0+xi1[i]);
-                    y[i] = 0.5*(1.0+xi2[i]);
-                }
-
-                int cnt  = 0;
-                int cnt2 = 0;
-                int maxnummodes = max(m_base[0]->GetNumModes(),
-                                      m_base[1]->GetNumModes());
-                int nDumpCoeffs = maxnummodes*maxnummodes;
-                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
-                Array<OneD, int> indexMap(GetNcoeffs(),0);
-                Array<TwoD, int> exponentMap(GetNcoeffs(),3,0);
-                for(i = 0; i < maxnummodes; i++)
-                {
-                    for(j = 0; j < maxnummodes; j++)
-                    {
-                        if(j<maxnummodes-i)
-                        {
-                            exponentMap[cnt][0] = j;
-                            exponentMap[cnt][1] = i;
-                            indexMap[cnt++]  = cnt2;
-                        }
-
-                        dumpExponentMap[cnt2][0]   = j;
-                        dumpExponentMap[cnt2++][1] = i;
-                    }            
-                }
-
-                NekMatrix<NekDouble> vdm(GetNcoeffs(),GetNcoeffs());
-                for(i = 0 ; i < GetNcoeffs(); i++)
-                {
-                    for(j = 0 ; j < GetNcoeffs(); j++)
-                    {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*
-                            pow(y[i],exponentMap[j][1]);
-                    }
-                } 
-
-                vdm.Invert();  
-
-                NekVector<NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
-                NekVector<NekDouble> out(GetNcoeffs());
-                out = vdm*in;
-
-                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
-                for(i = 0 ; i < GetNcoeffs(); i++)
-                {
-                    dumpOut[ indexMap[i]  ] = out[i];
-                }
-
-                //write the coefficients
-                outfile<<"{";
-                for(i = 0; i < nDumpCoeffs; i++)
-                {
-                    outfile<<dumpOut[i];
-                    if(i < nDumpCoeffs - 1)
-                    {
-                        outfile<<", ";
-                    }
-                }
-                outfile<<"};"<<endl;
-              
-                if(dumpVar)
-                {   
-                    outfile<<"INTERPOLATION_SCHEME"<<endl;
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < nDumpCoeffs; j++)
-                        {
-                            if(i==j)
-                            {
-                                outfile<<"1.00";
-                            }
-                            else
-                            {
-                                outfile<<"0.00";
-                            }
-                            if(j < nDumpCoeffs - 1)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"}"<<endl;
-                        }
-                    }
-                    
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < 3; j++)
-                        {
-                            outfile<<dumpExponentMap[i][j];
-                            if(j < 2)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs  - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"};"<<endl;
-                        }
-                    }
-                    outfile<<"};"<<endl;
-                }    
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for "
-                         "requested type of output");
-            }
-        }      
-        
-        
         //--------------------------
         // Mappings
         //--------------------------
@@ -519,7 +314,8 @@ namespace Nektar
             }
         }
 
-        int StdNodalTriExp::v_GetVertexMap(const int localVertexId)
+        int StdNodalTriExp::v_GetVertexMap(const int localVertexId,
+                                           bool useCoeffPacking)
         {
             ASSERTL0(localVertexId >= 0 && localVertexId <= 2,
                      "Local Vertex ID must be between 0 and 2");                

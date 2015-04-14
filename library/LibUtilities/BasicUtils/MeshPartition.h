@@ -46,34 +46,54 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        class MeshPartition;
         class SessionReader;
+        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
+        typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
+        typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
+
+        /// Datatype of the NekFactory used to instantiate classes derived from
+        /// the EquationSystem class.
+        typedef LibUtilities::NekFactory< std::string, MeshPartition, const SessionReaderSharedPtr& > MeshPartitionFactory;
+
+        LIB_UTILITIES_EXPORT MeshPartitionFactory& GetMeshPartitionFactory();
 
         class MeshPartition
         {
-        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
         public:
             LIB_UTILITIES_EXPORT MeshPartition(const SessionReaderSharedPtr& pSession);
-            LIB_UTILITIES_EXPORT ~MeshPartition();
+            LIB_UTILITIES_EXPORT virtual ~MeshPartition();
 
-            LIB_UTILITIES_EXPORT void PartitionMesh();
+            LIB_UTILITIES_EXPORT void PartitionMesh(int nParts, bool shared = false);
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT void WriteAllPartitions(
+                    SessionReaderSharedPtr& pSession);
+
+            LIB_UTILITIES_EXPORT void PrintPartInfo(std::ostream &out);
+            LIB_UTILITIES_EXPORT void GetCompositeOrdering(
+                    CompositeOrdering &composites);
+            LIB_UTILITIES_EXPORT void GetBndRegionOrdering(
+                    BndRegionOrdering &composites);
+
+            LIB_UTILITIES_EXPORT void GetElementIDs(const int procid,
+                                                    std::vector<unsigned int> &tmp);
 
         private:
             struct MeshEntity
             {
                 int id;
                 char type;
-                std::vector<int> list;
+                std::vector<unsigned int> list;
             };
 
             struct MeshVertex
             {
                 int id;
-                double x;
-                double y;
-                double z;
+                NekDouble x;
+                NekDouble y;
+                NekDouble z;
             };
 
             struct MeshEdge
@@ -99,12 +119,14 @@ namespace Nektar
             struct MeshCurved
             {
                 int id;
-                int edgeid;
+                std::string entitytype;
+                int entityid;
                 std::string type;
                 int npoints;
                 std::string data;
             };
-
+            typedef std::pair<std::string, int> MeshCurvedKey;
+            
             struct MeshComposite
             {
                 int id;
@@ -112,12 +134,15 @@ namespace Nektar
                 std::vector<int> list;
             };
 
+            typedef std::vector<unsigned int>   MultiWeight;
+
             // Element in a mesh
             struct GraphVertexProperties
             {
-                int id;         ///< Universal ID of the vertex
-                int partition;  ///< Index of the partition to which it belongs
-                int partid;     ///< Global ID of the vertex in the partition
+                int id;             ///< Universal ID of the vertex
+                int partition;      ///< Index of the partition to which it belongs
+                int partid;         ///< Global ID of the vertex in the partition
+                MultiWeight weight; ///< Weightings to this graph vertex
             };
 
             // Face/Edge/Vertex between two adjacent elements
@@ -160,26 +185,61 @@ namespace Nektar
                         BoostGraph
                     >::adjacency_iterator BoostAdjacencyIterator;
 
-            int                        m_dim;
+            typedef std::vector<unsigned int>       NumModes;
+            typedef std::map<std::string, NumModes> NummodesPerField;
 
-            std::map<int, MeshVertex>  m_meshVertices;
-            std::map<int, MeshEntity>  m_meshEdges;
-            std::map<int, MeshEntity>  m_meshFaces;
-            std::map<int, MeshEntity>  m_meshElements;
-            std::map<int, MeshCurved>  m_meshCurved;
-            std::map<int, MeshEntity>  m_meshComposites;
-            std::vector<unsigned int>  m_domain;
+            int                                 m_dim;
+            int                                 m_numFields;
 
-            BoostSubGraph              m_mesh;
-            BoostSubGraph              m_localPartition;
+            std::map<int, MeshVertex>           m_meshVertices;
+            std::map<int, MeshEntity>           m_meshEdges;
+            std::map<int, MeshEntity>           m_meshFaces;
+            std::map<int, MeshEntity>           m_meshElements;
+            std::map<MeshCurvedKey, MeshCurved> m_meshCurved;
+            std::map<int, MeshEntity>           m_meshComposites;
+            std::vector<unsigned int>           m_domain;
+            std::map<std::string, std::string>  m_vertexAttributes;
 
-            CommSharedPtr              m_comm;
+            // hierarchial mapping: composite id -> field name -> integer list
+            // of directional nummodes described by expansion type clause.
+            std::map<int, NummodesPerField>     m_expansions;
 
-            void ReadMesh(const SessionReaderSharedPtr& pSession);
+            std::map<std::string, int>          m_fieldNameToId;
+            std::vector<MultiWeight>            m_vertWeights;
+
+            BndRegionOrdering                   m_bndRegOrder;
+
+            BoostSubGraph                       m_mesh;
+            std::vector<BoostSubGraph>          m_localPartition;
+
+            CommSharedPtr                       m_comm;
+
+            bool                                m_weightingRequired;
+            bool                                m_shared;
+
+            void ReadExpansions(const SessionReaderSharedPtr& pSession);
+            void ReadGeometry(const SessionReaderSharedPtr& pSession);
+            void ReadConditions(const SessionReaderSharedPtr& pSession);
+            void WeightElements();
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
-                                BoostSubGraph& pLocalPartition);
+                                int nParts,
+                                std::vector<BoostSubGraph>& pLocalPartition);
+
+            virtual void PartitionGraphImpl(
+                    int&                              nVerts,
+                    int&                              nVertConds,
+                    Nektar::Array<Nektar::OneD, int>& xadj,
+                    Nektar::Array<Nektar::OneD, int>& adjcy,
+                    Nektar::Array<Nektar::OneD, int>& vertWgt,
+                    Nektar::Array<Nektar::OneD, int>& vertSize,
+                    int&                              nparts,
+                    int&                              volume,
+                    Nektar::Array<Nektar::OneD, int>& part) = 0;
+
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            void CheckPartitions(int nParts, Array<OneD, int> &pPart);
+            int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

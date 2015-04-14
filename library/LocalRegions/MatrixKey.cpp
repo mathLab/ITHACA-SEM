@@ -41,12 +41,12 @@ namespace Nektar
     namespace LocalRegions
     {
         MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType,
-                  const StdRegions::ExpansionType expansionType,
+                  const LibUtilities::ShapeType shapeType,
                   const StdRegions::StdExpansion &stdExpansion,
                   const StdRegions::ConstFactorMap &factorMap,
                   const StdRegions::VarCoeffMap &varCoeffMap,
                   LibUtilities::PointsType nodalType) :
-            StdMatrixKey(matrixType, expansionType, stdExpansion, factorMap, varCoeffMap, nodalType),
+            StdMatrixKey(matrixType, shapeType, stdExpansion, factorMap, varCoeffMap, nodalType),
             m_metricinfo(stdExpansion.GetMetricInfo())
         {
         }

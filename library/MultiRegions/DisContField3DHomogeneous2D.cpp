@@ -70,7 +70,6 @@ namespace Nektar
         {
             if(DeclareLinesSetCoeffPhys)
             {
-                bool False = false;
                 DisContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
                 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
@@ -96,15 +95,13 @@ namespace Nektar
             m_bndConditions()
         {
             int i,n,nel;
-            bool True  = true; 
-            bool False = false; 
             DisContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
             //  
             m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
 
             for(i = 0; i < nel; ++i)
@@ -178,26 +175,34 @@ namespace Nektar
             EvaluateBoundaryConditions();
         }
 
-        void DisContField3DHomogeneous2D::EvaluateBoundaryConditions(const NekDouble time)
+        void DisContField3DHomogeneous2D::EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName)
         {
-            int n,m;
-			
-			const Array<OneD, const NekDouble> y = m_homogeneousBasis_y->GetZ();
+            int n, m;
+            const Array<OneD, const NekDouble> y = m_homogeneousBasis_y->GetZ();
             const Array<OneD, const NekDouble> z = m_homogeneousBasis_z->GetZ();
-			
 
-            for(n = 0; n < m_nz; ++n)
+            for (n = 0; n < m_nz; ++n)
             {
-				for(m = 0; m < m_ny; ++m)
-				{
-					m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(time,0.5*m_lhom_y*(1.0+y[m]),0.5*m_lhom_z*(1.0+z[n]));
-				}
+                for (m = 0; m < m_ny; ++m)
+                {
+                    m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(
+                        time, varName, 0.5*m_lhom_y*(1.0+y[m]), 
+                        0.5*m_lhom_z*(1.0+z[n]));
+                }
             }
             
             // Fourier transform coefficient space boundary values
-            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                if (time == 0.0 || m_bndConditions[n]->GetUserDefined() == 
+                    SpatialDomains::eTimeDependent)
+                {
+                    m_bndCondExpansions[n]->HomogeneousFwdTrans(
+                        m_bndCondExpansions[n]->GetCoeffs(), 
+                        m_bndCondExpansions[n]->UpdateCoeffs());
+                }
             }    
         }
         
@@ -250,10 +255,14 @@ namespace Nektar
 			}
         }
 		
-		void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in, const NekDouble x3_in)
-		{
-			EvaluateBoundaryConditions(time);
-		}
+        void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in, 
+            const NekDouble   x3_in)
+        {
+            EvaluateBoundaryConditions(time, varName);
+        }
 		
 		const Array<OneD,const boost::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
 		{

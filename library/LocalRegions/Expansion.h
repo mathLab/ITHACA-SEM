@@ -37,10 +37,13 @@
 #define EXPANSION_H
 
 #include <StdRegions/StdExpansion.h>
+#include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <vector>
+#include <map>
 
 namespace Nektar
 {
@@ -50,16 +53,29 @@ namespace Nektar
         class Expansion;
         class MatrixKey;
 
+        enum MetricType
+        {
+            MetricLaplacian00,
+            MetricLaplacian01,
+            MetricLaplacian02,
+            MetricLaplacian11,
+            MetricLaplacian12,
+            MetricLaplacian22,
+            MetricQuadrature
+        };
+
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion> ExpansionSharedPtr;
         typedef boost::weak_ptr<Expansion> ExpansionWeakPtr;
         typedef std::vector< ExpansionSharedPtr > ExpansionVector;
         typedef std::vector< ExpansionSharedPtr >::iterator ExpansionVectorIter;
+        typedef std::map<MetricType, Array<OneD, NekDouble> > MetricMap;
 
         class Expansion : virtual public StdRegions::StdExpansion
         {
             public:
-                LOCAL_REGIONS_EXPORT Expansion(); // default constructor. 
+                LOCAL_REGIONS_EXPORT Expansion(SpatialDomains::GeometrySharedPtr pGeom); // default constructor.
+                LOCAL_REGIONS_EXPORT Expansion(const Expansion &pSrc); // copy constructor.
                 LOCAL_REGIONS_EXPORT virtual ~Expansion();
 
                 LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey);
@@ -68,14 +84,94 @@ namespace Nektar
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
                             const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
 
+                LOCAL_REGIONS_EXPORT SpatialDomains::GeometrySharedPtr GetGeom() const;
+
+                LOCAL_REGIONS_EXPORT virtual const
+                    SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
+
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
+                    const DNekScalMatSharedPtr &r_bnd, 
+                    const StdRegions::MatrixType matrixType);
+
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd);
+			
+                LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fx,
+                    const Array<OneD, const NekDouble> &Fy,
+                          Array<OneD,       NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void AddFaceNormBoundaryInt(
+                    const int                           face,
+                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void DGDeriv(
+                    const int                                   dir,
+                    const Array<OneD, const NekDouble>&         inarray,
+                          Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                          Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                          Array<OneD,             NekDouble>   &outarray);
 
             protected:
+                SpatialDomains::GeometrySharedPtr  m_geom;
+                SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
+                MetricMap m_metrics;
+
+                void ComputeLaplacianMetric();
+                void ComputeQuadratureMetric();
+
+                virtual void v_MultiplyByQuadratureMetric(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray);
+
+                virtual void v_ComputeLaplacianMetric() {};
+
+                virtual void v_GetCoords(Array<OneD,NekDouble> &coords_1,
+                                         Array<OneD,NekDouble> &coords_2,
+                                         Array<OneD,NekDouble> &coords_3);
+
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
+
+                virtual DNekMatSharedPtr v_BuildTransformationMatrix(
+                    const DNekScalMatSharedPtr &r_bnd, 
+                    const StdRegions::MatrixType matrixType);
+
+                virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd); 
+
+                virtual void v_AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fx,
+                    const Array<OneD, const NekDouble> &Fy,
+                          Array<OneD,       NekDouble> &outarray);
+                virtual void v_AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                virtual void v_AddFaceNormBoundaryInt(
+                    const int                           face,
+                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                virtual void v_DGDeriv(
+                    const int                                   dir,
+                    const Array<OneD, const NekDouble>&         inarray,
+                          Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                          Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                          Array<OneD,             NekDouble>   &outarray);
 
             private:
 
         };
-
     } //end of namespace
 } //end of namespace
 

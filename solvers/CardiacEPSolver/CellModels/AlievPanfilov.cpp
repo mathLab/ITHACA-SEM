@@ -183,14 +183,14 @@ namespace Nektar
     /**
      *
      */
-    void CellModelAlievPanfilov::v_PrintSummary(std::ostream &out)
+    void CellModelAlievPanfilov::v_GenerateSummary(SummaryList& s)
     {
-        out << "\tCell model      : Aliev-Panfilov" << std::endl;
-        out << "\tk               : " << m_k << std::endl;
-        out << "\ta               : " << m_a << std::endl;
-        out << "\teps             : " << m_eps << std::endl;
-        out << "\tmu1             : " << m_mu1 << std::endl;
-        out << "\tmu2             : " << m_mu2 << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model","Aliev-Panfilov");
+        SolverUtils::AddSummaryItem(s, "k", m_k);
+        SolverUtils::AddSummaryItem(s, "a", m_a);
+        SolverUtils::AddSummaryItem(s, "eps", m_eps);
+        SolverUtils::AddSummaryItem(s, "mu1", m_mu1);
+        SolverUtils::AddSummaryItem(s, "mu2", m_mu2);
     }
 
 

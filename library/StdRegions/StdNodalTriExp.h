@@ -59,15 +59,12 @@ namespace Nektar
             //-------------------------------
             // Nodal basis specific routines
             //-------------------------------
-            STD_REGIONS_EXPORT void NodalToModal();
             STD_REGIONS_EXPORT void NodalToModal(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void NodalToModalTranspose();
             STD_REGIONS_EXPORT void NodalToModalTranspose(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void ModalToNodal();
             STD_REGIONS_EXPORT void ModalToNodal(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
@@ -125,12 +122,6 @@ namespace Nektar
             // Helper functions
             //---------------------------
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
-            STD_REGIONS_EXPORT virtual void v_WriteToFile(
-                std::ofstream &outfile,
-                OutputFormat format,
-                const bool dumpVar = true,
-                std::string var = "v");
-
 
             //--------------------------
             // Mappings
@@ -140,7 +131,8 @@ namespace Nektar
                 const Orientation      edgeOrient,
                 Array<OneD, unsigned int>& maparray,
                 Array<OneD,          int>& signarray);
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId);
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
+                                                           bool useCoeffPacking = false);
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
                 const int                  eid,
                 const Orientation      edgeOrient,

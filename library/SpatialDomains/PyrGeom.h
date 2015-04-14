@@ -61,11 +61,13 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
             
         protected:
-            virtual void v_GetLocCoords(
+            virtual void v_GenGeomFactors();
+            virtual NekDouble v_GetLocCoords(
                 const Array<OneD, const NekDouble> &coords,
                       Array<OneD,       NekDouble> &Lcoords);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
+            virtual int v_GetDir(const int faceidx, const int facedir) const;
 
         private:
             void SetUpLocalEdges();

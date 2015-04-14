@@ -12,7 +12,7 @@
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/(double)CLOCKS_PER_SEC); \
  st = clock();
 #else
 #define Timing(s) \
@@ -31,18 +31,19 @@ int main(int argc, char *argv[])
 
     MultiRegions::DisContField3DHomogeneous1DSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2,DerExp3;
-    int i, nq,  coordim;
+    int i, nq;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     NekDouble lz;
-    NekDouble cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
     {
         fprintf(stderr,"Usage: Helmholtz2D  meshfile\n");
         exit(1);
     }
+
+    LibUtilities::FieldIOSharedPtr fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
 
     //----------------------------------------------
     // Read in mesh from input file
@@ -82,9 +83,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
-    coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetTotPoints();
-
+    nq  = Exp->GetTotPoints();
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
     xc2 = Array<OneD,NekDouble>(nq,0.0);
@@ -135,7 +134,7 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Write solution to file
     string   out = meshfile.substr(0, meshfile.find_last_of(".")) + ".fld";
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -144,7 +143,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph2D->Write(out, FieldDef, FieldData);
+    fld->Write(out, FieldDef, FieldData);
 
     //-----------------------------------------------
 
@@ -168,8 +167,8 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
-        cout << "L infinity error:  " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error  :       " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error:  " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error  :       " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
 

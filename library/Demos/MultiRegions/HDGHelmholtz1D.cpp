@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::DisContField1DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
@@ -29,6 +28,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    LibUtilities::FieldIOSharedPtr fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
     //----------------------------------------------
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
@@ -38,7 +39,6 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
-    const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
     cout << "Solving 1D Helmholtz:"  << endl;
     cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
     //----------------------------------------------
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     string   out(strtok(argv[1],"."));
     string   endfile(".fld");
     out += endfile;
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
         = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
     for(i = 0; i < FieldDef.size(); ++i)
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph1D->Write(out, FieldDef, FieldData);
+    fld->Write(out, FieldDef, FieldData);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -134,8 +134,8 @@ int main(int argc, char *argv[])
         //--------------------------------------------
         // Calculate L_inf error
         Fce->SetPhys(fce);
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
     //----------------------------------------------

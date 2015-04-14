@@ -45,39 +45,48 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D():
             ExpListHomogeneous1D()
         {
+            SetExpType(e3DH1D);
         }
 
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                       const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom,
-                                                       const bool useFFT,
-													   const bool dealiasing):
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &HomoBasis,
+            const NekDouble lhom,
+            const bool useFFT,
+            const bool dealiasing):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e3DH1D);
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                       const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom,
-                                                       const bool useFFT,
-													   const bool dealiasing,
-                                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                                       const std::string &var):
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &HomoBasis,
+            const NekDouble lhom,
+            const bool useFFT,
+            const bool dealiasing,
+            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+            const std::string &var):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e3DH1D);
+
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var));
         }
         
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                       const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom,
-                                                       const bool useFFT,
-													   const bool dealiasing,
-                                                       const SpatialDomains::ExpansionMap  &expansions):                                                      
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &HomoBasis,
+            const NekDouble lhom,
+            const bool useFFT,
+            const bool dealiasing,
+            const SpatialDomains::ExpansionMap  &expansions):                                                      
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e3DH1D);
+            
             GenExpList3DHomogeneous1D(expansions);
         }
 
@@ -90,7 +99,7 @@ namespace Nektar
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<ExpList2D>::AllocateSharedPtr(m_session, expansions, False);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
             
             for(j = 0; j < nel; ++j)
@@ -122,6 +131,8 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, bool DeclarePlanesSetCoeffPhys):
             ExpListHomogeneous1D(In)
         {
+            SetExpType(e3DH1D);
+
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;
@@ -192,13 +203,13 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
-			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
-			{
-				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
-			}
-			
+            Array<OneD, NekDouble> local_pts(m_planes.num_elements());
+            
+            for(n = 0; n < m_planes.num_elements(); n++)
+            {
+                local_pts[n] = pts[m_transposition->GetPlaneID(n)];
+            }
+            
             Array<OneD, NekDouble> z(nzplanes);
 
             Vmath::Smul(nzplanes,m_lhom/2.0,local_pts,1,z,1);
@@ -244,16 +255,16 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
-			
-			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
-			{
-				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
-			}
-			
+            
+            Array<OneD, NekDouble> local_pts(m_planes.num_elements());
+            
+            for(n = 0; n < m_planes.num_elements(); n++)
+            {
+                local_pts[n] = pts[m_transposition->GetPlaneID(n)];
+            }
+            
             Array<OneD, NekDouble> z(nzplanes);
-
+            
             Vmath::Smul(nzplanes,m_lhom/2.0,local_pts,1,z,1);
             Vmath::Sadd(nzplanes,m_lhom/2.0,z,1,z,1);
 
@@ -268,46 +279,49 @@ namespace Nektar
             }
         }
 
-
-        /**
-         * Write Tecplot Files Zone
-         * @param   outfile    Output file name.
-         * @param   expansion  Expansion that is considered
-         */
-        void ExpList3DHomogeneous1D::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ostream &outfile, int expansion)
         {
-            int i,j;
+            ASSERTL0(expansion == -1, "Multi-zone output not supported for homogeneous expansions.");
 
-            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_planes.num_elements();
+            const int nPtsPlane = m_planes[0]->GetNpoints();
+            const int nElmt     = m_planes[0]->GetExpSize();
+            const int nPlanes   = m_planes.num_elements();
 
-            Array<OneD,NekDouble> coords[3];
-
-            coords[0] = Array<OneD,NekDouble>(3*nquad0*nquad1*nquad2);
-            coords[1] = coords[0] + nquad0*nquad1*nquad2;
-            coords[2] = coords[1] + nquad0*nquad1*nquad2;
-
-            GetCoords(expansion,coords[0],coords[1],coords[2]);
-
-            outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<",K="
-                    << nquad2 << ", F=Block" << std::endl;
-
-            for(j = 0; j < 3; ++j)
+            int cnt = 0;
+            int cnt2 = 0;
+            for (int i = 0; i < nElmt; ++i)
             {
-                for(i = 0; i < nquad0*nquad1*nquad2; ++i)
+                const int np0 = (*m_exp)[i]->GetNumPoints(0);
+                const int np1 = (*m_exp)[i]->GetNumPoints(1);
+
+                for (int n = 1; n < nPlanes; ++n)
                 {
-                    outfile << coords[j][i] << " ";
+                    const int o1 = (n-1) * nPtsPlane;
+                    const int o2 =  n    * nPtsPlane;
+                    for (int j = 1; j < np1; ++j)
+                    {
+                        for(int k = 1; k < np0; ++k)
+                        {
+                            outfile << cnt + (j-1)*np0 + (k-1) + o1 + 1 << " ";
+                            outfile << cnt + (j-1)*np0 + (k-1) + o2 + 1 << " ";
+                            outfile << cnt + (j-1)*np0 +  k    + o2 + 1 << " ";
+                            outfile << cnt + (j-1)*np0 +  k    + o1 + 1 << " ";
+                            outfile << cnt +  j   *np0 + (k-1) + o1 + 1 << " ";
+                            outfile << cnt +  j   *np0 + (k-1) + o2 + 1 << " ";
+                            outfile << cnt +  j   *np0 +  k    + o2 + 1 << " ";
+                            outfile << cnt +  j   *np0 +  k    + o1 + 1 << endl;
+                            cnt2++;
+                        }
+                    }
                 }
-                outfile << std::endl;
+
+                cnt += np0*np1;
             }
         }
 
-
-        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int nquad2 = m_planes.num_elements();
@@ -380,11 +394,97 @@ namespace Nektar
             outfile << "      <PointData>" << endl;
         }
 
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(
+                std::ostream    &outfile,
+                int              expansion,
+                int              istrip)
+        {
+            int i,j,k;
+            int nq0 = (*m_exp)[expansion]->GetNumPoints(0);
+            int nq1 = (*m_exp)[expansion]->GetNumPoints(1);
+            int nq2 = m_planes.num_elements();
+            int ntot = nq0*nq1*nq2;
+            int ntotminus = (nq0-1)*(nq1-1)*(nq2-1);
 
-        NekDouble ExpList3DHomogeneous1D::v_L2(const Array<OneD, const NekDouble> &soln)
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(ntot);
+            coords[1] = Array<OneD,NekDouble>(ntot);
+            coords[2] = Array<OneD,NekDouble>(ntot);
+            GetCoords(expansion,coords[0],coords[1],coords[2]);
+
+            NekDouble DistStrip;
+            m_session->LoadParameter("DistStrip", DistStrip);
+            for(int i = 0; i < ntot; i++)
+            {
+                coords[2][i] += istrip*DistStrip;
+            }
+
+            outfile << "    <Piece NumberOfPoints=\""
+                    << ntot << "\" NumberOfCells=\""
+                    << ntotminus << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float32\" "
+                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            outfile << "          ";
+            for (i = 0; i < ntot; ++i)
+            {
+                for (j = 0; j < 3; ++j)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+            for (i = 0; i < nq0-1; ++i)
+            {
+                for (j = 0; j < nq1-1; ++j)
+                {
+                    for (k = 0; k < nq2-1; ++k)
+                    {
+                        outfile << k*nq0*nq1     + j*nq0     + i     << " "
+                                << k*nq0*nq1     + j*nq0     + i + 1 << " "
+                                << k*nq0*nq1     + (j+1)*nq0 + i + 1 << " "
+                                << k*nq0*nq1     + (j+1)*nq0 + i     << " "
+                                << (k+1)*nq0*nq1 + j*nq0     + i     << " "
+                                << (k+1)*nq0*nq1 + j*nq0     + i + 1 << " "
+                                << (k+1)*nq0*nq1 + (j+1)*nq0 + i + 1 << " "
+                                << (k+1)*nq0*nq1 + (j+1)*nq0 + i     << endl;
+                    }
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << i*8+8 << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                    << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << "12 ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
+        }
+
+        NekDouble ExpList3DHomogeneous1D::v_L2(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
             int cnt = 0;
-            NekDouble errL2,err = 0.0;
+            NekDouble errL2, err = 0.0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
             Array<OneD, NekDouble> local_w(m_planes.num_elements());
             
@@ -393,47 +493,33 @@ namespace Nektar
                 local_w[n] = w[m_transposition->GetPlaneID(n)];
             }
             
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            if (soln == NullNekDouble1DArray)
             {
-                errL2 = m_planes[n]->L2(soln + cnt);
-                cnt  += m_planes[n]->GetTotPoints();
-                err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    errL2 = m_planes[n]->L2(inarray + cnt);
+                    cnt  += m_planes[n]->GetTotPoints();
+                    err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                }
             }
-            
+            else
+            {
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    errL2 = m_planes[n]->L2(inarray + cnt, soln + cnt);
+                    cnt  += m_planes[n]->GetTotPoints();
+                    err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                }
+            }
             m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
             
             return sqrt(err);
         }
 	
-        NekDouble ExpList3DHomogeneous1D::v_L2(void)
+        Array<OneD, const NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
-            NekDouble errL2,err = 0;
-            Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
-            Array<OneD, NekDouble> local_w(m_planes.num_elements());
-            
-            for(int n = 0; n < m_planes.num_elements(); n++)
-            {
-                local_w[n] = w[m_transposition->GetPlaneID(n)];
-            }
-
-            for(int n = 0; n < m_planes.num_elements(); ++n)
-            {
-                errL2 = m_planes[n]->L2();
-                err += errL2*errL2*local_w[n]*m_lhom*0.5;
-            }
-            
-            m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
-                        
-            return sqrt(err);
-        }
-		
-        Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
-        {
-            int cnt = 0, cnt1 = 0;
-            int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-
             Array<OneD, NekDouble> energy(m_planes.num_elements()/2);
-            double area = 0.0;
+            NekDouble area = 0.0;
 
             // Calculate total area of elements.
             for (int n = 0; n < m_planes[0]->GetExpSize(); ++n)
@@ -447,22 +533,23 @@ namespace Nektar
             // Calculate L2 norm of real/imaginary planes.
             for (int n = 0; n < m_planes.num_elements(); n += 2)
             {
-                double err;
+                NekDouble err;
                 
                 energy[n/2] = 0;
                 
                 for(int i = 0; i < m_planes[n]->GetExpSize(); ++i)
                 {
                     StdRegions::StdExpansionSharedPtr exp = m_planes[n]->GetExp(i);
+                    Array<OneD, NekDouble> phys(exp->GetTotPoints());
                     exp->BwdTrans(m_planes[n]->GetCoeffs()+m_planes[n]->GetCoeff_Offset(i),
-                                  exp->UpdatePhys());
-                    err = exp->L2();
+                                  phys);
+                    err = exp->L2(phys);
                     energy[n/2] += err*err;
                     
                     exp = m_planes[n+1]->GetExp(i);
                     exp->BwdTrans(m_planes[n+1]->GetCoeffs()+m_planes[n+1]->GetCoeff_Offset(i),
-                                  exp->UpdatePhys());
-                    err = exp->L2();
+                                  phys);
+                    err = exp->L2(phys);
                     energy[n/2] += err*err;
                 }
                 

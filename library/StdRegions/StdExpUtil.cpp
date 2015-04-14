@@ -154,7 +154,7 @@ namespace Nektar
         }
 
         // Formatted version of matrix ostream output
-        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision, double expSigFigs )
+        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision, NekDouble expSigFigs )
         {
             stringstream s;
             s << setprecision(precision);
@@ -164,7 +164,7 @@ namespace Nektar
             {
                 for(int j=0; j<N; ++j)
                 {
-                    double a = MakeRound(expSigFigs * A(i, j)) / expSigFigs;
+                    NekDouble a = MakeRound(expSigFigs * A(i, j)) / expSigFigs;
                     s << setw(7) << right << a;
                     if( j < N-1 )
                     {
@@ -180,14 +180,14 @@ namespace Nektar
         }
 
         // Formatted version of vector ostream output
-        std::string VectorToString( const NekVector<NekDouble> & v, int precision, double expSigFigs )
+        std::string VectorToString( const NekVector<NekDouble> & v, int precision, NekDouble expSigFigs )
         {
             stringstream s;
             s << setprecision(precision) << "[ ";
             int N = int(v.GetRows());
             for(int j=0; j<N; ++j )
             {
-                double x = MakeRound(expSigFigs * v(j)) / expSigFigs;
+                NekDouble x = MakeRound(expSigFigs * v(j)) / expSigFigs;
                 s << setw(7) << right << x;
                 if( j < N-1 )
                 {
@@ -221,7 +221,7 @@ namespace Nektar
         // Get Tetrahedral number, where Tn = (d+1)(d+2)(d+3)/6
         int GetTetDegree(int nBasisFunc)
         {
-            double eq = pow( 81.0 * nBasisFunc + 3.0 * sqrt(-3.0 + 729.0 * nBasisFunc * nBasisFunc), 1.0/3.0);
+            NekDouble eq = pow( 81.0 * nBasisFunc + 3.0 * sqrt(-3.0 + 729.0 * nBasisFunc * nBasisFunc), 1.0/3.0);
             int degree = int(MakeRound(eq/3.0 + 1.0/eq - 1.0)) - 1;
 
             ASSERTL1( GetTetNumPoints(degree) == nBasisFunc, "The number of points defines an expansion of fractional degree, which is not supported." );

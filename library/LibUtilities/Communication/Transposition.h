@@ -94,6 +94,10 @@ namespace Nektar
                     bool UseNumMode = false,
                     TranspositionDir dir = eNoTrans);
 
+            LIB_UTILITIES_EXPORT void SetSpecVanVisc(Array<OneD, NekDouble> visc);
+            
+            LIB_UTILITIES_EXPORT NekDouble GetSpecVanVisc(const int k);
+
         protected:
             CommSharedPtr         m_hcomm;
 

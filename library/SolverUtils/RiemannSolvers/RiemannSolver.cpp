@@ -74,7 +74,8 @@ namespace Nektar
          * which solvers for various Riemann problems can be implemented.
          */
         
-        RiemannSolver::RiemannSolver() : m_requiresRotation(false)
+        RiemannSolver::RiemannSolver() : m_requiresRotation(false),
+                                         m_rotStorage      (3)
         {
             
         }
@@ -87,238 +88,233 @@ namespace Nektar
          * Riemann solve. If the flag #m_requiresRotation is set, then the
          * velocity field is rotated to the normal direction to perform
          * dimensional splitting, and the resulting fluxes are rotated back to
-         * the Cartesian directions before being returned.
+         * the Cartesian directions before being returned. For the Rotation to
+         * work, the normal vectors "N" and the location of the vector
+         * components in Fwd "vecLocs"must be set via the SetAuxVec() method.
          * 
          * @param Fwd   Forwards trace space.
          * @param Bwd   Backwards trace space.
          * @param flux  Resultant flux along trace space.
          */
         void RiemannSolver::Solve(
+            const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
             if (m_requiresRotation)
             {
+                ASSERTL1(CheckVectors("N"), "N not defined.");
+                ASSERTL1(CheckAuxVec("vecLocs"), "vecLocs not defined.");
+                const Array<OneD, const Array<OneD, NekDouble> > normals =
+                    m_vectors["N"]();
+                const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
+                    m_auxVec["vecLocs"]();
+
                 int nFields = Fwd   .num_elements();
                 int nPts    = Fwd[0].num_elements();
-                Array<OneD, Array<OneD, NekDouble> > tmp1(nFields);
-                Array<OneD, Array<OneD, NekDouble> > tmp2(nFields);
-                Array<OneD, Array<OneD, NekDouble> > tmp3(nFields);
                 
-                for (int i = 0; i < nFields; ++i)
+                if (m_rotStorage[0].num_elements()    != nFields ||
+                    m_rotStorage[0][0].num_elements() != nPts)
                 {
-                    tmp1[i] = Array<OneD, NekDouble>(nPts);
-                    tmp2[i] = Array<OneD, NekDouble>(nPts);
-                    tmp3[i] = Array<OneD, NekDouble>(nPts);
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        m_rotStorage[i] =
+                            Array<OneD, Array<OneD, NekDouble> >(nFields);
+                        for (int j = 0; j < nFields; ++j)
+                        {
+                            m_rotStorage[i][j] = Array<OneD, NekDouble>(nPts);
+                        }
+                    }
                 }
-                
-                rotateToNormal(Fwd, tmp1);
-                rotateToNormal(Bwd, tmp2);
-                v_Solve(tmp1, tmp2, tmp3);
-                rotateFromNormal(tmp3, flux);
+
+                rotateToNormal  (Fwd, normals, vecLocs, m_rotStorage[0]);
+                rotateToNormal  (Bwd, normals, vecLocs, m_rotStorage[1]);
+                v_Solve         (nDim, m_rotStorage[0], m_rotStorage[1],
+                                       m_rotStorage[2]);
+                rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);
             }
             else
             {
-                v_Solve(Fwd, Bwd, flux);
+                v_Solve(nDim, Fwd, Bwd, flux);
             }
         }
 
         /**
-         * @brief Rotate velocity field to trace normal.
+         * @brief Rotate a vector field to trace normal.
          * 
-         * This function performs a rotation of the triad of velocity components
-         * provided in inarray so that the first component aligns with the trace
-         * normal direction.
+         * This function performs a rotation of a vector so that the first
+         * component aligns with the trace normal direction.
+         *
+         * The vectors  components are stored in inarray. Their locations must
+         * be specified in the "vecLocs" array. vecLocs[0] contains the locations
+         * of the first vectors components, vecLocs[1] those of the second and
+         * so on.
          * 
          * In 2D, this is accomplished through the transform:
          * 
          * \f[ (u_x, u_y) = (n_x u_x + n_y u_y, -n_x v_x + n_y v_y) \f]
          * 
-         * @todo Implement for 1D and 3D.
+         * In 3D, we generate a (non-unique) transformation using
+         * RiemannSolver::fromToRotation.
+         *
          */
         void RiemannSolver::rotateToNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+            const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = m_vectors["N"]();
-            const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
-            
-            switch(normals.num_elements())
+            for (int i = 0; i < inarray.num_elements(); ++i)
             {
-                case 1:
-                    ASSERTL0(false, "1D not implemented yet.");
-                    break;
+                Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1,
+                             outarray[i], 1);
+            }
 
-                case 2:
+            for (int i = 0; i < vecLocs.num_elements(); i++)
+            {
+                ASSERTL1(vecLocs[i].num_elements() == normals.num_elements(),
+                         "vecLocs[i] element count mismatch");
+
+                switch (normals.num_elements())
                 {
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int i;
-                    
-                    for (i = 0; i < normals[0].num_elements(); ++i)
+                    case 1:
+                        // do nothing
+                        break;
+
+                    case 2:
                     {
-                        double tmp1 =  inarray[vx][i]*normals[0][i] + 
-                            inarray[vy][i]*normals[1][i];
-                        double tmp2 = -inarray[vx][i]*normals[1][i] + 
-                            inarray[vy][i]*normals[0][i];
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
+                        const int nq = inarray[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
+
+                        Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
+                                         outarray[vx], 1);
+                        Vmath::Vvtvp(nq, inarray [vy], 1, normals [1],  1,
+                                         outarray[vx], 1, outarray[vx], 1);
+                        Vmath::Vmul (nq, inarray [vx], 1, normals [1],  1,
+                                         outarray[vy], 1);
+                        Vmath::Vvtvm(nq, inarray [vy], 1, normals [0],  1,
+                                         outarray[vy], 1, outarray[vy], 1);
+                        break;
                     }
-                    
-                    for (i = 0; i < inarray.num_elements(); ++i)
+
+                    case 3:
                     {
-                        if (i == vx || i == vy)
+                        const int nq = inarray[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
+                        const int vz = (int)vecLocs[i][2];
+
+                        // Generate matrices if they don't already exist.
+                        if (m_rotMat.num_elements() == 0)
                         {
-                            continue;
+                            GenerateRotationMatrices(normals);
                         }
-                        
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
-                                     outarray[i], 1);
+
+                        // Apply rotation matrices.
+                        Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[0],  1,
+                                           inarray [vy], 1, m_rotMat[1],  1,
+                                           outarray[vx], 1);
+                        Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[2],  1,
+                                           outarray[vx], 1, outarray[vx], 1);
+                        Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[3],  1,
+                                           inarray [vy], 1, m_rotMat[4],  1,
+                                           outarray[vy], 1);
+                        Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[5],  1,
+                                           outarray[vy], 1, outarray[vy], 1);
+                        Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[6],  1,
+                                           inarray [vy], 1, m_rotMat[7],  1,
+                                           outarray[vz], 1);
+                        Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[8],  1,
+                                           outarray[vz], 1, outarray[vz], 1);
+                        break;
                     }
-                    break;
+
+                    default:
+                        ASSERTL1(false, "Invalid space dimension.");
+                        break;
                 }
-                
-                case 3:
-                {
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int vz = (int)velLoc[2];
-                    
-                    // Generate matrices if they don't already exist.
-                    if (m_rotMatrices.size() == 0)
-                    {
-                        GenerateRotationMatrices();
-                    }
-                    
-                    // Apply rotation matrices.
-                    for (int i = 0; i < normals[0].num_elements(); ++i)
-                    {
-                        DNekMatSharedPtr m = m_rotMatrices[i];
-                        double tmp1 = inarray[vx][i]*(*m)(0,0) + 
-                            inarray[vy][i]*(*m)(0,1) + inarray[vz][i]*(*m)(0,2);
-                        double tmp2 = inarray[vx][i]*(*m)(1,0) + 
-                            inarray[vy][i]*(*m)(1,1) + inarray[vz][i]*(*m)(1,2);
-                        double tmp3 = inarray[vx][i]*(*m)(2,0) + 
-                            inarray[vy][i]*(*m)(2,1) + inarray[vz][i]*(*m)(2,2);
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                        outarray[vz][i] = tmp3;
-                    }
-                    
-                    for (int i = 0; i < inarray.num_elements(); ++i)
-                    {
-                        if (i == vx || i == vy || i == vz)
-                        {
-                            continue;
-                        }
-                        
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
-                                     outarray[i], 1);
-                    }
-                    break;
-                }
-                
-                default:
-                    ASSERTL0(false, "Invalid space dimension.");
-                    break;
             }
         }
         
         /**
-         * @brief Rotate velocity field from trace normal.
+         * @brief Rotate a vector field from trace normal.
          * 
-         * This function performs a rotation of the triad of velocity components
+         * This function performs a rotation of the triad of vector components
          * provided in inarray so that the first component aligns with the
          * Cartesian components; it performs the inverse operation of
          * RiemannSolver::rotateToNormal.
          */
         void RiemannSolver::rotateFromNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+            const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                m_vectors["N"]();
-            const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
-            
-            switch(normals.num_elements())
+            for (int i = 0; i < inarray.num_elements(); ++i)
             {
-                case 1:
-                    ASSERTL0(false, "1D not implemented yet.");
-                    break;
-                    
-                case 2:
-                {
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int i;
+                Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1,
+                             outarray[i], 1);
+            }
 
-                    for (i = 0; i < normals[0].num_elements(); ++i)
-                    {
-                        double tmp1 = inarray[vx][i]*normals[0][i] - 
-                            inarray[vy][i]*normals[1][i];
-                        double tmp2 = inarray[vx][i]*normals[1][i] + 
-                            inarray[vy][i]*normals[0][i];
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                    }
-                    
-                    for (i = 0; i < inarray.num_elements(); ++i)
-                    {
-                        if (i == vx || i == vy)
-                        {
-                            continue;
-                        }
-                        
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
-                                     outarray[i], 1);
-                    }
-                    break;
-                }
-                
-                case 3:
-                {
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int vz = (int)velLoc[2];
-                    
-                    // Generate matrices if they don't already exist.
-                    if (m_rotMatrices.size() == 0)
-                    {
-                        GenerateRotationMatrices();
-                    }
-                    
-                    // Apply rotation matrices.
-                    for (int i = 0; i < normals[0].num_elements(); ++i)
-                    {
-                        DNekMatSharedPtr m = m_invRotMatrices[i];
-                        double tmp1 = inarray[vx][i]*(*m)(0,0) + 
-                            inarray[vy][i]*(*m)(0,1) + inarray[vz][i]*(*m)(0,2);
-                        double tmp2 = inarray[vx][i]*(*m)(1,0) + 
-                            inarray[vy][i]*(*m)(1,1) + inarray[vz][i]*(*m)(1,2);
-                        double tmp3 = inarray[vx][i]*(*m)(2,0) + 
-                            inarray[vy][i]*(*m)(2,1) + inarray[vz][i]*(*m)(2,2);
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                        outarray[vz][i] = tmp3;
-                    }
-                    
-                    for (int i = 0; i < inarray.num_elements(); ++i)
-                    {
-                        if (i == vx || i == vy || i == vz)
-                        {
-                            continue;
-                        }
-                        
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
-                                     outarray[i], 1);
-                    }
-                    break;
-                }
+            for (int i = 0; i < vecLocs.num_elements(); i++)
+            {
+                ASSERTL1(vecLocs[i].num_elements() == normals.num_elements(),
+                         "vecLocs[i] element count mismatch");
 
-                default:
-                    ASSERTL0(false, "Invalid space dimension.");
-                    break;
+                switch (normals.num_elements())
+                {
+                    case 1:
+                        // do nothing
+                        break;
+
+                    case 2:
+                    {
+                        const int nq = normals[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
+
+                        Vmath::Vmul (nq, inarray [vy], 1, normals [1],  1,
+                                         outarray[vx], 1);
+                        Vmath::Vvtvm(nq, inarray [vx], 1, normals [0],  1,
+                                         outarray[vx], 1, outarray[vx], 1);
+                        Vmath::Vmul (nq, inarray [vx], 1, normals [1],  1,
+                                         outarray[vy], 1);
+                        Vmath::Vvtvp(nq, inarray [vy], 1, normals [0],  1,
+                                         outarray[vy], 1, outarray[vy], 1);
+                        break;
+                    }
+
+                    case 3:
+                    {
+                        const int nq = normals[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
+                        const int vz = (int)vecLocs[i][2];
+
+                        Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[0],  1,
+                                           inarray [vy], 1, m_rotMat[3],  1,
+                                           outarray[vx], 1);
+                        Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[6],  1,
+                                           outarray[vx], 1, outarray[vx], 1);
+                        Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[1],  1,
+                                           inarray [vy], 1, m_rotMat[4],  1,
+                                           outarray[vy], 1);
+                        Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[7],  1,
+                                           outarray[vy], 1, outarray[vy], 1);
+                        Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[2],  1,
+                                           inarray [vy], 1, m_rotMat[5],  1,
+                                           outarray[vz], 1);
+                        Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[8],  1,
+                                           outarray[vz], 1, outarray[vz], 1);
+                        break;
+                    }
+
+                    default:
+                        ASSERTL1(false, "Invalid space dimension.");
+                        break;
+                }
             }
         }
 
@@ -362,36 +358,64 @@ namespace Nektar
         }
 
         /**
+         * @brief Determine whether a scalar has been defined in #m_auxScal.
+         *
+         * @param name  Scalar name.
+         */
+        bool RiemannSolver::CheckAuxScal(std::string name)
+        {
+            std::map<std::string, RSScalarFuncType>::iterator it =
+                m_auxScal.find(name);
+
+            return it != m_auxScal.end();
+        }
+
+        /**
+         * @brief Determine whether a vector has been defined in #m_auxVec.
+         *
+         * @param name  Vector name.
+         */
+        bool RiemannSolver::CheckAuxVec(std::string name)
+        {
+            std::map<std::string, RSVecFuncType>::iterator it =
+                m_auxVec.find(name);
+
+            return it != m_auxVec.end();
+        }
+
+        /**
          * @brief Generate rotation matrices for 3D expansions.
          */
-        void RiemannSolver::GenerateRotationMatrices()
+        void RiemannSolver::GenerateRotationMatrices(
+            const Array<OneD, const Array<OneD, NekDouble> > &normals)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                m_vectors["N"]();
-
             Array<OneD, NekDouble> xdir(3,0.0);
             Array<OneD, NekDouble> tn  (3);
+            NekDouble tmp[9];
+            const int nq = normals[0].num_elements();
+            int i, j;
             xdir[0] = 1.0;
+
+            // Allocate storage for rotation matrices.
+            m_rotMat = Array<OneD, Array<OneD, NekDouble> >(9);
             
-            for (int i = 0; i < normals[0].num_elements(); ++i)
+            for (i = 0; i < 9; ++i)
             {
-                DNekMatSharedPtr mat = MemoryManager<DNekMat>::
-                    AllocateSharedPtr(3,3);
-                
+                m_rotMat[i] = Array<OneD, NekDouble>(nq);
+            }
+            for (i = 0; i < normals[0].num_elements(); ++i)
+            {
                 // Generate matrix which takes us from (1,0,0) vector to trace
                 // normal.
                 tn[0] = normals[0][i];
                 tn[1] = normals[1][i];
                 tn[2] = normals[2][i];
-                FromToRotation(tn, xdir, mat);
+                FromToRotation(tn, xdir, tmp);
                 
-                // Generate inverse rotation matrix.
-                DNekMatSharedPtr mat2 = MemoryManager<DNekMat>::
-                    AllocateSharedPtr(*mat);
-                mat2->Invert();
-                
-                m_rotMatrices.   push_back(mat);
-                m_invRotMatrices.push_back(mat2);
+                for (j = 0; j < 9; ++j)
+                {
+                    m_rotMat[j][i] = tmp[j];
+                }
             }
         }
 
@@ -410,7 +434,7 @@ namespace Nektar
         void RiemannSolver::FromToRotation(
             Array<OneD, const NekDouble> &from,
             Array<OneD, const NekDouble> &to,
-            DNekMatSharedPtr              mat)
+            NekDouble                    *mat)
         {
             NekDouble v[3];
             NekDouble e, h, f;
@@ -462,14 +486,14 @@ namespace Nektar
                 c1 = 2.0 / DOT(u, u);
                 c2 = 2.0 / DOT(v, v);
                 c3 = c1 * c2  * DOT(u, v);
-            
+                
                 for (i = 0; i < 3; i++) {
                     for (j = 0; j < 3; j++) {
-                        (*mat)(i,j) =  - c1 * u[i] * u[j]
+                        mat[3*i+j] =  - c1 * u[i] * u[j]
                             - c2 * v[i] * v[j]
                             + c3 * v[i] * u[j];
                     }
-                    (*mat)(i,i) += 1.0;
+                    mat[i+3*i] += 1.0;
                 }
             }
             else
@@ -481,17 +505,15 @@ namespace Nektar
                 hvxy = hvx * v[1];
                 hvxz = hvx * v[2];
                 hvyz = hvz * v[1];
-                (*mat)(0,0) = e + hvx * v[0];
-                (*mat)(0,1) = hvxy - v[2];
-                (*mat)(0,2) = hvxz + v[1];
-            
-                (*mat)(1,0) = hvxy + v[2];
-                (*mat)(1,1) = e + h * v[1] * v[1];
-                (*mat)(1,2) = hvyz - v[0];
-            
-                (*mat)(2,0) = hvxz - v[1];
-                (*mat)(2,1) = hvyz + v[0];
-                (*mat)(2,2) = e + hvz * v[2];
+                mat[0] = e + hvx * v[0];
+                mat[1] = hvxy - v[2];
+                mat[2] = hvxz + v[1];
+                mat[3] = hvxy + v[2];
+                mat[4] = e + h * v[1] * v[1];
+                mat[5] = hvyz - v[0];
+                mat[6] = hvxz - v[1];
+                mat[7] = hvyz + v[0];
+                mat[8] = e + hvz * v[2];
             }
         }
     }

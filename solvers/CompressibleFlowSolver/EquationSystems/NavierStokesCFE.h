@@ -39,66 +39,67 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
-{  
+{
 
   enum ProblemType
-  {           
+  {
     eGeneral,          ///< No problem defined - Default Inital data
     SIZE_ProblemType   ///< Length of enum list
   };
-  
+
   const char* const ProblemTypeMap[] =
     {
       "General"
     };
-  
+
   /**
-   * 
-   * 
+   *
+   *
    **/
   class NavierStokesCFE : public CompressibleFlowSystem
   {
   public:
       friend class MemoryManager<NavierStokesCFE>;
 
-    /// Creates an instance of this class
+    // Creates an instance of this class
     static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      SolverUtils::EquationSystemSharedPtr p = MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
+      SolverUtils::EquationSystemSharedPtr p =
+            MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
       p->InitObject();
       return p;
     }
-    /// Name of class
+    // Name of class
     static std::string className;
-    
+
     virtual ~NavierStokesCFE();
 
-    ///< problem type selector
-    ProblemType                                     m_problemType;   
-    
+    // Problem type selector
+    ProblemType m_problemType;
+
   protected:
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_InitObject();
-    /// Print a summary of time stepping parameters.
-    virtual void v_PrintSummary(std::ostream &out);
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+    void DoOdeRhs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time);
+    void DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time);
+    virtual void v_SetInitialConditions(
+        NekDouble                               initialtime = 0.0,
+        bool                                    dumpInitialConditions = true,
+        const int domain = 0);
 
-    void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
-		  const NekDouble time);
-    
-    void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-			 Array<OneD,  Array<OneD, NekDouble> > &outarray,
-			 const NekDouble time);
-
-    virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-					bool dumpInitialConditions = true);
-    
-    private:
-
-    void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-    
+  private:
+      void SetBoundaryConditions(
+        Array<OneD, Array<OneD, NekDouble> >             &physarray,
+        NekDouble                                         time);
   };
 }
 #endif

@@ -51,7 +51,6 @@ namespace Nektar
             DisContField3DHomogeneous2D (In,false)
         {
             
-            bool False = false;
             ContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
             
             for(int n = 0; n < m_lines.num_elements(); ++n)
@@ -78,13 +77,12 @@ namespace Nektar
             DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int i,n,nel;
-            bool False = false;
             ContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
             m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
 
             for(i = 0; i < nel; ++i)

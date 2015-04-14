@@ -45,7 +45,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string GlobalLinSys::lookupIds[8] = {
+        std::string GlobalLinSys::lookupIds[12] = {
             LibUtilities::SessionReader::RegisterEnumValue(
                 "GlobalSysSoln", "DirectFull",
                 MultiRegions::eDirectFullMatrix),
@@ -69,7 +69,19 @@ namespace Nektar
                 MultiRegions::eXxtFullMatrix),
             LibUtilities::SessionReader::RegisterEnumValue(
                 "GlobalSysSoln", "XxtStaticCond",
-                MultiRegions::eXxtStaticCond)
+                MultiRegions::eXxtStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "XxtMultiLevelStaticCond",
+                MultiRegions::eXxtMultiLevelStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "PETScFull",
+                MultiRegions::ePETScFullMatrix),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "PETScStaticCond",
+                MultiRegions::ePETScStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "PETScMultiLevelStaticCond",
+                MultiRegions::ePETScMultiLevelStaticCond)
         };
 
         std::string GlobalLinSys::def = LibUtilities::SessionReader::
@@ -170,8 +182,7 @@ namespace Nektar
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by
          * AssembleFullMatrix().
-         * @param   mkey        Associated linear system key.
-         * @param   Mat         Block matrix.
+         * @param   pkey        Associated linear system key.
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
@@ -241,9 +252,9 @@ namespace Nektar
             }
 
             LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                       vExp->DetExpansionType(),
-                                       *vExp, m_linSysKey.GetConstFactors(),
-                                       vVarCoeffMap);
+                                           vExp->DetShapeType(),
+                                           *vExp, m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
             loc_mat = vExp->GetLocMatrix(matkey);
 
             // apply robin boundary conditions to the matrix.
@@ -310,7 +321,7 @@ namespace Nektar
             }
 
             LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetExpansionType(),
+                                           vExp->DetShapeType(),
                                            *vExp,
                                            m_linSysKey.GetConstFactors(),
                                            vVarCoeffMap);
@@ -347,13 +358,50 @@ namespace Nektar
             return loc_mat;
         }
 
-        const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const
+        /**
+         * @brief Releases the static condensation block matrices from NekManager
+         * of n-th expansion using the matrix key provided by the #m_linSysKey.
+         * 
+         * @param   n           Number of the expansion
+         */
+        void GlobalLinSys::v_DropStaticCondBlock(unsigned int n)
         {
-            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-            return NullDNekMatSharedPtr;
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+
+            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
+
+            // need to be initialised with zero size for non variable
+            // coefficient case
+            StdRegions::VarCoeffMap vVarCoeffMap;
+
+            // retrieve variable coefficients
+            if(m_linSysKey.GetNVarCoeffs() > 0)
+            {
+                StdRegions::VarCoeffMap::const_iterator x;
+                int cnt = expList->GetPhys_Offset(n);
+                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
+                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
+                {
+                    vVarCoeffMap[x->first] = x->second + cnt;
+                }
+            }
+
+            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
+                                           vExp->DetShapeType(),
+                                           *vExp,
+                                           m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
+
+            vExp->DropLocStaticCondMatrix(matkey);
         }
 
         void GlobalLinSys::v_InitObject()
+        {
+            NEKERROR(ErrorUtil::efatal, "Method does not exist" );
+	}
+
+        void GlobalLinSys::v_Initialise(
+            const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );
 	}

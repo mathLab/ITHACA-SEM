@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <NEKTAR>
+    <!-- IncNavierStokesSolver -npz 16 Pipe_turb.xml -->
+    <!-- Note: the -npz should be prefixed by a double hyphen
+         (not supported in XML comments) -->
 
 <EXPANSIONS>
     <E COMPOSITE="C[0]" NUMMODES="8" TYPE="GLL_LAGRANGE_SEM" FIELDS="u,v,w,p" />
@@ -27,7 +30,6 @@
       <P> HomModesZ      = 128        </P>
       <P> LZ             = 5.0        </P>
       <P> Noise          = 0.0001     </P>
-      <P> PROC_Z         = 16         </P>
     </PARAMETERS>
     
     <VARIABLES>
@@ -63,6 +65,12 @@
       </REGION>
     </BOUNDARYCONDITIONS>
   </CONDITIONS>
+  
+  <FORCING>
+      <FORCE TYPE="Body">
+          <BODYFORCE> BodyForce </BODYFORCE>
+      </FORCE>
+  </FORCING>
   
   <GEOMETRY DIM="2" SPACE="2">
     <VERTEX>

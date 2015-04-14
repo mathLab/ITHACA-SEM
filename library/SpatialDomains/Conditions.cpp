@@ -36,20 +36,26 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <SpatialDomains/Conditions.h>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
         BoundaryConditions::BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph)
-            : m_session(pSession),
-              m_meshGraph(meshGraph)
+            : m_meshGraph(meshGraph), 
+              m_session  (pSession)
+              
         {
             Read(m_session->GetElement("Nektar/Conditions"));
         }
 
-        BoundaryConditions::~BoundaryConditions()
+
+        BoundaryConditions::BoundaryConditions(void)
+        {
+        }
+
+        BoundaryConditions::~BoundaryConditions(void)
         {
         }
 
@@ -77,35 +83,32 @@ namespace Nektar
          */
         void BoundaryConditions::ReadBoundaryRegions(TiXmlElement *conditions)
         {
+            // ensure boundary regions only read once per class definition
+            if(m_boundaryRegions.size() != 0)
+            {
+                return;
+            }
+
             TiXmlElement *boundaryRegions = conditions->FirstChildElement("BOUNDARYREGIONS");
             ASSERTL0(boundaryRegions, "Unable to find BOUNDARYREGIONS block.");
 
-            int regionIndx = 0;
-
             // See if we have boundary regions defined.
             TiXmlElement *boundaryRegionsElement = boundaryRegions->FirstChildElement("B");
-
-            // Sequential counter for the composite numbers.
-            int nextBoundaryRegionNumber = -1;
 
             while (boundaryRegionsElement)
             {
                 /// All elements are of the form: "<B ID="#"> ... </B>", with
                 /// ? being the element type.
-
-                nextBoundaryRegionNumber++;
-
                 int indx;
                 int err = boundaryRegionsElement->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextBoundaryRegionNumber, "Boundary region IDs must begin with zero and be sequential.");
 
                 TiXmlNode* boundaryRegionChild = boundaryRegionsElement->FirstChild();
                 // This is primarily to skip comments that may be present.
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TEXT)
+                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     boundaryRegionChild = boundaryRegionChild->NextSibling();
                 }
@@ -124,9 +127,13 @@ namespace Nektar
                 {
                     // Extract the composites from the string and return them in a list.
                     BoundaryRegionShPtr boundaryRegion(MemoryManager<BoundaryRegion>::AllocateSharedPtr());
-                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
 
-                    m_boundaryRegions.push_back(boundaryRegion);
+                    ASSERTL0(m_boundaryRegions.count(indx) == 0,
+                             "Boundary region "+indxStr+ " defined more than "
+                             "once!");
+                    
+                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
+                    m_boundaryRegions[indx] = boundaryRegion;
                 }
 
                 boundaryRegionsElement = boundaryRegionsElement->NextSiblingElement("B");
@@ -139,13 +146,19 @@ namespace Nektar
          */
         void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
         {
+            // Protect against multiple reads.
+            if(m_boundaryConditions.size() != 0)
+            {
+                return;
+            }
+            
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
             ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
-
+            
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
-
-            // Read R (Robin), D (Dirichlet), N (Neumann), P (Periodic) [What about Cauchy?] tags
+            
+            // Read R (Robin), D (Dirichlet), N (Neumann), P (Periodic) C(Cauchy) tags
             while (regionElement)
             {
                 BoundaryConditionMapShPtr boundaryConditions = MemoryManager<BoundaryConditionMap>::AllocateSharedPtr();
@@ -154,15 +167,18 @@ namespace Nektar
                 int err = regionElement->QueryIntAttribute("REF", &boundaryRegionID);
                 ASSERTL0(err == TIXML_SUCCESS, "Error reading boundary region reference.");
 
+                ASSERTL0(m_boundaryConditions.count(boundaryRegionID) == 0,
+                         "Boundary region '" + boost::lexical_cast<std::string>(boundaryRegionID)
+                         + "' appears multiple times.");
+
                 // Find the boundary region corresponding to this ID.
                 std::string boundaryRegionIDStr;
                 std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
                 boundaryRegionIDStrm << boundaryRegionID;
-                ASSERTL0(boundaryRegionID < m_boundaryRegions.size(),
-                (std::string("Boundary region ID not found: ") + boundaryRegionIDStr).c_str());
 
-                // Here is the boundary region.
-                // m_boundaryRegions[boundaryRegionID];
+                ASSERTL0(m_boundaryRegions.count(boundaryRegionID) == 1,
+                         "Boundary region " + boost::lexical_cast<
+                         string>(boundaryRegionID)+ " not found");
 
                 TiXmlElement *conditionElement = regionElement->FirstChildElement();
                 std::vector<std::string> vars = m_session->GetVariables();
@@ -481,14 +497,13 @@ namespace Nektar
                                 int beg = attrData.find_first_of("[");
                                 int end = attrData.find_first_of("]");
                                 std::string periodicBndRegionIndexStr = attrData.substr(beg+1,end-beg-1);
-                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ")
-                                                     + boundaryRegionIDStrm.str()).c_str());
+                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
 
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(periodicBndRegionIndexStr.c_str(), periodicBndRegionIndex);
-
+                                
                                 ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
-
+                                
                                 BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0]));
                                 (*boundaryConditions)[*iter]  = periodicCondition;
                             }
@@ -502,160 +517,6 @@ namespace Nektar
                     {
                         NEKERROR(ErrorUtil::ewarning, "Cauchy type boundary conditions not implemented.");
                     }
-					else if (conditionType == "JUNCTION")
-                    {						
-                        if (attrData.empty())
-                        {
-                            ASSERTL0(false, "JUNCTION not set up correctly");
-                        }
-                        else
-                        {
-                            // Use the iterator from above, which must point to the variable.
-                            attr = attr->Next();
-							
-                            if (attr)
-                            {
-                                int P = 0;
-								int D1 = 0;
-								
-                                while(attr) {
-									
-									attrName = attr->Name();
-									
-                                    if (attrName=="P") {
-										
-                                        // Do stuff for the user defined attribute
-                                        attrData = attr->Value();	
-                                        m_session->SubstituteExpressions(attrData);
-                                        P = atoi(attrData.c_str());
-                                    }
-									else if (attrName=="D1") {
-						 
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-
-									}
-									attr = attr->Next();
-                                }
-								
-                                BoundaryConditionShPtr junctionCondition(MemoryManager<JunctionBoundaryCondition>::AllocateSharedPtr(P, D1));
-                                (*boundaryConditions)[*iter]  = junctionCondition;
-                            }
-                        }
-						
-                    }
-					else if (conditionType == "BIFURCATION")
-                    {						
-                        if (attrData.empty())
-                        {
-                            ASSERTL0(false, "BIFURCATION not set up correctly");
-                        }
-                        else
-                        {
-                            // Use the iterator from above, which must point to the variable.
-                            attr = attr->Next();
-							
-                            if (attr)
-                            {
-                                int P = 0;
-								int D1 = 0;
-								int D2 = 0;
-								
-								std::string userDefined;
-								
-                                while(attr) {
-									
-									attrName = attr->Name();
-									
-                                    if (attrName=="P") {
-										
-                                        // Do stuff for the user defined attribute
-                                        attrData = attr->Value();	
-                                        m_session->SubstituteExpressions(attrData);
-                                        P = atoi(attrData.c_str());
-                                    }
-									else if (attrName=="D1") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-										
-									}
-									else if (attrName=="D2") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D2 = atoi(attrData.c_str());
-										
-									}
-									attr = attr->Next();
-                                }
-								
-                                BoundaryConditionShPtr bifurcationCondition(MemoryManager<BifurcationBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
-                                (*boundaryConditions)[*iter]  = bifurcationCondition;
-                            }
-                        }
-                    }
-					else if (conditionType == "MERGING")
-                    {						
-                        if (attrData.empty())
-                        {
-                            ASSERTL0(false, "MERGING flow condition not set up correctly");
-                        }
-                        else
-                        {
-                            // Use the iterator from above, which must point to the variable.
-                            attr = attr->Next();
-							
-                            if (attr)
-                            {
-                                int P = 0;
-								int D1 = 0;
-								int D2 = 0;
-								
-								std::string userDefined;
-								
-                                while(attr) {
-									
-									attrName = attr->Name();
-									
-                                    if (attrName=="P") {
-										
-                                        // Do stuff for the user defined attribute
-                                        attrData = attr->Value();	
-                                        m_session->SubstituteExpressions(attrData);
-                                        P = atoi(attrData.c_str());
-                                    }
-									else if (attrName=="D1") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-										
-									}
-									else if (attrName=="D2") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D2 = atoi(attrData.c_str());
-										
-									}
-									attr = attr->Next();
-                                }
-								
-                                BoundaryConditionShPtr mergingCondition(MemoryManager<MergingBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
-                                (*boundaryConditions)[*iter]  = mergingCondition;
-                            }
-                        }
-                    }
-					
-					
 
                     conditionElement = conditionElement->NextSiblingElement();
                 }
@@ -663,6 +524,6 @@ namespace Nektar
                 m_boundaryConditions[boundaryRegionID] = boundaryConditions;
                 regionElement = regionElement->NextSiblingElement("REGION");
             }
-       }
+        }
     }
 }

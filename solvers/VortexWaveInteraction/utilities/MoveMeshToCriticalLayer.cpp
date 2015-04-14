@@ -37,7 +37,7 @@
 #include <cstdlib>
 #include <iomanip>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
@@ -91,9 +91,6 @@ void EnforceRotationalSymmetry(SpatialDomains::MeshGraphSharedPtr &mesh,
 
 int main(int argc, char *argv[])
 {
-    int i,j;
-    NekDouble cr = 0;
-    
     if(argc !=4)
     {
         fprintf(stderr,"Usage: ./MoveMeshToCriticalLayer  meshfile streakfile  outfile\n");
@@ -195,9 +192,9 @@ void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
 
     //----------------------------------------------
     // Import field file.
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    mesh->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -238,8 +235,8 @@ void GetNewVertexLocation(TiXmlElement *doc,
     // loop mesh edges and fill in verts info
     std::map<int,SpatialDomains::SegGeomSharedPtr>::iterator segIter;
     
-    SpatialDomains::VertexComponentSharedPtr v0,v1;
-    SpatialDomains::VertexComponent dist;
+    SpatialDomains::PointGeomSharedPtr v0,v1;
+    SpatialDomains::PointGeom dist;
 
     int vid0,vid1;
     NekDouble kspring;
@@ -485,7 +482,7 @@ void  TurnOffEdges(TiXmlElement *doc,
         // Comments appear as nodes just like elements.
         // We are specifically looking for text in the body
         // of the definition.
-        while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+        while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
         {
             compositeChild = compositeChild->NextSibling();
         }
@@ -621,7 +618,6 @@ void   RedefineVertices(TiXmlElement *doc,
     vector<NekDouble> xpts,ypts,zpts;
     NekDouble xval, yval, zval;
         
-    NekDouble yoffset = 0.0;
     while (vertex)
     {
         nextVertexNumber++;
@@ -642,7 +638,7 @@ void   RedefineVertices(TiXmlElement *doc,
         while (vertexBody)
         {
             // Accumulate all non-comment body data.
-            if (vertexBody->Type() == TiXmlNode::TEXT)
+            if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
             {
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";

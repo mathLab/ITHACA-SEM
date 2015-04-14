@@ -46,44 +46,26 @@ namespace Nektar
         class ExpList;
 
         /// A global linear system.
-        class GlobalLinSysDirect : public GlobalLinSys
+        class GlobalLinSysDirect : virtual public GlobalLinSys
         {
-		    public:
-                /// Default constructor
-//                MULTI_REGIONS_EXPORT GlobalLinSysDirect(void);
-
-			    /// Constructor for full direct matrix solve.
-                MULTI_REGIONS_EXPORT GlobalLinSysDirect(
-                        const GlobalLinSysKey &pKey,
-                        const boost::weak_ptr<ExpList> &pExp,
-                        const boost::shared_ptr<AssemblyMap>
-                                                                &pLocToGloMap);
+        public:
+            MULTI_REGIONS_EXPORT GlobalLinSysDirect(
+                const GlobalLinSysKey &pKey,
+                const boost::weak_ptr<ExpList> &pExp,
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
                 
                 MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
-                
-                
+
         protected:
-                /// Basic linear system object.
-                DNekLinSysSharedPtr m_linSys;
-
-                /// Solve the linear system for given input and output vectors
-                /// using a specified local to global map.
-                virtual void v_Solve(
-                        const Array<OneD, const NekDouble> &in,
-                        Array<OneD, NekDouble> &out,
-                        const AssemblyMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
-
-                /// Solve the linear system for given input and output vectors.
-                virtual void v_SolveLinearSystem(
-                        const int pNumRows,
-                        const Array<OneD,const NekDouble> &pInput,
-                              Array<OneD,      NekDouble> &pOutput,
-                        const AssemblyMapSharedPtr &locToGloMap,
-                        const int pNumDir = 0);
-
-		    private:
-                
+            /// Basic linear system object.
+            DNekLinSysSharedPtr m_linSys;
+            /// Solve the linear system for given input and output vectors.
+            virtual void v_SolveLinearSystem(
+                const int pNumRows,
+                const Array<OneD,const NekDouble> &pInput,
+                      Array<OneD,      NekDouble> &pOutput,
+                const AssemblyMapSharedPtr &locToGloMap,
+                const int pNumDir = 0);
         };
     }
 }

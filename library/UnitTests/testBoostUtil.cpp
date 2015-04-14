@@ -73,7 +73,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(testMakePtr)
         {
             boost::shared_ptr<FakeClass<int> > a(new FakeClass<int>());
-            FakeClass<int>& b = ConsistentObjectAccess<boost::shared_ptr<FakeClass<int> > >::reference(a);
+            //FakeClass<int>& b = ConsistentObjectAccess<boost::shared_ptr<FakeClass<int> > >::reference(a);
             
             {
                 boost::shared_ptr<TestClass> p = MakePtr(new TestClass());

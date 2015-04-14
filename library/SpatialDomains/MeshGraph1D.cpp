@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -47,10 +47,11 @@ namespace Nektar
         {
         }
 
-        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
-            ReadGeometry(pSession->GetDocument());
+            ReadGeometry  (pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
         }
 
@@ -59,7 +60,7 @@ namespace Nektar
         }
 
         // \brief Read segments (and general MeshGraph) given filename.
-        void MeshGraph1D::ReadGeometry(std::string &infilename)
+        void MeshGraph1D::ReadGeometry(const std::string &infilename)
         {
             TiXmlDocument doc(infilename);
 
@@ -80,7 +81,6 @@ namespace Nektar
             MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
 
             /// Look for all geometry related data in GEOMETRY block.
@@ -122,7 +122,7 @@ namespace Nektar
 //                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 TiXmlNode* elementChild = segment->FirstChild();
-                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     elementChild = elementChild->NextSibling();
                 }
@@ -142,8 +142,8 @@ namespace Nektar
 
                     ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
 
-                    VertexComponentSharedPtr v1 = GetVertex(vertex1);
-                    VertexComponentSharedPtr v2 = GetVertex(vertex2);
+                    PointGeomSharedPtr v1 = GetVertex(vertex1);
+                    PointGeomSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
                     seg->SetGlobalID(indx);
                     m_segGeoms[indx] = seg;
@@ -198,7 +198,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }

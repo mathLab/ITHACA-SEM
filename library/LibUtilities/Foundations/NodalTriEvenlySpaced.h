@@ -39,7 +39,6 @@
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -48,7 +47,6 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
- 
         class NodalTriEvenlySpaced: public Points<NekDouble>
         {
         public:
@@ -57,49 +55,41 @@ namespace Nektar
                             
             }
 
-            NodalTriEvenlySpaced(const PointsKey &key):PointsBaseType(key)
+            NodalTriEvenlySpaced(const PointsKey &key) : PointsBaseType(key)
             {
 
             }
             
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+                Create(const PointsKey &key);
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim()==2, "NodalTriEvenlySpaced Points can only interp to other 2d point distributions");
+                ASSERTL0(pkey.GetPointsDim() == 2, 
+                         "NodalTriEvenlySpaced Points can only interp to other "
+                         "2d point distributions");
                 Array<OneD, const NekDouble> x, y;
                 PointsManager()[pkey]->GetPoints(x, y);
-                
                 return GetI(x, y);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x,
-                                                                const Array<OneD, const NekDouble>& y)
+            const MatrixSharedPtrType GetI(
+                const Array<OneD, const NekDouble> &x,
+                const Array<OneD, const NekDouble> &y)
             {
-                int numpoints = x.num_elements();
+                int          numpoints = x.num_elements();
+                unsigned int np        = GetTotNumPoints();
                 
-                return GetI(numpoints, x, y);
-
-            }
-
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints,
-                                                                const Array<OneD, const NekDouble>& xi,
-                                                                const Array<OneD, const NekDouble>& yi)
-            {
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
-                CalculateInterpMatrix(xi, yi, interp);
+                CalculateInterpMatrix(x, y, interp);
                 
-                unsigned int np = GetTotNumPoints();
                 NekDouble* d = interp.data();
-                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, np, d));
-                
-                return returnval;
+                return MemoryManager<NekMatrix<NekDouble> >
+                    ::AllocateSharedPtr(numpoints, np, d);
             }
-
 
         private:
-        
-            /// Deafult constructor should not be called except by Create matrix           
+            /// Deafult constructor should not be called except by Create matrix
             NodalTriEvenlySpaced():PointsBaseType(NullPointsKey)
             {
             }
@@ -108,12 +98,10 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
-
-            void CalculateInterpMatrix(const Array<OneD, const NekDouble>& xi,
-                                       const Array<OneD, const NekDouble>& yi,
-                                       Array<OneD, NekDouble>& interp);
-
-
+            void CalculateInterpMatrix(
+                const Array<OneD, const NekDouble> &xi,
+                const Array<OneD, const NekDouble> &yi,
+                      Array<OneD,       NekDouble> &interp);
         }; // end of NodalTriEvenlySpaced
    } // end of namespace
 } // end of namespace 

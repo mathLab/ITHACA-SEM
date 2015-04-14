@@ -37,21 +37,31 @@
 #include <SpatialDomains/Geometry1D.h>
 #include <StdRegions/StdHexExp.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int HexGeom::VertexEdgeConnectivity[8][3] = {
+            {0,3,4},{0,1,5},{1,2,6},{2,3,7},
+            {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
+        const unsigned int HexGeom::VertexFaceConnectivity[8][3] = {
+            {0,1,4},{0,1,2},{0,2,3},{0,3,4},
+            {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
+        const unsigned int HexGeom::EdgeFaceConnectivity[12][2] = {
+            {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
+            {1,5},{2,5},{3,5},{4,5}};
+
         HexGeom::HexGeom()
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
         }
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
@@ -71,32 +81,32 @@ namespace Nektar
 
             if (m_forient[0] < 9)
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
             }
             else
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
             }
             
             if (m_forient[5] < 9)
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(2));
             }
             else
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(3));
             }
             
             int order0  = *max_element(tmp1.begin(), tmp1.end());
@@ -107,32 +117,32 @@ namespace Nektar
             
             if (m_forient[0] < 9)
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
             }
 
             if (m_forient[5] < 9)
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(2));
             }
             
             int order1  = *max_element(tmp1.begin(), tmp1.end());
@@ -143,32 +153,32 @@ namespace Nektar
 
             if (m_forient[1] < 9)
             {
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(2));
             }
             
             if (m_forient[3] < 9)
             {
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(2));
             }
 
             int order2  = *max_element(tmp1.begin(), tmp1.end());
@@ -184,35 +194,16 @@ namespace Nektar
                 LibUtilities::eModified_A, order2,
                 LibUtilities::PointsKey(points2,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
-            }
+            m_xmap = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-
-        /*
-        HexGeom::HexGeom(const QuadGeomSharedPtr faces[], 
-                         const Array<OneD, StdRegions::StdExpansion3DSharedPtr> &xMap) :
-            Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
-        {
-            HexGeom::HexGeom(faces);
-            
-            for(int i = 0; i < xMap.num_elements(); ++i)
-            {
-                m_xmap[i] = xMap[i];
-            }
-        }
-        */
 
         HexGeom::~HexGeom()
         {
             
         }
 
-        void HexGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void HexGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -224,9 +215,9 @@ namespace Nektar
                 // check to see if expansions are linear
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(2) != 2 )
+                    if (m_xmap->GetBasisNumModes(0) != 2 ||
+                        m_xmap->GetBasisNumModes(1) != 2 ||
+                        m_xmap->GetBasisNumModes(2) != 2 )
                     {
                         Gtype = eDeformed;
                     }
@@ -266,23 +257,23 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                                            Gtype, m_coordim, m_xmap, tbasis);
-
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, m_coeffs);
                 m_geomFactorsState = ePtsFilled;
             }
         }
 
-        void HexGeom::v_GetLocCoords(
+        NekDouble HexGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             int i;
 
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
@@ -290,18 +281,18 @@ namespace Nektar
                 NekDouble xi0 = 0.0;
                 NekDouble xi1 = 0.0;
                 NekDouble xi2 = 0.0;
-                Array<OneD, const NekDouble> pts;
+                Array<OneD, NekDouble> pts(m_xmap->GetTotPoints());
                 int nq0, nq1, nq2;
 
                 // get points;
                 //find end points
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    nq0 = m_xmap[i]->GetNumPoints(0);
-                    nq1 = m_xmap[i]->GetNumPoints(1);
-                    nq2 = m_xmap[i]->GetNumPoints(2);
+                    nq0 = m_xmap->GetNumPoints(0);
+                    nq1 = m_xmap->GetNumPoints(1);
+                    nq2 = m_xmap->GetNumPoints(2);
 
-                    pts = m_xmap[i]->GetPhys();
+                    m_xmap->BwdTrans(m_coeffs[i], pts);
 
                     // use projection to side 1 to determine xi_1 coordinate based on length
                     len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
@@ -323,14 +314,17 @@ namespace Nektar
             else
             {
                 // Determine nearest point of coords  to values in m_xmap
-                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
-                Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
-                int npts = ptsx.num_elements();
+                int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
                 Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
-                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
-                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
-                const Array<OneD, const NekDouble> zc = m_xmap[0]->GetPoints(2);
+
+                m_xmap->BwdTrans(m_coeffs[0], ptsx);
+                m_xmap->BwdTrans(m_coeffs[1], ptsy);
+                m_xmap->BwdTrans(m_coeffs[2], ptsz);
+
+                const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+                const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
                 
                 //guess the first local coords based on nearest point
                 Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
@@ -350,21 +344,81 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,
+                                           resid);
             }
+            return resid;
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+        }
+
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
+        {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
         }
 
         bool HexGeom::v_ContainsPoint(
-            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol,
+            NekDouble &resid)
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
-            v_GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
-                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
-                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> mincoord(3), maxcoord(3);
+                NekDouble diff = 0.0;
+
+                v_FillGeom();
+
+                const int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> pts(npts);
+
+                for(i = 0; i < 3; ++i)
+                {
+                    m_xmap->BwdTrans(m_coeffs[i], pts);
+
+                    mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
+
+                    diff = max(maxcoord[i] - mincoord[i],diff); 
+                }
+
+                for(i = 0; i < 3; ++i)
+                {
+                    if((gloCoord[i] < mincoord[i] - 0.2*diff)||
+                       (gloCoord[i] > maxcoord[i] + 0.2*diff))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            v_GetLocCoords(gloCoord, locCoord);
+
+            if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol
+                && locCoord[1] >= -(1+tol) && locCoord[1] <= 1+tol
+                && locCoord[2] >= -(1+tol) && locCoord[2] <= 1+tol)
             {
                 return true;
             }
@@ -388,30 +442,34 @@ namespace Nektar
 
         int HexGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
-	    const unsigned int VertexEdgeConnectivity[][3] = {
-	        {0,3,4},{0,1,5},{1,2,6},{2,3,7},
-                {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
-
 	    return VertexEdgeConnectivity[i][j];
 	}
 
         int HexGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
-	    const unsigned int VertexFaceConnectivity[][3] = {
-	        {0,1,4},{0,1,2},{0,2,3},{0,3,4},
-	        {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
-
 	    return VertexFaceConnectivity[i][j];
 	}
 
         int HexGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
-	    const unsigned int EdgeFaceConnectivity[][2] = {
-                {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
-	        {1,5},{2,5},{3,5},{4,5}};
-
 	    return EdgeFaceConnectivity[i][j];
 	}
+
+        int HexGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0 || faceidx == 1)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1 || faceidx == 3)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
+        }
 
         void HexGeom::SetUpLocalEdges()
         {
@@ -885,91 +943,3 @@ namespace Nektar
 
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: HexGeom.cpp,v $
-// Revision 1.22  2010/01/20 18:05:09  cantwell
-// Added utility for probing a line of points in a FLD file.
-//
-// Revision 1.21  2009/12/17 01:47:31  bnelson
-// Fixed visual studio compiler warning.
-//
-// Revision 1.20  2009/12/16 21:29:31  bnelson
-// Removed unused variables to fix compiler warnings.
-//
-// Revision 1.19  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.18  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.17  2008/12/18 14:08:58  pvos
-// NekConstants update
-//
-// Revision 1.16  2008/11/17 08:59:54  ehan
-// Added necessary mapping routines for Tet
-//
-// Revision 1.15  2008/09/23 22:09:00  ehan
-// Added new constructor HexGeom
-//
-// Revision 1.14  2008/09/23 22:06:26  ehan
-// Added new GeomFactor constructor.
-//
-// Revision 1.13  2008/09/23 18:19:56  pvos
-// Updates for working ProjectContField3D demo
-//
-// Revision 1.12  2008/09/17 13:46:26  pvos
-// Added LocalToGlobalC0ContMap for 3D expansions
-//
-// Revision 1.11  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.10  2008/06/18 19:27:18  ehan
-// Added implementation for GetLocCoords(..)
-//
-// Revision 1.9  2008/06/14 01:22:05  ehan
-// Implemented constructor and FillGeom().
-//
-// Revision 1.8  2008/06/12 21:22:43  delisi
-// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
-//
-// Revision 1.7  2008/05/29 19:02:23  delisi
-// Renamed eHex to eHexahedron.
-//
-// Revision 1.6  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.5  2008/05/12 17:28:26  ehan
-// Added virtual functions
-//
-// Revision 1.4  2008/04/06 06:00:37  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.3  2008/02/08 23:05:28  jfrazier
-// More work on 3D components.
-//
-// Revision 1.2  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.11  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.10  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.9  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

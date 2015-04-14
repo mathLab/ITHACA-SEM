@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::ExpList1DSharedPtr Exp,Sol;
     int i,j;
@@ -88,12 +87,6 @@ int main(int argc, char *argv[])
     // Backward Transform Solution to get projected values
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
-
-    //--------------------------------------------
-    // Write solution 
-    ofstream outfile("ProjectLocFile1D.dat");
-    Exp->WriteToFile(outfile);
-    //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_inf error

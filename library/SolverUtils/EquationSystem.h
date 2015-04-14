@@ -40,9 +40,14 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <SpatialDomains/SpatialData.h>
+#include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
@@ -59,9 +64,9 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
-        
+
         /// A base class for describing how to solve specific equations.
-        class EquationSystem
+        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -96,6 +101,25 @@ namespace Nektar
             {
                 return m_sessionName;
             }
+
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
+            }
+
+            /// Reset Session name
+            SOLVER_UTILS_EXPORT void ResetSessionName(std::string newname)
+            {
+                m_sessionName = newname;
+            }
             
             /// Get Session name
             SOLVER_UTILS_EXPORT LibUtilities::SessionReaderSharedPtr GetSession()
@@ -116,31 +140,36 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 Array<OneD, Array<OneD, NekDouble> >& pArray,
                 std::string pFunctionName,
-                const NekDouble pTime = 0.0);
+                const NekDouble pTime = 0.0,
+                const int domain = 0);
             
             /// Populate given fields with the function from session.
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 std::vector<std::string> pFieldNames,
                 Array<OneD, Array<OneD, NekDouble> > &pFields,
-                const std::string& pName);
+                const std::string& pName,
+                const int domain = 0);
             
             /// Populate given fields with the function from session.
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 std::vector<std::string> pFieldNames,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                const std::string& pName);
+                const std::string& pName,
+                const int domain = 0);
             
             // Populate an array with a function variable from session.
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 std::string pFieldName,
                 Array<OneD, NekDouble>& pArray,
                 const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0);
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
             
             // Describe a function.
             SOLVER_UTILS_EXPORT std::string DescribeFunction(
                 std::string pFieldName,
-                const std::string &pFunctionName);
+                const std::string &pFunctionName,
+                const int domain);
             
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(
@@ -149,7 +178,8 @@ namespace Nektar
             /// Initialise the data in the dependent fields.
             SOLVER_UTILS_EXPORT inline void SetInitialConditions(
                 NekDouble initialtime = 0.0,
-                bool dumpInitialConditions = true);
+                bool dumpInitialConditions = true,
+                const int domain = 0);
             
             /// Evaluates an exact solution
             SOLVER_UTILS_EXPORT inline void EvaluateExactSolution(
@@ -224,9 +254,12 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void Checkpoint_Output(
                 const int n,
                 MultiRegions::ExpListSharedPtr &field,
-                Array< OneD, Array<OneD, NekDouble> > &fieldcoeffs,
-                Array<OneD, std::string> &variables);
-            
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string> &variables);
+        
+            /// Write base flow file of #m_fields.
+            SOLVER_UTILS_EXPORT void Checkpoint_BaseFlow(const int n);
+
             /// Write field data to the given filename.
             SOLVER_UTILS_EXPORT void WriteFld(const std::string &outname);
             
@@ -234,14 +267,19 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void WriteFld(
                 const std::string &outname,
                 MultiRegions::ExpListSharedPtr &field,
-                Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs,
-                Array<OneD, std::string> &variables);
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string> &variables);
             
             /// Input field data from the given file.
             SOLVER_UTILS_EXPORT void ImportFld(
                 const std::string &infile,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
             
+            /// Input field data from the given file to multiple domains
+            SOLVER_UTILS_EXPORT void ImportFldToMultiDomains(
+                                      const std::string &infile, 
+                                      Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                      const int ndomains);
             
             /// Output a field.
             /// Input field data into array from the given file.
@@ -257,39 +295,23 @@ namespace Nektar
                 MultiRegions::ExpListSharedPtr &pField, 
                 std::string &pFieldName);
             
-            /// Output a field.
-            //        void Array_Output(
-            //                const int n,
-            //                std::string name,
-            //                const Array<OneD, const NekDouble>&inarray,
-            //                bool IsInPhysicalSpace);
-            
-            SOLVER_UTILS_EXPORT void WriteTecplotFile(
-                const int n, 
-                const std::string &name, 
-                bool IsInPhysicalSpace);
-            
             /// Builds map of which element holds each history point.
             SOLVER_UTILS_EXPORT void ScanForHistoryPoints();
             
             /// Probe each history point and write to file.
             SOLVER_UTILS_EXPORT void WriteHistoryData (std::ostream &out);
             
-            /// Write out a full summary.
-            SOLVER_UTILS_EXPORT void Summary          (std::ostream &out);
-            
             /// Write out a session summary.
-            SOLVER_UTILS_EXPORT void SessionSummary   (std::ostream &out);
-            
-            /// Write out a summary of the time parameters.
-            SOLVER_UTILS_EXPORT void TimeParamSummary (std::ostream &out);
+            SOLVER_UTILS_EXPORT void SessionSummary   (SummaryList& vSummary);
             
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateFields();
             
-            SOLVER_UTILS_EXPORT inline Array<
-            OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
-            
+
+            /// Get hold of FieldInfoMap so it can be updated
+            SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
+                &UpdateFieldMetaDataMap();
+
             /// Return final time
             SOLVER_UTILS_EXPORT inline NekDouble GetFinalTime();
             
@@ -368,13 +390,13 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
             
             SOLVER_UTILS_EXPORT inline void NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
             
             SOLVER_UTILS_EXPORT inline void NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array<OneD, Array<OneD, NekDouble> >  &qflux);
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                Array<OneD, Array<OneD, NekDouble> >               &qflux);
             
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
@@ -388,21 +410,22 @@ namespace Nektar
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
+            /// Field input/output
+            LibUtilities::FieldIOSharedPtr              m_fld;
+            /// Map of the interpolation weights for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  float> > > m_interpWeights;
+            /// Map of the interpolation indices for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  unsigned int> > > m_interpInds;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
-            /// Array holding force values.
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
             /// Pointer to boundary conditions object.
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
-            /// Filename.
-            std::string                                 m_filename;
             /// Name of the session.
             std::string                                 m_sessionName;
             /// Current time of simulation.
@@ -431,25 +454,31 @@ namespace Nektar
             bool                                        m_MultipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
-            /// Flag to determine if dealiasing is used for homogeneous
-            /// simulations.
-            bool                                        m_dealiasing;
+            /**
+             * \brief Flag to determine if dealiasing is used for
+             * homogeneous simulations.
+             */
+            bool m_homogen_dealiasing;
+            /**
+             * \brief Flag to determine if dealisising is usde for the
+             * Spectral/hp element discretisation.
+             */
+            bool                                        m_specHP_dealiasing;
             /// Type of projection; e.g continuous or discontinuous.
             enum MultiRegions::ProjectionType           m_projectionType;
-            /// Array holding trace normals for DG simulations in the forwards
-            /// direction.
+            /// Array holding trace normals for DG simulations in the forwards direction.
             Array<OneD, Array<OneD, NekDouble> >        m_traceNormals;
             /// 1 x nvariable x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
             /// 2 x m_spacedim x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
-            /// Flag to indicate if the fields should be checked for
-            /// singularity.
+            /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
-            
+            /// Map to identify relevant solver info to dump in output fields
+            LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
+
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
-            bool m_UseContCoeff;
             
             /// Parameter for homogeneous expansions
             enum HomogeneousType
@@ -514,12 +543,13 @@ namespace Nektar
             /// Virtual function for transformation to coefficient space.
             SOLVER_UTILS_EXPORT virtual void v_TransPhysToCoeff();
             
-            /// Virtual function for printing summary information.
-            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
-            
+            /// Virtual function for generating summary information.
+            SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& l);
+
             SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(
                 NekDouble initialtime = 0.0,
-                bool dumpInitialConditions = true);
+                bool dumpInitialConditions = true,
+                const int domain = 0);
             
             SOLVER_UTILS_EXPORT virtual void v_EvaluateExactSolution(
                 unsigned int field,
@@ -539,11 +569,14 @@ namespace Nektar
             
             // Get pressure field if available
             SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
+
+            SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables);
             
         private:
             
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
-            SOLVER_UTILS_EXPORT virtual int v_GetForceDimension();
             SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
                 const int i, Array<OneD,
                 Array<OneD, NekDouble> >&physfield,
@@ -570,13 +603,19 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
             
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
             
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array<OneD, Array<OneD, NekDouble > >  &qflux);
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                Array<OneD, Array<OneD, NekDouble > >              &qflux);
+
+            SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
+                                                      const int goal) const
+            {
+                LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+            }
         };
         
         
@@ -680,16 +719,20 @@ namespace Nektar
         {
             if (m_session->GetComm()->GetRank() == 0)
             {
+                std::vector<std::pair<std::string, std::string> > vSummary;
+                v_GenerateSummary(vSummary);
+
                 out << "=======================================================================" << endl;
-                out << "\tEquation Type   : " << m_session->GetSolverInfo("EQTYPE") << endl;
-                SessionSummary(out);
-                
-                v_PrintSummary(out);
-                
+                SummaryList::const_iterator x;
+                for (x = vSummary.begin(); x != vSummary.end(); ++x)
+                {
+                    out << "\t";
+                    out.width(20);
+                    out << x->first << ": " << x->second << endl;
+                }
                 out << "=======================================================================" << endl;
             }
         }
-        
         
         inline void EquationSystem::SetLambda(NekDouble lambda)
         {
@@ -697,9 +740,10 @@ namespace Nektar
         }
         
         inline void EquationSystem::SetInitialConditions(NekDouble initialtime,
-                                                         bool dumpInitialConditions)
+                                                         bool dumpInitialConditions,
+                                                         const int domain)
         {
-            v_SetInitialConditions(initialtime,dumpInitialConditions);
+            v_SetInitialConditions(initialtime,dumpInitialConditions,domain);
         }
         
         /// Evaluates an exact solution
@@ -713,11 +757,6 @@ namespace Nektar
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateFields(void)
         {
             return m_fields;
-        }
-        
-        inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateForces(void)
-        {
-            return m_forces;
         }
         
         /// Return final time
@@ -749,19 +788,18 @@ namespace Nektar
         
         inline int EquationSystem::GetNvariables(void)
         {
-            return m_fields.num_elements();
+            return m_session->GetVariables().size();
         }
         
         inline const std::string EquationSystem::GetVariable(unsigned int i)
         {
-            return m_boundaryConditions->GetVariable(i);
+            return m_session->GetVariable(i);
         }
         
         inline int EquationSystem::GetTraceTotPoints(void)
         {
             return GetTraceNpoints();
         }
-        
         
         inline int EquationSystem::GetTraceNpoints(void)
         {
@@ -865,17 +903,19 @@ namespace Nektar
             v_NumericalFlux(physfield, numfluxX, numfluxY);
         }
         
-        inline void EquationSystem::NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        inline void EquationSystem::NumFluxforScalar(
+            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             v_NumFluxforScalar(ufield, uflux);
         }
         
-        inline void EquationSystem::NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                                                     Array<OneD, Array<OneD, NekDouble> >  &qflux)
+        inline void EquationSystem::NumFluxforVector(            
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
-            v_NumFluxforVector(ufield,qfield, qflux);
+            v_NumFluxforVector(ufield, qfield, qflux);
         }
     }
 }

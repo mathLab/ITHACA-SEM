@@ -68,8 +68,8 @@ namespace Nektar
         LIB_UTILITIES_EXPORT Array<OneD, NekDouble> ToArray( const NekVector<NekDouble> & x );
         LIB_UTILITIES_EXPORT NekVector<NekDouble> Hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y );
         LIB_UTILITIES_EXPORT NekVector<NekDouble> VectorPower( const NekVector<NekDouble> & x, NekDouble p );
-        LIB_UTILITIES_EXPORT std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision = 2, double threshold = 1e12 );
-        LIB_UTILITIES_EXPORT std::string VectorToString( const NekVector<NekDouble> & v, int precision = 2, double threshold = 1e12 );
+        LIB_UTILITIES_EXPORT std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision = 2, NekDouble threshold = 1e12 );
+        LIB_UTILITIES_EXPORT std::string VectorToString( const NekVector<NekDouble> & v, int precision = 2, NekDouble threshold = 1e12 );
         
         // ////////////////////////////////////////////////////////////////
         // Polynomials(Jacobi, Legendre, and Dubiner) and its derivations        

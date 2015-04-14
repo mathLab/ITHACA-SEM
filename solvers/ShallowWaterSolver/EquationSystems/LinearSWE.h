@@ -29,8 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Linearized Shallow water equations in primitive variables
-//              valid for a constant water depth
+// Description: Linear Shallow water equations in primitive variables
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,18 +46,19 @@ namespace Nektar
    * 
    * 
    **/
+ 
   class LinearSWE : public ShallowWaterSystem
   {
   public:
       friend class MemoryManager<LinearSWE>;
 
     /// Creates an instance of this class
-    static EquationSystemSharedPtr create(
+      static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-        EquationSystemSharedPtr p = MemoryManager<LinearSWE>::AllocateSharedPtr(pSession);
-        p->InitObject();
-        return p;
+      SolverUtils::EquationSystemSharedPtr p = MemoryManager<LinearSWE>::AllocateSharedPtr(pSession);
+      p->InitObject();
+      return p;
     }
     /// Name of class
     static std::string className;
@@ -66,10 +66,15 @@ namespace Nektar
     virtual ~LinearSWE();
 
   protected:
+
     LinearSWE(const LibUtilities::SessionReaderSharedPtr& pSession);
-    
+
     virtual void v_InitObject();
-    
+
+    /// Still water depth traces
+    Array<OneD, NekDouble>                          m_dFwd;
+    Array<OneD, NekDouble>                          m_dBwd;
+	
     void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
 		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
 		  const NekDouble time);
@@ -77,65 +82,27 @@ namespace Nektar
     void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
 			 Array<OneD,  Array<OneD, NekDouble> > &outarray,
 			 const NekDouble time);
-    
-    virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-				 Array<OneD, Array<OneD, NekDouble> > &flux) 
-    {
-      switch(m_expdim)
-	{
-	case 1:
-	  ASSERTL0(false,"1D not implemented for Shallow Water Equations");
-	  break;
-	case 2:
-	  GetFluxVector2D(i,physfield,flux);
-	  break;
-	case 3:
-	  ASSERTL0(false,"3D not implemented for Shallow Water Equations");
-	  break;
-	default:
-	  ASSERTL0(false,"Illegal dimension");
-	}
-    }
-    
-    
-    virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxY)
-    {
-      switch(m_expdim)
-	{
-	case 1:
-	  ASSERTL0(false,"1D not implemented for Shallow Water Equations");
-	  break;
-	case 2:
-	  NumericalFlux2D(physfield,numfluxX,numfluxY);
-	  break;
-	case 3:
-	  ASSERTL0(false,"3D not implemented for Shallow Water Equations");
-	  break;
-	default:
-	  ASSERTL0(false,"Illegal dimension");
-	}
-      
-    }
 
-    void v_PrimitiveToConservative()
-    {
-      m_primitive = true;
-    }
-      
-    void v_ConservativeToPrimitive()
-    {
-      m_primitive = true;
-    }
+    void GetFluxVector(
+     const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
+     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+    
+    virtual void v_PrimitiveToConservative( );
+    
+    virtual void v_ConservativeToPrimitive( );
+
+    const Array<OneD, NekDouble> &GetDepthFwd()
+        {
+            return m_dFwd;
+        }
+    const Array<OneD, NekDouble> &GetDepthBwd()
+        {
+            return m_dBwd;
+        }
   
     private:
-
-	void GetFluxVector1D(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-			     Array<OneD, Array<OneD, NekDouble> > &flux);
-	
-	void GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
-			     Array<OneD, Array<OneD, NekDouble> > &flux);
 
 	void NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 			     Array<OneD, Array<OneD, NekDouble> > &numfluxX);
@@ -144,27 +111,26 @@ namespace Nektar
 			     Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
 			     Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 
-	void AverageLinearNumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-					  Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
-					  Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-
-	void RiemannLinearNumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-					  Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
-					  Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-
-	void RiemannSolver(NekDouble hL,NekDouble uL,NekDouble vL,NekDouble hR,NekDouble uR, 
-			   NekDouble vR, NekDouble &hflux, NekDouble &huflux,NekDouble &hvflux );
 
 	void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 
-	void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
-
 	void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
+	void WallBoundary(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
 
-	void AddCoriolis(const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+	void AddCoriolis( const Array<OneD,  const Array<OneD, NekDouble> > &physarray,
 			       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-    };
+	
+	void ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+				     Array<OneD,       Array<OneD, NekDouble> >&physout);
+	void PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+				     Array<OneD,       Array<OneD, NekDouble> >&physout);
+
+	void GetVelocityVector(
+			       const Array<OneD, Array<OneD, NekDouble> > &physfield,
+			       Array<OneD, Array<OneD, NekDouble> > &velocity);
+  };
+ 
 }
 
-#endif
+#endif 
 

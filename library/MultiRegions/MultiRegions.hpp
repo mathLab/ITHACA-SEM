@@ -39,7 +39,6 @@
 #include <vector>
 #include <SpatialDomains/Conditions.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions
@@ -87,6 +86,9 @@ namespace Nektar
             eXxtFullMatrix,
             eXxtStaticCond,
             eXxtMultiLevelStaticCond,
+            ePETScFullMatrix,
+            ePETScStaticCond,
+            ePETScMultiLevelStaticCond,
             eSIZE_GlobalSysSolnType
         };
 
@@ -102,7 +104,10 @@ namespace Nektar
             "IterativeMultiLevelStaticCond",
             "XxtFull",
             "XxtStaticCond",
-            "XxtMultiLevelStaticCond"
+            "XxtMultiLevelStaticCond",
+            "PETScFull",
+            "PETScStaticCond",
+            "PETScMultiLevelStaticCond"
         };
 
         /// Type of Galerkin projection.
@@ -117,22 +122,37 @@ namespace Nektar
         {
             eNull,    ///< No Solution type specified
             eDiagonal,
-            eInverseLinear,
-	    eLowEnergy,
-            eLinearLowEnergy,
+            eLinearWithDiagonal,
+            eLinear,
+            eLowEnergy,
+            eLinearWithLowEnergy,
             eBlock,
-            eLocalLowEnergy
+            eLinearWithBlock
         };
 
         const char* const PreconditionerTypeMap[] =
         {
             "Null",
             "Diagonal",
-            "InverseLinear",
-	    "LowEnergy",
-	    "LinearLowEnergy",
+            "FullLinearSpaceWithDiagonal",
+            "FullLinearSpace",
+            "LowEnergyBlock",
+            "FullLinearSpaceWithLowEnergyBlock",
             "Block",
-            "LocalLowEnergy"
+            "FullLinearSpaceWithBlock"
+        };
+
+
+        // let's keep this for linking to external
+        // sparse libraries
+        enum MatrixStorageType
+        {
+            eSmvBSR
+        };
+
+        const char* const MatrixStorageTypeMap[] =
+        {
+            "SmvBSR"
         };
 
 
@@ -160,6 +180,26 @@ namespace Nektar
 
         typedef boost::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
 
+        typedef struct _PeriodicEntity
+        {
+            _PeriodicEntity(
+                const int                     id,
+                const StdRegions::Orientation orient,
+                const bool                    isLocal) :
+                id(id), orient(orient), isLocal(isLocal) {}
+
+            _PeriodicEntity() {}
+            
+            /// Geometry ID of entity.
+            int id;
+            /// Orientation of entity within higher dimensional entity.
+            StdRegions::Orientation orient;
+            /// Flag specifying if this entity is local to this partition.
+            bool isLocal;
+        } PeriodicEntity;
+
+        typedef std::map<int, vector<PeriodicEntity> > PeriodicMap;
+        static PeriodicMap NullPeriodicMap;
     }// end of namespace
 }// end of namespace
 

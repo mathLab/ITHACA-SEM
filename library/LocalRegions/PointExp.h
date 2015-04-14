@@ -37,7 +37,7 @@
 #define POINTEXP_H
 
 #include <StdRegions/StdPointExp.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/Expansion0D.h>
 
@@ -48,7 +48,7 @@ namespace Nektar
         class PointExp: virtual public StdRegions::StdPointExp, virtual public Expansion0D
         {
         public:
-            LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
+            LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::PointGeomSharedPtr &m_geom);
             LOCAL_REGIONS_EXPORT ~PointExp(void);
 
             inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
@@ -104,33 +104,23 @@ namespace Nektar
 
             inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
             {
-                m_geom->GetCoords(x,y,z);
+                SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+                v->GetCoords(x,y,z);
             }
 
-            inline void GetCoords(Array<OneD,NekDouble> &coords)
+            inline const SpatialDomains::PointGeomSharedPtr GetGeom() const
             {
-                m_geom->GetCoords(coords);
-            }
-            
-            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const
-            {
-                return m_geom;
+                return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
             }
 
-            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const
-            {
-                return m_geom;
-            }
-            
         protected:
             Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
             Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
-            SpatialDomains::VertexComponentSharedPtr m_geom;
-            
-            const SpatialDomains::GeometrySharedPtr v_GetGeom() const
-            {
-                return m_geom;
-            }
+
+            virtual void v_GetCoords(
+                Array<OneD, NekDouble> &coords_0,
+                Array<OneD, NekDouble> &coords_1,
+                Array<OneD, NekDouble> &coords_2);
         };
         
         // type defines for use of PointExp in a boost vector

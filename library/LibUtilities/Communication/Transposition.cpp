@@ -177,7 +177,6 @@ namespace Nektar
 
         }
 
-
         //====================================================================
         // TODO: Need to generalise the following methods for 1D, 2D and 3D
         unsigned int Transposition::GetK(int i)
@@ -502,10 +501,6 @@ namespace Nektar
                 ASSERTL0(false,
                          "Parallel transposition not implemented yet for "
                          "3D-Homo-2D approach.");
-
-                int num_dofs = inarray.num_elements();
-                int num_points_per_line = num_dofs /
-                        (m_num_points_per_proc[0]*m_num_points_per_proc[1]);
             }
             else
             {

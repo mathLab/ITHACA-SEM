@@ -53,28 +53,20 @@ namespace Nektar
         {
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::GetXmap(const int i)
-        {
-            return v_GetXmap(i);
-        }
-
-        VertexComponentSharedPtr Geometry1D::GetVertex(const int i) const
+        PointGeomSharedPtr Geometry1D::GetVertex(const int i) const
         {
             return v_GetVertex(i);
         }
 
-        StdRegions::ExpansionType Geometry1D::DetExpansionType() const
+        LibUtilities::ShapeType Geometry1D::DetShapeType() const
         {
-            return v_DetExpansionType();
+            return v_DetShapeType();
         }
 
-        void Geometry1D::WriteToFile(std::ofstream &outfile, const int dumpVar)
+        int Geometry1D::GetEid() const
         {
-            v_WriteToFile(outfile,dumpVar);
+            return v_GetEid();
         }
-
-
 
 
         int Geometry1D::v_GetShapeDim() const
@@ -90,20 +82,11 @@ namespace Nektar
             return 0;
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::v_GetXmap(const int i)
+        PointGeomSharedPtr Geometry1D::v_GetVertex(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
-            static StdRegions::StdExpansion1DSharedPtr returnval;
-            return returnval; 
-        }
-
-        VertexComponentSharedPtr Geometry1D::v_GetVertex(const int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            VertexComponentSharedPtr returnval;
+            PointGeomSharedPtr returnval;
             return returnval;
         }
 
@@ -114,20 +97,11 @@ namespace Nektar
             return 0;
         }
 
-        StdRegions::ExpansionType Geometry1D::v_DetExpansionType() const
+        LibUtilities::ShapeType Geometry1D::v_DetShapeType() const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
-            return StdRegions::eNoExpansionType;
+            return LibUtilities::eNoShapeType;
         }
-
-        void Geometry1D::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-        }
-
-
-
     }; //end of namespace
 }; //end of namespace

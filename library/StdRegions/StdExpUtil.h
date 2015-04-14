@@ -61,8 +61,8 @@ namespace Nektar
         Array<OneD, NekDouble> ToArray( const NekVector<NekDouble> & x );
         NekVector<NekDouble> Hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y );
         NekVector<NekDouble> VectorPower( const NekVector<NekDouble> & x, NekDouble p );
-        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision = 2, double threshold = 1e12 );
-        std::string VectorToString( const NekVector<NekDouble> & v, int precision = 2, double threshold = 1e12 );
+        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision = 2, NekDouble threshold = 1e12 );
+        std::string VectorToString( const NekVector<NekDouble> & v, int precision = 2, NekDouble threshold = 1e12 );
         
         // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Monomial Vandermonde stuff for Triangle : Useful to test triangle(integration, interpolation, and derivation) 

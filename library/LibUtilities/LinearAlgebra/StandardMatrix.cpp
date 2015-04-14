@@ -469,7 +469,7 @@ namespace Nektar
     {
         return NekMatrix<DataType, StandardMatrixTag>(rhs, eWrapper);
     }
-
+    
     template<typename DataType>
     boost::shared_ptr<NekMatrix<DataType, StandardMatrixTag> > NekMatrix<DataType, StandardMatrixTag>::CreateWrapper(const boost::shared_ptr<NekMatrix<DataType, StandardMatrixTag> >& rhs)
     {

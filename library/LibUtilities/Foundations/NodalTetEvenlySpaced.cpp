@@ -105,11 +105,6 @@ namespace Nektar
                 return isFace_012(x, y, z, npts) || isFace_013(x, y, z, npts)
                        || isFace_123(x, y, z, npts) || isFace_203(x, y, z, npts);
             }
-
-            bool isInteriorVolume(int x, int y, int z, int npts){
-                return !isFace(x, y, z, npts);
-            }
-
         }
 
         // Calculate evenly spaced number of points

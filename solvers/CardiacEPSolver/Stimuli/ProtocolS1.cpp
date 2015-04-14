@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <CardiacEPSolver/Stimuli/ProtocolS1.h>
 
 namespace Nektar
@@ -98,27 +98,28 @@ namespace Nektar
    
     /**
      *
-     */ 
+     */
     NekDouble ProtocolS1::v_GetAmplitude(const NekDouble time)
     {
-        time1 = time - floor((time-m_start)/m_s1cyclelength)*m_s1cyclelength 
-                     - m_start;
+        // Number of complete S1 intervals
+        NekDouble a = floor((time-m_start)/m_s1cyclelength);
 
-        if( (time1 > 0) && 
-            (m_s1cyclelength * (m_num_s1) + m_start) && 
-            (time1  < m_dur) )
+        // Time since start of most recent S1 interval
+        NekDouble time1 = time - a * m_s1cyclelength - m_start;
+
+        if( (time1 > 0) && (a < m_num_s1) && (time1 < m_dur) )
         {
             return 1.0;
         }
 
         return 0.0;
     }
-    
+
 
     /**
      *
      */
-    void ProtocolS1::v_PrintSummary(std::ostream &out)
+    void ProtocolS1::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         
     }

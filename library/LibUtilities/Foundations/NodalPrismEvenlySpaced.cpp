@@ -131,18 +131,13 @@ namespace Nektar
             
             bool isFace_0354(int x, int y, int z, int npts)
             {
-                return y == 0;
+                return x == 0;
             }
 
             bool isFace(int x, int y, int z, int npts){
                 return isFace_0123(x,y,z,npts) || isFace_014(x,y,z,npts) ||
                        isFace_1254(x,y,z,npts) || isFace_325(x,y,z,npts) ||
                        isFace_0354(x,y,z,npts);
-            }
-
-            bool isInteriorVolume(int x, int y, int z, int npts)
-            {
-                return !isFace(x, y, z, npts);
             }
         }
 

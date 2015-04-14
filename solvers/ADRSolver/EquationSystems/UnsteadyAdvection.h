@@ -38,47 +38,53 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
-#include <SolverUtils/Advection.h>
-
-using namespace Nektar::SolverUtils;
+#include <SolverUtils/AdvectionSystem.h>
 
 namespace Nektar
 {
-    class UnsteadyAdvection : public UnsteadySystem
+    class UnsteadyAdvection : public SolverUtils::AdvectionSystem
     {
     public:
         friend class MemoryManager<UnsteadyAdvection>;
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
+        static SolverUtils::EquationSystemSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p
+                = MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className;
-        
+
         /// Destructor
         virtual ~UnsteadyAdvection();
 
     protected:
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
-        SolverUtils::AdvectionSharedPtr         m_advection;
 
         /// Advection velocity
         Array<OneD, Array<OneD, NekDouble> >    m_velocity;
         Array<OneD, NekDouble>                  m_traceVn;
+
+        // Plane (used only for Discontinous projection
+        //        with 3DHomogenoeus1D expansion)
+        int                                     m_planeNumber;
 
         /// Session reader
         UnsteadyAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Evaluate the flux at each solution point
         void GetFluxVector(
-            const int i, 
-            const Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                  Array<OneD, Array<OneD, NekDouble> > &flux);
-        
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+
+        /// Evaluate the flux at each solution point using dealiasing
+        void GetFluxVectorDeAlias(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+
         /// Compute the RHS
         void DoOdeRhs(
             const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
@@ -93,12 +99,15 @@ namespace Nektar
 
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();
-        
+
         /// Initialise the object
         virtual void v_InitObject();
-        
+
         /// Print Summary
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+
+    private:
+        NekDouble m_waveFreq;
     };
 }
 

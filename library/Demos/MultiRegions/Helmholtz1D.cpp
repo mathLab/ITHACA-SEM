@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
-    string meshfile(vSession->GetFilename());
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -33,22 +32,29 @@ int main(int argc, char *argv[])
 
     try
     {
+        LibUtilities::FieldIOSharedPtr fld =
+            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
+        SpatialDomains::MeshGraphSharedPtr graph1D =
+            SpatialDomains::MeshGraph::Read(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-        const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
         const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
-        cout << "Solving 1D Helmholtz: "  << endl;
-        cout << "       Communication: " << vComm->GetType() << endl;
-        cout << "       Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
-        cout << "       Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
-        cout << "       No. modes    : " << bkey0.GetNumModes() << endl;
+
+        if (vComm->GetRank() ==0)
+        {
+            cout << "Solving 1D Helmholtz: "  << endl;
+            cout << "       Communication: " << vComm->GetType() << endl;
+            cout << "       Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
+            cout << "       Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
+            cout << "       No. modes    : " << bkey0.GetNumModes() << endl;
+        }
         //----------------------------------------------
 
         //----------------------------------------------
@@ -116,11 +122,7 @@ int main(int argc, char *argv[])
         string   out(strtok(argv[1],"."));
         string   endfile(".fld");
         out += endfile;
-        if (vComm->GetSize() > 1)
-        {
-            out += "." + boost::lexical_cast<string>(vComm->GetRank());
-        }
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
             = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
         for(i = 0; i < FieldDef.size(); ++i)
@@ -128,7 +130,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph1D->Write(out, FieldDef, FieldData);
+        fld->Write(out, FieldDef, FieldData);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -150,9 +152,9 @@ int main(int argc, char *argv[])
 
             //--------------------------------------------
             // Calculate errors
-            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
-            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
-            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            NekDouble vLinfError = Exp->Linf(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Exp->GetPhys(), Fce->GetPhys());
             if (vComm->GetRank() == 0)
             {
                 cout << "L infinity error: " << vLinfError << endl;

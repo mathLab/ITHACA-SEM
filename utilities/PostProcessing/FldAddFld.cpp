@@ -8,7 +8,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int i,j;
     NekDouble scal1,scal2;
 
     if(argc != 6)
@@ -27,17 +26,17 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import fieldfile1.
     string fieldfile1(argv[argc-3]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef1;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef1;
     vector<vector<NekDouble> > fielddata1;
-    graph.Import(fieldfile1,fielddef1,fielddata1);
+    LibUtilities::Import(fieldfile1,fielddef1,fielddata1);
     //----------------------------------------------
 
     //----------------------------------------------
     // Import fieldfile2.
     string fieldfile2(argv[argc-2]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef2;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef2;
     vector<vector<NekDouble> > fielddata2;
-    graph.Import(fieldfile2,fielddef2,fielddata2);
+    LibUtilities::Import(fieldfile2,fielddef2,fielddata2);
     //----------------------------------------------
 
 
@@ -89,7 +88,6 @@ int main(int argc, char *argv[])
         // not defined in fielddef1[i]->m_fields
         for(int k = 0; k < fielddef2[i]->m_fields.size(); ++k)
         {
-            int offset = 0;
             for(j = 0; j < fielddef1[i]->m_fields.size(); ++j)
             {
                 if(fielddef2[i]->m_fields[k] == fielddef1[i]->m_fields[j])
@@ -118,7 +116,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write out datafile. 
-    graph.Write(argv[argc-1], fielddef1, fielddata1);
+    LibUtilities::Write(argv[argc-1], fielddef1, fielddata1);
     //-----------------------------------------------
 
     return 0;

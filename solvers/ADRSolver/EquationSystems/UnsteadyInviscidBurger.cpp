@@ -37,11 +37,16 @@
 
 namespace Nektar
 {
-    string UnsteadyInviscidBurger::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyInviscidBurger", UnsteadyInviscidBurger::create, "Inviscid Burger equation");
+    string UnsteadyInviscidBurger::className
+        = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+                "UnsteadyInviscidBurger",
+                UnsteadyInviscidBurger::create,
+                "Inviscid Burger equation");
     
     UnsteadyInviscidBurger::UnsteadyInviscidBurger(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        : UnsteadySystem(pSession),
+          AdvectionSystem(pSession)
     {
     }
     
@@ -51,7 +56,7 @@ namespace Nektar
     void UnsteadyInviscidBurger::v_InitObject()
     {
         // Call to the initialisation object of UnsteadySystem
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
                 
         // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
@@ -67,8 +72,8 @@ namespace Nektar
             {
                 string advName;
                 m_session->LoadSolverInfo("AdvectionType", advName, "NonConservative");
-                m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
-                m_advection->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
+                m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advObject->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
                 break;
             }
             // Discontinuous field 
@@ -78,15 +83,15 @@ namespace Nektar
                 string riemName;
                 
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-                m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
-                m_advection->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
+                m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advObject->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
                 
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
-                m_riemannSolver->AddScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
+                m_riemannSolver->SetScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
                 
-                m_advection->SetRiemannSolver(m_riemannSolver);
-                m_advection->InitObject      (m_session, m_fields);
+                m_advObject->SetRiemannSolver(m_riemannSolver);
+                m_advObject->InitObject      (m_session, m_fields);
                 break;
             }
             default:
@@ -193,7 +198,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >    advVel;    
         
         // RHS computation using the new advection base class
-        m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray);
+        m_advObject->Advect(nVariables, m_fields, advVel, inarray,
+                            outarray, time);
         
         // Negate the RHS
         for (i = 0; i < nVariables; ++i)
@@ -267,18 +273,19 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void UnsteadyInviscidBurger::GetFluxVector(
-        const int i, 
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        for(int j = 0; j < flux.num_elements(); ++j)
+        const int nq = GetNpoints();
+
+        for (int i = 0; i < flux.num_elements(); ++i)
         {
-            Vmath::Vmul(GetNpoints(), 
-                        physfield[i], 1, 
-                        physfield[i], 1, 
-                        flux[j], 1);
-            
-            Vmath::Smul(GetNpoints(), 0.5, flux[j], 1, flux[j], 1);
+            for (int j = 0; j < flux[0].num_elements(); ++j)
+            {
+                Vmath::Vmul(nq, physfield[i], 1, physfield[i], 1, 
+                            flux[i][j], 1);
+                Vmath::Smul(nq, 0.5, flux[i][j], 1, flux[i][j], 1);
+            }
         }
     }
 }

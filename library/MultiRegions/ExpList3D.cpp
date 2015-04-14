@@ -41,6 +41,9 @@
 #include <LocalRegions/PyrExp.h>
 #include <LocalRegions/TetExp.h>
 
+#include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/PhysGalerkinProject.h>
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -48,10 +51,12 @@ namespace Nektar
 
         ExpList3D::ExpList3D(): ExpList()
         {
+            SetExpType(e3D);
         }
 
         ExpList3D::ExpList3D(const ExpList3D &In): ExpList(In)
         {
+            SetExpType(e3D);
         }
 
         ExpList3D::~ExpList3D()
@@ -70,6 +75,7 @@ namespace Nektar
                              const LibUtilities::PointsType TetNb):
             ExpList(pSession,graph3D)
         {
+            SetExpType(e3D);
 
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
@@ -99,7 +105,7 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
 
-                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
+                    m_ncoeffs += LibUtilities::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
                     
                     m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
                 }
@@ -161,16 +167,19 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          */
         ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D) :
+                             const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                             const std::string  &variable) :
             ExpList(pSession,graph3D)
         {
+            SetExpType(e3D);
+
             LocalRegions::TetExpSharedPtr   tet;
             LocalRegions::HexExpSharedPtr   hex;
             LocalRegions::PrismExpSharedPtr prism;
             LocalRegions::PyrExpSharedPtr   pyramid;
 
             const SpatialDomains::ExpansionMap &expansions
-                                        = graph3D->GetExpansions();
+                                        = graph3D->GetExpansions(variable);
 
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
@@ -283,6 +292,8 @@ namespace Nektar
         ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions):
             ExpList()
         {
+            SetExpType(e3D);
+
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
             LocalRegions::PrismExpSharedPtr prism;
@@ -427,12 +438,12 @@ namespace Nektar
 
             for(int i = 0; i < GetExpSize(); ++i)
             {
-                switch ((*m_exp)[i]->DetExpansionType())
+                switch ((*m_exp)[i]->DetShapeType())
                 {
-                    case StdRegions::eTetrahedron:  NumShape[0]++; break;
-                    case StdRegions::ePyramid:      NumShape[1]++; break;
-                    case StdRegions::ePrism:        NumShape[2]++; break;
-                    case StdRegions::eHexahedron:   NumShape[3]++; break;
+                    case LibUtilities::eTetrahedron:  NumShape[0]++; break;
+                    case LibUtilities::ePyramid:      NumShape[1]++; break;
+                    case LibUtilities::ePrism:        NumShape[2]++; break;
+                    case LibUtilities::eHexahedron:   NumShape[3]++; break;
                     default:
                         ASSERTL0(false, "Unknown expansion type.");
                         break;
@@ -444,10 +455,9 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,three,NumShape);
         }
 
-        void ExpList3D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int nquad2 = (*m_exp)[expansion]->GetNumPoints(2);
@@ -464,7 +474,7 @@ namespace Nektar
                     << ntot << "\" NumberOfCells=\""
                     << ntotminus << "\">" << endl;
             outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
+            outfile << "        <DataArray type=\"Float64\" "
                     << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             outfile << "          ";
             for (i = 0; i < ntot; ++i)
@@ -476,6 +486,7 @@ namespace Nektar
                 }
                 outfile << endl;
             }
+
             outfile << endl;
             outfile << "        </DataArray>" << endl;
             outfile << "      </Points>" << endl;
@@ -533,6 +544,76 @@ namespace Nektar
             }
         }
 
+        void ExpList3D::v_PhysInterp1DScaled(const NekDouble scale, 
+                                  const Array<OneD, NekDouble> &inarray, 
+                                  Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                // get new points key
+                int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                int pt2 = (*m_exp)[i]->GetNumPoints(2);
+                int npt0 = (int) pt0*scale;
+                int npt1 = (int) pt1*scale;
+                int npt2 = (int) pt2*scale;
+                
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+                LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[i]->GetPointsType(2));
+
+                // Interpolate points; 
+                LibUtilities::Interp3D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(2)->GetPointsKey(),
+                                       &inarray[cnt], newPointsKey0,
+                                       newPointsKey1, newPointsKey2,
+                                       &outarray[cnt1]);
+
+                cnt  += pt0*pt1*pt2;
+                cnt1 += npt0*npt1*npt2;
+            }
+        }
+        
+        void ExpList3D::v_PhysGalerkinProjection1DScaled(const NekDouble scale, 
+                                           const Array<OneD, NekDouble> &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                // get new points key
+                int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                int pt2 = (*m_exp)[i]->GetNumPoints(2);
+                int npt0 = (int) pt0*scale;
+                int npt1 = (int) pt1*scale;
+                int npt2 = (int) pt2*scale;
+                
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+                LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[i]->GetPointsType(2));
+
+                // Project points; 
+                LibUtilities::PhysGalerkinProject3D(newPointsKey0, 
+                                                    newPointsKey1,
+                                                    newPointsKey2,
+                                                    &inarray[cnt],
+                                       (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(2)->GetPointsKey(),
+                                       &outarray[cnt1]);
+                
+                cnt  += npt0*npt1*npt2;
+                cnt1 += pt0*pt1*pt2;
+            }
+
+        }
   } //end of namespace
 } //end of namespace
 

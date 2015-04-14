@@ -45,7 +45,6 @@
 #include <boost/random/variate_generator.hpp>  // for variate_generator
 #include <boost/random/normal_distribution.hpp>
 
-
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
@@ -77,7 +76,21 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        static NekDouble rad(NekDouble x, NekDouble y)
+        {
+            if (x != 0. || y != 0.)
+                return sqrt (x*x + y*y);
+            else
+                return 0.;
+        }
 
+        static NekDouble ang(NekDouble x, NekDouble y)
+        {
+            NekDouble theta = 0.;
+            if ((x != 0.) || (y != 0.))
+                theta = atan2 (y,x);
+            return theta;
+        }
 
         ///  This class defines evaluator of analytic (symbolic)
         ///  mathematical expressions. Expressions are allowed to
@@ -111,16 +124,17 @@ namespace Nektar
             typedef std::map<std::string, int>    ExpressionMap;
             typedef std::map<std::string, int>    FunctionNameMap;
             typedef std::vector<EvaluationStep*>  ExecutionStack;
-            typedef std::pair<bool, double>       PrecomputedValue;
-            typedef double (*OneArgFunc)(double);
+            typedef std::pair<bool, NekDouble>       PrecomputedValue;
+            typedef NekDouble (*OneArgFunc)(NekDouble);
+            typedef NekDouble (*TwoArgFunc)(NekDouble, NekDouble);
 
             typedef boost_spirit::tree_parse_info<
                             std::string::const_iterator,
-                            boost_spirit::node_val_data_factory<double>
+                            boost_spirit::node_val_data_factory<NekDouble>
                     > ParsedTreeInfo;
             typedef boost_spirit::tree_match<
                             std::string::const_iterator,
-                            boost_spirit::node_val_data_factory<double>
+                            boost_spirit::node_val_data_factory<NekDouble>
                     >::tree_iterator ParsedTreeIterator;
 
             typedef std::vector<const Array<OneD, const NekDouble>* > VariableArray;
@@ -158,37 +172,37 @@ namespace Nektar
             ///  throw an exception stating which constants in the map had this issue. It will add
             ///  all of the constants it can and output the constants it couldn't add in the string
             ///  exception.
-            LIB_UTILITIES_EXPORT void AddConstants(std::map<std::string, double> const& constants);
+            LIB_UTILITIES_EXPORT void AddConstants(std::map<std::string, NekDouble> const& constants);
 
             ///  This function behaves in the same way as #AddConstants, but it only adds one
             ///    constant at a time. If the constant existed previously, an exception will be thrown
             ///    stating the fact. If it did not exist previously, it will be added to the global
             ///    constants and will be used the next time #DefineFunction is called.
-            LIB_UTILITIES_EXPORT int AddConstant(std::string const& name, double value);
+            LIB_UTILITIES_EXPORT int AddConstant(std::string const& name, NekDouble value);
 
-            ///  If a constant with the specified name exists, it returns the double value that the
+            ///  If a constant with the specified name exists, it returns the NekDouble value that the
             ///  constant stores. If the constant doesn't exist, it throws an exception.
-            LIB_UTILITIES_EXPORT double GetConstant(std::string const& name);
+            LIB_UTILITIES_EXPORT NekDouble GetConstant(std::string const& name);
 
             ///  Parameters are like constants, but they are inserted into the function at the time
             ///  #Evaluate is called instead of when the function is parsed. This function can
             ///  be called at any time, and it will take effect in the next call to #Evaluate.
             ///  This function will delete all of the parameters, and replace all of them with only
             ///  the ones in the map argument.
-            LIB_UTILITIES_EXPORT void SetParameters(std::map<std::string, double> const& params);
+            LIB_UTILITIES_EXPORT void SetParameters(std::map<std::string, NekDouble> const& params);
 
             ///  This function behaves in the same way as #SetParameters, but it only adds one
             ///  parameter and it does not delete the others. If the parameter existed previously,
             ///  it will be overridden and replaced with the new value. If it did not exist previously,
             ///  it will be added to the current parameters.
-            LIB_UTILITIES_EXPORT void SetParameter(std::string const& name, double value);
+            LIB_UTILITIES_EXPORT void SetParameter(std::string const& name, NekDouble value);
 
-            ///  If a parameter with the specified name exists, it returns the double value that the
+            ///  If a parameter with the specified name exists, it returns the NekDouble value that the
             ///  parameter stores. If the parameter doesn't exist, it throws an exception.
-            LIB_UTILITIES_EXPORT double GetParameter(std::string const& name);
+            LIB_UTILITIES_EXPORT NekDouble GetParameter(std::string const& name);
 
             ///  Returns the total time spent in evaluation procedures, seconds.
-            LIB_UTILITIES_EXPORT double GetTime() const;
+            LIB_UTILITIES_EXPORT NekDouble GetTime() const;
 
 
             // ======================================================
@@ -206,23 +220,23 @@ namespace Nektar
 
 
             ///  Evaluation method for expressions depending on parameters only.
-            LIB_UTILITIES_EXPORT double Evaluate(const int AnalyticExpression_id);
+            LIB_UTILITIES_EXPORT NekDouble Evaluate(const int AnalyticExpression_id);
 
             ///  Evaluation method for expressions depending on 4 variables (+parameters).
-            LIB_UTILITIES_EXPORT double Evaluate(
+            LIB_UTILITIES_EXPORT NekDouble Evaluate(
                         const int AnalyticExpression_id,
-                        const double,
-                        const double,
-                        const double,
-                        const double);
+                        const NekDouble,
+                        const NekDouble,
+                        const NekDouble,
+                        const NekDouble);
 
             ///  Evaluation method for expressions depending on unspecified number of variables.
             ///  This suitable for expressions depending on more than 4 variables or for the dynamic
             ///  setting some variables as parameters (there is currently no interface method
             ///  for removing a variable from parameter map though).
-            LIB_UTILITIES_EXPORT double EvaluateAtPoint(
+            LIB_UTILITIES_EXPORT NekDouble EvaluateAtPoint(
                         const int AnalyticExpression_id,
-                        std::vector<double> point);
+                        std::vector<NekDouble> point);
 
             ///  Vectorized evaluation method for expressions depending on 4 variables.
             LIB_UTILITIES_EXPORT void Evaluate(
@@ -233,9 +247,11 @@ namespace Nektar
                         const Array<OneD, const NekDouble>&,
                         Array<OneD, NekDouble>& result);
 
+
+
             ///  Vectorized evaluation method for expressions depending on unspecified
             ///  number of variables.
-            LIB_UTILITIES_EXPORT void EvaluateAtPoints(
+            LIB_UTILITIES_EXPORT void Evaluate(
                     const int expression_id,
                     const std::vector<Array<OneD, const NekDouble> > points,
                     Array<OneD, NekDouble>& result);
@@ -271,8 +287,8 @@ namespace Nektar
             ///          stateIndex - an index in state[] array where an evaluation
             ///                     step corresponding to the current tree node
             ///                     is allowed to write.
-            ///  \output an std::pair<bool, double> which encodes fully pre-evaluated
-            ///          double value as pair <true, value> if all sub-tree down the
+            ///  \output an std::pair<bool, NekDouble> which encodes fully pre-evaluated
+            ///          NekDouble value as pair <true, value> if all sub-tree down the
             ///          current node evaluates to constant, or flags the opposite
             ///          via pair <false,0>.
             LIB_UTILITIES_EXPORT PrecomputedValue PrepareExecutionAsYouParse(
@@ -291,18 +307,18 @@ namespace Nektar
                 constants are those that are in math.h without the M_ prefix and they are
                 initialized in the AnalyticExpressionEvaluator constructor. **/
 
-            boost_spirit::symbols<double> m_constantsParser;
+            boost_spirit::symbols<NekDouble> m_constantsParser;
 
 
             /** This is the class that is used as the grammar parser for the spirit engine. **/
             class AnalyticExpression : public boost_spirit::grammar<AnalyticExpression>
             {
             private:
-                const boost_spirit::symbols<double>* constants_p;
+                const boost_spirit::symbols<NekDouble>* constants_p;
 
                 /** Variables is a customized parser that will match the variables that the function
                     depends on (the first argument of #DefineFunction). **/
-                struct variables : boost_spirit::symbols<double*>
+                struct variables : boost_spirit::symbols<NekDouble*>
                 {
                     variables(std::vector<std::string> const& vars)
                     {
@@ -322,8 +338,15 @@ namespace Nektar
                 static const int factorID       = 6;
                 static const int operatorID     = 7;
 
-                AnalyticExpression(const boost_spirit::symbols<double>* constants, const std::vector<std::string>& variables) :
-                        boost_spirit::grammar<AnalyticExpression>(), constants_p(constants), variables_p(variables) {}
+                AnalyticExpression(const boost_spirit::symbols<NekDouble>* constants, const std::vector<std::string>& variables) :
+                    boost_spirit::grammar<AnalyticExpression>(), constants_p(constants), variables_p(variables) {}
+
+                // Trivial constructor to avoid compiler warning with
+                // constants_p.
+                ~AnalyticExpression()
+                {
+                    constants_p = NULL;
+                }
 
                 template <typename ScannerT>
                 struct definition
@@ -331,8 +354,8 @@ namespace Nektar
                     /** This function specifies the grammar of the MathAnalyticExpression parser. **/
                     definition(AnalyticExpression const& self);
 
-                    /** This holds the double value that is parsed by spirit so it can be stored in the AST. **/
-                    double ParsedDouble;
+                    /** This holds the NekDouble value that is parsed by spirit so it can be stored in the AST. **/
+                    NekDouble ParsedDouble;
 
                     boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<constantID> >     constant;
                     boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<numberID> >       number;
@@ -390,20 +413,20 @@ namespace Nektar
             ///  stage when the analytic expression is parsed. This associates an integer
             ///  id with a parameter name in its string form. On evaluation stage the id
             ///  and a std::vector constant lookup time make evaluation faster compared
-            ///  to permanent std::map<std::string, double> lookup.
+            ///  to permanent std::map<std::string, NekDouble> lookup.
 
             ParameterMap  m_parameterMapNameToId;
             ConstantMap   m_constantMapNameToId;
             VariableMap   m_expressionVariableMap;
 
-            std::vector<double>  m_parameter;
-            std::vector<double>  m_constant;
-            std::vector<double>  m_variable;
+            std::vector<NekDouble>  m_parameter;
+            std::vector<NekDouble>  m_constant;
+            std::vector<NekDouble>  m_variable;
 
 
             ///  This vector stores the execution state (memory) used by the
             ///  sequential execution process.
-            std::vector<double>  m_state;
+            std::vector<NekDouble>  m_state;
 
             ///  Vector of state sizes per each
             std::vector<int>     m_state_sizes;
@@ -415,7 +438,7 @@ namespace Nektar
 
             ///  Timer and sum of evaluation times
             Timer        m_timer;
-            double       m_total_eval_time;
+            NekDouble       m_total_eval_time;
 
 
             RandomGeneratorType  m_generator;
@@ -431,6 +454,7 @@ namespace Nektar
 
             FunctionNameMap            m_functionMapNameToInstanceType;
             std::map<int, OneArgFunc>  m_function;
+            std::map<int, TwoArgFunc>  m_function2;
 
 
             // ======================================================
@@ -438,8 +462,8 @@ namespace Nektar
             // ======================================================
 
             ///  Short names to minimise the infractructural code mess in defining functors below.
-            typedef std::vector<double>& vr;
-            typedef const std::vector<double>& cvr;
+            typedef std::vector<NekDouble>& vr;
+            typedef const std::vector<NekDouble>& cvr;
             typedef const int  ci;
             typedef RandomGeneratorType& rgt;
 
@@ -452,11 +476,10 @@ namespace Nektar
 
             enum EvaluationStepType
             {
-                    E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2,
-                    E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,
-                    E_FLOOR,  E_LOG,   E_LOG10, E_POW,   E_SIN,
-                    E_SINH,   E_SQRT,  E_TAN,   E_TANH,  E_SIGN,
-                    E_AWGN
+                    E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2, E_ANG,
+                    E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,  E_FLOOR,
+                    E_LOG,    E_LOG10, E_POW,   E_RAD,   E_SIN,   E_SINH,
+                    E_SQRT,   E_TAN,   E_TANH,  E_SIGN,  E_AWGN
             };
 
 
@@ -479,7 +502,7 @@ namespace Nektar
                 ci      argIdx2;
 
                 EvaluationStep(rgt rn, ci i, ci l, ci r, vr s, cvr c, cvr p, cvr v):
-                    rng(rn), storeIdx(i), argIdx1(l), argIdx2(r), state(s), consts(c), params(p), vars(v) {};
+                    rng(rn), state(s), consts(c), params(p), vars(v), storeIdx(i), argIdx1(l), argIdx2(r) {};
 
                 virtual ~EvaluationStep() {}
 
@@ -607,6 +630,18 @@ namespace Nektar
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::atan( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::atan( state[argIdx1] ); }
             };
+            struct EvalAtan2: public EvaluationStep
+            {
+                EvalAtan2(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::atan2( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = std::atan2( state[argIdx1], state[argIdx2] ); }
+            };
+            struct EvalAng: public EvaluationStep
+            {
+                EvalAng(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ang( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = ang( state[argIdx1], state[argIdx2] ); }
+            };
             struct EvalCeil: public EvaluationStep
             {
                 EvalCeil(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
@@ -654,6 +689,12 @@ namespace Nektar
                 EvalLog10(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::log10( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::log10( state[argIdx1] ); }
+            };
+            struct EvalRad: public EvaluationStep
+            {
+                EvalRad(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = rad( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = rad( state[argIdx1], state[argIdx2] ); }
             };
             struct EvalSin: public EvaluationStep
             {

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <CardiacEPSolver/Stimuli/StimulusRect.h>
@@ -68,6 +68,8 @@ namespace Nektar
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
+        m_chiCapMembrane = m_session->GetParameter("chi")
+                            * m_session->GetParameter("Cm");
         
         if (!pXml)
         {
@@ -135,7 +137,8 @@ namespace Nektar
         m_field->GetCoords(x0,x1,x2);
 
         // Get the protocol amplitude
-        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
+        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength
+                            / m_chiCapMembrane;
         
         switch (dim)
         {
@@ -144,17 +147,17 @@ namespace Nektar
             {
                 outarray[0][j] += v_amp * ( ( tanh(m_pis*(x0[j] - m_px1)) 
                                               - tanh(m_pis*(x0[j] - m_px2)) 
-                                            ) / 2.0 + 0.5 );
+                                            ) / 2.0 );
             }
             break;
         case 2:
             for(int j=0; j<nq; j++)
             {
-                outarray[0][j] += v_amp * ( ( (tanh(m_pis*(x0[j] - m_px1)) 
+                outarray[0][j] += v_amp * ( ( (tanh(m_pis*(x0[j] - m_px1))
                                                - tanh(m_pis*(x0[j] - m_px2)))
-                                            * (tanh(m_pis*(x1[j] - m_py1)) 
+                                            * (tanh(m_pis*(x1[j] - m_py1))
                                                - tanh(m_pis*(x1[j] - m_py2)))
-                                            ) / 2.0 + 0.5 );
+                                            ) / 2.0 );
             }
             break;
         case 3:
@@ -166,7 +169,7 @@ namespace Nektar
                                                - tanh(m_pis*(x1[j] - m_py2)))
                                             * (tanh(m_pis*(x2[j] - m_pz1)) 
                                                - tanh(m_pis*(x2[j] - m_pz2)))
-                                            ) / 2.0 + 0.5 );
+                                            ) / 2.0 );
             }
             break;
         }
@@ -176,7 +179,7 @@ namespace Nektar
     /**
      *
      */
-    void StimulusRect::v_PrintSummary(std::ostream &out)
+    void StimulusRect::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
 
 

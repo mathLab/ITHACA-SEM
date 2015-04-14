@@ -38,6 +38,9 @@
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <LocalRegions/TetExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LocalRegions/HexExp.h>
 
 
 namespace Nektar
@@ -52,9 +55,9 @@ namespace Nektar
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const boost::shared_ptr<AssemblyMap>
+                &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -62,96 +65,95 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className1;
-            static std::string className2;
-            static std::string className3;
+            static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
-	                 const AssemblyMapSharedPtr &pLocToGloMap);
+                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerLowEnergy() {}
+                virtual ~PreconditionerLowEnergy() {}
 
-	    /*const DNekMatSharedPtr& GetTransformationMatrix() const;
-
-	    const DNekMatSharedPtr& GetTransposedTransformationMatrix() const;
-
-	    const DNekMatSharedPtr& GetInverseTransformationMatrix() const;
-
-	    const DNekMatSharedPtr& GetInverseTransposedTransformationMatrix() const;*/
-	    
 	protected:
 
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
+            const boost::weak_ptr<GlobalLinSys> m_linsys;
+            boost::shared_ptr<AssemblyMap> m_locToGloMap;
 
-            PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
+	    DNekBlkMatSharedPtr     m_BlkMat;
+            DNekScalMatSharedPtr    m_bnd_mat;
 
-            DNekMatSharedPtr                            m_preconditioner;
-	    DNekScalBlkMatSharedPtr                     GloBlkMat;
+            DNekScalBlkMatSharedPtr m_RBlk;
+            DNekScalBlkMatSharedPtr m_RTBlk;
+            DNekScalBlkMatSharedPtr m_InvRBlk;
+            DNekScalBlkMatSharedPtr m_InvRTBlk;
 
-            DNekScalMatSharedPtr                        bnd_mat;
+            DNekScalMatSharedPtr    m_Rtet;
+            DNekScalMatSharedPtr    m_RTtet;
+            DNekScalMatSharedPtr    m_Rinvtet;
+            DNekScalMatSharedPtr    m_RTinvtet;
 
-	    DNekMatSharedPtr                            m_vertexedgefacetransformmatrix;
-            DNekMatSharedPtr                            m_vertexedgefacecoupling;
-	    DNekMatSharedPtr                            m_edgefacecoupling;
-	    DNekMatSharedPtr                            m_transformationmatrix;
-	    DNekMatSharedPtr                            m_inversetransformationmatrix;
-	    DNekMatSharedPtr                            m_transposedtransformationmatrix;
-	    DNekMatSharedPtr                            m_inversetransposedtransformationmatrix;
-	    DNekMatSharedPtr                            m_efedgefacecoupling;
-	    DNekMatSharedPtr                            m_effacefacecoupling;
-	    DNekMatSharedPtr                            m_edgefacetransformmatrix;
+            DNekScalMatSharedPtr    m_Rhex;
+            DNekScalMatSharedPtr    m_RThex;
+            DNekScalMatSharedPtr    m_Rinvhex;
+            DNekScalMatSharedPtr    m_RTinvhex;
 
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
+            DNekScalMatSharedPtr    m_Rprism;
+            DNekScalMatSharedPtr    m_RTprism;
+            DNekScalMatSharedPtr    m_Rinvprism;
+            DNekScalMatSharedPtr    m_RTinvprism;
 
-            Array<OneD, int>                            vertModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
-
-            Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
+            Array<OneD, NekDouble>  m_locToGloSignMult;
+            Array<OneD, NekDouble>  m_multiplicity;
+            Array<OneD, int>        m_map;
 
 	private:
 
-	    void InverseLinearSpacePreconditioner(void);
+            void SetUpReferenceElements(void);
 
-	    void StaticCondInverseLinearSpacePreconditioner(void);
+            void CreateMultiplicityMap(void);
 
-	    void SetUpLowEnergyBasis(void);
+            void SetupBlockTransformationMatrix(void);
 
-            void CreateLinearFiniteElmentSpace(void);
+            void ModifyPrismTransformationMatrix(
+                LocalRegions::TetExpSharedPtr TetExp,
+                LocalRegions::PrismExpSharedPtr PrismExp,
+                DNekMatSharedPtr Rmodprism,
+                DNekMatSharedPtr RTmodprism);
 
-            void CreateReferenceGeometryAndMatrix(void);
-
-	    void SetLowEnergyModes_Rv(void);
-
-	    void SetLowEnergyModes_Ref(void);
-
-	    void SetUpInverseTransformationMatrix(void);
-
-	    void LowEnergyPreconditioner(void);
-
-	    void BlockPreconditioner(void);
-
-	    void VertexEdgeFaceMatrix(void);
+            SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
+            SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
+            SpatialDomains::HexGeomSharedPtr CreateRefHexGeom(void);
 
             virtual void v_InitObject();
 
             virtual void v_DoPreconditioner(                
-                      const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
-	    virtual const DNekMatSharedPtr& v_GetTransformationMatrix() const;
+            virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
 
-	    virtual const DNekMatSharedPtr& v_GetTransposedTransformationMatrix() const;
+            virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
-	    virtual const DNekMatSharedPtr& v_GetInverseTransformationMatrix() const;
+            virtual void v_DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInOut);
 
-	    virtual const DNekMatSharedPtr& v_GetInverseTransposedTransformationMatrix() const;
+            virtual void v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
-	};
+            virtual void v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+            
+            virtual void v_BuildPreconditioner();
+            
+            virtual DNekScalMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+        };
     }
 }
 

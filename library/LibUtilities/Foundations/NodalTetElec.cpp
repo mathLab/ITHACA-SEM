@@ -51,11 +51,11 @@ namespace Nektar
         void NodalTetElec::CalculatePoints()
         {
             // Allocate the storage for points
-            Points<double>::CalculatePoints();
+            Points<NekDouble>::CalculatePoints();
 
             int index=0,isum=0;
             const int offset = 5; //offset to match Datafile
-            NekDouble a,b,c,d;
+            NekDouble b,c,d;
             unsigned int numPoints = GetNumPoints();
 
             // initialize values
@@ -69,7 +69,6 @@ namespace Nektar
                 // 1 Point Symmetry: aaaa
                 if(int(NodalTetElecData[index][0]))
                 {
-                    a = NodalTetElecData[index][5];
                     b = NodalTetElecData[index][6];
                     c = NodalTetElecData[index][7];
                     d = NodalTetElecData[index][8];
@@ -87,7 +86,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 4; ++j)
                     {
-                        a = NodalTetElecData[index][offset + perm4_3d[j][0]];
                         b = NodalTetElecData[index][offset + perm4_3d[j][1]];
                         c = NodalTetElecData[index][offset + perm4_3d[j][2]];
                         d = NodalTetElecData[index][offset + perm4_3d[j][3]];
@@ -106,7 +104,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 6; ++j)
                     {
-                        a = NodalTetElecData[index][offset + perm6_3d[j][0]];
                         b = NodalTetElecData[index][offset + perm6_3d[j][1]];
                         c = NodalTetElecData[index][offset + perm6_3d[j][2]];
                         d = NodalTetElecData[index][offset + perm6_3d[j][3]];
@@ -125,7 +122,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 12; ++j)
                     {
-                        a = NodalTetElecData[index][offset + perm12A_3d[j][0]];
                         b = NodalTetElecData[index][offset + perm12A_3d[j][1]];
                         c = NodalTetElecData[index][offset + perm12A_3d[j][2]];
                         d = NodalTetElecData[index][offset + perm12A_3d[j][3]];
@@ -144,7 +140,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 12; ++j)
                     {
-                        a = NodalTetElecData[index][offset + perm12B_3d[j][0]];
                         b = NodalTetElecData[index][offset + perm12B_3d[j][1]];
                         c = NodalTetElecData[index][offset + perm12B_3d[j][2]];
                         d = NodalTetElecData[index][offset + perm12B_3d[j][3]];
@@ -163,7 +158,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 12; ++j)
                     {
-                        a = NodalTetElecData[index][offset + perm12C_3d[j][0]];
                         b = NodalTetElecData[index][offset + perm12C_3d[j][1]];
                         c = NodalTetElecData[index][offset + perm12C_3d[j][2]];
                         d = NodalTetElecData[index][offset + perm12C_3d[j][3]];
@@ -181,7 +175,6 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 24; ++j)
                     {
-                        a = NodalTetElecData[index][offset + perm24_3d[j][0]];
                         b = NodalTetElecData[index][offset + perm24_3d[j][1]];
                         c = NodalTetElecData[index][offset + perm24_3d[j][2]];
                         d = NodalTetElecData[index][offset + perm24_3d[j][3]];

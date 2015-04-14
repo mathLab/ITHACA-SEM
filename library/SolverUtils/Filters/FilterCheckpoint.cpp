@@ -61,6 +61,8 @@ namespace Nektar
             m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
             m_outputIndex = 0;
             m_index = 0;
+            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+
         }
 
         FilterCheckpoint::~FilterCheckpoint()
@@ -83,17 +85,9 @@ namespace Nektar
             }
 
             std::stringstream vOutputFilename;
-            vOutputFilename << m_outputFile << "_" << m_outputIndex;
+            vOutputFilename << m_outputFile << "_" << m_outputIndex << ".chk";
 
-            if (m_session->GetComm()->GetSize() > 1)
-            {
-                vOutputFilename << "_P" << m_session->GetComm()->GetRank();
-            }
-            vOutputFilename << ".chk";
-
-            SpatialDomains::MeshGraphSharedPtr vGraph = pFields[0]->GetGraph();
-
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -107,7 +101,7 @@ namespace Nektar
                     pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], pFields[j]->UpdateCoeffs());
                 }
             }
-            vGraph->Write(vOutputFilename.str(),FieldDef,FieldData);
+            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
             m_outputIndex++;
         }
 

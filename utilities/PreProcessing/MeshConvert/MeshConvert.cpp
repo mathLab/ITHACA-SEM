@@ -157,13 +157,13 @@ int main(int argc, char* argv[])
      * module to load.
      */
 
-    MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
+    MeshSharedPtr mesh = boost::shared_ptr<Mesh>(new Mesh());
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
     
     if (vm.count("verbose"))
     {
-        m->verbose = true;
+        mesh->m_verbose = true;
     }
 
     if (vm.count("module"))
@@ -197,8 +197,8 @@ int main(int argc, char* argv[])
             // filename.xml:vtk:opt1=arg1:opt2=arg2
             if (tmp1.size() == 1)
             {
-                int    dot    = tmp1[0].find_last_of('.');
-                string ext    = tmp1[0].substr(++dot, tmp1[0].length() - dot);
+                int    dot    = tmp1[0].find_last_of('.') + 1;
+                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
                 module.second = ext;
                 tmp1.push_back(string(i == 0 ? "infile=" : "outfile=")+tmp1[0]);
             }
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
         }
             
         // Create module.
-        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module,m);
+        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module,mesh);
         modules.push_back(mod);
         
         // Set options for this module.

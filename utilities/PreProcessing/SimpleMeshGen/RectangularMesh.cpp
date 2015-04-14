@@ -11,7 +11,7 @@
 #define TIXML_USE_STL
 #endif
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 
 void Header(FILE *, int nel);
@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
         ASSERTL0(loadOkay, errstr.str());
         
         TiXmlHandle docHandle(&doc);
-        TiXmlNode* node = NULL;
         TiXmlElement* master = NULL;   
         TiXmlElement* block = NULL;
         

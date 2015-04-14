@@ -40,15 +40,46 @@ namespace Nektar
     namespace LocalRegions
     {
 
-        PointExp::PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom):
-            m_coeffs(1,0.0),
-            m_phys(1,0.0),
-            m_geom(m_geom)
+        PointExp::PointExp(const SpatialDomains::PointGeomSharedPtr &geom):
+            StdExpansion  (1,0),
+            StdExpansion0D(),
+            StdRegions::StdPointExp(),
+            Expansion     (geom),
+            Expansion0D   (geom)
         {
+            m_ncoeffs = 1;
         }
         
         PointExp::~PointExp(void)
         {
         }
+
+        void PointExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
+                Array<OneD, NekDouble> &coords_1,
+                Array<OneD, NekDouble> &coords_2)
+        {
+            ASSERTL1(coords_0.num_elements() > 0,
+                     "Coords_0 is of insufficient size.");
+            ASSERTL1(GetCoordim() < 2 || coords_1.num_elements() > 0,
+                     "Coords_1 is of insufficient size.");
+            ASSERTL1(GetCoordim() < 3 || coords_2.num_elements() > 0,
+                     "Coords_2 is of insufficient size.");
+
+            SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+            NekDouble tmp;
+            switch(GetCoordim())
+            {
+                case 1:
+                    v->GetCoords(coords_0[0], tmp, tmp);
+                    break;
+                case 2:
+                    v->GetCoords(coords_0[0], coords_1[0], tmp);
+                    break;
+                case 3:
+                    v->GetCoords(coords_0[0], coords_1[0], coords_2[0]);
+                    break;
+            }
+        }
+
     }
 }

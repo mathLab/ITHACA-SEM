@@ -36,43 +36,68 @@
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG_H
 #define MULTIREGIONS_ASSEMBLYMAPCG_H
 
+#include <boost/tuple/tuple.hpp>
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-
         static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
-        class ExpList;
         class AssemblyMapCG;
         typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
+        typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
+        typedef vector<map<int, int> > DofGraph;
 
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+                       StdRegions::Orientation   faceOrient1,
+                       StdRegions::Orientation   faceOrient2);
 
+  
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMap
         {
+            typedef Array<OneD, const ExpListSharedPtr> BndCondExp;
+            typedef Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                BndCond;
+        
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession);
-
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string variable = "DefaultVar");
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                                    const int numLocalCoeffs,
-                                    const ExpList &locExp);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const int                                   numLocalCoeffs,
+                const ExpList                              &locExp,
+                const BndCondExp                           &bndCondExp
+                                                    = NullExpListSharedPtrArray,
+                const BndCond                              &bndConditions
+                              = SpatialDomains::NullBoundaryConditionShPtrArray,
+                const bool                                  checkIfSingular
+                                                                        = false,
+                const std::string                           variable
+                                                                 = "defaultVar",
+                const PeriodicMap                          &periodicVerts
+                                                              = NullPeriodicMap,
+                const PeriodicMap                          &periodicEdges
+                                                              = NullPeriodicMap,
+                const PeriodicMap                          &periodicFaces
+                                                             = NullPeriodicMap);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT map<int, vector<pair<int, int> > > 
+            MULTI_REGIONS_EXPORT map<int, vector<ExtraDirDof> >
                 &GetExtraDirDofs()
             {
                 return m_extraDirDofs;
@@ -95,11 +120,47 @@ namespace Nektar
             int m_numNonDirEdgeModes;
             /// Number of non Dirichlet face modes
             int m_numNonDirFaceModes;
+            /// Number of Dirichlet edges
+            int m_numDirEdges;
+            /// Number of Dirichlet faces
+            int m_numDirFaces;
+            /// Number of Dirichlet edges
+            int m_numNonDirEdges;
+            /// Number of Dirichlet faces
+            int m_numNonDirFaces;
+            /// Number of local boundary condition coefficients
+            int m_numLocalBndCondCoeffs;
+            /// Extra dirichlet edges in parallel
+            Array<OneD, int> m_extraDirEdges;
+            /// Number of local boundary condition degrees of freedom.
+            int m_numLocDirBndCondDofs;
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
-            map<int, vector<pair<int, int> > > m_extraDirDofs;
-            
-            void SetUpUniversalC0ContMap(const ExpList &locExp);
+            /// Map indicating degrees of freedom which are Dirichlet but whose
+            /// value is stored on another processor.
+            map<int, vector<ExtraDirDof> > m_extraDirDofs;
+
+            MULTI_REGIONS_EXPORT int CreateGraph(
+                const ExpList                       &locExp,
+                const BndCondExp                    &bndCondExp,
+                const Array<OneD, const BndCond>    &bndConditions,
+                const bool                           checkIfSystemSingular,
+                const PeriodicMap                   &periodicVerts,
+                const PeriodicMap                   &periodicEdges,
+                const PeriodicMap                   &periodicFaces,
+                DofGraph                            &graph,
+                BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+                set<int>                            &extraDirVerts,
+                set<int>                            &extraDirEdges,
+                int                                 &firstNonDirGraphVertId,
+                int                                 &nExtraDirichlet,
+                int                                  mdswitch = 1);
+
+            void SetUpUniversalC0ContMap(
+                const ExpList     &locExp,
+                const PeriodicMap &perVerts = NullPeriodicMap,
+                const PeriodicMap &perEdges = NullPeriodicMap,
+                const PeriodicMap &perFaces = NullPeriodicMap);
 
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
@@ -120,41 +181,41 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual void v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                 Array<OneD,     NekDouble>& pGlobal,
                 int offset) const;
 
-            MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT virtual int v_GetFullSystemBandWidth() const;
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirVertexModes() const;
 
@@ -162,6 +223,18 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaceModes() const;
 
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetExtraDirEdges();
+
+            MULTI_REGIONS_EXPORT virtual AssemblyMapSharedPtr v_LinearSpaceMap(
+                const ExpList &locexp, GlobalSysSolnType solnType);
         };
 
 

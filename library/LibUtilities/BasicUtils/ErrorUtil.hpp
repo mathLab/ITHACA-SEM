@@ -45,14 +45,14 @@ namespace ErrorUtil
 {
     static boost::optional<std::ostream&> outStream;
 
-    static void SetErrorStream(std::ostream& o)
+    inline static void SetErrorStream(std::ostream& o)
     {
         outStream = o;
     }
-
-    static bool HasCustomErrorStream()
+    
+    inline static bool HasCustomErrorStream()
     {
-        return outStream;
+        return outStream ? true : false;
     }
 
     enum ErrType
@@ -63,11 +63,11 @@ namespace ErrorUtil
 
     class NekError : public std::runtime_error
     {
-        public:
-            NekError(const std::string& message) : std::runtime_error(message) {}
+    public:
+        NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
@@ -112,12 +112,12 @@ namespace ErrorUtil
         }
     }
 
-    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
     {
         Error(type, routine, lineNumber, msg.c_str(), level);
     }
 
-    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
     {
         Error(type, routine, lineNumber, msg, 0);
     }
@@ -138,6 +138,12 @@ namespace ErrorUtil
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 0); \
 }
 
+#define WARNINGL0(condition,msg) \
+    if(!(condition)) \
+{ \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+}
+
 
 /// Assert Level 1 -- Debugging which is used whether in FULLDEBUG or
 /// DEBUG compilation mode.  This level assert is designed for aiding
@@ -149,9 +155,15 @@ namespace ErrorUtil
 { \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 1); \
 }
+#define WARNINGL1(condition,msg) \
+    if(!(condition)) \
+{ \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+}
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 #define ASSERTL1(condition,msg)
+#define WARNINGL1(condition,msg)
 #endif //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 
 
@@ -165,9 +177,15 @@ namespace ErrorUtil
 { \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 2); \
 }
+#define WARNINGL2(condition,msg) \
+    if(!(condition)) \
+{ \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+}
 
 #else //NEKTAR_FULLDEBUG
 #define ASSERTL2(condition,msg)
+#define WARNINGL2(condition,msg)
 #endif //NEKTAR_FULLDEBUG
 
 #endif //ERRORUTIL_HPP

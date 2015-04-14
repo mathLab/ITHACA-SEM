@@ -107,7 +107,7 @@ namespace Nektar
 
                 void CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, 
                                            Array<OneD, NekDouble>& interp);
-                               double PeriodicSincFunction(const NekDouble x, const NekDouble h);
+                               NekDouble PeriodicSincFunction(const NekDouble x, const NekDouble h);
         }; // class FourierPoints
     } // end of namespace
 } // end of namespace 

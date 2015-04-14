@@ -17,6 +17,95 @@
 
 using namespace Nektar;
 
+/**
+ * Below is the old function from GeomFactors1D::v_ComputeEdgeTangents. This
+ * However, the vectors were computed in the function below, but is never called
+ * and therefore was never working.
+ *
+ * This utility therefore does not presently work, but the (now removed)
+ * function is kept here for reference.
+ *
+ * -- Chris Cantwell
+ *
+        void GeomFactors1D::v_ComputeEdgeTangents(
+                    const GeometrySharedPtr &geom,
+                    const int edge,
+                    const LibUtilities::PointsKey &to_key)
+        {
+            int k;
+            int nquad= to_key.GetNumPoints();
+            Geometry2DSharedPtr g;
+            ASSERTL0(g= boost::dynamic_pointer_cast<Geometry2D>(geom),
+                     "FAIL");
+
+            GeomFactorsSharedPtr gf = geom->GetMetricInfo();
+            //cannot use m_type here
+            //GeomType gtype = gf->GetGtype();
+            GeomType gtype= m_type;
+            m_tangent =Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+            for( k=0; k< m_coordDim; ++k)
+            {
+                m_tangent[k] = Array<OneD, NekDouble>(nquad);
+            }
+
+            int i;
+
+            DerivStorage deriv = GetDeriv(m_pointsKey);
+            //FillDeriv(deriv, m_pointsKey);
+
+            NekDouble fac;
+            // Regular geometry case
+            if((gtype == eRegular)||(gtype == eMovingRegular))
+            {
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                        Vmath::Fill(nquad, deriv[0][i][0],m_tangent[i],1);
+                }
+
+                // normalise
+                fac = 0.0;
+                for(i =0 ; i < m_coordDim; ++i)
+                {
+                    fac += m_tangent[i][0]*m_tangent[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Smul(nquad,fac,m_tangent[i],1,m_tangent[i],1);
+                }
+            }
+
+            else   // Set up deformed tangents
+            {
+
+            Array<OneD, NekDouble> jac(m_coordDim*nquad);
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    for(int j=0; j<nquad; j++)
+                        {
+                    m_tangent[i][j] = deriv[0][i][j];
+                    }
+                }
+                //normalise normal vectors
+                Array<OneD,NekDouble> work(nquad,0.0);
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vvtvp(nquad, m_tangent[i],1, m_tangent[i],1,work,1,work,1);
+                }
+
+                Vmath::Vsqrt(nquad,work,1,work,1);
+                Vmath::Sdiv(nquad,1.0,work,1,work,1);
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vmul(nquad, m_tangent[i],1,work,1,m_tangent[i],1);
+                }
+            }
+        }
+ *
+ */
 int main(int argc, char *argv[])
 {
     void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
@@ -82,8 +171,7 @@ cout<<"argc="<<argc<<endl;
     //----------------------------------------------
   
     // Also read and store the boundary conditions
-    SpatialDomains::MeshGraph *meshptr = graphShPt.get();
-    SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
+        SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                                         ::AllocateSharedPtr(vSession, graphShPt);
     SpatialDomains::BoundaryConditions bcs(vSession, graphShPt);                                        
@@ -122,9 +210,9 @@ cout<<"cr="<<cr<<endl;
   
     // Import field file.
     string fieldfile(argv[argc-3]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     // Define Expansion    
@@ -138,16 +226,13 @@ cout<<"cr="<<cr<<endl;
     }
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
 
-   
-
-    int lastfield;
+    int lastfield = 0;
     if(solvtype == "CoupledLinearisedNS" && nfields!=2)
     {
-      	    
-         SetFields(graphShPt,boundaryConditions,vSession,fields,nfields-1);
- 	 //decomment
-         //nfields = nfields-1;
-//start
+        SetFields(graphShPt,boundaryConditions,vSession,fields,nfields-1);
+        //decomment
+        //nfields = nfields-1;
+        //start
          lastfield = nfields-1;
          cout<<"Set pressure: "<<lastfield<<endl;           
          int nplanes = fielddef[0]->m_numModes[2];
@@ -157,37 +242,34 @@ cout<<"cr="<<cr<<endl;
          MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
          Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt,fielddef[0]->m_fields[0]);
          fields[lastfield] = Exp3DH1;        
-//end       
+         //end       
     }
     else if(solvtype == "CoupledLinearisedNS" && nfields==2)
     {
-         cout<<"Set pressure split"<<endl;
+        cout<<"Set pressure split"<<endl;
            
-         int nplanes = fielddef[0]->m_numModes[2];
-         const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
-         const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
-         NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
-cout<<"set ppp"<<endl;
-/*
+        int nplanes = fielddef[0]->m_numModes[2];
+        const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
+        const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
+        NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
+        cout<<"set ppp"<<endl;
+        /*
          //to use GetBndCondExpansions() a contfield is needed and you j=have to
          //call it "u" to get the bndconds
          MultiRegions::ContField3DHomogeneous1DSharedPtr Cont3DH1;
          Cont3DH1 = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt, "u");
          fields[0] = Cont3DH1;    
 */
-          fields[0] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr        (vSession,Bkey,lz,false,false,graphShPt,vSession->GetVariable(0)); 
+        fields[0] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+            ::AllocateSharedPtr        (vSession,Bkey,lz,false,false,graphShPt,vSession->GetVariable(0)); 
+        
+        
 
-
-
-         //pressure is field 1
-         lastfield = nfields-1;
-         MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
-         Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt,fielddef[0]->m_fields[0]);
-         fields[lastfield] = Exp3DH1;
-
-
-           
+        //pressure is field 1
+        lastfield = nfields-1;
+        MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
+        Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt,fielddef[0]->m_fields[0]);
+        fields[lastfield] = Exp3DH1;       
     }
     else
     {
@@ -195,7 +277,7 @@ cout<<"set ppp"<<endl;
     	 SetFields(graphShPt,boundaryConditions,vSession,fields,nfields);
     }
     //----------------------------------------------       
-
+    
     // Copy data from file:fill fields with the fielddata
     if(lastfield==1)
     {
@@ -264,9 +346,9 @@ cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1=
     //          (vSession, graphShPt, true, "w");
     
     string streakfile(argv[argc-2]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> streakdef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> streakdef;
     vector<vector<NekDouble> > streakdata;
-    graphShPt->Import(streakfile,streakdef,streakdata); 
+    LibUtilities::Import(streakfile,streakdef,streakdata); 
     //attention: streakdata.size==2 because the session file is 3DHomo1D but in
     //reality the streak is real quantity
     
@@ -278,12 +360,9 @@ cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1=
         streak->ExtractDataToCoeffs(streakdef[i],streakdata[i],streakdef[i]->m_fields[0], streak->UpdateCoeffs());
     }             
     streak->BwdTrans(streak->GetCoeffs(),streak->UpdatePhys());
-    int totpoints = fields[0]->GetPlane(0)->GetTotPoints();
-//end   	
+    
+    //end   	
     //---------------------------------------------------------------    
-
-
-
     // determine the I regions
     //hypothesis: the number of I regions is the same for all the variables
     //hypothesis: all the I regions have the same nq points
@@ -309,12 +388,6 @@ cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1=
     ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""CalcBC"" specified");
     //-----------------------------------------------------------------
 
-
-
-
-
-
-
     //set 1D output fields:
     //initialise fields
     const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
@@ -328,9 +401,9 @@ cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1=
     //declarecoeffsphysarray?????????!!!! true?!      
 
     outfieldxtmp = MemoryManager<MultiRegions::ExpList1D>
-                ::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);    
+        ::AllocateSharedPtr(*(bregions.find(lastIregion)->second), graphShPt, true);    
     outfieldytmp = MemoryManager<MultiRegions::ExpList1D>
-    		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+        ::AllocateSharedPtr(*(bregions.find(lastIregion)->second), graphShPt, true);
 
     outfieldx = MemoryManager<MultiRegions::ContField1D>
                                 ::AllocateSharedPtr(vSession, *outfieldxtmp);
@@ -404,136 +477,134 @@ cout<<"OOOK"<<endl;
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
 	{		
 		// Setting parameteres for homogenous problems
-        	MultiRegions::GlobalSysSolnType solnType;
-		NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
-		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
-		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
+		NekDouble LhomX;  ///< physical length in X direction (if homogeneous) 
+		NekDouble LhomY;  ///< physical length in Y direction (if homogeneous)
+		NekDouble LhomZ;  ///< physical length in Z direction (if homogeneous)
 		
 		bool DeclareCoeffPhysArrays = true;		
-		int npointsX;              ///< number of points in X direction (if homogeneous)
-		int npointsY;              ///< number of points in Y direction (if homogeneous)
-                int npointsZ;              ///< number of points in Z direction (if homogeneous)	
+		int npointsX;     ///< number of points in X direction (if homogeneous)
+		int npointsY;     ///< number of points in Y direction (if homogeneous)
+                int npointsZ;     ///< number of points in Z direction (if homogeneous)	
 		int HomoDirec       = 0;
 		bool useFFT = false;	
 		bool deal = false;        
 		///Parameter for homogeneous expansions		
 		enum HomogeneousType
 		{
-			eHomogeneous1D,
-			eHomogeneous2D,
-			eHomogeneous3D,
-			eNotHomogeneous
+                    eHomogeneous1D,
+                    eHomogeneous2D,
+                    eHomogeneous3D,
+                    eNotHomogeneous
 		};
-
+                
 		enum HomogeneousType HomogeneousType = eNotHomogeneous;
 
 		if(session->DefinesSolverInfo("HOMOGENEOUS"))
 		{ 			
-			std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
-			//m_spacedim          = 3;
-			
-			if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
-			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
-			{
-				HomogeneousType = eHomogeneous1D;
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+                    std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
+                    //m_spacedim          = 3;
+                    
+                    if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
+                       (HomoStr == "1D")||(HomoStr == "Homo1D"))
+                    {
+                        HomogeneousType = eHomogeneous1D;
+                        npointsZ        = session->GetParameter("HomModesZ");
+                        LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 1;				
-			}
-			
-			if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
-			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
-			{
-				HomogeneousType = eHomogeneous2D;
-				npointsY        = session->GetParameter("HomModesY");
-				LhomY           = session->GetParameter("LY");
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
-				HomoDirec       = 2;
-			}
-			
-			if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
-			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
-			{
-				HomogeneousType = eHomogeneous3D;
-				npointsX        = session->GetParameter("HomModesX");
-				LhomX           = session->GetParameter("LX");
-				npointsY        = session->GetParameter("HomModesY");
-				LhomY           = session->GetParameter("LY");
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
-				HomoDirec       = 3;
-			}
-			
-			if(session->DefinesSolverInfo("USEFFT"))
-			{
-				useFFT = true;
-			}
+                    }
+                    
+                    if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
+                       (HomoStr == "2D")||(HomoStr == "Homo2D"))
+                    {
+                        HomogeneousType = eHomogeneous2D;
+                        npointsY        = session->GetParameter("HomModesY");
+                        LhomY           = session->GetParameter("LY");
+                        npointsZ        = session->GetParameter("HomModesZ");
+                        LhomZ           = session->GetParameter("LZ");
+                        HomoDirec       = 2;
+                    }
+                    
+                    if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
+                       (HomoStr == "3D")||(HomoStr == "Homo3D"))
+                    {
+                        HomogeneousType = eHomogeneous3D;
+                        npointsX        = session->GetParameter("HomModesX");
+                        LhomX           = session->GetParameter("LX");
+                        npointsY        = session->GetParameter("HomModesY");
+                        LhomY           = session->GetParameter("LY");
+                        npointsZ        = session->GetParameter("HomModesZ");
+                        LhomZ           = session->GetParameter("LZ");
+                        HomoDirec       = 3;
+                    }
+                    
+                    if(session->DefinesSolverInfo("USEFFT"))
+                    {
+                        useFFT = true;
+                    }
 		}		
-			
-	    int i;		
-	    int expdim   = mesh->GetMeshDimension();
-	    //Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);    
-  	    // I can always have 3 variables in a 2D mesh (oech vel component i a function which can depend on 1-3 var)
-        // Continuous Galerkin projection
-
-            switch(expdim)
-            {
-                case 1:
+		
+                int i;		
+                int expdim   = mesh->GetMeshDimension();
+                //Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);    
+                // I can always have 3 variables in a 2D mesh (oech vel component i a function which can depend on 1-3 var)
+                // Continuous Galerkin projection
+                
+                switch(expdim)
                 {
-                    if(HomogeneousType == eHomogeneous2D)
+                case 1:
                     {
-                        const LibUtilities::PointsKey PkeyY(npointsY,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,npointsY,PkeyY);
-                        const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
-
-                        for(i = 0 ; i < nvariables; i++)
+                        if(HomogeneousType == eHomogeneous2D)
                         {
-                            Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,deal,mesh,session->GetVariable(i));
+                            const LibUtilities::PointsKey PkeyY(npointsY,LibUtilities::eFourierEvenlySpaced);
+                            const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,npointsY,PkeyY);
+                            const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
+                            const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
+                            
+                            for(i = 0 ; i < nvariables; i++)
+                            {
+                                Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
+                                    ::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,deal,mesh,session->GetVariable(i));
+                            }
                         }
-                    }
-                    else
-                    {
-                        for(i = 0 ; i < nvariables; i++)
+                        else
                         {
-                            Exp[i] = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(session,mesh,session->GetVariable(i));
+                            for(i = 0 ; i < nvariables; i++)
+                            {
+                                Exp[i] = MemoryManager<MultiRegions::ContField1D>
+                                    ::AllocateSharedPtr(session,mesh,session->GetVariable(i));
+                            }
                         }
+                        
+                        break;
                     }
-
-                    break;
-                }
-            case 2:
-                {   
-                    if(HomogeneousType == eHomogeneous1D)
-                    {
-                        const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
-                        for(i = 0 ; i < nvariables; i++)
-                        {                        	
-                            Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));                                    
+                case 2:
+                    {   
+                        if(HomogeneousType == eHomogeneous1D)
+                        {
+                            const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
+                            const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
+                            for(i = 0 ; i < nvariables; i++)
+                            {                        	
+                                Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                    ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));                                    
+                            }
                         }
-                    }
-                    else
-                    {                   	    
-                        i = 0;
-                        MultiRegions::ContField2DSharedPtr firstfield;
-                        firstfield = MemoryManager<MultiRegions::ContField2D>
+                        else
+                        {                   	    
+                            i = 0;
+                            MultiRegions::ContField2DSharedPtr firstfield;
+                            firstfield = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(session,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
-
-                        Exp[0] = firstfield;
-                        for(i = 1 ; i < nvariables; i++)
-                        {                        	
-                            Exp[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*firstfield,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
+                            
+                            Exp[0] = firstfield;
+                            for(i = 1 ; i < nvariables; i++)
+                            {                        	
+                                Exp[i] = MemoryManager<MultiRegions::ContField2D>
+                                    ::AllocateSharedPtr(*firstfield,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
+                            }
                         }
+                        break;
                     }
-
-                    break;
-                }
                 case 3:
                     {
                         if(HomogeneousType == eHomogeneous3D)
@@ -546,7 +617,7 @@ cout<<"OOOK"<<endl;
                             MultiRegions::ContField3DSharedPtr firstfield =
                                 MemoryManager<MultiRegions::ContField3D>
                                 ::AllocateSharedPtr(session,mesh,session->GetVariable(i));
-
+                            
                             Exp[0] = firstfield;
                             for(i = 1 ; i < nvariables; i++)
                             {
@@ -744,8 +815,8 @@ cout<<"layer region="<<Ireg<<endl;
             int Nregcoeffs;  
 
             for(
-       	        regIt= bregions[Ireg]->begin();
-       	        regIt !=bregions[Ireg]->end();
+       	        regIt= bregions.find(Ireg)->second->begin();
+       	        regIt !=bregions.find(Ireg)->second->end();
        	        ++regIt)
        	    {
                 Icompreg=regIt->second;
@@ -819,7 +890,8 @@ cout<<"layer region="<<Ireg<<endl;
                      	           ((*elementreg)[0]->m_Element))->GetEorient((*elementreg)[0]
                      	           	   ->m_EdgeIndx);
 
-                     gmat = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetGmat();
+                     gmat = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetGmat(
+                             pressure->GetPlane(0)->GetExp(elmtidreg)->GetPointsKeys());
                      int nq2D = nqedge*nqedge;                     	           
                      
 		     //	setup map between global and local ids
@@ -854,38 +926,16 @@ cout<<"layer region="<<Ireg<<endl;
 		     int Imoffsetreg = pressure->GetPlane(1)->GetCoeff_Offset(elmtidreg);
 		     int stoffsetreg = streak->GetCoeff_Offset(elmtidreg);
 		     
-//cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
-		     
-
-
-
-		     int ReNumoffset = Ilayer->GetPlane(0)->GetNcoeffs();
-                     int ImNumoffset = Ilayer->GetPlane(1)->GetNcoeffs();	
-//cout<<" OFFSET TEst Re="<<ReNumoffset<<"  Im="<<ImNumoffset<<endl;                     
-		     int Reoffsetedgereg = Ilayer->GetPlane(0)->GetCoeff_Offset(k);
-//cout<<"k="<<k<<"  Offsetedge="<<Reoffsetedgereg<<endl;		     
-		     
+                     //cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		 		     
 		     //hypothesis: 2 planes (0 Re, 1 Im)
-		     int nplanecoeffs = pressure->GetExp(elmtidreg)->GetNcoeffs();
 		     Array<OneD, NekDouble> Recoeffsedgereg(bmapedgereg.num_elements());	
 		     Array<OneD, NekDouble> Imcoeffsedgereg(bmapedgereg.num_elements());
 		     Array<OneD, NekDouble> stcoeffsedgereg(bmapedgereg.num_elements());
 		     
 		     
 		     //grad edge coeffs		     
-//cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
-//<<"  n bmapedge="<<bmapedgereg.num_elements()<<endl;	
-
-
-
-		     //ncoeffs per edge fwd transf..
-		     int ncoeffs2Delmt = pressure->GetPlane(0)->GetExp(elmtidreg)->GetNcoeffs();	     
-                  
-            
-
-
-
-            	     int nqed = Ilayer->GetPlane(0)->GetTotPoints();
+                     //cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
+                     //<<"  n bmapedge="<<bmapedgereg.num_elements()<<endl;	
 
 		     for(int d=0; d<bmapedgereg.num_elements(); d++)
 		     {
@@ -916,7 +966,7 @@ cout<<"layer region="<<Ireg<<endl;
                      Array<OneD, NekDouble> jacedge (nqedge);
                      Array<OneD, NekDouble> Pre_edge (nqedge);                     
                      Array<OneD, NekDouble> dPre_edge (nqedge);
-                     jacedge = Ilayer->GetPlane(0)->GetExp(k)->GetMetricInfo()->GetJac();
+                     jacedge = Ilayer->GetPlane(0)->GetExp(k)->GetMetricInfo()->GetJac(Ilayer->GetPlane(0)->GetExp(k)->GetPointsKeys());
 
 
                      //check if the metrix is the same for streak and Ilayer obj
@@ -934,20 +984,10 @@ cout<<"layer region="<<Ireg<<endl;
                      	  
                      }		     
 		     
-		     
-		     
-		     
-		     
-		     
-		     
-		     
-//cout<<"Nlayercoeffs="<<Recoeffsreg.num_elements()<<"   Nlayerphys="<<Rephysreg.num_elements()<<endl;
-		     
-		     
-		     
-//cout<<"extract normal for edge="<<k<<endl;	
-	     
-//cout<<"extract tangent for edge="<<k<<endl;
+                     //cout<<"Nlayercoeffs="<<Recoeffsreg.num_elements()<<"   Nlayerphys="<<Rephysreg.num_elements()<<endl;
+                     
+                     //cout<<"extract normal for edge="<<k<<endl;	
+                     //cout<<"extract tangent for edge="<<k<<endl;
               	     //k is the number of the edge according to the composite list
 		     LocalRegions::Expansion1DSharedPtr edgeexp = 
 		     		boost::dynamic_pointer_cast<LocalRegions::Expansion1D>
@@ -957,7 +997,8 @@ cout<<"layer region="<<Ireg<<endl;
                             GetLeftAdjacentElementExp()->GetEdgeNormal(localEid);
 		     LocalRegions::SegExpSharedPtr  bndSegExp = 
 		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
-	             tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
+	         // This function call has be deprecated -- cc
+		     //tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
                      int  physoffsetregIExp = Ilayer->GetPlane(0)->GetPhys_Offset(k);
                      for(int e=0; e< nqedge; e++)
                      {
@@ -981,7 +1022,8 @@ cout<<"layer region="<<Ireg<<endl;
 
 		     //extract metrics factors...
                      //int nq2D= nqedge*nqedge;
-                     deriv = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetDeriv();
+                     LibUtilities::PointsKeyVector ptsKeys = pressure->GetPlane(0)->GetExp(elmtidreg)->GetPointsKeys();
+                     deriv = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetDeriv(ptsKeys);
 
                      Array<OneD, NekDouble> derivelmt(nq2D);
                      int offsetregphys = Ilayer->GetPlane(0)->GetPhys_Offset(k);   
@@ -1029,16 +1071,9 @@ cout<<"layer region="<<Ireg<<endl;
 		//streak phys values:
 		Ilayer->GetPlane(0)->BwdTrans(stcoeffsreg, stphysreg);
 		Ilayer->GetPlane(0)->BwdTrans_IterPerExp(stgradxcoeffsreg, stphysgradxreg);
-		Ilayer->GetPlane(0)->BwdTrans_IterPerExp(stgradycoeffsreg, stphysgradyreg);
-  
+		Ilayer->GetPlane(0)->BwdTrans_IterPerExp(stgradycoeffsreg, stphysgradyreg);  
             }  
       
-
-
-
-            
-
-
 
              //TANGENTS WRONG WITH 3DHOMOGENEOUS 1D...	     
              //calculate the curvature:     
@@ -1076,11 +1111,9 @@ cout<<"layer region="<<Ireg<<endl;
              Array<OneD, NekDouble> delta(nq1D);
              Array<OneD, NekDouble> curv_unsigned(nq1D,0.0);
              Array<OneD, NekDouble> curv(nq1D,0.0);
-
-
         
 
-//cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;     
+             //cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;     
              for(int t=0; t<nq1D; t++)
 	     {
 
@@ -1088,11 +1121,10 @@ cout<<"layer region="<<Ireg<<endl;
                     delta[t] = 1+f_z[t]*f_z[t];
                     //Hall's definition...
                     curv[t] = f_zz[t]/sqrt(delta[t]*delta[t]*delta[t]);
-//cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<setw(13)<<"     "<<ty[t]<<"     "
-//<<nx[t]<<"    "<<ny[t]<<"      "<<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
+                    //cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<setw(13)<<"     "<<ty[t]<<"     "
+                    //<<nx[t]<<"    "<<ny[t]<<"      "<<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
              }		     
-	
-
+       
 	    
              //attempt to smooth the curvature
              Array<OneD, NekDouble> curv_coeffs (Nregcoeffs);
@@ -1131,9 +1163,9 @@ cout<<"layer region="<<Ireg<<endl;
 
 
 
-             NekDouble tmp = pressure->GetPlane(0)->L2();             
+             NekDouble tmp = pressure->GetPlane(0)->L2(pressure->GetPlane(0)->GetPhys());             
              norm2D = tmp*tmp;
-             tmp = pressure->GetPlane(1)->L2();
+             tmp = pressure->GetPlane(1)->L2(pressure->GetPlane(1)->GetPhys());
              norm2D += tmp*tmp;
                           
              Array<OneD, NekDouble> I (2*np,1.0); 
@@ -1361,14 +1393,9 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             }
 
 */
-
-
-          
-
        
 	   //final jump conditions
            //n0=2*pi*(2/3)^(2/3)*(-2/3)! = 2*pi*(2/3)^(2/3)*gamma(1/3)
-           NekDouble gamma13 = 2.6789385347077476336556929409746776441286893779573011009;
            NekDouble n0 = 12.845424015;
            //use the session to get the values of rho,alpha...
            NekDouble rho ;
@@ -1404,10 +1431,6 @@ cout<<"alpha^-5/3="<<alpha53<<endl;
 	   outfieldy->BwdTrans(tycoeffs, ty);
 cout<<"RHO=="<<rho<<endl;	
 
-      
-
-
-
      
 	     
 //end
@@ -1431,9 +1454,6 @@ cout<<"RHO=="<<rho<<endl;
             	   20*2*cos(2*x0d[j])/3.14;
 */
             }
-
-
-
 
 
             //FINAL REFINEMENT:::
@@ -1533,12 +1553,11 @@ cout<<"symmetrise the jump conditions"<<endl;
 */
 
 
-cout<<"length layer="<<length<<endl;
+            cout<<"length layer="<<length<<endl;
             //calc dUds
             Array<OneD, NekDouble> dUds(nq1D); 
             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, stphysreg, dUds);
 
-            bool signjac=true;
             Array<OneD, int> indexjacwarn(nq1D,-1);
             NekDouble invjac2D;
             NekDouble jactest;
@@ -1548,13 +1567,13 @@ cout<<"length layer="<<length<<endl;
 	    {
 
                 
-//NBBB dPre is the stdDERIV!!! 
+                //NBBB dPre is the stdDERIV!!! 
                 invjac2D = (gmat0[g]*tx[g] +gmat2[g]*ty[g]);
                 jactest = (invjac2D + (1/Jac[g]))/2.;
                 jactest = (invjac2D- (1/Jac[g]))/jactest;
                 basetest = abs(curv[g]);
 /*
-cout<<x0d[g]<<"       "<<
+  cout<<x0d[g]<<"       "<<
 //stphysreg[g]<<"      "<<lambda[g]<<"      "<<
 //delta[g]<<"      "<<
 //f_z[g]<<"     "<<a53[g]<<"    "<<
@@ -1649,10 +1668,6 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
 	}
  
 	
-	
-	
-	
-	
        void  Manipulate(Array<OneD, int> Iregions,int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,
        	       SpatialDomains::BoundaryConditions &bcs,
        	       Array<OneD,MultiRegions::ExpListSharedPtr> &infields, 
@@ -1661,8 +1676,7 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
        	       MultiRegions::ExpListSharedPtr &streak)
        
        {
-       	       
-       	       
+       	              	       
        }       	       
 	
 	
@@ -1752,9 +1766,9 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
 
             // Determine normalisation of pressure so that |P|/A = 1
             NekDouble norm = 0, l2;
-            l2    = wavePressure->GetPlane(0)->L2();
+            l2    = wavePressure->GetPlane(0)->L2(wavePressure->GetPlane(0)->GetPhys());
             norm  = l2*l2;
-            l2    = wavePressure->GetPlane(1)->L2();
+            l2    = wavePressure->GetPlane(1)->L2(wavePressure->GetPlane(0)->GetPhys());
             norm += l2*l2;
             Vmath::Fill(2*npts,1.0,der1,1);
             NekDouble area = waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
@@ -1837,7 +1851,6 @@ cout<<"waveforcemag="<<waveForceMag<<endl;
 
             Vmath::Smul(ncoeffs,- waveForceMag, vwiForcing[1],1, vwiForcing[1],1);
             
-            int i;     
             if(symm==true)
             {
                cout<<"symmetrization"<<endl;
@@ -1873,29 +1886,24 @@ cout<<"waveforcemag="<<waveForceMag<<endl;
             string sessionName = fieldfile.substr(0,fieldfile.find_last_of("."));
             std::string outname = sessionName  + ".vwi";
         
-            
-
-
- 	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-    			= waveVelocities[0]->GetPlane(0)->GetFieldDefinitions();  			
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());    		
-    	    //Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(outfield.num_elements());   	
+ 	    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+    			= waveVelocities[0]->GetPlane(0)->GetFieldDefinitions(); 
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());    
+    	    //Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(outfield.num_elements());
 	    string var;
             for(int j=0; j< vwiForcing.num_elements(); ++j)
 	    {  
- 		     
 		 //fieldcoeffs =vwiForcing;			
 		 for(int i=0; i< FieldDef.size(); i++)
 		 {	     	     
-		     //var = vSession->GetVariable(j);		     	   		    
+		     //var = vSession->GetVariable(j);	       
                      var =  variables[j];	   
 		     FieldDef[i]->m_fields.push_back(var);   
  		     waveVelocities[0]->GetPlane(0)->AppendFieldData(FieldDef[i], FieldData[i], vwiForcing[j]);  
 		  }
 	     }
-	     mesh->Write(outname,FieldDef,FieldData);
-
-            //session->WriteFld(outname, waveVelocities[0]->GetPlane(0), outfield, variables);
+            LibUtilities::Write(outname,FieldDef,FieldData);
+             
          
        }
 	
@@ -1951,10 +1959,6 @@ cout<<"waveforcemag="<<waveForceMag<<endl;
            return index;
        }	
 	
-	
-	
-	
-	
 	void WriteBcs(string variable, int region, string fieldfile,SpatialDomains::MeshGraphSharedPtr &mesh,
 		MultiRegions::ContField1DSharedPtr &outregionfield)
 	{			
@@ -1968,19 +1972,19 @@ cout<<"waveforcemag="<<waveForceMag<<endl;
     		Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
                 outregionfield->FwdTrans_IterPerExp(outregionfield->GetPhys(),outregionfield->UpdateCoeffs()); 
                 fieldcoeffs[0] = outregionfield->UpdateCoeffs();		
-		std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                = outregionfield->GetFieldDefinitions();               
+		std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                    = outregionfield->GetFieldDefinitions();               
                 std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
                 // copy Data into FieldData and set variable             
             	//for(int i = 0; i < FieldDef.size(); ++i)
           	//{                
-            	    //FieldDef[i]->m_fields.push_back(variable);
-            	    FieldDef[0]->m_fields.push_back(variable);            	    
-            	    //outregionfield->AppendFieldData(FieldDef[i], FieldData[i]);
-            	    outregionfield->AppendFieldData(FieldDef[0], FieldData[0]);            	    
-            	    //outregionfield->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[0]);
+                //FieldDef[i]->m_fields.push_back(variable);
+                FieldDef[0]->m_fields.push_back(variable);            	    
+                //outregionfield->AppendFieldData(FieldDef[i], FieldData[i]);
+                outregionfield->AppendFieldData(FieldDef[0], FieldData[0]);            	    
+                //outregionfield->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[0]);
             	//}            	
-            	mesh->Write(outfile,FieldDef,FieldData);            		
+                LibUtilities::Write(outfile,FieldDef,FieldData);            		
 	}
     
         void WriteFld(string outfile,SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
@@ -2004,8 +2008,8 @@ cout<<"waveforcemag="<<waveForceMag<<endl;
             }
             Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(fields.num_elements());
            
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-            = fields[0]->GetFieldDefinitions();
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                = fields[0]->GetFieldDefinitions();
          
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
             //this cycle is needed in order to use the the appendfielddata with coeffs function!!!
@@ -2033,7 +2037,7 @@ cout<<"waveforcemag="<<waveForceMag<<endl;
           	     fields[0]->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[j]);
           	}
             }
-            mesh->Write(outfile,FieldDef,FieldData);            
+            LibUtilities::Write(outfile,FieldDef,FieldData);            
             
         }
     

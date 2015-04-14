@@ -99,9 +99,8 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-        int ncoeffs    = inarray[0].num_elements();
+        int npoints = GetNpoints();
+        int ncoeffs = inarray[0].num_elements();
         StdRegions::ConstFactorMap factors;
 
         // Load parameter alpha.
@@ -251,8 +250,8 @@ namespace Nektar
         }
     }
     
-    void ImageWarpingSystem::v_PrintSummary(std::ostream &out)
+    void ImageWarpingSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
 }

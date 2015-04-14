@@ -2,7 +2,7 @@
 <test>
     <description>StdProject3D Hexahedron Chebyshev basis P=6 Q=7</description>
     <executable>StdProject3D</executable>
-    <parameters>7 10 10 10 6 6 6 7 7 7</parameters>
+    <parameters>8 10 10 10 6 6 6 7 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">4.11256e-14</value>

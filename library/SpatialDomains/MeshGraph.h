@@ -38,6 +38,8 @@
 #include <boost/unordered_map.hpp>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
+
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
@@ -59,19 +61,21 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
+            eModifiedQuadPlus1,
+            eModifiedQuadPlus2,
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eGauss_Lagrange,
             eGauss_Lagrange_SEM,
-			eFourier,
-			eFourierSingleMode,
-			eFourierHalfModeRe,
-			eFourierHalfModeIm,
-			eChebyshev,
-			eFourierChebyshev,
-			eChebyshevFourier,
-			eFourierModified,
+            eFourier,
+            eFourierSingleMode,
+            eFourierHalfModeRe,
+            eFourierHalfModeIm,
+            eChebyshev,
+            eFourierChebyshev,
+            eChebyshevFourier,
+            eFourierModified,
             eExpansionTypeSize
         };
 
@@ -81,30 +85,33 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
+            "MODIFIEDQUADPLUS1",
+            "MODIFIEDQUADPLUS2",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
             "GAUSS_LAGRANGE",
             "GAUSS_LAGRANGE_SEM",
-			"FOURIER",
-			"FOURIERSINGLEMODE",
-			"FOURIERHALFMODERE",
-			"FOURIERHALFMODEIM",
-			"CHEBYSHEV",
-			"FOURIER-CHEBYSHEV",
-			"CHEBYSHEV-FOURIER",
-			"FOURIER-MODIFIED"
+            "FOURIER",
+            "FOURIERSINGLEMODE",
+            "FOURIERHALFMODERE",
+            "FOURIERHALFMODEIM",
+            "CHEBYSHEV",
+            "FOURIER-CHEBYSHEV",
+            "CHEBYSHEV-FOURIER",
+            "FOURIER-MODIFIED"
         };
 
         class InterfaceComponent;
         typedef boost::shared_ptr< InterfaceComponent > SharedInterfaceCompPtr;
-        typedef std::vector< VertexComponentSharedPtr > VertexVector;
-        typedef std::map<int, VertexComponentSharedPtr> VertexMap;
+        typedef std::vector< PointGeomSharedPtr >       PointGeomVector;
+        typedef std::map<int, PointGeomSharedPtr>       PointGeomMap;
         typedef std::list< SharedInterfaceCompPtr >     InterfaceCompList;
 
         typedef boost::shared_ptr< GeometryVector >     Composite;
         typedef std::map<int, Composite>                CompositeMap;
         typedef std::map<int, Composite>::iterator      CompositeMapIter;
+        typedef std::map<int, Composite>::const_iterator      CompositeMapConstIter;
 
         struct ElementEdge
         {
@@ -118,6 +125,7 @@ namespace Nektar
             int m_FaceIndx;
         };
 
+
         typedef boost::shared_ptr<ElementEdge> ElementEdgeSharedPtr;
         typedef std::vector<ElementEdgeSharedPtr> ElementEdgeVector;
         typedef boost::shared_ptr<ElementEdgeVector> ElementEdgeVectorSharedPtr;
@@ -125,6 +133,26 @@ namespace Nektar
         typedef boost::shared_ptr<ElementFace> ElementFaceSharedPtr;
         typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
         typedef boost::shared_ptr<ElementFaceVector> ElementFaceVectorSharedPtr;
+
+        // set restriction on domain range for post-processing.
+        struct DomainRange
+        {
+            bool                    m_doXrange;
+            NekDouble               m_xmin;
+            NekDouble               m_xmax;
+            bool                    m_doYrange;
+            NekDouble               m_ymin;
+            NekDouble               m_ymax;
+            bool                    m_doZrange;
+            NekDouble               m_zmin;
+            NekDouble               m_zmax;
+
+            bool                    m_checkShape;
+            LibUtilities::ShapeType m_shapeType;
+        };
+
+        typedef boost::shared_ptr<DomainRange> DomainRangeShPtr;
+        static DomainRangeShPtr NullDomainRangeShPtr;
 
         struct Expansion
         {
@@ -146,77 +174,10 @@ namespace Nektar
 
         typedef boost::shared_ptr<ExpansionMap> ExpansionMapShPtr;
         typedef std::map<std::string, ExpansionMapShPtr> ExpansionMapShPtrMap;
+        typedef std::map<std::string, ExpansionMapShPtr>::iterator  ExpansionMapShPtrMapIter;
 
-        static std::vector<NekDouble> NullNekDoubleVector;
-        static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
-        static std::vector<unsigned int> NullUnsignedIntVector;
-
-        struct FieldDefinitions
-        {
-            FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
-                             const std::vector<unsigned int> &elementIDs,// vector[2]
-                             const std::vector<LibUtilities::BasisType> &basis,
-                             bool uniOrder,
-                             // UniOrder = vector[dimension] - MixOrder
-                             //          = vector[element*dimension]
-                             const std::vector<unsigned int> &numModes,
-                             const std::vector<std::string>  &fields,
-                             int NumHomoDir = 0,
-                             const std::vector<NekDouble> &HomoLengths =
-                             NullNekDoubleVector,
-							 const std::vector<unsigned int> &HomoZIDs =
-                             NullUnsignedIntVector,
-							 const std::vector<unsigned int> &HomoYIDs =
-                             NullUnsignedIntVector,
-                             const std::vector<LibUtilities::PointsType> &points =
-                             NullPointsTypeVector,
-                             bool pointsDef = false,
-                             const std::vector<unsigned int> &numPoints =
-                             NullUnsignedIntVector,
-                             bool numPointsDef = false):
-                m_shapeType(shapeType),
-                    m_elementIDs(elementIDs),
-                    m_basis(basis),
-                    m_numHomogeneousDir(NumHomoDir),
-                    m_homogeneousLengths(HomoLengths),
-			        m_homogeneousZIDs(HomoZIDs),
-			        m_homogeneousYIDs(HomoYIDs),
-                    m_points(points),
-                    m_pointsDef(pointsDef),
-                    m_uniOrder(uniOrder),
-                    m_numModes(numModes),
-                    m_numPoints(numPoints),
-                    m_numPointsDef(numPointsDef),
-                    m_fields(fields)
-                {
-                }
-
-                SpatialDomains::GeomShapeType			m_shapeType;
-                std::vector<unsigned int>					m_elementIDs;
-                std::vector<LibUtilities::BasisType>	m_basis;
-                int										m_numHomogeneousDir;
-            std::vector<NekDouble>					m_homogeneousLengths;
-            std::vector<unsigned int>					m_homogeneousZIDs;
-            std::vector<unsigned int>					m_homogeneousYIDs;
-            
-            /// Define the type of points per direction.
-            std::vector<LibUtilities::PointsType> m_points;
-            bool                                  m_pointsDef;
-            /// Define order of the element group.
-            /// * UniOrder: same order for each element
-            /// * MixOrder: definition of a different order for each element.
-            bool                                  m_uniOrder;
-            /// Define number of modes per direction.
-            std::vector<unsigned int>             m_numModes;
-            std::vector<unsigned int>             m_numPoints;
-            bool                                  m_numPointsDef;
-            std::vector<std::string>              m_fields;
-        };
-        
-        typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
         typedef std::map<std::string, std::string> GeomInfoMap;
-
 
         /// Base class for a spectral/hp element mesh.
         class MeshGraph
@@ -229,14 +190,17 @@ namespace Nektar
                         unsigned int spaceDimension);
 
                 SPATIAL_DOMAINS_EXPORT MeshGraph(
-                        const LibUtilities::SessionReaderSharedPtr &pSession);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const DomainRangeShPtr &rng = NullDomainRangeShPtr);
+
 
                 SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
 
                 /* ---- Mesh Reading routines ---- */
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
-                        const LibUtilities::SessionReaderSharedPtr &pSession);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        DomainRangeShPtr &rng = NullDomainRangeShPtr);
 
                 /// \todo Remove updated routine
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
@@ -277,35 +241,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ReadCurves(
                         std::string &infilename);
 
-
-                /* --- FLD handling routines ---- */
-                SPATIAL_DOMAINS_EXPORT void Write(
-                        const std::string &outFile,
-                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> >      &fielddata);
-
-                /// Imports an FLD file.
-                SPATIAL_DOMAINS_EXPORT void Import(
-                        const std::string& infilename,
-                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
-
-                /// Imports the definition of the fields.
-                SPATIAL_DOMAINS_EXPORT void ImportFieldDefs(
-                        TiXmlDocument &doc,
-                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        bool expChild);
-
-                /// Imports the data fileds.
-                SPATIAL_DOMAINS_EXPORT void ImportFieldData(
-                        TiXmlDocument &doc,
-                        const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
-
-                SPATIAL_DOMAINS_EXPORT int CheckFieldDefinition(
-                        const FieldDefinitionsSharedPtr  &fielddefs);
-
-
                 /* ---- Helper functions ---- */
                 /// Dimension of the mesh (can be a 1D curve in 3D space).
                 inline int GetMeshDimension() const;
@@ -313,6 +248,20 @@ namespace Nektar
                 /// Dimension of the space (can be a 1D curve in 3D space).
                 inline int GetSpaceDimension() const;
 
+
+                /* Range definitions for postprorcessing */
+                SPATIAL_DOMAINS_EXPORT void SetDomainRange
+                    (NekDouble xmin, NekDouble xmax,
+                     NekDouble ymin = NekConstants::kNekUnsetDouble,
+                     NekDouble ymax = NekConstants::kNekUnsetDouble,
+                     NekDouble zmin = NekConstants::kNekUnsetDouble,
+                     NekDouble zmax = NekConstants::kNekUnsetDouble);
+
+                /// Check if goemetry is in range definition if activated
+                bool CheckRange(Geometry2D &geom);
+
+                /// Check if goemetry is in range definition if activated
+                bool CheckRange(Geometry3D &geom);
 
                 /* ---- Composites and Domain ---- */
                 inline Composite GetComposite(int whichComposite) const;
@@ -325,7 +274,11 @@ namespace Nektar
                         const std::string &compositeStr,
                         CompositeMap &compositeVector) const;
 
-                inline const CompositeMap &GetDomain() const;
+                inline const CompositeMap &GetComposites() const;
+
+                inline const std::vector<CompositeMap> &GetDomain(void) const;
+
+                inline const CompositeMap &GetDomain(int domain) const;
 
 
                 /* ---- Expansions ---- */
@@ -335,19 +288,23 @@ namespace Nektar
                         const std::string variable);
 
                 SPATIAL_DOMAINS_EXPORT ExpansionShPtr GetExpansion(
-                        GeometrySharedPtr geom);
+                                                                   GeometrySharedPtr geom, const std::string variable = "DefaultVar");
 
                 /// Sets expansions given field definitions
                 SPATIAL_DOMAINS_EXPORT void SetExpansions(
-                        std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+                        std::vector<LibUtilities::FieldDefinitionsSharedPtr>
                                                                 &fielddef);
 
                 /// Sets expansions given field definition, quadrature points.
                 SPATIAL_DOMAINS_EXPORT void SetExpansions(
-                        std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+                        std::vector<LibUtilities::FieldDefinitionsSharedPtr>
                                                                 &fielddef,
                         std::vector< std::vector<LibUtilities::PointsType> >
                                                                 &pointstype );
+
+                /// Sets expansions to have equispaced points
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
+                                                        int npoints = 0);
 
                 /// This function sets the expansion #exp in map with entry #variable
                 inline void SetExpansions(
@@ -356,7 +313,7 @@ namespace Nektar
 
                 /// Sets the basis key for all expansions of the given shape.
                 SPATIAL_DOMAINS_EXPORT void SetBasisKey(
-                        SpatialDomains::GeomShapeType shape,
+                        LibUtilities::ShapeType shape,
                         LibUtilities::BasisKeyVector &keys,
                         std::string var = "DefaultVar");
 
@@ -364,7 +321,7 @@ namespace Nektar
                         const std::string var1,
                         const std::string var2);
 
-                inline const bool CheckForGeomInfo(std::string parameter);
+                inline bool CheckForGeomInfo(std::string parameter);
 
                 inline const std::string GetGeomInfo(std::string parameter);
 
@@ -386,23 +343,23 @@ namespace Nektar
 
 
                 /* ---- Manipulation of mesh ---- */
-                inline const int GetNvertices() const;
+                inline int GetNvertices() const;
 
-                inline VertexComponentSharedPtr GetVertex(int id);
+                inline PointGeomSharedPtr GetVertex(int id);
                 /// Adds a vertex to the with the next available ID.
-                SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr AddVertex(
+                SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr AddVertex(
                         NekDouble x,
                         NekDouble y,
                         NekDouble z);
 
-                /// \brief Adds an edge between two points.  If curveDefinition is 
-                /// null, then the edge is straight, otherwise it is curved according 
+                /// \brief Adds an edge between two points.  If curveDefinition is
+                /// null, then the edge is straight, otherwise it is curved according
                 /// to the curveDefinition.
-                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(PointGeomSharedPtr v0, PointGeomSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
-                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
+                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr  AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
                 SPATIAL_DOMAINS_EXPORT QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
                 SPATIAL_DOMAINS_EXPORT TetGeomSharedPtr AddTetrahedron(TriGeomSharedPtr tfaces[TetGeom::kNtfaces]);
                 SPATIAL_DOMAINS_EXPORT PyrGeomSharedPtr AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
@@ -410,6 +367,10 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT PrismGeomSharedPtr AddPrism(TriGeomSharedPtr tfaces[PrismGeom::kNtfaces],
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
+
+                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedEdges() const { return m_curvedEdges; }
+
+                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedFaces() const { return m_curvedFaces; }
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
                 SPATIAL_DOMAINS_EXPORT const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
                 SPATIAL_DOMAINS_EXPORT const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
@@ -425,7 +386,7 @@ namespace Nektar
 
             protected:
                 LibUtilities::SessionReaderSharedPtr    m_session;
-                VertexMap                               m_vertSet;
+                PointGeomMap                            m_vertSet;
                 InterfaceCompList                       m_iComps;
 
                 CurveVector                             m_curvedEdges;
@@ -446,11 +407,13 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
-                CompositeMap                            m_domain;
+                std::vector<CompositeMap>               m_domain;
+                DomainRangeShPtr                        m_domainRange;
 
                 ExpansionMapShPtrMap                    m_expansionMapShPtrMap;
 
                 GeomInfoMap                             m_geomInfo;
+
 
                 ExpansionMapShPtr    SetUpExpansionMap(void);
         };
@@ -490,9 +453,27 @@ namespace Nektar
         /**
          *
          */
-        inline const CompositeMap &MeshGraph::GetDomain() const
+        inline const CompositeMap &MeshGraph::GetComposites() const
+        {
+            return m_meshComposites;
+        }
+
+
+        /**
+         *
+         */
+        inline const std::vector<CompositeMap> &MeshGraph::GetDomain(void) const
         {
             return m_domain;
+        }
+
+        /**
+         *
+         */
+        inline const CompositeMap &MeshGraph::GetDomain(const int domain) const
+        {
+            ASSERTL1(domain < m_domain.size(),"Request for domain which does not exist");
+            return m_domain[domain];
         }
 
 
@@ -509,7 +490,7 @@ namespace Nektar
         /**
          *
          */
-        void  MeshGraph::SetExpansions(const std::string variable, ExpansionMapShPtr &exp) 
+        void  MeshGraph::SetExpansions(const std::string variable, ExpansionMapShPtr &exp)
         {
             if(m_expansionMapShPtrMap.count(variable) != 0)
             {
@@ -525,14 +506,14 @@ namespace Nektar
         /**
          *
          */
-        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2) 
+        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2)
         {
             ExpansionMapShPtr expVec1 = m_expansionMapShPtrMap.find(var1)->second;
             ExpansionMapShPtr expVec2 = m_expansionMapShPtrMap.find(var2)->second;
 
             if(expVec1.get() == expVec2.get())
             {
-                return true; 
+                return true;
             }
 
             return false;
@@ -542,7 +523,7 @@ namespace Nektar
         /**
          *
          */
-        inline const bool MeshGraph::CheckForGeomInfo(std::string parameter)
+        inline bool MeshGraph::CheckForGeomInfo(std::string parameter)
         {
             return m_geomInfo.find(parameter) != m_geomInfo.end();
         }
@@ -562,7 +543,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int MeshGraph::GetNvertices() const
+        inline int MeshGraph::GetNvertices() const
         {
             return int(m_vertSet.size());
         }
@@ -571,10 +552,10 @@ namespace Nektar
         /**
          *
          */
-        inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
+        inline PointGeomSharedPtr MeshGraph::GetVertex(int id)
         {
-            VertexComponentSharedPtr returnval;
-            VertexMap::iterator x = m_vertSet.find(id);
+            PointGeomSharedPtr returnval;
+            PointGeomMap::iterator x = m_vertSet.find(id);
             ASSERTL0(x != m_vertSet.end(),
                      "Vertex " + boost::lexical_cast<string>(id)
                      + " not found.");

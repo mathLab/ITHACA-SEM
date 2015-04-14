@@ -42,7 +42,6 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
 
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for SharedArray, ErrorUtils
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -50,11 +49,9 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
- 
         class NodalPrismEvenlySpaced: public Points<NekDouble>
         {
         public:
-
             virtual ~NodalPrismEvenlySpaced()
             {
                 
@@ -65,46 +62,37 @@ namespace Nektar
 
             }
             
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+                Create(const PointsKey &key);
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim()==3, "NodalPrismEvenlySpaced Points can only interp to other 3d point distributions");
+                ASSERTL0(pkey.GetPointsDim() == 3, 
+                         "NodalPrismEvenlySpaced Points can only interp to "
+                         "other 3d point distributions");
                 Array<OneD, const NekDouble> x, y, z;
                 PointsManager()[pkey]->GetPoints(x, y, z);
-                
                 return GetI(x, y, z);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x,
-                                                                const Array<OneD, const NekDouble>& y,
-                                                                const Array<OneD, const NekDouble>& z)
+            const MatrixSharedPtrType GetI(
+                const Array<OneD, const NekDouble> &x,
+                const Array<OneD, const NekDouble> &y,
+                const Array<OneD, const NekDouble> &z)
             {
-                int numpoints = x.num_elements();
-                
-                return GetI(numpoints, x, y, z);
+                int          numpoints = x.num_elements();
+                unsigned int np        = GetTotNumPoints();
 
-            }
-
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints,
-                                                                const Array<OneD, const NekDouble>& xi,
-                                                                const Array<OneD, const NekDouble>& yi,
-                                                                const Array<OneD, const NekDouble>& zi)
-            {
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
-                CalculateInterpMatrix(xi, yi, zi, interp);
+                CalculateInterpMatrix(x, y, z, interp);
                 
-                unsigned int np = GetTotNumPoints();
                 NekDouble* d = interp.data();
-                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, np, d));
-                
-                return returnval;
+                return MemoryManager<NekMatrix<NekDouble> >
+                    ::AllocateSharedPtr(numpoints, np, d);
             }
-
 
         private:
-        
-            /// Deafult constructor should not be called except by Create matrix           
+            /// Default constructor should not be called except by Create matrix
             NodalPrismEvenlySpaced():PointsBaseType(NullPointsKey)
             {
             }
@@ -113,11 +101,11 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder3d();
-
-            void CalculateInterpMatrix(const Array<OneD, const NekDouble>& xi,
-                                       const Array<OneD, const NekDouble>& yi,
-                                       const Array<OneD, const NekDouble>& zi,
-                                       Array<OneD, NekDouble>& interp);
+            void CalculateInterpMatrix(
+                const Array<OneD, const NekDouble> &xi,
+                const Array<OneD, const NekDouble> &yi,
+                const Array<OneD, const NekDouble> &zi,
+                      Array<OneD,       NekDouble> &interp);
         }; // end of NodalPrismEvenlySpaced
    } // end of namespace
 } // end of namespace 

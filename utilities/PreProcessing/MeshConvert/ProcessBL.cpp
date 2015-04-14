@@ -39,702 +39,608 @@ using namespace std;
 #include "MeshElements.h"
 #include "ProcessBL.h"
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/BLPoints.h>
-#include <LocalRegions/PrismExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LocalRegions/PrismExp.h>
+#include <LocalRegions/HexExp.h>
 
 namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessBL::className = 
+        ModuleKey ProcessBL::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "bl"), ProcessBL::create,
                 "Refines a prismatic boundary layer.");
-        
+
+        int **helper2d(int lda, int arr[][2])
+        {
+            int **ret = new int*[lda];
+            for (int i = 0; i < lda; ++i)
+            {
+                ret[i] = new int[2];
+                ret[i][0] = arr[i][0];
+                ret[i][1] = arr[i][1];
+            }
+            return ret;
+        }
+
+        int **helper2d(int lda, int arr[][4])
+        {
+            int **ret = new int*[lda];
+            for (int i = 0; i < lda; ++i)
+            {
+                ret[i] = new int[4];
+                ret[i][0] = arr[i][0];
+                ret[i][1] = arr[i][1];
+                ret[i][2] = arr[i][2];
+                ret[i][3] = arr[i][3];
+            }
+            return ret;
+        }
+
+        struct SplitMapHelper
+        {
+            int size;
+            int layerOff;
+            int *edge;
+            int *offset;
+            int *inc;
+            int **conn;
+            int bfacesSize;
+            int *bfaces;
+        };
+
+        struct SplitEdgeHelper
+        {
+            int size;
+            int *edge;
+            int **edgeVert;
+            int *offset;
+            int *inc;
+        };
+
         ProcessBL::ProcessBL(MeshSharedPtr m) : ProcessModule(m)
         {
-	    // BL mesh configuration.
-            config["layers"]     = ConfigOption(false, "0",       
+            // BL mesh configuration.
+            m_config["layers"]     = ConfigOption(false, "2",
                 "Number of layers to refine.");
-	    config["nopoints"]   = ConfigOption(false, "3",       
+            m_config["nq"]         = ConfigOption(false, "5",
                 "Number of points in high order elements.");
-	    config["powercoeff"] = ConfigOption(false, "2",       
-                "Initial power law coeficiant for layer spacing.");
-	    // Physical parameters of the problem.
-            config["Re"]         = ConfigOption(false, "11e6",
-                "Reynolds number to adapt to.");
-	    config["BLlength"]   = ConfigOption(false, "0.8059",       
-                "The length of the cord.");
-            config["yplus"]      = ConfigOption(false, "5",
-                "y^+ value (i.e. height of first element).");
-            config["delta"]      = ConfigOption(false, "0.04",
-                "Hight of elements to refine (m).");
-            config["rho"]        = ConfigOption(false, "1.205",
-                "Density (kg/m^3).");
-            config["mu"]         = ConfigOption(false, "1.82e-5",
-                "Dynamic viscosity (kg\(m*s)).");
-	    config["TetsOff"]    = ConfigOption(true,  "0",
-                "Use this option to turn off splitting prisms into tetrahedra");
+            m_config["surf"]       = ConfigOption(false, "",
+                "Tag identifying surface connected to prism.");
+            m_config["r"]          = ConfigOption(false, "2.0",
+                "Ratio to use in geometry progression.");
         }
-      
+
         ProcessBL::~ProcessBL()
         {
-          
+
         }
-        
+
         void ProcessBL::Process()
         {
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "ProcessBL: Refining prismatic boundary layer..."
                      << endl;
             }
 
-	    // Initialisation of parameters and settings.
+            // A set containing all element types which are valid.
+            set<LibUtilities::ShapeType> validElTypes;
+            validElTypes.insert(LibUtilities::ePrism);
+            validElTypes.insert(LibUtilities::eHexahedron);
 
-            // Physical problem parameters.
-	    double Reynolds   = config["Re"].        as<double>();
-	    double cord       = config["BLlength"].  as<double>();
-	    double y_plus     = config["yplus"].     as<double>();
-	    double delta_int  = config["delta"].     as<double>();
-	    // Physical constants for air (default at temperature of 293K
-	    // (20C)).
-	    double visc_mu    = config["mu"].        as<double>(); //kg\(m*s)
-	    double dens_rho   = config["rho"].       as<double>(); //kg\m^3
-	    
-	    // Mesh configuration parameters; powercoefficient only works when
-	    // iLayers is on, layers works when iLayers is off.
-	    double rr         = config["powercoeff"].as<double>(); 
-	    int    nLayers    = config["layers"].    as<int>   (); 
-	    int    layerWidth = config["nopoints"].  as<int>   ();
+            int nodeId  = m_mesh->m_vertexSet.size();
+            int nl      = m_config["layers"].as<int>();
+            int nq      = m_config["nq"].    as<int>();
 
-	    // Derived parameters.
-	    double U          = visc_mu*Reynolds/(cord*dens_rho);
-	    double Cf         = pow(2*log10(Reynolds)-0.65,-2.3);
-	    double tau_w      = Cf*0.5*dens_rho*pow(U,2);
-	    double delta_y    = visc_mu*y_plus/(sqrt(tau_w/dens_rho)*dens_rho);
-	    double delta_star = delta_y*2/delta_int;
-            
-            // Used only when iLayers is on.
-	    int npoints = int(ceil(log10(2/delta_star)/log10(rr)))+2;
-            // Used for when iLayers is off.
-	    double rn = powf(2.0/delta_star,1/double(nLayers+1));
+            // determine if geometric ratio is string or a constant.
+            LibUtilities::AnalyticExpressionEvaluator rEval;
+            NekDouble r             =  1;
+            int       rExprId       = -1;
+            bool      ratioIsString = false;
 
-	    // Options - Can be automaticaly changed based on if "powercoeff" or
-	    // "layers" is specified.
-	    bool tetsOn = !config["TetsOff"].as<bool>();
-            // Set to false for user defined no. of layers and true for user
-            // defined scaling factor.
-	    bool iLayers = true; 
-
-	    if (nLayers != 0)
+            if (m_config["r"].isType<NekDouble>())
             {
-		iLayers = false;
+                r = m_config["r"].as<NekDouble>();
             }
-	    
-	    if (iLayers)
+            else
             {
-                nLayers = npoints-1;
-		rn = powf(2.0/delta_star,1/double(npoints-2));
+                std::string rstr = m_config["r"].as<string>();
+                rExprId = rEval.DefineFunction("x y z", rstr);
+                ratioIsString = true;
             }
-            
-	    // Printouts - enable only in -v option??
-	    cerr << "Reynolds no. : " << Reynolds << ",  y plus : " 
-                 << y_plus << endl;
-	    cerr << "U : " << U << "m/s,  Cf : " << Cf << ",  tau_w : " 
-                 << tau_w << endl;
-	    cerr << "delta : " << delta_y << "m" << endl;
-	    cerr << "delta_star : " << delta_star << endl;
-	    cerr << "Number of layers :  " << nLayers << endl;
-	    cerr << "geometric factor :  " << rn << endl;
-
-            // Create a duplicate of the element list.
-            vector<ElementSharedPtr> el = m->element[m->expDim];
-            int nodeId = m->vertexSet.size();
-            
-            // Erase all elements from the element list. Elements will be
-            // re-added as they are split.
-            m->element[m->expDim].clear();
-
-            // Set up map which identifies edges (as pairs of vertex ids)
-            // including their vertices to the offset/stride in the 3d array
-            // of collapsed co-ordinates. Note that this map also includes the
-            // diagonal edges along quadrilateral faces which will be used to
-            // add high-order information to the split tetrahedra.
-            map<pair<int,int>, pair<int,int> > edgeMap;
-            map<pair<int,int>, pair<int,int> >::iterator it;
-            
-            // Standard prismatic edges (0->8)
-            int nq = layerWidth;
-            edgeMap[pair<int,int>(0,1)] = pair<int,int>(0,            1);
-            edgeMap[pair<int,int>(3,2)] = pair<int,int>(nq*(nq-1),    1);
-            edgeMap[pair<int,int>(0,3)] = pair<int,int>(0,            nq);
-            edgeMap[pair<int,int>(1,2)] = pair<int,int>(nq-1,         nq);
-	    edgeMap[pair<int,int>(4,5)] = pair<int,int>((nq-1)*nq*nq, nq);
-            edgeMap[pair<int,int>(0,4)] = pair<int,int>(0,            nq*nq);
-            edgeMap[pair<int,int>(1,4)] = pair<int,int>(nq-1,         nq*nq);
-            edgeMap[pair<int,int>(2,5)] = pair<int,int>(nq*nq-1,      nq*nq);
-            edgeMap[pair<int,int>(3,5)] = pair<int,int>(nq*(nq-1),    nq*nq);
-            // Face 0 diagonals
-            edgeMap[pair<int,int>(0,2)] = pair<int,int>(0,            nq+1);
-            edgeMap[pair<int,int>(1,3)] = pair<int,int>(nq-1,         nq-1);
-            // Face 2 diagonals
-            edgeMap[pair<int,int>(1,5)] = pair<int,int>(nq-1,         nq*nq+nq);
-            edgeMap[pair<int,int>(2,4)] = pair<int,int>(nq*nq-1,      nq*nq-nq);
-            // Face 4 diagonals
-            edgeMap[pair<int,int>(0,5)] = pair<int,int>(0,            nq*nq+nq);
-            edgeMap[pair<int,int>(3,4)] = pair<int,int>(nq*(nq-1),    nq*nq-nq);
 
             // Prismatic node -> face map.
             int prismFaceNodes[5][4] = {
                 {0,1,2,3},{0,1,4,-1},{1,2,5,4},{3,2,5,-1},{0,3,5,4}};
-            
+            int hexFaceNodes  [6][4] = {
+                {0,1,2,3},{0,1,5,4},{1,2,6,5},{3,2,6,7},{0,3,7,4},{4,5,6,7}};
+            map<LibUtilities::ShapeType, int **> faceNodeMap;
+            faceNodeMap[LibUtilities::ePrism]      = helper2d(5, prismFaceNodes);
+            faceNodeMap[LibUtilities::eHexahedron] = helper2d(6, hexFaceNodes);
+
             // Default PointsType.
             LibUtilities::PointsType pt = LibUtilities::eGaussLobattoLegendre;
-            
-            // Pass delta_star spacing through to BLPoints.
-            LibUtilities::BLPoints::delta_star = delta_star;
-            
+
+            // Map which takes element ID to face on surface. This enables
+            // splitting to occur in either y-direction of the prism.
+            boost::unordered_map<int, int> splitEls;
+            boost::unordered_map<int, int>::iterator sIt;
+
+            // Set up maps which takes an edge (in nektar++ ordering) and return
+            // their offset and stride in the 3d array of collapsed quadrature
+            // points. Note that this map includes only the edges that are on
+            // the triangular faces as the edges in the normal direction are
+            // linear.
+            map<LibUtilities::ShapeType, map<int, SplitMapHelper> > splitMap;
+            int po = nq*(nl+1);
+
+            SplitMapHelper splitPrism;
+            int splitMapEdgePrism  [6]    = {0, 2,  4,  5,    6,       7};
+            int splitMapOffsetPrism[6]    = {0, nq, 0,  nq-1, nq+nq-1, nq};
+            int splitMapIncPrism   [6]    = {1, 1,  po, po,   po,      po};
+            int splitMapBFacesPrism[3]    = {0, 2, 4};
+            int splitMapConnPrism  [6][2] = {{0,0}, {1,0}, {1,1},
+                                             {0,1}, {2,0}, {2,1}};
+            splitPrism.size       = 6;
+            splitPrism.layerOff   = nq;
+            splitPrism.edge       = splitMapEdgePrism;
+            splitPrism.offset     = splitMapOffsetPrism;
+            splitPrism.inc        = splitMapIncPrism;
+            splitPrism.conn       = helper2d(6, splitMapConnPrism);
+            splitPrism.bfacesSize = 3;
+            splitPrism.bfaces     = splitMapBFacesPrism;
+            splitMap[LibUtilities::ePrism][1] = splitPrism;
+            splitMap[LibUtilities::ePrism][3] = splitPrism;
+
+            int ho = nq*(nq-1);
+            int tl = nq*nq;
+            SplitMapHelper splitHex0;
+            int splitMapEdgeHex0  [8]    = {0, 1,    2,     3,   8,  9,       10,     11};
+            int splitMapOffsetHex0[8]    = {0, nq-1, tl-1,  ho,  tl, tl+nq-1, 2*tl-1, tl+ho};
+            int splitMapIncHex0   [8]    = {1, nq,   -1,   -nq,  1,  nq,      -1,     -nq};
+            int splitMapBFacesHex0[4]    = {1, 2, 3, 4};
+            int splitMapConnHex0  [8][2] = {{0,0}, {1,0}, {2,0}, {3,0},
+                                            {0,1}, {1,1}, {2,1}, {3,1}};
+            splitHex0.size       = 8;
+            splitHex0.layerOff   = nq*nq;
+            splitHex0.edge       = splitMapEdgeHex0;
+            splitHex0.offset     = splitMapOffsetHex0;
+            splitHex0.inc        = splitMapIncHex0;
+            splitHex0.conn       = helper2d(8, splitMapConnHex0);
+            splitHex0.bfacesSize = 4;
+            splitHex0.bfaces     = splitMapBFacesHex0;
+            splitMap[LibUtilities::eHexahedron][0] = splitHex0;
+            splitMap[LibUtilities::eHexahedron][5] = splitHex0;
+
+            // splitEdge enumerates the edges in the standard prism along which
+            // new nodes should be generated. These edges are the three between
+            // the two triangular faces.
+            //
+            // edgeVertMap specifies the vertices which comprise those edges in
+            // splitEdge; for example splitEdge[0] = 3 which connects vertices 0
+            // and 3.
+            //
+            // edgeOffset holds the offset of each of edges 3, 1 and 8
+            // respectively inside the collapsed coordinate system.
+            map<LibUtilities::ShapeType, map<int, SplitEdgeHelper> > splitEdge;
+
+            int splitPrismEdges   [3]    = {3,     1,     8};
+            int splitPrismEdgeVert[3][2] = {{0,3}, {1,2}, {4,5}};
+            int splitPrismOffset  [3]    = {0,     nq-1,  nq*(nl+1)*(nq-1)};
+            int splitPrismInc     [3]    = {nq,    nq,    nq};
+            SplitEdgeHelper splitPrismEdge;
+            splitPrismEdge.size     = 3;
+            splitPrismEdge.edge     = splitPrismEdges;
+            splitPrismEdge.edgeVert = helper2d(3, splitPrismEdgeVert);
+            splitPrismEdge.offset   = splitPrismOffset;
+            splitPrismEdge.inc      = splitPrismInc;
+            splitEdge[LibUtilities::ePrism][1] = splitPrismEdge;
+            splitEdge[LibUtilities::ePrism][3] = splitPrismEdge;
+
+            int splitHex0Edges   [4]    = {4,     5,     6,       7};
+            int splitHex0EdgeVert[4][2] = {{0,4}, {1,5}, {2,6},   {3,7}};
+            int splitHex0Offset  [4]    = {0,     nq-1,  nq*nq-1, nq*(nq-1) };
+            int splitHex0Inc     [4]    = {nq*nq, nq*nq, nq*nq,   nq*nq};
+            SplitEdgeHelper splitHex0Edge;
+            splitHex0Edge.size     = 4;
+            splitHex0Edge.edge     = splitHex0Edges;
+            splitHex0Edge.edgeVert = helper2d(4, splitHex0EdgeVert);
+            splitHex0Edge.offset   = splitHex0Offset;
+            splitHex0Edge.inc      = splitHex0Inc;
+            splitEdge[LibUtilities::eHexahedron][0] = splitHex0Edge;
+            splitEdge[LibUtilities::eHexahedron][5] = splitHex0Edge;
+
+            map<LibUtilities::ShapeType, map<int, bool> > revPoints;
+            revPoints[LibUtilities::ePrism][1] = false;
+            revPoints[LibUtilities::ePrism][3] = true;
+
+            revPoints[LibUtilities::eHexahedron][0] = true;
+            revPoints[LibUtilities::eHexahedron][5] = false;
+
+            // edgeMap associates geometry edge IDs to the (nl+1) vertices which
+            // are generated along that edge when a prism is split, and is used
+            // to avoid generation of duplicate vertices. It is stored as an
+            // unordered map for speed.
+            boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
+            boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
+
+            string surf = m_config["surf"].as<string>();
+            if (surf.size() > 0)
+            {
+                vector<unsigned int> surfs;
+                ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+                sort(surfs.begin(), surfs.end());
+
+                // If surface is defined, process list of elements to find those
+                // that are connected to it.
+                for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+                {
+                    ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+                    int nSurf = el->GetFaceCount();
+
+                    for (int j = 0; j < nSurf; ++j)
+                    {
+                        int bl = el->GetBoundaryLink(j);
+                        if (bl == -1)
+                        {
+                            continue;
+                        }
+
+                        ElementSharedPtr bEl  = m_mesh->m_element[m_mesh->m_expDim-1][bl];
+                        vector<int>      tags = bEl->GetTagList();
+                        vector<int>      inter;
+
+                        sort(tags.begin(), tags.end());
+                        set_intersection(surfs.begin(), surfs.end(),
+                                         tags .begin(), tags .end(),
+                                         back_inserter(inter));
+                        ASSERTL0(inter.size() <= 1,
+                                 "Intersection of surfaces wrong");
+
+                        if (inter.size() == 1)
+                        {
+                            if (el->GetConf().m_e == LibUtilities::ePrism)
+                            {
+                                if (j % 2 == 0)
+                                {
+                                    cerr << "WARNING: Found quadrilateral face "
+                                         << j << " on surface " << surf
+                                         << " connected to prism; ignoring."
+                                         << endl;
+                                    continue;
+                                }
+
+                                if (splitEls.count(el->GetId()) > 0)
+                                {
+                                    cerr << "WARNING: prism already found; "
+                                         << "ignoring" << endl;
+                                }
+
+                                splitEls[el->GetId()] = j;
+                            }
+                            else if (validElTypes.count(el->GetConf().m_e) == 0)
+                            {
+                                cerr << "WARNING: Unsupported element type "
+                                     << "found in surface " << j << "; "
+                                     << "ignoring" << endl;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Otherwise, add all prismatic elements and assume face 1 of
+                // the prism lies on the surface.
+                for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+                {
+                    ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+
+                    if (el->GetConf().m_e == LibUtilities::ePrism)
+                    {
+                        splitEls[el->GetId()] = 1;
+                    }
+                    else if (validElTypes.count(el->GetConf().m_e) > 0)
+                    {
+                        splitEls[el->GetId()] = 0;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            if (splitEls.size() == 0)
+            {
+                cerr << "WARNING: No elements detected to split." << endl;
+                return;
+            }
+
+            // Erase all elements from the element list. Elements will be
+            // re-added as they are split.
+            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+            m_mesh->m_element[m_mesh->m_expDim].clear();
+
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
-                if (el[i]->GetConf().e != ePrism)
+                const int elId = el[i]->GetId();
+                sIt = splitEls.find(elId);
+
+                if (sIt == splitEls.end())
                 {
-                    m->element[m->expDim].push_back(el[i]);		  
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
                     continue;
                 }
-	      
+
+                const int faceNum = sIt->second;
+                LibUtilities::ShapeType elType = el[i]->GetConf().m_e;
+
+                SplitMapHelper  &sMap  = splitMap [elType][faceNum];
+                SplitEdgeHelper &sEdge = splitEdge[elType][faceNum];
+
                 // Find quadrilateral boundary faces if any
                 std::map<int, int> bLink;
-                for (int j = 0; j < 5; j += 2)
+                for (int j = 0; j < sMap.bfacesSize; ++j)
                 {
-                    int bl = el[i]->GetBoundaryLink(j);
+                    int bl = el[i]->GetBoundaryLink(sMap.bfaces[j]);
                     if (bl != -1)
                     {
-                        bLink[j] = bl;
+                        bLink[sMap.bfaces[j]] = bl;
                     }
                 }
-	       
+
                 // Get elemental geometry object.
-                SpatialDomains::PrismGeomSharedPtr geom = 
-                    boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-                        el[i]->GetGeom(m->spaceDim));
-                
-                // Create basis.
-                LibUtilities::BasisKey B0(
-                    LibUtilities::eModified_A, layerWidth,
-                    LibUtilities::PointsKey(layerWidth,pt));
-                LibUtilities::BasisKey B1(
-                    LibUtilities::eModified_A, 2,
-                    LibUtilities::PointsKey(
-                        nLayers+1, LibUtilities::eBoundaryLayerPoints));
-                LibUtilities::BasisKey B2(
-                    LibUtilities::eModified_A, layerWidth,
-                    LibUtilities::PointsKey(layerWidth,pt));
-                
-                // Create local region.
-                LocalRegions::PrismExpSharedPtr q = 
-                    MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
-                        B0,B1,B2,geom);
-                
-                // Grab co-ordinates.
-                Array<OneD, NekDouble> x(layerWidth*layerWidth*(nLayers+1));
-                Array<OneD, NekDouble> y(layerWidth*layerWidth*(nLayers+1));
-                Array<OneD, NekDouble> z(layerWidth*layerWidth*(nLayers+1));
-                q->GetCoords(x,y,z);
-                
-                // Create element layers.
-                for (int j = 0; j < nLayers; ++j)
+                SpatialDomains::Geometry3DSharedPtr geom =
+                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                        el[i]->GetGeom(m_mesh->m_spaceDim));
+
+                // Determine whether to use reverse points.
+                LibUtilities::PointsType t =
+                    revPoints[elType][faceNum] ?
+                    LibUtilities::eBoundaryLayerPoints :
+                    LibUtilities::eBoundaryLayerPointsRev;
+
+                // Determine value of r based on geometry.
+                if(ratioIsString)
                 {
-                    // Create corner vertices.
-                    vector<NodeSharedPtr> nodeList(6);
-                    int offset = j*layerWidth;
+                    NekDouble x,  y,  z;
+                    NekDouble x1, y1, z1;
+                    int nverts = geom->GetNumVerts();
 
-                    // For the first layer use nodes of the original prism at
-                    // the bottom.
-                    if (j == 0)
+                    x = y = z = 0.0;
+
+                    for(int i = 0; i < nverts; ++i)
                     {
-                        nodeList[0] = el[i]->GetVertex(0);
-                        
-                        nodeList[1] = el[i]->GetVertex(1);
-                        
-                        nodeList[2] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+2*layerWidth-1], 
-                                     y[offset+2*layerWidth-1], 
-                                     z[offset+2*layerWidth-1]));
-                        nodeList[3] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+layerWidth], 
-                                     y[offset+layerWidth], z[offset+layerWidth]));
-                        nodeList[4] = el[i]->GetVertex(4);
-
-                        nodeList[5] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth], 
-                                     y[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth],
-                                     z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth]));
+                        geom->GetVertex(i)->GetCoords(x1,y1,z1);
+                        x += x1; y += y1; z += z1;
                     }
-                    // For the last layer use nodes of the original prism at the
-                    // top.
-                    else if (j == nLayers-1)
+                    x /= (NekDouble) nverts;
+                    y /= (NekDouble) nverts;
+                    z /= (NekDouble) nverts;
+                    r = rEval.Evaluate(rExprId,x,y,z,0.0);
+                }
+
+                LocalRegions::ExpansionSharedPtr q;
+
+                if (elType == LibUtilities::ePrism)
+                {
+                    // Create basis.
+                    LibUtilities::BasisKey B0(
+                        LibUtilities::eModified_A, nq,
+                        LibUtilities::PointsKey(nq,pt));
+                    LibUtilities::BasisKey B1(
+                        LibUtilities::eModified_A, 2,
+                        LibUtilities::PointsKey(nl+1, t, r));
+                    LibUtilities::BasisKey B2(
+                        LibUtilities::eModified_B, nq,
+                        LibUtilities::PointsKey(nq,pt));
+
+                    // Create local region.
+                    SpatialDomains::PrismGeomSharedPtr g =
+                        boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
+                            geom);
+                    q = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
+                        B0, B1, B2, g);
+                }
+                else if (elType == LibUtilities::eHexahedron)
+                {
+                    // Create basis.
+                    LibUtilities::BasisKey B0(
+                        LibUtilities::eModified_A, nq,
+                        LibUtilities::PointsKey(nq,pt));
+                    LibUtilities::BasisKey B1(
+                        LibUtilities::eModified_A, 2,
+                        LibUtilities::PointsKey(nl+1, t, r));
+
+                    // Create local region.
+                    SpatialDomains::HexGeomSharedPtr g =
+                        boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(
+                            geom);
+                    q = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(
+                        B0, B0, B1, g);
+                }
+
+                // Grab co-ordinates.
+                Array<OneD, NekDouble> x(nq*nq*(nl+1));
+                Array<OneD, NekDouble> y(nq*nq*(nl+1));
+                Array<OneD, NekDouble> z(nq*nq*(nl+1));
+                q->GetCoords(x,y,z);
+
+                int nSplitEdge = sEdge.size;
+                vector<vector<NodeSharedPtr> > edgeNodes(nSplitEdge);
+
+                // Loop over edges to be split.
+                for (int j = 0; j < nSplitEdge; ++j)
+                {
+                    int locEdge = sEdge.edge[j];
+                    int edgeId  = el[i]->GetEdge(locEdge)->m_id;
+
+                    // Determine whether we have already generated vertices
+                    // along this edge.
+                    eIt = edgeMap.find(edgeId);
+
+                    if (eIt == edgeMap.end())
                     {
-                        nodeList[0] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset], 
-                                     y[offset], z[offset]));
-                        nodeList[1] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+layerWidth-1], 
-                                     y[offset+layerWidth-1], 
-                                     z[offset+layerWidth-1]));
-                        nodeList[2] = el[i]->GetVertex(2);
+                        // If not then resize storage to hold new points.
+                        edgeNodes[j].resize(nl+1);
 
-                        nodeList[3] = el[i]->GetVertex(3);
+                        // Re-use existing vertices at endpoints of edge to
+                        // avoid duplicating the existing vertices.
+                        edgeNodes[j][0]  = el[i]->GetVertex(sEdge.edgeVert[j][0]);
+                        edgeNodes[j][nl] = el[i]->GetVertex(sEdge.edgeVert[j][1]);
 
-                        nodeList[4] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)], 
-                                     y[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)],
-                                     z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)]));
-                        nodeList[5] = el[i]->GetVertex(5);
+                        // Variable geometric ratio
+                        if(ratioIsString)
+                        {
+                            NekDouble x0,y0,z0;
+                            NekDouble x1,y1,z1;
+                            NekDouble xm,ym,zm;
+
+                            // -> Find edge end and mid points
+                            x0 = x[sEdge.offset[j]];
+                            y0 = y[sEdge.offset[j]];
+                            z0 = z[sEdge.offset[j]];
+
+                            x1 = x[sEdge.offset[j]+nl*nq];
+                            y1 = y[sEdge.offset[j]+nl*nq];
+                            z1 = z[sEdge.offset[j]+nl*nq];
+
+                            xm = 0.5*(x0+x1);
+                            ym = 0.5*(y0+y1);
+                            zm = 0.5*(z0+z1);
+
+                            // evaluate r factor based on mid point value
+                            NekDouble rnew;
+                            rnew = rEval.Evaluate(rExprId,xm,ym,zm,0.0);
+
+                            // Get basis with new r;
+                            LibUtilities::PointsKey Pkey(nl+1, t, rnew);
+                            LibUtilities::PointsSharedPtr newP
+                                = LibUtilities::PointsManager()[Pkey];
+
+                            const Array<OneD, const NekDouble> z = newP->GetZ();
+
+                            // Create new interior nodes based on this new blend
+                            for (int k = 1; k < nl; ++k)
+                            {
+                                xm = 0.5*(1+z[k])*(x1-x0) + x0;
+                                ym = 0.5*(1+z[k])*(y1-y0) + y0;
+                                zm = 0.5*(1+z[k])*(z1-z0) + z0;
+                                edgeNodes[j][k] = NodeSharedPtr(
+                                        new Node(nodeId++, xm,ym,zm));
+                            }
+                        }
+                        else
+                        {
+                            // Create new interior nodes.
+                            for (int k = 1; k < nl; ++k)
+                            {
+                                int pos = sEdge.offset[j] + k*sEdge.inc[j];
+                                edgeNodes[j][k] = NodeSharedPtr(
+                                    new Node(nodeId++, x[pos], y[pos], z[pos]));
+                            }
+                        }
+
+                        // Store these edges in edgeMap.
+                        edgeMap[edgeId] = edgeNodes[j];
                     }
-                    else // All the intermediate layers.
+                    else
                     {
-                        nodeList[0] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset], 
-                                     y[offset],
-                                     z[offset]));
-                        nodeList[1] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+layerWidth-1], 
-                                     y[offset+layerWidth-1], 
-                                     z[offset+layerWidth-1]));
-                        nodeList[2] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+2*layerWidth-1], 
-                                     y[offset+2*layerWidth-1], 
-                                     z[offset+2*layerWidth-1]));
-                        nodeList[3] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+layerWidth], 
-                                     y[offset+layerWidth],
-                                     z[offset+layerWidth]));
-                        nodeList[4] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)], 
-                                     y[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)],
-                                     z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)]));
-                        nodeList[5] = checkNode(
-                            new Node(nodeId++, 
-                                     x[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth], 
-                                     y[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth],
-                                     z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth]));
+                        edgeNodes[j] = eIt->second;
                     }
-                    
-                    // Create element tags - 0 indicates place the element in
-                    // the general domain.
-                    vector<int> tags;
-                    tags.push_back(0);
-                    
+                }
+
+                // Create element layers.
+                for (int j = 0; j < nl; ++j)
+                {
+                    // Offset of this layer within the collapsed coordinate
+                    // system.
+                    int offset = j * sMap.layerOff;
+
+                    // Get corner vertices.
+                    vector<NodeSharedPtr> nodeList(sMap.size);
+                    for (int k = 0; k < sMap.size; ++k)
+                    {
+                        nodeList[k] =
+                            edgeNodes[sMap.conn[k][0]][j + sMap.conn[k][1]];
+                    }
+
                     // Create the element.
-                    ElmtConfig conf(ePrism, 1, true, true, false);
+                    ElmtConfig conf(elType, 1, true, true, false);
                     ElementSharedPtr elmt = GetElementFactory().
-                        CreateInstance(ePrism,conf,nodeList,tags); 
+                        CreateInstance(
+                            elType, conf, nodeList, el[i]->GetTagList());
 
-                    EdgeSharedPtr e0 = elmt->GetEdge(0);
-                    EdgeSharedPtr e2 = elmt->GetEdge(2);
-                    EdgeSharedPtr e4 = elmt->GetEdge(4);
-                    EdgeSharedPtr e5 = elmt->GetEdge(5);
-                    EdgeSharedPtr e6 = elmt->GetEdge(6);
-                    EdgeSharedPtr e7 = elmt->GetEdge(7);
-
-                    for (int k = 1; k < layerWidth-1; ++k)
+                    // Add high order nodes to split prismatic edges.
+                    for (int l = 0; l < sMap.size; ++l)
                     {
-                        e0->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+k], 
-                                         y[offset+k],
-                                         z[offset+k])));
-                        e2->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k], 
-                                         y[offset+layerWidth+k],
-                                         z[offset+layerWidth+k])));
-                        e4->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+k*(layerWidth)*(nLayers+1)], 
-                                         y[offset+k*(layerWidth)*(nLayers+1)],
-                                         z[offset+k*(layerWidth)*(nLayers+1)])));
-                        e5->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
-                                         y[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1],
-                                         z[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
-                        e6->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
-                                         y[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1],
-                                         z[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
-                        e7->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k*(layerWidth)*(nLayers+1)], 
-                                         y[offset+layerWidth+k*(layerWidth)*(nLayers+1)],
-                                         z[offset+layerWidth+k*(layerWidth)*(nLayers+1)])));
+                        EdgeSharedPtr HOedge = elmt->GetEdge(
+                            sMap.edge[l]);
+                        for (int k = 1; k < nq-1; ++k)
+                        {
+                            int pos = offset + sMap.offset[l] + k*sMap.inc[l];
+                            HOedge->m_edgeNodes.push_back(
+                                NodeSharedPtr(
+                                    new Node(nodeId++,x[pos],y[pos],z[pos])));
+                        }
+                        HOedge->m_curveType = pt;
                     }
 
-                    e0->curveType = pt;
-                    e2->curveType = pt;
-                    e4->curveType = pt;
-                    e5->curveType = pt;
-                    e6->curveType = pt;
-                    e7->curveType = pt;
-
-                    // Change the surface elements of the quad face on the
-                    // symmetry plane to match the layers of prisms.
+                    // Change the surface elements to match the layers of
+                    // elements on the boundary of the domain.
                     map<int,int>::iterator it;
                     for (it = bLink.begin(); it != bLink.end(); ++it)
                     {
                         int fid = it->first;
                         int bl  = it->second;
+
                         if (j == 0)
                         {
-                            ElementSharedPtr e = m->element[m->expDim-1][bl];
-                            e->SetVertex(0, nodeList[prismFaceNodes[fid][0]]);
-                            e->SetVertex(1, nodeList[prismFaceNodes[fid][1]]);
-                            e->SetVertex(2, nodeList[prismFaceNodes[fid][2]]);
-                            e->SetVertex(3, nodeList[prismFaceNodes[fid][3]]);
-                            elmt->SetBoundaryLink(fid,bl);
+                            // For first layer reuse existing 2D element.
+                            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim-1][bl];
+                            for (int k = 0; k < 4; ++k)
+                            {
+                                e->SetVertex(
+                                    k, nodeList[faceNodeMap[elType][fid][k]]);
+                            }
                         }
                         else
                         {
+                            // For all other layers create new element.
                             vector<NodeSharedPtr> qNodeList(4);
                             for (int k = 0; k < 4; ++k)
                             {
-                                qNodeList[k] = nodeList[prismFaceNodes[fid][k]];
+                                qNodeList[k] = nodeList[faceNodeMap[elType][fid][k]];
                             }
                             vector<int> tagBE;
-                            tagBE = m->element[m->expDim-1][bl]->GetTagList();
-                            ElmtConfig bconf(eQuadrilateral, 1, true, true, false);
+                            tagBE = m_mesh->m_element[m_mesh->m_expDim-1][bl]->GetTagList();
+                            ElmtConfig bconf(LibUtilities::eQuadrilateral,1,true,true,false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
-                                CreateInstance(eQuadrilateral,bconf,qNodeList,tagBE);
-                            elmt->SetBoundaryLink(fid,m->element[m->expDim-1].size());
-                            m->element[m->expDim-1].push_back(boundaryElmt);
+                                CreateInstance(LibUtilities::eQuadrilateral,bconf,
+                                               qNodeList,tagBE);
+                            m_mesh->m_element[m_mesh->m_expDim-1].push_back(boundaryElmt);
                         }
                     }
-                    
-                    m->element[m->expDim].push_back(elmt);
+
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
             }
 
-            /*
-             * Split all element types into tetrahedra. This is based on the
-             * algorithm found in:
-             * 
-             * "How to Subdivide Pyramids, Prisms and Hexahedra into
-             * Tetrahedra", J. Dompierre et al.
-             */
-            if (tetsOn)
-            {
-                // Denotes a set of indices inside m->element[m->expDim-1]
-                // which are to be removed. These are precisely the
-                // quadrilateral boundary faces which will be replaced by two
-                // triangular faces.
-                set<int> toRemove;
-                
-                // Represents table 2 of paper; each row i represents a
-                // rotation of the prism nodes such that vertex i is placed at
-                // position 0.
-                static int indir[6][6] = {
-                    {0,1,2,3,4,5},
-                    {1,2,0,4,5,3},
-                    {2,0,1,5,3,4},
-                    {3,5,4,0,2,1},
-                    {4,3,5,1,0,2},
-                    {5,4,3,2,1,0}
-                };
-                
-                // Represents table 3 of paper; the first three rows are the
-                // three tetrahedra if the first condition is met; the latter
-                // three rows are the three tetrahedra if the second condition
-                // is met.
-                static int prismTet[6][4] = {
-                    {0,1,2,5},
-                    {0,1,5,4},
-                    {0,4,5,3},
-                    {0,1,2,4},
-                    {0,4,2,5},
-                    {0,4,5,3}
-                };
-                
-                // Represents the order of tetrahedral edges (in Nektar++
-                // ordering).
-                static int tetEdges[6][2] = {
-                    {0,1}, {1,2},
-                    {0,2}, {0,3},
-                    {1,3}, {2,3}};
-                
-                // A tetrahedron nodes -> faces map.
-                static int tetFaceNodes[4][3] = {
-                    {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
-
-                // Make a copy of the element list.
-                el = m->element[m->expDim];
-                m->element[m->expDim].clear();
-                
-                for (int i = 0; i < el.size(); ++i)
-                {
-                    if (el[i]->GetConf().e != ePrism)
-                    {
-                        m->element[m->expDim].push_back(el[i]);
-                        continue;
-                    }                    
-                    
-                    vector<NodeSharedPtr> nodeList(6);
-                    
-                    // Map Nektar++ ordering (vertices 0,1,2,3 are base quad)
-                    // to paper ordering (vertices 0,1,2 are first triangular
-                    // face).
-                    int mapPrism[6] = {0,1,4,3,2,5};
-                    for (int j = 0; j < 6; ++j)
-                    {
-                        nodeList[j] = el[i]->GetVertex(mapPrism[j]);
-                    }
-                    
-                    // Determine minimum ID of the nodes in this prism.
-                    int minElId = nodeList[0]->id;
-                    int minId   = 0;
-                    for (int j = 1; j < 6; ++j)
-                    {
-                        int curId = nodeList[j]->id;
-                        if (curId < minElId)
-                        {
-                            minElId = curId;
-                            minId   = j;
-                        }
-                    }
-                    
-                    int offset;
-                    
-                    // Split prism using paper criterion.
-                    if (min(nodeList[indir[minId][1]]->id, nodeList[indir[minId][5]]->id) <
-                        min(nodeList[indir[minId][2]]->id, nodeList[indir[minId][4]]->id))
-                    {
-                        offset = 0;
-                    }
-                    else if (min(nodeList[indir[minId][1]]->id, nodeList[indir[minId][5]]->id) >
-                             min(nodeList[indir[minId][2]]->id, nodeList[indir[minId][4]]->id))
-                    {
-                        offset = 3;
-                    }
-                    else
-                    {
-                        cerr << "Connectivity issue with prism->tet splitting." << endl;
-                        abort();
-                    }
-
-                    // Create local prismatic region so that co-ordinates of
-                    // the mapped element can be read from.
-                    SpatialDomains::PrismGeomSharedPtr geomLayer = 
-                        boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-                            el[i]->GetGeom(m->spaceDim));
-                    LibUtilities::BasisKey B0(LibUtilities::eModified_A, layerWidth,
-                                              LibUtilities::PointsKey(layerWidth,pt));
-                    LocalRegions::PrismExpSharedPtr qs = 
-                        MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
-                            B0,B0,B0,geomLayer);
-                    
-                    // Get the coordiantes of the high order prismatic element.
-                    Array<OneD, NekDouble> xs(layerWidth*layerWidth*layerWidth);
-                    Array<OneD, NekDouble> ys(layerWidth*layerWidth*layerWidth);
-                    Array<OneD, NekDouble> zs(layerWidth*layerWidth*layerWidth);
-                    qs->GetCoords(xs,ys,zs);
-                    
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        vector<NodeSharedPtr> tetNodes(4);
-                        
-                        for (int k = 0; k < 4; ++k)
-                        {
-                            tetNodes[k] = nodeList[indir[minId][prismTet[j+offset][k]]];
-                        }
-                        
-                        // Add high order information to tetrahedral edges.
-                        for (int k = 0; k < 6; ++k)
-                        {
-                            // Determine prismatic nodes which correspond with
-                            // this edge. Apply prism map to this to get
-                            // Nektar++ ordering (this works since as a
-                            // permutation, prismMap^{-1} = prismMap).
-                            int n1 = mapPrism[indir[minId][prismTet[j+offset][tetEdges[k][0]]]];
-                            int n2 = mapPrism[indir[minId][prismTet[j+offset][tetEdges[k][1]]]];
-                            
-                            // Find offset/stride
-                            it = edgeMap.find(pair<int,int>(n1,n2));
-                            if (it == edgeMap.end())
-                            {
-                                it = edgeMap.find(pair<int,int>(n2,n1));
-                                if (it == edgeMap.end())
-                                {
-                                    cerr << "Couldn't find prism edges " << n1 << " " << n2 << endl;
-                                    abort();
-                                }
-                                // Extract vertices -- reverse order.
-                                for (int l = layerWidth-2; l >= 1; --l)
-                                {
-                                    int pos = it->second.first + l*it->second.second;
-                                    tetNodes.push_back(
-                                        NodeSharedPtr(
-                                            new Node(nodeId++, xs[pos], ys[pos], zs[pos])));
-                                }
-                            }
-                            else
-                            {
-                                // Extract vertices -- forwards order.
-                                for (int l = 1; l < layerWidth-1; ++l)
-                                {
-                                    int pos = it->second.first + l*it->second.second;
-                                    tetNodes.push_back(
-                                        NodeSharedPtr(
-                                            new Node(nodeId++, xs[pos], ys[pos], zs[pos])));
-                                }
-                            }
-                        }
-                        
-                        vector<int> tags = el[i]->GetTagList();
-                        //tags.push_back(0);
-                        
-                        ElmtConfig conf(eTetrahedron, layerWidth-1, false, false);
-                        ElementSharedPtr elmt = GetElementFactory().
-                            CreateInstance(eTetrahedron,conf,tetNodes,tags);
-                        
-                        m->element[m->expDim].push_back(elmt);
-                    }
-
-                    // Now check to see if this one of the quadrilateral faces
-                    // is associated with a boundary condition. If it is, we
-                    // split the face into two triangles and mark the existing
-                    // face for removal.
-                    //
-                    // Note that this algorithm has significant room for
-                    // improvement and is likely one of the least optimal
-                    // approachs - however implementation is simple.
-                    for (int fid = 0; fid < 5; fid += 2)
-                    {
-                        int bl = el[i]->GetBoundaryLink(fid);
-                        
-                        if (bl == -1)
-                        {
-                            continue;
-                        }
-                        
-                        vector<NodeSharedPtr> triNodeList(3);
-                        vector<int>           faceNodes  (3);
-                        vector<int>           tmp;
-                        vector<int>           tagBE;
-                        ElmtConfig            bconf(eTriangle, 1, true, true);
-                        ElementSharedPtr      elmt;
-                        
-                        // Mark existing boundary face for removal.
-                        toRemove.insert(bl);
-                        tagBE =  m->element[m->expDim-1][bl]->GetTagList();
-                        
-                        // First loop over tets.
-                        for (int j = 0; j < 3; ++j)
-                        {
-                            // Now loop over faces.
-                            for (int k = 0; k < 4; ++k)
-                            {
-                                // Finally determine Nektar++ local node
-                                // numbers for this face.
-                                for (int l = 0; l < 3; ++l)
-                                {
-                                    faceNodes[l] = mapPrism[indir[minId][prismTet[j+offset][tetFaceNodes[k][l]]]];
-                                }
-                                
-                                tmp = faceNodes;
-                                sort(faceNodes.begin(), faceNodes.end());
-
-                                // If this face matches a triple denoting a
-                                // split quad face, add the face to the
-                                // expansion list.
-                                if ((fid == 0 && (
-                                        (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2)   ||
-                                        (faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3)   ||
-                                        (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 3)   ||
-                                        (faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3))) ||
-                                    (fid == 2 && (
-                                        (faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 5)   ||
-                                        (faceNodes[0] == 1 && faceNodes[1] == 4 && faceNodes[2] == 5)   ||
-                                        (faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 4)   ||
-                                        (faceNodes[0] == 2 && faceNodes[1] == 4 && faceNodes[2] == 5))) ||
-                                    (fid == 4 && (
-                                        (faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 5) ||
-                                        (faceNodes[0] == 0 && faceNodes[1] == 4 && faceNodes[2] == 5) ||
-                                        (faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 4) ||
-                                        (faceNodes[0] == 3 && faceNodes[1] == 4 && faceNodes[2] == 5))))
-                                {
-                                    triNodeList[0] = nodeList[mapPrism[tmp[0]]];
-                                    triNodeList[1] = nodeList[mapPrism[tmp[1]]];
-                                    triNodeList[2] = nodeList[mapPrism[tmp[2]]];
-                                    elmt           = GetElementFactory().
-                                        CreateInstance(eTriangle,bconf,triNodeList,tagBE);
-                                    m->element[m->expDim-1].push_back(elmt);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Remove 2D elements.
-                vector<ElementSharedPtr> tmp;
-                for (int i = 0; i < m->element[m->expDim-1].size(); ++i)
-                {
-                    set<int>::iterator it = toRemove.find(i);
-                    if (it == toRemove.end())
-                    {
-                        tmp.push_back(m->element[m->expDim-1][i]);
-                    }
-                }
-                
-                m->element[m->expDim-1] = tmp;
-            }
-            
             // Re-process mesh to eliminate duplicate vertices and edges.
             ProcessVertices();
             ProcessEdges();
             ProcessFaces();
             ProcessElements();
             ProcessComposites();
-        }
-
-        // Very expensive function - search for this node to see if it has
-        // already been created. This should be replaced by an appropriate
-        // data structure for nearest-neighbour searches (e.g. kd-tree).
-        NodeSharedPtr ProcessBL::checkNode(Node *n)
-        {
-            int i;
-            for (i = 0; i < createdNodes.size(); ++i)
-            {
-                NodeSharedPtr n1 = createdNodes[i];
-                if (((n1->x-n->x)*(n1->x-n->x) + 
-                     (n1->y-n->y)*(n1->y-n->y) + 
-                     (n1->z-n->z)*(n1->z-n->z)) < 1.0e-14)
-                {
-                    delete n;
-                    return n1;
-                }
-            }
-            createdNodes.push_back(NodeSharedPtr(n));
-            return createdNodes.back();
         }
     }
 }

@@ -2,7 +2,7 @@
 <test>
     <description>LocProject_Diff2D Lin. Deformed Quad Lagrange Basis P=6, Q=7</description>
     <executable>LocProject_Diff2D</executable>
-    <parameters>3 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0</parameters>
+    <parameters>4 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">0.288711</value>

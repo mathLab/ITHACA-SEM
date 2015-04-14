@@ -10,7 +10,9 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
        ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
+       ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
+       ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
+       ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
@@ -25,7 +27,9 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
        ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
+       ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
+       ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
+       ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
@@ -41,7 +45,9 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
        ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
+       ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
+       ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
+       ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp

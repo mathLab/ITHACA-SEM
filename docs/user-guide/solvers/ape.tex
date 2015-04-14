@@ -1,0 +1,148 @@
+\chapter{Acoustic Perturbation Equations Solver}
+
+\section{Synopsis}
+The aim of APESolver is to predict aerodynamic sound generation. Through
+the application of a splitting technique, the flow-induced acoustic field is
+totally decoupled from the underlying incompressible hydrodynamic field. The
+acoustic perturbation equations proposed by Ewert and Shroeder are employed as
+the governing equations of the acoustic field and they assure stable
+aeroacoustic simulation due to the suppression of the term related to the
+production of perturbed vorticity. These equations are similar to the linearised
+perturbed compressible equations, but while in the original formulation the flow
+decomposition is based on solenoidal vortical perturbations as well as
+irrotational acoustic perturbations, in this case perturbations are assumed to
+be exclusively of acoustic nature.
+\begin{align*}
+      \frac{\partial \mathbf{u}'}{\partial t}
+        +\nabla(\mathbf{u}' \cdot \mathbf{U})+\frac{1}{\rho_0}\nabla p' &= 0 \\
+      \frac{\partial p'}{\partial t}
+        +\nabla \cdot (\gamma P \mathbf{u}' + p'\mathbf{U})&=-\frac{DP'}{Dt}
+\end{align*}
+where $(\mathbf{U},P)$ represents the base flow, $(\mathbf{u}',p')$
+the perturbations and $\mathrm{D}/\mathrm{D}t$ the material derivative.
+$P'=P-p_{\infty}$ is the acoustic source term, with $p_\infty$
+the pressure at a reference value.
+
+\section{Usage}
+\begin{lstlisting}[style=BashInputStyle]
+APESolver session.xml
+\end{lstlisting}
+
+\section{Session file configuration}
+
+\subsection{Solver Info}
+\begin{itemize}
+\item \inltt{Eqtype} Specifies the equation to solve. This should be set to
+\inltt{APE}.
+\item \inltt{UpwindType} Specifies the numerical interface flux scheme.
+Currently, only \inltt{APEUpwind} supported.
+\end{itemize}
+
+\subsection{Parameters}
+\begin{itemize}
+\item \inltt{Rho0}: Density
+\item \inltt{Gamma}: Ratio of specific heats
+\item \inltt{Pinfinity}: Ambient pressure
+\end{itemize}
+
+\subsection{Functions}
+\begin{itemize}
+\item \inltt{BaseFlow} Baseflow $(\mathbf{U},P)$ defined by the variables \inltt{U0,V0,W0,P0}
+\item \inltt{Source} Source term $P'=P-p_{\infty}$
+\item \inltt{InitialConditions}
+\end{itemize}
+
+
+\section{Examples}
+\subsection{Aeroacoustic Wave Propagation}
+In this section we explain how to set up a simple simulation of aeroacoustics in
+Nektar++. We will study the propagation of an acoustic wave in the simple case
+where the base flow is $\mathbf{U}=0, P=p_{\infty}=10^6$. The geometry consists
+of $64$ quadrilateral elements, as shown in Fig.~\ref{f:apesolver:geometry}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\linewidth]{Figures/APE_Geometry.png}
+	\caption{Geometry used for the example case of modelling propagation of
+	acoustic waves where $\mathbf{U}=0, P=p_{\infty}=10^6$}
+	\label{f:apesolver:geometry}
+\end{figure}
+
+\subsubsection{Input file}
+We require a discontinuous Galerkin projection and use an explicit
+fourth-order Runge-Kutta time integration scheme. We therefore set the following
+solver information:
+\begin{lstlisting}[style=XmlStyle]
+<I PROPERTY="EQType" VALUE="APE"/> 
+<I PROPERTY="Projection" VALUE="DisContinuous"/>
+<I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
+<I PROPERTY="UpwindType"  VALUE="APEUpwind"/>
+\end{lstlisting}
+
+To maintain numerical stability we must use a small time-step. The total
+simulation time is $150$ time units. Finally, we set the density, heat ratio and
+ambient pressure.
+\begin{lstlisting}[style=XMLStyle]
+<P> TimeStep       = 0.00001             </P>
+<P> NumSteps       = 150                 </P>
+<P> FinTime        = TimeStep*NumSteps   </P>
+<P> Rho0             = 1.204             </P> <!-- Incompressible density -->
+<P> Gamma            = 1.4               </P> <!-- Ratio of specific heats -->
+<P> Pinfinity      = 100000              </P> <!-- Ambient pressure -->
+\end{lstlisting}
+
+Let us note that to solve efficiently this problem a discontinuous Garlerkin
+approach was used. The
+system is excited via the initial conditions putting a Gaussian pulse for pulse
+fluctuations.  Finally, it is necessary to specify the base flow and the
+eventual source terms using the following functions:
+
+\begin{lstlisting}[style=XmlStyle]
+<FUNCTION NAME="Baseflow"> 
+    <E VAR="U0" VALUE="0" />
+    <E VAR="V0" VALUE="0" />
+    <E VAR="P0" VALUE="Pinfinity" />
+</FUNCTION>
+
+<FUNCTION NAME="Source"> 
+    <E VAR="S"  VALUE="0" />
+</FUNCTION>
+
+<!-- Gaussian pulse located at the origin -->
+<FUNCTION NAME="InitialConditions">
+    <E VAR="p" VALUE="100*exp(-32*(((x)*(x))+((y)*(y))))" />
+    <E VAR="u" VALUE="0" />
+    <E VAR="v" VALUE="0" />
+</FUNCTION>
+\end{lstlisting}
+
+\subsubsection{Running the code}
+\begin{lstlisting}[style=BashInputStyle]
+APESolver Test_pulse.xml
+\end{lstlisting}
+
+\subsubsection{Results}
+Fig.~\ref{f:apesolver:results} shows the pressure profile at different
+time steps, showing the acoustic propagation.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.3\linewidth]{Figures/Prop_1.png}
+	\includegraphics[width=0.3\linewidth]{Figures/Prop_2.png}
+	\includegraphics[width=0.3\linewidth]{Figures/Prop_3.png}
+	\caption{}
+	\label{f:apesolver:results}
+\end{figure}
+
+It is possible to show the profile of the pressure perturbations with respect to
+the spatial coordinate. The pressure fluctuations, that are concentrated  in a
+specific locations at the beginning (as specified by the initial conditions),
+propagate with time and for sufficiently large time the decay is exponential as
+predicted by literature \cite{DoFf83}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{Figures/prog_4.png}
+	\caption{}
+\end{figure}
+

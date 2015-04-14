@@ -94,13 +94,6 @@ namespace Nektar
             // Inner product functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& base0, 
-                const Array<OneD, const NekDouble>& base1, 
-                const Array<OneD, const NekDouble>& base2, 
-                const Array<OneD, const NekDouble>& inarray, 
-                      Array<OneD,       NekDouble>& outarray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
 
@@ -108,17 +101,14 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
-                Array<OneD, NekDouble> &coords_0,
-                Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);
-            
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                 const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,       NekDouble> &coords);
 
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
+                      Array<OneD,       NekDouble> &coords_1,
+                      Array<OneD,       NekDouble> &coords_2,
+                      Array<OneD,       NekDouble> &coords_3);
 
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
@@ -128,16 +118,14 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT void v_WriteToFile(
-                std::ofstream &outfile, 
-                OutputFormat   format, 
-                const bool     dumpVar = true, 
-                std::string    var = "v");
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
-
+            LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
+            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
             
             //---------------------------------------
             // Matrix creation functions
@@ -150,17 +138,22 @@ namespace Nektar
                 const MatrixKey &mkey);
             LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                const MatrixKey &mkey);
             LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr CreateMatrix(
                 const MatrixKey &mkey);
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
-            
-        private:
-            SpatialDomains::Geometry3DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 
+        private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
+            virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp);
         };
 
         // type defines for use of PyrExp in a boost vector

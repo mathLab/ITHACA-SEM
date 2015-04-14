@@ -17,10 +17,9 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::ContField3DHomogeneous2DSharedPtr Exp, Fce;
-    int     i, nq,  coordim;
+    int     nq;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
@@ -39,7 +38,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    int bc_val = 0;
     int nypoints;
     int nzpoints;
     NekDouble ly;
@@ -87,9 +85,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
-    coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetTotPoints();
-
+    nq  = Exp->GetTotPoints();
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
     xc2 = Array<OneD,NekDouble>(nq,0.0);
@@ -145,8 +141,8 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
     //----------------------------------------------

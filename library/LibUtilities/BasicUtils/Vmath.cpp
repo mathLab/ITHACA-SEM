@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Vmath.hpp
+// File: Vmath.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -463,8 +463,9 @@ namespace Vmath
              const int incx, const Nektar::NekDouble *y, const int incy,
              Nektar::NekDouble *z, const int incz);
 
+
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
-    template<class T> void Svtvp(int n, const T alpha, const T *x,
+    template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz)
     {
@@ -492,8 +493,9 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT void Svtvp(int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
-             const int incx, const Nektar::NekDouble *y, const int incy,
-             Nektar::NekDouble *z, const int incz);
+                 const int incx, const Nektar::NekDouble *y, const int incy,
+                 Nektar::NekDouble *z, const int incz);
+
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y
     template<class T> void Svtvm(int n, const T alpha, const T *x,
@@ -836,6 +838,7 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT int Imin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT  int Imin( int n, const int *x, const int incx);
 
     /// \brief Return the minimum element in x - called vmin to avoid
     /// conflict with min
@@ -857,6 +860,7 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Vmin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Vmin( int n, const int *x, const int incx);
 
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> T Dot(     int n,
@@ -945,7 +949,7 @@ namespace Vmath
                              const Nektar::NekDouble   *x, const int incx,
                              const int *y, const int incy);
 
-
+/*
     // \brief copy one int vector to another
     void Vcopy(int n, const int *x, const int incx, int *y,
                              const int incy)
@@ -1002,6 +1006,32 @@ namespace Vmath
             }
         }
     }
+*/
+
+    // \brief copy one vector to another
+    template<typename T>
+    void Vcopy(int n, const T *x, const int incx,
+                            T *y, const int incy)
+    {
+        if( incx ==1 && incy == 1)
+        {
+            memcpy(y,x,n*sizeof(T));
+        }
+        else
+        {
+            while( n-- )
+            {
+                *y = *x;
+                x += incx;
+                y += incy;
+            }
+        }
+    }
+
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const int *x, const int incx, int *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const unsigned int *x, const int incx, unsigned int *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const Nektar::NekDouble *x, const int incx, Nektar::NekDouble *y, const int incy);
+
 
     // \brief reverse the ordering of  vector to another
     template<class T>  void  Reverse( int n, const T *x, const int incx, T *y, const int incy)

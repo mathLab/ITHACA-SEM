@@ -46,11 +46,8 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
-
         class AssemblyMapDG;
         typedef boost::shared_ptr<AssemblyMapDG>  AssemblyMapDGSharedPtr;
-
 
         ///
         class AssemblyMapDG: public AssemblyMap
@@ -63,37 +60,14 @@ namespace Nektar
             MULTI_REGIONS_EXPORT AssemblyMapDG( 
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const ExpList0DSharedPtr &trace,
+                const ExpListSharedPtr &trace,
                 const ExpList &locExp,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicVertices);
-
-            /// Constructor for trace map for two-dimensional expansion.
-            MULTI_REGIONS_EXPORT AssemblyMapDG(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                const ExpList1DSharedPtr &trace,
-                const ExpList &locExp,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>
-                                                                &bndContraint,
-                const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndCond,
-                const map<int,int> &periodicEdges);
-
-            /// Constructor for trace map for three-dimensional expansion.
-            MULTI_REGIONS_EXPORT AssemblyMapDG(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                const ExpList2DSharedPtr &trace,
-                const ExpList &locExp,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>
-                                                                &bndConstraint,
-                const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndCond,
-                const map<int,PeriodicFace> &periodicFaces);
+                const PeriodicMap &periodicTrace,
+                const std::string variable = "DefaultVar");
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapDG();
@@ -102,11 +76,11 @@ namespace Nektar
             /// boundary conditions are imposed.
             MULTI_REGIONS_EXPORT int GetNumDirichletBndPhys();
 
-            MULTI_REGIONS_EXPORT Array<OneD, StdRegions::StdExpansionSharedPtr>
+            MULTI_REGIONS_EXPORT Array<OneD, LocalRegions::ExpansionSharedPtr>
                 &GetElmtToTrace(const int i);
 
             MULTI_REGIONS_EXPORT 
-                Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
+                Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
             MULTI_REGIONS_EXPORT int GetTraceToUniversalMap(int i);
@@ -123,7 +97,7 @@ namespace Nektar
             int m_numDirichletBndPhys;
 
             /// list of edge expansions for a given element
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> > m_elmtToTrace;
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > m_elmtToTrace;
             /// Integer map of process trace space quadrature points to
             /// universal space.
             Array<OneD,int> m_traceToUniversalMap;
@@ -133,8 +107,10 @@ namespace Nektar
 
             void SetUpUniversalDGMap(const ExpList &locExp);
 
-            void SetUpUniversalTraceMap(const ExpList &locExp,
-                                        const ExpListSharedPtr trace);
+            void SetUpUniversalTraceMap(
+                const ExpList         &locExp,
+                const ExpListSharedPtr trace,
+                const PeriodicMap     &perMap = NullPeriodicMap);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;
 
@@ -150,38 +126,43 @@ namespace Nektar
 
             virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
 
-            virtual const void v_LocalToGlobal(
+            virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            virtual const void v_LocalToGlobal(
+            virtual void v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_GlobalToLocal(
+            virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            virtual const void v_GlobalToLocal(
+            virtual void v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            virtual const void v_Assemble(
+            virtual void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            virtual const void v_Assemble(
+            virtual void v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            virtual const int v_GetFullSystemBandWidth() const;
+            virtual int v_GetFullSystemBandWidth() const;
 
+            void RealignTraceElement(
+                Array<OneD, int>        &toAlign,
+                StdRegions::Orientation  orient,
+                int                      nquad1,
+                int                      nquad2 = 0);
         }; // class
 
 

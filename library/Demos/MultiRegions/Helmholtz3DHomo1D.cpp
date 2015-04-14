@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     string meshfile(argv[1]);
 
     MultiRegions::ContField3DHomogeneous1DSharedPtr Exp, Fce;
-    int     i, nq,  coordim;
+    int     i, nq;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    LibUtilities::FieldIOSharedPtr fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
     //----------------------------------------------
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
@@ -39,7 +41,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    int bc_val = 0;
     int nplanes      = vSession->GetParameter("HomModesZ");
     NekDouble lz     = vSession->GetParameter("LZ");
 	bool useFFT = false;
@@ -68,9 +69,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
-    coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetTotPoints();
-
+    nq  = Exp->GetTotPoints();
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
     xc2 = Array<OneD,NekDouble>(nq,0.0);
@@ -123,8 +122,8 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
     //----------------------------------------------
@@ -134,7 +133,7 @@ int main(int argc, char *argv[])
     string   out(strtok(argv[1],"."));
     string   endfile(".fld");
     out += endfile;
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
 
     Exp->GetFieldDefinitions(FieldDef);
 
@@ -147,7 +146,7 @@ int main(int argc, char *argv[])
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
 
-    graph2D->Write(out, FieldDef, FieldData);
+    fld->Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     vSession->Finalise();

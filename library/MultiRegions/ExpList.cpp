@@ -2684,7 +2684,6 @@ namespace Nektar
          */
         void ExpList::CreateCollections(Collections::ImplementationType ImpType)
         {
-            //return;
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
@@ -2694,15 +2693,6 @@ namespace Nektar
             // session file or default given
             Collections::CollectionOptimisation colOpt(m_session, ImpType);
             ImpType = colOpt.GetDefaultImplementationType();
-
-            // If ImpType is not specified by default argument call
-            // then set ImpType to eStdMat for large collections or
-            // eSumFac for small
-            if(ImpType == Collections::eNoImpType)
-            {
-                ImpType = (m_exp->size() < 100 ? Collections::eSumFac
-                                               : Collections::eStdMat);
-            }
 
             bool autotuning = colOpt.IsUsingAutotuning();
             bool verbose    = (m_session->DefinesCmdLineArgument("verbose")) &&
@@ -2719,7 +2709,8 @@ namespace Nektar
             // Loop over expansions, and create collections for each element type
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                collections[(*m_exp)[i]->DetShapeType()].push_back(std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
+                collections[(*m_exp)[i]->DetShapeType()].push_back(
+                    std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
             }
 
             for (it = collections.begin(); it != collections.end(); ++it)

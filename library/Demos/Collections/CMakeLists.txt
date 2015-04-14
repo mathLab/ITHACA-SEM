@@ -16,6 +16,10 @@ SET(CollectionTiming3DSource  CollectionTiming3D.cpp)
 ADD_NEKTAR_EXECUTABLE(CollectionTiming3D demos CollectionTiming3DSource)
 TARGET_LINK_LIBRARIES(CollectionTiming3D ${LinkLibraries})
 
+SET(CollectionTimingSource  CollectionTiming.cpp)
+ADD_NEKTAR_EXECUTABLE(CollectionTiming demos CollectionTimingSource)
+TARGET_LINK_LIBRARIES(CollectionTiming ${LinkLibraries})
+
 #ADD_NEKTAR_TEST(LinearAdvDiffReact2D_P7_Modes)
 
 IF (NEKTAR_USE_MPI)

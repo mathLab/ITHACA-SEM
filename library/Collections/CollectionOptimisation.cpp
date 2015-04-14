@@ -55,10 +55,10 @@ CollectionOptimisation::CollectionOptimisation(
                     (pSession->DefinesCmdLineArgument("verbose")) &&
                     (pSession->GetComm()->GetRank() == 0);
 
-    m_setByXml = false;
-    m_autotune = false;
+    m_setByXml    = false;
+    m_autotune    = false;
     m_maxCollSize = 0;
-    m_defaultType = defaultType;
+    m_defaultType = defaultType == eNoImpType ? eNoCollection : defaultType;
 
     map<string, LibUtilities::ShapeType> elTypes;
     map<string, LibUtilities::ShapeType>::iterator it2;
@@ -73,7 +73,7 @@ CollectionOptimisation::CollectionOptimisation(
     // Set defaults for all element types.
     for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
     {
-        defaults[ElmtOrder(it2->second, -1)] = defaultType;
+        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
     }
 
     map<string, OperatorType> opTypes;
@@ -243,7 +243,6 @@ CollectionOptimisation::CollectionOptimisation(
     }
 }
 
-
 OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(
         StdRegions::StdExpansionSharedPtr pExp)
 {
@@ -266,8 +265,8 @@ OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(
             it2 = it->second.find(defSearch);
             if (it2 == it->second.end())
             {
-                cout << "shouldn't be here..." << endl;
-                impType = eStdMat;
+                // Shouldn't be able to reach here.
+                impType = eNoCollection;
             }
             else
             {

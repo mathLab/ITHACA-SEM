@@ -1338,26 +1338,29 @@ namespace Nektar
             if (m_fromFunction)
             {
                 std::string s_FieldStr; 
+                string fieldNames[3] = {"x", "y", "z"};
+                string velFieldNames[3] = {"vx", "vy", "vz"};
                 // Check if function from session file defines each component
                 //      and evaluate them, otherwise there is no need to update
                 //          coords
                 for(int i = 0; i < 3; i++)
                 {
-                    s_FieldStr = m_session->GetVariable(i);
+                    s_FieldStr = fieldNames[i];
                     if ( m_session->DefinesFunction(m_funcName, s_FieldStr))
                     {
                         EvaluateFunction(m_fields, m_session, s_FieldStr, m_coords[i],
-                                                m_funcName);
+                                                m_funcName, time);
                         if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                         {
                             ASSERTL0 (false,
                                     "3DH1D does not support mapping in the z-direction.");
                         }
                     }
+                    s_FieldStr = velFieldNames[i];
                     if ( m_session->DefinesFunction(m_velFuncName, s_FieldStr))
                      {
                          EvaluateFunction(m_fields, m_session, s_FieldStr, 
-                                             m_coordsVel[i], m_velFuncName);
+                                             m_coordsVel[i], m_velFuncName, time);
                          if ( i==2 && m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                          {
                              ASSERTL0 (false,

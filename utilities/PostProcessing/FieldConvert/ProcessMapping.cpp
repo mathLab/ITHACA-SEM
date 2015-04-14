@@ -240,7 +240,7 @@ GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)
                 if ( f->m_session->DefinesFunction(velFuncName, s_FieldStr))
                 {
                     LibUtilities::EquationSharedPtr ffunc =
-                        f->m_session->GetFunction(funcName, s_FieldStr);
+                        f->m_session->GetFunction(velFuncName, s_FieldStr);
                     ffunc->Evaluate(coords[0], coords[1], coords[2], 
                                             time, coords_vel[i]);                    
                 }

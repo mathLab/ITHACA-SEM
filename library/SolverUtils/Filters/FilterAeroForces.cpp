@@ -1318,11 +1318,11 @@ namespace Nektar
                                     fv[j] = Array<OneD, NekDouble> (nbc,0.0);
                                     for ( k = 0; k < expdim; k++ )
                                     {
-                                        Vmath::Vvtvp (nbc,gradBnd[k*expdim+j],1,
+                                        Vmath::Vvtvp (nbc,gradBnd[k*nVel+j],1,
                                                            normals[k], 1,
                                                            fv[j], 1,
                                                            fv[j], 1);
-                                        Vmath::Vvtvp (nbc,gradBnd[j*expdim+k],1,
+                                        Vmath::Vvtvp (nbc,gradBnd[j*nVel+k],1,
                                                            normals[k], 1,
                                                            fv[j], 1, 
                                                            fv[j], 1);                                                

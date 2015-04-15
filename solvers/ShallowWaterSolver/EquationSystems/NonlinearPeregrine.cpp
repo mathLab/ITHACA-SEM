@@ -545,7 +545,7 @@ void NonlinearPeregrine::SetBoundaryConditions(
     {
 
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == "Wall")
+        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBoundary2D(n, cnt, inarray);
         }
@@ -971,7 +971,7 @@ void NonlinearPeregrine::SetBoundaryConditionsForcing(
     {
         // Use wall for all BC...
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == "Wall")
+        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBoundaryForcing(n, cnt, inarray);
         }
@@ -1082,7 +1082,7 @@ void NonlinearPeregrine::SetBoundaryConditionsContVariables(
     {
         // Use wall for all
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == "Wall")
+        if(boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBoundaryContVariables(n, cnt, inarray);
         }

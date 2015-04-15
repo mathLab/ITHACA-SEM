@@ -220,96 +220,42 @@ namespace Nektar
         NekDouble                             time)
     {
         std::string varName;
-        int nvariables = m_fields.num_elements();
         int cnt        = 0;
         
         std::string userDefStr;
+        int nreg = m_fields[0]->GetBndConditions().num_elements();
         // Loop over Boundary Regions
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        for (int n = 0; n < nreg; ++n)
         {
-
             userDefStr = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
             if(!userDefStr.empty())
             {
-                if(userDefStr ==  UserDefMap[eWall])
-                {
-                    WallBC(n, cnt, inarray);
-                }
-                else if(userDefStr  ==  UserDefMap[eWallViscous])
+                if(boost::iequals(userDefStr,"WallViscous"))
                 {
                     ASSERTL0(false, "WallViscous is a wrong bc for the "
                              "Euler equations");
                 }
-                else if(userDefStr  == UserDefMap[eSymmetry])
-                {
-                    // Symmetric Boundary Condition
-                    SymmetryBC(n, cnt, inarray);
-                }
-                else if( userDefStr == UserDefMap[eRiemannInvariant])
-                {
-                    // Riemann invariant characteristic Boundary Condition (CBC)
-                    RiemannInvariantBC(n, cnt, inarray);
-                }
-                else if(userDefStr == UserDefMap[ePressureOutflowNonReflective])
-                {
-                    // Pressure outflow non-reflective Boundary Condition
-                    PressureOutflowNonReflectiveBC(n, cnt, inarray);
-                }
-                else if(userDefStr == UserDefMap[ePressureOutflow])
-                {
-                    // Pressure outflow Boundary Condition
-                    PressureOutflowBC(n, cnt, inarray);
-                }
-                else if(userDefStr == UserDefMap[ePressureOutflowFile])
-                {
-                    // Pressure outflow Boundary Condition from file 
-                    PressureOutflowFileBC(n, cnt, inarray);
-                }
-                else if(userDefStr == UserDefMap[ePressureInflowFile])
-                {
-                    // Pressure inflow Boundary Condition from file
-                    PressureInflowFileBC(n, cnt, inarray);
-                }
-                else if(userDefStr == UserDefMap[eExtrapOrder0])
-                {
-                    // Extrapolation of the data at the boundaries
-                    ExtrapOrder0BC(n, cnt, inarray);
-                }
-                else if(userDefStr == UserDefMap[eIsentropicVortexBc])
+                else if(boost::iequals(userDefStr, "IsentropicVortex"))
                 {
                     // Isentropic Vortex Boundary Condition
                     SetBoundaryIsentropicVortex(n, time, cnt, inarray);
                 }
-                else if (userDefStr == UserDefMap[eRinglebFlowBc])
+                else if (boost::iequals(userDefStr,"RinglebFlow"))
                 {
                     SetBoundaryRinglebFlow(n, time, cnt, inarray);
                 }
                 else
                 {
-                    if(userDefStr != "TimeDependent")
-                    {
-                        string errmsg = "Unrecognised boundary condition: ";
-                        errmsg += userDefStr;
-                        ASSERTL0(false,errmsg.c_str());
-                    }
+                    // set up userdefined BC common to all solvers
+                    SetCommonBC(userDefStr,n,time, cnt,inarray);
                 }
             }
-            
-            // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
-                }
-            }
-            
-            
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+
+            // no User Defined conditions provided so skip cnt 
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize(); 
         }
     }
-    
+
     /**
      * @brief Get the exact solutions for isentropic vortex and Ringleb
      * flow problems.

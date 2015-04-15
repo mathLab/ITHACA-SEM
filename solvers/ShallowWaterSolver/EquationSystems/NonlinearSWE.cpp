@@ -427,7 +427,7 @@ namespace Nektar
       {	
 	
           // Wall Boundary Condition
-          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == "Wall")
+          if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
           {
               WallBoundary2D(n, cnt, inarray);
           }

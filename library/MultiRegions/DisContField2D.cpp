@@ -654,15 +654,13 @@ namespace Nektar
                     m_bndCondExpansions[cnt]  = locExpList;
                     m_bndConditions[cnt]      = bc;
 
-#if 0 // needs to be defined in local solver setup
-                    SpatialDomains::BndUserDefinedType type = 
-                        m_bndConditions[cnt]->GetUserDefined();
-                    if (type == SpatialDomains::eI || 
-                        type == SpatialDomains::eCalcBC)
+                    // needs to be defined in local solver setup
+                    std::string type = m_bndConditions[cnt]->GetUserDefined();
+                    if (boost::iequals(type,"I") || 
+                        boost::iequals(type,"CalcBC"))
                     {
                         SetUpPhysNormals();
                     }
-#endif
                     cnt++;
                 }
             }
@@ -2242,9 +2240,8 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
-#if 0 
-                else if (m_bndConditions[i]->GetUserDefined()
-                            == SpatialDomains::eMovingBody)
+                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
+                                        "MovingBody"))
                 {
                     locExpList = m_bndCondExpansions[i];
                     if (m_bndConditions[i]->GetBoundaryConditionType()
@@ -2259,7 +2256,6 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
-#endif
             }
         }
     } // end of namespace

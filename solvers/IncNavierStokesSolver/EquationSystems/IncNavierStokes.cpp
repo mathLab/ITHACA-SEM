@@ -127,12 +127,12 @@ namespace Nektar
                     if(!type.empty())
                         // Time Dependent Boundary Condition (if no user
                         // defined then this is empty)
-                        ASSERTL0 (type == "Wall_Forces"   ||
-                                  type == "TimeDependent" ||
-                                  type == "MovingBody"    ||
-                                  type == "Radiation"     ||
-                                  type == "I"             ||
-                                  type == "HOutflow",
+                        ASSERTL0 (boost::iequals(type,"Wall_Forces")   ||
+                                  boost::iequals(type,"TimeDependent") ||
+                                  boost::iequals(type,"MovingBody")    ||
+                                  boost::iequals(type,"Radiation")     ||
+                                  boost::iequals(type,"I")             ||
+                                  boost::iequals(type,"HOutflow"),
                                   "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
@@ -194,7 +194,7 @@ namespace Nektar
             BndExp   = m_fields[i]->GetBndCondExpansions();
             for(int n = 0; n < BndConds.num_elements(); ++n)
             {    
-                if(BndConds[n]->GetUserDefined() == "Radiation")
+                if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
                     ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin,
                              "Radiation boundary condition must be of type Robin <R>");
@@ -214,7 +214,7 @@ namespace Nektar
 
             for(int n = 0; n < BndConds.num_elements(); ++n)
             {    
-                if(BndConds[n]->GetUserDefined() == "Radiation")
+                if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
                     
                     int npoints    = BndExp[n]->GetNpoints();
@@ -407,7 +407,7 @@ namespace Nektar
         {            
             std::string type = BndConds[n]->GetUserDefined(); 
             
-            if((BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)&&(type == "Radiation"))
+            if((BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)&&(boost::iequals(type,"Radiation")))
             {
                 for(i = 0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
                 {

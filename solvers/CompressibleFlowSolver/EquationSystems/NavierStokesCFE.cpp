@@ -248,87 +248,13 @@ namespace Nektar
         NekDouble                             time)
     {
         std::string varName;
-        int nvariables = m_fields.num_elements();
         int cnt        = 0;
 
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
-            // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "Wall")
-            {
-                ASSERTL0(false, "Wall is a wrong bc for the full "
-                                "compressible Navier-Stokes equations");
-            }
-
-            // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "WallViscous")
-            {
-                WallViscousBC(n, cnt, inarray);
-            }
-
-            // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "Symmetry")
-            {
-                SymmetryBC(n, cnt, inarray);
-            }
-
-            // Riemann invariant characteristic Boundary Condition (CBC)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "RiemannInvariant")
-            {
-                RiemannInvariantBC(n, cnt, inarray);
-            }
-
-            // Pressure outflow non-reflective Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "PressureOutflowNonReflective")
-            {
-                PressureOutflowNonReflectiveBC(n, cnt, inarray);
-            }
-
-            // Pressure outflow Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "PressureOutflow")
-            {
-                PressureOutflowBC(n, cnt, inarray);
-            }
-
-            // Pressure outflow Boundary Condition from file
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "PressureOutflowFile")
-            {
-                PressureOutflowFileBC(n, cnt, inarray);
-            }
-
-            // Pressure inflow Boundary Condition from file
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "PressureInflowFile")
-            {
-                PressureInflowFileBC(n, cnt, inarray);
-            }
-
-            // Extrapolation of the data at the boundaries
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "ExtrapOrder0")
-            {
-                ExtrapOrder0BC(n, cnt, inarray);
-            }
-
-            // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
-                }
-            }
-
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();       
+            SetCommonBC(type,n,time,cnt,inarray);
         }
     }
 }

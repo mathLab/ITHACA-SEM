@@ -234,27 +234,21 @@ namespace Nektar
 
                                     if (attrName=="USERDEFINEDTYPE") 
                                     {
-
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), 
                                                  "USERDEFINEDTYPE attribute must have associated value.");
 
-                                        // Suppose to go here?
                                         m_session->SubstituteExpressions(attrData);
 
                                         userDefined = attrData;
-                                        if(attrData == "TimeDependent")
+                                        if(boost::iequals(attrData,"TimeDependent"))
                                         {
                                             IsTimeDependent = true;
                                         }
                                      }
                                      else if(attrName=="VALUE")
                                      {
-                                        ASSERTL0(attrName == "VALUE", 
-                                                 (std::string("Unknown attribute: ") 
-                                                  + attrName).c_str());
-
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), 
                                                  "VALUE attribute must be specified.");
@@ -265,19 +259,21 @@ namespace Nektar
                                       }
                                      else if(attrName=="FILE")
                                      {
-                                        ASSERTL0(attrName == "FILE", 
-                                                 (std::string("Unknown attribute: ") 
-                                                  + attrName).c_str());
-
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), "FILE attribute must be specified.");
 
                                         m_session->SubstituteExpressions(attrData);
 
                                         filename = attrData;
-                                      }
-                                      attr = attr->Next();
+                                     }
+                                     else
+                                     {
+                                         ASSERTL0(false, 
+                                       (std::string("Unknown boundary condition attribute: ")  + attrName).c_str());
+                                     }
+                                    attr = attr->Next();
                                 }
+
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
                                 neumannCondition->SetIsTimeDependent(IsTimeDependent);
                                 (*boundaryConditions)[*iter]  = neumannCondition;
@@ -311,49 +307,50 @@ namespace Nektar
                             {
                                 std::string equation, userDefined, filename;
 
-                                while(attr) {
-
+                                while(attr) 
+                                {
                                    attrName = attr->Name();
-
-                                    if (attrName=="USERDEFINEDTYPE") {
-
-                                        // Do stuff for the user defined attribute
-                                        attrData = attr->Value();
-                                        ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
-
-                                        m_session->SubstituteExpressions(attrData);
-
-                                        userDefined = attrData;
-                                        if(attrData == "TimeDependent")
-                                        {
+                                   
+                                   if (attrName=="USERDEFINEDTYPE") {
+                                       
+                                       // Do stuff for the user defined attribute
+                                       attrData = attr->Value();
+                                       ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
+                                       
+                                       m_session->SubstituteExpressions(attrData);
+                                       
+                                       userDefined = attrData;
+                                       if(boost::iequals(attrData,"TimeDependent"))
+                                       {
                                             IsTimeDependent = true;
-                                        }
-                                    }
-                                    else if(attrName=="VALUE")
-                                    {
-                                        ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
-
-                                        attrData = attr->Value();
-                                        ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
-
-                                        m_session->SubstituteExpressions(attrData);
-
-                                        equation = attrData;
-                                    }
-                                    else if(attrName=="FILE")
-                                    {
-                                       ASSERTL0(attrName == "FILE", (std::string("Unknown attribute: ") + attrName).c_str());
-
+                                       }
+                                   }
+                                   else if(attrName=="VALUE")
+                                   {
+                                       attrData = attr->Value();
+                                       ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
+                                       
+                                       m_session->SubstituteExpressions(attrData);
+                                       
+                                       equation = attrData;
+                                   }
+                                   else if(attrName=="FILE")
+                                   {
                                        attrData = attr->Value();
                                        ASSERTL0(!attrData.empty(), "FILE attribute must be specified.");
-
+                                       
                                        m_session->SubstituteExpressions(attrData);
-
+                                       
                                        filename = attrData;
-                                     }
+                                   }
+                                   else
+                                   {
+                                       ASSERTL0(false, 
+                                                (std::string("Unknown boundary condition attribute: ") + attrName).c_str());
+                                   }
                                    attr = attr->Next();
                                 }
-
+                                
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
                                 dirichletCondition->SetIsTimeDependent(IsTimeDependent);
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
@@ -391,66 +388,65 @@ namespace Nektar
                                 std::string attrData1;
                                 std::string equation1, equation2, userDefined;
                                 std::string filename;
-
+                                
                                 while(attr){
-
-                                attrName1 = attr->Name();
-
-                                if (attrName1=="USERDEFINEDTYPE") {
-
-                                    // Do stuff for the user defined attribute
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attribute must have associated value.");
-
-                                    m_session->SubstituteExpressions(attrData1);
-
-                                    userDefined = attrData1;
-                                    if(attrData == "TimeDependent")
-                                    {
-                                        IsTimeDependent = true;
-                                    }
                                     
-                                 }
-                                 else if(attrName1 == "VALUE"){
-
-                                    ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
-
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "VALUE attributes must have associated values.");
-
-                                    m_session->SubstituteExpressions(attrData1);
-
-                                    equation1 = attrData1;
-
-                                    attr = attr->Next();
-                                    ASSERTL0(attr, "Unable to read PRIMCOEFF attribute.");
-
-                                    attrName1= attr->Name();
-                                    ASSERTL0(attrName1 == "PRIMCOEFF", (std::string("Unknown attribute: ") + attrName1).c_str());
-
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "PRIMCOEFF attributes must have associated values.");
-
-                                    m_session->SubstituteExpressions(attrData1);
-
-                                    equation2 = attrData1;
-
-                                 }
-                                 else if(attrName1=="FILE")
-                                 {
-                                    ASSERTL0(attrName1 == "FILE", (std::string("Unknown attribute: ") + attrName1).c_str());
-
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "FILE attribute must be specified.");
-
-                                    m_session->SubstituteExpressions(attrData1);
-
-                                    filename = attrData1;
-                                 }
-                                 attr = attr->Next();
-
+                                    attrName1 = attr->Name();
+                                    
+                                    if (attrName1=="USERDEFINEDTYPE") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData1 = attr->Value();
+                                        ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attribute must have associated value.");
+                                        
+                                        m_session->SubstituteExpressions(attrData1);
+                                        userDefined = attrData1;
+                                        if(boost::iequals(attrData,"TimeDependent"))
+                                        {
+                                            IsTimeDependent = true;
+                                        }
+                                        
+                                    }
+                                    else if(attrName1 == "VALUE"){
+                                        
+                                        attrData1 = attr->Value();
+                                        ASSERTL0(!attrData1.empty(), "VALUE attributes must have associated values.");
+                                        
+                                        m_session->SubstituteExpressions(attrData1);
+                                        
+                                        equation1 = attrData1;
+                                        
+                                        attr = attr->Next();
+                                        ASSERTL0(attr, "Unable to read PRIMCOEFF attribute.");
+                                        
+                                        attrName1= attr->Name();
+                                        ASSERTL0(attrName1 == "PRIMCOEFF", (std::string("Unknown attribute: ") + attrName1).c_str());
+                                        
+                                        attrData1 = attr->Value();
+                                        ASSERTL0(!attrData1.empty(), "PRIMCOEFF attributes must have associated values.");
+                                        
+                                        m_session->SubstituteExpressions(attrData1);
+                                        
+                                        equation2 = attrData1;
+                                        
+                                    }
+                                    else if(attrName1=="FILE")
+                                    {
+                                        attrData1 = attr->Value();
+                                        ASSERTL0(!attrData1.empty(), "FILE attribute must be specified.");
+                                        
+                                        m_session->SubstituteExpressions(attrData1);
+                                        
+                                        filename = attrData1;
+                                    }
+                                    else
+                                    {
+                                        ASSERTL0(false, (std::string("Unknown boundary condition attribute: ") + attrName1).c_str());
+                                        
+                                    }
+                                    attr = attr->Next();                                    
                                 }
-
+                                
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, equation1, equation2, userDefined, filename));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }

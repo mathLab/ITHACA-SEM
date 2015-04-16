@@ -43,7 +43,8 @@ namespace Nektar
         {
             typedef Loki::SingletonHolder<FilterFactory,
                                           Loki::CreateUsingNew,
-                                          Loki::NoDestroy > Type;
+                                          Loki::NoDestroy,
+                                          Loki::SingleThreaded> Type;
             return Type::Instance();
         }
 

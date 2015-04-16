@@ -3,7 +3,7 @@
  *
  */
 
-#include "ThreadBoost.h"
+#include "LibUtilities/BasicUtils/ThreadBoost.h"
 #include <iostream>
 
 namespace Nektar
@@ -11,9 +11,9 @@ namespace Nektar
     namespace Thread
     {
 
-    	std::string ThreadManagerBoost::className =
-    		GetThreadManager().RegisterCreatorFunction("ThreadManagerBoost",
-    				ThreadManagerBoost::Create, "Threading using Boost.");
+        std::string ThreadManagerBoost::className =
+            GetThreadManagerFactory().RegisterCreatorFunction("ThreadManagerBoost",
+                    ThreadManagerBoost::Create, "Threading using Boost.");
 
         ThreadManagerBoost::~ThreadManagerBoost()
         {
@@ -37,12 +37,14 @@ namespace Nektar
             delete []m_threadThreadList;
             delete []m_threadActiveList;
             delete []m_threadBusyList;
+            delete m_barrier;
         }
         
         ThreadManagerBoost::ThreadManagerBoost(unsigned int numT) :
                 m_numThreads(numT), m_numWorkers(numT-1), m_masterQueue(), m_masterQueueMutex(),
                 m_masterActiveMutex(), m_masterQueueCondVar(), m_masterActiveCondVar(),
-                m_chunkSize(1), m_schedType(e_dynamic)
+                m_chunkSize(1), m_schedType(e_dynamic),
+                m_threadMap()
         {
             using namespace std;
             try {
@@ -73,6 +75,8 @@ namespace Nektar
         
                 try {
                     m_threadThreadList[i] = new boost::thread(boost::ref(*tw));
+                    boost::thread::id id = m_threadThreadList[i]->get_id();
+                    m_threadMap[id] = i;
                 } catch (...) {
                     std::cerr << "Exception while creating worker threads" << std::endl;
                     abort();
@@ -81,6 +85,8 @@ namespace Nektar
             }
             m_threadActiveList[m_numThreads-1] = false;
             m_masterThreadId = boost::this_thread::get_id();
+            m_barrier = new boost::barrier(m_numWorkers > 0 ? m_numWorkers : 1);
+            m_type = "Threading with Boost";
         }
         
         void ThreadManagerBoost::QueueJobs(std::vector<ThreadJob*> &joblist)
@@ -124,8 +130,8 @@ namespace Nektar
 
         bool ThreadManagerBoost::InThread()
         {
-        	boost::thread::id id = boost::this_thread::get_id();
-        	return (id != m_masterThreadId);
+            boost::thread::id id = boost::this_thread::get_id();
+            return (id != m_masterThreadId);
         }
 
         void ThreadManagerBoost::Wait()
@@ -147,27 +153,41 @@ namespace Nektar
         
         unsigned int ThreadManagerBoost::GetNumWorkers()
         {
-            return m_numWorkers+1;
+            return m_numWorkers;
         }
         
+        unsigned int ThreadManagerBoost::GetWorkerNum()
+        {
+            boost::thread::id id = boost::this_thread::get_id();
+            return m_threadMap[id];
+        }
+
         void ThreadManagerBoost::SetNumWorkersImpl(const unsigned int num)
         {
-        	Lock masterActiveLock(m_masterActiveMutex); // locks the active
+            Lock masterActiveLock(m_masterActiveMutex); // locks the active
 
-        	m_numWorkers = num;
-        	for (unsigned int i = 0; i < m_numThreads; i++)
-        	{
-        		m_threadActiveList[i] = i < m_numWorkers ? true : false;
-        	}
-        	m_masterActiveCondVar.notify_all();
+            if (m_numWorkers == num)
+            {
+                return;
+            }
+
+            delete m_barrier;
+            m_barrier = new boost::barrier(num > 0 ? num : 1);
+
+            m_numWorkers = num;
+            for (unsigned int i = 0; i < m_numThreads; i++)
+            {
+                m_threadActiveList[i] = i < m_numWorkers ? true : false;
+            }
+            m_masterActiveCondVar.notify_all();
         } // Lock on active released here
 
         void ThreadManagerBoost::SetNumWorkers(unsigned int num)
         {
-        	num = std::min(num, m_numThreads);
-        	num = std::max(num, static_cast<unsigned int>(0));
-        	--num;
-        	SetNumWorkersImpl(num);
+            num = std::min(num, m_numThreads);
+            num = std::max(num, static_cast<unsigned int>(0));
+            --num;
+            SetNumWorkersImpl(num);
         }
         
         void ThreadManagerBoost::SetNumWorkers()
@@ -180,6 +200,17 @@ namespace Nektar
             return m_numThreads;
         }
         
+        void ThreadManagerBoost::Hold()
+        {
+                m_barrier->wait();
+        }
+
+        const std::string& ThreadManagerBoost::GetType() const
+        {
+            return m_type;
+        }
+
+
         ThreadWorkerBoost::ThreadWorkerBoost(ThreadManagerBoost *tm, unsigned int workerNum) :
                 m_threadManager(tm), m_workerQueue(),
                 m_keepgoing(true), m_threadNum(workerNum)
@@ -289,6 +320,7 @@ namespace Nektar
                 {
                     // something bad happened, probably time to die
                     // maybe signal ThreadManager
+                    throw;
                 }
             }
         }

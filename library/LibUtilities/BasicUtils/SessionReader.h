@@ -43,7 +43,6 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
-#include <LibUtilities/BasicUtils/Thread.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -51,7 +50,6 @@
 
 class TiXmlElement;
 class TiXmlDocument;
-
 
 namespace Nektar
 {
@@ -428,8 +426,6 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT void SetUpXmlDoc();
 
-            LIB_UTILITIES_EXPORT Nektar::Thread::ThreadManagerSharedPtr GetThreadManager();
-
         private:
             boost::program_options::variables_map m_cmdLineOptions;
 
@@ -461,8 +457,6 @@ namespace Nektar
             FilterMap                                 m_filters;
             /// Be verbose
             bool                                      m_verbose;
-            /// Thread Manager
-            Nektar::Thread::ThreadManagerSharedPtr    m_threadManager;
             /// Map of original composite ordering for parallel periodic bcs.
             CompositeOrdering                         m_compOrder;
             /// Map of original boundary region ordering for parallel periodic
@@ -529,8 +523,6 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void ReadFunctions(TiXmlElement *conditions);
             /// Reads the FILTERS section of the XML document.
             LIB_UTILITIES_EXPORT void ReadFilters(TiXmlElement *filters);
-            /// Starts the required number of threads on this worker
-            void StartThreads();
             /// Enforce parameters from command line arguments.
             LIB_UTILITIES_EXPORT void CmdLineOverride();
 

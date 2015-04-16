@@ -55,7 +55,6 @@ using namespace std;
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <LibUtilities/BasicUtils/Thread.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/program_options.hpp>
@@ -275,9 +274,6 @@ namespace Nektar
 
             // Parse the XML data in #m_xmlDoc
             ParseDocument();
-
-            // Start threads
-            StartThreads();
 
             // Override SOLVERINFO and parameters with any specified on the
             // command line.
@@ -1537,7 +1533,6 @@ namespace Nektar
         void SessionReader::PartitionMesh()
         {
             ASSERTL0(m_comm.get(), "Communication not initialised.");
-        	ASSERTL0(m_threadManager, "Threading not initialised.");
 
             // Get row of comm, or the whole comm if not split
             CommSharedPtr vCommMesh = m_comm->GetRowComm();
@@ -2634,23 +2629,6 @@ namespace Nektar
                     }
                 }
             }
-        }
-
-        /**
-         *
-         */
-        void SessionReader::StartThreads()
-        {
-            int nthreads;
-            LoadParameter("NThreads", nthreads, 1);
-            cerr << "Number of threads will be: " << nthreads << endl;
-            m_threadManager = Thread::GetThreadManager().CreateInstance("ThreadManagerBoost", nthreads);
-
-        }
-
-        Nektar::Thread::ThreadManagerSharedPtr SessionReader::GetThreadManager()
-        {
-        	return m_threadManager;
         }
 
         void SessionReader::SetUpXmlDoc(void)

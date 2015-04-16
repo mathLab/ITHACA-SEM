@@ -81,8 +81,9 @@ namespace Nektar
         EquationSystemFactory& GetEquationSystemFactory()
         {
             typedef Loki::SingletonHolder<EquationSystemFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                                          Loki::CreateUsingNew,
+                                          Loki::NoDestroy,
+                                          Loki::ClassLevelLockable> Type;
             return Type::Instance();
         }
 

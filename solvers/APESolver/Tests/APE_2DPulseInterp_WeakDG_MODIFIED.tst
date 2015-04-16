@@ -2,9 +2,9 @@
 <test>
     <description>desc P=10</description>
     <executable>APESolver</executable>
-    <parameters>APE_2DPulseInterp_FRDG_MODIFIED.xml</parameters>
+    <parameters>APE_2DPulseInterp_WeakDG_MODIFIED.xml</parameters>
     <files>
-        <file description="Session File">APE_2DPulseInterp_FRDG_MODIFIED.xml</file>
+        <file description="Session File">APE_2DPulseInterp_WeakDG_MODIFIED.xml</file>
         <file description="Pts File">APE_2DPulseInterp_baseflow_0.00000000E+00.pts</file>
         <file description="Pts File">APE_2DPulseInterp_baseflow_1.00000000E-05.pts</file>
         <file description="Pts File">APE_2DPulseInterp_baseflow_2.00000000E-05.pts</file>

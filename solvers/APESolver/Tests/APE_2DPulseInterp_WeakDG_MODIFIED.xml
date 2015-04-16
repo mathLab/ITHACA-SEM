@@ -318,7 +318,7 @@
     </SOLVERINFO>
     <PARAMETERS>
       <P> TimeStep       = 0.00001            </P>
-      <P> NumSteps       = 10                 </P>
+      <P> NumSteps       = 2                 </P>
       <P> FinTime        = TimeStep*NumSteps  </P>
       <P> IO_CheckSteps  = 10                 </P>
       <P> IO_InfoSteps   = 10                 </P>
@@ -342,22 +342,20 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-      <E VAR="U0" VALUE="300 * tanh(2*y/0.1)"/>
-      <E VAR="V0" VALUE="0"/>
-      <E VAR="P0" VALUE="Pinfinity"/>
+      <F VAR="u0" TIMEDEPENDENT="1" FILE="APE_2DPulseInterp_baseflow_%14.8E.pts"/>
+      <E VAR="v0" VALUE="0"/>
+      <E VAR="p0" VALUE="Pinfinity"/>
+      <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
       <E VAR="S" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
-      <E VAR="p" VALUE="0"/>
-      <E VAR="u" VALUE="0"/>
-      <E VAR="v" VALUE="0"/>
+      <E VAR="p,u,v" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="InitialConditions">
       <E VAR="p" VALUE="100*exp(-32*(x^2+y^2))"/> <!-- Gaussian pulse located at the origin -->
-      <E VAR="u" VALUE="0"/>
-      <E VAR="v" VALUE="0"/>
+      <E VAR="u,v" VALUE="0"/>
     </FUNCTION>
   </CONDITIONS>
 </NEKTAR>

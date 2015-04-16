@@ -152,14 +152,15 @@ namespace Nektar
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
                                    m_f->m_fielddef,
                                    m_f->m_data,
-                                   LibUtilities::NullFieldMetaDataMap,
+                                   m_f->m_fieldMetaDataMap,
                                    ElementGIDs);
             }
             else // load all data.
             {
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
                                    m_f->m_fielddef,
-                                   m_f->m_data);
+                                   m_f->m_data,
+                                   m_f->m_fieldMetaDataMap);
             }
 
 

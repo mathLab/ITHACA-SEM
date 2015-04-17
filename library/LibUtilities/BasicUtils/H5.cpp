@@ -64,75 +64,12 @@ namespace Nektar
                 return ans;
             }
 
-            File::File(const std::string& filename, unsigned mode)
-            {
-                m_Id = H5Fcreate(filename.c_str(), mode, H5P_DEFAULT,
-                        H5P_DEFAULT);
-                if (m_Id < 0)
-                    throw Error();
-            }
-
-            File::~File()
-            {
-                Close();
-            }
-
-            void File::Close()
-            {
-                H5Fclose(m_Id);
-                m_Id = H5I_INVALID_HID;
-            }
-
-            AttributeSharedPtr NamedObject::CreateAttribute(
+            AttributeSharedPtr CanHaveAttributes::CreateAttribute(
                     const std::string& name, DataTypeSharedPtr type,
                     DataSpaceSharedPtr space)
             {
-                NamedObjectSharedPtr self = boost::dynamic_pointer_cast
-                        < NamedObject > (shared_from_this());
-                AttributeSharedPtr ans(new Attribute(self, name, type, space));
+                AttributeSharedPtr ans(new Attribute(GetId(), name, type, space));
                 return ans;
-            }
-
-//            void NamedObject::SetStringAttribute(const std::string& name,
-//                    const std::string& value)
-//            {
-//                DataTypeSharedPtr type = PredefinedDataType::Native<char>();
-//                DataSpaceSharedPtr space = DataSpace::OneD(value.size());
-//                AttributeSharedPtr attr = CreateAttribute(name, type, space);
-//                H5Awrite(*attr, *type, &name[0]);
-//            }
-
-            Group::Group(hid_t id) :
-                    Object(id)
-            {
-            }
-
-            Group::~Group()
-            {
-                Close();
-            }
-
-            void Group::Close()
-            {
-                H5Gclose(m_Id);
-                m_Id = H5I_INVALID_HID;
-            }
-
-            Attribute::Attribute(NamedObjectSharedPtr parent,
-                    const std::string& name, DataTypeSharedPtr type,
-                    DataSpaceSharedPtr space)
-            {
-                m_Id = H5Acreate(parent->GetId(), name.c_str(), type->GetId(),
-                        space->GetId(), H5P_DEFAULT, H5P_DEFAULT);
-            }
-
-            Attribute::~Attribute()
-            {
-                Close();
-            }
-            void Attribute::Close()
-            {
-                H5Aclose(m_Id);
             }
 
             DataSpaceSharedPtr DataSpace::Null()
@@ -237,27 +174,70 @@ namespace Nektar
                 m_Id = H5I_INVALID_HID;
             }
 
-            template<class T>
-            const bool DataTypeTraits<T>::IsPredefined = false;
             template<>
             hid_t DataTypeTraits<char>::NativeType = H5T_NATIVE_CHAR;
-            template<>
-            const bool DataTypeTraits<char>::IsPredefined = true;
 
             template<>
             hid_t DataTypeTraits<int>::NativeType = H5T_NATIVE_INT;
-            template<>
-            const bool DataTypeTraits<int>::IsPredefined = true;
 
             template<>
             hid_t DataTypeTraits<unsigned int>::NativeType = H5T_NATIVE_UINT;
-            template<>
-            const bool DataTypeTraits<unsigned int>::IsPredefined = true;
 
             template<>
             hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
-            template<>
-            const bool DataTypeTraits<double>::IsPredefined = true;
+
+            Attribute::Attribute(hid_t parent,
+                    const std::string& name, DataTypeSharedPtr type,
+                    DataSpaceSharedPtr space)
+            {
+                m_Id = H5Acreate(parent, name.c_str(), type->GetId(),
+                        space->GetId(), H5P_DEFAULT, H5P_DEFAULT);
+            }
+
+            Attribute::~Attribute()
+            {
+                Close();
+            }
+            void Attribute::Close()
+            {
+                H5Aclose(m_Id);
+            }
+
+
+            File::File(const std::string& filename, unsigned mode)
+            {
+                m_Id = H5Fcreate(filename.c_str(), mode, H5P_DEFAULT,
+                        H5P_DEFAULT);
+                if (m_Id < 0)
+                    throw Error();
+            }
+
+            File::~File()
+            {
+                Close();
+            }
+
+            void File::Close()
+            {
+                H5Fclose(m_Id);
+                m_Id = H5I_INVALID_HID;
+            }
+
+            Group::Group(hid_t id) :
+                    Object(id)
+            {
+            }
+
+            Group::~Group()
+            {
+                Close();
+            }
+
+            void Group::Close()
+            {
+                H5Gclose(m_Id);
+                m_Id = H5I_INVALID_HID;
+            }
 
         }
     }

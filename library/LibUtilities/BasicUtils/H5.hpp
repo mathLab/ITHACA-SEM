@@ -5,7 +5,7 @@ namespace Nektar
         namespace H5
         {
             template<typename T>
-            void NamedObject::SetAttribute(const std::string& name,
+            void CanHaveAttributes::SetAttribute(const std::string& name,
                     const T& value)
             {
                 DataTypeSharedPtr type = DataTypeTraits<T>::GetType();
@@ -16,7 +16,7 @@ namespace Nektar
             }
 
             template<typename T>
-            void NamedObject::SetAttribute(const std::string& name,
+            void CanHaveAttributes::SetAttribute(const std::string& name,
                     const std::vector<T>& value)
             {
                 DataTypeSharedPtr type = DataTypeTraits<T>::GetType();
@@ -25,6 +25,7 @@ namespace Nektar
                 H5Awrite(*attr, *type, &value[0]);
 
             }
+
             template<class T>
             DataTypeSharedPtr DataTypeTraits<T>::GetType()
             {

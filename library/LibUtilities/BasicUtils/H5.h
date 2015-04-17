@@ -54,6 +54,21 @@ namespace Nektar
             {
 
             };
+
+            // Forward declare
+            class Object;
+            typedef boost::shared_ptr<Object> ObjectSharedPtr;
+            class DataType;
+            typedef boost::shared_ptr<DataType> DataTypeSharedPtr;
+            class DataSpace;
+            typedef boost::shared_ptr<DataSpace> DataSpaceSharedPtr;
+            class Attribute;
+            typedef boost::shared_ptr<Attribute> AttributeSharedPtr;
+            class Group;
+            typedef boost::shared_ptr<Group> GroupSharedPtr;
+            class File;
+            typedef boost::shared_ptr<File> FileSharedPtr;
+
             /// HDF5 base class
             class Object : public boost::enable_shared_from_this<Object>
             {
@@ -75,43 +90,16 @@ namespace Nektar
                     virtual ~Object();
                     hid_t m_Id;
             };
-            typedef boost::shared_ptr<Object> ObjectSharedPtr;
 
-            // Fwd declare
-            class DataType;
-            typedef boost::shared_ptr<DataType> DataTypeSharedPtr;
-            class DataSpace;
-            typedef boost::shared_ptr<DataSpace> DataSpaceSharedPtr;
-            class Attribute;
-            typedef boost::shared_ptr<Attribute> AttributeSharedPtr;
-            class Group;
-            typedef boost::shared_ptr<Group> GroupSharedPtr;
-
-            class Location : public virtual Object
-            {
-            };
-            typedef boost::shared_ptr<Location> LocationSharedPtr;
-
-            /// Common functionality of Groups and Files
+            /// Mixin for objects that contain groups and datasets (Group and File)
             class CanHaveGroups : public virtual Object
             {
                 public:
                     GroupSharedPtr CreateGroup(const std::string& name);
             };
 
-            /// HDF5 file wrapper
-            class File : public Location, public CanHaveGroups
-            {
-                public:
-                    File(const std::string& filename, unsigned mode);
-                    ~File();
-                    void Close();
-
-            };
-            typedef boost::shared_ptr<File> FileSharedPtr;
-
-            /// Base for Groups, DataSets and DataTypes
-            class NamedObject : public Location
+            /// Mixin for objects that can have attributes (Group, DataSet, DataType)
+            class CanHaveAttributes : public virtual Object
             {
                 public:
                     AttributeSharedPtr CreateAttribute(const std::string& name,
@@ -120,49 +108,11 @@ namespace Nektar
                     template<class T>
                     void SetAttribute(const std::string& name, const T& value);
                     template<class T>
-                    void SetAttribute(const std::string& name, const std::vector<T>& value);
-
-                    //void SetAttribute(const std::string& name, const std::string& value);
-
-//                    void SetStringAttribute(const std::string& name,
-//                            const std::string& value);
-            };
-            typedef boost::shared_ptr<NamedObject> NamedObjectSharedPtr;
-
-            /// HDF5 Group wrapper
-            class Group : public NamedObject, public CanHaveGroups
-            {
-                public:
-                    ~Group();
-                    void Close();
-                private:
-                    Group(hid_t id);
-                    friend class CanHaveGroups;
+                    void SetAttribute(const std::string& name,
+                            const std::vector<T>& value);
             };
 
-            class Attribute : public Object
-            {
-                public:
-                    ~Attribute();
-                    void Close();
-//                    Read();
-//                    void Write(const std::string& data);
-//                    template<class T>
-//                    void Write(const std::vector<T>& data);
-                private:
-                    Attribute(NamedObjectSharedPtr parent,
-                            const std::string& name, DataTypeSharedPtr type,
-                            DataSpaceSharedPtr space);
-                    friend class NamedObject;
-            };
-            class DataSet : public NamedObject
-            {
-                private:
-                    DataSet(NamedObjectSharedPtr parent,
-                            const std::string& name, DataTypeSharedPtr type,
-                            DataSpaceSharedPtr space);
-                    friend class NamedObject;
-            };
+            /// HDF5 DataSpace wrapper
             class DataSpace : public Object
             {
                 public:
@@ -180,16 +130,29 @@ namespace Nektar
                     void Close();
             };
 
+            /// Traits class for HDF5 data types. Specialise this for
             template<class T>
             struct DataTypeTraits
             {
+                    /**
+                     * Get the address of the start of the data.
+                     * Default implementation just uses "&"
+                     */
                     static const void* GetAddress(const T& obj);
+                    /**
+                     * Return a DataType object representing T.
+                     * Default implementation just calls PredefinedDataType::Native<T>()
+                     */
                     static DataTypeSharedPtr GetType();
+                    /***
+                     * Define this for a specialision for any HDF5 NATIVE type you want to use.
+                     * See http://hdfgroup.org/HDF5/doc/UG/UG_frame11Datatypes.html
+                     */
                     static hid_t NativeType;
-                    static const bool IsPredefined;
             };
 
-            class DataType : public NamedObject
+            /// Wrap and HDF5 data type object
+            class DataType : public virtual Object, public CanHaveAttributes
             {
                 public:
                     static DataTypeSharedPtr String(size_t len = 0);
@@ -199,6 +162,7 @@ namespace Nektar
                     DataType(hid_t id);
             };
 
+            /// Predefined HDF data types that must not be closed when done with.
             class PredefinedDataType : public DataType
             {
                 public:
@@ -215,6 +179,50 @@ namespace Nektar
                     PredefinedDataType (hid_t);
 
             };
+
+            /// HDF5 Attribute Wrapper
+            class Attribute : public Object
+            {
+                public:
+                    ~Attribute();
+                    void Close();
+                private:
+                    Attribute(hid_t parent, const std::string& name,
+                            DataTypeSharedPtr type, DataSpaceSharedPtr space);
+                    friend class CanHaveAttributes;
+            };
+
+            /// HDF5 file wrapper
+            class File : public CanHaveGroups
+            {
+                public:
+                    File(const std::string& filename, unsigned mode);
+                    ~File();
+                    void Close();
+
+            };
+
+            /// HDF5 Group wrapper
+            class Group : public CanHaveAttributes, public CanHaveGroups
+            {
+                public:
+                    ~Group();
+                    void Close();
+                private:
+                    Group(hid_t id);
+                    friend class CanHaveGroups;
+            };
+
+//            class DataSet : public CanHaveAttributes
+//            {
+//                private:
+//                    DataSet(boost::shared_ptr<CanHaveAttributes> parent,
+//                            const std::string& name, DataTypeSharedPtr type,
+//                            DataSpaceSharedPtr space);
+//                    friend class CanHaveAttributes;
+//            };
+
+
         }
     }
 }

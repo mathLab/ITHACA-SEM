@@ -27,6 +27,17 @@ namespace Nektar
             }
 
             template<class T>
+            DataSetSharedPtr CanHaveGroupsDataSets::CreateWriteDataSet(
+                    const std::string& name, const std::vector<T>& data)
+            {
+                DataTypeSharedPtr type = DataTypeTraits<T>::GetType();
+                DataSpaceSharedPtr space = DataSpace::OneD(data.size());
+                DataSetSharedPtr dataset = CreateDataSet(name, type, space);
+                dataset->Write(data);
+                return dataset;
+            }
+
+            template<class T>
             DataTypeSharedPtr DataTypeTraits<T>::GetType()
             {
                 return PredefinedDataType::Native<T>();

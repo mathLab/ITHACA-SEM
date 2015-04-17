@@ -56,7 +56,8 @@ namespace Nektar
             {
             }
 
-            GroupSharedPtr CanHaveGroups::CreateGroup(const std::string& name)
+            GroupSharedPtr CanHaveGroupsDataSets::CreateGroup(
+                    const std::string& name)
             {
                 hid_t grp = H5Gcreate(m_Id, name.c_str(), H5P_DEFAULT,
                         H5P_DEFAULT, H5P_DEFAULT);
@@ -64,11 +65,20 @@ namespace Nektar
                 return ans;
             }
 
+            DataSetSharedPtr CanHaveGroupsDataSets::CreateDataSet(
+                    const std::string& name, DataTypeSharedPtr type,
+                    DataSpaceSharedPtr space)
+            {
+                DataSetSharedPtr ans(new DataSet(GetId(), name, type, space));
+                return ans;
+            }
+
             AttributeSharedPtr CanHaveAttributes::CreateAttribute(
                     const std::string& name, DataTypeSharedPtr type,
                     DataSpaceSharedPtr space)
             {
-                AttributeSharedPtr ans(new Attribute(GetId(), name, type, space));
+                AttributeSharedPtr ans(
+                        new Attribute(GetId(), name, type, space));
                 return ans;
             }
 
@@ -186,9 +196,8 @@ namespace Nektar
             template<>
             hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
 
-            Attribute::Attribute(hid_t parent,
-                    const std::string& name, DataTypeSharedPtr type,
-                    DataSpaceSharedPtr space)
+            Attribute::Attribute(hid_t parent, const std::string& name,
+                    DataTypeSharedPtr type, DataSpaceSharedPtr space)
             {
                 m_Id = H5Acreate(parent, name.c_str(), type->GetId(),
                         space->GetId(), H5P_DEFAULT, H5P_DEFAULT);
@@ -202,7 +211,6 @@ namespace Nektar
             {
                 H5Aclose(m_Id);
             }
-
 
             File::File(const std::string& filename, unsigned mode)
             {
@@ -239,6 +247,23 @@ namespace Nektar
                 m_Id = H5I_INVALID_HID;
             }
 
+            DataSet::DataSet(hid_t parent, const std::string& name,
+                    DataTypeSharedPtr type, DataSpaceSharedPtr space)
+            {
+                m_Id = H5Dcreate(parent, name.c_str(), type->GetId(),
+                        space->GetId(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            }
+
+            DataSet::~DataSet()
+            {
+                Close();
+            }
+
+            void DataSet::Close()
+            {
+                H5Dclose(m_Id);
+                m_Id = H5I_INVALID_HID;
+            }
         }
     }
 }

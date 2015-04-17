@@ -68,6 +68,8 @@ namespace Nektar
             typedef boost::shared_ptr<Group> GroupSharedPtr;
             class File;
             typedef boost::shared_ptr<File> FileSharedPtr;
+            class DataSet;
+            typedef boost::shared_ptr<DataSet> DataSetSharedPtr;
 
             /// HDF5 base class
             class Object : public boost::enable_shared_from_this<Object>
@@ -92,10 +94,14 @@ namespace Nektar
             };
 
             /// Mixin for objects that contain groups and datasets (Group and File)
-            class CanHaveGroups : public virtual Object
+            class CanHaveGroupsDataSets : public virtual Object
             {
                 public:
                     GroupSharedPtr CreateGroup(const std::string& name);
+                    DataSetSharedPtr CreateDataSet(const std::string& name,
+                            DataTypeSharedPtr type, DataSpaceSharedPtr space);
+                    template <class T>
+                    DataSetSharedPtr CreateWriteDataSet(const std::string& name, const std::vector<T>& data);
             };
 
             /// Mixin for objects that can have attributes (Group, DataSet, DataType)
@@ -152,7 +158,7 @@ namespace Nektar
             };
 
             /// Wrap and HDF5 data type object
-            class DataType : public virtual Object, public CanHaveAttributes
+            class DataType : public CanHaveAttributes
             {
                 public:
                     static DataTypeSharedPtr String(size_t len = 0);
@@ -193,7 +199,7 @@ namespace Nektar
             };
 
             /// HDF5 file wrapper
-            class File : public CanHaveGroups
+            class File : public CanHaveGroupsDataSets
             {
                 public:
                     File(const std::string& filename, unsigned mode);
@@ -203,25 +209,34 @@ namespace Nektar
             };
 
             /// HDF5 Group wrapper
-            class Group : public CanHaveAttributes, public CanHaveGroups
+            class Group : public CanHaveAttributes, public CanHaveGroupsDataSets
             {
                 public:
                     ~Group();
                     void Close();
                 private:
                     Group(hid_t id);
-                    friend class CanHaveGroups;
+                    friend class CanHaveGroupsDataSets;
             };
 
-//            class DataSet : public CanHaveAttributes
-//            {
-//                private:
-//                    DataSet(boost::shared_ptr<CanHaveAttributes> parent,
-//                            const std::string& name, DataTypeSharedPtr type,
-//                            DataSpaceSharedPtr space);
-//                    friend class CanHaveAttributes;
-//            };
+            class DataSet : public CanHaveAttributes
+            {
+                public:
+                    ~DataSet();
+                    void Close();
 
+                    template <class T>
+                    void Write(const std::vector<T>& data)
+                    {
+                            DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
+                            H5Dwrite(m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
+                    }
+
+                private:
+                    DataSet(hid_t parent, const std::string& name,
+                            DataTypeSharedPtr type, DataSpaceSharedPtr space);
+                    friend class CanHaveGroupsDataSets;
+            };
 
         }
     }

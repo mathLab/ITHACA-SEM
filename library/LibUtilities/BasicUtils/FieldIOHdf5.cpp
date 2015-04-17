@@ -117,6 +117,8 @@ namespace Nektar
             {
                 //---------------------------------------------
                 // Write ELEMENTS
+
+                // first, give it a name that will be unique in the group
                 std::string elemGroupName;
                 {
                     std::stringstream nameSS;
@@ -124,13 +126,14 @@ namespace Nektar
                     elemGroupName = nameSS.str();
                 }
 
-                H5::GroupSharedPtr elemTag = root->CreateGroup(elemGroupName);
-
+                // Write the actual field data
+                H5::DataSetSharedPtr elemTag = root->CreateWriteDataSet("elemGroupName", fielddata[f]);
                 // Write FIELDS
                 // i.e. m_fields is a vector<string> (variable length)
                 elemTag->SetAttribute("FIELDS", fielddefs[f]->m_fields);
 
                 // Write SHAPE
+                // because this isn't just a vector of data, serialise it ourselves for now
                 std::string shapeString;
                 {
                     std::stringstream shapeStringStream;
@@ -176,6 +179,7 @@ namespace Nektar
                 }
 
                 // Write NUMMODESPERDIR
+                // because this isn't just a vector of data, serialise it by hand for now
                 std::string numModesString;
                 {
                     std::stringstream numModesStringStream;
@@ -213,44 +217,14 @@ namespace Nektar
                 elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
 
                 // Write ID
-                // Should ideally look at ways of compressing this stream
-                // if just sequential;
+                // Should promote this to a data set with appropriate compression and then reference it in the ID attribute
                 std::string idString;
                 {
                     std::stringstream idStringStream;
                     GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
                 }
                 elemTag->SetAttribute("ID", idString);
-
-                // Write the actual field data now
-
-//                std::string compressedDataString;
-//                ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
-//                        "Failed to compress field data.");
-//
-//                // If the string length is not divisible by 3,
-//                // pad it. There is a bug in transform_width
-//                // that will make it reference past the end
-//                // and crash.
-//                switch (compressedDataString.length() % 3)
-//                {
-//                case 1:
-//                    compressedDataString += '\0';
-//                case 2:
-//                    compressedDataString += '\0';
-//                    break;
-//                }
-//
-//                // Convert from binary to base64.
-//                typedef boost::archive::iterators::base64_from_binary<
-//                        boost::archive::iterators::transform_width<
-//                        std::string::const_iterator, 6, 8> > base64_t;
-//                std::string base64string(base64_t(compressedDataString.begin()),
-//                        base64_t(compressedDataString.end()));
-//                elemTag->LinkEndChild(new TiXmlText(base64string));
-
             }
-//            doc.SaveFile(filename);
             // Destruction of the H5::File and Group objects closes them. Yay RAII
         }
     }

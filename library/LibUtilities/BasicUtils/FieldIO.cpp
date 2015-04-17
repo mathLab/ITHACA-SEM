@@ -37,6 +37,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/make_shared.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
@@ -783,7 +784,33 @@ namespace Nektar
          * \brief add information about provenance and fieldmetadata
          */
         void FieldIO::AddInfoTag(TiXmlElement * root,
-                             const FieldMetaDataMap &fieldmetadatamap)
+                const FieldMetaDataMap &fieldmetadatamap)
+        {
+            TagWriterSharedPtr w = boost::make_shared<XmlTagWriter>(root);
+            AddInfoTag(w, fieldmetadatamap);
+        }
+
+        TagWriter::~TagWriter() {
+        }
+
+        XmlTagWriter::XmlTagWriter(TiXmlElement* elem) : m_El(elem)
+        {
+        }
+        TagWriterSharedPtr XmlTagWriter::AddChild(const std::string& name)
+        {
+            TiXmlElement* child = new TiXmlElement(name.c_str());
+            m_El->LinkEndChild(child);
+            return TagWriterSharedPtr(new XmlTagWriter(child));
+        };
+
+        void XmlTagWriter::SetAttr(const std::string& key, const std::string& val)
+        {
+            TiXmlElement* child = new TiXmlElement(key.c_str());
+            child->LinkEndChild(new TiXmlText(val.c_str()));
+            m_El->LinkEndChild(child);
+        }
+        void FieldIO::AddInfoTag(TagWriterSharedPtr root,
+                const FieldMetaDataMap &fieldmetadatamap)
         {
             FieldMetaDataMap ProvenanceMap;
 
@@ -809,19 +836,14 @@ namespace Nektar
                 ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
             }
 
-            TiXmlElement * infoTag = new TiXmlElement("Metadata");
-            root->LinkEndChild(infoTag);
+            TagWriterSharedPtr infoTag = root->AddChild("Metadata");
 
-            TiXmlElement * v;
             FieldMetaDataMap::const_iterator infoit;
 
-            TiXmlElement * provTag = new TiXmlElement("Provenance");
-            infoTag->LinkEndChild(provTag);
+            TagWriterSharedPtr provTag = infoTag->AddChild("Provenance");
             for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end(); ++infoit)
             {
-                v = new TiXmlElement( (infoit->first).c_str() );
-                v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
-                provTag->LinkEndChild(v);
+                provTag->SetAttr(infoit->first, infoit->second);
             }
 
             //---------------------------------------------
@@ -830,9 +852,7 @@ namespace Nektar
             {
                 for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
                 {
-                    v = new TiXmlElement( (infoit->first).c_str() );
-                    v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
-                    infoTag->LinkEndChild(v);
+                    infoTag->SetAttr(infoit->first, infoit->second);
                 }
             }
         }

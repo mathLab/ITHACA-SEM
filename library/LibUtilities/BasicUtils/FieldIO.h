@@ -59,7 +59,28 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        
+        /// Base class for writing hierarchical data (XML or HDF5)
+        class TagWriter {
+            public:
+                /// Create a child node
+                virtual boost::shared_ptr<TagWriter> AddChild(const std::string& name) = 0;
+                /// Set an attribute on the node
+                virtual void SetAttr(const std::string& key, const std::string& val) = 0;
+            protected:
+                virtual ~TagWriter();
+        };
+        typedef boost::shared_ptr<TagWriter> TagWriterSharedPtr;
+
+        /// Simple class for writing to XML
+        class XmlTagWriter : public TagWriter {
+            public:
+                XmlTagWriter(TiXmlElement* elem);
+                TagWriterSharedPtr AddChild(const std::string& name);
+                void SetAttr(const std::string& key, const std::string& val);
+            private:
+                TiXmlElement* m_El;
+        };
+
         static std::vector<NekDouble> NullNekDoubleVector;
         static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
         static std::vector<unsigned int> NullUnsignedIntVector;
@@ -214,6 +235,9 @@ namespace Nektar
 
                 LIB_UTILITIES_EXPORT void AddInfoTag(
                         TiXmlElement * root,
+                        const FieldMetaDataMap &fieldmetadatamap);
+                LIB_UTILITIES_EXPORT void AddInfoTag(
+                        TagWriterSharedPtr root,
                         const FieldMetaDataMap &fieldmetadatamap);
 
                 LIB_UTILITIES_EXPORT void GenerateSeqString(

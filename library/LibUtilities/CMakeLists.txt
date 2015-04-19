@@ -21,6 +21,9 @@ SET(BasicUtilsHeaders
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/Progressbar.hpp
+    ./BasicUtils/PtsField.h
+    ./BasicUtils/PtsIO.h
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
@@ -39,6 +42,8 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/PtsField.cpp
+    ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
@@ -441,6 +446,11 @@ IF( NEKTAR_USE_BLAS_LAPACK )
     ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
 ENDIF( NEKTAR_USE_BLAS_LAPACK )
+
+IF( NEKTAR_USE_PETSC )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
+    ADD_DEPENDENCIES(LibUtilities petsc-3.5.2)
+ENDIF( NEKTAR_USE_PETSC )
 
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

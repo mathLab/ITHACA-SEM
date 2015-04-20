@@ -489,7 +489,7 @@ namespace Nektar
                     int veloffset = 0;
                     for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
                     {
-                        // count the expansion order in each plane for e3DH1D case
+                        // count the expansion list in each plane for e3DH1D case
                         if(cnt_exp == m_expsize_per_plane[n])
                         {
                             cnt_exp = 0; cnt_plane++;
@@ -537,7 +537,7 @@ namespace Nektar
                     veloffset = 0;
                     for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
                     {
-                        // count the expansion order for each plane for e3DH1D
+                        // count the expansion list for each plane for e3DH1D
                         if(cnt_exp == m_expsize_per_plane[n])
                         {
                             cnt_exp = 0; cnt_plane++;
@@ -626,7 +626,7 @@ namespace Nektar
                 {
                     if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                     {
-                        // count the expansion order for e3DH1D
+                        // count the expansion list for e3DH1D
                         if(cnt_exp == m_expsize_per_plane[n])
                         {
                             cnt_exp = 0; cnt_plane++;

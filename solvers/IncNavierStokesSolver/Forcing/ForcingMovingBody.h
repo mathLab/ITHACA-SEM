@@ -85,15 +85,22 @@ class ForcingMovingBody : public SolverUtils::Forcing
         ForcingMovingBody(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        void CheckIsFromFile();
+        void CheckIsFromFile(const TiXmlElement* pForce);
 
         void InitialiseCableModel(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
-        void UpdateMotion(
+        void InitialiseFilter(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                  NekDouble time);
+            const TiXmlElement* pForce);
+
+        void UpdateMotion(
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
+              Array<OneD, Array<OneD, NekDouble> >       &  zta,
+              Array<OneD, Array<OneD, NekDouble> >       &  eta,
+              NekDouble                                     time);
 
         void TensionedCableModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -102,10 +109,15 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void EvaluateStructDynModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const Array<OneD, Array<OneD, NekDouble> > &zta,
+            const Array<OneD, Array<OneD, NekDouble> > &eta,
             const NekDouble &time );
 
         void CalculateForcing(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> > &zta,
+            const Array<OneD, Array<OneD, NekDouble> > &eta,
+                  Array<OneD, Array<OneD, NekDouble> > &forcing);
 
         void EvaluateAccelaration(
             const Array<OneD, NekDouble> &input,
@@ -115,56 +127,31 @@ class ForcingMovingBody : public SolverUtils::Forcing
         void SetDynEqCoeffMatrix(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
-        void OutputStructMotion(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
-
         void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
 
-        int m_intSteps;
         int m_movingBodyCalls;
         int m_np;
-        int m_vsize;
-        int m_NumD;
-        bool m_FictitiousMass;
-        bool m_homostrip;
+        int m_nd;
 
         NekDouble m_structrho;
-        NekDouble m_fictrho;
-        NekDouble m_cabletension;
-        NekDouble m_bendingstiff;
         NekDouble m_structdamp;
-        NekDouble m_fictdamp;
-        NekDouble m_structstiff;
         NekDouble m_lhom;
         NekDouble m_kinvis;
         NekDouble m_timestep;
 
-        static NekDouble StifflyStable_Betaq_Coeffs[3][3];
-        static NekDouble StifflyStable_Alpha_Coeffs[3][3];
-        static NekDouble StifflyStable_Gamma0_Coeffs[3];
-
         LibUtilities::NektarFFTSharedPtr m_FFT;
-        LibUtilities::CommSharedPtr m_comm;
         FilterMovingBodySharedPtr m_filter;
-
-        /// either free or forced vibration types are available
-        std::string m_vibrationtype;
-        /// either free-free or pinned-pinned support types
-        std::string m_supporttype;
 
         /// storage for the cable's force(x,y) variables
         Array<OneD, NekDouble> m_Aeroforces;
         /// storage for the cable's motion(x,y) variables
         Array<OneD, NekDouble> m_MotionVars;
-        Array<OneD, Array<OneD, NekDouble> > m_zeta;
-        Array<OneD, Array<OneD, NekDouble> > m_eta;
         Array<OneD, Array<OneD, NekDouble> > m_W;
         /// fictitious velocity storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
         /// fictitious acceleration storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fA;
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BndV;
+        /// matrices in Newmart-beta method
         Array<OneD, DNekMatSharedPtr> m_CoeffMat_A;
         Array<OneD, DNekMatSharedPtr> m_CoeffMat_B;
         /// [0] is displacements, [1] is velocities, [2] is accelerations

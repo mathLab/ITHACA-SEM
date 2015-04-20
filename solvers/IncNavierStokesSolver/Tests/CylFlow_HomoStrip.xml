@@ -1848,8 +1848,8 @@
             <P> LC            = 4*PI             </P>
             <P> A             = 0.025            </P>
             <P> omega         = 1.0              </P>
-            <P> PROC_Z        = 8                </P>
-            <P> Strip_Z       = 8                </P>
+            <P> PROC_Z        = 16               </P>
+            <P> Strip_Z       = 16               </P>
             <P> DistStrip     = PI/2             </P>
             <P> StructStiff   = 0.02             </P>
             <P> StructRho     = 2.0              </P>

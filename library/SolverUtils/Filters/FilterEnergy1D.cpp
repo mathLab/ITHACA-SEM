@@ -82,7 +82,7 @@ namespace Nektar
             ASSERTL0(pSession->GetComm()->GetSize() == 1,
                      "The 1D energy filter currently only works in serial.");
 
-            m_out.open(outName);
+            m_out.open(outName.c_str());
         }
 
         /**

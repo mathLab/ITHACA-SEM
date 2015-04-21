@@ -85,17 +85,6 @@ namespace Nektar
 
             template<>
             void CanHaveAttributes::SetAttribute<std::string>(
-                    const std::string& name, const std::string& value)
-            {
-                DataTypeSharedPtr type = DataType::String();
-                DataSpaceSharedPtr space = DataSpace::Scalar();
-                AttributeSharedPtr attr = CreateAttribute(name, type, space);
-                const char* str = value.c_str();
-                H5_CALL(H5Awrite, (attr->GetId(), type->GetId(), &str));
-            }
-
-            template<>
-            void CanHaveAttributes::SetAttribute<std::string>(
                     const std::string& name,
                     const std::vector<std::string>& value)
             {
@@ -216,16 +205,16 @@ namespace Nektar
             }
 
             template<>
-            hid_t DataTypeTraits<char>::NativeType = H5T_NATIVE_CHAR;
+            const hid_t DataTypeTraits<char>::NativeType = H5T_NATIVE_CHAR;
 
             template<>
-            hid_t DataTypeTraits<int>::NativeType = H5T_NATIVE_INT;
+            const hid_t DataTypeTraits<int>::NativeType = H5T_NATIVE_INT;
 
             template<>
-            hid_t DataTypeTraits<unsigned int>::NativeType = H5T_NATIVE_UINT;
+            const hid_t DataTypeTraits<unsigned int>::NativeType = H5T_NATIVE_UINT;
 
             template<>
-            hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
+            const hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
 
             Attribute::Attribute(hid_t parent, const std::string& name,
                     DataTypeSharedPtr type, DataSpaceSharedPtr space)

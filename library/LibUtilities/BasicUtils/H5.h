@@ -141,17 +141,26 @@ namespace Nektar
                     void Close();
             };
 
-            /// Traits class for HDF5 data types. Specialise this for
+            template<class T>
+            struct DataTypeConversionPolicy
+            {
+                    typedef const T& ConvertedType;
+                    static ConvertedType Convert(const T& obj);
+            };
+
+            /// Traits class for HDF5 data types.
             template<class T>
             struct DataTypeTraits
             {
+                    typedef DataTypeConversionPolicy<T> Converter;
+
                     /***
                      * Define this for a specialision for any HDF5 NATIVE type you want to use.
                      * See http://hdfgroup.org/HDF5/doc/UG/UG_frame11Datatypes.html
                      */
-                    static hid_t NativeType;
+                    static const hid_t NativeType;
 
-                    typedef const T& ConvertedType;
+                    typedef typename Converter::ConvertedType ConvertedType;
 
                     static ConvertedType Convert(const T& obj);
                     /**
@@ -182,7 +191,7 @@ namespace Nektar
             {
                 public:
                     template<class T>
-                    static  DataTypeSharedPtr Native();
+                    static DataTypeSharedPtr Native();
                     static DataTypeSharedPtr CS1();
                     void Close();
                 private:
@@ -233,7 +242,8 @@ namespace Nektar
                     void Write(const std::vector<T>& data)
                     {
                         DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
-                        H5_CALL(H5Dwrite, (m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]));
+                        H5_CALL(H5Dwrite,
+                                (m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]));
                     }
 
                 private:

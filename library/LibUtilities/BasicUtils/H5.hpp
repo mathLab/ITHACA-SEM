@@ -5,13 +5,20 @@ namespace Nektar
         namespace H5
         {
             template<class T>
+            typename DataTypeConversionPolicy<T>::ConvertedType DataTypeConversionPolicy<
+                    T>::Convert(const T& obj)
+            {
+                return obj;
+            }
+
+            template<class T>
             DataTypeSharedPtr DataTypeTraits<T>::GetType()
             {
                 return PredefinedDataType::Native<T>();
             }
-
             template<class T>
-            const void* DataTypeTraits<T>::GetAddress(const T& obj)
+            const void* DataTypeTraits<T>::GetAddress(
+                    DataTypeTraits<T>::ConvertedType& obj)
             {
                 return &obj;
             }
@@ -19,27 +26,24 @@ namespace Nektar
             typename DataTypeTraits<T>::ConvertedType DataTypeTraits<T>::Convert(
                     const T& obj)
             {
-                return obj;
+                return Converter::Convert(obj);
             }
 
             template<>
-            struct DataTypeTraits<std::string>
+            struct DataTypeConversionPolicy<std::string>
             {
                     typedef const char* ConvertedType;
-                    static inline const void* GetAddress(ConvertedType& obj)
-                    {
-                        return &obj;
-                    }
-                    static inline DataTypeSharedPtr GetType()
-                    {
-                        return DataType::String();
-                    }
-
-                    static ConvertedType Convert(const std::string& obj)
+                    inline static ConvertedType Convert(const std::string & obj)
                     {
                         return obj.c_str();
                     }
             };
+
+            template<>
+            inline DataTypeSharedPtr DataTypeTraits<std::string>::GetType()
+            {
+                return DataType::String();
+            }
 
             template<class T>
             inline DataTypeSharedPtr PredefinedDataType::Native()

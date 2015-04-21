@@ -203,6 +203,42 @@ which produces a field file \inlsh{threshold\_max.fld}.
 Performs the same function as the \inltt{ThresholdMax} filter but records the
 time at which the threshold variable drops below a prescribed value.
 
+\subsection{One-dimensional energy}
+
+This filter is designed to output the energy spectrum of one-dimensional
+elements. It transforms the solution field at each timestep into a orthogonal
+basis defined by the functions
+\[
+\psi_p(\xi) = L_p(\xi)
+\]
+where $L_p$ is the $p$-th Legendre polynomial. This can be used to show the
+presence of, for example, oscillations in the underlying field due to numerical
+instability. The resulting output is written into a file called
+\inltt{session.eny} by default. The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the energy spectrum is written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example syntax is given below:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Energy1D">
+      <PARAM NAME="OutputFile">EnergyFile</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+  </FILTER>
+\end{lstlisting}
+
 \subsection{Modal energy}
 
 \begin{notebox}

@@ -4,6 +4,50 @@ namespace Nektar
     {
         namespace H5
         {
+            template<class T>
+            DataTypeSharedPtr DataTypeTraits<T>::GetType()
+            {
+                return PredefinedDataType::Native<T>();
+            }
+
+            template<class T>
+            const void* DataTypeTraits<T>::GetAddress(const T& obj)
+            {
+                return &obj;
+            }
+            template<class T>
+            typename DataTypeTraits<T>::ConvertedType DataTypeTraits<T>::Convert(
+                    const T& obj)
+            {
+                return obj;
+            }
+
+            template<>
+            struct DataTypeTraits<std::string>
+            {
+                    typedef const char* ConvertedType;
+                    static inline const void* GetAddress(ConvertedType& obj)
+                    {
+                        return &obj;
+                    }
+                    static inline DataTypeSharedPtr GetType()
+                    {
+                        return DataType::String();
+                    }
+
+                    static ConvertedType Convert(const std::string& obj)
+                    {
+                        return obj.c_str();
+                    }
+            };
+
+            template<class T>
+            inline DataTypeSharedPtr PredefinedDataType::Native()
+            {
+                return DataTypeSharedPtr(
+                        new PredefinedDataType(DataTypeTraits<T>::NativeType));
+            }
+
             template<typename T>
             void CanHaveAttributes::SetAttribute(const std::string& name,
                     const T& value)
@@ -11,8 +55,12 @@ namespace Nektar
                 DataTypeSharedPtr type = DataTypeTraits<T>::GetType();
                 DataSpaceSharedPtr space = DataSpace::Scalar();
                 AttributeSharedPtr attr = CreateAttribute(name, type, space);
-                H5Awrite(attr->GetId(), type->GetId(),
-                        DataTypeTraits<T>::GetAddress(value));
+
+                typename DataTypeTraits<T>::ConvertedType conv = DataTypeTraits<
+                        T>::Convert(value);
+                H5_CALL(H5Awrite,
+                        (attr->GetId(), type->GetId(), DataTypeTraits<T>::GetAddress(
+                                conv)));
             }
 
             template<typename T>
@@ -22,7 +70,7 @@ namespace Nektar
                 DataTypeSharedPtr type = DataTypeTraits<T>::GetType();
                 DataSpaceSharedPtr space = DataSpace::OneD(value.size());
                 AttributeSharedPtr attr = CreateAttribute(name, type, space);
-                H5Awrite(*attr, *type, &value[0]);
+                H5_CALL(H5Awrite, (attr->GetId(), type->GetId(), &value[0]));
 
             }
 
@@ -37,29 +85,6 @@ namespace Nektar
                 return dataset;
             }
 
-            template<class T>
-            DataTypeSharedPtr DataTypeTraits<T>::GetType()
-            {
-                return PredefinedDataType::Native<T>();
-            }
-
-            template<class T>
-            const void* DataTypeTraits<T>::GetAddress(const T& obj)
-            {
-                return &obj;
-            }
-            template<>
-            inline const void* DataTypeTraits<std::string>::GetAddress(
-                    const std::string& obj)
-            {
-                return &obj[0];
-            }
-
-            template<>
-            inline DataTypeSharedPtr DataTypeTraits<std::string>::GetType()
-            {
-                return DataType::String();
-            }
         }
     }
 }

@@ -127,7 +127,7 @@ namespace Nektar
                 }
 
                 // Write the actual field data
-                H5::DataSetSharedPtr elemTag = root->CreateWriteDataSet("elemGroupName", fielddata[f]);
+                H5::DataSetSharedPtr elemTag = root->CreateWriteDataSet(elemGroupName, fielddata[f]);
                 // Write FIELDS
                 // i.e. m_fields is a vector<string> (variable length)
                 elemTag->SetAttribute("FIELDS", fielddefs[f]->m_fields);

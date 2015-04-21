@@ -59,8 +59,9 @@ namespace Nektar
             GroupSharedPtr CanHaveGroupsDataSets::CreateGroup(
                     const std::string& name)
             {
-                hid_t grp = H5Gcreate(m_Id, name.c_str(), H5P_DEFAULT,
-                        H5P_DEFAULT, H5P_DEFAULT);
+                hid_t grp;
+                H5_CONSTRUCT(grp, H5Gcreate,
+                        (m_Id, name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
                 GroupSharedPtr ans(new Group(grp));
                 return ans;
             }
@@ -82,23 +83,50 @@ namespace Nektar
                 return ans;
             }
 
+            template<>
+            void CanHaveAttributes::SetAttribute<std::string>(
+                    const std::string& name, const std::string& value)
+            {
+                DataTypeSharedPtr type = DataType::String();
+                DataSpaceSharedPtr space = DataSpace::Scalar();
+                AttributeSharedPtr attr = CreateAttribute(name, type, space);
+                const char* str = value.c_str();
+                H5_CALL(H5Awrite, (attr->GetId(), type->GetId(), &str));
+            }
+
+            template<>
+            void CanHaveAttributes::SetAttribute<std::string>(
+                    const std::string& name,
+                    const std::vector<std::string>& value)
+            {
+                DataTypeSharedPtr type = DataType::String();
+                DataSpaceSharedPtr space = DataSpace::OneD(value.size());
+                AttributeSharedPtr attr = CreateAttribute(name, type, space);
+                std::vector<const char*> vals(value.size(), NULL);
+                for (size_t i = 0; i < value.size(); ++i)
+                    vals[i] = value[i].c_str();
+
+                H5_CALL(H5Awrite, (attr->GetId(), type->GetId(), &vals[0]));
+
+            }
+
             DataSpaceSharedPtr DataSpace::Null()
             {
                 DataSpaceSharedPtr ans(new DataSpace);
-                ans->m_Id = H5Screate(H5S_NULL);
+                H5_CONSTRUCT(ans->m_Id, H5Screate, (H5S_NULL));
                 return ans;
             }
 
             DataSpaceSharedPtr DataSpace::Scalar()
             {
                 DataSpaceSharedPtr ans(new DataSpace);
-                ans->m_Id = H5Screate(H5S_SCALAR);
+                H5_CONSTRUCT(ans->m_Id, H5Screate, (H5S_SCALAR));
                 return ans;
             }
             DataSpaceSharedPtr DataSpace::OneD(hsize_t size)
             {
                 DataSpaceSharedPtr ans(new DataSpace);
-                ans->m_Id = H5Screate_simple(1, &size, NULL);
+                H5_CONSTRUCT(ans->m_Id, H5Screate_simple, (1, &size, NULL));
                 return ans;
             }
 
@@ -111,7 +139,7 @@ namespace Nektar
                     Object()
             {
                 int rank = dims.size();
-                m_Id = H5Screate_simple(rank, &dims[0], NULL);
+                H5_CONSTRUCT(m_Id, H5Screate_simple, (rank, &dims[0], NULL));
             }
 
             DataSpace::DataSpace(const hsize_t size, const hsize_t max) :
@@ -120,7 +148,7 @@ namespace Nektar
                 const hsize_t* max_p = NULL;
                 if (max != (H5S_UNLIMITED - 1))
                     max_p = &max;
-                m_Id = H5Screate_simple(1, &size, max_p);
+                H5_CONSTRUCT(m_Id, H5Screate_simple, (1, &size, max_p));
             }
 
             DataSpace::DataSpace(const std::vector<hsize_t>& dims,
@@ -128,7 +156,8 @@ namespace Nektar
                     Object()
             {
                 int rank = dims.size();
-                m_Id = H5Screate_simple(rank, &dims[0], &max_dims[0]);
+                H5_CONSTRUCT(m_Id, H5Screate_simple,
+                        (rank, &dims[0], &max_dims[0]));
             }
 
             DataSpace::~DataSpace()
@@ -138,7 +167,8 @@ namespace Nektar
 
             void DataSpace::Close()
             {
-                H5Sclose(m_Id);
+                H5_CALL(H5Sclose, (m_Id));
+                m_Id = H5I_INVALID_HID;
             }
 
             DataType::DataType(hid_t id) :
@@ -151,19 +181,20 @@ namespace Nektar
                 DataTypeSharedPtr ans = s1->Copy();
                 if (len == 0)
                     len = H5T_VARIABLE;
-                H5Tset_size(ans->GetId(), len);
+                H5_CALL(H5Tset_size, (ans->GetId(), len));
                 return ans;
             }
 
             void DataType::Close()
             {
-                H5Tclose(m_Id);
+                H5_CALL(H5Tclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
             }
 
             DataTypeSharedPtr DataType::Copy() const
             {
-                hid_t ans_id = H5Tcopy(H5T_C_S1);
+                hid_t ans_id = H5I_INVALID_HID;
+                H5_CONSTRUCT(ans_id, H5Tcopy, (m_Id));
                 DataTypeSharedPtr ans(new DataType(ans_id));
                 return ans;
             }
@@ -199,8 +230,8 @@ namespace Nektar
             Attribute::Attribute(hid_t parent, const std::string& name,
                     DataTypeSharedPtr type, DataSpaceSharedPtr space)
             {
-                m_Id = H5Acreate(parent, name.c_str(), type->GetId(),
-                        space->GetId(), H5P_DEFAULT, H5P_DEFAULT);
+                H5_CONSTRUCT(m_Id, H5Acreate,
+                        (parent, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, H5P_DEFAULT));
             }
 
             Attribute::~Attribute()
@@ -209,15 +240,14 @@ namespace Nektar
             }
             void Attribute::Close()
             {
-                H5Aclose(m_Id);
+                H5_CALL(H5Aclose, (m_Id));
+                m_Id = H5I_INVALID_HID;
             }
 
             File::File(const std::string& filename, unsigned mode)
             {
-                m_Id = H5Fcreate(filename.c_str(), mode, H5P_DEFAULT,
-                        H5P_DEFAULT);
-                if (m_Id < 0)
-                    throw Error();
+                H5_CONSTRUCT(m_Id, H5Fcreate,
+                        (filename.c_str(), mode, H5P_DEFAULT, H5P_DEFAULT));
             }
 
             File::~File()
@@ -227,7 +257,7 @@ namespace Nektar
 
             void File::Close()
             {
-                H5Fclose(m_Id);
+                H5_CALL(H5Fclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
             }
 
@@ -243,15 +273,15 @@ namespace Nektar
 
             void Group::Close()
             {
-                H5Gclose(m_Id);
+                H5_CALL(H5Gclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
             }
 
             DataSet::DataSet(hid_t parent, const std::string& name,
                     DataTypeSharedPtr type, DataSpaceSharedPtr space)
             {
-                m_Id = H5Dcreate(parent, name.c_str(), type->GetId(),
-                        space->GetId(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                H5_CONSTRUCT(m_Id, H5Dcreate,
+                        (parent, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
             }
 
             DataSet::~DataSet()
@@ -261,9 +291,10 @@ namespace Nektar
 
             void DataSet::Close()
             {
-                H5Dclose(m_Id);
+                H5_CALL(H5Dclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
             }
+
         }
     }
 }

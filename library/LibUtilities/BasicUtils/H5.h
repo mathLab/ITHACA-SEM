@@ -43,12 +43,17 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+
 namespace Nektar
 {
     namespace LibUtilities
     {
         namespace H5
         {
+
+#define H5_CONSTRUCT(ans, func, args) {hid_t ret = func args; if (ret < 0) ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, "HDF5 error in API function " #func, 0); ans = ret;}
+#define H5_CALL(func, args) {herr_t ret = func args; if (ret < 0) ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, "HDF5 error in API function " #func, 0);}
 
             class Error : public std::exception
             {
@@ -100,8 +105,9 @@ namespace Nektar
                     GroupSharedPtr CreateGroup(const std::string& name);
                     DataSetSharedPtr CreateDataSet(const std::string& name,
                             DataTypeSharedPtr type, DataSpaceSharedPtr space);
-                    template <class T>
-                    DataSetSharedPtr CreateWriteDataSet(const std::string& name, const std::vector<T>& data);
+                    template<class T>
+                    DataSetSharedPtr CreateWriteDataSet(const std::string& name,
+                            const std::vector<T>& data);
             };
 
             /// Mixin for objects that can have attributes (Group, DataSet, DataType)
@@ -110,7 +116,6 @@ namespace Nektar
                 public:
                     AttributeSharedPtr CreateAttribute(const std::string& name,
                             DataTypeSharedPtr type, DataSpaceSharedPtr space);
-
                     template<class T>
                     void SetAttribute(const std::string& name, const T& value);
                     template<class T>
@@ -140,25 +145,29 @@ namespace Nektar
             template<class T>
             struct DataTypeTraits
             {
-                    /**
-                     * Get the address of the start of the data.
-                     * Default implementation just uses "&"
-                     */
-                    static const void* GetAddress(const T& obj);
-                    /**
-                     * Return a DataType object representing T.
-                     * Default implementation just calls PredefinedDataType::Native<T>()
-                     */
-                    static DataTypeSharedPtr GetType();
                     /***
                      * Define this for a specialision for any HDF5 NATIVE type you want to use.
                      * See http://hdfgroup.org/HDF5/doc/UG/UG_frame11Datatypes.html
                      */
                     static hid_t NativeType;
+
+                    typedef const T& ConvertedType;
+
+                    static ConvertedType Convert(const T& obj);
+                    /**
+                     * Get the address of the start of the data.
+                     * Default implementation just uses "&"
+                     */
+                    static const void* GetAddress(ConvertedType& obj);
+                    /**
+                     * Return a DataType object representing T.
+                     * Default implementation just calls PredefinedDataType::Native<T>()
+                     */
+                    static DataTypeSharedPtr GetType();
             };
 
-            /// Wrap and HDF5 data type object
-            class DataType : public CanHaveAttributes
+            /// Wrap and HDF5 data type object. Technically this can have attributes, but not really bothered.
+            class DataType : public Object
             {
                 public:
                     static DataTypeSharedPtr String(size_t len = 0);
@@ -173,12 +182,7 @@ namespace Nektar
             {
                 public:
                     template<class T>
-                    static inline DataTypeSharedPtr Native()
-                    {
-                        return DataTypeSharedPtr(
-                                new PredefinedDataType(
-                                        DataTypeTraits<T>::NativeType));
-                    }
+                    static  DataTypeSharedPtr Native();
                     static DataTypeSharedPtr CS1();
                     void Close();
                 private:
@@ -225,18 +229,19 @@ namespace Nektar
                     ~DataSet();
                     void Close();
 
-                    template <class T>
+                    template<class T>
                     void Write(const std::vector<T>& data)
                     {
-                            DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
-                            H5Dwrite(m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]);
+                        DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
+                        H5_CALL(H5Dwrite, (m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]));
                     }
 
                 private:
                     DataSet(hid_t parent, const std::string& name,
                             DataTypeSharedPtr type, DataSpaceSharedPtr space);
                     friend class CanHaveGroupsDataSets;
-            };
+            }
+            ;
 
         }
     }

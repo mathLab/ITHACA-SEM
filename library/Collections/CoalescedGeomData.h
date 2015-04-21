@@ -53,23 +53,23 @@ enum GeomData
 
 class CoalescedGeomData
 {
-public:
-    CoalescedGeomData(void);
+    public:
+        CoalescedGeomData(void);
 
-    virtual ~CoalescedGeomData(void);
+        virtual ~CoalescedGeomData(void);
 
-    const Array<OneD, const NekDouble> &GetJac(
-            std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+        const Array<OneD, const NekDouble> &GetJac(
+                std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
-    const Array<OneD, const NekDouble> &GetJacWithStdWeights(
-            std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+        const Array<OneD, const NekDouble> &GetJacWithStdWeights(
+                std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
-    const Array<TwoD, const NekDouble> &GetDerivFactors(
-            std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+        const Array<TwoD, const NekDouble> &GetDerivFactors(
+                std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
-private:
-    std::map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
-    std::map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
+    private:
+        std::map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
+        std::map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
 };
 
 typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;

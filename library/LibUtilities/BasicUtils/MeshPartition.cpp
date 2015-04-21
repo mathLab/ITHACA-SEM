@@ -948,8 +948,8 @@ namespace Nektar
                 x->SetAttribute("ID", vVertIt->first);
                 std::stringstream vCoords;
                 vCoords.precision(12);
-                vCoords << std::setw(15) << vVertIt->second.x
-                        << std::setw(15) << vVertIt->second.y
+                vCoords << std::setw(15) << vVertIt->second.x << " "
+                        << std::setw(15) << vVertIt->second.y << " "
                         << std::setw(15) << vVertIt->second.z << " ";
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);

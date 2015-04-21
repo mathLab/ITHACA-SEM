@@ -254,7 +254,8 @@ void OutputFld::Process(po::variables_map &vm)
                 }
             }
 
-            m_f->m_fld->Write(outname, FieldDef, FieldData);
+            m_f->m_fld->Write(outname, FieldDef, FieldData,
+                                                 m_f->m_fieldMetaDataMap);
 
         }
     }
@@ -266,7 +267,6 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         fs::path writefile(filename);
-
         bool writefld = true;
         if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
         {

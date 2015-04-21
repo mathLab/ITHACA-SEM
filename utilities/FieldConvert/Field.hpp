@@ -101,8 +101,9 @@ struct Field {
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;
 
-    MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;   
+    MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
 
+    LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
                                                      bool fldfilegiven = false)
@@ -629,7 +630,7 @@ struct Field {
 
                         tmp = MemoryManager<MultiRegions::ContField3D>::
                             AllocateSharedPtr(*tmp2,m_graph,var);
-                        
+
                         m_locToGlobalMap = tmp2->GetLocalToGlobalMap();
                     }
                 }

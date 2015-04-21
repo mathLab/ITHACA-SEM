@@ -84,10 +84,12 @@ namespace SolverUtils
                              m_Forcing[i], funcName);
         }
 
+        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D;
+
         // If singleMode or halfMode, transform the forcing term to be in
         // physical space in the plane, but Fourier space in the homogeneous
         // direction
-        if (singleMode || halfMode)
+        if (singleMode || halfMode || homogeneous)
         {
             // Temporary array
             Array<OneD, NekDouble> forcingCoeff(pFields[0]->GetNcoeffs(), 0.0);

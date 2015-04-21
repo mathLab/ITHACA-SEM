@@ -2,9 +2,9 @@
 <test>
     <description>2D channel with base flow, P=5</description>
     <executable>APESolver</executable>
-    <parameters>APE_2DChannel_FRDG_MODIFIED.xml</parameters>
+    <parameters>APE_2DChannel_WeakDG_MODIFIED.xml</parameters>
     <files>
-        <file description="Session File">APE_2DChannel_FRDG_MODIFIED.xml</file>
+        <file description="Session File">APE_2DChannel_WeakDG_MODIFIED.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

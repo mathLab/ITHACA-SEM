@@ -390,8 +390,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
             if(m_config["modalenergy"].m_beenSet)
             {
-                
-                Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys(); 
+
+                Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
                 for(int i = 0; i < nel; ++i)
                 {
                     GenOrthoModes(i,phys+cnt,tmp = pts[coordim + n] + cnt1);
@@ -436,7 +436,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     {
         LocalRegions::ExpansionSharedPtr e;
         e = m_f->m_exp[0]->GetExp(n);
-        
+
                 switch(e->DetShapeType())
         {
         case LibUtilities::eTriangle:
@@ -454,7 +454,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,np,pa);
                 LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,np,pb);
                 StdRegions::StdTriExp OrthoExp(Ba,Bb);
-               
+
                 // interpolate points to new phys points!
                 LibUtilities::Interp2D(e->GetBasis(0)->GetBasisKey(),
                                        e->GetBasis(1)->GetBasisKey(),
@@ -472,7 +472,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 LibUtilities::PointsKey pa(np+1,e->GetPointsType(0));
                 LibUtilities::PointsKey pb(np+1,e->GetPointsType(1));
                 Array<OneD, NekDouble> tophys((np+1)*(np+1));
-                
+
                 LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,np,pa);
                 LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,np,pb);
                 StdRegions::StdQuadExp OrthoExp(Ba,Bb);
@@ -485,10 +485,10 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 OrthoExp.FwdTrans(phys,coeffs);
             }
             break;
-        default: 
+        default:
             ASSERTL0(false,"Shape needs setting up");
             break;
-            
+
         }
     }
 

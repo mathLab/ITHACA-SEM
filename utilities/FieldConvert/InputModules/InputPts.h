@@ -43,25 +43,26 @@ namespace Nektar
 namespace Utilities
 {
 
+
 /**
  *  Input module for Xml files.
  */
 class InputPts : public InputModule
 {
-public:
-    InputPts(FieldSharedPtr f);
-    virtual ~InputPts();
-    virtual void Process(po::variables_map &vm);
+    public:
+        InputPts(FieldSharedPtr f);
+        virtual ~InputPts();
+        virtual void Process(po::variables_map &vm);
 
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(FieldSharedPtr f)
-    {
-        return MemoryManager<InputPts>::AllocateSharedPtr(f);
-    }
-    /// %ModuleKey for class.
-    static ModuleKey m_className[];
+        /// Creates an instance of this class
+        static ModuleSharedPtr create(FieldSharedPtr f)
+        {
+            return MemoryManager<InputPts>::AllocateSharedPtr(f);
+        }
+        /// %ModuleKey for class.
+        static ModuleKey m_className[];
 
-private:
+    private:
 };
 
 }

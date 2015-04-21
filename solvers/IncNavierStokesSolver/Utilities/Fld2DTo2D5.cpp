@@ -22,10 +22,10 @@ int main(int argc, char *argv[])
         exit(1);
     }
     string datasave(argv[5]);
-    
+
     string mesh2d(argv[1]);
     string mesh3d(argv[3]);
-    
+
     //create 2d session
     LibUtilities::SessionReaderSharedPtr vSession2d
             = LibUtilities::SessionReader::CreateInstance(2, argv);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     //create 3D session
     LibUtilities::SessionReaderSharedPtr vSession3d
             = LibUtilities::SessionReader::CreateInstance(2, argv, filenames, vSession2d->GetComm());
-    
+
     SpatialDomains::MeshGraphSharedPtr graphShPt2d = SpatialDomains::MeshGraph::Read(vSession2d);
     SpatialDomains::MeshGraphSharedPtr graphShPt3d = SpatialDomains::MeshGraph::Read(vSession3d);
     //2D
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp3d(nfields3d);
     MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
     // Define Homogeneous expansion
-    int nplanes; 
+    int nplanes;
     //vSession3d->LoadParameter("HomModesZ",nplanes,field3ddef[0]->m_numModes[2]);
     nplanes = field3ddef[0]->m_numModes[2];
     cout<< nplanes << endl;
@@ -102,27 +102,27 @@ int main(int argc, char *argv[])
     Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession3d,Bkey,lz,useFFT,dealiasing,graphShPt3d);
     Exp3d[0] = Exp3DH1;
     for(j = 1; j < nfields3d; ++j)
-    {	
+    {
           Exp3d[j] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*Exp3DH1);
     }
-    
+
     k=0;
     for(j = 0; j < nfields2d; ++j)
-    {	
+    {
         if (j< nfields2d-1)
         {
-       		for(int i = 0; i < field2ddata.size(); ++i)
-       		{
+               for(int i = 0; i < field2ddata.size(); ++i)
+               {
                    Exp2d[j]->ExtractDataToCoeffs(
                                                 field2ddef[i],
-		                                field2ddata[i],
-		                                field2ddef[i]->m_fields[j],
-		                                Exp3d[j]->GetPlane(k)->UpdateCoeffs());            
-        	}
+                                        field2ddata[i],
+                                        field2ddef[i]->m_fields[j],
+                                        Exp3d[j]->GetPlane(k)->UpdateCoeffs());
+            }
         }
         if (j==nfields2d-1)
         {
-		for(int i = 0; i < field2ddata.size(); ++i)
+        for(int i = 0; i < field2ddata.size(); ++i)
                 {
                    Exp2d[j]->ExtractDataToCoeffs(
                                                 field2ddef[i],
@@ -137,9 +137,9 @@ int main(int argc, char *argv[])
     {
         fieldcoeffs[j] = Exp3d[j]->UpdateCoeffs();
         for(int i = 0; i < field3ddef.size(); ++i)
-    	{
+        {
           Exp3d[0]->AppendFieldData(field3ddef[i], field3ddatanew[i],fieldcoeffs[j]);
-    	}
+        }
     }
     LibUtilities::Write(datasave,field3ddef,field3ddatanew);
     return 0;

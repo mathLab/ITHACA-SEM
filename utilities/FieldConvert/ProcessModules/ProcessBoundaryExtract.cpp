@@ -39,82 +39,83 @@ using namespace std;
 
 #include "ProcessBoundaryExtract.h"
 
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey ProcessBoundaryExtract::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "extract"),
+        ProcessBoundaryExtract::create, "Extract Boundary field");
+
+ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule(f)
+{
+    // set up dafault values.
+    m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
+    m_config["fldtoboundary"] = ConfigOption(true,"NotSet","Extract fld values to boundary");
+
+    m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
+
+
+    f->m_writeBndFld = true;
+    f->m_declareExpansionAsContField = true;
+
+    // check for correct input files
+    if((f->m_inputfiles.count("xml") == 0)&&(f->m_inputfiles.count("xml.gz") == 0))
     {
-        ModuleKey ProcessBoundaryExtract::className =
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "extract"), 
-                ProcessBoundaryExtract::create, "Extract Boundary field");
+        cout << "An xml or xml.gz input file must be specified for the boundary extraction module" << endl;
+        exit(3);
+    }
 
-        ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule(f)
+    if((f->m_inputfiles.count("fld") == 0)&&(f->m_inputfiles.count("chk") == 0)&&(f->m_inputfiles.count("rst") == 0))
+    {
+        cout << "A fld or chk or rst input file must be specified for the boundary extraction module" << endl;
+
+        exit(3);
+    }
+
+}
+
+ProcessBoundaryExtract::~ProcessBoundaryExtract()
+{
+}
+
+void ProcessBoundaryExtract::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
+    {
+        cout << "ProcessBoundaryExtract: Setting up boundary extraction..." << endl;
+    }
+
+    // Set up Field options to output boundary fld
+    string bvalues =  m_config["bnd"].as<string>();
+
+    if(bvalues.compare("All") == 0)
+    {
+        Array<OneD, const MultiRegions::ExpListSharedPtr>
+            BndExp = m_f->m_exp[0]->GetBndCondExpansions();
+
+        for(int i = 0; i < BndExp.num_elements(); ++i)
         {
-            // set up dafault values. 
-            m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
-            m_config["fldtoboundary"] = ConfigOption(true,"NotSet","Extract fld values to boundary");
-
-            m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
-
-            
-            f->m_writeBndFld = true;
-            f->m_declareExpansionAsContField = true;
-            
-            // check for correct input files
-            if((f->m_inputfiles.count("xml") == 0)&&(f->m_inputfiles.count("xml.gz") == 0))
-            {
-                cout << "An xml or xml.gz input file must be specified for the boundary extraction module" << endl;
-                exit(3);
-            }
-
-            if((f->m_inputfiles.count("fld") == 0)&&(f->m_inputfiles.count("chk") == 0)&&(f->m_inputfiles.count("rst") == 0))
-            {
-                cout << "A fld or chk or rst input file must be specified for the boundary extraction module" << endl;
-
-                exit(3);
-            }
-
-        }
-
-        ProcessBoundaryExtract::~ProcessBoundaryExtract()
-        {
-        }
-
-        void ProcessBoundaryExtract::Process(po::variables_map &vm)
-        {
-            if (m_f->m_verbose)
-            {
-                cout << "ProcessBoundaryExtract: Setting up boundary extraction..." << endl;
-            }
-
-            // Set up Field options to output boundary fld
-            string bvalues =  m_config["bnd"].as<string>();
-
-            if(bvalues.compare("All") == 0)
-            {
-                Array<OneD, const MultiRegions::ExpListSharedPtr> 
-                    BndExp = m_f->m_exp[0]->GetBndCondExpansions();
-                
-                for(int i = 0; i < BndExp.num_elements(); ++i)
-                {
-                    m_f->m_bndRegionsToWrite.push_back(i);
-                }
-            }
-            else
-            {
-                ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                           m_f->m_bndRegionsToWrite),"Failed to interpret range string");
-            }
-
-            m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
-            m_f->m_addNormals = m_config["addnormals"].m_beenSet; 
-
+            m_f->m_bndRegionsToWrite.push_back(i);
         }
     }
+    else
+    {
+        ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
+                                                   m_f->m_bndRegionsToWrite),"Failed to interpret range string");
+    }
+
+    m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
+    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
+
+}
+
+}
 }
 
 

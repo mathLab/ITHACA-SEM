@@ -70,7 +70,7 @@ void OutputFld::Process(po::variables_map &vm)
     if (m_f->m_writeBndFld)
     {
         ModuleKey      module;
-        
+
         // Extract data to boundaryconditions
         if (m_f->m_fldToBnd)        {
             for (int i = 0; i < m_f->m_exp.size(); ++i)
@@ -78,7 +78,7 @@ void OutputFld::Process(po::variables_map &vm)
                 m_f->m_exp[i]->FillBndCondFromField();
             }
         }
-        
+
         if (m_f->m_verbose)
         {
             cout << "OutputFld: Writing boundary file(s): ";
@@ -155,46 +155,46 @@ void OutputFld::Process(po::variables_map &vm)
                 {
                     ASSERTL0(m_f->m_exp[0]->GetCoordim(0) == 3,
                              "Add normals to extracted boundaries only set up in 3 dimensions");
-                    int normdim = 3; // currently assuming 3D normals; 
+                    int normdim = 3; // currently assuming 3D normals;
                     string normstr[3] = {"Norm_x","Norm_y","Norm_z"};
-                    
+
                     // Add normal information
                     StdRegions::StdExpansionSharedPtr elmt;
                     StdRegions::StdExpansion2DSharedPtr bc;
                     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
-                    
-                    m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, 
+
+                    m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,
                                                         BoundarytoTraceID);
-                    
+
                     // determine offset of this Bnd Expansion Border
                     int cnt = 0;
                     for(int n = 0; n < Border; ++n)
                     {
                         cnt += BndExp[0][n]->GetExpSize();
                     }
-                    
+
                     Array<OneD, NekDouble> tmp_array;
                     Array<OneD, Array<OneD, NekDouble> > NormCoeff(normdim);
-                    
+
                     for(int j = 0; j < normdim; ++j)
                     {
                         NormCoeff[j] = Array<OneD, NekDouble>(BndExp[0][Border]->GetNcoeffs(),0.0);
                     }
-                    
-                    // setup coeff arrays of normals. 
+
+                    // setup coeff arrays of normals.
                     for(int j = 0; j < BndExp[0][Border]->GetExpSize();
                         ++j, cnt++)
-                    {       
+                    {
                         // find element and face of this expansion.
                         int elmtid = BoundarytoElmtID[cnt];
                         elmt = m_f->m_exp[0]->GetExp(elmtid);
-                        
+
                         // Get face 2D expansion from element expansion
                         bc  =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][Border]->GetExp(j));
 
                         //identify boundary of element looking at.
                         int boundary = BoundarytoTraceID[cnt];
-                                
+
                         //Get face normals
                         const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetFaceNormal(boundary);
 
@@ -221,7 +221,7 @@ void OutputFld::Process(po::variables_map &vm)
                     }
                 }
 
-                // output error for regression checking. 
+                // output error for regression checking.
                 if (vm.count("error"))
                 {
                     int rank = m_f->m_session->GetComm()->GetRank();
@@ -239,13 +239,13 @@ void OutputFld::Process(po::variables_map &vm)
 
                         NekDouble linferr = BndExp[j][Border]
                                            ->Linf(BndExp[j][Border]->GetPhys());
-                        
+
                         if (rank == 0)
                         {
                             cout << "L 2 error (variable "
                                  << FieldDef[0]->m_fields[j]
                                  << ") : " << l2err  << endl;
-                            
+
                             cout << "L inf error (variable "
                                  << FieldDef[0]->m_fields[j]
                                  << ") : " << linferr << endl;
@@ -265,25 +265,25 @@ void OutputFld::Process(po::variables_map &vm)
             cout << "OutputFld: Writing file..." << endl;
         }
 
-	fs::path writefile(filename);
+        fs::path writefile(filename);
 
-	bool writefld = true;
-	if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
-	{
-	   string answer;
-	   cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-	   getline(cin,answer);
-	   if(answer.compare("y") != 0)
-	   {
-	     writefld = false; 
-	     cout << "Not writing file " << filename << " because it already exists" << endl;
-	   }
-	}
-        
+        bool writefld = true;
+        if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
+        {
+            string answer;
+            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
+            getline(cin,answer);
+            if(answer.compare("y") != 0)
+            {
+                writefld = false;
+                cout << "Not writing file " << filename << " because it already exists" << endl;
+            }
+        }
+
         if(writefld == true)
-	{
-            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
-	}
+        {
+                m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+        }
 
         // output error for regression checking.
         if (vm.count("error"))
@@ -316,7 +316,6 @@ void OutputFld::Process(po::variables_map &vm)
                 }
             }
         }
-
     }
 }
 

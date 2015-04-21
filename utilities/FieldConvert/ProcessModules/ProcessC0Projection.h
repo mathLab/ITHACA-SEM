@@ -40,33 +40,34 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the Q Criterion and adds it
-         * as an extra-field to the output file.
-         */
-        class ProcessC0Projection : public ProcessModule
+namespace Utilities
+{
+
+/**
+ * @brief This processing module calculates the Q Criterion and adds it
+ * as an extra-field to the output file.
+ */
+class ProcessC0Projection : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f)
         {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
-            {
-                return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessC0Projection(FieldSharedPtr f);
-            virtual ~ProcessC0Projection();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-            
-        private:
-            MultiRegions::ExpListSharedPtr m_c0ProjectExp;
-            
-        };
-    }
+            return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+
+        ProcessC0Projection(FieldSharedPtr f);
+        virtual ~ProcessC0Projection();
+
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+
+    private:
+        MultiRegions::ExpListSharedPtr m_c0ProjectExp;
+
+};
+}
 }
 
 #endif

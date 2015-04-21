@@ -45,6 +45,7 @@ namespace Nektar
 {
 namespace Utilities
 {
+
 ModuleKey ProcessInterpPoints::className =
     GetModuleFactory().RegisterCreatorFunction(
        ModuleKey(eProcessModule, "interppoints"),

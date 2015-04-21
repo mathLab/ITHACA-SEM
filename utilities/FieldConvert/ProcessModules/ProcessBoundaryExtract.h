@@ -40,26 +40,28 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module sets up for the boundary field to be extracted 
-         */
-        class ProcessBoundaryExtract : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessBoundaryExtract(FieldSharedPtr f);
-            virtual ~ProcessBoundaryExtract();
-            
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+namespace Utilities
+{
+
+/**
+ * @brief This processing module sets up for the boundary field to be extracted
+ */
+class ProcessBoundaryExtract : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+
+        ProcessBoundaryExtract(FieldSharedPtr f);
+        virtual ~ProcessBoundaryExtract();
+
+        virtual void Process(po::variables_map &vm);
+};
+
+}
 }
 
 #endif

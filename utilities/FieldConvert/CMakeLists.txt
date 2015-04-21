@@ -1,4 +1,4 @@
-SET(FieldConvertHeaders 
+SET(FieldConvertHeaders
     Module.h
     Field.hpp
     InputModules/InputDat.h
@@ -7,7 +7,7 @@ SET(FieldConvertHeaders
     InputModules/InputPts.h
     OutputModules/OutputInfo.h
     OutputModules/OutputTecplot.h
-    OutputModules/OutputVtk.h 
+    OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
@@ -29,7 +29,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessQCriterion.h
 )
 
-SET(FieldConvertSources 
+SET(FieldConvertSources
     Module.cpp
     FieldConvert.cpp
     InputModules/InputDat.cpp
@@ -42,7 +42,7 @@ SET(FieldConvertSources
     OutputModules/OutputFld.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
-    ProcessModules/ProcessConcatenateFld.cpp 
+    ProcessModules/ProcessConcatenateFld.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessInterpField.cpp
@@ -59,7 +59,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessQCriterion.cpp
 )
-  
+
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
 
 

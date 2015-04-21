@@ -40,28 +40,29 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the wall shear stress and adds it
-         * as an extra-field to the output file, and writes it to a surface output file. 
-         */
-        class ProcessWSS : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessWSS(FieldSharedPtr f);
-            virtual ~ProcessWSS();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+namespace Utilities
+{
+
+/**
+ * @brief This processing module calculates the wall shear stress and adds it
+ * as an extra-field to the output file, and writes it to a surface output file.
+ */
+class ProcessWSS : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+
+        ProcessWSS(FieldSharedPtr f);
+        virtual ~ProcessWSS();
+
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+};
+}
 }
 
 #endif

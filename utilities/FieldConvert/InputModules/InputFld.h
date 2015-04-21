@@ -40,29 +40,31 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * Converter for Fld files.
-         */
-        class InputFld : public InputModule
-        {
-        public:
-            InputFld(FieldSharedPtr f);
-            virtual ~InputFld();
-            virtual void Process(po::variables_map &vm);
+namespace Utilities
+{
 
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(FieldSharedPtr f) 
-            {
-                return MemoryManager<InputFld>::AllocateSharedPtr(f);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey m_className[];
-            
-        private:
-        };
-    }
+/**
+ * Converter for Fld files.
+ */
+class InputFld : public InputModule
+{
+    public:
+        InputFld(FieldSharedPtr f);
+        virtual ~InputFld();
+        virtual void Process(po::variables_map &vm);
+
+        /// Creates an instance of this class
+        static ModuleSharedPtr create(FieldSharedPtr f)
+        {
+            return MemoryManager<InputFld>::AllocateSharedPtr(f);
+        }
+        /// %ModuleKey for class.
+        static ModuleKey m_className[];
+
+    private:
+};
+
+}
 }
 
 #endif

@@ -1,14 +1,14 @@
 /* ==========================================================================
- * Generation of a .fld file for the Falkner-Skan boundary layer starting 
- * from a session file with some physical data for the definition of the 
- * BL and a .txt file with the similarity solution. 
+ * Generation of a .fld file for the Falkner-Skan boundary layer starting
+ * from a session file with some physical data for the definition of the
+ * BL and a .txt file with the similarity solution.
  * ======================================================================== */
 
 /* =====================================
- * Author: Gianmarco Mengaldo 
+ * Author: Gianmarco Mengaldo
  * Generation: dd/mm/aa = 08/03/12
  * Mantainer: Gianmarco Mengaldo
-===================================== */ 
+===================================== */
 
 //! Loading cc libraries
 #include <cstdio>
@@ -32,19 +32,19 @@ int main(int argc, char *argv[])
 {
     //! Setting up the decimal precision to machine precision
     setprecision (16);
-    
+
     //! Auxiliary counters for the x and y directions
     int  i, j, numModes, nFields;
-    
+
     //! Usage check
-	if((argc != 2) && (argc != 3))
+    if((argc != 2) && (argc != 3))
     {
         fprintf(stderr,"Usage: ./FldAddFalknerSkanBL sessionFile [SysSolnType]\n");exit(1);
     }
-    
+
     //! Reading the session file
     LibUtilities::SessionReaderSharedPtr vSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
-    
+
     //! Loading the parameters to define the BL
     NekDouble Re;
     NekDouble L;
@@ -55,17 +55,17 @@ int main(int argc, char *argv[])
     string    BL_type;
     string    txt_file;
     string    stability_solver;
-    int       numLines; 
+    int       numLines;
 
-    
+
     BL_type          = vSession->GetSolverInfo("BL_type");
     txt_file         = vSession->GetSolverInfo("txt_file");
     stability_solver = vSession->GetSolverInfo("stability_solver");
 
-    if(stability_solver != "velocity_correction_scheme" && 
+    if(stability_solver != "velocity_correction_scheme" &&
        stability_solver != "coupled_scheme")
     {
-        fprintf(stderr,"Error: You must specify the stability solver in the session file properly.\n"); 
+        fprintf(stderr,"Error: You must specify the stability solver in the session file properly.\n");
         fprintf(stderr,"Options: 'velocity_correction_scheme' [output ===> (u,v,p)]; 'coupled_scheme' [output ===>(u,v)]\n");
         exit(1);
     }
@@ -83,14 +83,14 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Error: x must be positive ===> CHECK the session file\n");
         exit(1);
     }
-    
+
     if(x_0 < 0)
     {
         fprintf(stderr,"Error: x_0 must be positive or at least equal to 0 ===> CHECK the session file\n");
         exit(1);
     }
     std::cout<<"\n=========================================================================\n";
-    std::cout<<"Falkner-Skan Boundary Layer Generation (version of July 12th 2012)\n"; 
+    std::cout<<"Falkner-Skan Boundary Layer Generation (version of July 12th 2012)\n";
     std::cout<<"=========================================================================\n";
     std::cout<<"*************************************************************************\n";
     std::cout<<"DATA FROM THE SESSION FILE:\n";
@@ -106,23 +106,23 @@ int main(int argc, char *argv[])
     std::cout<<"*************************************************************************\n";
     std::cout<<"-------------------------------------------------------------------------\n";
     std::cout<<"MESH and EXPANSION DATA:\n";
-    
+
     //! Computation of the kinematic viscosity
     nu = U_inf * L / Re;
 
     //! Read in mesh from input file and create an object of class MeshGraph2D
-    SpatialDomains::MeshGraphSharedPtr graphShPt; 
+    SpatialDomains::MeshGraphSharedPtr graphShPt;
     graphShPt = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
-    
+
     //!  Feed our spatial discretisation object
     MultiRegions::ContField2DSharedPtr Domain;
     Domain = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(0));
-    
+
     //! Get the total number of elements
     int nElements;
     nElements = Domain->GetExpSize();
     std::cout << "Number of elements                 = " << nElements << std::endl;
-    
+
     //! Get the total number of quadrature points (depends on n. modes)
     int nQuadraturePts;
     nQuadraturePts = Domain->GetTotPoints();
@@ -144,12 +144,12 @@ int main(int argc, char *argv[])
 
     //! Open the .txt file with the BL data
     ifstream pFile(txt_file_char);
-    if (!pFile) 
+    if (!pFile)
     {
         cout << "Errro: Unable to open the .txt file with the BL data\n";
-        exit(1); 
-    }    
-    
+        exit(1);
+    }
+
     numLines = numLines/3;
     NekDouble d;
     std::vector<std::vector<NekDouble> > GlobalArray (3);
@@ -183,29 +183,29 @@ int main(int argc, char *argv[])
     }
     //! --------------------------------------------------------------------------------------------
 
-    
-    //! Inizialisation of the arrays for computations on the Quadrature points --------------------- 
+
+    //! Inizialisation of the arrays for computations on the Quadrature points ---------------------
     Array<OneD,NekDouble> eta_QuadraturePts;
     eta_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts);
 
     Array<OneD,NekDouble> f_QuadraturePts;
     f_QuadraturePts   = Array<OneD,NekDouble>(nQuadraturePts);
-    
+
     Array<OneD,NekDouble> df_QuadraturePts;
     df_QuadraturePts  = Array<OneD,NekDouble>(nQuadraturePts);
-    
+
     Array<OneD,NekDouble> u_QuadraturePts;
     u_QuadraturePts   = Array<OneD,NekDouble>(nQuadraturePts);
 
     Array<OneD,NekDouble> v_QuadraturePts;
     v_QuadraturePts   = Array<OneD,NekDouble>(nQuadraturePts);
-    
+
     Array<OneD,NekDouble> p_QuadraturePts;
     p_QuadraturePts   = Array<OneD,NekDouble>(nQuadraturePts);
     //! --------------------------------------------------------------------------------------------
 
-    
-    
+
+
     //! PARALLEL CASE ------------------------------------------------------------------------------
     if(BL_type == "Parallel")
     {
@@ -216,16 +216,16 @@ int main(int argc, char *argv[])
             {
                 if(eta_QuadraturePts[i] >= eta[j] && eta_QuadraturePts[i] <= eta[j+1])
                 {
-                    f_QuadraturePts[i]  = (eta_QuadraturePts[i] - eta[j]) * (f[j+1] - f[j]) / (eta[j+1] - eta[j]) + f[j]; 
+                    f_QuadraturePts[i]  = (eta_QuadraturePts[i] - eta[j]) * (f[j+1] - f[j]) / (eta[j+1] - eta[j]) + f[j];
                     df_QuadraturePts[i] = (eta_QuadraturePts[i] - eta[j]) * (df[j+1] - df[j]) / (eta[j+1] - eta[j]) + df[j];
                 }
-                
+
                 else if(eta_QuadraturePts[i] == 1000000)
                 {
                     f_QuadraturePts[i] = f[numLines-1];
                     df_QuadraturePts[i] = df[numLines-1];
                 }
-                
+
                 else if(eta_QuadraturePts[i] > eta[numLines-1])
                 {
                     f_QuadraturePts[i] = f[numLines-1] + df[numLines-1] * (eta_QuadraturePts[i] - eta[numLines-1]);
@@ -241,79 +241,79 @@ int main(int argc, char *argv[])
     }
     //! --------------------------------------------------------------------------------------------
 
-    
-    
+
+
     //! NON-PARALLEL CASE --------------------------------------------------------------------------
     if(BL_type == "nonParallel")
     {
         for(i=0; i<nQuadraturePts; i++)
         {
             eta_QuadraturePts[i] = y_QuadraturePts[i] * sqrt(U_inf / (2 * (x_QuadraturePts[i] + x_0) * nu));
-        
+
             if((x_QuadraturePts[i] + x_0) == 0)
             {
-                eta_QuadraturePts[i] = 1000000;        
+                eta_QuadraturePts[i] = 1000000;
             }
-        
+
             for(j=0; j<numLines-1; j++)
             {
                 if(eta_QuadraturePts[i] >= eta[j] && eta_QuadraturePts[i] <= eta[j+1])
                 {
-                    f_QuadraturePts[i]  = (eta_QuadraturePts[i] - eta[j]) * (f[j+1] - f[j]) / (eta[j+1] - eta[j]) + f[j]; 
+                    f_QuadraturePts[i]  = (eta_QuadraturePts[i] - eta[j]) * (f[j+1] - f[j]) / (eta[j+1] - eta[j]) + f[j];
                     df_QuadraturePts[i] = (eta_QuadraturePts[i] - eta[j]) * (df[j+1] - df[j]) / (eta[j+1] - eta[j]) + df[j];
                 }
-            
+
                 else if(eta_QuadraturePts[i] == 1000000)
                 {
                     f_QuadraturePts[i] = f[numLines-1];
                     df_QuadraturePts[i] = df[numLines-1];
                 }
-            
+
                 else if(eta_QuadraturePts[i] > eta[numLines-1])
                 {
                     f_QuadraturePts[i] = f[numLines-1] + df[numLines-1] * (eta_QuadraturePts[i] - eta[numLines-1]);
                     df_QuadraturePts[i] = df[numLines-1];
                 }
             }
-        
+
             u_QuadraturePts[i] = U_inf * df_QuadraturePts[i];
-            v_QuadraturePts[i] = nu * sqrt(U_inf / (2.0 * nu * (x_QuadraturePts[i] + x_0))) * 
-                                 (y_QuadraturePts[i] * sqrt(U_inf / (2.0 * nu * (x_QuadraturePts[i] + x_0))) * 
+            v_QuadraturePts[i] = nu * sqrt(U_inf / (2.0 * nu * (x_QuadraturePts[i] + x_0))) *
+                                 (y_QuadraturePts[i] * sqrt(U_inf / (2.0 * nu * (x_QuadraturePts[i] + x_0))) *
                                  df_QuadraturePts[i] - f_QuadraturePts[i]);
-        
+
             //! INFLOW SECTION: X = 0; Y > 0.
             if((x_QuadraturePts[i] + x_0) == 0)
             {
                 u_QuadraturePts[i] = U_inf;
                 v_QuadraturePts[i] = 0.0;
             }
-        
+
             //! SINGULARITY POINT: X = 0; Y = 0.
             if((x_QuadraturePts[i] + x_0) == 0 && y_QuadraturePts[i] == 0)
             {
                 u_QuadraturePts[i] = 0.0;
                 v_QuadraturePts[i] = 0.0;
             }
-        
+
             p_QuadraturePts[i] = 0.0;
         }
     }
     //! --------------------------------------------------------------------------------------------
 
-    
-        
+
+
     //! Inspection of the interpolation ------------------------------------------------------------
-    FILE *etaOriginal; 
-    etaOriginal = fopen("eta.txt","w+"); 
+    FILE *etaOriginal;
+    etaOriginal = fopen("eta.txt","w+");
     for(i=0; i<numLines; i++)
     {
         fprintf(etaOriginal,"%f %f %f \n", eta[i], f[i], df[i]);
     }
     fclose(etaOriginal);
-    
-        
-    FILE *yQ; 
-    yQ = fopen("yQ.txt","w+"); 
+
+
+    FILE *yQ;
+    yQ = fopen("yQ.txt","w+");
     for(i=0; i<nQuadraturePts; i++)
     {
         fprintf(yQ,"%f %f %f %f %f %f %f\n", x_QuadraturePts[i], y_QuadraturePts[i], u_QuadraturePts[i],
@@ -322,29 +322,29 @@ int main(int argc, char *argv[])
     fclose(yQ);
     //! --------------------------------------------------------------------------------------------
 
-    
-    
+
+
     //! Definition of the 2D expansion using the mesh data specified on the session file -----------
     MultiRegions::ExpList2DSharedPtr Exp2D_uk;
     Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
-    
+
     MultiRegions::ExpList2DSharedPtr Exp2D_vk;
     Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
-    
+
     MultiRegions::ExpList2DSharedPtr Exp2D_pk;
     Exp2D_pk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
     //! --------------------------------------------------------------------------------------------
-    
-    
-    
+
+
+
     //! Filling the 2D expansion using a recursive algorithm based on the mesh ordering ------------
     LibUtilities::BasisSharedPtr Basis;
     Basis       = Domain->GetExp(0)->GetBasis(0);
     numModes    = Basis->GetNumModes();
 
     std::cout<< "Number of modes                    = " << numModes << std::endl;
-      
-    //! Copying the ukGlobal vector (with the same pattern of m_phys) in m_phys 
+
+    //! Copying the ukGlobal vector (with the same pattern of m_phys) in m_phys
     Vmath::Vcopy(nQuadraturePts, u_QuadraturePts , 1, Exp2D_uk->UpdatePhys(), 1);
     Vmath::Vcopy(nQuadraturePts, v_QuadraturePts,  1, Exp2D_vk->UpdatePhys(), 1);
     Vmath::Vcopy(nQuadraturePts, p_QuadraturePts , 1, Exp2D_pk->UpdatePhys(), 1);
@@ -353,36 +353,36 @@ int main(int argc, char *argv[])
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(3);
     Exp[0] = Exp2D_uk;
     Exp[1] = Exp2D_vk;
-    
+
     if(stability_solver == "velocity_correction_scheme")
         Exp[2] = Exp2D_pk;
-    
-    //! Expansion coefficient extraction (necessary to write the .fld file)    
+
+    //! Expansion coefficient extraction (necessary to write the .fld file)
     Exp[0]->FwdTrans(Exp2D_uk->GetPhys(),Exp[0]->UpdateCoeffs());
     Exp[1]->FwdTrans(Exp2D_vk->GetPhys(),Exp[1]->UpdateCoeffs());
-    
+
     if(stability_solver == "velocity_correction_scheme")
-        Exp[2]->FwdTrans(Exp2D_pk->GetPhys(),Exp[2]->UpdateCoeffs());    
+        Exp[2]->FwdTrans(Exp2D_pk->GetPhys(),Exp[2]->UpdateCoeffs());
     //! --------------------------------------------------------------------------------------------
 
 
-    
+
     //! Generation .FLD file with one field only (at the moment) -----------------------------------
     //! Definition of the name of the .fld file
     string FalknerSkan = "FalknerSkan.fld";
-    
+
     //! Definition of the number of the fields
     if(stability_solver == "coupled_scheme")
         nFields = 2;
-    
-    if(stability_solver == "velocity_correction_scheme")
-        nFields = 3;    
 
-    
+    if(stability_solver == "velocity_correction_scheme")
+        nFields = 3;
+
+
     //! Definition of the Field
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-        
+
     for(j = 0; j < nFields; ++j)
     {
         for(i = 0; i < FieldDef.size(); ++i)
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
             }
             Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-    }    
+    }
 
     LibUtilities::Write(FalknerSkan, FieldDef, FieldData);
 

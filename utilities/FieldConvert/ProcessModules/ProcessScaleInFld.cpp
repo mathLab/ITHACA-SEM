@@ -48,9 +48,9 @@ namespace Utilities
 {
 
 ModuleKey ProcessScaleInFld::className =
-GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "scaleinputfld"),
-    ProcessScaleInFld::create, "rescale input field by a constant factor.");
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "scaleinputfld"),
+        ProcessScaleInFld::create, "rescale input field by a constant factor.");
 
 ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
 {

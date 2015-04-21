@@ -46,6 +46,7 @@ namespace Nektar
 {
 namespace Utilities
 {
+
 ModuleKey ProcessAddFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "addfld"),
@@ -192,12 +193,6 @@ void ProcessAddFld::Process(po::variables_map &vm)
         m_f->m_data     = FieldData;
 
     }
-
-
-
-
-
-
 }
 
 }

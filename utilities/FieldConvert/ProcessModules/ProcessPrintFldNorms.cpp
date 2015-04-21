@@ -46,6 +46,7 @@ namespace Nektar
 {
 namespace Utilities
 {
+
 ModuleKey ProcessPrintFldNorms::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "printfldnorms"),
@@ -71,11 +72,8 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
     // Evaluate norms and print
     for(int j = 0; j < m_f->m_exp.size(); ++j)
     {
-//        if (!m_f->m_exp[j]->GetPhysState())
-//        {
-            m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                    m_f->m_exp[j]->UpdatePhys());
-//        }
+        m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
+                                m_f->m_exp[j]->UpdatePhys());
         NekDouble L2   = m_f->m_exp[j]->L2  (m_f->m_exp[j]->GetPhys());
         NekDouble LInf = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
 
@@ -85,6 +83,7 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
              << ") : " << LInf << endl;
     }
 }
+
 }
 }
 

@@ -2002,7 +2002,6 @@ namespace Nektar
                             {
                                 LibUtilities::PointsKey pkey(nmodes[cnt], LibUtilities::eGaussLobattoLegendre);
 
-                                
                                 if(numPointDef&&pointDef)
                                 {
                                     const LibUtilities::PointsKey pkey2(npoints[cnt],points[0]);

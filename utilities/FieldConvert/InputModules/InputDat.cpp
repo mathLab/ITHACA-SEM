@@ -46,179 +46,190 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey InputDat::m_className[1] = {
+    GetModuleFactory().RegisterCreatorFunction(
+            ModuleKey(eInputModule, "dat"),
+            InputDat::create,
+            "Reads Tecplot dat file for FE block triangular format."),
+};
+
+/**
+ * @brief Set up InputDat object.
+ *
+ */
+InputDat::InputDat(FieldSharedPtr f) : InputModule(f)
+{
+    m_allowedFiles.insert("dat");
+}
+
+
+/**
+ *
+ */
+InputDat::~InputDat()
+{
+}
+
+
+/**
+ *
+ */
+void InputDat::Process(po::variables_map &vm)
+{
+
+    if(m_f->m_verbose)
     {
+        cout << "Processing input dat file" << endl;
+    }
 
-        ModuleKey InputDat::m_className[1] = {
-            GetModuleFactory().RegisterCreatorFunction(
-                    ModuleKey(eInputModule, "dat"),
-                    InputDat::create,
-                    "Reads Tecplot dat file for FE block triangular format."),
-        };
+    string      line, word, tag;
+    std::ifstream datFile;
+    stringstream s;
 
-        /**
-         * @brief Set up InputDat object.
-         *
-         */
-        InputDat::InputDat(FieldSharedPtr f) : InputModule(f)
+    // Open the file stream.
+    string fname = m_f->m_inputfiles["dat"][0];
+
+
+    datFile.open(fname.c_str());
+    if (!datFile.good())
+    {
+        cerr << "Error opening file: " << fname << endl;
+        abort();
+    }
+
+    // read variables
+    // currently assum there are x y and z coordinates
+    int dim = 3;
+    vector<string> fieldNames;
+    while (!datFile.eof())
+    {
+        getline(datFile, line);
+
+        if(line.find("VARIABLES") != string::npos)
         {
-            m_allowedFiles.insert("dat");
-        }
+            std::size_t  pos = line.find('=');
+            pos++;
 
-        InputDat::~InputDat()
-        {
-        }
+            // note this expects a comma separated list but
+            // does not work for white space separated lists!
+            bool valid = ParseUtils::GenerateOrderedStringVector(
+                                line.substr(pos).c_str(), fieldNames);
+            ASSERTL0(valid,"Unable to process list of field variable in "
+                     " VARIABLES list:  "+ line.substr(pos));
 
-        /**
-         *
-         */
-        void InputDat::Process(po::variables_map &vm)
-        {
+            // remove coordinates from fieldNames
+            fieldNames.erase(fieldNames.begin(), fieldNames.begin() + dim);
 
-            if(m_f->m_verbose)
-            {
-                cout << "Processing input dat file" << endl;
-            }
-
-            string      line, word, tag;
-            std::ifstream datFile;
-            stringstream s;
-
-            // Open the file stream.
-            string fname = m_f->m_inputfiles["dat"][0];
-
-
-            datFile.open(fname.c_str());
-            if (!datFile.good())
-            {
-                cerr << "Error opening file: " << fname << endl;
-                abort();
-            }
-
-            // read variables
-            // currently assum there are x y and z coordinates
-            int dim = 3;
-            vector<string> fieldNames;
-            while (!datFile.eof())
-            {
-                getline(datFile, line);
-
-                if(line.find("VARIABLES") != string::npos)
-                {
-                    std::size_t  pos = line.find('=');
-                    pos++;
-
-                    // note this expects a comma separated list but
-                    // does not work for white space separated lists!
-                    bool valid = ParseUtils::GenerateOrderedStringVector(
-                                        line.substr(pos).c_str(), fieldNames);
-                    ASSERTL0(valid,"Unable to process list of field variable in "
-                             " VARIABLES list:  "+ line.substr(pos));
-
-                    // remove coordinates from fieldNames
-                    fieldNames.erase(fieldNames.begin(), fieldNames.begin() + dim);
-
-                    break;
-                }
-            }
-
-            // set up basic parameters
-            int nfields = fieldNames.size();
-            int totvars = dim + nfields;
-            Array<OneD, Array<OneD, NekDouble> > pts(totvars);
-            vector<Array<OneD, int> > ptsConn;
-
-            // read zones
-            while (!datFile.eof())
-            {
-                getline(datFile, line);
-
-                if((line.find("ZONE") != string::npos)||
-                   (line.find("Zone") != string::npos)||
-                   (line.find("zone") != string::npos))
-                {
-                    ReadTecplotFEBlockZone(datFile, line, pts, ptsConn);
-                }
-            }
-
-            datFile.close();
-
-            m_f->m_fieldPts =
-                MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                    dim, fieldNames, pts);
-            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
-            m_f->m_fieldPts->SetConnectivity(ptsConn);
-        }
-
-        void InputDat::ReadTecplotFEBlockZone(
-            std::ifstream   &datFile,
-            string          &line,
-            Array<OneD, Array<OneD, NekDouble> > &pts,
-            vector<Array<OneD, int> > &ptsConn)
-        {
-            ASSERTL0(line.find("FEBlock") != string::npos,
-                     "Routine only set up for FEBLock format");
-            ASSERTL0(line.find("ET") != string::npos,
-                     "Routine only set up TRIANLES");
-
-            // read the number of nodes
-
-            stringstream s;
-            string tag;
-            int start,end;
-
-            s.clear();
-            s.str(line);
-            tag = s.str();
-
-            // read the number of vertices
-            start = tag.find("N=");
-            end   = tag.find_first_of(',',start);
-            int nvert = atoi(tag.substr(start+2,end).c_str());
-
-            // read the number of elements
-            start = tag.find("E=");
-            end   = tag.find_first_of(',',start);
-            int nelmt = atoi(tag.substr(start+2,end).c_str());
-
-            // set-up or extend m_pts array;
-            int norigpts  = pts[0].num_elements();
-            int totfields = pts.num_elements();
-            Array<OneD, Array<OneD, NekDouble> > origpts(totfields);
-            for(int i = 0; i < totfields; ++i)
-            {
-                origpts[i] = pts[i];
-                pts[i] = Array<OneD, NekDouble>(norigpts + nvert);
-            }
-
-            NekDouble value;
-            for(int n = 0; n < totfields; ++n)
-            {
-
-                for(int i = 0; i < norigpts; ++i)
-                {
-                    pts[n][i] = origpts[n][i];
-                }
-                for(int i = 0; i < nvert; ++i)
-                {
-                    datFile >> value;
-                    pts[n][norigpts+i] = value;
-                }
-            }
-
-            // read connectivity and add to list
-            int intvalue;
-            Array<OneD, int> conn(3*nelmt);
-            for(int i = 0; i < 3*nelmt; ++i)
-            {
-                datFile >> intvalue;
-                intvalue -=1; // decrement intvalue by 1 for c array convention
-                conn[i] = norigpts + intvalue;
-            }
-            ptsConn.push_back(conn);
-
-            getline(datFile, line);
+            break;
         }
     }
+
+    // set up basic parameters
+    int nfields = fieldNames.size();
+    int totvars = dim + nfields;
+    Array<OneD, Array<OneD, NekDouble> > pts(totvars);
+    vector<Array<OneD, int> > ptsConn;
+
+    // read zones
+    while (!datFile.eof())
+    {
+        getline(datFile, line);
+
+        if((line.find("ZONE") != string::npos)||
+           (line.find("Zone") != string::npos)||
+           (line.find("zone") != string::npos))
+        {
+            ReadTecplotFEBlockZone(datFile, line, pts, ptsConn);
+        }
+    }
+
+    datFile.close();
+
+    m_f->m_fieldPts =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+            dim, fieldNames, pts);
+    m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
+    m_f->m_fieldPts->SetConnectivity(ptsConn);
+}
+
+
+/**
+ *
+ */
+void InputDat::ReadTecplotFEBlockZone(
+    std::ifstream   &datFile,
+    string          &line,
+    Array<OneD, Array<OneD, NekDouble> > &pts,
+    vector<Array<OneD, int> > &ptsConn)
+{
+    ASSERTL0(line.find("FEBlock") != string::npos,
+             "Routine only set up for FEBLock format");
+    ASSERTL0(line.find("ET") != string::npos,
+             "Routine only set up TRIANLES");
+
+    // read the number of nodes
+
+    stringstream s;
+    string tag;
+    int start,end;
+
+    s.clear();
+    s.str(line);
+    tag = s.str();
+
+    // read the number of vertices
+    start = tag.find("N=");
+    end   = tag.find_first_of(',',start);
+    int nvert = atoi(tag.substr(start+2,end).c_str());
+
+    // read the number of elements
+    start = tag.find("E=");
+    end   = tag.find_first_of(',',start);
+    int nelmt = atoi(tag.substr(start+2,end).c_str());
+
+    // set-up or extend m_pts array;
+    int norigpts  = pts[0].num_elements();
+    int totfields = pts.num_elements();
+    Array<OneD, Array<OneD, NekDouble> > origpts(totfields);
+    for(int i = 0; i < totfields; ++i)
+    {
+        origpts[i] = pts[i];
+        pts[i] = Array<OneD, NekDouble>(norigpts + nvert);
+    }
+
+    NekDouble value;
+    for(int n = 0; n < totfields; ++n)
+    {
+
+        for(int i = 0; i < norigpts; ++i)
+        {
+            pts[n][i] = origpts[n][i];
+        }
+        for(int i = 0; i < nvert; ++i)
+        {
+            datFile >> value;
+            pts[n][norigpts+i] = value;
+        }
+    }
+
+    // read connectivity and add to list
+    int intvalue;
+    Array<OneD, int> conn(3*nelmt);
+    for(int i = 0; i < 3*nelmt; ++i)
+    {
+        datFile >> intvalue;
+        intvalue -=1; // decrement intvalue by 1 for c array convention
+        conn[i] = norigpts + intvalue;
+    }
+    ptsConn.push_back(conn);
+
+    getline(datFile, line);
+}
+
+
+}
 }
 

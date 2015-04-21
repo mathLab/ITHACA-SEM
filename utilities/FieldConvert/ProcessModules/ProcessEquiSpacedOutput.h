@@ -40,37 +40,39 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module interpolates one field to another
-         */
-        class ProcessEquiSpacedOutput : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessEquiSpacedOutput>::
-                                                        AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            ProcessEquiSpacedOutput(FieldSharedPtr f);
-            virtual ~ProcessEquiSpacedOutput();
+/**
+ * @brief This processing module interpolates one field to another
+ */
+class ProcessEquiSpacedOutput : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessEquiSpacedOutput>::
+                                                    AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        protected:
-            ProcessEquiSpacedOutput(){};
-            void SetupEquiSpacedField(void);
+        ProcessEquiSpacedOutput(FieldSharedPtr f);
+        virtual ~ProcessEquiSpacedOutput();
 
-            void GenOrthoModes(int n,
-                               const Array<OneD,const NekDouble> &phys,
-                               Array<OneD, NekDouble> &coeffs);
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+    protected:
+        ProcessEquiSpacedOutput(){};
+        void SetupEquiSpacedField(void);
 
-        private:
-        };
-    }
+        void GenOrthoModes(int n,
+                           const Array<OneD,const NekDouble> &phys,
+                           Array<OneD, NekDouble> &coeffs);
+
+    private:
+};
+
+}
 }
 
 #endif

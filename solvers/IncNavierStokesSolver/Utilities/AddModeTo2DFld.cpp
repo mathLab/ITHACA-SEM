@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     scal2  = boost::lexical_cast<double>(argv[argc-4]);
 
     //default meshgraph
-    SpatialDomains::MeshGraph graph; 
+    SpatialDomains::MeshGraph graph;
 
     //----------------------------------------------
     // Import fieldfile1.
@@ -42,19 +42,23 @@ int main(int argc, char *argv[])
 
     ASSERTL0(fielddata1.size() == fielddata2.size(),"Inner has different size");
     //----------------------------------------------
-    // Add fielddata2 to fielddata1 using m_fields definition to align data. 
+    // Add fielddata2 to fielddata1 using m_fields definition to align data.
 
-    for(int i = 0; i < fielddata2.size(); ++i)
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    int n = 0;
+
+    for(i = 0; i < fielddata2.size(); ++i)
     {
         ASSERTL0(fielddef2[i]->m_numHomogeneousDir == 1,"Expected second fld to have one homogeneous direction");
         ASSERTL0(fielddef2[i]->m_numModes[2] == 2,"Expected Fourier field to have 2 modes");
 
-        int j;
         int datalen1 = fielddata1[i].size()/fielddef1[i]->m_fields.size();
         int datalen2 = fielddata2[i].size()/fielddef2[i]->m_fields.size();
 
         ASSERTL0(datalen1*2 == datalen2,"Data per fields is note compatible");
-        
+
         // Determine the number of coefficients per element
         int ncoeffs = 0;
         switch(fielddef2[i]->m_shapeType)
@@ -69,33 +73,23 @@ int main(int argc, char *argv[])
                 ASSERTL0(false,"Shape not recognised");
             break;
         }
-        
-        // array for zero packing 
-        Array<OneD,NekDouble> Zero(ncoeffs,0.0);
-        
-        
-        // scale first field
-        for(j = 0; j < fielddata1[i].size(); ++j)
-        {
-            fielddata1[i][j] *= scal1;
-            
-        }
-        
-        // scale second field
-        for(j = 0; j < fielddata2[i].size(); ++j)
-        {
-            fielddata2[i][j] *= scal2;
-            
-        }
 
-        std::vector<NekDouble>::iterator vec_iter; 
+        // array for zero packing
+        Array<OneD,NekDouble> Zero(ncoeffs,0.0);
+
+        // scale first and second fields
+        Vmath::Smul(fielddata1[i].size(), scal1, &fielddata1[i][0], 1,
+                                                 &fielddata1[i][0], 1);
+        Vmath::Smul(fielddata2[i].size(), scal2, &fielddata2[i][0], 1,
+                                                 &fielddata2[i][0], 1);
+
+        std::vector<NekDouble>::iterator vec_iter;
 
         vector<NekDouble> newdata;
         vec_iter = fielddata2[i].begin();
 
-        for(int k = 0; k < fielddef2[i]->m_fields.size(); ++k)
+        for(k = 0; k < fielddef2[i]->m_fields.size(); ++k)
         {
-            
             // get location of 2D field information in order of field2 ordering
             int offset = 0;
             for(j = 0; j < fielddef1[i]->m_fields.size(); ++j)
@@ -106,32 +100,35 @@ int main(int argc, char *argv[])
                 }
                 offset  += datalen1;
             }
-            
+
             if(j != fielddef1[i]->m_fields.size())
             {
-                for(int n = 0; n < fielddef2[i]->m_elementIDs.size(); ++n)
+                for(n = 0; n < fielddef2[i]->m_elementIDs.size(); ++n)
                 {
-                    // Real zero component 
-                    newdata.insert(newdata.end(),&(fielddata1[i][offset+n*ncoeffs]),
-&(fielddata1[i][offset+n*ncoeffs]) + ncoeffs);
-                    // Imaginary zero component; 
+                    // Real zero component
+                    newdata.insert(newdata.end(),
+                                   &(fielddata1[i][offset+n*ncoeffs]),
+                                   &(fielddata1[i][offset+n*ncoeffs])
+                                        + ncoeffs);
+
+                    // Imaginary zero component;
                     newdata.insert(newdata.end(),&Zero[0],&Zero[0] + ncoeffs);
-                    
-                    // Put orginal mode in here. 
+
+                    // Put orginal mode in here.
                     newdata.insert(newdata.end(),vec_iter, vec_iter+2*ncoeffs);
                     vec_iter += 2*ncoeffs;
                 }
             }
             else
             {
-                
-                for(int n = 0; n < fielddef2[i]->m_elementIDs.size(); ++n)
+
+                for(n = 0; n < fielddef2[i]->m_elementIDs.size(); ++n)
                 {
-                    // Real & Imag zero component 
+                    // Real & Imag zero component
                     newdata.insert(newdata.end(),&Zero[0],&Zero[0] + ncoeffs);
                     newdata.insert(newdata.end(),&Zero[0],&Zero[0] + ncoeffs);
-                    
-                    // Put orginal mode in here. 
+
+                    // Put orginal mode in here.
                     newdata.insert(newdata.end(),vec_iter, vec_iter+2*ncoeffs);
                     vec_iter += 2*ncoeffs;
                 }
@@ -144,7 +141,7 @@ int main(int argc, char *argv[])
 
         // check to see if any field in fielddef1[i]->m_fields is
         // not defined in fielddef2[i]->m_fields
-        for(int k = 0; k < fielddef1[i]->m_fields.size(); ++k)
+        for(k = 0; k < fielddef1[i]->m_fields.size(); ++k)
         {
             for(j = 0; j < fielddef2[i]->m_fields.size(); ++j)
             {
@@ -153,19 +150,20 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
-            
+
             if(j == fielddef2[i]->m_fields.size())
             {
-                cout << "Warning: Field \'" << fielddef1[i]->m_fields[k] << "\' was not included in output " << endl;
+                cout << "Warning: Field \'" << fielddef1[i]->m_fields[k]
+                     << "\' was not included in output " << endl;
             }
 
         }
-        
+
     }
     //----------------------------------------------
 
     //-----------------------------------------------
-    // Write out datafile. 
+    // Write out datafile.
     LibUtilities::Write(argv[argc-1], fielddef2, combineddata);
     //-----------------------------------------------
 

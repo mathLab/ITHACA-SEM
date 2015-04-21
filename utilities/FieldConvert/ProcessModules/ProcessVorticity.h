@@ -40,28 +40,29 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the vorticity and adds it
-         * as an extra-field to the output file.
-         */
-        class ProcessVorticity : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessVorticity(FieldSharedPtr f);
-            virtual ~ProcessVorticity();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+namespace Utilities
+{
+/**
+ * @brief This processing module calculates the vorticity and adds it
+ * as an extra-field to the output file.
+ */
+class ProcessVorticity : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+
+        ProcessVorticity(FieldSharedPtr f);
+        virtual ~ProcessVorticity();
+
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+};
+
+}
 }
 
 #endif

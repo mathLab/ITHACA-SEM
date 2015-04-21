@@ -56,6 +56,7 @@ ModuleKey InputPts::m_className[5] = {
         ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
 };
 
+
 /**
  * @brief Set up InputPts object.
  *
@@ -65,9 +66,14 @@ InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
     m_allowedFiles.insert("pts");
 }
 
+
+/**
+ *
+ */
 InputPts::~InputPts()
 {
 }
+
 
 /**
  *

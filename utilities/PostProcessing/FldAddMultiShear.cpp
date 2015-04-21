@@ -21,19 +21,19 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Usage: FldAddMultiShear meshfile nfiles FirstInFile BoundaryID\n");
         exit(1);
     }
-    
+
     nfiles = boost::lexical_cast<int>(argv[2]);
     surfID = boost::lexical_cast<int>(argv[4]);
 
     vector<string> infiles(nfiles);
     string outfile;
-    
+
     // Output file name: multishear.fld
     stringstream filename2;
     filename2 <<  "multishear.fld";
     filename2 >> outfile;
 
-    // starting checkpoint file name: name_tn_wss.fld. n can be any number. 
+    // starting checkpoint file name: name_tn_wss.fld. n can be any number.
     string basename = argv[3];
     basename = basename.substr(basename.find_last_of("t")+1, basename.find_last_of(".")-basename.find_last_of("t"));
     stringstream filename3;
@@ -48,10 +48,10 @@ int main(int argc, char *argv[])
         stringstream filename;
         filename << basename << "_t" << i+nStart << "_wss.fld";
         filename >> infiles[i];
-        cout << infiles[i]<<endl;            
+        cout << infiles[i]<<endl;
     }
- 
-    argv[2] = argv[3]; 
+
+    argv[2] = argv[3];
     argv[4] = argv[3];
 
     LibUtilities::SessionReaderSharedPtr vSession
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     int addfields = 7;
     int sfields = nfields - expdim;
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields+addfields), shear(sfields), extraVar(addfields);
-    MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;   
+    MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;
 
     switch(expdim)
     {
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
             i = 0;
             MultiRegions::ContField3DSharedPtr firstfield =
                 MemoryManager<MultiRegions::ContField3D>
-                ::AllocateSharedPtr(vSession, graphShPt, 
+                ::AllocateSharedPtr(vSession, graphShPt,
                                     vSession->GetVariable(i));
 
             m_locToGlobalMap = firstfield->GetLocalToGlobalMap();
@@ -109,21 +109,21 @@ int main(int argc, char *argv[])
             for(i = 1; i < expdim; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ContField3D>
-                    ::AllocateSharedPtr(*firstfield, graphShPt, 
+                    ::AllocateSharedPtr(*firstfield, graphShPt,
                                         vSession->GetVariable(i));
             }
 
             for(i = 0; i < sfields; ++i)
             {
                 Exp[i+expdim] = MemoryManager<MultiRegions::ContField3D>
-                    ::AllocateSharedPtr(*firstfield, graphShPt, 
+                    ::AllocateSharedPtr(*firstfield, graphShPt,
                                         vSession->GetVariable(i));
             }
 
             for(i = 0; i < addfields; ++i)
             {
                 Exp[i+nfields] = MemoryManager<MultiRegions::ContField3D>
-                    ::AllocateSharedPtr(*firstfield, graphShPt, 
+                    ::AllocateSharedPtr(*firstfield, graphShPt,
                                         vSession->GetVariable(0));
             }
 
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     //-------------------------------------
     // FIRST FILE - INITIALISING EVERYTHING
     //-------------------------------------
- 
+
     // Set up mapping from Boundary condition to element details.
     StdRegions::StdExpansionSharedPtr elmt;
     StdRegions::StdExpansion2DSharedPtr bc;
@@ -155,48 +155,48 @@ int main(int argc, char *argv[])
                                     Exp[0]->UpdateCoeffs());
     }
     Exp[0]->BwdTrans(Exp[0]->GetCoeffs(),Exp[0]->UpdatePhys());
-    
-    Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);        
+
+    Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
     BndExp[0]   = Exp[0]->GetBndCondExpansions();
-   
+
     // Get face 2D expansion from element expansion
     bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][surfID]->GetExp(0));
-    
-    int nfq=  bc->GetTotPoints();    
+
+    int nfq=  bc->GetTotPoints();
     int nelem = BndExp[0][surfID]->GetExpSize();
     int nbq = nelem*nfq;
 
     int nt = Exp[0]->GetNpoints();
     Array<OneD, const NekDouble> testing(nt);
 
-    
-    // Define local arrays for wss components, and outputs (TAwss, osi, trs) 
+
+    // Define local arrays for wss components, and outputs (TAwss, osi, trs)
     int n, cnt, elmtid, offset, boundary, bndOffset;
     Array<OneD, NekDouble> Sx(nbq), Sy(nbq), Sz(nbq), S(nbq), Sxr(nbq), Syr(nbq), Szr(nbq);
     Array<OneD, NekDouble> Save(nbq), temp2(nbq), trs(nbq), TAwss(nbq), osi(nbq);
     Array<OneD, Array<OneD, NekDouble> > temp(sfields), values(nfields);
-   
+
     for (i = 0; i < sfields; i++)
     {
         temp[i]= Array<OneD, NekDouble>(nfq);
     }
-    
+
     Vmath::Zero (nbq, Sx, 1);
     Vmath::Zero (nbq, Sy, 1);
     Vmath::Zero (nbq, Sz, 1);
 
     // -----------------------------------------------------
     // Compute temporal average wall shear stress vector,
-    // and the spatial average of the temporal average.  
+    // and the spatial average of the temporal average.
     // -----------------------------------------------------
-    
+
     for (int fileNo = 0; fileNo < nfiles ; ++fileNo)
     {
-        // Import field file. 
+        // Import field file.
         fielddef.clear();
         fielddata.clear();
         LibUtilities::Import(infiles[fileNo],fielddef,fielddata);
-        
+
         // Copy data from field file
         for(j = 0; j < nfields; ++j)
         {
@@ -209,14 +209,14 @@ int main(int argc, char *argv[])
             }
             Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
         }
-     
-        Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);        
+
+        Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
         BndExp[0]   = Exp[0]->GetBndCondExpansions();
-        
+
         for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
-        {   
+        {
             if(n == surfID)
-            {   
+            {
                 for(i = 0; i < nelem; ++i, cnt++)
                 {
                     // find element and face of this expansion.
@@ -224,25 +224,25 @@ int main(int argc, char *argv[])
                     elmt   = Exp[0]->GetExp(elmtid);
                     offset = Exp[0]->GetPhys_Offset(elmtid);
                     bndOffset = nfq*i;
-                    
+
                     if(expdim == 2)
-                    { 
-                        // Not implemented in 2D. 
+                    {
+                        // Not implemented in 2D.
                     }
                     else
-                    {   
+                    {
                         // Get face 2D expansion from element expansion
                         bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
-                        
+
                         //identify boundary of element looking at.
                         boundary = BoundarytoTraceID[cnt];
-                        
+
                         // Get face stress values.
                         for (int t = 0; t< expdim; t++)
                         {
                             elmt->GetFacePhysVals(boundary,bc, Exp[t+expdim]->GetPhys() + offset, temp[t]);
                         }
-                        
+
                         for (int m = 0; m < nfq; m++)
                         {
                             Sxr[bndOffset + m] = temp[0][m];
@@ -251,30 +251,30 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                
+
                 // Sx = Sx + Sxr;
                 Vmath::Vadd (nbq, Sxr, 1, Sx, 1, Sx, 1);
                 Vmath::Vadd (nbq, Syr, 1, Sy, 1, Sy, 1);
                 Vmath::Vadd (nbq, Szr, 1, Sz, 1, Sz, 1);
-                
+
                 Vmath::Zero (nbq, Sxr, 1);
                 Vmath::Zero (nbq, Syr, 1);
                 Vmath::Zero (nbq, Szr, 1);
             }
-            else 
+            else
             {
                 cnt += BndExp[0][n]->GetExpSize();
             }
         }
     }
-  
-    // Temporal averages of each wss component: Sx = Sx / nfiles. I.e. mean temporal wss 
+
+    // Temporal averages of each wss component: Sx = Sx / nfiles. I.e. mean temporal wss
     Vmath::Smul(nbq, 1.0/nfiles , Sx, 1, Sx, 1);
     Vmath::Smul(nbq, 1.0/nfiles , Sy, 1, Sy, 1);
     Vmath::Smul(nbq, 1.0/nfiles , Sz, 1, Sz, 1);
 
     // Spatial average of the temporal averaged wss vector: Save = sqrt(sx^2 + Sy^2 + Sz^2);
-    // i.e magnitude of mean temporal wss. 
+    // i.e magnitude of mean temporal wss.
     Vmath::Vvtvvtp(nbq, Sx, 1, Sx, 1, Sy, 1, Sy, 1, Save, 1);
     Vmath::Vvtvp(nbq, Sz, 1, Sz, 1, Save, 1, Save, 1);
     Vmath::Vsqrt(nbq, Save, 1, Save, 1);
@@ -290,22 +290,22 @@ int main(int argc, char *argv[])
     Vmath::Zero (nbq, Sz, 1);
     Vmath::Zero (nbq, trs, 1);
     Vmath::Zero (nbq, TAwss, 1);
-   
+
     // -----------------------------------------------------
-    // Loop through files again, and compute transverse wss  
+    // Loop through files again, and compute transverse wss
     // -----------------------------------------------------
-    
+
     for (int fileNo = 0; fileNo < nfiles ; ++fileNo)
     {
         Vmath::Zero (nbq, Sx, 1);
         Vmath::Zero (nbq, Sy, 1);
         Vmath::Zero (nbq, Sz, 1);
-        
-        // Import field file. 
+
+        // Import field file.
         fielddef.clear();
         fielddata.clear();
         LibUtilities::Import(infiles[fileNo],fielddef,fielddata);
-        
+
         // Copy data from field file
         for(j = 0; j < nfields; ++j)
         {
@@ -319,13 +319,13 @@ int main(int argc, char *argv[])
             Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
         }
 
-        Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);        
+        Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
         BndExp[0]   = Exp[0]->GetBndCondExpansions();
-        
+
         for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
-        {   
+        {
             if(n == surfID)
-            {   
+            {
                 for(i = 0; i < nelem; ++i, cnt++)
                 {
                     // find element and face of this expansion.
@@ -333,24 +333,24 @@ int main(int argc, char *argv[])
                     elmt   = Exp[0]->GetExp(elmtid);
                     offset = Exp[0]->GetPhys_Offset(elmtid);
                     bndOffset = nfq*i;
-                    
+
                     if(expdim == 2)
-                    { 
+                    {
                     }
                     else
-                    {   
+                    {
                         // Get face 2D expansion from element expansion
                         bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
-                        
+
                         //identify boundary of element looking at.
                         boundary = BoundarytoTraceID[cnt];
-                        
+
                         // Get face stress values.
                         for (int t = 0; t< sfields; t++)
                         {
                             elmt->GetFacePhysVals(boundary,bc,Exp[t+expdim]->GetPhys() + offset, temp[t]);
                         }
-                        
+
                         for (int m = 0; m < nfq; m++)
                         {
                             Sx[bndOffset + m] = temp[0][m];
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                
+
                 Vmath::Vvtvvtp(nbq, Sx, 1, Sx, 1, Sy, 1, Sy, 1, S, 1);
                 Vmath::Vvtvp(nbq, Sz, 1, Sz, 1, S, 1, S, 1);
                 Vmath::Vsqrt(nbq, S, 1, S, 1);
@@ -373,22 +373,22 @@ int main(int argc, char *argv[])
                 Vmath::Vvtvm(nbq, S, 1, S, 1, temp2, 1, temp2, 1);
                 for (int m = 0; m < nbq; m++)
                 {
-                    if (temp2[m]> 0.0) 
+                    if (temp2[m]> 0.0)
                     {
                         trs[m] = trs[m] + sqrt(temp2[m]);
-                    }  /*  
+                    }  /*
                     else
                     {
                         trs[m] = 0.0;
                         }*/
                 }
-              
+
                 Vmath::Zero (nbq, temp2, 1);
-                
+
                 //Time averaged wss TAwss = TAwss + S;
                 Vmath::Vadd (nbq, S, 1, TAwss, 1, TAwss, 1);
             }
-            else 
+            else
             {
                 cnt += BndExp[0][n]->GetExpSize();
             }
@@ -399,16 +399,16 @@ int main(int argc, char *argv[])
     // Final step in computing trs and TAwss: trs = trs/nfiles;
     Vmath::Smul (nbq, (1.0/nfiles), trs, 1, trs, 1);
     Vmath::Smul (nbq, (1.0/nfiles), TAwss, 1, TAwss, 1);
-    
+
     //Compute osi = 0.5*(1- Save/TAwss)
     Vmath::Vdiv(nbq, Save, 1, TAwss, 1, osi, 1);
     Vmath::Smul(nbq, -0.5, osi, 1, osi, 1);
     Vmath::Sadd(nbq, 0.5, osi, 1, osi, 1);
-   
+
     fielddef.clear();
     fielddata.clear();
     LibUtilities::Import(infiles[nfiles-1],fielddef,fielddata);
-    
+
     // Copy u,v,w, data from last field file for the fields
     for(j = 0; j < nfields; ++j)
     {
@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
         }
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
-    
+
     for(j = 0; j < addfields; ++j)
     {
         for(int i = 0; i < fielddata.size(); ++i)
@@ -434,40 +434,40 @@ int main(int argc, char *argv[])
         Exp[j+nfields]->BwdTrans(Exp[j+nfields]->GetCoeffs(),Exp[j+nfields]->UpdatePhys());
     }
 
-    Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);        
-    
+    Exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
+
     //get boundary expansions for each field
     for(j = 0; j < nfields+addfields; ++j)
     {
         BndExp[j]   = Exp[j]->GetBndCondExpansions();
     }
-    
+
     for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
-    {   
+    {
         if(n == surfID)
-        {   
+        {
             for(i = 0; i < nelem; ++i, cnt++)
             {
                 // find element and face of this expansion.
                 elmtid = BoundarytoElmtID[cnt];
                 offset = Exp[0]->GetPhys_Offset(elmtid);
                 bndOffset = nfq*i;
-                
+
                 if(expdim == 2)
-                { 
+                {
                 }
                 else
-                {   
+                {
                     // Get face 2D expansion from element expansion
                     bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
-                    
+
                     //identify boundary of element looking at.
                     boundary = BoundarytoTraceID[cnt];
-                    
+
                     //Update outfield coefficients in the elemental boundary expansion
                     for (j = 0; j < nfq; j++)
                     {
-                        temp[0][j] = trs[bndOffset + j];                     
+                        temp[0][j] = trs[bndOffset + j];
                         temp[1][j] = TAwss[bndOffset + j];
                         temp[2][j] = osi[bndOffset + j];
                     }
@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
 
                     for (j = 0; j < nfq; j++)
                     {
-                        temp[0][j] = Sxr[bndOffset + j];                     
+                        temp[0][j] = Sxr[bndOffset + j];
                         temp[1][j] = Syr[bndOffset + j];
                         temp[2][j] = Szr[bndOffset + j];
                     }
@@ -491,23 +491,23 @@ int main(int argc, char *argv[])
                     {
                         values[j] = BndExp[j+nfields+3][n]->UpdateCoeffs() + BndExp[j+nfields+3][n]->GetCoeff_Offset(i);
                         bc->FwdTrans(temp[j], values[j]);
-                     
+
                         Vmath::Zero(nbq, temp[j],1);
                     }
 
 
                     for (j = 0; j < nfq; j++)
                     {
-                        temp[0][j] = Save[bndOffset + j];                     
+                        temp[0][j] = Save[bndOffset + j];
                     }
-                    
+
                     values[0] = BndExp[nfields+addfields-1][n]->UpdateCoeffs() + BndExp[nfields+addfields-1][n]->GetCoeff_Offset(i);
                     bc->FwdTrans(temp[0], values[0]);
-                    
+
                 }
             }
         }
-        else 
+        else
         {
             cnt += BndExp[0][n]->GetExpSize();
         }
@@ -517,17 +517,17 @@ int main(int argc, char *argv[])
     {
         int ncoeffs = Exp[j]->GetNcoeffs();
         Array<OneD, NekDouble> output(ncoeffs);
-        
+
         output=Exp[j]->UpdateCoeffs();
-        
+
         int nGlobal=m_locToGlobalMap->GetNumGlobalCoeffs();
         Array<OneD, NekDouble> outarray(nGlobal,0.0);
-        
+
         int bndcnt=0;
-        
+
         const Array<OneD,const int>& map = m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsMap();
         NekDouble sign;
-        
+
         for(i = 0; i < BndExp[j].num_elements(); ++i)
         {
             if(i==surfID)
@@ -545,7 +545,7 @@ int main(int argc, char *argv[])
             }
         }
         m_locToGlobalMap->GlobalToLocal(outarray,output);
-       
+
     }
 
     //-----------------------------------------------
@@ -554,9 +554,9 @@ int main(int argc, char *argv[])
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
         = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    
+
     vector<string > outname;
-    
+
     outname.push_back("TransWSS");
     outname.push_back("TAWSS");
     outname.push_back("OSI");
@@ -580,9 +580,9 @@ int main(int argc, char *argv[])
             Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }
-    
+
     LibUtilities::Write(outfile, FieldDef, FieldData);
-    
+
     return 0;
 }
- 
+

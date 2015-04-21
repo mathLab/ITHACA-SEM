@@ -40,36 +40,38 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module interpolates one field to another 
-         */
-        class ProcessInterpPoints : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessInterpPoints>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessInterpPoints(FieldSharedPtr f);
-            virtual ~ProcessInterpPoints();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
+namespace Utilities
+{
 
-        private:
-            FieldSharedPtr m_fromField;
+/**
+ * @brief This processing module interpolates one field to another
+ */
+class ProcessInterpPoints : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessInterpPoints>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-            void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
-                                       Array<OneD, Array<OneD, NekDouble> >   &pts,
-                                       NekDouble                               clamp_low,
-                                       NekDouble                               clamp_up,
-                                       NekDouble                               def_value);
-        };
-    }
+        ProcessInterpPoints(FieldSharedPtr f);
+        virtual ~ProcessInterpPoints();
+
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+
+    private:
+        FieldSharedPtr m_fromField;
+
+        void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
+                                   Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                   NekDouble                               clamp_low,
+                                   NekDouble                               clamp_up,
+                                   NekDouble                               def_value);
+};
+
+}
 }
 
 #endif

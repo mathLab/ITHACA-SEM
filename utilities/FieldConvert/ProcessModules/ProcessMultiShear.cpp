@@ -46,364 +46,346 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey ProcessMultiShear::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "shear"),
+        ProcessMultiShear::create, "Computes shear stress metrics.");
+
+ProcessMultiShear::ProcessMultiShear(FieldSharedPtr f) : ProcessModule(f)
+{
+    m_config["N"] = ConfigOption(false,"1","Number of chk or fld files");
+    m_config["fromfld"] = ConfigOption(false, "NotSet",
+                                       "First fld file. First underscore flags position of id in name.");
+
+    ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
+             "Need to specify fromfld=file.fld ");
+
+    m_f->m_fldToBnd = false;
+}
+
+ProcessMultiShear::~ProcessMultiShear()
+{
+}
+
+void ProcessMultiShear::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
     {
-        ModuleKey ProcessMultiShear::className =
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "shear"), 
-                ProcessMultiShear::create, "Computes shear stress metrics.");
+        cout << "ProcessMultiShear: Calculating shear stress metrics..." << endl;
+    }
 
-        ProcessMultiShear::ProcessMultiShear(FieldSharedPtr f) : ProcessModule(f)
+    int nstart, i, j, nfields;
+    NekDouble nfld = m_config["N"].as<NekDouble>();
+    string fromfld, basename, endname, nstartStr;
+    stringstream filename;
+    vector<string> infiles(nfld);
+    vector< boost::shared_ptr<Field> > m_fromField(nfld);
+
+    // Set up list of input fld files.
+    fromfld = m_config["fromfld"].as<string>();
+    basename = fromfld.substr(0, fromfld.find_first_of("_")+1);
+    filename << fromfld.substr(fromfld.find_first_of("_")+1, fromfld.size());
+    filename >> nstart;
+    filename.str("");
+    filename << nstart;
+    filename >> nstartStr;
+    filename.str("");
+    endname = fromfld.substr(fromfld.find(nstartStr)+nstartStr.size(), fromfld.size());
+
+    for (i=0; i<nfld; ++i)
+    {
+        stringstream filename;
+        filename << basename << i+nstart << endname;
+        filename >> infiles[i];
+        cout << infiles[i]<<endl;
+    }
+
+    for ( i = 0; i<nfld; ++i)
+    {
+        m_fromField[i] = boost::shared_ptr<Field>(new Field());
+        m_fromField[i]->m_session = m_f->m_session;
+        m_fromField[i]->m_graph = m_f->m_graph;
+        m_fromField[i]->m_fld = MemoryManager<LibUtilities::FieldIO>
+            ::AllocateSharedPtr(m_fromField[0]->m_session->GetComm());
+    }
+
+    //Import all fld files.
+    for (i = 0; i < nfld; ++i)
+    {
+        if(m_f->m_exp.size())
         {
-            m_config["N"] = ConfigOption(false,"1","Number of chk or fld files");
-            m_config["fromfld"] = ConfigOption(false, "NotSet",
-                                               "First fld file. First underscore flags position of id in name.");
-
-            ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
-                     "Need to specify fromfld=file.fld ");
-
-           m_f->m_fldToBnd = false;
+            // Set up ElementGIDs in case of parallel processing
+            Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
+            for (j = 0; j < m_f->m_exp[0]->GetExpSize(); ++j)
+            {
+                ElementGIDs[j] = m_f->m_exp[0]->GetExp(j)->GetGeom()->GetGlobalID();
+            }
+            m_fromField[i]->m_fld->Import(infiles[i],m_fromField[i]->m_fielddef,
+                                          m_fromField[i]->m_data,
+                                          LibUtilities::NullFieldMetaDataMap,
+                                          ElementGIDs);
         }
-        
-        ProcessMultiShear::~ProcessMultiShear()
+        else
         {
+            m_fromField[i]->m_fld->Import(infiles[i],m_fromField[i]->m_fielddef,
+                                          m_fromField[i]->m_data,
+                                          LibUtilities::NullFieldMetaDataMap);
         }
-        
-        void ProcessMultiShear::Process(po::variables_map &vm)
+
+        nfields    = m_fromField[i]->m_fielddef[0]->m_fields.size();
+        int NumHomogeneousDir = m_fromField[i]->m_fielddef[0]->m_numHomogeneousDir;
+
+        // Set up Expansion information to use mode order from field
+        m_fromField[i]->m_graph->SetExpansions(m_fromField[i]->m_fielddef);
+
+        //Set up expansions, and extract data.
+        m_fromField[i]->m_exp.resize(nfields);
+        m_fromField[i]->m_exp[0] = m_fromField[i]->SetUpFirstExpList(NumHomogeneousDir,true);
+
+        for(j = 1; j < nfields; ++j)
         {
-            if (m_f->m_verbose)
+            m_fromField[i]->m_exp[j] = m_f->AppendExpList(NumHomogeneousDir);
+        }
+
+        for (j = 0; j < nfields; ++j)
+        {
+            for (int k = 0; k < m_fromField[i]->m_data.size(); ++k)
             {
-                cout << "ProcessMultiShear: Calculating shear stress metrics..." << endl;
+                m_fromField[i]->m_exp[j]->ExtractDataToCoeffs(
+                    m_fromField[i]->m_fielddef[k],
+                    m_fromField[i]->m_data[k],
+                    m_fromField[i]->m_fielddef[k]->m_fields[j],
+                    m_fromField[i]->m_exp[j]->UpdateCoeffs());
             }
-
-            
-            int nstart, i, j, nfields;
-            NekDouble nfld = m_config["N"].as<NekDouble>();
-            string fromfld, basename, endname, nstartStr;
-            stringstream filename;
-            vector<string> infiles(nfld);
-            vector< boost::shared_ptr<Field> > m_fromField(nfld);
-
-
-
-//            StdRegions::StdExpansion2DSharedPtr bc;
-//            StdRegions::StdExpansionSharedPtr elmt;
-
-            // Set up list of input fld files. 
-            fromfld = m_config["fromfld"].as<string>();
-            basename = fromfld.substr(0, fromfld.find_first_of("_")+1);
-            filename << fromfld.substr(fromfld.find_first_of("_")+1, fromfld.size());
-            filename >> nstart;
-            filename.str("");
-            filename << nstart;
-            filename >> nstartStr;
-            filename.str("");
-            endname = fromfld.substr(fromfld.find(nstartStr)+nstartStr.size(), fromfld.size());
-       
-   
-            for (i=0; i<nfld; ++i)
-            {
-                stringstream filename;
-                filename << basename << i+nstart << endname;
-                filename >> infiles[i];       
-                cout << infiles[i]<<endl;
-            }
-
-
-            for ( i = 0; i<nfld; ++i)
-            {
-                m_fromField[i] = boost::shared_ptr<Field>(new Field());
-                m_fromField[i]->m_session = m_f->m_session;
-                m_fromField[i]->m_graph = m_f->m_graph;
-                m_fromField[i]->m_fld = MemoryManager<LibUtilities::FieldIO>
-                    ::AllocateSharedPtr(m_fromField[0]->m_session->GetComm());
-            }
-            
-            //Import all fld files. 
-            for (i=0; i<nfld; ++i)
-            {
-                if(m_f->m_exp.size())
-                {
-                    // Set up ElementGIDs in case of parallel processing
-                    Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
-                    for (j = 0; j < m_f->m_exp[0]->GetExpSize(); ++j)
-			    {
-                        ElementGIDs[j] = m_f->m_exp[0]->GetExp(j)->GetGeom()->GetGlobalID();
-                    }
-                    m_fromField[i]->m_fld->Import(infiles[i],m_fromField[i]->m_fielddef,
-                                                  m_fromField[i]->m_data,
-                                                  LibUtilities::NullFieldMetaDataMap,
-                                                  ElementGIDs);
-                }
-                else
-                {
-                    m_fromField[i]->m_fld->Import(infiles[i],m_fromField[i]->m_fielddef,
-                                                  m_fromField[i]->m_data,
-                                                  LibUtilities::NullFieldMetaDataMap);
-                }
-                
-                nfields    = m_fromField[i]->m_fielddef[0]->m_fields.size();
-                int NumHomogeneousDir = m_fromField[i]->m_fielddef[0]->m_numHomogeneousDir;
-   
-                // Set up Expansion information to use mode order from field
-                m_fromField[i]->m_graph->SetExpansions(m_fromField[i]->m_fielddef);
-                
-                //Set up expansions, and extract data. 
-                m_fromField[i]->m_exp.resize(nfields);
-                m_fromField[i]->m_exp[0] = m_fromField[i]->SetUpFirstExpList(NumHomogeneousDir,true);
-                
-                for(j = 1; j < nfields; ++j)
-                {
-                    m_fromField[i]->m_exp[j] = m_f->AppendExpList(NumHomogeneousDir);
-                }
-                
-                for (j = 0; j < nfields; ++j)
-                {
-                    for (int k = 0; k < m_fromField[i]->m_data.size(); ++k)
-                    {
-                        m_fromField[i]->m_exp[j]->ExtractDataToCoeffs(
-                            m_fromField[i]->m_fielddef[k],
-                            m_fromField[i]->m_data[k],
-                            m_fromField[i]->m_fielddef[k]->m_fields[j],
-                            m_fromField[i]->m_exp[j]->UpdateCoeffs());
-                    }
-                    m_fromField[i]->m_exp[j]->BwdTrans(m_fromField[i]->m_exp[j]->GetCoeffs(),
-                                                       m_fromField[i]->m_exp[j]->UpdatePhys());
-                }
-            }            
-
-            
-            int spacedim   = m_f->m_graph->GetSpaceDimension();
-            if ((m_fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-                (m_fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 2)
-            {
-                spacedim = 3;
-            }
-            
-
-            int npoints = m_fromField[0]->m_exp[0]->GetNpoints();
-            int nout = 6; // TAWSS, OSI, transWSS, AFI, CFI, WSSG. 
-            Array<OneD, Array<OneD, NekDouble> > shear(spacedim), TemporalMeanVec(spacedim), normals(spacedim);
-            Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),outfield(nout);
-	    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanPerp(spacedim),dTm(spacedim),dTn(spacedim);
-            Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0),Tm(npoints,0.0);
-            Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0),Tn(npoints,0.0), WSSG(npoints,0.0);        
-            Array<OneD, NekDouble> ndTn(npoints,0.0),mdTm(npoints,0.0);
-
-            for (i = 0; i < spacedim; ++i)
-            {
-                shear[i] = Array<OneD, NekDouble>(npoints);
-                normals[i] = Array<OneD, NekDouble>(npoints);
-                dTm[i] = Array<OneD, NekDouble>(npoints);
-                dTn[i] = Array<OneD, NekDouble>(npoints);
-                TemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
-                normTemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
-                normTemporalMeanPerp[i] = Array<OneD, NekDouble>(npoints);
-                Vmath::Zero(npoints, TemporalMeanVec[i],1);
-            }
-            
-            for (i = 0; i < nout; ++i)
-            {
-                outfield[i] = Array<OneD, NekDouble>(npoints);
-                Vmath::Zero(npoints, outfield[i],1);
-            }
-            
-
-
-
-            // -----------------------------------------------------
-            // Compute temporal average wall shear stress vector,
-            // it's spatial average, and normalise it.  
-            for (i = 0; i < nfld; ++i)
-            {
-                for (j = 0; j < spacedim; ++j)
-                {
-                    shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
-                    Vmath::Vadd(npoints, shear[j], 1, TemporalMeanVec[j], 1, TemporalMeanVec[j], 1);
-                }
-            }
-            
-            for (i = 0; i < spacedim; ++i)
-            {
-                Vmath::Smul(npoints, 1.0/nfld, TemporalMeanVec[i], 1, TemporalMeanVec[i], 1);
-                Vmath::Vvtvp(npoints, TemporalMeanVec[i], 1, TemporalMeanVec[i], 1, 
-                             TemporalMeanMag, 1, TemporalMeanMag, 1);
-            }
-            Vmath::Vsqrt(npoints, TemporalMeanMag, 1, TemporalMeanMag, 1);
-            
-            for (i = 0; i < spacedim; ++i)
-            {
-                Vmath::Vdiv(npoints, TemporalMeanVec[i], 1, TemporalMeanMag, 1, normTemporalMeanVec[i], 1);
-            }
-            // -----------------------------------------------------
-        
-            //------------------------------------------------------
-	    // Grab Noramls from first field - same for all fields - Compute the vector perpindicular
-            // to normTemporalMeanVec in plane
-	    for (i = 0; i < spacedim; ++i)
-	    {
-                normals[i] = m_fromField[0]->m_exp[i+4]->GetPhys();
-            }	
-	    // Cross Product
-//	    Vmath::Vvtvvtm(npoints,normals[1],1,normTemporalMeanVec[2],1,normals[2],1,normTemporalMeanVec[1],1,
-//                       normTemporalMeanPerp[0],1); 
-//
-//	    Vmath::Vvtvvtm(npoints,normals[0],1,normTemporalMeanVec[2],1,normals[2],1,normTemporalMeanVec[0],1,
-//                       normTemporalMeanPerp[1],1);
-//	    
-//	    Vmath::Vvtvvtm(npoints,normals[0],1,normTemporalMeanVec[1],1,normals[1],1,normTemporalMeanVec[0],1,
-//                       normTemporalMeanPerp[2],1) ;
-            Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[0],1);
-	    Vmath::Vvtvm(npoints,normals[1],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[0],1,
-			normTemporalMeanPerp[0],1);
-           
-            Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[1],1);
-	    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[1],1,
-			normTemporalMeanPerp[1],1);
-            
-	    Vmath::Vmul(npoints,normals[1],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[2],1);
-	    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[2],1,
-			normTemporalMeanPerp[2],1);
-
-	    Vmath::Smul(npoints,-1.0,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1);
-	    cout << "Test" << '\n';
-
-            // Compute tawss, trs,  osi, taafi, tacfi, WSSG. 
-            for (i = 0; i < nfld; ++i)
-            {
-                for (j = 0; j < spacedim; ++j)
-                {
-                    shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
-                }
-                wss = m_fromField[i]->m_exp[3]->GetPhys();
-                
-                for (j = 0; j < spacedim; ++j)
-                {
-                    Vmath::Vvtvp(npoints, shear[j], 1, normTemporalMeanVec[j], 1, 
-                                 DotProduct, 1, DotProduct, 1);
-                }
-              
-                //TAWSS
-                Vmath::Vadd(npoints, wss, 1, outfield[0], 1, outfield[0], 1);
-  
-                //transWSS
-                for (j = 0; j < npoints; ++j)
-                {
-                    temp[j] = wss[j]*wss[j] - DotProduct[j]*DotProduct[j];
-                    if(temp[j] > 0.0)
-                    {
-                        outfield[1][j] = outfield[1][j] + sqrt(temp[j]);
-                    }
-                }
-                
-                //TAAFI
-                Vmath::Vdiv(npoints, DotProduct, 1, wss, 1, temp, 1);
-                Vmath::Vadd(npoints, temp, 1, outfield[3], 1, outfield[3], 1);
-
-                //TACFI
-                for (j = 0; j < npoints; ++j)
-                {
-                    temp[j] = 1 - temp[j]*temp[j];
-                    if(temp[j] > 0.0)
-                    {
-                        outfield[4][j] = outfield[4][j] + sqrt(temp[j]);
-                    }
-                }
-
-                // WSSG
-                for(j = 0; j < spacedim; ++j)
-                {
-                    Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanVec[j],1,
-                                Tm, 1, Tm, 1);
-                    Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanPerp[j],1,
-                                Tn, 1, Tn, 1);
-                }
-
-		m_fromField[i]->m_exp[0]->PhysDeriv(Tm,dTm[0],dTm[1],dTm[2]);
-		m_fromField[i]->m_exp[0]->PhysDeriv(Tn,dTn[0],dTn[1],dTn[2]);
-
- 		for(j = 0;j < spacedim; ++j)
-		{
-		    Vmath::Vvtvp(npoints,dTm[j],1,normTemporalMeanVec[j],1,mdTm,1,mdTm,1);
-		    Vmath::Vvtvp(npoints,dTn[j],1,normTemporalMeanPerp[j],1,ndTn,1,ndTn,1);
-		}
-
-		Vmath::Vmul(npoints,mdTm,1,mdTm,1,mdTm,1);
-		Vmath::Vvtvp(npoints,ndTn,1,ndTn,1,mdTm,1,WSSG,1);       	        
-		Vmath::Vsqrt(npoints,WSSG,1,WSSG,1);
-                Vmath::Vadd(npoints, WSSG, 1, outfield[5], 1, outfield[5], 1);
-                
-
-		Vmath::Zero(npoints, DotProduct,1);
-                Vmath::Zero(npoints, Tm,1);
-                Vmath::Zero(npoints, Tn,1);
-                Vmath::Zero(npoints, ndTn,1);
-                Vmath::Zero(npoints, mdTm,1);
-
-            }
-
-            //Divide by nfld
-            Vmath::Smul(npoints, 1.0/nfld, outfield[0], 1, outfield[0], 1);
-            Vmath::Smul(npoints, 1.0/nfld, outfield[1], 1, outfield[1], 1);
-            Vmath::Smul(npoints, 1.0/nfld, outfield[3], 1, outfield[3], 1); 
-            Vmath::Smul(npoints, 1.0/nfld, outfield[4], 1, outfield[4], 1);  
-            Vmath::Smul(npoints, 1.0/nfld, outfield[5], 1, outfield[5], 1); 
- 
-            //OSI
-            for (i = 0; i < npoints; ++i)
-            {
-                outfield[2][i] = 0.5 * (1 - TemporalMeanMag[i]/outfield[0][i]);
-            }
-            
-            /* TAWSS = sum(wss)/nfld
-             * transWSS = sum( sqrt( wss^2 - (wss . normTempMean)^2) )/nfld.
-             * OSI = 0.5*(1-TemporalMeanMag/TAWSS)
-             * TAAFI = sum(cos)/nfld
-             * TACFI = sum(sin)/nfld = sum( sqrt(1-cos^2) )/nfld. 
-             */
-            
-            m_f->m_exp.resize(nout);
-            m_f->m_fielddef = m_fromField[0]->m_fielddef;
-            m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,true);
-            
-            for(i = 1; i < nout; ++i)
-            {
-                m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-            }                
-            
-            m_f->m_fielddef[0]->m_fields.resize(nout);
-            m_f->m_fielddef[0]->m_fields[0] = "TAWSS";
-            m_f->m_fielddef[0]->m_fields[1] = "transWSS";
-            m_f->m_fielddef[0]->m_fields[2] = "OSI";
-            m_f->m_fielddef[0]->m_fields[3] = "TAAFI";
-            m_f->m_fielddef[0]->m_fields[4] = "TACFI";
-            m_f->m_fielddef[0]->m_fields[5] = "|WSSG|";
-            
-            for(i = 0; i < nout; ++i)
-            {
-		cout << i << endl;
-                m_f->m_exp[i]->FwdTrans(outfield[i],
-                                        m_f->m_exp[i]->UpdateCoeffs());
-                m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(), 
-                                        m_f->m_exp[i]->UpdatePhys());
-            }
-
-
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = m_fromField[0]->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-            
-            for( i = 0; i < nout; ++i)
-            {
-                for ( j = 0; j < FieldDef.size(); ++j)
-                {
-                    FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-                    m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-                }
-            }
-            
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
+            m_fromField[i]->m_exp[j]->BwdTrans(m_fromField[i]->m_exp[j]->GetCoeffs(),
+                                               m_fromField[i]->m_exp[j]->UpdatePhys());
         }
     }
+
+
+    int spacedim   = m_f->m_graph->GetSpaceDimension();
+    if ((m_fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
+        (m_fromField[0]->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    {
+        spacedim = 3;
+    }
+
+
+    int npoints = m_fromField[0]->m_exp[0]->GetNpoints();
+    int nout = 6; // TAWSS, OSI, transWSS, AFI, CFI, WSSG.
+    Array<OneD, Array<OneD, NekDouble> > shear(spacedim), TemporalMeanVec(spacedim), normals(spacedim);
+    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),outfield(nout);
+    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanPerp(spacedim),dTm(spacedim),dTn(spacedim);
+    Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0),Tm(npoints,0.0);
+    Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0),Tn(npoints,0.0), WSSG(npoints,0.0);
+    Array<OneD, NekDouble> ndTn(npoints,0.0),mdTm(npoints,0.0);
+
+    for (i = 0; i < spacedim; ++i)
+    {
+        shear[i] = Array<OneD, NekDouble>(npoints);
+        normals[i] = Array<OneD, NekDouble>(npoints);
+        dTm[i] = Array<OneD, NekDouble>(npoints);
+        dTn[i] = Array<OneD, NekDouble>(npoints);
+        TemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
+        normTemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
+        normTemporalMeanPerp[i] = Array<OneD, NekDouble>(npoints);
+        Vmath::Zero(npoints, TemporalMeanVec[i],1);
+    }
+
+    for (i = 0; i < nout; ++i)
+    {
+        outfield[i] = Array<OneD, NekDouble>(npoints);
+        Vmath::Zero(npoints, outfield[i],1);
+    }
+
+    // -----------------------------------------------------
+    // Compute temporal average wall shear stress vector,
+    // it's spatial average, and normalise it.
+    for (i = 0; i < nfld; ++i)
+    {
+        for (j = 0; j < spacedim; ++j)
+        {
+            shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
+            Vmath::Vadd(npoints, shear[j], 1, TemporalMeanVec[j], 1, TemporalMeanVec[j], 1);
+        }
+    }
+
+    for (i = 0; i < spacedim; ++i)
+    {
+        Vmath::Smul(npoints, 1.0/nfld, TemporalMeanVec[i], 1, TemporalMeanVec[i], 1);
+        Vmath::Vvtvp(npoints, TemporalMeanVec[i], 1, TemporalMeanVec[i], 1,
+                     TemporalMeanMag, 1, TemporalMeanMag, 1);
+    }
+
+    Vmath::Vsqrt(npoints, TemporalMeanMag, 1, TemporalMeanMag, 1);
+
+    for (i = 0; i < spacedim; ++i)
+    {
+        Vmath::Vdiv(npoints, TemporalMeanVec[i], 1, TemporalMeanMag, 1, normTemporalMeanVec[i], 1);
+    }
+    // -----------------------------------------------------
+
+    //------------------------------------------------------
+    // Grab Noramls from first field - same for all fields - Compute the vector perpindicular
+    // to normTemporalMeanVec in plane
+    for (i = 0; i < spacedim; ++i)
+    {
+        normals[i] = m_fromField[0]->m_exp[i+4]->GetPhys();
+    }
+
+    // Cross Product
+    Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[0],1);
+    Vmath::Vvtvm(npoints,normals[1],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[0],1,
+                        normTemporalMeanPerp[0],1);
+
+    Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[1],1);
+    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[1],1,
+                        normTemporalMeanPerp[1],1);
+
+    Vmath::Vmul(npoints,normals[1],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[2],1);
+    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[2],1,
+                        normTemporalMeanPerp[2],1);
+
+    Vmath::Smul(npoints,-1.0,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1);
+
+    // Compute tawss, trs,  osi, taafi, tacfi, WSSG.
+    for (i = 0; i < nfld; ++i)
+    {
+        for (j = 0; j < spacedim; ++j)
+        {
+            shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
+        }
+        wss = m_fromField[i]->m_exp[3]->GetPhys();
+
+        for (j = 0; j < spacedim; ++j)
+        {
+            Vmath::Vvtvp(npoints, shear[j], 1, normTemporalMeanVec[j], 1,
+                         DotProduct, 1, DotProduct, 1);
+        }
+
+        //TAWSS
+        Vmath::Vadd(npoints, wss, 1, outfield[0], 1, outfield[0], 1);
+
+        //transWSS
+        for (j = 0; j < npoints; ++j)
+        {
+            temp[j] = wss[j]*wss[j] - DotProduct[j]*DotProduct[j];
+            if(temp[j] > 0.0)
+            {
+                outfield[1][j] = outfield[1][j] + sqrt(temp[j]);
+            }
+        }
+
+        //TAAFI
+        Vmath::Vdiv(npoints, DotProduct, 1, wss, 1, temp, 1);
+        Vmath::Vadd(npoints, temp, 1, outfield[3], 1, outfield[3], 1);
+
+        //TACFI
+        for (j = 0; j < npoints; ++j)
+        {
+            temp[j] = 1 - temp[j]*temp[j];
+            if(temp[j] > 0.0)
+            {
+                outfield[4][j] = outfield[4][j] + sqrt(temp[j]);
+            }
+        }
+
+        // WSSG
+        for(j = 0; j < spacedim; ++j)
+        {
+            Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanVec[j],1,
+                        Tm, 1, Tm, 1);
+            Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanPerp[j],1,
+                        Tn, 1, Tn, 1);
+        }
+
+        m_fromField[i]->m_exp[0]->PhysDeriv(Tm,dTm[0],dTm[1],dTm[2]);
+        m_fromField[i]->m_exp[0]->PhysDeriv(Tn,dTn[0],dTn[1],dTn[2]);
+
+        for(j = 0;j < spacedim; ++j)
+        {
+            Vmath::Vvtvp(npoints,dTm[j],1,normTemporalMeanVec[j],1,mdTm,1,mdTm,1);
+            Vmath::Vvtvp(npoints,dTn[j],1,normTemporalMeanPerp[j],1,ndTn,1,ndTn,1);
+        }
+
+        Vmath::Vmul(npoints,mdTm,1,mdTm,1,mdTm,1);
+        Vmath::Vvtvp(npoints,ndTn,1,ndTn,1,mdTm,1,WSSG,1);
+        Vmath::Vsqrt(npoints,WSSG,1,WSSG,1);
+        Vmath::Vadd(npoints, WSSG, 1, outfield[5], 1, outfield[5], 1);
+
+        Vmath::Zero(npoints, DotProduct,1);
+        Vmath::Zero(npoints, Tm,1);
+        Vmath::Zero(npoints, Tn,1);
+        Vmath::Zero(npoints, ndTn,1);
+        Vmath::Zero(npoints, mdTm,1);
+
+    }
+
+    //Divide by nfld
+    Vmath::Smul(npoints, 1.0/nfld, outfield[0], 1, outfield[0], 1);
+    Vmath::Smul(npoints, 1.0/nfld, outfield[1], 1, outfield[1], 1);
+    Vmath::Smul(npoints, 1.0/nfld, outfield[3], 1, outfield[3], 1);
+    Vmath::Smul(npoints, 1.0/nfld, outfield[4], 1, outfield[4], 1);
+    Vmath::Smul(npoints, 1.0/nfld, outfield[5], 1, outfield[5], 1);
+
+    //OSI
+    for (i = 0; i < npoints; ++i)
+    {
+        outfield[2][i] = 0.5 * (1 - TemporalMeanMag[i]/outfield[0][i]);
+    }
+
+    /* TAWSS = sum(wss)/nfld
+     * transWSS = sum( sqrt( wss^2 - (wss . normTempMean)^2) )/nfld.
+     * OSI = 0.5*(1-TemporalMeanMag/TAWSS)
+     * TAAFI = sum(cos)/nfld
+     * TACFI = sum(sin)/nfld = sum( sqrt(1-cos^2) )/nfld.
+     */
+
+    m_f->m_exp.resize(nout);
+    m_f->m_fielddef = m_fromField[0]->m_fielddef;
+    m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,true);
+
+    for(i = 1; i < nout; ++i)
+    {
+        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+    }
+
+    m_f->m_fielddef[0]->m_fields.resize(nout);
+    m_f->m_fielddef[0]->m_fields[0] = "TAWSS";
+    m_f->m_fielddef[0]->m_fields[1] = "transWSS";
+    m_f->m_fielddef[0]->m_fields[2] = "OSI";
+    m_f->m_fielddef[0]->m_fields[3] = "TAAFI";
+    m_f->m_fielddef[0]->m_fields[4] = "TACFI";
+    m_f->m_fielddef[0]->m_fields[5] = "|WSSG|";
+
+    for(i = 0; i < nout; ++i)
+    {
+        m_f->m_exp[i]->FwdTrans(outfield[i],
+                                m_f->m_exp[i]->UpdateCoeffs());
+        m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(),
+                                m_f->m_exp[i]->UpdatePhys());
+    }
+
+
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+        = m_fromField[0]->m_exp[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    for( i = 0; i < nout; ++i)
+    {
+        for ( j = 0; j < FieldDef.size(); ++j)
+        {
+            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
+            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
+        }
+    }
+
+    m_f->m_fielddef = FieldDef;
+    m_f->m_data     = FieldData;
+}
+
+}
 }

@@ -538,8 +538,6 @@ namespace Nektar
 
             if (Vmath::Vmin(pts, &jac[0], 1) < 0)
             {
-		NekDouble dumb = Vmath::Vmin(pts, &jac[0],1);
-		cout << dumb << '\n';
                 m_valid = false;
             }
         }

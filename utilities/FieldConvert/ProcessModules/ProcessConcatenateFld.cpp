@@ -39,7 +39,6 @@ using namespace std;
 
 #include "ProcessConcatenateFld.h"
 
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
@@ -47,6 +46,7 @@ namespace Nektar
 {
 namespace Utilities
 {
+
 ModuleKey ProcessConcatenateFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "concatenate"),
@@ -107,6 +107,7 @@ void ProcessConcatenateFld::Process(po::variables_map &vm)
     m_f->m_fielddef  = FieldDef;
     m_f->m_data = FieldData;
 }
+
 }
 }
 

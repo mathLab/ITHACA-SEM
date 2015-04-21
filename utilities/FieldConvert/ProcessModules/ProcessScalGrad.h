@@ -40,28 +40,29 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the scalar gradient field and
-         * writes it to a surface output file. 
-         */
-        class ProcessScalGrad : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessScalGrad>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessScalGrad(FieldSharedPtr f);
-            virtual ~ProcessScalGrad();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+namespace Utilities
+{
+
+/**
+ * @brief This processing module calculates the scalar gradient field and
+ * writes it to a surface output file.
+ */
+class ProcessScalGrad : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessScalGrad>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+
+        ProcessScalGrad(FieldSharedPtr f);
+        virtual ~ProcessScalGrad();
+
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+};
+}
 }
 
 #endif

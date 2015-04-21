@@ -40,28 +40,30 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the shear stress metrics and 
-         * writes it to a surface output file. 
-         */
-        class ProcessMultiShear : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessMultiShear>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessMultiShear(FieldSharedPtr f);
-            virtual ~ProcessMultiShear();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+namespace Utilities
+{
+
+/**
+ * @brief This processing module calculates the shear stress metrics and
+ * writes it to a surface output file.
+ */
+class ProcessMultiShear : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessMultiShear>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+
+        ProcessMultiShear(FieldSharedPtr f);
+        virtual ~ProcessMultiShear();
+
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+};
+
+}
 }
 
 #endif

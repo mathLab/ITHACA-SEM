@@ -40,40 +40,40 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
+namespace Utilities
+{
 
-        /**
-         * @brief This processing module interpolates one field to another 
-         */
-        class ProcessInterpField : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessInterpField(FieldSharedPtr f);
-            virtual ~ProcessInterpField();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
+/**
+ * @brief This processing module interpolates one field to another
+ */
+class ProcessInterpField : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-        private:
-            FieldSharedPtr m_fromField;
+        ProcessInterpField(FieldSharedPtr f);
+        virtual ~ProcessInterpField();
 
-            void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
-                                  vector<MultiRegions::ExpListSharedPtr> &field1,
-                                  Array<OneD, NekDouble>                  x,
-                                  Array<OneD, NekDouble>                  y,
-                                  Array<OneD, NekDouble>                  z,
-                                  NekDouble                               clamp_low,
-                                  NekDouble                               clamp_up,
-                                  NekDouble                               def_value);
-        };
-    }
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+
+    private:
+        FieldSharedPtr m_fromField;
+
+        void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
+                              vector<MultiRegions::ExpListSharedPtr> &field1,
+                              Array<OneD, NekDouble>                  x,
+                              Array<OneD, NekDouble>                  y,
+                              Array<OneD, NekDouble>                  z,
+                              NekDouble                               clamp_low,
+                              NekDouble                               clamp_up,
+                              NekDouble                               def_value);
+};
+}
 }
 
 #endif

@@ -46,24 +46,24 @@ namespace Utilities
 /// This processing module scales the input fld file
 class ProcessJacobianEnergy : public ProcessModule
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        {
+            return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-    ProcessJacobianEnergy(FieldSharedPtr f);
-    virtual ~ProcessJacobianEnergy();
+        ProcessJacobianEnergy(FieldSharedPtr f);
+        virtual ~ProcessJacobianEnergy();
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
 
-private:
+    private:
 };
-}
 
+}
 }
 
 #endif

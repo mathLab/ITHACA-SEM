@@ -40,28 +40,30 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module prints the L2 and LInf norms of the 
-         * variables in the field.
-         */
-        class ProcessPrintFldNorms : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessPrintFldNorms>
-                                        ::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            ProcessPrintFldNorms(FieldSharedPtr f);
-            virtual ~ProcessPrintFldNorms();
+/**
+ * @brief This processing module prints the L2 and LInf norms of the
+ * variables in the field.
+ */
+class ProcessPrintFldNorms : public ProcessModule
+{
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessPrintFldNorms>
+                                    ::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+        ProcessPrintFldNorms(FieldSharedPtr f);
+        virtual ~ProcessPrintFldNorms();
+
+        virtual void Process(po::variables_map &vm);
+};
+
+}
 }
 
 #endif

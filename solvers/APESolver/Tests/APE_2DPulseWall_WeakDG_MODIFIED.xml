@@ -348,9 +348,10 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-      <E VAR="U0" VALUE="0"/>
-      <E VAR="V0" VALUE="0"/>
-      <E VAR="P0" VALUE="Pinfinity"/>
+      <E VAR="u0" VALUE="0"/>
+      <E VAR="v0" VALUE="0"/>
+      <E VAR="p0" VALUE="Pinfinity"/>
+      <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
       <E VAR="S" VALUE="0"/>

@@ -358,8 +358,8 @@ namespace Nektar
                 return;
             }
   
-            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_bnd_dim);
-            for(int i = 0; i < m_bnd_dim; ++i)
+            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+            for(int i = 0; i < m_curl_dim; ++i)
             {
                 m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
                 for(int j = 0; j < m_curl_dim; ++j)
@@ -371,9 +371,9 @@ namespace Nektar
 
             if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
             {
-                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_bnd_dim);
+                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
 
-                for(int i = 0; i < m_bnd_dim; ++i)
+                for(int i = 0; i < m_curl_dim; ++i)
                 {
                     m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
                     for(int j = 0; j < m_curl_dim; ++j)
@@ -421,14 +421,14 @@ namespace Nektar
             UBndExp[i]   = m_fields[m_velocity[i]]->GetBndCondExpansions();
         }
 
-        Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
-        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_bnd_dim);
-        Array<OneD, Array<OneD, NekDouble> > nGradu(m_bnd_dim);
+        Array<OneD, Array<OneD, NekDouble> > BndValues(m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > nGradu   (m_curl_dim);
         Array<OneD, NekDouble > gradtmp (m_pressureBCsElmtMaxPts),
                                 fgradtmp(m_pressureBCsElmtMaxPts);
-
-        nGradu[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
-        for(int i = 0; i < m_bnd_dim; ++i)
+        
+        nGradu[0] = Array<OneD, NekDouble>(m_curl_dim*m_pressureBCsMaxPts);
+        for(int i = 0; i < m_curl_dim; ++i)
         {
             BndElmt[i]   = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,
                                                    0.0);
@@ -441,7 +441,7 @@ namespace Nektar
                 RollOver(m_PhyoutfVel[i]);
             }
         }
-
+            
         int nbc,cnt,cnt_start;
         int veloffset = 0;
         int  nint    = min(m_pressureCalls,m_intSteps);
@@ -513,7 +513,7 @@ namespace Nektar
                         // previously have obtained value from m_integrationSoln
                         Array<OneD, NekDouble> veltmp;
 
-                        for(int j = 0; j < m_bnd_dim; ++j)
+                        for(int j = 0; j < m_curl_dim; ++j)
                         {
                             Vmath::Vcopy(nq, &fields[m_velocity[j]][offset], 1,
                                          &BndElmt[j][0],                 1);
@@ -526,7 +526,7 @@ namespace Nektar
                     // for velocity on the outflow boundary in e3DH1D,
                     // we need to make a backward fourier transformation
                     // to get the physical coeffs at the outflow BCs.
-                    for(int j = 0; j < m_bnd_dim; ++j)
+                    for(int j = 0; j < m_curl_dim; ++j)
                     {
                         m_PBndExp[n]->HomogeneousBwdTrans(
                                 m_outflowVel[j][0],
@@ -585,6 +585,29 @@ namespace Nektar
                             Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
                                               normDotu,     1, normDotu,     1);
                         }
+                        
+                        // Here we should include the contribution from the z-velocity
+                        Array<OneD, NekDouble> tmp (m_pressureBCsMaxPts,0.0);
+                        // extrapolate velocity
+                        if(nint <= 1)
+                        {
+                            Vmath::Vcopy(nbc,
+                                        veltmp = m_PhyoutfVel[2][0] +veloffset, 1,
+                                        tmp,                           1);
+                        }
+                        else // only set up for 2nd order extrapolation
+                        {
+                            Vmath::Smul(nbc, 2.0,
+                                        veltmp = m_PhyoutfVel[2][0] + veloffset, 1,
+                                        tmp,                            1);
+                            Vmath::Svtvp(nbc, -1.0,
+                                        veltmp = m_PhyoutfVel[2][1] + veloffset, 1,
+                                        tmp,                            1,
+                                        tmp,                            1);
+                        }
+
+                        Vmath::Vvtvp(nbc,  tmp, 1,  tmp, 1,
+                                          utot, 1, utot, 1);
 
                         int Offset = m_PBndExp[n]->GetPhys_Offset(i);
 

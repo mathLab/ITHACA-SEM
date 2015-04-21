@@ -583,7 +583,7 @@ void ForcingMovingBody::TensionedCableModel(
               Array<OneD, NekDouble> &AeroForces,
               Array<OneD, NekDouble> &CableMotions)
 {  
-    std::string stype = m_session->GetSolverInfo("SupportType");
+    std::string supptype = m_session->GetSolverInfo("SupportType");
 
     bool homostrip;
     m_session->MatchSolverInfo("HomoStrip","True",homostrip,false);
@@ -694,14 +694,16 @@ void ForcingMovingBody::TensionedCableModel(
     if(colrank == 0)
     {
         // Implement Fourier transformation of the motion variables
-        if(stype == "FREE-FREE" || stype == "Free-Free")
+        if(supptype == "FREE-FREE" || 
+                        supptype == "Free-Free")
         {
             for(int j = 0 ; j < 4; ++j)
             {
                 m_FFT->FFTFwdTrans(fft_i[j], fft_o[j]);
             }
         }
-        else if(stype == "PINNED-PINNED" || stype == "Pinned-Pinned")
+        else if(supptype == "PINNED-PINNED" || 
+                            supptype == "Pinned-Pinned")
         {
             //TODO:
             int N = fft_i[0].num_elements();
@@ -761,14 +763,16 @@ void ForcingMovingBody::TensionedCableModel(
 
         // get physical coeffients via Backward fourier transformation of wave
         // coefficients
-        if(stype == "FREE-FREE" || stype == "Free-Free")
+        if(supptype == "FREE-FREE" || 
+                        supptype == "Free-Free")
         {
             for(int var = 0; var < 3; var++)
             {
                 m_FFT->FFTBwdTrans(fft_i[var], fft_o[var]);
             }
         }
-        else if(stype == "PINNED-PINNED" || stype == "Pinned-Pinned")
+        else if(supptype == "PINNED-PINNED" || 
+                            supptype == "Pinned-Pinned")
         {
             //TODO:
             int N = fft_i[0].num_elements();
@@ -1487,7 +1491,7 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
     // solve the ODE in the wave space for cable motion to obtain disp, vel and
     // accel
 
-    std::string stype = m_session->GetSolverInfo("SupportType");
+    std::string supptype = m_session->GetSolverInfo("SupportType");
 
     for(int plane = 0; plane < nplanes; plane++)
     {
@@ -1500,14 +1504,14 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
         unsigned int K;
         NekDouble beta;
 
-        if(stype == "FREE-FREE" || 
-                    stype == "Free-Free")
+        if(supptype == "FREE-FREE" || 
+                    supptype == "Free-Free")
         {
             K = plane/2;
             beta = 2.0 * M_PI/m_lhom;
         }
-        else if(stype == "PINNED-PINNED" || 
-                        stype == "Pinned-Pinned")
+        else if(supptype == "PINNED-PINNED" || 
+                        supptype == "Pinned-Pinned")
         {   
             K = plane+1;
             beta = M_PI/m_lhom;

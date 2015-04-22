@@ -322,12 +322,40 @@ class PhysDeriv_NoCollection : public Operator
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
 
             // calculate local derivatives
-            for (int i = 0; i < m_numElmt; ++i)
+            switch (m_expList[0]->GetShapeDimension())
             {
-                m_expList[i]->PhysDeriv(input + i*nPhys,
+                case 1:
+                {
+                    for (int i = 0; i < m_numElmt; ++i)
+                    {
+                        m_expList[i]->PhysDeriv(input + i*nPhys,
+                                        tmp0 = output0 + i*nPhys);
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    for (int i = 0; i < m_numElmt; ++i)
+                    {
+                        m_expList[i]->PhysDeriv(input + i*nPhys,
+                                        tmp0 = output0 + i*nPhys,
+                                        tmp1 = output1 + i*nPhys);
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    for (int i = 0; i < m_numElmt; ++i)
+                    {
+                        m_expList[i]->PhysDeriv(input + i*nPhys,
                                         tmp0 = output0 + i*nPhys,
                                         tmp1 = output1 + i*nPhys,
                                         tmp2 = output2 + i*nPhys);
+                    }
+                    break;
+                }
+                default:
+                    ASSERTL0(false, "Unknown dimension.");
             }
         }
 

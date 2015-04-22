@@ -112,16 +112,7 @@ namespace Nektar
             {
                 tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
 
-#if 0 
-                for (j = 0; j < nDim; ++j)
-                {
-                    fields[i]->IProductWRTDerivBase(j, fluxvector[i][j],
-                                                       outarray[i]);
-                    Vmath::Vadd(nCoeffs, outarray[i], 1, tmp[i], 1, tmp[i], 1);
-                }
-#else
                 fields[i]->IProductWRTDerivBase(fluxvector[i],tmp[i]);
-#endif
             }
 
             // Store forwards/backwards space along trace space

@@ -431,8 +431,8 @@ namespace Nektar
 
         void StdPrismExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-            Array<OneD,       NekDouble>& outarray,
-            bool multiplybyweights)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();

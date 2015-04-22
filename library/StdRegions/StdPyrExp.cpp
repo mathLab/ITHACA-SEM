@@ -549,8 +549,8 @@ namespace Nektar
 
         void StdPyrExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-            Array<OneD,       NekDouble>& outarray,
-            bool multiplybyweights)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             Array<OneD, NekDouble> wsp;
 

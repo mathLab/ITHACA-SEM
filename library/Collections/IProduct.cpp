@@ -32,6 +32,7 @@
 // Description: IProduct operators for multiple calls in different operators
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
 

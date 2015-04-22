@@ -2820,38 +2820,6 @@ namespace Nektar
                 }
             }
         }
-
-        int NoCaseStringCompare( const string & s1, const string& s2)
-        {
-            string::const_iterator it1=s1.begin();
-            string::const_iterator it2=s2.begin();
-
-            // Stop when either string's end has been reached
-            while ( (it1!=s1.end()) && (it2!=s2.end()) )
-            {
-                if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-                {
-                    // Return -1 to indicate smaller than, 1 otherwise
-                    return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
-                }
-
-                // Proceed to the next character in each string
-                ++it1;
-                ++it2;
-            }
-
-            size_t size1=s1.size();
-            size_t size2=s2.size();// cache lengths
-
-            // Return -1, 0 or 1 according to strings' lengths
-            if (size1==size2)
-            {
-                return 0;
-            }
-
-            return (size1 < size2) ? -1 : 1;
-        }
-
     } //end of namespace
 } //end of namespace
 

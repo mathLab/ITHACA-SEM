@@ -574,8 +574,8 @@ class BwdTrans_SumFac_Hex : public Operator
                 //loop over elements  and do bwd trans wrt c
                 for(int n = 0; n < m_numElmt; ++n)
                 {
-                    Blas::Dgemm('N', 'T', m_nquad2, m_nmodes0*m_nmodes1, m_nmodes2,
-                                1.0, m_base2.get(), m_nquad2,
+                    Blas::Dgemm('N', 'T', m_nquad2, m_nmodes0*m_nmodes1,
+                                m_nmodes2, 1.0, m_base2.get(), m_nquad2,
                                 &input[n*totmodes], m_nmodes0*m_nmodes1, 0.0,
                                 &wsp[n*m_nquad2], m_nquad2*m_numElmt);
                 }

@@ -453,7 +453,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(nquad);
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
             Array<OneD, const NekDouble> base =  m_base[0]->GetBdata();
-            
+
             if(multiplybyweights)
             {
                 Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);

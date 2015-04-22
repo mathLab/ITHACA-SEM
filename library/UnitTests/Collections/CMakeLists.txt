@@ -1,4 +1,3 @@
-
 SET(Sources
     main.cpp
     TestHexCollection.cpp

@@ -544,8 +544,8 @@ namespace Nektar
          */
         void StdTetExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-            Array<OneD,       NekDouble>& outarray,
-            bool multiplybyweights)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();

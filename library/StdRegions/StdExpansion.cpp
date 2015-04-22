@@ -1441,7 +1441,7 @@ namespace Nektar
             }
         
             void StdExpansion::v_MultiplyByStdQuadratureMetric(
-                                                           const Array<OneD, const NekDouble> &inarray,
+                    const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");

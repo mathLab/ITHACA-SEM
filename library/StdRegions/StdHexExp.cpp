@@ -396,8 +396,8 @@ namespace Nektar
          */
         void StdHexExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray,
-            bool multiplybyweights)
+                  Array<OneD,       NekDouble> &outarray,
+            bool                                multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -405,7 +405,7 @@ namespace Nektar
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + 
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) +
                                        order0*order1*nquad2);
 
             if(multiplybyweights)

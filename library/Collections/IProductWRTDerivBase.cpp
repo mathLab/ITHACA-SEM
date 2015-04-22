@@ -352,7 +352,8 @@ OperatorKey IProductWRTDerivBase_IterPerExp::m_typeArr[] = {
 
 
 /**
- * @brief Inner product WRT deriv base operator using LocalRegions implementation.
+ * @brief Inner product WRT deriv base operator using LocalRegions
+ * implementation.
  */
 class IProductWRTDerivBase_NoCollection : public Operator
 {
@@ -463,7 +464,8 @@ OperatorKey IProductWRTDerivBase_NoCollection::m_typeArr[] = {
 
 
 /**
- * @brief Inner product WRT deriv base operator using sum-factorisation (Segment)
+ * @brief Inner product WRT deriv base operator using sum-factorisation
+ * (Segment)
  */
 class IProductWRTDerivBase_SumFac_Seg : public Operator
 {
@@ -671,8 +673,10 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             wsp1   = wsp + 2*nmax;
 
 
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx + dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy + dphi/dxi_1 dxi_1/dy),in[1])
+            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
+            //                               dphi/dxi_1 dxi_1/dx),in[0])
+            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
+            //                               dphi/dxi_1 dxi_1/dy),in[1])
             //
             // Note dphi/dxi_0  =
             //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_1)
@@ -684,8 +688,8 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             // and so the full inner products are
             //
             // (dphi/dx,in[0]) + (dphi/dy,in[1])
-            //    = (dphi/deta_0, ((2/(1-eta_1) (dxi_0/dx in[0] + dxi_0/dy in[1])
-            //            + (1_eta_0)/(1-eta_1) (dxi_1/dx in[0] + dxi_1/dy in[1]))
+            //    = (dphi/deta_0, ((2/(1-eta_1) (dxi_0/dx in[0]+dxi_0/dy in[1])
+            //            + (1_eta_0)/(1-eta_1) (dxi_1/dx in[0]+dxi_1/dy in[1]))
             //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]))
 
             for(int i = 0; i < 2; ++i)
@@ -974,18 +978,26 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
             }
 
 
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx + dphi/dxi_1 dxi_1/dx + dphi/dxi_2 dxi_2/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy + dphi/dxi_1 dxi_1/dy + dphi/dxi_2 dxi_2/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz + dphi/dxi_1 dxi_1/dz + dphi/dxi_2 dxi_2/dz),in[1])
+            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
+            //                               dphi/dxi_1 dxi_1/dx +
+            //                               dphi/dxi_2 dxi_2/dx),in[0])
+            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
+            //                               dphi/dxi_1 dxi_1/dy +
+            //                               dphi/dxi_2 dxi_2/dy),in[1])
+            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
+            //                               dphi/dxi_1 dxi_1/dz +
+            //                               dphi/dxi_2 dxi_2/dz),in[1])
             //
             // Note dphi/dxi_0  =
             //             dphi/deta_0 4/((1-eta_1)(1-eta2))
             //
             //      dphi/dxi_1  =
-            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) + dphi/deta_1 2/(1-eta_2)
+            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) +
+            //             dphi/deta_1 2/(1-eta_2)
             //
             //      dphi/dxi_2  =
-            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) + dphi/deta_1 (1+eta_1)/(1-eta_2)  + dphi/deta_2
+            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) +
+            //             dphi/deta_1 (1+eta_1)/(1-eta_2)  + dphi/deta_2
             //
             // and so the full inner products are
             //
@@ -1198,9 +1210,12 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                 tmp[i] = wsp + i*nmax;
             }
 
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx + dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy + dphi/dxi_1 dxi_1/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz + dphi/dxi_1 dxi_1/dz),in[2])
+            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
+            //                               dphi/dxi_1 dxi_1/dx),in[0])
+            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
+            //                               dphi/dxi_1 dxi_1/dy),in[1])
+            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
+            //                               dphi/dxi_1 dxi_1/dz),in[2])
             //
             // Note dphi/dxi_0  =
             //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_2)
@@ -1212,12 +1227,14 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
             // and so the full inner products are
             //
             // (dphi/dx,in[0]) + (dphi/dy,in[1]) + (dphi/dz,in[2])
-            //    = (dphi/deta_0, ((2/(1-eta_2) (dxi_0/dx in[0] + dxi_0/dy in[1] + dxi_0/dz in[2]   )
-            //            + (1_eta_0)/(1-eta_2) (dxi_2/dx in[0] + dxi_2/dy in[1] + dxi_2/dz in[2] ))
-            //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1] + dxi_1/dz in[2]))
-            //    + (dphi/deta_2, (dxi_2/dx in[0] + dxi_2/dy in[1] + dxi_2/dz in[2]))
-
-
+            //    = (dphi/deta_0, ((2/(1-eta_2) (dxi_0/dx in[0] + dxi_0/dy in[1]
+            //                                               + dxi_0/dz in[2])
+            //            + (1_eta_0)/(1-eta_2) (dxi_2/dx in[0] + dxi_2/dy in[1]
+            //                                               + dxi_2/dz in[2] ))
+            //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]
+            //                                    + dxi_1/dz in[2]))
+            //    + (dphi/deta_2, (dxi_2/dx in[0] + dxi_2/dy in[1]
+            //                                    + dxi_2/dz in[2]))
 
             for(int i = 0; i < 3; ++i)
             {

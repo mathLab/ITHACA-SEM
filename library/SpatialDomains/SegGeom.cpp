@@ -241,7 +241,7 @@ namespace Nektar
 
             const Array<OneD, const NekDouble> jac = m_geomFactors->GetJac(v);
             
-            NekDouble len;
+            NekDouble len = 0.0;
             if(jac.num_elements() == 1)
             {
                 len = jac[0]*2.0;

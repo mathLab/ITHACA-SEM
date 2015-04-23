@@ -765,6 +765,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         }
 
 
+        StdRegions::StdExpansionSharedPtr SegExp::v_GetStdExp() const
+        {
+            return MemoryManager<StdRegions::StdSegExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey());
+        }
+
         int SegExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();

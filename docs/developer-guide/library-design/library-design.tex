@@ -352,6 +352,101 @@ Other classes:
 \label{f:library:localregions}
 \end{figure}
 
+\section{Collections}
+The Collections library contains optimised approaches to performing finite
+element operations on multiple elements. Typically, the geometric information is
+handled separately to the core reference operator, allowing the reference
+operator to be applied to elements stored in contiguous blocks of memory. While
+this does not necessarily reduce the operation count, data transfer from
+memory to CPU is often substantially reduced and the contiguous storage
+structures enable more efficient access, thereby reducing runtime.
+
+\subsection{Structure}
+The top-level container is the \texttt{Collection} class, which manages one or
+more LocalRegions objects of the same type (shape and basis). The
+\texttt{Operator} class generically describes an operation of these elements.
+Derived classes from \texttt{Operator} are created for each specific operation
+(e.g. BwdTrans, IProductWRTBase) on each element type. A factory pattern is used
+to instantiate the correct class using the key triple (shape, operator, impl).
+All classes relating to a particular operator are collated in a single .cpp
+file.
+
+An example template for a specific \texttt{Operator} class is as follows:
+\begin{lstlisting}[style=C++Style]
+class [[NAME]] : public Operator
+{
+    public:
+        OPERATOR_CREATE([[NAME]])
+
+        virtual ~[[NAME]]()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            [[IMPLEMENTATION]]
+        }
+
+    protected:
+        [[MEMBERS]]
+
+    private:
+        [[NAME]](
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+            [[INITIALISATION]]
+        }
+};
+\end{lstlisting}
+The placeholders in double square brackets should be replaced as follows:
+\begin{itemize}
+	\item \texttt{[[NAME]]}: The name of the class in the form
+	\begin{lstlisting}
+	<operation>_<impl>{_<shape>}
+	\end{lstlisting}
+	where the shape need only be included if the operator is shape-specific.
+	\item \texttt{[[MEMBERS]]}: Any member variables necessary to store precomputed
+	quantities and ensure computational efficiency.
+    \item \texttt{[[IMPLEMENTATION]]}: The code which actually computes the action
+    of the operator on the elements in the collection.
+	\item \texttt{[[INITIALIZATION]]}: Code to initialize member variables and
+	precomputed quantities.
+\end{itemize}
+
+\subsection{Instantiation}
+Operators are instantiated through the OperatorFactory. Therefore the operator
+classes must be registered with the factory during start-up. This is achieved
+using static initialisation with either the \texttt{m\_type} or
+\texttt{m\_typeArr}. The latter is shown in the following example:
+\begin{lstlisting}[style=C++Style]
+OperatorKey BwdTrans_StdMat::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment,       eBwdTrans, eStdMat,false),
+        BwdTrans_StdMat::create, "BwdTrans_StdMat_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle,      eBwdTrans, eStdMat,false),
+        BwdTrans_StdMat::create, "BwdTrans_StdMat_Tri"),
+    ...
+};
+\end{lstlisting}
+This instructs the factory to use the \texttt{BwdTrans\_StdMat} class for all
+shapes when performing a backward transform using the \texttt{StdMat} approach.
+In contrast, if the class is shape specific, the non-array member variable would
+be initialised, for example:
+\begin{lstlisting}[style=C++Style]
+OperatorKey BwdTrans_SumFac_Seg::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(
+        OperatorKey(eSegment, eBwdTrans, eSumFac, false),
+        BwdTrans_SumFac_Seg::create, "BwdTrans_SumFac_Seg");
+\end{lstlisting}
+
 \section{MultiRegions}
 In the MultiRegions library, all classes and routines are related to the
 process of assembling a global spectral/hp expansion out of local elemental

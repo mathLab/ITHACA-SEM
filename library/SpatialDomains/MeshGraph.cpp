@@ -1835,6 +1835,9 @@ namespace Nektar
                     if ( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
                          (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
                          (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
                          (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
                          (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
                          (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
@@ -2529,7 +2532,37 @@ namespace Nektar
             }
         }
 
+        /** 
+         * \brief Reset all points keys to have expansion order of \a
+         *  nmodes.  we keep the point distribution the same and make
+         *  the number of points the same difference from the number
+         *  of modes as the original expansion definition
+         */
+        void MeshGraph::SetExpansionsToPolyOrder(int nmodes)
+        {
+            ExpansionMapShPtrMapIter   it;
 
+            // iterate over all defined expansions
+            for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
+            {
+                ExpansionMapIter expIt;
+                
+                for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
+                {
+                    for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
+                    {
+                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i]; 
+                        
+                        int npts = nmodes + (bkeyold.GetNumPoints() - bkeyold.GetNumModes());
+                        
+                        const LibUtilities::PointsKey pkey(npts,bkeyold.GetPointsType());
+                        LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),nmodes, pkey);
+                        expIt->second->m_basisKeyVector[i] = bkeynew; 
+                        
+                    }
+                }
+            }
+        }
 
         /**
          * For each element of shape given by \a shape in field \a

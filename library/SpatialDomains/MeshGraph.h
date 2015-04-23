@@ -306,7 +306,11 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
                                                         int npoints = 0);
 
+                /// Reset expansion to have specified polynomial order \a nmodes
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToPolyOrder(int nmodes);
+
                 /// This function sets the expansion #exp in map with entry #variable
+
                 inline void SetExpansions(
                         const std::string variable,
                         ExpansionMapShPtr &exp);

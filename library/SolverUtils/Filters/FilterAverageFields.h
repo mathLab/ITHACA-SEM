@@ -61,7 +61,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT FilterAverageFields(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterAverageFields();
+            SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
 
         protected:
             virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);

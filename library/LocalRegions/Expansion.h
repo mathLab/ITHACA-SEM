@@ -55,13 +55,13 @@ namespace Nektar
 
         enum MetricType
         {
-            MetricLaplacian00,
-            MetricLaplacian01,
-            MetricLaplacian02,
-            MetricLaplacian11,
-            MetricLaplacian12,
-            MetricLaplacian22,
-            MetricQuadrature
+            eMetricLaplacian00,
+            eMetricLaplacian01,
+            eMetricLaplacian02,
+            eMetricLaplacian11,
+            eMetricLaplacian12,
+            eMetricLaplacian22,
+            eMetricQuadrature
         };
 
         // type defines for use of PrismExp in a boost vector

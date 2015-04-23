@@ -167,12 +167,12 @@ namespace Nektar
         {
             const int nqtot = GetTotPoints();
 
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
 
-            Vmath::Vmul(nqtot, m_metrics[MetricQuadrature], 1, inarray, 1, outarray, 1);
+            Vmath::Vmul(nqtot, m_metrics[eMetricQuadrature], 1, inarray, 1, outarray, 1);
         }
 
         void Expansion::ComputeLaplacianMetric()
@@ -188,15 +188,15 @@ namespace Nektar
             if (type == SpatialDomains::eRegular ||
                    type == SpatialDomains::eMovingRegular)
             {
-                m_metrics[MetricQuadrature] = Array<OneD, NekDouble>(nqtot, m_metricinfo->GetJac(p)[0]);
+                m_metrics[eMetricQuadrature] = Array<OneD, NekDouble>(nqtot, m_metricinfo->GetJac(p)[0]);
             }
             else
             {
-                m_metrics[MetricQuadrature] = m_metricinfo->GetJac(p);
+                m_metrics[eMetricQuadrature] = m_metricinfo->GetJac(p);
             }
 
-            MultiplyByStdQuadratureMetric(m_metrics[MetricQuadrature],
-                                                   m_metrics[MetricQuadrature]);
+            MultiplyByStdQuadratureMetric(m_metrics[eMetricQuadrature],
+                                                   m_metrics[eMetricQuadrature]);
         }
 
         void Expansion::v_GetCoords(

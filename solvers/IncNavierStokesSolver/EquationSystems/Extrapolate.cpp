@@ -212,7 +212,7 @@ namespace Nektar
         for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
         {
             /// Casting the boundary expansion to the specific case
-            Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
+            Pbc = boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
                         (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
                             ->GetExp(m_HBCdata[j].m_bndElmtOffset));
 

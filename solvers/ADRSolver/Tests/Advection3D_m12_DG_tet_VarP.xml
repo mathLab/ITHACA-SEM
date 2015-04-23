@@ -380,5 +380,19 @@
       <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
     </FUNCTION>
   </CONDITIONS>
+    <COLLECTIONS>
+        <OPERATOR TYPE="BwdTrans">
+            <ELEMENT TYPE="A" ORDER="6-16" IMPTYPE="SumFac" />
+        </OPERATOR>
+        <OPERATOR TYPE="IProductWRTBase">
+            <ELEMENT TYPE="A" ORDER="6-16" IMPTYPE="SumFac" />
+        </OPERATOR>
+        <OPERATOR TYPE="PhysDeriv">
+            <ELEMENT TYPE="A" ORDER="6-16" IMPTYPE="SumFac" />
+        </OPERATOR>
+        <OPERATOR TYPE="IProductWRTDerivBase">
+            <ELEMENT TYPE="A" ORDER="6-16" IMPTYPE="SumFac" />
+        </OPERATOR>
+     </COLLECTIONS>
 </NEKTAR>
 

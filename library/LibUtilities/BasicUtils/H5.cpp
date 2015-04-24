@@ -56,21 +56,148 @@ namespace Nektar
             {
             }
 
+            PList::PList() :
+                    Object(H5P_DEFAULT)
+            {
+            }
+            PList::PList(hid_t cls) :
+                    Object()
+            {
+                H5_CONSTRUCT(m_Id, H5Pcreate, (cls));
+            }
+            PList::~PList()
+            {
+                Close();
+            }
+            void PList::Close()
+            {
+                H5_CALL(H5Pclose, (m_Id));
+                m_Id = H5I_INVALID_HID;
+            }
+
+            /// Properties for object creation
+            PListSharedPtr PList::ObjectCreate()
+            {
+                return PListSharedPtr(new PList(H5P_OBJECT_CREATE));
+            }
+
+            /// Properties for file creation
+            PListSharedPtr PList::FileCreate()
+            {
+                return PListSharedPtr(new PList(H5P_FILE_CREATE));
+            }
+
+            /// Properties for file access
+            PListSharedPtr PList::FileAccess()
+            {
+                return PListSharedPtr(new PList(H5P_FILE_ACCESS));
+            }
+
+            /// Properties for dataset creation
+            PListSharedPtr PList::DatasetCreate()
+            {
+                return PListSharedPtr(new PList(H5P_DATASET_CREATE));
+            }
+
+            /// Properties for dataset access
+            PListSharedPtr PList::DatasetAccess()
+            {
+                return PListSharedPtr(new PList(H5P_DATASET_ACCESS));
+            }
+
+            /// Properties for raw data transfer
+            PListSharedPtr PList::DatasetXfer()
+            {
+                return PListSharedPtr(new PList(H5P_DATASET_XFER));
+            }
+
+            /// Properties for file mounting
+            PListSharedPtr PList::FileMount()
+            {
+                return PListSharedPtr(new PList(H5P_FILE_MOUNT));
+            }
+
+            /// Properties for group creation
+            PListSharedPtr PList::GroupCreate()
+            {
+                return PListSharedPtr(new PList(H5P_GROUP_CREATE));
+            }
+
+            /// Properties for group access
+            PListSharedPtr PList::GroupAccess()
+            {
+                return PListSharedPtr(new PList(H5P_GROUP_ACCESS));
+            }
+
+            /// Properties for datatype creation
+            PListSharedPtr PList::DatatypeCreate()
+            {
+                return PListSharedPtr(new PList(H5P_DATATYPE_CREATE));
+            }
+
+            /// Properties for datatype access
+            PListSharedPtr PList::DatatypeAccess()
+            {
+                return PListSharedPtr(new PList(H5P_DATATYPE_ACCESS));
+            }
+
+            /// Properties for character encoding when encoding strings or object names
+            PListSharedPtr PList::StringCreate()
+            {
+                return PListSharedPtr(new PList(H5P_STRING_CREATE));
+            }
+
+            /// Properties for attribute creation
+            PListSharedPtr PList::AttributeCreate()
+            {
+                return PListSharedPtr(new PList(H5P_ATTRIBUTE_CREATE));
+            }
+
+            /// Properties governing the object copying process
+            PListSharedPtr PList::ObjectCopy()
+            {
+                return PListSharedPtr(new PList(H5P_OBJECT_COPY));
+            }
+
+            /// Properties governing link creation
+            PListSharedPtr PList::LinkCreate()
+            {
+                return PListSharedPtr(new PList(H5P_LINK_CREATE));
+            }
+
+            /// Properties governing link traversal when accessing objects
+            PListSharedPtr PList::LinkAccess()
+            {
+                return PListSharedPtr(new PList(H5P_LINK_ACCESS));
+            }
+            void PList::SetChunk(const std::vector<hsize_t>& dims)
+            {
+                H5_CALL(H5Pset_chunk, (m_Id, dims.size(), &dims[0]));
+            }
+            void PList::SetDeflate(const unsigned level)
+            {
+                H5_CALL(H5Pset_deflate, (m_Id, level))
+            }
+
             GroupSharedPtr CanHaveGroupsDataSets::CreateGroup(
-                    const std::string& name)
+                    const std::string& name, PListSharedPtr createPL,
+                    PListSharedPtr accessPL)
             {
                 hid_t grp;
                 H5_CONSTRUCT(grp, H5Gcreate,
-                        (m_Id, name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
+                        (m_Id, name.c_str(), H5P_DEFAULT, createPL->GetId(), accessPL->GetId()));
                 GroupSharedPtr ans(new Group(grp));
                 return ans;
             }
 
             DataSetSharedPtr CanHaveGroupsDataSets::CreateDataSet(
                     const std::string& name, DataTypeSharedPtr type,
-                    DataSpaceSharedPtr space)
+                    DataSpaceSharedPtr space, PListSharedPtr createPL,
+                    PListSharedPtr accessPL)
             {
-                DataSetSharedPtr ans(new DataSet(GetId(), name, type, space));
+                DataSetSharedPtr ans(
+                        new DataSet(GetId(), name, type, space, createPL,
+                                accessPL));
                 return ans;
             }
 
@@ -81,22 +208,6 @@ namespace Nektar
                 AttributeSharedPtr ans(
                         new Attribute(GetId(), name, type, space));
                 return ans;
-            }
-
-            template<>
-            void CanHaveAttributes::SetAttribute<std::string>(
-                    const std::string& name,
-                    const std::vector<std::string>& value)
-            {
-                DataTypeSharedPtr type = DataType::String();
-                DataSpaceSharedPtr space = DataSpace::OneD(value.size());
-                AttributeSharedPtr attr = CreateAttribute(name, type, space);
-                std::vector<const char*> vals(value.size(), NULL);
-                for (size_t i = 0; i < value.size(); ++i)
-                    vals[i] = value[i].c_str();
-
-                H5_CALL(H5Awrite, (attr->GetId(), type->GetId(), &vals[0]));
-
             }
 
             DataSpaceSharedPtr DataSpace::Null()
@@ -211,7 +322,8 @@ namespace Nektar
             const hid_t DataTypeTraits<int>::NativeType = H5T_NATIVE_INT;
 
             template<>
-            const hid_t DataTypeTraits<unsigned int>::NativeType = H5T_NATIVE_UINT;
+            const hid_t DataTypeTraits<unsigned int>::NativeType =
+                    H5T_NATIVE_UINT;
 
             template<>
             const hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
@@ -233,10 +345,11 @@ namespace Nektar
                 m_Id = H5I_INVALID_HID;
             }
 
-            File::File(const std::string& filename, unsigned mode)
+            File::File(const std::string& filename, unsigned mode,
+                    PListSharedPtr createPL, PListSharedPtr accessPL)
             {
                 H5_CONSTRUCT(m_Id, H5Fcreate,
-                        (filename.c_str(), mode, H5P_DEFAULT, H5P_DEFAULT));
+                        (filename.c_str(), mode, createPL->GetId(), accessPL->GetId()));
             }
 
             File::~File()
@@ -267,10 +380,11 @@ namespace Nektar
             }
 
             DataSet::DataSet(hid_t parent, const std::string& name,
-                    DataTypeSharedPtr type, DataSpaceSharedPtr space)
+                    DataTypeSharedPtr type, DataSpaceSharedPtr space,
+                    PListSharedPtr createPL, PListSharedPtr accessPL)
             {
                 H5_CONSTRUCT(m_Id, H5Dcreate,
-                        (parent, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
+                        (parent, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, createPL->GetId(), accessPL->GetId()));
             }
 
             DataSet::~DataSet()

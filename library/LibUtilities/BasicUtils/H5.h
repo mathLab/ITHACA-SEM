@@ -41,6 +41,7 @@
 #include <vector>
 #include <hdf5.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -75,6 +76,8 @@ namespace Nektar
             typedef boost::shared_ptr<File> FileSharedPtr;
             class DataSet;
             typedef boost::shared_ptr<DataSet> DataSetSharedPtr;
+            class PList;
+            typedef boost::shared_ptr<PList> PListSharedPtr;
 
             /// HDF5 base class
             class Object : public boost::enable_shared_from_this<Object>
@@ -98,16 +101,70 @@ namespace Nektar
                     hid_t m_Id;
             };
 
+            // PropertyList objects
+            class PList : public Object
+            {
+                public:
+                    PList();
+                    ~PList();
+                    void Close();
+                    void SetChunk(const std::vector<hsize_t>& dims);
+                    void SetDeflate(const unsigned level = 1);
+                    ///Properties for object creation
+                    static PListSharedPtr ObjectCreate();
+                    ///Properties for file creation
+                    static PListSharedPtr FileCreate();
+                    ///Properties for file access
+                    static PListSharedPtr FileAccess();
+                    ///Properties for dataset creation
+                    static PListSharedPtr DatasetCreate();
+                    ///Properties for dataset access
+                    static PListSharedPtr DatasetAccess();
+                    ///Properties for raw data transfer
+                    static PListSharedPtr DatasetXfer();
+                    ///Properties for file mounting
+                    static PListSharedPtr FileMount();
+                    ///Properties for group creation
+                    static PListSharedPtr GroupCreate();
+                    ///Properties for group access
+                    static PListSharedPtr GroupAccess();
+                    ///Properties for datatype creation
+                    static PListSharedPtr DatatypeCreate();
+                    ///Properties for datatype access
+                    static PListSharedPtr DatatypeAccess();
+                    ///Properties for character encoding when encoding strings or object names
+                    static PListSharedPtr StringCreate();
+                    ///Properties for attribute creation
+                    static PListSharedPtr AttributeCreate();
+                    ///Properties governing the object copying process
+                    static PListSharedPtr ObjectCopy();
+                    ///Properties governing link creation
+                    static PListSharedPtr LinkCreate();
+                    ///Properties governing link traversal when accessing objects
+                    static PListSharedPtr LinkAccess();
+
+                private:
+                    PList(hid_t cls);
+            };
+
             /// Mixin for objects that contain groups and datasets (Group and File)
             class CanHaveGroupsDataSets : public virtual Object
             {
                 public:
-                    GroupSharedPtr CreateGroup(const std::string& name);
+                    // Create a group with the given name. The createPL can be
+                    // omitted to use the default properties.
+                    GroupSharedPtr CreateGroup(const std::string& name, PListSharedPtr createPL = boost::make_shared<PList>(), PListSharedPtr accessPL = boost::make_shared<PList>());
+
+                    // Create a dataset with the name, type and space.
+                    // The createPL can be omitted to use the defaults.
                     DataSetSharedPtr CreateDataSet(const std::string& name,
-                            DataTypeSharedPtr type, DataSpaceSharedPtr space);
+                            DataTypeSharedPtr type, DataSpaceSharedPtr space, PListSharedPtr createPL = boost::make_shared<PList>(), PListSharedPtr accessPL = boost::make_shared<PList>());
+
+                    // Create a dataset containing the data supplied
+                    // The createPL can be omitted to use the defaults
                     template<class T>
                     DataSetSharedPtr CreateWriteDataSet(const std::string& name,
-                            const std::vector<T>& data);
+                            const std::vector<T>& data, PListSharedPtr createPL = boost::make_shared<PList>(), PListSharedPtr accessPL = boost::make_shared<PList>());
             };
 
             /// Mixin for objects that can have attributes (Group, DataSet, DataType)
@@ -141,10 +198,17 @@ namespace Nektar
                     void Close();
             };
 
+            // Policy class for the DataTypesTraits controlling whether data
+            // has to be converted in anyway before writing. (It could perhaps
+            // be DataTypeTraitsTraits but that's too horrible a name.)
+            //
+            // Default policy is to not convert at all.
             template<class T>
             struct DataTypeConversionPolicy
             {
+                    static const bool MustConvert = false;
                     typedef const T& ConvertedType;
+                    typedef T ConvertedVectorElemType;
                     static ConvertedType Convert(const T& obj);
             };
 
@@ -215,7 +279,7 @@ namespace Nektar
             class File : public CanHaveGroupsDataSets
             {
                 public:
-                    File(const std::string& filename, unsigned mode);
+                    File(const std::string& filename, unsigned mode, PListSharedPtr createPL = boost::make_shared<PList>(), PListSharedPtr accessPL = boost::make_shared<PList>());
                     ~File();
                     void Close();
 
@@ -248,10 +312,9 @@ namespace Nektar
 
                 private:
                     DataSet(hid_t parent, const std::string& name,
-                            DataTypeSharedPtr type, DataSpaceSharedPtr space);
+                            DataTypeSharedPtr type, DataSpaceSharedPtr space, PListSharedPtr createPL, PListSharedPtr accessPL);
                     friend class CanHaveGroupsDataSets;
-            }
-            ;
+            };
 
         }
     }

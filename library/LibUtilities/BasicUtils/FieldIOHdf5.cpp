@@ -126,8 +126,7 @@ namespace Nektar
                     elemGroupName = nameSS.str();
                 }
 
-                // Write the actual field data
-                H5::DataSetSharedPtr elemTag = root->CreateWriteDataSet(elemGroupName, fielddata[f]);
+                H5::GroupSharedPtr elemTag = root->CreateGroup(elemGroupName);
                 // Write FIELDS
                 // i.e. m_fields is a vector<string> (variable length)
                 elemTag->SetAttribute("FIELDS", fielddefs[f]->m_fields);
@@ -216,14 +215,21 @@ namespace Nektar
                 }
                 elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
 
+                // Configure for compression.
+                // This requires chunking - arbitrarily pick 1024 elements
+                H5::PListSharedPtr zip = H5::PList::DatasetCreate();
+                std::vector<hsize_t> chunk;
+                chunk.push_back(std::min(size_t(1024), fielddata[f].size()));
+                zip->SetChunk(chunk);
+                // Higher compression levels will reduce filesize at the cost
+                // increasing time.
+                zip->SetDeflate(1);
+
+                // Write the actual field data
+                elemTag->CreateWriteDataSet("DATA", fielddata[f], zip);
+
                 // Write ID
-                // Should promote this to a data set with appropriate compression and then reference it in the ID attribute
-                std::string idString;
-                {
-                    std::stringstream idStringStream;
-                    GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
-                }
-                elemTag->SetAttribute("ID", idString);
+                elemTag->CreateWriteDataSet("ID", fielddefs[f]->m_elementIDs);
             }
             // Destruction of the H5::File and Group objects closes them. Yay RAII
         }

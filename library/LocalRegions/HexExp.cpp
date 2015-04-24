@@ -706,7 +706,6 @@ namespace Nektar
                     {
                         outarray[i] = i;
                     }
-                    
                     break;
                 case 1:
                     nq0 = nquad0;
@@ -774,7 +773,6 @@ namespace Nektar
                     {
                         outarray[i] = i*nquad0;
                     }
-                    
                     break;
                 case 5:
                     nq0 = nquad0;
@@ -790,7 +788,6 @@ namespace Nektar
                     {
                         outarray[i] = nquad0*nquad1*(nquad2-1) + i;
                     }
-                    
                     break;
                 default:
                     ASSERTL0(false,"face value (> 5) is out of range");
@@ -910,6 +907,7 @@ namespace Nektar
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
+                Array<OneD, NekDouble> faceJac(nqe);
                 Array<OneD, NekDouble> normals(vCoordDim*nqe,0.0);
 
                 // Extract Jacobian along face and recover local
@@ -923,6 +921,7 @@ namespace Nektar
                             normals[j]       = -df[2][j]*jac[j];
                             normals[nqe+j]   = -df[5][j]*jac[j];
                             normals[2*nqe+j] = -df[8][j]*jac[j];
+                            faceJac[j]       = jac[j];
                         }
 
                         points0 = ptsKeys[0];
@@ -937,6 +936,7 @@ namespace Nektar
                                 normals[j+k*nqe0]       = -df[1][idx]*jac[idx];
                                 normals[nqe+j+k*nqe0]   = -df[4][idx]*jac[idx];
                                 normals[2*nqe+j+k*nqe0] = -df[7][idx]*jac[idx];
+                                faceJac[j+k*nqe0]       = jac[idx];
                             }
                         }
                         points0 = ptsKeys[0];
@@ -948,9 +948,10 @@ namespace Nektar
                             for(k = 0; k < nqe2; ++k)
                             {
                                 int idx = nqe0-1+nqe0*j+nqe01*k;
-                                normals[j+k*nqe0]       = df[0][idx]*jac[idx];
-                                normals[nqe+j+k*nqe0]   = df[3][idx]*jac[idx];
-                                normals[2*nqe+j+k*nqe0] = df[6][idx]*jac[idx];
+                                normals[j+k*nqe1]       = df[0][idx]*jac[idx];
+                                normals[nqe+j+k*nqe1]   = df[3][idx]*jac[idx];
+                                normals[2*nqe+j+k*nqe1] = df[6][idx]*jac[idx];
+                                faceJac[j+k*nqe1]       = jac[idx];
                             }
                         }
                         points0 = ptsKeys[1];
@@ -965,20 +966,22 @@ namespace Nektar
                                 normals[j+k*nqe0]       = df[1][idx]*jac[idx];
                                 normals[nqe+j+k*nqe0]   = df[4][idx]*jac[idx];
                                 normals[2*nqe+j+k*nqe0] = df[7][idx]*jac[idx];
+                                faceJac[j+k*nqe0]       = jac[idx];
                             }
                         }
                         points0 = ptsKeys[0];
                         points1 = ptsKeys[2];
                         break;
                     case 4:
-                        for (j = 0; j < nqe0; ++j)
+                        for (j = 0; j < nqe1; ++j)
                         {
                             for(k = 0; k < nqe2; ++k)
                             {
                                 int idx = j*nqe0+nqe01*k;
-                                normals[j+k*nqe0]       = -df[0][idx]*jac[idx];
-                                normals[nqe+j+k*nqe0]   = -df[3][idx]*jac[idx];
-                                normals[2*nqe+j+k*nqe0] = -df[6][idx]*jac[idx];
+                                normals[j+k*nqe1]       = -df[0][idx]*jac[idx];
+                                normals[nqe+j+k*nqe1]   = -df[3][idx]*jac[idx];
+                                normals[2*nqe+j+k*nqe1] = -df[6][idx]*jac[idx];
+                                faceJac[j+k*nqe1]       = jac[idx];
                             }
                         }
                         points0 = ptsKeys[1];
@@ -991,6 +994,7 @@ namespace Nektar
                             normals[j]       = df[2][idx]*jac[idx];
                             normals[nqe+j]   = df[5][idx]*jac[idx];
                             normals[2*nqe+j] = df[8][idx]*jac[idx];
+                            faceJac[j]       = jac[idx];
                         }
                         points0 = ptsKeys[0];
                         points1 = ptsKeys[1];
@@ -1001,7 +1005,7 @@ namespace Nektar
 
                 Array<OneD, NekDouble> work   (nq_face, 0.0);
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0, points1, jac,
+                LibUtilities::Interp2D(points0, points1, faceJac,
                                        tobasis0.GetPointsKey(),
                                        tobasis1.GetPointsKey(),
                                        work);

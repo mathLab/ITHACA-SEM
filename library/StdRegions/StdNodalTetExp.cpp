@@ -230,8 +230,8 @@ namespace Nektar
         
         void StdNodalTetExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD,       NekDouble>& outarray,
-            bool multiplybyweights)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
             NodalToModalTranspose(outarray,outarray);    

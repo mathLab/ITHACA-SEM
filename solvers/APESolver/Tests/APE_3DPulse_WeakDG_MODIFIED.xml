@@ -1352,10 +1352,10 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="p" TYPE="MODIFIED"/>
-    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u" TYPE="MODIFIED"/>
-    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="v" TYPE="MODIFIED"/>
-    <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="w" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="p" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="v" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="w" TYPE="MODIFIED"/>
   </EXPANSIONS>
   <CONDITIONS>
     <SOLVERINFO>
@@ -1381,9 +1381,8 @@
       <V ID="3"> w </V>
     </VARIABLES>
     <BOUNDARYREGIONS>
-      <B ID="0"> C[1,2,3,4,5]  </B>
-      <B ID="1"> C[6]  </B>
-    </BOUNDARYREGIONS>
+      <B ID="0"> C[1,2,3,4,5,6]  </B>
+      </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="p" VALUE="0"/>
@@ -1391,18 +1390,13 @@
         <D VAR="v" VALUE="0"/>
         <D VAR="w" VALUE="0"/>
       </REGION>
-      <REGION REF="1">
-        <D VAR="p" USERDEFINEDTYPE="Wall" VALUE="0" />
-        <D VAR="u" USERDEFINEDTYPE="Wall" VALUE="0" />
-        <D VAR="v" USERDEFINEDTYPE="Wall" VALUE="0" />
-        <D VAR="w" USERDEFINEDTYPE="Wall" VALUE="0" />
-      </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-      <E VAR="U0" VALUE="0"/>
-      <E VAR="V0" VALUE="0"/>
-      <E VAR="W0" VALUE="0"/>
-      <E VAR="P0" VALUE="Pinfinity"/>
+      <E VAR="u0" VALUE="0"/>
+      <E VAR="v0" VALUE="0"/>
+      <E VAR="w0" VALUE="0"/>
+      <E VAR="p0" VALUE="Pinfinity"/>
+      <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
       <E VAR="S" VALUE="0"/>

@@ -2,9 +2,9 @@
 <test>
     <description>desc P=10</description>
     <executable>APESolver</executable>
-    <parameters>APE_2DPulseAdv_FRDG_MODIFIED.xml</parameters>
+    <parameters>APE_2DPulseAdv_WeakDG_MODIFIED.xml</parameters>
     <files>
-        <file description="Session File">APE_2DPulseAdv_FRDG_MODIFIED.xml</file>
+        <file description="Session File">APE_2DPulseAdv_WeakDG_MODIFIED.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

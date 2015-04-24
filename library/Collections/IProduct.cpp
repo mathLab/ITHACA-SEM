@@ -32,6 +32,7 @@
 // Description: IProduct operators for multiple calls in different operators
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
 
@@ -39,6 +40,10 @@ namespace Nektar
 {
 namespace Collections
 {
+
+/**
+ *
+ */
 void QuadIProduct(bool colldir0, bool colldir1, int numElmt,
                   int  nquad0,   int  nquad1,
                   int  nmodes0,  int  nmodes1,
@@ -121,6 +126,10 @@ void QuadIProduct(bool colldir0, bool colldir1, int numElmt,
     }
 }
 
+
+/**
+ *
+ */
 void TriIProduct(bool sortTopVertex, int numElmt, int  nquad0,
                  int nquad1, int nmodes0, int  nmodes1,
                  const Array<OneD, const NekDouble> &base0,
@@ -130,7 +139,8 @@ void TriIProduct(bool sortTopVertex, int numElmt, int  nquad0,
                  Array<OneD, NekDouble> &output,
                  Array<OneD, NekDouble> &wsp)
 {
-    int totmodes  = LibUtilities::StdTriData::getNumberOfCoefficients(nmodes0,nmodes1);
+    int totmodes  = LibUtilities::StdTriData::getNumberOfCoefficients(
+                                                    nmodes0, nmodes1);
     int totpoints = nquad0*nquad1;
 
     Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
@@ -144,9 +154,10 @@ void TriIProduct(bool sortTopVertex, int numElmt, int  nquad0,
     // Inner product with respect to 'b' direction
     for (mode=i=0; i < nmodes0; ++i)
     {
-        Blas::Dgemm('T','N',nmodes1-i,numElmt,nquad1,1.0,base1.get()+mode*nquad1,
-                    nquad1,wsp1.get() + i*nquad1*numElmt,nquad1,
-                    0.0, &output[mode],totmodes);
+        Blas::Dgemm('T', 'N', nmodes1-i, numElmt,  nquad1,
+                    1.0, base1.get()+mode*nquad1,  nquad1,
+                    wsp1.get() + i*nquad1*numElmt, nquad1, 0.0,
+                    &output[mode], totmodes);
 
         mode += nmodes1 - i;
     }
@@ -160,6 +171,9 @@ void TriIProduct(bool sortTopVertex, int numElmt, int  nquad0,
 }
 
 
+/**
+ *
+ */
 void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt,
                  int  nquad0,   int  nquad1,  int nquad2,
                  int  nmodes0,  int  nmodes1, int nmodes2,
@@ -186,7 +200,10 @@ void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt,
 
         // Assign second half of workspace for 2nd DGEMM operation.
         Array<OneD, NekDouble> wsp1 = wsp  + totpoints*numElmt;
-        if(numElmt < nmodes0 || 1) // note sure what criterion we should use to swap around these strategies
+
+        // note sure what criterion we should use to swap around these
+        // strategies
+        if(numElmt < nmodes0 || 1)
         {
             Array<OneD, NekDouble> wsp2 = wsp1 + nmodes0*nquad1*nquad2;
 
@@ -248,7 +265,8 @@ void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt,
         }
         else
         {
-            Array<OneD, NekDouble> wsp2 = wsp1 + numElmt*(max(totpoints,totmodes));
+            Array<OneD, NekDouble> wsp2 = wsp1 + numElmt*(max(totpoints,
+                                                              totmodes));
 
             if(colldir0)
             {
@@ -294,14 +312,16 @@ void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt,
                 }
                 else
                 {
-                    Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2, nquad2,
-                                1.0, &wsp2[0],  nquad2,  base2.get(),   nquad2,
-                                0.0, &wsp1[0],  numElmt*nmodes0*nmodes1);
+                    Blas::Dgemm('T', 'N', numElmt*nmodes0*nmodes1, nmodes2,
+                                nquad2, 1.0, &wsp2[0],  nquad2,
+                                base2.get(),   nquad2, 0.0,
+                                &wsp1[0],  numElmt*nmodes0*nmodes1);
                 }
 
                 for(int i = 0; i < totmodes; ++i)
                 {
-                    Vmath::Vcopy(numElmt,&wsp1[i*numElmt],1,&output[i],totmodes);
+                    Vmath::Vcopy(numElmt, &wsp1[i*numElmt], 1,
+                                          &output[i],       totmodes);
                 }
 
             }
@@ -317,9 +337,10 @@ void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt,
                 }
                 else
                 {
-                    Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2, nquad2,
-                                1.0, &wsp2[0],  nquad2,  base2.get(),   nquad2,
-                                0.0, &output[0],  numElmt*nmodes0*nmodes1);
+                    Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2,
+                                nquad2, 1.0, &wsp2[0],  nquad2,
+                                base2.get(),   nquad2, 0.0,
+                                &output[0],  numElmt*nmodes0*nmodes1);
                 }
             }
         }
@@ -327,6 +348,9 @@ void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt,
 }
 
 
+/**
+ *
+ */
 void PrismIProduct(bool sortTopVertex, int numElmt,
                  int nquad0,  int  nquad1,  int nquad2,
                  int nmodes0, int  nmodes1, int nmodes2,
@@ -338,14 +362,17 @@ void PrismIProduct(bool sortTopVertex, int numElmt,
                  Array<OneD, NekDouble> &output,
                  Array<OneD, NekDouble> &wsp)
 {
-    int totmodes  = LibUtilities::StdPrismData::getNumberOfCoefficients(nmodes0,nmodes1,nmodes2);
+    int totmodes  = LibUtilities::StdPrismData::getNumberOfCoefficients(
+                                                    nmodes0,nmodes1,nmodes2);
     int totpoints = nquad0*nquad1*nquad2;
     int cnt;
     int mode, mode1;
 
     Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
 
-    Array<OneD, NekDouble> wsp1 = wsp + numElmt*nquad2*(max(nquad0*nquad1,nmodes0*nmodes1));
+    Array<OneD, NekDouble> wsp1 = wsp + numElmt * nquad2
+                                                * (max(nquad0*nquad1,
+                                                       nmodes0*nmodes1));
 
     // Perform iproduct  with respect to the  '0' direction
     Blas::Dgemm('T', 'N', nquad1*nquad2*numElmt, nmodes0, nquad0,
@@ -359,7 +386,8 @@ void PrismIProduct(bool sortTopVertex, int numElmt,
                 nquad1, 0.0, wsp.get(), nquad2*numElmt*nmodes0);
 
 
-    // Inner product with respect to the '2' direction (not sure if it woudl be better to swap loops?)
+    // Inner product with respect to the '2' direction (not sure if it would
+    // be better to swap loops?)
     mode = mode1 = cnt = 0;
     for(int i = 0; i < nmodes0; ++i)
     {
@@ -392,6 +420,9 @@ void PrismIProduct(bool sortTopVertex, int numElmt,
 }
 
 
+/**
+ *
+ */
 void TetIProduct(bool sortTopEdge, int numElmt,
                  int nquad0,  int  nquad1,  int nquad2,
                  int nmodes0, int  nmodes1, int nmodes2,
@@ -403,7 +434,8 @@ void TetIProduct(bool sortTopEdge, int numElmt,
                  Array<OneD, NekDouble> &output,
                  Array<OneD, NekDouble> &wsp)
 {
-    int totmodes  = LibUtilities::StdTetData::getNumberOfCoefficients(nmodes0,nmodes1,nmodes2);
+    int totmodes  = LibUtilities::StdTetData::getNumberOfCoefficients(
+                                                    nmodes0,nmodes1,nmodes2);
     int totpoints = nquad0*nquad1*nquad2;
     int cnt;
     int mode, mode1;

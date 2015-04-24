@@ -483,7 +483,7 @@ namespace Nektar
         void StdTriExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray,
-            bool multiplybyweights)
+            bool                                multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -492,9 +492,9 @@ namespace Nektar
             if(multiplybyweights)
             {
                 Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
-                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);         
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
 
-                // multiply by integration constants 
+                // multiply by integration constants
                 MultiplyByQuadratureMetric(inarray,tmp);
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                              m_base[1]->GetBdata(),

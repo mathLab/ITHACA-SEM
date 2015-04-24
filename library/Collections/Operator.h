@@ -107,38 +107,38 @@ OperatorImpMap SetFixedImpType(ImplementationType defaultType);
 /// Base class for operators on a collection of elements
 class Operator
 {
-public:
-    /// Constructor
-    Operator(
-            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-            boost::shared_ptr<CoalescedGeomData> GeomData)
-        : m_stdExp(pCollExp[0]->GetStdExp()),
-          m_numElmt(pCollExp.size()),
-          m_wspSize(0)
-    {
-    }
+    public:
+        /// Constructor
+        Operator(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                boost::shared_ptr<CoalescedGeomData> GeomData)
+            : m_stdExp(pCollExp[0]->GetStdExp()),
+              m_numElmt(pCollExp.size()),
+              m_wspSize(0)
+        {
+        }
 
-    /// Perform operation
-    COLLECTIONS_EXPORT virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output0,
-                  Array<OneD,       NekDouble> &output1,
-                  Array<OneD,       NekDouble> &output2,
-                  Array<OneD,       NekDouble> &wsp
-                                                = NullNekDouble1DArray) = 0;
+        /// Perform operation
+        COLLECTIONS_EXPORT virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output0,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp
+                                                    = NullNekDouble1DArray) = 0;
 
-    COLLECTIONS_EXPORT virtual ~Operator();
+        COLLECTIONS_EXPORT virtual ~Operator();
 
-    /// Get the size of the required workspace
-    int GetWspSize()
-    {
-        return m_wspSize;
-    }
+        /// Get the size of the required workspace
+        int GetWspSize()
+        {
+            return m_wspSize;
+        }
 
-protected:
-    StdRegions::StdExpansionSharedPtr m_stdExp;
-    unsigned int m_numElmt;
-    unsigned int m_wspSize;
+    protected:
+        StdRegions::StdExpansionSharedPtr m_stdExp;
+        unsigned int m_numElmt;
+        unsigned int m_wspSize;
 };
 
 /// Shared pointer to an Operator object

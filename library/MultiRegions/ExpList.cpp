@@ -1383,6 +1383,11 @@ namespace Nektar
         void ExpList::v_WriteTecplotHeader(std::ostream &outfile,
                                            std::string    var)
         {
+            if (GetNumElmts() == 0)
+            {
+                return;
+            }
+
             int coordim  = GetExp(0)->GetCoordim();
             char vars[3] = { 'x', 'y', 'z' };
 
@@ -2473,6 +2478,11 @@ namespace Nektar
                                   Array<OneD, NekDouble> &coord_1,
                                   Array<OneD, NekDouble> &coord_2)
         {
+            if (GetNumElmts() == 0)
+            {
+                return;
+            }
+
             int    i;
             Array<OneD, NekDouble> e_coord_0;
             Array<OneD, NekDouble> e_coord_1;
@@ -2631,7 +2641,7 @@ namespace Nektar
             case LibUtilities::eTriangle:
                 {
                     StdRegions::StdNodalTriExpSharedPtr nexp;
-                    if((nexp = boost::dynamic_pointer_cast<StdRegions::StdNodalTriExp>(exp)))
+                    if((nexp = exp->as<StdRegions::StdNodalTriExp>()))
                     {
                         stdExp = MemoryManager<StdRegions::StdNodalTriExp>
                             ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
@@ -2639,11 +2649,11 @@ namespace Nektar
                                                 nexp->GetNodalPointsKey().GetPointsType());
                     }
                     else
-                        {
-                            stdExp = MemoryManager<StdRegions::StdTriExp>
-                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                                    exp->GetBasis(1)->GetBasisKey());
-                        }
+                    {
+                        stdExp = MemoryManager<StdRegions::StdTriExp>
+                            ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                exp->GetBasis(1)->GetBasisKey());
+                    }
                 }
                 break;
             case LibUtilities::eQuadrilateral:
@@ -2689,20 +2699,10 @@ namespace Nektar
          */
         void ExpList::CreateCollections(Collections::ImplementationType ImpType)
         {
-            //return;
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
-
-            // If ImpType is not specified by default argument call
-            // then set ImpType to eStdMat for large collections or
-            // eSumFac for small
-            if(ImpType == Collections::eNoImpType)
-            {
-                ImpType = (m_exp->size() < 100 ? Collections::eSumFac
-                                               : Collections::eStdMat);
-            }
 
             // Figure out optimisation parameters if provided in
             // session file or default given
@@ -2724,7 +2724,8 @@ namespace Nektar
             // Loop over expansions, and create collections for each element type
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                collections[(*m_exp)[i]->DetShapeType()].push_back(std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
+                collections[(*m_exp)[i]->DetShapeType()].push_back(
+                    std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
             }
 
             for (it = collections.begin(); it != collections.end(); ++it)
@@ -2833,37 +2834,6 @@ namespace Nektar
                     }
                 }
             }
-        }
-
-        int NoCaseStringCompare( const string & s1, const string& s2)
-        {
-            string::const_iterator it1=s1.begin();
-            string::const_iterator it2=s2.begin();
-
-            // Stop when either string's end has been reached
-            while ( (it1!=s1.end()) && (it2!=s2.end()) )
-            {
-                if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-                {
-                    // Return -1 to indicate smaller than, 1 otherwise
-                    return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
-                }
-
-                // Proceed to the next character in each string
-                ++it1;
-                ++it2;
-            }
-
-            size_t size1=s1.size();
-            size_t size2=s2.size();// cache lengths
-
-            // Return -1, 0 or 1 according to strings' lengths
-            if (size1==size2)
-            {
-                return 0;
-            }
-
-            return (size1 < size2) ? -1 : 1;
         }
         
         void ExpList::ClearGlobalLinSysManager(void)

@@ -53,35 +53,35 @@ namespace Collections {
  */
 class Collection
 {
-public:
+    public:
 
-    COLLECTIONS_EXPORT Collection(
-            vector<StdRegions::StdExpansionSharedPtr>     pCollExp,
-            OperatorImpMap                               &impTypes);
+        COLLECTIONS_EXPORT Collection(
+                vector<StdRegions::StdExpansionSharedPtr>     pCollExp,
+                OperatorImpMap                               &impTypes);
 
-    inline void ApplyOperator(
-            const OperatorType                           &op,
-            const Array<OneD, const NekDouble>           &inarray,
-                  Array<OneD,       NekDouble>           &output);
+        inline void ApplyOperator(
+                const OperatorType                           &op,
+                const Array<OneD, const NekDouble>           &inarray,
+                      Array<OneD,       NekDouble>           &output);
 
-    inline void ApplyOperator(
-            const OperatorType                           &op,
-            const Array<OneD, const NekDouble>           &inarray,
-                  Array<OneD,       NekDouble>           &output0,
-                  Array<OneD,       NekDouble>           &output1);
+        inline void ApplyOperator(
+                const OperatorType                           &op,
+                const Array<OneD, const NekDouble>           &inarray,
+                      Array<OneD,       NekDouble>           &output0,
+                      Array<OneD,       NekDouble>           &output1);
 
-    inline void ApplyOperator(
-            const OperatorType                           &op,
-            const Array<OneD, const NekDouble>           &inarray,
-                  Array<OneD,       NekDouble>           &output0,
-                  Array<OneD,       NekDouble>           &output1,
-                  Array<OneD,       NekDouble>           &output2);
+        inline void ApplyOperator(
+                const OperatorType                           &op,
+                const Array<OneD, const NekDouble>           &inarray,
+                      Array<OneD,       NekDouble>           &output0,
+                      Array<OneD,       NekDouble>           &output1,
+                      Array<OneD,       NekDouble>           &output2);
 
-protected:
-    StdRegions::StdExpansionSharedPtr                     m_stdExp;
-    vector<SpatialDomains::GeometrySharedPtr>             m_geom;
-    boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
-    CoalescedGeomDataSharedPtr                            m_geomData;
+    protected:
+        StdRegions::StdExpansionSharedPtr                     m_stdExp;
+        vector<SpatialDomains::GeometrySharedPtr>             m_geom;
+        boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
+        CoalescedGeomDataSharedPtr                            m_geomData;
 
 };
 

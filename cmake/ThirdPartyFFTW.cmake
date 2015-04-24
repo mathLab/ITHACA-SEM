@@ -41,7 +41,7 @@ IF (NEKTAR_USE_FFTW)
             CONFIGURE_COMMAND ${TPSRC}/fftw-3.2.2/configure --prefix=${TPDIST} --quiet --enable-shared --disable-dependency-tracking
         )
 
-        SET(FFTW_LIBRARY fftw CACHE FILEPATH
+        SET(FFTW_LIBRARY fftw3 CACHE FILEPATH
             "FFTW library" FORCE)
         SET(FFTW_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "FFTW include" FORCE)

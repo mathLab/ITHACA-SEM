@@ -55,20 +55,10 @@ CollectionOptimisation::CollectionOptimisation(
                     (pSession->DefinesCmdLineArgument("verbose")) &&
                     (pSession->GetComm()->GetRank() == 0);
 
-    m_setByXml = false;
-    m_autotune = false;
+    m_setByXml    = false;
+    m_autotune    = false;
     m_maxCollSize = 0;
-    m_defaultType = defaultType;
-
-    // Default all elements to eStdMat
-    defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eTriangle,      -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eQuadrilateral, -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eTetrahedron,   -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::ePyramid,       -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::ePrism,         -1)] = defaultType;
-    defaults[ElmtOrder(LibUtilities::eHexahedron,    -1)] = defaultType;
-
+    m_defaultType = defaultType == eNoImpType ? eNoCollection : defaultType;
 
     map<string, LibUtilities::ShapeType> elTypes;
     map<string, LibUtilities::ShapeType>::iterator it2;
@@ -79,6 +69,12 @@ CollectionOptimisation::CollectionOptimisation(
     elTypes["P"] = LibUtilities::ePyramid;
     elTypes["R"] = LibUtilities::ePrism;
     elTypes["H"] = LibUtilities::eHexahedron;
+
+    // Set defaults for all element types.
+    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+    {
+        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+    }
 
     map<string, OperatorType> opTypes;
     for (i = 0; i < SIZE_OperatorType; ++i)
@@ -123,6 +119,20 @@ CollectionOptimisation::CollectionOptimisation(
                             m_defaultType = (Collections::ImplementationType) i;
                             break;
                         }
+                    }
+
+                    ASSERTL0(i != Collections::SIZE_ImplementationType,
+                             "Unknown default collection scheme: "+collinfo);
+
+                    // Override default types
+                    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+                    {
+                        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+                    }
+
+                    for (i = 0; i < SIZE_OperatorType; ++i)
+                    {
+                        m_global[(OperatorType)i] = defaults;
                     }
                 }
             }
@@ -208,28 +218,30 @@ CollectionOptimisation::CollectionOptimisation(
                          << endl;
                 }
 
-                map<OperatorType, map<ElmtOrder,
-                                      ImplementationType> >::iterator mIt;
-                map<ElmtOrder, ImplementationType>::iterator eIt;
-                for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
+                if (m_setByXml)
                 {
-                    cout << "Operator " << OperatorTypeMap[mIt->first]
-                                                           << ":" << endl;
-
-                    for (eIt = mIt->second.begin();
-                            eIt != mIt->second.end(); eIt++)
+                    map<OperatorType, map<ElmtOrder,
+                                          ImplementationType> >::iterator mIt;
+                    map<ElmtOrder, ImplementationType>::iterator eIt;
+                    for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
                     {
-                        cout << "- "
-                             << LibUtilities::ShapeTypeMap[eIt->first.first]
-                             << " order " << eIt->first.second << " -> "
-                             << ImplementationTypeMap[eIt->second] << endl;
+                        cout << "Operator " << OperatorTypeMap[mIt->first]
+                                                               << ":" << endl;
+
+                        for (eIt = mIt->second.begin();
+                                eIt != mIt->second.end(); eIt++)
+                        {
+                            cout << "- "
+                                 << LibUtilities::ShapeTypeMap[eIt->first.first]
+                                 << " order " << eIt->first.second << " -> "
+                                 << ImplementationTypeMap[eIt->second] << endl;
+                        }
                     }
                 }
             }
         }
     }
 }
-
 
 OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(
         StdRegions::StdExpansionSharedPtr pExp)
@@ -253,8 +265,8 @@ OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(
             it2 = it->second.find(defSearch);
             if (it2 == it->second.end())
             {
-                cout << "shouldn't be here..." << endl;
-                impType = eStdMat;
+                // Shouldn't be able to reach here.
+                impType = eNoCollection;
             }
             else
             {

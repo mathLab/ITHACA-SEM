@@ -38,12 +38,14 @@
 #include <boost/algorithm/string.hpp>
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <SolverUtils/Filters/Filter.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <complex>
 #include <iostream>
 #include <fstream> 
@@ -259,54 +261,64 @@ namespace Nektar
         }
 
 	// Set up maping for womersley BC - and load variabls
-        for (int i = 0; i < m_fields.num_elements(); ++i){
-            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n){
-		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
-			==SpatialDomains::eWomersley){
-//
-//			NekDouble T,R,n0,n1,n2;
-//			int M;	
-//		
-			m_session->LoadParameter("Period",T);
-			m_session->LoadParameter("Radius",R);
-			m_session->LoadParameter("Modes",M);
-			m_session->LoadParameter("n0",n0);
-			m_session->LoadParameter("n1",n1);
-			m_session->LoadParameter("n2",n2);
-			m_session->LoadParameter("x0",x0);
-			m_session->LoadParameter("x1",y0);
-			m_session->LoadParameter("x2",z0);
-			
-			//Wom # Print
-			std::cout << "Womersley Number: " << R*sqrt(2*M_PI/T/m_kinvis) << '\n';
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
+            {
+        		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
+		        	==SpatialDomains::eWomersley)
+                {
+                    m_session->LoadParameter("Period",T);
+                    m_session->LoadParameter("Radius",R);
+                    m_session->LoadParameter("Modes",M);
+                    m_session->LoadParameter("n0",n0);
+                    m_session->LoadParameter("n1",n1);
+                    m_session->LoadParameter("n2",n2);
+                    m_session->LoadParameter("x0",x0);
+                    m_session->LoadParameter("x1",y0);
+                    m_session->LoadParameter("x2",z0);
+                    
+                    LibUtilities::PtsIOSharedPtr pts =
+                            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr();
+                    LibUtilities::PtsFieldSharedPtr m_fieldPts;
+
+                    string inFile = m_session->GetFunctionFilename("pts",0);//.c_str();
+
+//                    m_session->m_pts = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr();
+                    pts->Import(inFile,  m_fieldPts);
+                    Array< OneD, NekDouble > newPts(m_fieldPts->GetNpoints());
 
 
-			// Read in fourier coeffs
-			wom_vel_r = Array<OneD, NekDouble> (M,0.0);
-			wom_vel_i = Array<OneD, NekDouble> (M,0.0);
-			std::complex<NekDouble> coef;
-
-			std::ifstream file("fourier_coef.txt");
-			std::string line;
-
-			int count = 0;
-			while(std::getline(file,line)){
-			   std::stringstream stream(line);
-		           while((stream>>coef) && (count<=8))
-		           {
-				wom_vel_r[count] = coef.real();
-				wom_vel_i[count] = coef.imag();
-				std::cout << wom_vel_r[count] << '\n';
-				count++;
-        		   }
-      			}
-	
-			m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+                    //Wom # Print
+                    std::cout << "Womersley Number: " << R*sqrt(2*M_PI/T/m_kinvis) << '\n';
 
 
-		}
+                    // Read in fourier coeffs
+                    wom_vel_r = Array<OneD, NekDouble> (M,0.0);
+                    wom_vel_i = Array<OneD, NekDouble> (M,0.0);
+                    std::complex<NekDouble> coef;
+
+                    std::ifstream file("fourier_coef.txt");
+                    std::string line;
+
+                    int count = 0;
+                    while(std::getline(file,line)){
+                       std::stringstream stream(line);
+                           while((stream>>coef) && (count<=8))
+                           {
+                        wom_vel_r[count] = coef.real();
+                        wom_vel_i[count] = coef.imag();
+                        std::cout << wom_vel_r[count] << '\n';
+                        count++;
+                           }
+                        }
+            
+                    m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+
+
+	    	    }
+	        }
 	    }
-	}
 
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
@@ -535,20 +547,23 @@ namespace Nektar
 
     void IncNavierStokes::SetWomersleyBoundary(int fieldid,int bndid)
     {
-	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
- 	int  i,j,k;
+    	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
+ 	    int  i,j,k;
 
-	// Womersley Number
-	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
+        // Womersley Number
+        NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
 
-	NekDouble normals[] = {n0,n1,n2};
-	
-	NekDouble r,kt;
+        NekDouble normals[] = {n0,n1,n2};
 
-	std::complex<NekDouble> z1 (1.0,0.0);
-	std::complex<NekDouble> zi (0.0,1.0);
-	std::complex<NekDouble> z;
+        NekDouble r,kt;
 
+        std::complex<NekDouble> z1 (1.0,0.0);
+        std::complex<NekDouble> zi (0.0,1.0);
+        std::complex<NekDouble> z;
+        std::complex<NekDouble> test;
+
+        std::cout << "PolyLib Bessel: " << Polylib::ImagBesselComp(0,z1) << endl;
+        std::cout << "Inline Bessel: " << CompBessel(0,z1) << endl;
         
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
@@ -557,145 +572,151 @@ namespace Nektar
         BndConds = m_fields[fieldid]->GetBndConditions();
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
 	
-	StdRegions::StdExpansionSharedPtr elmt;
+        StdRegions::StdExpansionSharedPtr elmt;
         StdRegions::StdExpansionSharedPtr bc;
         
         int cnt=0;
         int elmtid,offset, boundary,nfq;
 	
-	Array<OneD, NekDouble> Bvals,w;	
+        Array<OneD, NekDouble> Bvals,w;	
 
 
-	//Loop over all expansions	
-	for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++){
-		// Get element id and offset
-		elmtid = m_fieldsBCToElmtID[fieldid][cnt];
-                elmt   = m_fields[fieldid]->GetExp(elmtid); 
-                offset = m_fields[fieldid]->GetPhys_Offset(elmtid); 
+        //Loop over all expansions	
+        for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++)
+        {
+            // Get element id and offset
+            elmtid = m_fieldsBCToElmtID[fieldid][cnt];
+            elmt   = m_fields[fieldid]->GetExp(elmtid); 
+            offset = m_fields[fieldid]->GetPhys_Offset(elmtid); 
 
-		// Get Boundary and trace expansion
-		bc = BndExp[bndid]->GetExp(i);
-		boundary = m_fieldsBCToTraceID[fieldid][cnt];
-		
-		nfq=bc->GetTotPoints();
-		w = m_fields[fieldid]->UpdatePhys() + offset;
+            // Get Boundary and trace expansion
+            bc = BndExp[bndid]->GetExp(i);
+            boundary = m_fieldsBCToTraceID[fieldid][cnt];
+            
+            nfq=bc->GetTotPoints();
+            w = m_fields[fieldid]->UpdatePhys() + offset;
 		
 	        Array<OneD, NekDouble> x(nfq,0.0);
     		Array<OneD, NekDouble> y(nfq,0.0);
         	Array<OneD, NekDouble> z(nfq,0.0);
-		Array<OneD, NekDouble> wbc(nfq,0.0);
-		bc->GetCoords(x,y,z);
+            Array<OneD, NekDouble> wbc(nfq,0.0);
+            bc->GetCoords(x,y,z);
 
-		// Add edge values (trace) into the wbc 
-		elmt->GetTracePhysVals(boundary,bc,w,wbc);
-		//Compute womersley solution
-	        for (j=0;j<nfq;j++){
-			r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
+            // Add edge values (trace) into the wbc 
+            elmt->GetTracePhysVals(boundary,bc,w,wbc);
+            //Compute womersley solution
+	        for (j=0;j<nfq;j++)
+            {
+                r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
 
-			wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
-			for (k=1; k<M; k++){
-				kt = 2.0*M_PI*k*m_time/T;
-				za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
-				zar = r*za;
-				zJ0 = CompBessel(0,za);
-				zJ0r = CompBessel(0,zar);
-				zJ0rJ0 = zJ0r/zJ0;
-				zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
-//				zq = std::complex<double>(vel_r[k],vel_i[k])*std::complex<double>(cos(kt),sin(kt));
-				zvel = zq*(z1-zJ0rJ0);
-				wbc[j] = wbc[j]+zvel.real();
-			}
-		}
-		// Multiply w by normal to get u,v,w component of velocity
-		Vmath::Smul(nfq,normals[fieldid],wbc,1,wbc,1);
+                wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+                for (k=1; k<M; k++)
+                {
+                    kt = 2.0*M_PI*k*m_time/T;
+                    za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
+                    zar = r*za;
+                    zJ0 = CompBessel(0,za);
+                    zJ0r = CompBessel(0,zar);
+                    zJ0rJ0 = zJ0r/zJ0;
+                    zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
+    //				zq = std::complex<double>(vel_r[k],vel_i[k])*std::complex<double>(cos(kt),sin(kt));
+                    zvel = zq*(z1-zJ0rJ0);
+                    wbc[j] = wbc[j]+zvel.real();
+			    }
+	    	}
+	    	// Multiply w by normal to get u,v,w component of velocity
+	    	Vmath::Smul(nfq,normals[fieldid],wbc,1,wbc,1);
 
-		Bvals = BndExp[bndid]->UpdateCoeffs()+BndExp[bndid]->GetCoeff_Offset(i);
-		// Push back to Coeff space	
-		bc->FwdTrans(wbc,Bvals);
-	}
+	    	Bvals = BndExp[bndid]->UpdateCoeffs()+BndExp[bndid]->GetCoeff_Offset(i);
+	    	// Push back to Coeff space	
+	    	bc->FwdTrans(wbc,Bvals);
+    	}
 
     }
 
- void IncNavierStokes::InitWomersleyBoundary(int fieldid,int bndid)
+    void IncNavierStokes::InitWomersleyBoundary(int fieldid,int bndid)
     {
-	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
- 	int  i,j,k;
+        std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
+        int  i,j,k;
 
-	// Womersley Number
-	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
+        // Womersley Number
+        NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
 
-	NekDouble normals[] = {n0,n1,n2};
-	
-	NekDouble r,kt;
-
-	std::complex<NekDouble> z1 (1.0,0.0);
-	std::complex<NekDouble> zi (0.0,1.0);
-	std::complex<NekDouble> z;
-
+        NekDouble normals[] = {n0,n1,n2};
         
+        NekDouble r,kt;
+
+        std::complex<NekDouble> z1 (1.0,0.0);
+        std::complex<NekDouble> zi (0.0,1.0);
+        std::complex<NekDouble> z,test;
+
+//        Polylib::BesselComp(0,z1,test);
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
-        
+
         
         BndConds = m_fields[fieldid]->GetBndConditions();
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
 	
-	StdRegions::StdExpansionSharedPtr elmt;
+        StdRegions::StdExpansionSharedPtr elmt;
         StdRegions::StdExpansionSharedPtr bc;
         
         int cnt=0;
         int elmtid,offset, boundary,nfq;
 	
-	Array<OneD, NekDouble> Bvals,w;	
+        Array<OneD, NekDouble> Bvals,w;	
 
 
-	//Loop over all expansions	
-	for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++){
-		// Get element id and offset
-		elmtid = m_fieldsBCToElmtID[fieldid][cnt];
-                elmt   = m_fields[fieldid]->GetExp(elmtid); 
-                offset = m_fields[fieldid]->GetPhys_Offset(elmtid); 
+        //Loop over all expansions	
+        for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++)
+        {
+            // Get element id and offset
+            elmtid = m_fieldsBCToElmtID[fieldid][cnt];
+            elmt   = m_fields[fieldid]->GetExp(elmtid); 
+            offset = m_fields[fieldid]->GetPhys_Offset(elmtid); 
 
-		// Get Boundary and trace expansion
-		bc = BndExp[bndid]->GetExp(i);
-		boundary = m_fieldsBCToTraceID[fieldid][cnt];
-		
-		nfq=bc->GetTotPoints();
-		w = m_fields[fieldid]->UpdatePhys() + offset;
-		
+            // Get Boundary and trace expansion
+            bc = BndExp[bndid]->GetExp(i);
+            boundary = m_fieldsBCToTraceID[fieldid][cnt];
+            
+            nfq=bc->GetTotPoints();
+            w = m_fields[fieldid]->UpdatePhys() + offset;
+            
 	        Array<OneD, NekDouble> x(nfq,0.0);
     		Array<OneD, NekDouble> y(nfq,0.0);
         	Array<OneD, NekDouble> z(nfq,0.0);
-		Array<OneD, NekDouble> wbc(nfq,0.0);
-		bc->GetCoords(x,y,z);
+            Array<OneD, NekDouble> wbc(nfq,0.0);
+            bc->GetCoords(x,y,z);
 
-		// Add edge values (trace) into the wbc 
-		elmt->GetTracePhysVals(boundary,bc,w,wbc);
-		//Compute womersley solution
-	        for (j=0;j<nfq;j++){
-			r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
+            // Add edge values (trace) into the wbc 
+            elmt->GetTracePhysVals(boundary,bc,w,wbc);
+            //Compute womersley solution
+	        for (j=0;j<nfq;j++)
+            {
+                r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
 
-			wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
-			for (k=1; k<M; k++){
-				kt = 2.0*M_PI*k*m_time/T;
-				za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
-				zar = r*za;
-				zJ0 = CompBessel(0,za);
-				zJ0r = CompBessel(0,zar);
-				zJ0rJ0 = zJ0r/zJ0;
-				zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
-//				zq = std::complex<double>(wom_vel_r[k],wom_vel_i[k])*std::complex<double>(cos(kt),sin(kt));
-				zvel = zq*(z1-zJ0rJ0);
-				wbc[j] = wbc[j]+zvel.real();
-			}
-		}
-		// Multiply w by normal to get u,v,w component of velocity
-		Vmath::Smul(nfq,normals[fieldid],wbc,1,wbc,1);
+                wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+                for (k=1; k<M; k++)
+                {
+                    kt = 2.0*M_PI*k*m_time/T;
+                    za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
+                    zar = r*za;
+                    zJ0 = CompBessel(0,za);
+                    zJ0r = CompBessel(0,zar);
+                    zJ0rJ0 = zJ0r/zJ0;
+                    zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
+    //				zq = std::complex<double>(wom_vel_r[k],wom_vel_i[k])*std::complex<double>(cos(kt),sin(kt));
+                    zvel = zq*(z1-zJ0rJ0);
+                    wbc[j] = wbc[j]+zvel.real();
+                }
+            }
+            // Multiply w by normal to get u,v,w component of velocity
+            Vmath::Smul(nfq,normals[fieldid],wbc,1,wbc,1);
 
-		Bvals = BndExp[bndid]->UpdateCoeffs()+BndExp[bndid]->GetCoeff_Offset(i);
-		// Push back to Coeff space	
-		bc->BwdTrans(wbc,Bvals);
-	}
+            Bvals = BndExp[bndid]->UpdateCoeffs()+BndExp[bndid]->GetCoeff_Offset(i);
+	    	// Push back to Coeff space	
+		    bc->BwdTrans(wbc,Bvals);
+	    }
 
     }
 
@@ -704,27 +725,29 @@ namespace Nektar
 */
     std::complex<NekDouble> IncNavierStokes::CompBessel(int n, std::complex<NekDouble> y)
     {
-	std::complex<NekDouble> z (1.0,0.0);
-	std::complex<NekDouble> zbes (1.0,0.0);
-	std::complex<NekDouble> zarg;
-	NekDouble tol = 1e-15;
-	int maxit = 10000;
-	int i = 1;
+        std::complex<NekDouble> z (1.0,0.0);
+        std::complex<NekDouble> zbes (1.0,0.0);
+        std::complex<NekDouble> zarg;
+        NekDouble tol = 1e-15;
+        int maxit = 10000;
+        int i = 1;
 
-	zarg = -0.25*y*y;
+        zarg = -0.25*y*y;
 
-	while (abs(z) > tol && i <= maxit){
-		z = z*(1.0/i/(i+n)*zarg);
-		if  (abs(z) <= tol) break;
-		zbes = zbes + z;
-		i++;
-	}
+        while (abs(z) > tol && i <= maxit)
+        {
+            z = z*(1.0/i/(i+n)*zarg);
+            if  (abs(z) <= tol) break;
+            zbes = zbes + z;
+            i++;
+        }
 
-	zarg = 0.5*y;
-	for (i=1;i<=n;i++){
-		zbes = zbes*zarg;
-	}
-	return zbes;
+        zarg = 0.5*y;
+        for (i=1;i<=n;i++)
+        {
+            zbes = zbes*zarg;
+        }
+        return zbes;
 
     }
 

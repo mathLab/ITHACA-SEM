@@ -1,6 +1,8 @@
 #ifndef H_PLYLIB  
 
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <complex>
 
 /*
  *  LIBRARY ROUTINES FOR POLYNOMIAL CALCULUS AND INTERPOLATION
@@ -157,6 +159,9 @@ namespace Polylib {
                   const double, const double);
     LIB_UTILITIES_EXPORT void jacobd  (const int, const double *, double *,  const int , 
                   const double, const double);
+
+//    LIB_UTILITIES_EXPORT void BesselComp(const int, std::complex<Nektar::NekDouble> , std::complex<Nektar::NekDouble> );
+    LIB_UTILITIES_EXPORT std::complex<Nektar::NekDouble> ImagBesselComp(const int, std::complex<Nektar::NekDouble> );
 
 	
 

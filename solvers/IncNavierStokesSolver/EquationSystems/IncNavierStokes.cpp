@@ -253,14 +253,10 @@ namespace Nektar
                     //Vmath::Neg(npoints,tmpArray = m_fieldsRadiationFactor[i]+ radpts,1);
                     radpts += npoints;
                 }
-		// Set up mapping for womersley BC - need to put this in a seperate loop for all the womersley info
-		//if(BndConds[n]->GetUserDefined() ==SpatialDomains::eWomersley){
-		//	 m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
-		//}
             }
         }
 
-	// Set up maping for womersley BC - and load variabls
+	    // Set up maping for womersley BC - and load variabls
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
             for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
@@ -282,11 +278,9 @@ namespace Nektar
                             MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr();
                     LibUtilities::PtsFieldSharedPtr m_fieldPts;
 
-                    string inFile = m_session->GetFunctionFilename("pts",0);//.c_str();
-
-//                    m_session->m_pts = MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr();
-                    pts->Import(inFile,  m_fieldPts);
-                    Array< OneD, NekDouble > newPts(m_fieldPts->GetNpoints());
+//                    string inFile = m_session->GetFunctionFilename("pts",0);//.c_str();
+//                    pts->Import(inFile,  m_fieldPts);
+//                    Array< OneD, NekDouble > newPts(m_fieldPts->GetNpoints());
 
 
                     //Wom # Print
@@ -457,7 +451,7 @@ namespace Nektar
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
-		 else if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+	    	    else if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eWomersley)  
                 {
                     SetWomersleyBoundary(i,n);
@@ -562,9 +556,8 @@ namespace Nektar
         std::complex<NekDouble> z;
         std::complex<NekDouble> test;
 
-        std::cout << "PolyLib Bessel: " << Polylib::ImagBesselComp(0,z1) << endl;
-        std::cout << "Inline Bessel: " << CompBessel(0,z1) << endl;
-        
+        std::cout <<"time" << m_time << endl;
+
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
         
@@ -690,6 +683,7 @@ namespace Nektar
 
             // Add edge values (trace) into the wbc 
             elmt->GetTracePhysVals(boundary,bc,w,wbc);
+
             //Compute womersley solution
 	        for (j=0;j<nfq;j++)
             {

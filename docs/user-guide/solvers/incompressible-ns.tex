@@ -486,6 +486,49 @@ the session file:
 \item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1)
 \end{itemize}
 
+\subsection{Womersley Boundary Condition}
+
+It is possible to define the time-dependent Womersley velocity profile for pulsatile flow in a pipe (ref). The modulation of the velocity profile is based on the desired peak or centerline velocity which can be represented by a Fourier expansion $U_{max}=A(\omega)e^{i\omega t}$ where $A$ are the Fourier modes and $\omega $ the frequency. The womersely solution is then defined as:
+
+$$ w(r,t) = A_0(1-(r/R)^2) + \sum_{n=1}^N \tilde{A_n}[1-\frac{J_0(i^{3/2}\alpha_n r/R)}{J_0(i^{3/2})}]e^{i\omega_n t} $$
+
+where the womersley number $\alpha$ is defined:
+$$ \alpha_n = R\sqrt{\frac{2\pi n}{T\nu}}$$
+
+and $\tilde{A_n}$ ($n=1:N$)are the Fourier coefficients scaled in the following way:
+
+$$ \tilde{A_n} = 2A_n/[1 - \frac{1}{J_0(i^{3/2}\alpha)}] $$
+
+The Womersley velocity profile is implemented in the folling way:
+
+\begin{lstlisting}[style=XMLStyle]
+<REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="Womersley" VALUE="0" />
+                <D VAR="v" USERDEFINEDTYPE="Womersley" VALUE="0" />
+                <D VAR="w" USERDEFINEDTYPE="Womersley" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+</REGION>
+\end{lstlisting}
+
+A text file containing the Fourier coefficients, $\tilde{A}$, must be in the directory where the solver is called from. The name of the file needs to be "fourier\_coef.txt" and it contains the real and imaginary coefficients in the first and second column respectively. Each value of $\tilde(A)$ is written as a seperate line in the following form:
+$(-0.280488272252,0.087836617233)$
+
+The following parameters also need to be definred the parameters section of the .xml file:
+
+\begin{lstlisting}[style=XMLStyle]
+<P> x0            = 0.0 </P>
+<P> x1            = 0.0 </P>
+<P> x2            = 0.0 </P>
+<P> Period        = 1.0 </P>
+<P> Radius        = 0.5 </P>
+<P> Modes         = 10  </P>
+<P> n0            = 0.0 </P>
+<P> n1            = 0.0 </P>
+<P> n2            = 1.0 </P>
+\end{lstlisting}
+
+where x0, x1 and x2 define the location of the boundary center, Period is the cycle period, Radius is the boundary radius, Modes is the numebr of Fourier modes used to define the waveform, and n0, n1 and n2 are the x,y,z components of the inward normal vector of the boundary.  
+
 \subsection{Forcing}
 \subsubsection{MovingBody}
 

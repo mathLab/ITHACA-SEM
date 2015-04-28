@@ -160,7 +160,8 @@ namespace Nektar
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray);
+                                        Array<OneD, NekDouble> &outarray,
+                                        bool multiplybyweights = true);
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
                                        Array<OneD, NekDouble> &outarray);
 
@@ -175,6 +176,8 @@ namespace Nektar
             void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray,
                                        const StdRegions::StdMatrixKey &mkey); 
+            
+            virtual StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
             
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
@@ -319,7 +322,8 @@ namespace Nektar
             }    
             
             virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                                  Array<OneD, NekDouble> &outarray)
+                                                  Array<OneD, NekDouble> &outarray,
+                                                  bool multiplybyweights = true)
             {
                 IProductWRTBase_SumFac(inarray,outarray);
             }            

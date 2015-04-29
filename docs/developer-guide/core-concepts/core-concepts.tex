@@ -156,8 +156,9 @@ used within the code. We then initialise it in \inlsh{MyConceptImpl1.cpp}
 \begin{lstlisting}[style=C++Style] 
 string MyConceptImpl1::className
         = GetMyConceptFactory().RegisterCreatorFunction(
-            "Impl1", MyConceptImpl1::create, "First implementation of my
-            concept.");
+                                "Impl1", 
+                                MyConceptImpl1::create, 
+                                "First implementation of my concept.");
 \end{lstlisting}
 The first parameter specifies the value of the key which should be used to
 select this implementation. The second parameter is a function pointer to our
@@ -239,3 +240,115 @@ a significant performance penalty (such as in tight inner loops). If needed,
 Arrays allow access to the C-style array through the \texttt{Array::data} member
 function.
 
+
+\section{Threading}
+\begin{notebox}
+Threading is not currently included in the main code distribution. However, this
+hybrid MPI/pthread functionality should be available within the next few months.
+\end{notebox}
+
+We investigated adding threaded parallelism to the already MPI parallel
+Nektar++.  MPI parallelism has multiple processes that exchange data using
+network or network-like communications.  Each process retains its own memory
+space and cannot affect any other process’s memory space except through the MPI
+API.  A thread, on the other hand, is a separately scheduled set of instructions
+that still resides within a single process’s memory space.  Therefore threads
+can communicate with one another simply by directly altering the process’s
+memory space.  The project's goal was to attempt to utilise this difference to
+speed up communications in parallel code.
+
+A design decision was made to add threading in an implementation independent
+fashion.  This was achieved by using the standard factory methods which
+instantiate an abstract thread manager, which is then implemented by a concrete
+class.  For the reference implementation it was decided to use the Boost library
+rather than native p-threads because Nektar++ already depends on the Boost
+libraries, and Boost implements threading in terms of p-threads anyway.
+
+It was decided that the best approach would be to use a thread pool.  This
+resulted in the abstract classes ThreadManager and ThreadJob.  ThreadManager is
+a singleton class and provides an interface for the Nektar++ programmer to
+start, control, and interact with threads.  ThreadJob has only one method, the
+virtual method run().  Subclasses of ThreadJob must override run() and provide a
+suitable constructor.  Instances of these subclasses are then handed to the
+ThreadManager which dispatches them to the running threads.  Many thousands of
+ThreadJobs may be queued up with the ThreadManager and strategies may be
+selected by which the running threads take jobs from the queue.  Synchronisation
+methods are also provided within the ThreadManager such as wait(), which waits
+for the thread queue to become empty, and hold(), which pauses a thread that
+calls it until all the threads have called hold().  The API was thoroughly
+documented in Nektar++’s existing Javadoc style.
+
+Classes were then written for a concrete implementation of ThreadManager using
+the Boost library.  Boost has the advantage of being available on all Nektar++’s
+supported platforms.  It would not be difficult, however, to implement
+ThreadManager using some other functionality, such as native p-threads.
+
+Two approaches to utilising these thread classes were then investigated.  The
+bottom-up approach identifies likely regions of the code for parallelisation,
+usually loops around a simple and independent operation.  The top-down approach
+seeks to run as much of the code as is possible within a threaded environment.
+
+The former approach was investigated first due to its ease of implementation. 
+The operation chosen was the multiplication of a very large sparse block
+diagonal matrix with a vector, where the matrix is stored as its many smaller
+sub matrices.  The original algorithm iterated over the sub matrices multiplying
+each by the vector and accumulating the result.  The new parallel algorithm
+sends ThreadJobs consisting of batches of sub matrices to the thread pool.  The
+worker threads pick up the ThreadJobs and iterate over the sub matrices in the
+job accumulating the result in a thread specific result vector.  This latter
+detail helps to avoid the problem of cache ping-pong which is where multiple
+threads try to write to the same memory location, repeatedly invalidating one
+another's caches.
+
+Clearly this approach will work best when the sub matrices are large and there
+are many of them . However, even for test cases that would be considered large
+it became clear that the code was still spending too much time in its scalar
+regions.
+
+This led to the investigation of the top-down approach.  Here the intent is to
+run as much of the code as possible in multiple threads.  This is a much more
+complicated approach as it requires that the overall problem can be partitioned
+suitably, that a mechanism be available to exchange data between the threads,
+and that any code using shared resources be thread safe.  As Nektar++ already
+has MPI parallelism the first two requirements (data partitioning and exchange)
+are already largely met.  However since MPI parallelism is implemented by having
+multiple independent processes that do not share memory space, global data in
+the Nektar++ code, such as class static members or singleton instances, are now
+vulnerable to change by all the threads running in a process.
+
+To Nektar++’s communication class, Comm, was added a new class, ThreadedComm. 
+This class encapsulates a Comm object and provides extra functionality without
+altering the API of Comm (this is the Decorator pattern).  To the rest of the
+Nektar++ library this Comm object behaves the same whether it is a purely MPI
+Comm object or a hybrid threading plus MPI object.  The existing data
+partitioning code can be used with very little modification and the parts of the
+Nektar++ library that exchange data are unchanged.  When a call is made to
+exchange data with other workers ThreadedComm first has the master thread on
+each process (i.e. the first thread) use the encapsulated Comm object (typically
+an MPI object) to exchange the necessary data between the other processes, and
+then exchanges data with the local threads using direct memory to memory copies.
+
+As an example: take the situation where there are two processes A and B,
+possibly running on different computers, each with two threads 1 and 2.  A
+typical data exchange in Nektar++ uses the Comm method AllToAll(...) in which
+each worker sends data to each of the other workers.  Thread A1 will send data
+from itself and thread A2 via the embedded MPI Comm to thread B1, receiving in
+turn data from threads B1 and B2.  Each thread will then pick up the data it
+needs from the master thread on its process using direct memory to memory
+copies.  Compared to the situation where there are four MPI processes the number
+of communications that actually pass over the network is reduced.  Even MPI
+implementations that are clever enough to recognise when processes are on the
+same host must make a system call to transfer data between processes.
+
+The code was then audited for situations where threads would be attempting to
+modify global data.  Where possible such situations were refactored so that each
+thread has a copy of the global data.  Where the original design of Nektar++ did
+not permit this access to global data was mediated through locking and
+synchronisation.  This latter approach is not favoured except for global data
+that is used infrequently because locking reduces concurrency.
+
+The code has been tested and Imperial College cluster cx1 and has shown good
+scaling.  However it is not yet clear that the threading approach outperforms
+the MPI approach; it is possible that the speedups gained through avoiding
+network operations are lost due to locking and synchronisation issues.  These
+losses could be mitigated through more in-depth refactoring of Nektar++.

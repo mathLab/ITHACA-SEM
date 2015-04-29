@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -47,25 +47,25 @@ namespace Nektar
 
 class APESolver : public RiemannSolver
 {
-protected:
-    APESolver();
+    protected:
+        APESolver();
 
-    virtual void v_Solve(
-        const int                                         nDim,
-        const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-              Array<OneD,       Array<OneD, NekDouble> > &flux);
+        virtual void v_Solve(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+            Array<OneD,       Array<OneD, NekDouble> > &flux);
 
-    virtual void v_PointSolve(
-        NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
-        NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-        NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
-        NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
-    {
-        ASSERTL0(false, "This function should be defined by subclasses.");
-    }
+        virtual void v_PointSolve(
+            NekDouble  pL, NekDouble  rhoL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
+            NekDouble  pR, NekDouble  rhoR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
+            NekDouble  p0, NekDouble  rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+            NekDouble &pF, NekDouble &rhoF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
+        {
+            ASSERTL0(false, "This function should be defined by subclasses.");
+        }
 
-    Array<OneD, Array<OneD, NekDouble> > GetRotBasefield();
+        Array<OneD, Array<OneD, NekDouble> > GetRotBasefield();
 };
 
 }

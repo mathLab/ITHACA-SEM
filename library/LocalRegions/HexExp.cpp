@@ -81,8 +81,6 @@ namespace Nektar
          * @param   T           HexExp to copy.
          */
         HexExp::HexExp(const HexExp &T):
-            StdExpansion(T),
-            StdExpansion3D(T),
             StdRegions::StdHexExp(T),
             Expansion(T),
             Expansion3D(T),
@@ -364,7 +362,8 @@ namespace Nektar
          */
         void HexExp::v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray)
+                Array<OneD,       NekDouble> &outarray,
+                bool multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -372,16 +371,29 @@ namespace Nektar
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) +
                                        order0*order1*nquad2);
 
-            MultiplyByQuadratureMetric(inarray, tmp);
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,
-                                         true,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(inarray.num_elements());
+
+                MultiplyByQuadratureMetric(inarray, tmp);
+               IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+               IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                            m_base[1]->GetBdata(),
+                                            m_base[2]->GetBdata(),
+                                            inarray,outarray,wsp,
+                                            true,true,true);
+
+            }
         }
 
         void HexExp::v_IProductWRTDerivBase(
@@ -543,6 +555,15 @@ namespace Nektar
             m_geom->GetLocCoords(coord,Lcoord);
             return StdHexExp::v_PhysEvaluate(Lcoord, physvals);
         }
+
+        StdRegions::StdExpansionSharedPtr HexExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdHexExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
 
         /**
 	 * \brief Retrieves the physical coordinates of a given set of 
@@ -2168,7 +2189,7 @@ namespace Nektar
         {
             // This implementation is only valid when there are no
             // coefficients associated to the Laplacian operator
-            if (m_metrics.count(MetricLaplacian00) == 0)
+            if (m_metrics.count(eMetricLaplacian00) == 0)
             {
                 ComputeLaplacianMetric();
             }
@@ -2187,12 +2208,12 @@ namespace Nektar
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
-            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
-            const Array<OneD, const NekDouble>& metric02 = m_metrics[MetricLaplacian02];
-            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
-            const Array<OneD, const NekDouble>& metric12 = m_metrics[MetricLaplacian12];
-            const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[eMetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[eMetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric02 = m_metrics[eMetricLaplacian02];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[eMetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric12 = m_metrics[eMetricLaplacian12];
+            const Array<OneD, const NekDouble>& metric22 = m_metrics[eMetricLaplacian22];
 
             // Allocate temporary storage
             Array<OneD,NekDouble> wsp0(wsp);
@@ -2227,7 +2248,7 @@ namespace Nektar
 
         void HexExp::v_ComputeLaplacianMetric()
         {
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
@@ -2235,9 +2256,9 @@ namespace Nektar
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 3;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            const MetricType m[3][3] = { {eMetricLaplacian00, eMetricLaplacian01, eMetricLaplacian02},
+                                       {eMetricLaplacian01, eMetricLaplacian11, eMetricLaplacian12},
+                                       {eMetricLaplacian02, eMetricLaplacian12, eMetricLaplacian22}
             };
 
             for (unsigned int i = 0; i < dim; ++i)

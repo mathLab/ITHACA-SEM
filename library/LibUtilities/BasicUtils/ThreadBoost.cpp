@@ -41,7 +41,7 @@ namespace Nektar
         }
         
         ThreadManagerBoost::ThreadManagerBoost(unsigned int numT) :
-                m_numThreads(numT), m_numWorkers(numT-1), m_masterQueue(), m_masterQueueMutex(),
+                m_numThreads(numT), m_numWorkers(numT), m_masterQueue(), m_masterQueueMutex(),
                 m_masterActiveMutex(), m_masterQueueCondVar(), m_masterActiveCondVar(),
                 m_chunkSize(1), m_schedType(e_dynamic),
                 m_threadMap()
@@ -83,7 +83,6 @@ namespace Nektar
                 }
                 i++;
             }
-            m_threadActiveList[m_numThreads-1] = false;
             m_masterThreadId = boost::this_thread::get_id();
             m_barrier = new boost::barrier(m_numWorkers > 0 ? m_numWorkers : 1);
             m_type = "Threading with Boost";
@@ -138,9 +137,9 @@ namespace Nektar
         {
             bool working;
             Lock masterQueueLock(m_masterQueueMutex); // locks the queue
-            unsigned int nw = m_numWorkers;
-            SetNumWorkersImpl(nw+1);
             working = IsWorking();
+            m_masterActiveCondVar.notify_all();
+            m_masterQueueCondVar.notify_all();
             while (!m_masterQueue.empty() || working)
             {
                 // while waiting, master queue is unlocked
@@ -148,7 +147,6 @@ namespace Nektar
                 // on exiting wait master queue is locked again
                 working = IsWorking();
             }
-            SetNumWorkersImpl(nw-1);
         }
         
         unsigned int ThreadManagerBoost::GetNumWorkers()
@@ -186,13 +184,12 @@ namespace Nektar
         {
             num = std::min(num, m_numThreads);
             num = std::max(num, static_cast<unsigned int>(0));
-            --num;
             SetNumWorkersImpl(num);
         }
         
         void ThreadManagerBoost::SetNumWorkers()
         {
-            SetNumWorkersImpl(m_numThreads-1);
+            SetNumWorkersImpl(m_numThreads);
         }
         
         unsigned int ThreadManagerBoost::GetMaxNumWorkers()

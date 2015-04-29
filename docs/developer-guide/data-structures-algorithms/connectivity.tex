@@ -126,7 +126,7 @@ Both the local coordinate axis along an intersecting edge will then point in the
 same direction. Obviously, these conditions will not be fulfilled by default.
 But in order to do so, the direction of the local coordinate axis should be
 reversed in following situations:
-\begin{lstlisting}
+\begin{lstlisting}[style=C++Style]
  if ((LocalEdgeId == 0)||(LocalEdgeId == 1)) {
      if( EdgeOrientation == Backward ) {
          change orientation of local coordinate axis
@@ -184,7 +184,7 @@ mode within element e. This index i in this map array corresponds to the index o
 \item globalID represents the ID of the corresponding global degree of freedom.
 \end{itemize}
 
-However, rather than this two-dimensional structure of the mapping array,
+However, rather than this two-dimensional structure of the mapping array,\\
 \texttt{LocalToGlobalMap2D::m\_locToContMap} stores the mapping array as a
 one-dimensional array which is the concatenation of the different elemental
 mapping arrays map[e]. This mapping array can then be used to assemble the
@@ -215,7 +215,7 @@ the vertex mode, we will make a clear distinction between them in the
 
 The fill-in of the mapping array can than be summarised by the following part of
 (simplified) code:
-\begin{lstlisting}
+\begin{lstlisting}[style=C++Style]
  for(e = 0; e < Number_Of_2D_Elements; e++) {
      for(i = 0; i < Number_Of_Vertices_Of_Element_e; i++) {
          offsetValue = ...

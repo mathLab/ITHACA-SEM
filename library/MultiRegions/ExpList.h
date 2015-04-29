@@ -36,20 +36,19 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 
-#include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Transposition.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/MultiRegions.hpp>
+#include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/Expansion.h>
+#include <Collections/Collection.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
+#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
-#include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
-#include <boost/enable_shared_from_this.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
-
-#include <LibUtilities/Communication/Transposition.h>
-
+#include <boost/enable_shared_from_this.hpp>
 #include <tinyxml.h>
 
 namespace Nektar
@@ -225,6 +224,14 @@ namespace Nektar
                 (const int dir,
                  const Array<OneD, const NekDouble> &inarray,
                        Array<OneD,       NekDouble> &outarray);
+
+            /// This function calculates the inner product of a function
+            /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
+            /// direction \param dir) of all \emph{local} expansion modes
+            /// \f$\phi_n^e(\boldsymbol{x})\f$.
+            MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
+                (const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                 Array<OneD,       NekDouble> &outarray);
 
             /// This function elementally evaluates the forward transformation
             /// of a function \f$u(\boldsymbol{x})\f$ onto the global
@@ -855,6 +862,10 @@ namespace Nektar
             //expansion type
             ExpansionType m_expType;
 
+            MULTI_REGIONS_EXPORT void CreateCollections(
+                    Collections::ImplementationType ImpType
+                                                    = Collections::eNoImpType);
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
@@ -932,6 +943,14 @@ namespace Nektar
              * in the #ExpList base class.
              */
             boost::shared_ptr<LocalRegions::ExpansionVector> m_exp;
+
+            Collections::CollectionVector m_collections;
+
+            /// Offset of elemental data into the array #m_coeffs
+            std::vector<int>  m_coll_coeff_offset;
+
+            /// Offset of elemental data into the array #m_phys
+            std::vector<int>  m_coll_phys_offset;
 
             /// Offset of elemental data into the array #m_coeffs
             Array<OneD, int>  m_coeff_offset;
@@ -1276,6 +1295,7 @@ namespace Nektar
                     GetBoundaryCondition(const SpatialDomains::
                             BoundaryConditionCollection& collection,
                             unsigned int index, const std::string& variable);
+
         
         private:
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();

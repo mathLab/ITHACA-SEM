@@ -402,7 +402,8 @@ namespace Nektar
          *
          * The last step is to eliminate duplicate edges/faces and reenumerate.
          *
-         * NOTE: This routine does not copy high-order information yet!
+         * NOTE: This routine does not copy face-interior high-order information
+         * yet!
          */
         void Module::ReorderPrisms(PerMap &perFaces)
         {
@@ -443,6 +444,9 @@ namespace Nektar
             // Counter for new node IDs.
             int nodeId = 0;
             int prismTris[2][3] = {{0,1,4}, {3,2,5}};
+
+            // Warning flag for high-order curvature information.
+            bool warnCurvature = false;
 
             // facesDone tracks face IDs inside prisms which have already been
             // aligned.
@@ -601,9 +605,30 @@ namespace Nektar
                         }
                     }
 
+                    // Warn users that we're throwing away face curvature
+                    if (!warnCurvature)
+                    {
+                        for (j = 0; j < 5; ++j)
+                        {
+                            if (line[i]->GetFace(j)->m_faceNodes.size() > 0)
+                            {
+                                warnCurvature = true;
+                                break;
+                            }
+                        }
+                    }
+
                     // Replace old prism.
                     m_mesh->m_element[3][line[i]->GetId()] = el;
                 }
+            }
+
+            if (warnCurvature)
+            {
+                cerr << "[ReorderPrisms] WARNING: Face curvature detected in "
+                     << "some prisms; this will be ignored in further module "
+                     << "evaluations."
+                     << endl;
             }
 
             // Loop over periodic faces, enumerate vertices.

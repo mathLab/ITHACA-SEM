@@ -813,11 +813,6 @@ namespace Nektar
                 }
 
                 LibUtilities::ShapeType surfElType = surfEl->GetConf().m_e;
-                // Hack
-                if (surfElType == LibUtilities::eQuadrilateral)
-                {
-                    surfElType = LibUtilities::eTriangle;
-                }
 
                 if (!found)
                 {

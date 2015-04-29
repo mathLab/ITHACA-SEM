@@ -370,6 +370,11 @@ namespace Nektar
                         NEKERROR(ErrorUtil::ewarning, err.c_str());
                     }
 
+                    LibUtilities::PointsKey fkey(npts,m_curve->m_ptype);
+                    DNekMatSharedPtr I0 =
+                        LibUtilities::PointsManager()[fkey]->GetI(pkey);
+                    NekVector<NekDouble> out(npts+1);
+
                     for(int i = 0; i < m_coordim; ++i)
                     {
                         // Load up coordinate values into tmp
@@ -379,13 +384,7 @@ namespace Nektar
                         }
 
                         // Interpolate to GLL points
-                        DNekMatSharedPtr I0;
-
-                        LibUtilities::PointsKey fkey(npts,m_curve->m_ptype);
-                        I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
-
                         NekVector<NekDouble> in (npts, tmp, eWrapper);
-                        NekVector<NekDouble> out(npts+1);
                         out = (*I0)*in;
 
                         m_xmap->FwdTrans(out.GetPtr(), m_coeffs[i]);

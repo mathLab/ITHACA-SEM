@@ -724,7 +724,7 @@ namespace Nektar
             SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-        
+
         /**
          * @brief Set up the #m_xmap object by determining the order of each
          * direction from derived faces.
@@ -734,17 +734,17 @@ namespace Nektar
             vector<int> tmp;
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
             int order0 = *max_element(tmp.begin(), tmp.end());
-            
+
             tmp.clear();
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
             int points0 = *max_element(tmp.begin(), tmp.end());
-            
+
             tmp.clear();
             tmp.push_back(order0);
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
             int order1 = *max_element(tmp.begin(), tmp.end());
-            
+
             tmp.clear();
             tmp.push_back(points0);
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));

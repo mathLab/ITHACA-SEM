@@ -43,44 +43,50 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class IterativeElasticSystem : public LinearElasticSystem
+
+/**
+ * @brief Class for iterative elastic system, in which linear elasticity is
+ * applied in substeps to attain a large deformation.
+ */
+class IterativeElasticSystem : public LinearElasticSystem
+{
+public:
+    /// Class may only be instantiated through the MemoryManager.
+    friend class MemoryManager<IterativeElasticSystem>;
+
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-    public:
-        /// Class may only be instantiated through the MemoryManager.
-        friend class MemoryManager<IterativeElasticSystem>;
+        EquationSystemSharedPtr p = MemoryManager<
+            IterativeElasticSystem>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<
-                IterativeElasticSystem>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+    /// Name of class
+    static std::string className;
 
-        /// Name of class
-        static std::string className;
+protected:
+    /// Number of steps to split deformation across.
+    int m_numSteps;
+    /// Flag determining whether to repeat boundary conditions.
+    bool m_repeatBCs;
+    /// Storage for boundary conditions.
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_savedBCs;
+    /// Vector of boundary regions to deform.
+    vector<int> m_toDeform;
 
-    protected:
-        /// Number of steps to split deformation across.
-        int m_numSteps;
-        /// Flag determining whether to repeat boundary conditions.
-        bool m_repeatBCs;
-        /// Storage for boundary conditions.
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_savedBCs;
-        /// Vector of boundary regions to deform.
-        vector<int> m_toDeform;
+    IterativeElasticSystem(
+        const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        IterativeElasticSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+    virtual void v_InitObject();
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+    virtual void v_DoSolve();
 
-        virtual void v_InitObject();
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        virtual void v_DoSolve();
+    void WriteGeometry(const int i);
+};
 
-        void WriteGeometry(const int i);
-    };
 }
 
 #endif

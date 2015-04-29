@@ -43,72 +43,79 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class LinearElasticSystem : public EquationSystem
+
+/**
+ * @brief Base class for linear elastic system.
+ */
+class LinearElasticSystem : public EquationSystem
+{
+public:
+    /// Class may only be instantiated through the MemoryManager.
+    friend class MemoryManager<LinearElasticSystem>;
+
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-    public:
-        /// Class may only be instantiated through the MemoryManager.
-        friend class MemoryManager<LinearElasticSystem>;
+        EquationSystemSharedPtr p = MemoryManager<
+            LinearElasticSystem>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<
-                LinearElasticSystem>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+    /// Name of class
+    static std::string className;
 
-        /// Name of class
-        static std::string className;
+    void BuildMatrixSystem();
 
-        void BuildMatrixSystem();
+    void SetStaticCondBlock(
+        const int                              n,
+        const LocalRegions::ExpansionSharedPtr exp,
+        Array<TwoD, DNekMatSharedPtr>         &mat);
 
-        void SetStaticCondBlock(
-            const int                              n,
-            const LocalRegions::ExpansionSharedPtr exp,
-            Array<TwoD, DNekMatSharedPtr>         &mat);
+    DNekMatSharedPtr BuildLaplacianIJMatrix(
+        const int                        k1,
+        const int                        k2,
+        const NekDouble                  scale,
+        LocalRegions::ExpansionSharedPtr exp);
 
-        DNekMatSharedPtr BuildLaplacianIJMatrix(
-            const int                        k1,
-            const int                        k2,
-            const NekDouble                  scale,
-            LocalRegions::ExpansionSharedPtr exp);
+protected:
+    LinearElasticSystem(
+        const LibUtilities::SessionReaderSharedPtr& pSession);
 
-    protected:
-        LinearElasticSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+    /// Poisson ratio.
+    NekDouble m_nu;
+    /// Young's modulus.
+    NekDouble m_E;
+    /// Parameter dictating amount of thermal stress to add.
+    NekDouble m_beta;
+    /// Assembly map for the coupled (u,v,w) system.
+    CoupledAssemblyMapSharedPtr m_assemblyMap;
+    /// Schur complement boundary-boundary matrix.
+    DNekScalBlkMatSharedPtr m_schurCompl;
+    /// Matrix of elemental \f$ B^{-1}D \f$ components
+    DNekScalBlkMatSharedPtr m_BinvD;
+    /// Matrix of elemental \f$ C \f$ components
+    DNekScalBlkMatSharedPtr m_C;
+    /// Matrix of elemental \f$ D^{-1} \f$ components
+    DNekScalBlkMatSharedPtr m_Dinv;
+    /// Boundary maps for each of the fields.
+    Array<OneD, Array<OneD, unsigned int> > m_bmap;
+    /// Interior maps for each of the fields.
+    Array<OneD, Array<OneD, unsigned int> > m_imap;
+    /// Storage for the temperature terms.
+    Array<OneD, Array<OneD, NekDouble> > m_temperature;
+    /// Storage for the thermal stress terms.
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_stress;
 
-        /// Poisson ratio.
-        NekDouble m_nu;
-        /// Young's modulus
-        NekDouble m_E;
-        /// Parameter dictating amount of thermal stress to add.
-        NekDouble m_beta;
-        /// Assembly map for the coupled (u,v,w) system.
-        CoupledAssemblyMapSharedPtr m_assemblyMap;
-        /// Schur complement boundary-boundary matrix.
-        DNekScalBlkMatSharedPtr m_schurCompl;
-        /// Matrix of elemental \f$ B^{-1}D \f$ components
-        DNekScalBlkMatSharedPtr m_BinvD;
-        /// Matrix of elemental \f$ C \f$ components
-        DNekScalBlkMatSharedPtr m_C;
-        /// Matrix of elemental \f$ D^{-1} \f$ components
-        DNekScalBlkMatSharedPtr m_Dinv;
-        Array<OneD, Array<OneD, unsigned int> > m_bmap;
-        Array<OneD, Array<OneD, unsigned int> > m_imap;
-        /// Storage for the temperature terms.
-        Array<OneD, Array<OneD, NekDouble> > m_temperature;
-        /// Storage for the thermal stress terms.
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_stress;
+    virtual void v_InitObject();
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+    virtual void v_DoSolve();
+    virtual void v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<std::string>             &variables);
+};
 
-        virtual void v_InitObject();
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        virtual void v_DoSolve();
-        virtual void v_ExtraFldOutput(
-            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-            std::vector<std::string>             &variables);
-    };
 }
 
 #endif

@@ -716,8 +716,6 @@ namespace Nektar
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
 
-                vcnt = 0;
-
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
                       ++vertit)

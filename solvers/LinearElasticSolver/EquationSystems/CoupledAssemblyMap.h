@@ -42,18 +42,24 @@
 
 namespace Nektar
 {
-    class CoupledAssemblyMap : public MultiRegions::AssemblyMapCG
-    {
-    public:
-        CoupledAssemblyMap(
-            const LibUtilities::SessionReaderSharedPtr        &pSession,
-            const SpatialDomains::MeshGraphSharedPtr          &graph,
-            const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
-            const SpatialDomains::BoundaryConditionsSharedPtr &boundConds,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
-    };
 
-    typedef boost::shared_ptr<CoupledAssemblyMap> CoupledAssemblyMapSharedPtr;
+/**
+ * @brief Modified version of MultiRegions::AssemblyMapCG that allows for
+ * coupled fields [u,v,w] instead of individual scalar fields u, v and w.
+ */
+class CoupledAssemblyMap : public MultiRegions::AssemblyMapCG
+{
+public:
+    CoupledAssemblyMap(
+        const LibUtilities::SessionReaderSharedPtr        &pSession,
+        const SpatialDomains::MeshGraphSharedPtr          &graph,
+        const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
+        const SpatialDomains::BoundaryConditionsSharedPtr &boundConds,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+};
+
+typedef boost::shared_ptr<CoupledAssemblyMap> CoupledAssemblyMapSharedPtr;
+
 }
 
 #endif

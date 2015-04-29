@@ -53,7 +53,8 @@ namespace Nektar
         }
         
         // ThreadMaster implementation
-        ThreadMaster::ThreadMaster() : m_threadManagers(1), m_mutex(), m_threadingType()
+        ThreadMaster::ThreadMaster() : m_threadManagers(THREADMANAGER_MAX),
+            m_mutex(), m_threadingType()
         {
             // empty
         }

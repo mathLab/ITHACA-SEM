@@ -338,7 +338,8 @@ namespace Nektar
 
             public:
                 enum ThreadManagerName {
-                                        SessionJob
+                                        SessionJob,
+                                        THREADMANAGER_MAX
                                         };
                 /**
                  * @brief Constructor

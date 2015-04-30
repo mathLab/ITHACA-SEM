@@ -2012,6 +2012,20 @@
         }
 
         /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField3D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
+        }
+
+        /**
          * Solving Helmholtz Equation in 3D
          */
         void DisContField3D::v_HelmSolve(

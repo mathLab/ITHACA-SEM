@@ -1665,6 +1665,13 @@ namespace Nektar
             int Q   = m_base[1]->GetNumModes() - 1, q;
             int R   = m_base[2]->GetNumModes() - 1, r;
             int idx = 0;
+            
+            int nBnd = NumBndryCoeffs();
+            
+            if (maparray.num_elements() != nBnd)
+            {
+                maparray = Array<OneD, unsigned int>(nBnd);
+            }
 
             // Loop over all boundary modes (in ascending order).
             for (p = 0; p <= P; ++p)

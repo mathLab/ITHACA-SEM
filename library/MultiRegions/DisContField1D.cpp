@@ -1442,6 +1442,20 @@ namespace Nektar
         }
 
         /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField1D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
+        }
+
+        /**
          * Search through the edge expansions and identify which ones
          * have Robin/Mixed type boundary conditions. If find a Robin
          * boundary then store the edge id of the boundary condition

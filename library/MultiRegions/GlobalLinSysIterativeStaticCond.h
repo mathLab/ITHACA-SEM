@@ -96,13 +96,13 @@ namespace Nektar
             static std::string className2;
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysIterativeStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysIterativeStaticCond(
                 const GlobalLinSysKey                &mkey,
                 const boost::weak_ptr<ExpList>       &pExpList,
                 const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysIterativeStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysIterativeStaticCond(
                 const GlobalLinSysKey                &mkey,
                 const boost::weak_ptr<ExpList>       &pExpList,
                 const DNekScalBlkMatSharedPtr         pSchurCompl,

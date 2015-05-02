@@ -641,7 +641,7 @@ namespace Nektar
                 if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(*(it->second), graph2D,
+                        ::AllocateSharedPtr(m_session, *(it->second), graph2D,
                                             DeclareCoeffPhysArrays, variable);
                     
                     // Set up normals on non-Dirichlet boundary conditions
@@ -1663,6 +1663,20 @@ namespace Nektar
                         m_Element->GetGlobalID()];
                     EdgeID[cnt] = (*tmp)[0]->m_EdgeIndx;
                 }
+            }
+        }
+
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField2D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
             }
         }
 

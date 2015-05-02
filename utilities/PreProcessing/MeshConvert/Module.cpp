@@ -49,7 +49,8 @@ namespace Nektar
         {
             typedef Loki::SingletonHolder<ModuleFactory,
                 Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                Loki::NoDestroy,
+                Loki::SingleThreaded> Type;
             return Type::Instance();
         }
 
@@ -110,16 +111,16 @@ namespace Nektar
         void Module::ProcessVertices()
         {
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-            
+
             m_mesh->m_vertexSet.clear();
-            
+
             for (int i = 0, vid = 0; i < elmt.size(); ++i)
             {
                 for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
                 {
                     pair<NodeSet::iterator,bool> testIns =
                         m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
-                    
+
                     if (testIns.second)
                     {
                         (*(testIns.first))->m_id = vid++;
@@ -154,9 +155,9 @@ namespace Nektar
             if(ReprocessEdges)
             {
                 vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-                
+
                 m_mesh->m_edgeSet.clear();
-                
+
                 // Scan all elements and generate list of unique edges
                 for (int i = 0, eid = 0; i < elmt.size(); ++i)
                 {
@@ -165,7 +166,7 @@ namespace Nektar
                         pair<EdgeSet::iterator,bool> testIns;
                         EdgeSharedPtr ed = elmt[i]->GetEdge(j);
                         testIns = m_mesh->m_edgeSet.insert(ed);
-                        
+
                         if (testIns.second)
                         {
                             (*(testIns.first))->m_id = eid++;
@@ -179,7 +180,7 @@ namespace Nektar
                             {
                                 e2->m_curveType = ed->m_curveType;
                                 e2->m_edgeNodes = ed->m_edgeNodes;
-                                
+
                                 // Reverse nodes if appropriate.
                                 if (e2->m_n1->m_id != ed->m_n1->m_id)
                                 {
@@ -187,7 +188,7 @@ namespace Nektar
                                             e2->m_edgeNodes.end());
                                 }
                             }
-                            
+
                             // Update edge to element map.
                             (*(testIns.first))->m_elLink.push_back(
                                 pair<ElementSharedPtr,int>(elmt[i],j));
@@ -257,9 +258,9 @@ namespace Nektar
             if(ReprocessFaces)
             {
                 vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-                
+
                 m_mesh->m_faceSet.clear();
-                
+
                 // Scan all elements and generate list of unique faces
                 for (int i = 0, fid = 0; i < elmt.size(); ++i)
                 {
@@ -267,7 +268,7 @@ namespace Nektar
                     {
                         pair<FaceSet::iterator,bool> testIns;
                         testIns = m_mesh->m_faceSet.insert(elmt[i]->GetFace(j));
-                        
+
                         if (testIns.second)
                         {
                             (*(testIns.first))->m_id = fid++;
@@ -354,7 +355,7 @@ namespace Nektar
                     unsigned int tagid = elmt[i]->GetTagList()[0];
 
                     it = m_mesh->m_composite.find(tagid);
-                    
+
                     if (it == m_mesh->m_composite.end())
                     {
                         CompositeSharedPtr tmp = boost::shared_ptr<Composite>(
@@ -723,7 +724,7 @@ namespace Nektar
 
                 // See if this face is periodic.
                 it2 = perFaces.find(f->m_id);
-                
+
                 if (it2 != perFaces.end())
                 {
                     int id2 = it2->second.first->m_id;

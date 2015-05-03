@@ -36,6 +36,7 @@
 
 #include "LibUtilities/BasicUtils/ThreadBoost.h"
 #include <iostream>
+#include <algorithm>
 
 namespace Nektar
 {

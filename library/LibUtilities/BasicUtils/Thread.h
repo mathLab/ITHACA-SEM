@@ -42,6 +42,7 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <loki/Singleton.h>

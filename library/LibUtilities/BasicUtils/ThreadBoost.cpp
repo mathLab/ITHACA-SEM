@@ -396,7 +396,7 @@ unsigned int ThreadWorkerBoost::GetNumToLoad()
     {
         case e_guided:
             numToLoad = std::max(static_cast<unsigned long>(m_threadManager->m_chunkSize),
-                    m_threadManager->m_masterQueue.size() / (2*m_threadManager->m_numWorkers +1));
+                    static_cast<unsigned long>(m_threadManager->m_masterQueue.size() / (2*m_threadManager->m_numWorkers +1)));
             break;
 
         case e_dynamic:

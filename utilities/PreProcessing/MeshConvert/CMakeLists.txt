@@ -5,6 +5,7 @@ SET(MeshConvertHeaders
     InputPly.h
     InputSem.h
     InputSwan.h
+    InputStar.h
     InputStarTec.h
     MeshElements.h
     Module.h
@@ -28,6 +29,7 @@ SET(MeshConvertSources
     InputPly.cpp
     InputSem.cpp
     InputSwan.cpp
+    InputStar.cpp
     InputStarTec.cpp
     MeshConvert.cpp
     MeshElements.cpp
@@ -59,6 +61,9 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(MeshConvert vtkCommonCore vtkIOLegacy)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
+
+
+TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)
 
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)

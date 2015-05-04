@@ -425,7 +425,7 @@ namespace Nektar
         }
 
 
-        void PrismLineFaces(int prismid,  map<int, int> &facelist, 
+        static void PrismLineFaces(int prismid,  map<int, int> &facelist, 
                             vector<vector<int> > &FacesToPrisms, 
                             vector<vector<int> > &PrismsToFaces,
                             vector<bool> &PrismDone);
@@ -644,7 +644,7 @@ namespace Nektar
             
             
             
-        void PrismLineFaces(int prismid,  map<int, int> &facelist, 
+        static void PrismLineFaces(int prismid,  map<int, int> &facelist, 
                             vector<vector<int> > &FaceToPrisms, 
                             vector<vector<int> > &PrismToFaces,
                             vector<bool> &PrismDone)

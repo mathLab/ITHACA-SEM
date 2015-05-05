@@ -643,24 +643,24 @@ namespace Nektar
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
                         ::AllocateSharedPtr(*(it->second), graph2D,
                                             DeclareCoeffPhysArrays, variable);
-                    
-                    // Set up normals on non-Dirichlet boundary conditions
-                    if(bc->GetBoundaryConditionType() != 
-                           SpatialDomains::eDirichlet)
-                    {
-                        SetUpPhysNormals();
-                    }
 
                     m_bndCondExpansions[cnt]  = locExpList;
                     m_bndConditions[cnt]      = bc;
+                    
 
-                    // needs to be defined in local solver setup
                     std::string type = m_bndConditions[cnt]->GetUserDefined();
-                    if (boost::iequals(type,"I") || 
-                        boost::iequals(type,"CalcBC"))
+                    
+                    // Set up normals on non-Dirichlet boundary
+                    // conditions. Second two conditions ideally
+                    // should be in local solver setup (when made into factory)
+                    if((bc->GetBoundaryConditionType() != 
+                        SpatialDomains::eDirichlet)||
+                       boost::iequals(type,"I") || 
+                       boost::iequals(type,"CalcBC"))
                     {
                         SetUpPhysNormals();
                     }
+
                     cnt++;
                 }
             }

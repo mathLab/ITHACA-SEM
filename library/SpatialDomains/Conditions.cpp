@@ -188,7 +188,7 @@ namespace Nektar
                     // Check type.
                     std::string conditionType = conditionElement->Value();
                     std::string attrData;
-                    bool IsTimeDependent = false;
+                    bool isTimeDependent = false;
                     
                     // All have var specified, or else all variables are zero.
                     TiXmlAttribute *attr = conditionElement->FirstAttribute();
@@ -242,11 +242,8 @@ namespace Nektar
                                         m_session->SubstituteExpressions(attrData);
 
                                         userDefined = attrData;
-                                        if(boost::iequals(attrData,"TimeDependent"))
-                                        {
-                                            IsTimeDependent = true;
-                                        }
-                                     }
+                                        isTimeDependent = boost::iequals(attrData,"TimeDependent");
+                                    }
                                      else if(attrName=="VALUE")
                                      {
                                         attrData = attr->Value();
@@ -275,7 +272,7 @@ namespace Nektar
                                 }
 
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
-                                neumannCondition->SetIsTimeDependent(IsTimeDependent);
+                                neumannCondition->SetIsTimeDependent(isTimeDependent);
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
@@ -320,10 +317,7 @@ namespace Nektar
                                        m_session->SubstituteExpressions(attrData);
                                        
                                        userDefined = attrData;
-                                       if(boost::iequals(attrData,"TimeDependent"))
-                                       {
-                                            IsTimeDependent = true;
-                                       }
+                                       isTimeDependent = boost::iequals(attrData,"TimeDependent");
                                    }
                                    else if(attrName=="VALUE")
                                    {
@@ -352,7 +346,7 @@ namespace Nektar
                                 }
                                 
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
-                                dirichletCondition->SetIsTimeDependent(IsTimeDependent);
+                                dirichletCondition->SetIsTimeDependent(isTimeDependent);
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
@@ -401,11 +395,7 @@ namespace Nektar
                                         
                                         m_session->SubstituteExpressions(attrData1);
                                         userDefined = attrData1;
-                                        if(boost::iequals(attrData,"TimeDependent"))
-                                        {
-                                            IsTimeDependent = true;
-                                        }
-                                        
+                                        isTimeDependent = boost::iequals(attrData,"TimeDependent");
                                     }
                                     else if(attrName1 == "VALUE"){
                                         
@@ -454,7 +444,7 @@ namespace Nektar
                             {
                                 // This variable's condition is zero.
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, "0", "0"));
-                                robinCondition->SetIsTimeDependent(IsTimeDependent);
+                                robinCondition->SetIsTimeDependent(isTimeDependent);
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                         }

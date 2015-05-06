@@ -119,7 +119,7 @@ namespace Nektar
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
                 // High order boundary condition;
-          		if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
                     Vmath::Vcopy(nq, &(m_PBndExp[n]->GetCoeffs()[0]), 1,
@@ -169,7 +169,7 @@ namespace Nektar
             // m_pressureHBCS[nlevels-1] will be cancelled at next time step
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
                     Vmath::Vcopy(nq, &(m_pressureHBCs[nlevels-1])[cnt],  1,
@@ -345,8 +345,7 @@ namespace Nektar
             int totbndpts = 0;
             for(int n = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                if(m_PBndConds[n]->GetUserDefined()
-                        == SpatialDomains::eHighOutflow)
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
                 {
                     totbndpts += m_PBndExp[n]->GetTotPoints();
                 }
@@ -455,7 +454,7 @@ namespace Nektar
         for(int n = 0; n < m_PBndConds.num_elements(); ++n)
         {
             // Do outflow boundary conditions if they exist
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHighOutflow)
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
             {
                 for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -480,7 +479,7 @@ namespace Nektar
             cnt_start = cnt;
 
             // Do outflow boundary conditions if they exist
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHighOutflow)
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
             {
 
                 if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
@@ -806,8 +805,7 @@ namespace Nektar
                 // Now set up Velocity conditions.
                 for(int j = 0; j < m_bnd_dim; j++)
                 {
-                    if(UBndConds[j][n]->GetUserDefined()
-                                        == SpatialDomains::eHighOutflow)
+                    if(boost::iequals(UBndConds[j][n]->GetUserDefined(),"HOutflow"))
                     {
                         cnt = cnt_start;
 
@@ -1068,7 +1066,7 @@ namespace Nektar
         for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
             {
                 cnt += m_PBndExp[n]->GetNcoeffs();
                 HBCnumber += m_PBndExp[n]->GetExpSize();
@@ -1138,8 +1136,7 @@ namespace Nektar
                 {
                     exp_size = m_PBndExp[n]->GetExpSize();
 
-                    if(m_PBndConds[n]->GetUserDefined()
-                                            == SpatialDomains::eHigh)
+                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                     {
                         for(int i = 0; i < exp_size; ++i,cnt++)
                         {
@@ -1226,7 +1223,7 @@ namespace Nektar
                    for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
                    {
                        coeffPlaneOffset[n] = cnt;
-                       if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                       if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                        {
                            cnt += m_PBndExp[n]->GetNcoeffs();
                        }
@@ -1241,7 +1238,7 @@ namespace Nektar
                         exp_size = m_PBndExp[n]->GetExpSize();
                         exp_size_per_plane = exp_size/num_planes;
             
-                        if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                        if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                         {
                             for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
                             {
@@ -1321,7 +1318,7 @@ namespace Nektar
                             
                             exp_size_per_line = exp_size/(m_npointsZ*m_npointsY);
                             
-                            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                             {
                                 for(int i = 0; i < exp_size_per_line; ++i,cnt++)
                                 {

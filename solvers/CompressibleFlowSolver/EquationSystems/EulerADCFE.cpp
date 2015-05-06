@@ -271,88 +271,27 @@ namespace Nektar
         NekDouble                             time)
     {
         std::string varName;
-        int nvariables = m_fields.num_elements();
         int cnt        = 0;
 
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
+            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
             // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWall)
+            if (boost::iequals(type,"WallViscous"))
             {
-                WallBC(n, cnt, inarray);
-            }
-
-            // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWallViscous)
-            {
+                // Wall Boundary Condition
                 ASSERTL0(false, "WallViscous is a wrong bc for the "
-                "Euler equations");
+                         "Euler equations");
             }
-
-            // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eSymmetry)
+            else
             {
-                SymmetryBC(n, cnt, inarray);
+                SetCommonBC(type,n,time, cnt,inarray);
             }
 
-            // Riemann invariant characteristic Boundary Condition (CBC)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eRiemannInvariant)
-            {
-                RiemannInvariantBC(n, cnt, inarray);
-            }
-
-            // Pressure outflow non-reflective Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureOutflowNonReflective)
-            {
-                PressureOutflowNonReflectiveBC(n, cnt, inarray);
-            }
-
-            // Pressure outflow Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureOutflow)
-            {
-                PressureOutflowBC(n, cnt, inarray);
-            }
-
-            // Pressure outflow Boundary Condition from file
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureOutflowFile)
-            {
-                PressureOutflowFileBC(n, cnt, inarray);
-            }
-
-            // Pressure inflow Boundary Condition from file
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureInflowFile)
-            {
-                PressureInflowFileBC(n, cnt, inarray);
-            }
-
-            // Extrapolation of the data at the boundaries
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eExtrapOrder0)
-            {
-                ExtrapOrder0BC(n, cnt, inarray);
-            }
-
-            // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eTimeDependent)
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
-                }
-            }
-
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+            // no User Defined conditions provided so skip cnt 
+            // this line is left in case solver specific condition is added. 
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize(); 
         }
     }
 }

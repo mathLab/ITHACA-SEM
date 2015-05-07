@@ -499,7 +499,7 @@ and $\tilde{A_n}$ ($n=1:N$)are the Fourier coefficients scaled in the following 
 
 $$ \tilde{A_n} = 2A_n/[1 - \frac{1}{J_0(i^{3/2}\alpha)}] $$
 
-The Womersley velocity profile is implemented in the folling way:
+The Womersley velocity profile is implemented in the following way:
 
 \begin{lstlisting}[style=XMLStyle]
 <REGION REF="0">
@@ -510,7 +510,7 @@ The Womersley velocity profile is implemented in the folling way:
 </REGION>
 \end{lstlisting}
 
-A text file containing the Fourier coefficients, $\tilde{A}$, must be in the directory where the solver is called from. The name of the file needs to be "fourier\_coef.txt" and it contains the real and imaginary coefficients in the first and second column respectively. Each value of $\tilde(A)$ is written as a seperate line in the following form:
+A text file containing the Fourier coefficients, $\tilde{A}$, must be in the directory where the solver is called from. The name of the file needs to be "fourier\_coef.txt" and it contains the real and imaginary coefficients in the first and second column respectively. Each value of $\tilde{A}$ is written as a seperate line in the following form:
 $(-0.280488272252,0.087836617233)$
 
 The following parameters also need to be definred the parameters section of the .xml file:

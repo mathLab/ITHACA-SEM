@@ -488,9 +488,9 @@ the session file:
 
 \subsection{Womersley Boundary Condition}
 
-It is possible to define the time-dependent Womersley velocity profile for pulsatile flow in a pipe (ref). The modulation of the velocity profile is based on the desired peak or centerline velocity which can be represented by a Fourier expansion $U_{max}=A(\omega)e^{i\omega t}$ where $A$ are the Fourier modes and $\omega $ the frequency. The womersely solution is then defined as:
+It is possible to define the time-dependent Womersley velocity profile for pulsatile flow in a pipe (ref). The modulation of the velocity profile is based on the desired peak or centerline velocity which can be represented by a Fourier expansion $U_{max}=A(\omega_n)e^{i\omega_n t}$ where $A$ are the Fourier modes and $\omega $ the frequency. The womersely solution is then defined as:
 
-$$ w(r,t) = A_0(1-(r/R)^2) + \sum_{n=1}^N \tilde{A_n}[1-\frac{J_0(i^{3/2}\alpha_n r/R)}{J_0(i^{3/2})}]e^{i\omega_n t} $$
+$$ w(r,t) = A_0(1-(r/R)^2) + \sum_{n=1}^N \tilde{A_n}[1-\frac{J_0(i^{3/2}\alpha_n r/R)}{J_0(i^{3/2} \alpha)}]e^{i\omega_n t} $$
 
 where the womersley number $\alpha$ is defined:
 $$ \alpha_n = R\sqrt{\frac{2\pi n}{T\nu}}$$

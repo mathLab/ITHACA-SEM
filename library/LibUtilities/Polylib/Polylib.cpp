@@ -3016,7 +3016,6 @@ namespace Polylib {
 	    	zbes = zbes + z;
 	    	i++;
     	}
-        std::cout << zbes << endl;
         zarg = 0.5*y;
         for (i=1;i<=n;i++){
             zbes = zbes*zarg;

@@ -67,31 +67,44 @@ namespace Nektar
             
             void GenElement3D(vector<NodeSharedPtr> &Nodes,
                               int i, vector<int> &ElementFaces, 
-                              vector<vector<int> >&FaceNodes,
+                              map<int, vector<int> >&FaceNodes,
                               int ncomposite,
                               bool DoOrient);
 
-
             void GenElement2D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces, 
-                              vector<vector<int> >&FaceNodes,
+                              int i,
+                              vector<int> &FaceNodes,
                               int ncomposite); 
 
-
             Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces, 
-                                           vector<vector<int> >&FaceNodes);
+                                           vector<int> &FaceNodes);
 
             Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
                                            vector<int> &ElementFaces, 
-                                           vector<vector<int> >&FaceNodes);
+                                           map<int, vector<int> >&FaceNodes);
             
             void ResetNodes(vector<NodeSharedPtr>     &Nodes,
                             Array<OneD, vector<int> > &ElementFaces,
-                            vector<vector<int> >      &FaceNodes);
+                            map<int, vector<int> >      &FaceNodes);
             
-            void ReadInternalFaces(CCMIOID   &toplogy, vector<int> &mapDataFaces,
-                                   vector<int> &faces, vector<int> &faceCells);
+
+        private:
+            CCMIOError m_ccmErr;        //Star CCM error flag
+            CCMIOID    m_ccmTopology;   //Star CCM mesh topology
+            CCMIOID    m_ccmProcessor;
+            
+            void InitCCM(void);
+
+            void ReadNodes( std::vector<NodeSharedPtr> &Nodes);
+
+            void ReadInternalFaces(map<int,  vector<int> > &FacesNodes, 
+                                   Array<OneD, vector<int> > &ElementFaces);
+
+            void ReadBoundaryFaces(vector< vector<int> > &BndElementFaces,
+                                   map<int, vector<int> > &FacesNodes, 
+                                   Array<OneD, vector<int> > &ElementFaces);
+
+            void SetupElements(void);
         };
     }
 }

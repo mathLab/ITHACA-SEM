@@ -53,7 +53,6 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams) {
                 FilterSharedPtr p = MemoryManager<FilterCellHistoryPoints>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
                 return p;
             }
 
@@ -71,10 +70,7 @@ namespace Nektar
             }
 
         protected:
-//            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-//            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-//            virtual bool v_IsTimeDependent();
 
             CellModelSharedPtr m_cell;
 

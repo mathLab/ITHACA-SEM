@@ -90,29 +90,29 @@ namespace Nektar
             // Pull out data values field by field
             for (j = 0; j < numFields; ++j)
             {
-//                if(m_isHomogeneous1D)
-//                {
-//                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
-//                         ++x, ++k)
-//                    {
-//                        locCoord = (*x).second;
-//                        expId    = (*x).first->GetVid();
-//
-//                        physvals = pFields[j]->GetPlane(m_outputPlane)->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
-//
-//                        // transform elemental data if required.
-//                        if(pFields[j]->GetPhysState() == false)
-//                        {
-//                            pFields[j]->GetPlane(m_outputPlane)->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
-//                        }
-//
-//                        // interpolate point can do with zero plane methods
-//                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
-//
-//                    }
-//                }
-//                else
-//                {
+                if(m_isHomogeneous1D)
+                {
+                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
+                         ++x, ++k)
+                    {
+                        locCoord = (*x).second;
+                        expId    = (*x).first->GetVid();
+
+                        physvals = pFields[j]->GetPlane(m_outputPlane)->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+
+                        // transform elemental data if required.
+                        if(pFields[j]->GetPhysState() == false)
+                        {
+                            pFields[j]->GetPlane(m_outputPlane)->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
+                        }
+
+                        // interpolate point can do with zero plane methods
+                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
+
+                    }
+                }
+                else
+                {
                     for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
                     {
                         locCoord = (*x).second;
@@ -123,7 +123,7 @@ namespace Nektar
                         // interpolate point
                         data[m_historyLocalPointMap[k]*numFields+j] = pFields[0]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
                     }
-//                }
+                }
             }
 
             // Exchange history data

@@ -41,41 +41,46 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterCellHistoryPoints : public FilterHistoryPoints
+namespace SolverUtils
+{
+
+class FilterCellHistoryPoints : public FilterHistoryPoints
+{
+    public:
+        friend class MemoryManager<FilterCellHistoryPoints>;
+
+        /// Creates an instance of this class
+        static FilterSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::map<std::string, std::string> &pParams) {
+            FilterSharedPtr p = MemoryManager<FilterCellHistoryPoints>
+                                    ::AllocateSharedPtr(pSession, pParams);
+            return p;
+        }
+
+        ///Name of the class
+        static std::string className;
+
+        FilterCellHistoryPoints(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::map<std::string, std::string> &pParams);
+        ~FilterCellHistoryPoints();
+
+        void SetCellModel(CellModelSharedPtr &pCellModel)
         {
-        public:
-            friend class MemoryManager<FilterCellHistoryPoints>;
+            m_cell = pCellModel;
+        }
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterCellHistoryPoints>::AllocateSharedPtr(pSession, pParams);
-                return p;
-            }
+    protected:
+        virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
 
-            ///Name of the class
-            static std::string className;
+        CellModelSharedPtr m_cell;
 
-            SOLVER_UTILS_EXPORT FilterCellHistoryPoints(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterCellHistoryPoints();
+};
 
-            void SetCellModel(CellModelSharedPtr &pCellModel)
-            {
-                m_cell = pCellModel;
-            }
-
-        protected:
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-
-            CellModelSharedPtr m_cell;
-
-        };
-    }
+}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

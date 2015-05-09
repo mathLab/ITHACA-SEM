@@ -5,7 +5,6 @@ SET(MeshConvertHeaders
     InputPly.h
     InputSem.h
     InputSwan.h
-    InputStar.h
     InputStarTec.h
     MeshElements.h
     Module.h
@@ -29,7 +28,6 @@ SET(MeshConvertSources
     InputPly.cpp
     InputSem.cpp
     InputSwan.cpp
-    InputStar.cpp
     InputStarTec.cpp
     MeshConvert.cpp
     MeshElements.cpp
@@ -46,6 +44,11 @@ SET(MeshConvertSources
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp
 )
+
+IF (NEKTAR_USE_CCM)
+    SET(MeshConvertHeaders ${MeshConvertHeaders} InputStar.h)
+    SET(MeshConvertSources ${MeshConvertSources} InputStar.cpp)
+ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
     SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h OutputVtk.h)

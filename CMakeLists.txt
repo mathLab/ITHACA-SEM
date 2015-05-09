@@ -177,7 +177,7 @@ INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
-#INCLUDE (ThirdPartyCCM)
+INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)
 

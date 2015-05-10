@@ -89,6 +89,9 @@ namespace Nektar
             
             //Sets up reference element and builds transformation matrix
             //SetUpReferenceElements();
+
+            //Sets up reference element and builds transformation matrix for
+            // variable polynomial order meshes
             SetUpVariableReferenceElements();
 
             //Set up block transformation matrix
@@ -1653,9 +1656,9 @@ namespace Nektar
             nummodes1=locExpansion->GetBasisNumModes(1);
             nummodes2=locExpansion->GetBasisNumModes(2);
 
-            /************************************/
-            /* Normal transformation matrices **/
-            /************************************/
+            /*
+             * Set up a transformation matrices for equal order polynomial meshes
+             */
 
             //Bases for Tetrahedral element
             const LibUtilities::BasisKey TetBa(
@@ -1852,11 +1855,6 @@ namespace Nektar
                 }
             }
 
-            //Replace triangular faces and edges of the prims transformation
-            //matrix with the corresponding values of the tetrahedral
-            //transformation matrix.
-            //ModifyPrismTransformationMatrix(TetExp,PrismExp,Rtmpprism,RTtmpprism);
-
             m_Rprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rtmpprism);
             
@@ -1887,11 +1885,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr vSession
                                             = expList->GetSession();
 
-            vSession->LoadParameter("maxmode", maxnummodes);
-            //cout<<"mode: "<<maxnummodes<<endl;
-
-            //maxnummodes=4;
-
+            vSession->LoadParameter("maxmode", maxnummodes, maxnummodes);
 
             /*********************************/
             /** max transformation matrices **/
@@ -2015,14 +2009,15 @@ namespace Nektar
                 ::AllocateSharedPtr(1.0,RThexmax);
 
 
-            //LocalTransformToLowEnergy(m_maxRTinvtet, maxTetExp);
-            //LocalTransformToLowEnergy(m_maxRTinvprism, maxPrismExp);
-
-
-
             /***********************************/
             /* Setup Tet transformation matrix */
             /***********************************/
+
+            /*
+             * Here we take the original R matrix for the lowest polynomial order
+             * and replace the values with those from the  matrix for the largest
+             * polynomail order
+             */
 
             //Get the original number of boundary, edge and face coefficeints
             int nBndCoeffsHet = TetExp->NumBndryCoeffs();
@@ -2308,54 +2303,6 @@ namespace Nektar
             m_RTinvtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,invRTtetHet);
 
-
-            /*cout<<"R-MOD"<<endl;
-            for(i=0; i<RtetHet->GetRows(); ++i)
-            {
-                for(j=0; j<RtetHet->GetColumns(); ++j)
-                {
-                    cout<<(*RtetHet)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl;*/ 
-
-
-            /*cout<<"Tet vertex 0: "<<TetVertex0<<endl;
-            cout<<"Tet vertex 1: "<<TetVertex1<<endl;
-            cout<<"Tet vertex 2: "<<TetVertex2<<endl;
-            cout<<"Tet vertex 3: "<<TetVertex3<<endl;
-            cout<<endl;*/
-
-            //These are the edge mode locations of R which need to be replaced
-            //in the prism element
-
-            /*cout<<"Tet face 0: ";
-            for(int i=0; i< TetFace0.num_elements(); ++i)
-            {
-                cout<<TetFace0[i]<<" ";
-            }
-            cout<<endl;
-            cout<<"Tet face 1: ";
-            for(int i=0; i< TetFace1.num_elements(); ++i)
-            {
-                cout<<TetFace1[i]<<" ";
-            }
-            cout<<endl;
-            cout<<"Tet face 2: ";
-            for(int i=0; i< TetFace2.num_elements(); ++i)
-            {
-                cout<<TetFace2[i]<<" ";
-            }
-            cout<<endl;
-            cout<<"Tet face 3: ";
-            for(int i=0; i< TetFace3.num_elements(); ++i)
-            {
-                cout<<TetFace3[i]<<" ";
-            }
-            cout<<endl;*/
-
-
             /***********************************/
             /* Setup Hex transformation matrix */
             /***********************************/
@@ -2613,177 +2560,6 @@ namespace Nektar
                 ::AllocateSharedPtr(1.0,RThexHet);
             m_RTinvhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,invRThexHet);
-
-
-            /*DNekScalMat &RPRISM=(*m_Rprism);
-            cout<<"Hex R matrix"<<" rows: "<<RPRISM.GetRows()<<endl;
-            for(i=0; i<RTET.GetRows(); ++i)
-            {
-                for(j=0; j<RPRISM.GetColumns(); ++j)
-                {
-                    cout<<RPRISM(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl;*/ 
-
-            //Hex vertex modes
-            /*int HexVertex0=maxHexExp->GetVertexMap(0);
-            int HexVertex1=maxHexExp->GetVertexMap(1);
-            int HexVertex2=maxHexExp->GetVertexMap(2);
-            int HexVertex3=maxHexExp->GetVertexMap(3);
-            int HexVertex4=maxHexExp->GetVertexMap(4);
-            int HexVertex5=maxHexExp->GetVertexMap(5);*/
-
-            /*cout<<"Hex vertex 0: "<<HexVertex0<<endl;
-            cout<<"Hex vertex 1: "<<HexVertex1<<endl;
-            cout<<"Hex vertex 2: "<<HexVertex2<<endl;
-            cout<<"Hex vertex 3: "<<HexVertex3<<endl;
-            cout<<"Hex vertex 4: "<<HexVertex4<<endl;
-            cout<<"Hex vertex 5: "<<HexVertex5<<endl;
-            cout<<endl;*/
-
-            //Hex edge modes
-            /*Array<OneD, unsigned int> HexEdge0=
-                maxHexExp->GetEdgeInverseBoundaryMap(0);
-            Array<OneD, unsigned int> HexEdge1=
-                maxHexExp->GetEdgeInverseBoundaryMap(1);
-            Array<OneD, unsigned int> HexEdge2=
-                maxHexExp->GetEdgeInverseBoundaryMap(2);
-            Array<OneD, unsigned int> HexEdge3=
-                maxHexExp->GetEdgeInverseBoundaryMap(3);
-            Array<OneD, unsigned int> HexEdge4=
-                maxHexExp->GetEdgeInverseBoundaryMap(4);
-            Array<OneD, unsigned int> HexEdge5=
-                maxHexExp->GetEdgeInverseBoundaryMap(5);
-            Array<OneD, unsigned int> HexEdge6=
-                maxHexExp->GetEdgeInverseBoundaryMap(6);
-            Array<OneD, unsigned int> HexEdge7=
-                maxHexExp->GetEdgeInverseBoundaryMap(7);
-            Array<OneD, unsigned int> HexEdge8=
-                maxHexExp->GetEdgeInverseBoundaryMap(8);
-
-            cout<<"Hex edge 0: ";
-            for(int i=0; i< HexEdge0.num_elements(); ++i)
-            {
-                cout<<HexEdge0[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 1: ";
-            for(int i=0; i< HexEdge1.num_elements(); ++i)
-            {
-                cout<<HexEdge1[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 2: ";
-            for(int i=0; i< HexEdge2.num_elements(); ++i)
-            {
-                cout<<HexEdge2[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 3: ";
-            for(int i=0; i< HexEdge3.num_elements(); ++i)
-            {
-                cout<<HexEdge3[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 4: ";
-            for(int i=0; i< HexEdge4.num_elements(); ++i)
-            {
-                cout<<HexEdge4[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 5: ";
-            for(int i=0; i< HexEdge5.num_elements(); ++i)
-            {
-                cout<<HexEdge5[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 6: ";
-            for(int i=0; i< HexEdge6.num_elements(); ++i)
-            {
-                cout<<HexEdge6[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 7: ";
-            for(int i=0; i< HexEdge7.num_elements(); ++i)
-            {
-                cout<<HexEdge7[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex edge 8: ";
-            for(int i=0; i< HexEdge8.num_elements(); ++i)
-            {
-                cout<<HexEdge8[i]<<" ";
-            }
-            cout<<endl;
-            cout<<endl;
-
-            //Hex face 1 & 3 face modes
-            Array<OneD, unsigned int> HexFace1=
-                maxHexExp->GetFaceInverseBoundaryMap(1);
-            Array<OneD, unsigned int> HexFace3=
-                maxHexExp->GetFaceInverseBoundaryMap(3);
-            Array<OneD, unsigned int> HexFace0=
-                maxHexExp->GetFaceInverseBoundaryMap(0);
-            Array<OneD, unsigned int> HexFace2=
-                maxHexExp->GetFaceInverseBoundaryMap(2);
-            Array<OneD, unsigned int> HexFace4=
-                maxHexExp->GetFaceInverseBoundaryMap(4);
-            Array<OneD, unsigned int> HexFace5=
-                maxHexExp->GetFaceInverseBoundaryMap(5);
-
-
-            cout<<"Hex face 0: ";
-            for(int i=0; i< HexFace0.num_elements(); ++i)
-            {
-                cout<<HexFace0[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex face 1: ";
-            for(int i=0; i< HexFace1.num_elements(); ++i)
-            {
-                cout<<HexFace1[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex face 2: ";
-            for(int i=0; i< HexFace2.num_elements(); ++i)
-            {
-                cout<<HexFace2[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex face 3: ";
-            for(int i=0; i< HexFace3.num_elements(); ++i)
-            {
-                cout<<HexFace3[i]<<" ";
-            }
-            cout<<endl;
-
-            cout<<"Hex face 4: ";
-            for(int i=0; i< HexFace4.num_elements(); ++i)
-            {
-                cout<<HexFace4[i]<<" ";
-            }
-            cout<<"Hex face 5: ";
-            for(int i=0; i< HexFace5.num_elements(); ++i)
-            {
-                cout<<HexFace5[i]<<" ";
-            }
-
-            cout<<"stop"<<endl;
-            cout<<endl;
-            cout<<endl;*/
         }
 
         /**
@@ -3612,7 +3388,9 @@ namespace Nektar
     }
 }
 
-
+//Hex vertex edge info everywhere
+//triangular faces from tet
+//quad faces from hex 
 
 
 

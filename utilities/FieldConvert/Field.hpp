@@ -69,6 +69,9 @@ struct Field {
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_writeBndFld(false),
+              m_fldToBnd(false),
+              m_addNormals(false),
+              m_setUpEquiSpacedFields(false),
               m_fieldPts(LibUtilities::NullPtsField){}
 
     ~Field()
@@ -100,8 +103,8 @@ struct Field {
     bool                                    m_fldToBnd;
     bool                                    m_addNormals;
 
-    LibUtilities::PtsFieldSharedPtr         m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;
+    LibUtilities::PtsFieldSharedPtr         m_fieldPts;
 
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
 

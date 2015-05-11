@@ -213,7 +213,6 @@ void OutputFld::Process(po::variables_map &vm)
 
                         for (int k = 0; k < FieldDef.size(); ++k)
                         {
-                            int st = FieldData[k].size();
                             BndExp[0][Border]->AppendFieldData(FieldDef[k],
                                                                FieldData[k]);
                             FieldDef[k]->m_fields.push_back(normstr[j]);

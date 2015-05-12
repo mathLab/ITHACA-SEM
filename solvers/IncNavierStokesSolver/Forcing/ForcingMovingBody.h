@@ -97,9 +97,8 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const TiXmlElement* pForce);
 
         void UpdateMotion(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
-              Array<OneD, Array<OneD, NekDouble> >       &  zta,
-              Array<OneD, Array<OneD, NekDouble> >       &  eta,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
+            const Array<OneD, Array<OneD, NekDouble> >& inarray,
               NekDouble                                     time);
 
         void TensionedCableModel(
@@ -109,15 +108,19 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void EvaluateStructDynModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const Array<OneD, Array<OneD, NekDouble> > &zta,
-            const Array<OneD, Array<OneD, NekDouble> > &eta,
-            const NekDouble &time );
+                  NekDouble time );
 
         void CalculateForcing(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &zta,
-            const Array<OneD, Array<OneD, NekDouble> > &eta,
-                  Array<OneD, Array<OneD, NekDouble> > &forcing);
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+
+        void MappingBndConditions(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+            const Array<OneD, Array<OneD, NekDouble> >        &fields,
+                  NekDouble time );
+
+        void CalcOutflowBCs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const Array<OneD, Array<OneD, NekDouble> >        &fields);
 
         void EvaluateAccelaration(
             const Array<OneD, NekDouble> &input,
@@ -129,23 +132,24 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
 
-        int m_movingBodyCalls;
-        int m_np;
-        int m_nd;
+        int m_movingBodyCalls;     ///< number of times the movbody have been called
+        int m_np;                  ///< number of planes per processors
+        int m_vdim;                ///< vibration dimension
 
-        NekDouble m_structrho;
-        NekDouble m_structdamp;
-        NekDouble m_lhom;
-        NekDouble m_kinvis;
-        NekDouble m_timestep;
-
+        NekDouble m_structrho;     ///< mass of the cable per unit length
+        NekDouble m_structdamp;    ///< damping ratio of the cable
+        NekDouble m_lhom;          ///< length ratio of the cable
+        NekDouble m_kinvis;        ///< fluid viscous
+        NekDouble m_timestep;      ///< time step
+        ///
         LibUtilities::NektarFFTSharedPtr m_FFT;
-        FilterMovingBodySharedPtr m_filter;
-
+        ///
+        FilterMovingBodySharedPtr m_MovBodyfilter;
         /// storage for the cable's force(x,y) variables
         Array<OneD, NekDouble> m_Aeroforces;
         /// storage for the cable's motion(x,y) variables
         Array<OneD, NekDouble> m_MotionVars;
+        /// srorage for the velocity in z-direction
         Array<OneD, Array<OneD, NekDouble> > m_W;
         /// fictitious velocity storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
@@ -153,6 +157,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fA;
         /// matrices in Newmart-beta method
         Array<OneD, DNekMatSharedPtr> m_CoeffMat_A;
+        /// matrices in Newmart-beta method
         Array<OneD, DNekMatSharedPtr> m_CoeffMat_B;
         /// [0] is displacements, [1] is velocities, [2] is accelerations
         Array<OneD, std::string> m_funcName;
@@ -160,7 +165,54 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, std::string> m_motion;
         /// do determine if the the body motion come from an extern file
         Array<OneD, bool>        m_IsFromFile;
+        ///
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_outflowVel;
+        ///
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_PhyoutfVel;
+        ///
+        Array<OneD, Array<OneD, NekDouble> > m_movbodyVel;
+        ///
+        Array<OneD, Array<OneD, NekDouble> > m_movbodyDev;
+        ///
+        Array<OneD, Array<OneD, NekDouble> > m_ub;
+        ///
+        Array<OneD, NekDouble> m_nonlinearterm_phys;
+        ///
+        Array<OneD, const SpatialDomains::BoundaryConditionShPtr> m_PBndConds;
+        ///
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_PBndExp;
+        ///
+        Array<OneD, unsigned int> m_expsize_per_plane;
+        /// Id of element to which pressure  boundary condition belongs
+        Array<OneD, int> m_pressureBCtoElmtID;
+        /// Id of edge (2D) or face (3D) to which pressure boundary condition belongs
+        Array<OneD, int> m_pressureBCtoTraceID;
 
+        Array<OneD, Array< OneD, NekDouble> > m_zta;
+
+        Array<OneD, Array< OneD, NekDouble> > m_eta;
+
+        Array<OneD, Array< OneD, NekDouble> > m_forcing;
+        /// total number of boundary expansions per plane
+        int m_totexps_per_plane;
+
+        /// Curl-curl dimensionality
+        int m_curl_dim;
+
+        /// bounday dimensionality
+        int m_bnd_dim;
+
+        /// number of times the high-order pressure BCs have been called
+        int m_pressureCalls;
+
+        /// Maximum points used in pressure BC evaluation
+        int m_pressureBCsMaxPts;
+
+        /// Maximum points used in Element adjacent to pressure BC evaluation
+        int m_pressureBCsElmtMaxPts;
+
+        /// Maximum points used in pressure BC evaluation
+        int m_intSteps;
 };
 
 }

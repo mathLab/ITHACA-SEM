@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Moving Body forcing (movement of a body in a domain is achieved
-// via a forcing term which is the results of a coordinate system motion)
+// Description: Moving Body m_forcing (movement of a body in a domain is achieved
+// via a m_forcing term which is the results of a coordinate system motion)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -51,27 +51,61 @@ ForcingMovingBody::ForcingMovingBody(
 }
 
 void ForcingMovingBody::v_InitObject(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>& pfields,
         const unsigned int& pNumForcingFields,
-        const TiXmlElement* pForce)
+        const TiXmlElement* pforce)
 {
     // Just 3D homogenous 1D problems can use this techinque
-    ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,
+    ASSERTL0(pfields[0]->GetExpType()==MultiRegions::e3DH1D,
              "Moving body implemented just for 3D Homogenous 1D expansions.");
 
     // At this point we know in the xml file where those quantities
     // are declared (equation or file) - via a function name which is now
     // stored in funcNameD etc. We need now to fill in with this info the
-    // zta and eta vectors (actuallythey are matrices) Array to control if
+    // m_zta and m_eta vectors (actuallythey are matrices) Array to control if
     // the motion is determined by an equation or is from a file.(not Nektar++)
     // check if we need to load a file or we have an equation
-    CheckIsFromFile(pForce);
+    CheckIsFromFile(pforce);
 
     // Initialise movingbody filter
-    InitialiseFilter(m_session, pFields, pForce);
+    InitialiseFilter(m_session, pfields, pforce);
 
     // Initialise the cable model
-    InitialiseCableModel(m_session, pFields);
+    InitialiseCableModel(m_session, pfields);
+
+    m_pressureCalls = 0;
+
+    m_zta = Array<OneD, Array< OneD, NekDouble> > (10);
+    m_eta = Array<OneD, Array< OneD, NekDouble> > (10);
+    // What are this bi-dimensional vectors ------------------------------------------
+    // m_zta[0] = m_zta                     |  m_eta[0] = m_eta                      |
+    // m_zta[1] = d(m_zta)/dt               |  m_eta[1] = d(m_eta)/dt                |
+    // m_zta[2] = dd(m_zta)/ddtt            |  m_eta[2] = dd(m_eta)/ddtt             |
+    // m_zta[3] = d(m_zta)/dz               |  m_eta[3] = d(m_eta)/dz                |
+    // m_zta[4] = dd(m_zta)/ddzz            |  m_eta[4] = dd(m_eta)/ddzz             |
+    // m_zta[5] = ddd(m_zta)/dddzzz         |  m_eta[5] = ddd(m_eta)/dddzzz          |
+    // m_zta[6] = dd(m_zta)/ddtz            |  m_eta[6] = dd(m_eta)/ddtz             |
+    // m_zta[7] = ddd(m_zta)/dddtzz         |  m_eta[7] = ddd(m_eta)/dddtzz          |
+    // m_zta[8] = (d(m_zta)/dz)(d(m_eta)/dz)|  m_eta[8] = (d(m_eta)/dz)(d(m_zta)/dz) |
+    // m_zta[9] = (d(zm_zta)/dz)^2          |  m_eta[9] = (d(m_eta)/dz)^2            |
+    //--------------------------------------------------------------------------------
+    int phystot = pfields[0]->GetTotPoints();
+    for(int i = 0; i < m_zta.num_elements(); i++)
+    {
+        m_zta[i] = Array<OneD, NekDouble>(phystot,0.0);
+        m_eta[i] = Array<OneD, NekDouble>(phystot,0.0);
+    }
+
+    // m_forcing size (it must be 3: Ax, Ay and Az)
+    // total number of structural variables(Disp, Vel and Accel) must be 3
+    m_forcing = Array<OneD, Array<OneD, NekDouble> >(3);
+    // create the storage space for the body motion description
+
+    for(int i = 0; i < 3; i++)
+    {
+        m_forcing[i] = Array<OneD, NekDouble> (phystot, 0.0);
+    }
+ 
 }
 
 void ForcingMovingBody::v_Apply(
@@ -80,66 +114,37 @@ void ForcingMovingBody::v_Apply(
               Array<OneD, Array<OneD, NekDouble> >&         outarray,
         const NekDouble&                                    time)
 {
-    Array<OneD, Array< OneD, NekDouble> > zta(10);
-    Array<OneD, Array< OneD, NekDouble> > eta(10);
+    // Fill in m_zta and m_eta with all the required values
+    UpdateMotion(fields,inarray,time);
 
-    // What are this bi-dimensional vectors -----------------------------------
-    // zta[0] = zeta                 |  eta[0] = eta                      |
-    // zta[1] = d(zeta)/dt           |  eta[1] = d(eta)/dt                |
-    // zta[2] = dd(zeta)/ddtt        |  eta[2] = dd(eta)/ddtt             |
-    // zta[3] = d(zeta)/dz           |  eta[3] = d(eta)/dz                |
-    // zta[4] = dd(zeta)/ddzz        |  eta[4] = dd(eta)/ddzz             |
-    // zta[5] = ddd(zeta)/dddzzz     |  eta[5] = ddd(eta)/dddzzz          |
-    // zta[6] = dd(zeta)/ddtz        |  eta[6] = dd(eta)/ddtz             |
-    // zta[7] = ddd(zeta)/dddtzz     |  eta[7] = ddd(eta)/dddtzz          |
-    // zta[8] = (d(zeta)/dz)(d(eta)/dz)|eta[8] = (d(eta)/dz)(d(zeta)/dz)  |
-    // zta[9] = (d(zeta)/dz)^2       |  eta[9] = (d(eta)/dz)^2            |
-    //-------------------------------------------------------------------------
-    int phystot = fields[0]->GetTotPoints();
-    for(int i = 0; i < zta.num_elements(); i++)
-    {
-        zta[i] = Array<OneD, NekDouble>(phystot,0.0);
-        eta[i] = Array<OneD, NekDouble>(phystot,0.0);
-    }
-
-    // Fill in zta and eta with all the required values
-    UpdateMotion(fields,zta,eta,time);
-
-    // forcing size (it must be 3: Ax, Ay and Az)
-    // total number of structural variables(Disp, Vel and Accel) must be 3
-    Array<OneD, Array<OneD, NekDouble> > forcing(3);
-    // create the storage space for the body motion description
-
-    for(int i = 0; i < 3; i++)
-    {
-        forcing[i] = Array<OneD, NekDouble> (phystot, 0.0);
-    }
-    //calcualte the forcing components Ax,Ay,Az and put them in forcing
-    CalculateForcing(fields,zta,eta,forcing);
-    // Apply forcing terms
+    //calcualte the m_forcing components Ax,Ay,Az and put them in m_forcing
+    CalculateForcing(fields);
+    // Apply m_forcing terms
     for (int i = 0; i < 3; i++)
     {
         Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
-                                 forcing[i], 1, outarray[i], 1);
+                               m_forcing[i], 1, outarray[i], 1);
     }
+
+	// Mapping boundary conditions
+    MappingBndConditions(fields, inarray, time);
 }
 
 /**
  *
  */
 void ForcingMovingBody::UpdateMotion(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
-              Array<OneD, Array<OneD, NekDouble> >       &  zta,
-              Array<OneD, Array<OneD, NekDouble> >       &  eta,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pfields,
+        const Array<OneD, Array<OneD, NekDouble> >       &  fields,
               NekDouble                                     time)
 {
     // Update the forces from the calculation of fluid field, which is
     // implemented in the movingbody filter
-    m_filter->UpdateForce(m_session, pFields, m_Aeroforces, time);
+    m_MovBodyfilter->UpdateForce(m_session, pfields, m_Aeroforces, time);
 
     // for "free" type, the cable vibrates both in streamwise and crossflow
-    // directions, for "constrained" type, the cable only vibrates in crossflow
-    // direction, and for "forced" type, the calbe vibrates specifically along
+    // dimections, for "constrained" type, the cable only vibrates in crossflow
+    // dimection, and for "forced" type, the calbe vibrates specifically along
     // a given function or file
     std::string vibtype = m_session->GetSolverInfo("VibrationType"); 
     if(vibtype == "Free" || vibtype == "FREE" ||
@@ -147,7 +152,7 @@ void ForcingMovingBody::UpdateMotion(
     {
         // For free vibration case, displacements, velocities and acceleartions
         // are obtained through solving structure dynamic model
-        EvaluateStructDynModel(pFields, zta, eta, time);
+        EvaluateStructDynModel(pfields, time);
     }
     else if(vibtype == "Forced" || vibtype == "FORCED")
     {
@@ -162,9 +167,9 @@ void ForcingMovingBody::UpdateMotion(
             }
             else
             {
-                EvaluateFunction(pFields, m_session, m_motion[0], zta[j],
+                EvaluateFunction(pfields, m_session, m_motion[0], m_zta[j],
                                  m_funcName[j], time);
-                EvaluateFunction(pFields, m_session, m_motion[1], eta[j],
+                EvaluateFunction(pfields, m_session, m_motion[1], m_eta[j],
                                  m_funcName[j], time);
                 cnt = cnt + 2;
             }
@@ -174,13 +179,13 @@ void ForcingMovingBody::UpdateMotion(
         {
             for(int plane = 0; plane < m_np; plane++)
             {
-                int n = pFields[0]->GetPlane(plane)->GetTotPoints();
+                int n = pfields[0]->GetPlane(plane)->GetTotPoints();
                 int offset  = plane * n;
                 int xoffset = var * m_np+plane;
                 int yoffset = 3*m_np+xoffset;
 
-                m_MotionVars[xoffset] = zta[var][offset];
-                m_MotionVars[yoffset] = eta[var][offset];
+                m_MotionVars[xoffset] = m_zta[var][offset];
+                m_MotionVars[yoffset] = m_eta[var][offset];
             }
         }
     }
@@ -191,49 +196,49 @@ void ForcingMovingBody::UpdateMotion(
     }
 
     // Pass the variables of the cable's motion to the movingbody filter
-    m_filter->UpdateMotion(m_session, pFields, m_MotionVars, time);
+    m_MovBodyfilter->UpdateMotion(m_session, pfields, m_MotionVars, time);
 
     // Now we need to calcualte all the required z-derivatives
-    bool OriginalWaveSpace = pFields[0]->GetWaveSpace();
-    pFields[0]->SetWaveSpace(false);
+    bool OriginalWaveSpace = pfields[0]->GetWaveSpace();
+    pfields[0]->SetWaveSpace(false);
 
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            zta[0], zta[3]); //d(zeta)/dz
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            zta[3], zta[4]); //dd(zeta)/ddzz
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            zta[4], zta[5]); //ddd(zeta)/dddzzz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_zta[0], m_zta[3]); //d(m_zta)/dz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_zta[3], m_zta[4]); //dd(m_zta)/ddzz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_zta[4], m_zta[5]); //ddd(m_zta)/dddzzz
 
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            eta[0], eta[3]); //d(eta)/dz
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            eta[3], eta[4]); //dd(eta)/ddzz
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            eta[4], eta[5]); //ddd(eta)/dddzzz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_eta[0], m_eta[3]); //d(m_eta)/dz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_eta[3], m_eta[4]); //dd(m_eta)/ddzz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_eta[4], m_eta[5]); //ddd(m_eta)/dddzzz
 
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            zta[1], zta[6]); //dd(zeta)/ddtz
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            zta[6], zta[7]); //ddd(zeta)/ddtzz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_zta[1], m_zta[6]); //dd(m_zta)/ddtz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_zta[6], m_zta[7]); //ddd(m_zta)/ddtzz
 
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            eta[1], eta[6]); //dd(eta)/ddtz
-    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                            eta[6], eta[7]); //ddd(eta)/ddtzz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_eta[1], m_eta[6]); //dd(m_eta)/ddtz
+    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                            m_eta[6], m_eta[7]); //ddd(m_eta)/ddtzz
 
-    int NumPoints = pFields[0]->GetTotPoints();
+    int NumPoints = pfields[0]->GetTotPoints();
 
-    // (d(zeta)/dz)(d(eta)/dz)
-    Vmath::Vmul(NumPoints, zta[3], 1, eta[3],  1, zta[8], 1);
-    // (d(eta)/dz)(d(zeta)/dz) // not really needed
-    Vmath::Vmul(NumPoints, eta[3], 1, zta[3], 1, eta[8],  1);
+    // (d(m_zta)/dz)(d(m_eta)/dz)
+    Vmath::Vmul(NumPoints, m_zta[3], 1, m_eta[3], 1, m_zta[8], 1);
+    // (d(m_eta)/dz)(d(m_zta)/dz) // not really needed
+    Vmath::Vmul(NumPoints, m_eta[3], 1, m_zta[3], 1, m_eta[8], 1);
 
-    // (d(zeta)/dz)^2
-    Vmath::Vmul(NumPoints, zta[3], 1, zta[3], 1, zta[9], 1);
-    // (d(eta)/dz)^2
-    Vmath::Vmul(NumPoints, eta[3], 1, eta[3], 1, eta[9], 1);
+    // (d(m_zta)/dz)^2
+    Vmath::Vmul(NumPoints, m_zta[3], 1, m_zta[3], 1, m_zta[9], 1);
+    // (d(m_eta)/dz)^2
+    Vmath::Vmul(NumPoints, m_eta[3], 1, m_eta[3], 1, m_eta[9], 1);
 
-    pFields[0]->SetWaveSpace(OriginalWaveSpace);
+    pfields[0]->SetWaveSpace(OriginalWaveSpace);
 }
 
 
@@ -241,10 +246,7 @@ void ForcingMovingBody::UpdateMotion(
  *
  */
 void ForcingMovingBody::CalculateForcing(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> > &zta,
-        const Array<OneD, Array<OneD, NekDouble> > &eta,
-              Array<OneD, Array<OneD, NekDouble> > &forcing)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
 
     int nPointsTot = fields[0]->GetNpoints();
@@ -316,44 +318,44 @@ void ForcingMovingBody::CalculateForcing(
     Vmath::Vadd(nPointsTot, tmp, 1, tmp1, 1, tmp,  1);
 
     //-------------------------------------------------------------------------
-    // x-component of the forcing - accelaration component
+    // x-component of the m_forcing - accelaration component
     //-------------------------------------------------------------------------
-    Vmath::Vsub(nPointsTot, Fx, 1, zta[2], 1, Fx,   1);
-    Vmath::Vmul(nPointsTot, zta[3], 1, tmp,1, tmp1, 1);
+    Vmath::Vsub(nPointsTot, Fx, 1, m_zta[2], 1, Fx,   1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, tmp,1, tmp1, 1);
     Vmath::Vsub(nPointsTot, Fx, 1, tmp1,   1, Fx,   1);
 
-    Vmath::Vmul(nPointsTot, zta[6], 1, W,  1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[6], 1, W,  1, tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,    tmp1,  1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Fx, 1, tmp2,   1, Fx,   1);
     // W^2 - we reuse it later
     Vmath::Vmul(nPointsTot, W,   1, W,      1, tmp3, 1);
-    Vmath::Vmul(nPointsTot, zta[4], 1, tmp3,1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4], 1, tmp3,1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Fx, 1, tmp2,    1, Fx,   1);
 
     //-------------------------------------------------------------------------
-    // y-component of the forcing - accelaration component
+    // y-component of the m_forcing - accelaration component
     //-------------------------------------------------------------------------
-    Vmath::Vmul(nPointsTot, eta[4],  1, tmp3, 1, tmp2, 1); // reusing W^2
+    Vmath::Vmul(nPointsTot, m_eta[4],  1, tmp3, 1, tmp2, 1); // reusing W^2
     Vmath::Vsub(nPointsTot, Fy, 1, tmp2,      1, Fy,   1);
 
-    Vmath::Vmul(nPointsTot, eta[3],  1, tmp,  1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3],  1, tmp,  1, tmp1, 1);
     Vmath::Vsub(nPointsTot, Fy, 1, tmp1,      1, Fy,   1);
 
-    Vmath::Vsub(nPointsTot, Fy,   1, eta[2],  1, Fy,   1);
-    Vmath::Vmul(nPointsTot, eta[6],  1, W,    1, tmp1, 1);
+    Vmath::Vsub(nPointsTot, Fy,   1, m_eta[2],  1, Fy,   1);
+    Vmath::Vmul(nPointsTot, m_eta[6],  1, W,    1, tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,    tmp1,     1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Fy, 1, tmp2,      1, Fy,   1);
 
     //-------------------------------------------------------------------------
-    // z-component of the forcing - accelaration component
+    // z-component of the m_forcing - accelaration component
     //-------------------------------------------------------------------------
-    Vmath::Vmul(nPointsTot, zta[3], 1, Px,  1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[3], 1, Py,  1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, Px,  1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3], 1, Py,  1, tmp2, 1);
     Vmath::Vadd(nPointsTot, Fz,   1, tmp1,  1, Fz,   1);
     Vmath::Vadd(nPointsTot, Fz,   1, tmp2,  1, Fz,   1);
 
     //-------------------------------------------------------------------------
-    // Note: Now we use Px,Py,Pz to store the viscous component of the forcing
+    // Note: Now we use Px,Py,Pz to store the viscous component of the m_forcing
     // before we multiply them by m_kinvis = 1/Re. Since we build up on them we
     // need to set the entries to zero.
     //-------------------------------------------------------------------------
@@ -362,7 +364,7 @@ void ForcingMovingBody::CalculateForcing(
     Vmath::Zero(nPointsTot,Pz,1);
 
     //-------------------------------------------------------------------------
-    // x-component of the forcing - viscous component1:  (U_z^'z^' - U_zz + ZETA_tz^'z^')
+    // x-component of the m_forcing - viscous component1:  (U_z^'z^' - U_zz + ZETA_tz^'z^')
     //-------------------------------------------------------------------------
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                          fields[0]->GetPhys(), tmp1); // Uz
@@ -370,87 +372,87 @@ void ForcingMovingBody::CalculateForcing(
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], tmp3, tmp1); // Uzx
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], tmp3, tmp2); // Uzy
 
-    Vmath::Vmul(nPointsTot, zta[3], 1, tmp1,      1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, tmp1,      1, tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp1,      1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[3], 1, tmp2,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3], 1, tmp2,      1, tmp2, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp2,      1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp1,      1, Px,   1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp2,      1, Px,   1);
 
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], U,    tmp1); // Ux
-    Vmath::Vmul(nPointsTot, zta[4], 1, tmp1,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4], 1, tmp1,      1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp2,      1, Px,   1);
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], tmp1, tmp2); // Uxx
-    Vmath::Vmul(nPointsTot, zta[9], 1, tmp2,      1, tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_zta[9], 1, tmp2,      1, tmp3, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp3,      1, Px,   1);
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], tmp1, tmp2); // Uxy
-    Vmath::Vmul(nPointsTot, zta[8], 1, tmp2,      1, tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_zta[8], 1, tmp2,      1, tmp3, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp3,      1, tmp3, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp3,      1, Px,   1);
 
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], U,    tmp1); // Uy
-    Vmath::Vmul(nPointsTot, eta[4],  1, tmp1,     1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_eta[4],  1, tmp1,     1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Px,      1, tmp2,     1, Px,   1);
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], tmp1, tmp2); // Uyy
-    Vmath::Vmul(nPointsTot, eta[9],  1, tmp2,     1, tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_eta[9],  1, tmp2,     1, tmp3, 1);
     Vmath::Vadd(nPointsTot, Px,      1, tmp3,     1, Px,   1);
-    Vmath::Vadd(nPointsTot, Px,      1, zta[7],   1, Px,   1);
+    Vmath::Vadd(nPointsTot, Px,      1, m_zta[7],   1, Px,   1);
 
     //-------------------------------------------------------------------------
-    // x-component of the forcing - viscous component2:
+    // x-component of the m_forcing - viscous component2:
     //      ((ZETA_z * W)_z^'z^' + ZETA_z * (W_xx + W_yy))
     //-------------------------------------------------------------------------
-    Vmath::Vmul(nPointsTot, zta[5], 1, W,         1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[5], 1, W,         1, tmp1, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp1,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[3], 1, Wx,        1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, zta[4], 1, tmp1,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, Wx,        1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4], 1, tmp1,      1, tmp2, 1);
     Vmath::Smul(nPointsTot, 3.0,       tmp2,      1, tmp3, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp3,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, eta[3], 1, Wy,        1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, zta[4], 1, tmp1,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3], 1, Wy,        1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4], 1, tmp1,      1, tmp2, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp2,      1, tmp3, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp3,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[3], 1, Wy,        1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[4], 1, tmp1,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, Wy,        1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[4], 1, tmp1,      1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp2,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[4], 1, Wz,        1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4], 1, Wz,        1, tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp1,      1, tmp2, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp2,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[9], 1, Wxy,       1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[3], 1, tmp1,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[9], 1, Wxy,       1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3], 1, tmp1,      1, tmp2, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp2,      1, tmp3, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp3,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[9], 1, Wxz,       1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[9], 1, Wxz,       1, tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp1,      1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp2,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[8], 1, Wyz,       1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[8], 1, Wyz,       1, tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,       tmp1,      1, tmp2, 1);
     Vmath::Vsub(nPointsTot, Px,     1, tmp2,      1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[9], 1, zta[3],    1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[9], 1, m_zta[3],    1, tmp1, 1);
     Vmath::Vmul(nPointsTot, tmp1,1, Wxx,          1, tmp2, 1);
     Vmath::Vadd(nPointsTot, Px,  1, tmp2,         1, Px,   1);
 
-    Vmath::Vmul(nPointsTot, zta[3], 1, Wyy,       1, tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[9], 1, tmp1,      1, tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, Wyy,       1, tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[9], 1, tmp1,      1, tmp2, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp2,      1, Px,   1);
 
     Vmath::Vadd(nPointsTot, Wxx,    1, Wyy,       1, tmp1, 1);
     Vmath::Vadd(nPointsTot, Wzz,    1, tmp1,      1, tmp2, 1);
-    Vmath::Vmul(nPointsTot, zta[3], 1, tmp2,      1, tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3], 1, tmp2,      1, tmp3, 1);
     Vmath::Vadd(nPointsTot, Px,     1, tmp3,      1, Px,   1);
 
     Vmath::Smul(nPointsTot, m_kinvis,  Px,        1, Px,   1); //* 1/Re
 
     //-------------------------------------------------------------------------
-    // y-component of the forcing - viscous component1:
+    // y-component of the m_forcing - viscous component1:
     //  (V_z^'z^' - V_zz + ETA_tz^'z^')
     //-------------------------------------------------------------------------
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
@@ -458,120 +460,120 @@ void ForcingMovingBody::CalculateForcing(
     fields[0]->HomogeneousBwdTrans(tmp1, tmp3); // Vz in physical space
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], tmp3, tmp1); // Vzx
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], tmp3, tmp2); // Vzy
-    Vmath::Vmul(nPointsTot, zta[3],  1,  tmp1,   1,  tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3],  1,  tmp1,   1,  tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,         tmp1,   1,  tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[3],  1,  tmp2,   1,  tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3],  1,  tmp2,   1,  tmp2, 1);
     Vmath::Smul(nPointsTot, 2.0,         tmp2,   1,  tmp2, 1);
     Vmath::Vsub(nPointsTot, Py,      1,  tmp1,   1,  Py,   1);
     Vmath::Vsub(nPointsTot, Py,      1,  tmp2,   1,  Py,   1);
 
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], V,    tmp1); // Vx
-    Vmath::Vmul(nPointsTot, zta[4],  1,  tmp1,   1,  tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4],  1,  tmp1,   1,  tmp2, 1);
     Vmath::Vsub(nPointsTot, Py,      1,  tmp2,   1,  Py,   1);
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], tmp1, tmp2); // Vxx
-    Vmath::Vmul(nPointsTot, zta[9],  1,  tmp2,   1,  tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_zta[9],  1,  tmp2,   1,  tmp3, 1);
     Vmath::Vadd(nPointsTot, Py,      1,  tmp3,   1,  Py,   1);
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], tmp1, tmp2); // Vxy
-    Vmath::Vmul(nPointsTot, zta[8],  1,  tmp2,   1,  tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_zta[8],  1,  tmp2,   1,  tmp3, 1);
     Vmath::Smul(nPointsTot, 2.0,         tmp3,   1,  tmp3, 1);
     Vmath::Vadd(nPointsTot, Py,      1,  tmp3,   1,  Py,   1);
 
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], V,    tmp1); // Vy
-    Vmath::Vmul(nPointsTot, eta[4],   1,  tmp1,  1,  tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_eta[4],   1,  tmp1,  1,  tmp2, 1);
     Vmath::Vsub(nPointsTot, Py,       1,  tmp2,  1,  Py,   1);
     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], tmp1, tmp2); // Vyy
-    Vmath::Vmul(nPointsTot, eta[9],   1,  tmp2,  1,  tmp3, 1);
+    Vmath::Vmul(nPointsTot, m_eta[9],   1,  tmp2,  1,  tmp3, 1);
     Vmath::Vadd(nPointsTot, Py,       1,  tmp3,  1,  Py,   1);
-    Vmath::Vadd(nPointsTot, eta[7],   1,  Py,    1,  Py,   1);
+    Vmath::Vadd(nPointsTot, m_eta[7],   1,  Py,    1,  Py,   1);
 
     //-------------------------------------------------------------------------
-    // y-component of the forcing - viscous component2:
+    // y-component of the m_forcing - viscous component2:
     //   ((ETA_z * W)_z^'z^' + ETA_z * (W_xx + W_yy))
     //-------------------------------------------------------------------------
-    Vmath::Vmul(nPointsTot, eta[5],   1,  W,     1,  tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[5],   1,  W,     1,  tmp1, 1);
     Vmath::Vadd(nPointsTot, Py,       1,  tmp1,  1,  Py,   1);
 
-    Vmath::Vmul(nPointsTot, zta[3],   1,  Wx,    1,  tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[4],   1,  tmp1,  1,  tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[3],   1,  Wx,    1,  tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[4],   1,  tmp1,  1,  tmp2, 1);
     Vmath::Smul(nPointsTot, 2.0,          tmp2,  1,  tmp3, 1);
     Vmath::Vsub(nPointsTot, Py,       1,  tmp3,  1,  Py,   1);
 
-    Vmath::Vmul(nPointsTot, zta[4],  1,  Wx,     1,  tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[3],  1,  tmp1,   1,  tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_zta[4],  1,  Wx,     1,  tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3],  1,  tmp1,   1,  tmp2, 1);
     Vmath::Vsub(nPointsTot, Py,      1,  tmp2,   1,  Py,   1);
 
-    Vmath::Vmul(nPointsTot, eta[3],   1,  Wy,    1,  tmp1, 1);
-    Vmath::Vmul(nPointsTot, eta[4],   1,  tmp1,  1,  tmp2, 1);
+    Vmath::Vmul(nPointsTot, m_eta[3],   1,  Wy,    1,  tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[4],   1,  tmp1,  1,  tmp2, 1);
     Vmath::Smul(nPointsTot, 3.0,          tmp2,  1,  tmp3, 1);
     Vmath::Vsub(nPointsTot, Py,       1,  tmp3,  1,  Py,   1);
 
-    Vmath::Vmul(nPointsTot, eta[4],   1,  Wz,    1,  tmp1, 1);
+    Vmath::Vmul(nPointsTot, m_eta[4],   1,  Wz,    1,  tmp1, 1);
     Vmath::Smul(nPointsTot, 2.0,     tmp1,       1,  tmp2, 1);
     Vmath::Vadd(nPointsTot, Py,  1,  tmp2,       1,  Py,   1);
 
-    Vmath::Vmul(nPointsTot, eta[9],   1,  Wxy, 1,  tmp1,   1);
-    Vmath::Vmul(nPointsTot, zta[3],  1,  tmp1, 1,  tmp2,   1);
+    Vmath::Vmul(nPointsTot, m_eta[9],   1,  Wxy, 1,  tmp1,   1);
+    Vmath::Vmul(nPointsTot, m_zta[3],  1,  tmp1, 1,  tmp2,   1);
     Vmath::Smul(nPointsTot, 2.0,   tmp2,       1,  tmp3,   1);
     Vmath::Vadd(nPointsTot, Py, 1, tmp3,       1,  Py,     1);
 
-    Vmath::Vmul(nPointsTot, zta[8],  1,  Wxz,  1,  tmp1,   1);
+    Vmath::Vmul(nPointsTot, m_zta[8],  1,  Wxz,  1,  tmp1,   1);
     Vmath::Smul(nPointsTot, 2.0,   tmp1,       1,  tmp2,   1);
     Vmath::Vsub(nPointsTot, Py, 1,  tmp2,      1,  Py,     1);
 
-    Vmath::Vmul(nPointsTot, eta[9],   1,  Wyz, 1,  tmp1,   1);
+    Vmath::Vmul(nPointsTot, m_eta[9],   1,  Wyz, 1,  tmp1,   1);
     Vmath::Smul(nPointsTot, 2.0,   tmp1,       1,  tmp2,   1);
     Vmath::Vsub(nPointsTot, Py, 1,  tmp2,      1,  Py,     1);
 
-    Vmath::Vmul(nPointsTot, eta[3],   1,  Wxx, 1,  tmp1,   1);
-    Vmath::Vmul(nPointsTot, zta[9],  1,  tmp1, 1,  tmp2,   1);
+    Vmath::Vmul(nPointsTot, m_eta[3],   1,  Wxx, 1,  tmp1,   1);
+    Vmath::Vmul(nPointsTot, m_zta[9],  1,  tmp1, 1,  tmp2,   1);
     Vmath::Vadd(nPointsTot, Py, 1,  tmp2,      1,  Py,     1);
 
-    Vmath::Vmul(nPointsTot, eta[9], 1,  eta[3], 1,  tmp1,  1);
+    Vmath::Vmul(nPointsTot, m_eta[9], 1,  m_eta[3], 1,  tmp1,  1);
     Vmath::Vmul(nPointsTot, tmp1,   1,  Wyy,    1,  tmp2,  1);
     Vmath::Vadd(nPointsTot, Py,     1,  tmp2,   1,  Py,    1);
 
     Vmath::Vadd(nPointsTot, Wxx,    1,  Wyy,    1,  tmp1,  1);
     Vmath::Vadd(nPointsTot, Wzz,    1,  tmp1,   1,  tmp2,  1);
-    Vmath::Vmul(nPointsTot, eta[3], 1,  tmp2,   1,  tmp3,  1);
+    Vmath::Vmul(nPointsTot, m_eta[3], 1,  tmp2,   1,  tmp3,  1);
     Vmath::Vadd(nPointsTot, Py,     1,  tmp3,   1,  Py,    1);
 
     Vmath::Smul(nPointsTot, m_kinvis,   Py,     1,  Py,    1); //* 1/Re
 
     //-------------------------------------------------------------------------
-    // z-component of the forcing - viscous component: (W_z^'z^' - W_zz)
+    // z-component of the m_forcing - viscous component: (W_z^'z^' - W_zz)
     //-------------------------------------------------------------------------
-    Vmath::Vmul(nPointsTot, zta[3],  1,  Wxz,   1,  tmp1,  1);
+    Vmath::Vmul(nPointsTot, m_zta[3],  1,  Wxz,   1,  tmp1,  1);
     Vmath::Smul(nPointsTot, 2.0,    tmp1,       1,  tmp1,  1);
-    Vmath::Vmul(nPointsTot, eta[3],   1,  Wyz,  1,  tmp2,  1);
+    Vmath::Vmul(nPointsTot, m_eta[3],   1,  Wyz,  1,  tmp2,  1);
     Vmath::Smul(nPointsTot, 2.0,    tmp2,       1,  tmp2,  1);
-    Vmath::Vsub(nPointsTot, Pz, 1,  tmp1,       1,  Pz,     1);
-    Vmath::Vsub(nPointsTot, Pz, 1,  tmp2,       1,  Pz,     1);
+    Vmath::Vsub(nPointsTot, Pz, 1,  tmp1,       1,  Pz,    1);
+    Vmath::Vsub(nPointsTot, Pz, 1,  tmp2,       1,  Pz,    1);
 
-    Vmath::Vmul(nPointsTot, zta[4],  1,  Wx,    1,  tmp2,   1);
-    Vmath::Vsub(nPointsTot, Pz,     1,  tmp2,   1,  Pz,     1);
-    Vmath::Vmul(nPointsTot, zta[9],  1,  Wxx,   1,  tmp3,   1);
-    Vmath::Vadd(nPointsTot, Pz,     1,  tmp3,   1,  Pz,     1);
-    Vmath::Vmul(nPointsTot, zta[8],  1,  Wxy,   1,  tmp3,   1);
-    Vmath::Smul(nPointsTot, 2.0,    tmp3,       1,  tmp3,   1);
-    Vmath::Vadd(nPointsTot, Pz, 1,  tmp3,       1,  Pz,     1);
+    Vmath::Vmul(nPointsTot, m_zta[4],  1,  Wx,    1,  tmp2,  1);
+    Vmath::Vsub(nPointsTot, Pz,     1,  tmp2,   1,  Pz,    1);
+    Vmath::Vmul(nPointsTot, m_zta[9],  1,  Wxx,   1,  tmp3,  1);
+    Vmath::Vadd(nPointsTot, Pz,     1,  tmp3,   1,  Pz,    1);
+    Vmath::Vmul(nPointsTot, m_zta[8],  1,  Wxy,   1,  tmp3,  1);
+    Vmath::Smul(nPointsTot, 2.0,    tmp3,       1,  tmp3,  1);
+    Vmath::Vadd(nPointsTot, Pz, 1,  tmp3,       1,  Pz,    1);
 
-    Vmath::Vmul(nPointsTot, eta[4], 1,  Wy,     1,  tmp2,   1);
-    Vmath::Vsub(nPointsTot, Pz,     1,  tmp2,   1,  Pz,     1);
-    Vmath::Vmul(nPointsTot, eta[9],   1,  Wyy,  1,  tmp3,   1);
-    Vmath::Vadd(nPointsTot, Pz,     1,  tmp3,   1,  Pz,     1);
+    Vmath::Vmul(nPointsTot, m_eta[4], 1,  Wy,     1,  tmp2,  1);
+    Vmath::Vsub(nPointsTot, Pz,     1,  tmp2,   1,  Pz,    1);
+    Vmath::Vmul(nPointsTot, m_eta[9],   1,  Wyy,  1,  tmp3,  1);
+    Vmath::Vadd(nPointsTot, Pz,     1,  tmp3,   1,  Pz,    1);
 
-    Vmath::Smul(nPointsTot, m_kinvis,   Pz,     1,  Pz,     1); //* 1/Re
+    Vmath::Smul(nPointsTot, m_kinvis,   Pz,     1,  Pz,    1); //* 1/Re
 
     //-------------------------------------------------------------------------
     // adding viscous and pressure components and transfroming back to wave
     // space
     //-------------------------------------------------------------------------
-    Vmath::Vadd(nPointsTot, Fx,     1,  Px,     1,  Fx,     1);
-    Vmath::Vadd(nPointsTot, Fy,     1,  Py,     1,  Fy,     1);
-    Vmath::Vadd(nPointsTot, Fz,     1,  Pz,     1,  Fz,     1);
-    fields[0]->HomogeneousFwdTrans(Fx, forcing[0]);
-    fields[0]->HomogeneousFwdTrans(Fy, forcing[1]);
-    fields[0]->HomogeneousFwdTrans(Fz, forcing[2]);
+    Vmath::Vadd(nPointsTot, Fx,     1,  Px,     1,  Fx,    1);
+    Vmath::Vadd(nPointsTot, Fy,     1,  Py,     1,  Fy,    1);
+    Vmath::Vadd(nPointsTot, Fz,     1,  Pz,     1,  Fz,    1);
+    fields[0]->HomogeneousFwdTrans(Fx, m_forcing[0]);
+    fields[0]->HomogeneousFwdTrans(Fy, m_forcing[1]);
+    fields[0]->HomogeneousFwdTrans(Fz, m_forcing[2]);
 }
 
 
@@ -579,7 +581,7 @@ void ForcingMovingBody::CalculateForcing(
  *
  */
 void ForcingMovingBody::TensionedCableModel(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
               Array<OneD, NekDouble> &AeroForces,
               Array<OneD, NekDouble> &CableMotions)
 {  
@@ -592,7 +594,7 @@ void ForcingMovingBody::TensionedCableModel(
     // out in fluid fields; on the other hand, if homostrip == true, there is
     // a mismatch between the structure and fluid fields in terms of fourier
     // transformation, then the routines such as FFTFwdTrans/
-    // FFTBwdTrans can not be used directly for cable's solution.
+    // FFTBwdTrans can not be used dimectly for cable's solution.
 
     int npts;
 
@@ -614,13 +616,23 @@ void ForcingMovingBody::TensionedCableModel(
         fft_o[i] = Array<OneD, NekDouble>(npts, 0.0);
     }
 
-    LibUtilities::CommSharedPtr vcomm = pFields[0]->GetComm();
+    LibUtilities::CommSharedPtr vcomm = pfields[0]->GetComm();
     int colrank = vcomm->GetColumnComm()->GetRank();
     int nproc   = vcomm->GetColumnComm()->GetSize();
     
     if(!homostrip) //full resolutions
     {
-        Array <OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> tmp(4*m_np);
+        
+        for(int n = 0; n < m_np; n++)
+        {
+            tmp[n] = AeroForces[n];
+            for(int j = 0; j < 3; ++j)
+            {
+                tmp[(j+1)*m_np + n] = 
+                    CableMotions[j*m_np + n];
+            }
+        }
         // Send to root process.
         if(colrank == 0)
         {
@@ -633,22 +645,19 @@ void ForcingMovingBody::TensionedCableModel(
 
             for (int i = 1; i < nproc; ++i)
             {
-                vcomm->GetColumnComm()->Recv(i, AeroForces);
-                vcomm->GetColumnComm()->Recv(i, CableMotions);
-
-                Vmath::Vcopy(m_np, AeroForces, 1, 
-                        tmp = fft_i[0]+i*m_np, 1);
-                for(int j = 0; j < 3; j++)
+                vcomm->GetColumnComm()->Recv(i, tmp);
+                for(int n = 0; n < m_np; n++)
                 {
-                    Vmath::Vcopy(m_np, CableMotions+j*m_np, 1, 
-                                            tmp = fft_i[j+1]+i*m_np, 1);
+                    for(int var = 0; var < 4; ++var)
+                    {
+                        fft_i[var][i*m_np + n] = tmp[var*m_np + n];
+                    }
                 }
             }
         }
         else
         {
-            vcomm->GetColumnComm()->Send(0, AeroForces);
-            vcomm->GetColumnComm()->Send(0, CableMotions);
+            vcomm->GetColumnComm()->Send(0, tmp);
         }
     }
     else //strip modeling
@@ -802,11 +811,13 @@ void ForcingMovingBody::TensionedCableModel(
     // send physical coeffients to all planes of each processor
     if(!homostrip)//full resolutions
     {
-        Array<OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> tmp(3*m_np);
 
         if(colrank != 0)
         {
-            vcomm->GetColumnComm()->Recv(0, CableMotions);
+            vcomm->GetColumnComm()->Recv(0, tmp);
+            Vmath::Vcopy(3*m_np, tmp, 1, 
+                            CableMotions, 1);
         }
         else
         {
@@ -814,16 +825,22 @@ void ForcingMovingBody::TensionedCableModel(
             {
                 for(int j = 0; j < 3; j++)
                 {
-                    Vmath::Vcopy(m_np, fft_o[j]+i*m_np, 1, 
-                                      tmp = CableMotions+j*m_np, 1);
+                    for(int n = 0; n < m_np; n++)
+                    {
+                        tmp[j*m_np+n] = fft_o[j][i*m_np+n];
+                    }
                 }
-                vcomm->GetColumnComm()->Send(i, CableMotions);
+                vcomm->GetColumnComm()->Send(i, tmp);
             }
 
-            for (int var = 0; var < 3; var++)
+            for(int j = 0; j < 3; j++)
             {
-                Vmath::Vcopy(m_np, fft_o[var], 1, 
-                                    tmp = CableMotions+var*m_np, 1);
+                for(int n = 0; n < m_np; n++)
+                {
+                    tmp[j*m_np+n] = fft_o[j][n];
+                }
+                Vmath::Vcopy(3*m_np, tmp, 1,  
+                            CableMotions, 1);
             }
         }
     }
@@ -909,10 +926,8 @@ void ForcingMovingBody::TensionedCableModel(
  *
  */
 void ForcingMovingBody::EvaluateStructDynModel(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const Array<OneD, Array<OneD, NekDouble> > &zta,
-        const Array<OneD, Array<OneD, NekDouble> > &eta,
-        const NekDouble &time )
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+              NekDouble  time)
 {
     //Get the hydrodynamic forces from the fluid solver
     Array<OneD, Array <OneD, NekDouble> > fces(m_motion.num_elements());
@@ -937,7 +952,8 @@ void ForcingMovingBody::EvaluateStructDynModel(
         m_session->LoadParameter("FictMass", fictrho);
         m_session->LoadParameter("FictDamp", fictdamp);
 
-        NekDouble Betaq_Coeffs[2][2] = {{1.0,  0.0},{2.0, -1.0}};
+        static NekDouble Betaq_Coeffs[2][2] = 
+                            {{1.0,  0.0},{2.0, -1.0}};
 
         // only consider second order approximation for fictitious variables
         int  intOrder= 2;
@@ -986,20 +1002,20 @@ void ForcingMovingBody::EvaluateStructDynModel(
     }
 
     // Tensioned cable model is evaluated in wave space
-    for(int n = 0, cn = 1; n < m_nd; n++, cn--)
+    for(int n = 0, cn = 1; n < m_vdim; n++, cn--)
     {
         int offset = cn*3*m_np;
-        Array<OneD, NekDouble> tmp;
-        TensionedCableModel(pFields, fces[cn], 
+        Array<OneD, NekDouble> tmp(3*m_np);
+        TensionedCableModel(pfields, fces[cn], 
                             tmp = m_MotionVars+offset);
     }
 
-    // Set the forcing term based on the motion of the cable
+    // Set the m_forcing term based on the motion of the cable
     for(int var = 0; var < 3; var++)
     {
         for(int plane = 0; plane < m_np; plane++)
         {
-            int n = pFields[0]->GetPlane(plane)->GetTotPoints();
+            int n = pfields[0]->GetPlane(plane)->GetTotPoints();
 
             Array<OneD, NekDouble> tmp;
 
@@ -1007,15 +1023,20 @@ void ForcingMovingBody::EvaluateStructDynModel(
             int xoffset = var * m_np+plane;
             int yoffset = 3*m_np + xoffset;
 
-            Vmath::Fill(n, m_MotionVars[xoffset], tmp = zta[var] + offset, 1);
-            Vmath::Fill(n, m_MotionVars[yoffset], tmp = eta[var] + offset, 1);
+            Vmath::Fill(n, m_MotionVars[xoffset], tmp = m_zta[var] + offset, 1);
+            Vmath::Fill(n, m_MotionVars[yoffset], tmp = m_eta[var] + offset, 1);
         }
     }
+}
 
-    // velocity of moving body is used to set the boundary conditions
-    // according to the coordinate system mapping. for forced vibration,
-    // however, that can be simply set by prior according to the moving function
-    // in .xml file
+/**
+ *
+ */
+void ForcingMovingBody::MappingBndConditions(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+            const Array<OneD, Array<OneD, NekDouble> >        &fields,
+                  NekDouble  time) 
+{
     Array<OneD, Array<OneD, NekDouble> > BndV (
                                         m_motion.num_elements());
     for (int i = 0; i < m_motion.num_elements(); ++i)
@@ -1033,18 +1054,18 @@ void ForcingMovingBody::EvaluateStructDynModel(
     Array<OneD, const SpatialDomains::BoundaryConditionShPtr> bndConds;
 
     const Array<OneD, const NekDouble> z
-                            = pFields[0]->GetHomogeneousBasis()->GetZ();
-    int nbnd = pFields[0]->GetBndCondExpansions().num_elements();
+                            = pfields[0]->GetHomogeneousBasis()->GetZ();
+    int nbnd = pfields[0]->GetBndCondExpansions().num_elements();
 
     for (int i = 0; i < nbnd; ++i)
     {
         for (int plane = 0; plane < m_np; plane++)
         {
-            for ( int dir = 0; dir < m_motion.num_elements(); dir++)
+            for ( int dim = 0; dim < m_motion.num_elements(); dim++)
             {
-                bndCondExps = pFields[dir]->GetPlane(plane)
+                bndCondExps = pfields[dim]->GetPlane(plane)
                                             ->GetBndCondExpansions();
-                bndConds    = pFields[dir]->GetPlane(plane)
+                bndConds    = pfields[dim]->GetPlane(plane)
                                             ->GetBndConditions();
 
                 if (bndConds[i]->GetUserDefined() ==
@@ -1056,7 +1077,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
                     Array<OneD, NekDouble> x2(npoints, 0.0);
                     Array<OneD, NekDouble> tmp(npoints,0.0);
 
-                    NekDouble local_z = z[pFields[0]->GetTransposition()
+                    NekDouble local_z = z[pfields[0]->GetTransposition()
                                                     ->GetPlaneID(plane)];
                     NekDouble x2_in   = 0.5*m_lhom*(1.0+local_z);
                     // Homogeneous input case for x2.
@@ -1078,7 +1099,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
 
                     condition.Evaluate(x0, x1, x2, time,
                                     bndCondExps[i]->UpdatePhys());
-                    Vmath::Fill(npoints, BndV[dir][plane], tmp, 1);
+                    Vmath::Fill(npoints, BndV[dim][plane], tmp, 1);
                     Vmath::Vsub(npoints, bndCondExps[i]->UpdatePhys(), 1,
                                          tmp,                          1,
                                          bndCondExps[i]->UpdatePhys(), 1);
@@ -1086,19 +1107,502 @@ void ForcingMovingBody::EvaluateStructDynModel(
             }
         }
     }
+    
+    // Set up high order outflow conditions 
+    // for movingbody module
+    CalcOutflowBCs(pfields, fields);
 }
 
 
 /**
  *
+ **/
+void ForcingMovingBody::CalcOutflowBCs(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+        const Array<OneD, Array<OneD, NekDouble> >        &fields)
+    {
+        static bool init = true;
+        static bool noHOBC = false;
+
+        if(noHOBC == true)
+        {
+           return;
+        }
+        
+        if(init) // set up storage for boundary velocity at outflow
+        {
+            init = false;
+
+            m_PBndConds = pfields[3]->GetBndConditions();
+            m_PBndExp   = pfields[3]->GetBndCondExpansions();
+
+           int totbndpts = 0;
+            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                if(m_PBndConds[n]->GetUserDefined()
+                        == SpatialDomains::eHighOutflow)
+                {
+                    totbndpts += m_PBndExp[n]->GetTotPoints();
+                }
+            }
+            
+            if(totbndpts == 0)
+            {
+                noHOBC = true;
+                return;
+            }
+            
+            m_curl_dim = 3;
+            m_bnd_dim  = 2;
+            m_intSteps = 2;
+
+            // find the maximum values of points for pressure BC evaluation
+            m_pressureBCsMaxPts = 0;
+            m_pressureBCsElmtMaxPts = 0;
+            // Set up mapping from pressure boundary condition to pressure element
+            // dm_etails.
+            pfields[3]->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
+                                             m_pressureBCtoTraceID);
+            int cnt, n;
+            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
+                {
+                    m_pressureBCsMaxPts = max(m_pressureBCsMaxPts,
+                                    m_PBndExp[n]->GetExp(i)->GetTotPoints());
+                    m_pressureBCsElmtMaxPts = max(m_pressureBCsElmtMaxPts,
+                                    pfields[0]->GetExp(m_pressureBCtoElmtID[cnt++])
+                                                                ->GetTotPoints());
+                }
+            }
+ 
+            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+            m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+            m_movbodyVel = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+            m_movbodyDev = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+            m_ub         = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+            m_nonlinearterm_phys   = Array<OneD, NekDouble> (totbndpts,0.0);
+            for(int i = 0; i < m_curl_dim; ++i)
+            {
+                m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+                m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+                for(int j = 0; j < m_curl_dim; ++j)
+                {             
+                    // currently just set up for 2nd order extrapolation 
+                    m_outflowVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
+                    m_PhyoutfVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
+                }
+                m_movbodyVel[i] = Array<OneD, NekDouble>(totbndpts,0.0);
+                m_movbodyDev[i] = Array<OneD, NekDouble>(totbndpts,0.0);
+                m_ub[i]         = Array<OneD, NekDouble>(totbndpts,0.0);
+            }
+
+            Array<OneD, unsigned int> planes;
+            planes = pfields[0]->GetZIDs();
+            int num_planes = planes.num_elements();
+            m_expsize_per_plane = 
+					Array<OneD, unsigned int> (m_PBndConds.num_elements());
+            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                int exp_size = m_PBndExp[n]->GetExpSize();
+                m_expsize_per_plane[n] = exp_size/num_planes;
+            }
+            m_totexps_per_plane = 0;
+            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                m_totexps_per_plane += m_PBndExp[n]->GetExpSize()/num_planes;
+            }
+        }
+        
+        StdRegions::StdExpansionSharedPtr Bc; 
+        Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
+                                                        UBndConds(m_curl_dim);
+        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                                                        UBndExp(m_curl_dim);
+
+        for (int i = 0; i < m_curl_dim; ++i)
+        {
+            UBndConds[i] = pfields[i]->GetBndConditions();
+            UBndExp[i]   = pfields[i]->GetBndCondExpansions();
+        }
+
+        Array<OneD, Array<OneD, NekDouble> > BndValues(m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > MovValues(m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > ngradu   (m_curl_dim);
+        Array<OneD, NekDouble > gradtmp (m_pressureBCsElmtMaxPts),
+                                fgradtmp(m_pressureBCsElmtMaxPts);
+        
+        ngradu[0] = Array<OneD, NekDouble>(m_curl_dim*m_pressureBCsMaxPts);
+        for(int i = 0; i < m_curl_dim; ++i)
+        {
+            BndElmt[i]   = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,
+                                                   0.0);
+            BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
+            MovValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
+            ngradu[i]  = ngradu[0] + i*m_pressureBCsMaxPts;
+            RollOver(m_outflowVel[i]);
+            RollOver(m_PhyoutfVel[i]);
+        }
+            
+        m_pressureCalls++;
+        int  nint = min(m_pressureCalls,m_intSteps);
+
+        StdRegions::StdExpansionSharedPtr elmt;
+        Array<OneD, NekDouble> PBCvals, UBCvals;
+        Array<OneD, Array<OneD, NekDouble> > normals;
+
+        NekDouble U0,delta;
+        m_session->LoadParameter("U0_HighOrderBC",U0,1.0);
+        m_session->LoadParameter("Delta_HighOrderBC",delta,1/20.0);
+
+        int cnt;
+        int count = 0;
+        for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            // Do outflow boundary conditions if they exist
+            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHighOutflow)
+            {
+
+                int cnt_exp   = 0; int cnt_plane = 0;
+                int veloffset = 0;
+                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
+                {
+                    // count the expansion list in each plane for e3DH1D case
+                    if(cnt_exp == m_expsize_per_plane[n])
+                    {
+                        cnt_exp = 0; cnt_plane++;
+                    }
+                    int cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
+
+                    // find element and edge of this expansion.
+                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion>
+                        (m_PBndExp[n]->GetExp(i));
+
+                    int elmtid = m_pressureBCtoElmtID[cnt];
+                    elmt       = pfields[0]->GetExp(elmtid);
+                    int offset = pfields[0]->GetPhys_Offset(elmtid);
+
+                    int boundary = m_pressureBCtoTraceID[cnt];
+
+                    // Determine extrapolated U,V values
+                    int nq = elmt->GetTotPoints();
+                    int nbc = m_PBndExp[n]->GetExp(i)->GetTotPoints();
+                    // currently just using first order approximation here.
+                    // previously have obtained value from m_integrationSoln
+                    Array<OneD, NekDouble> veltmp;
+
+                    for(int j = 0; j < m_curl_dim; ++j)
+                    {
+                        Vmath::Vcopy(nq, &fields[j][offset], 1,
+                                         &BndElmt[j][0],     1);
+                        elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
+                                     veltmp = m_outflowVel[j][0] + veloffset);
+                    }
+
+                    for(int j = 0; j < m_bnd_dim; ++j)
+                    {
+                        if(j == 0)
+                        {
+                            Vmath::Vcopy(nq, &m_zta[1][offset], 1, &BndElmt[0][0], 1);
+                        }
+                        if(j == 1)
+                        {
+                            Vmath::Vcopy(nq, &m_eta[1][offset], 1, &BndElmt[1][0], 1);
+                        }
+                        // extract the values of velocity of movingbody on outflow boundaries
+                        elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
+                                         veltmp = m_movbodyVel[j] + veloffset);
+                        if(j == 0)
+                        {
+                            Vmath::Vcopy(nq, &m_zta[3][offset], 1, &BndElmt[0][0], 1);
+                        }
+                        if(j == 1)
+                        {
+                            Vmath::Vcopy(nq, &m_eta[3][offset], 1, &BndElmt[1][0], 1);
+                        }
+                        // extract the values of d(m_zta)/dz and d(m_eta)/dz on outflow boundaries
+                        elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
+                                         veltmp = m_movbodyDev[j] + veloffset);
+                    }
+
+                    veloffset += nbc;
+                }
+
+                // for velocity on the outflow boundary in e3DH1D,
+                // we need to make a backward fourier transformation
+                // to get the physical coeffs at the outflow BCs.
+                for(int j = 0; j < m_curl_dim; ++j)
+                {
+                    m_PBndExp[n]->HomogeneousBwdTrans(
+                            m_outflowVel[j][0],
+                            m_PhyoutfVel[j][0]);
+                }
+                
+                cnt_plane = 0; cnt_exp = 0;
+                veloffset = 0;
+                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
+                {   
+                    // count the expansion list for each plane for e3DH1D
+                    if(cnt_exp == m_expsize_per_plane[n])
+                    {
+                        cnt_exp = 0; cnt_plane++;
+                    }
+                    cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
+
+                    int elmtid = m_pressureBCtoElmtID[cnt];
+                    elmt       = pfields[0]->GetExp(elmtid);
+                    int nbc = m_PBndExp[n]->GetExp(i)->GetTotPoints();
+
+                    Array<OneD, NekDouble>  veltmp(nbc,0.0),
+                                            normDotu(nbc,0.0), utot(nbc,0.0);
+                    int boundary = m_pressureBCtoTraceID[cnt];
+                    normals=elmt->GetSurfaceNormal(boundary);
+
+                    // extrapolate velocity
+                    if(nint <= 1)
+                    {
+                        for(int j = 0; j < m_curl_dim; ++j)
+                        {
+                            Vmath::Vcopy(nbc,
+                                    veltmp = m_PhyoutfVel[j][0] +veloffset, 1,
+                                    BndValues[j],                           1);
+                        }
+                    }
+                    else // only set up for 2nd order extrapolation
+                    {
+                        for(int j = 0; j < m_curl_dim; ++j)
+                        {
+                            Vmath::Smul(nbc, 2.0,
+                                    veltmp = m_PhyoutfVel[j][0] + veloffset, 1,
+                                    BndValues[j],                            1);
+                            Vmath::Svtvp(nbc, -1.0,
+                                    veltmp = m_PhyoutfVel[j][1] + veloffset, 1,
+                                    BndValues[j],                            1,
+                                    BndValues[j],                            1);
+                        }    
+                    }
+
+                    // Set up |u|^2, n.u in physical space
+                    for(int j = 0; j < m_curl_dim; ++j)
+                    {
+                        Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
+                                          utot,         1, utot,         1);
+                    }
+                    for(int j = 0; j < m_bnd_dim; ++j)
+                    {
+                        Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
+                                          normDotu,     1, normDotu,     1);
+                    }
+                        
+                    int Offset = m_PBndExp[n]->GetPhys_Offset(i);
+
+                    for(int k = 0; k < nbc; ++k)
+                    {
+                        // calculate the nonlinear term (kinetic energy
+                        //  multiplies step function) in physical space
+                        NekDouble fac = 0.5*(1.0-tanh(normDotu[k]/(U0*delta)));
+                        m_nonlinearterm_phys[k + Offset] =  0.5 * utot[k] * fac;
+                    }
+
+
+                    // Include the constribution of movingbody effects
+                    for(int j = 0; j < m_bnd_dim; ++j)
+                    {
+                        Vmath::Vvtvp(nbc,veltmp = m_PhyoutfVel[2][0] + veloffset, 1,
+                                         veltmp = m_movbodyDev[j]    + veloffset, 1,
+                                         veltmp = m_movbodyVel[j]    + veloffset, 1,
+                                         MovValues[j],                            1);
+                        Vmath::Vadd(nbc, MovValues[j], 1,
+                                         BndValues[j], 1,
+                                         BndValues[j], 1);
+                    }
+
+
+                    Vmath::Zero(nbc,utot,1);
+                    Vmath::Zero(nbc,normDotu,1);
+
+                    // Set up |u|^2, n.u in physical space
+                    for(int j = 0; j < m_curl_dim; ++j)
+                    {
+                        Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
+                                          utot,         1, utot,         1);
+                    }
+                    for(int j = 0; j < m_bnd_dim; ++j)
+                    {
+                        Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
+                                          normDotu,     1, normDotu,     1);
+                    }
+
+                    for(int k = 0; k < nbc; ++k)
+                    {
+                        // calculate the nonlinear term (kinetic energy
+                        //  multiplies step function) in physical space
+                        NekDouble fac = 0.5*(1.0-tanh(normDotu[k]/(U0*delta)));
+                        m_nonlinearterm_phys[k + Offset] += -0.5 * utot[k] * fac;
+                    }
+                    veloffset += nbc;
+                }
+
+                // m_forcing size (it must be 3: Ax, Ay and Az)
+                // total number of structural variables(Disp, Vel and Accel) must be 3
+                Array<OneD, Array<OneD, NekDouble> > Fields(3);
+                // create the storage space for the body motion description
+                int phystot = pfields[0]->GetTotPoints();
+                for(int i = 0; i < 3; i++)
+                {
+                    Fields[i] = Array<OneD, NekDouble> (phystot, 0.0);
+                }
+                for(int j = 0; j < m_curl_dim; ++j)
+                {
+                    pfields[0]->HomogeneousBwdTrans(fields[j],Fields[j]);
+                }
+    
+                veloffset = 0;
+                cnt_exp = 0; cnt_plane = 0; //only useful in e3DH1D case
+                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
+                {
+                    // count the expansion list for e3DH1D
+                    if(cnt_exp == m_expsize_per_plane[n])
+                    {
+                        cnt_exp = 0; cnt_plane++;
+                    }
+                    cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
+                    cnt_exp++;
+
+                    // find element and edge of this expansion. 
+                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
+                        (m_PBndExp[n]->GetExp(i));
+
+                    int elmtid = m_pressureBCtoElmtID[cnt];
+                    elmt       = pfields[0]->GetExp(elmtid);
+                    int offset = pfields[0]->GetPhys_Offset(elmtid);
+
+                    // Determine extrapolated U,V values
+                    int nq = elmt->GetTotPoints();
+
+                    // currently just using first order approximation here. 
+                    // previously have obtained value from m_integrationSoln
+                    for(int j = 0; j < m_curl_dim; ++j)
+                    {
+                        Vmath::Vcopy(nq, &Fields[j][offset], 1,
+                                         &BndElmt[j][0],     1);
+                    }
+
+                    int nbc      = m_PBndExp[n]->GetExp(i)->GetTotPoints();
+                    int boundary = m_pressureBCtoTraceID[cnt];
+
+                    Array<OneD, NekDouble>  ptmp(nbc,0.0),devtmp(nbc,0.0),
+                                            divU(nbc,0.0);
+
+                    normals=elmt->GetSurfaceNormal(boundary);
+                    Vmath::Zero(m_bnd_dim*m_pressureBCsMaxPts,ngradu[0],1);
+
+                    for (int j = 0; j < m_bnd_dim; j++)
+                    {
+                        // Calculate gradient terms:
+                        // nx(w_x*d(m_zta)/dz)+ny(w_y*d(m_zta)/dz),
+                        // nx(w_x*d(m_eta)/dz)+ny(w_y*d(m_eta)/dz)
+                        for (int k = 0; k< m_bnd_dim; k++)
+                        {
+                            elmt->PhysDeriv(MultiRegions::DirCartesianMap[k],
+                                            BndElmt[2], gradtmp);
+                            elmt->GetTracePhysVals(boundary, Bc, gradtmp,
+                                                   fgradtmp);
+                            Vmath::Vmul(nbc, devtmp = m_movbodyDev[j] + veloffset, 1,
+                                             fgradtmp, 1, fgradtmp, 1);
+                            Vmath::Vvtvp(nbc,normals[k], 1, fgradtmp, 1,
+                                             ngradu[j],  1, ngradu[j],1);
+                        }
+                    }
+
+                    // Set up (n.grad(u) . n) for
+                    // pressure condition
+                    for(int j = 0; j < m_bnd_dim; ++j)
+                    {
+                        Vmath::Vvtvp(nbc, normals[j],   1, ngradu[j],    1,
+                                          ptmp,         1, ptmp,         1);
+                    }
+                    int p_offset = m_PBndExp[n]->GetPhys_Offset(i);
+
+                    for(int k = 0; k < nbc; ++k)
+                    {
+                        // Set up Dirichlet pressure condition and
+                        // store in ptmp (m_UBndCoeffs contains Fourier Coeffs of the
+                        // function from the input file )
+
+                        ptmp[k] = - m_kinvis * ptmp[k] 
+                                  - m_nonlinearterm_phys[k + p_offset];
+                    }
+
+                    // set up pressure boundary condition
+                    PBCvals = m_PBndExp[n]->UpdatePhys()
+                            + m_PBndExp[n]->GetPhys_Offset(i);
+                    Vmath::Vcopy(nbc, ptmp, 1, PBCvals, 1);
+                    for(int j = 0; j < m_curl_dim; j++)
+                    {
+                        int u_offset = UBndExp[j][n]->GetPhys_Offset(i);
+
+                        for(int k = 0; k < nbc; ++k)
+                        {
+                            if(j < m_curl_dim-1)
+                            {
+                                m_ub[j][k + u_offset] = - m_nonlinearterm_phys[k + u_offset] 
+                                                                  * normals[j][k] / m_kinvis
+                                                                              - ngradu[j][k];
+                            }
+                            else
+                            {
+                                m_ub[j][k + u_offset] = - ngradu[j][k];
+                            }
+                        }
+                    }
+
+                    veloffset += nbc;
+                }
+
+                //
+                for(int j = 0; j < m_curl_dim; ++j)
+                {
+                    m_PBndExp[n]->HomogeneousFwdTrans(
+                            m_ub[j],
+                            m_ub[j]);
+                }
+
+                // Now set up Velocity conditions.
+                for(int j = 0; j < m_curl_dim; j++)
+                {
+                    if(UBndConds[j][n]->GetUserDefined()
+                                        == SpatialDomains::eHighOutflow)
+                    {
+                        for(int i = 0; i < UBndExp[0][n]->GetExpSize();
+                                       ++i)
+                        {
+                            int u_offset = UBndExp[j][n]->GetPhys_Offset(i);
+                            UBCvals = UBndExp[j][n]->UpdateCoeffs()
+                                    + UBndExp[j][n]->GetCoeff_Offset(i);
+                            Bc->IProductWRTBase(m_ub[j]+u_offset,UBCvals);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                count  += m_expsize_per_plane[n];
+            }
+        }
+    }
+    
+/**
+ *
  */
 void ForcingMovingBody::InitialiseCableModel(
         const LibUtilities::SessionReaderSharedPtr& pSession,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields)
 {
     // storage of spanwise-velocity for current and previous time levels
-    // used to calculate dw/dt in forcing term
-    int nPointsTot = pFields[0]->GetNpoints();
+    // used to calculate dw/dt in m_forcing term
+    int nPointsTot = pfields[0]->GetNpoints();
     m_W = Array<OneD, Array<OneD, NekDouble> > (2);
     for(int n = 0; n < 2; ++n)
     {
@@ -1111,7 +1615,7 @@ void ForcingMovingBody::InitialiseCableModel(
     m_movingBodyCalls = 0;
 
     Array<OneD, unsigned int> ZIDs;
-    ZIDs = pFields[0]->GetZIDs();
+    ZIDs = pfields[0]->GetZIDs();
     m_np = ZIDs.num_elements();
     
     m_Aeroforces = Array<OneD, NekDouble>(2*m_np,0.0);
@@ -1121,18 +1625,18 @@ void ForcingMovingBody::InitialiseCableModel(
 
     if(vibtype == "Constrained" || vibtype == "CONSTRAINED")
     {
-        m_nd = 1;
+        m_vdim = 1;
     }
     else if (vibtype == "Free" || vibtype == "FREE")
     {
-        m_nd = 2;
+        m_vdim = 2;
     }
     else if (vibtype == "Forced" || vibtype == "FORCED")
     {
         return;
     }
 
-    LibUtilities::CommSharedPtr vcomm = pFields[0]->GetComm();
+    LibUtilities::CommSharedPtr vcomm = pfields[0]->GetComm();
 
     bool homostrip;
     m_session->MatchSolverInfo("HomoStrip","True",homostrip,false);
@@ -1141,8 +1645,9 @@ void ForcingMovingBody::InitialiseCableModel(
     {
         m_session->LoadParameter("LZ", m_lhom);
         int nplanes = m_session->GetParameter("HomModesZ");
-        m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance(
-                                                            "NekFFTW", nplanes);
+        m_FFT = 
+            LibUtilities::GetNektarFFTFactory().CreateInstance(
+                                            "NekFFTW", nplanes);
     }
     else
     {
@@ -1153,8 +1658,9 @@ void ForcingMovingBody::InitialiseCableModel(
         m_session->LoadParameter("DistStrip", DistStrip);
         m_session->LoadParameter("Strip_Z", nstrips);
         m_lhom = nstrips * DistStrip;
-        m_FFT  = LibUtilities::GetNektarFFTFactory().CreateInstance(
-                                                            "NekFFTW", nstrips);
+        m_FFT = 
+            LibUtilities::GetNektarFFTFactory().CreateInstance(
+                                            "NekFFTW", nstrips);
     }
 
     // load the structural dynamic parameters from xml file
@@ -1177,9 +1683,9 @@ void ForcingMovingBody::InitialiseCableModel(
         // Storage array of Struct Velocity and Acceleration used for
         // extrapolation of fictitious force
         m_fV = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
-                                                    m_motion.num_elements());
+                                            m_motion.num_elements());
         m_fA = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
-                                                    m_motion.num_elements());
+                                            m_motion.num_elements());
         for (int i = 0; i < m_motion.num_elements(); ++i)
         {
             m_fV[i] = Array<OneD, Array<OneD, NekDouble> > (2);
@@ -1194,7 +1700,7 @@ void ForcingMovingBody::InitialiseCableModel(
     }
 
     // Setting the coefficient matrices for solving structural dynamic ODEs
-    SetDynEqCoeffMatrix(pFields);
+    SetDynEqCoeffMatrix(pfields);
 
     // Set initial condition for cable's motion
     int cnt = 0;
@@ -1218,7 +1724,7 @@ void ForcingMovingBody::InitialiseCableModel(
             }
             else
             { 
-                nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
+                nzpoints = pfields[0]->GetHomogeneousBasis()->GetNumModes();
             }
 
  
@@ -1388,10 +1894,10 @@ void ForcingMovingBody::InitialiseCableModel(
             
             if(!homostrip)
             {
-                int nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
+                int nzpoints = pfields[0]->GetHomogeneousBasis()->GetNumModes();
                 Array<OneD, NekDouble> z_coords(nzpoints,0.0);
                 Array<OneD, const NekDouble> pts
-                                    = pFields[0]->GetHomogeneousBasis()->GetZ();
+                                    = pfields[0]->GetHomogeneousBasis()->GetZ();
 
                 Vmath::Smul(nzpoints,m_lhom/2.0,pts,1,z_coords,1);
                 Vmath::Sadd(nzpoints,m_lhom/2.0,z_coords,1,z_coords,1);
@@ -1431,8 +1937,8 @@ void ForcingMovingBody::InitialiseCableModel(
                 }
             }
 
-            int Xoffset = j*m_np;
-            int Yoffset = 3*m_np+Xoffset;
+            int xoffset = j*m_np;
+            int yoffset = 3*m_np+xoffset;
 
             Array<OneD, NekDouble> tmp(m_np,0.0);
             LibUtilities::EquationSharedPtr ffunc0,ffunc1;
@@ -1440,8 +1946,8 @@ void ForcingMovingBody::InitialiseCableModel(
             ffunc0 = m_session->GetFunction(m_funcName[j], m_motion[0]);
             ffunc1 = m_session->GetFunction(m_funcName[j], m_motion[1]);
 
-            ffunc0->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+Xoffset);
-            ffunc1->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+Yoffset);
+            ffunc0->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+xoffset);
+            ffunc1->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+yoffset);
             cnt = cnt + 2;
         }
     }
@@ -1452,7 +1958,7 @@ void ForcingMovingBody::InitialiseCableModel(
  *
  */
 void ForcingMovingBody::SetDynEqCoeffMatrix(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields)
 {
     int nplanes;
 
@@ -1613,7 +2119,7 @@ void ForcingMovingBody::EvaluateAccelaration(
 /**
  *
  */
-void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
+void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pforce)
 {
 
     m_funcName = Array<OneD, std::string> (3);
@@ -1622,15 +2128,15 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
     m_motion[1] = "y";
 
     m_IsFromFile = Array<OneD, bool> (6);
-    // Loading the x-dispalcement (zta) and the y-displacement (eta)
+    // Loading the x-dispalcement (m_zta) and the y-displacement (m_eta)
     // Those two variables are bith functions of z and t and the may come
     // from an equation (forced vibration) or from another solver which, given
     // the aerodynamic forces at the previous step, calculates the 
     // displacements.
 
-    //Get the body displacement: zta and eta
+    //Get the body displacement: m_zta and m_eta
     const TiXmlElement* funcNameElmt_D
-                    = pForce->FirstChildElement("DISPLACEMENTS");
+                    = pforce->FirstChildElement("DISPLACEMENTS");
     ASSERTL0(funcNameElmt_D,
              "MOVINGBODYFORCE tag has to specify a function name which "
              "prescribes the body displacement as d(z,t).");
@@ -1639,9 +2145,9 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
     ASSERTL0(m_session->DefinesFunction(m_funcName[0]),
              "Function '" + m_funcName[0] + "' not defined.");
 
-    //Get the body velocity of movement: d(zta)/dt and d(eta)/dt
+    //Get the body velocity of movement: d(m_zta)/dt and d(m_eta)/dt
     const TiXmlElement* funcNameElmt_V
-                    = pForce->FirstChildElement("VELOCITIES");
+                    = pforce->FirstChildElement("VELOCITIES");
     ASSERTL0(funcNameElmt_D,
              "MOVINGBODYFORCE tag has to specify a function name which "
              "prescribes the body velocity of movement as v(z,t).");
@@ -1651,9 +2157,9 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
              "Function '" + m_funcName[1] + "' not defined.");
 
 
-    //Get the body acceleration: dd(zta)/ddt and dd(eta)/ddt
+    //Get the body acceleration: dd(m_zta)/ddt and dd(m_eta)/ddt
     const TiXmlElement* funcNameElmt_A
-                    = pForce->FirstChildElement("ACCELERATIONS");
+                    = pforce->FirstChildElement("ACCELERATIONS");
     ASSERTL0(funcNameElmt_A,
              "MOVINGBODYFORCE tag has to specify a function name which "
              "prescribes the body acceleration as a(z,t).");
@@ -1766,15 +2272,15 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
  */
 void ForcingMovingBody::InitialiseFilter(
         const LibUtilities::SessionReaderSharedPtr& pSession,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const TiXmlElement* pForce)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+        const TiXmlElement* pforce)
 {
     // Get the outputfile name, output frequency and 
     // the boundary's ID for the cable's wall
-    std::string typeStr = pForce->Attribute("TYPE");
+    std::string typeStr = pforce->Attribute("TYPE");
     std::map<std::string, std::string> vParams;
 
-    const TiXmlElement *param = pForce->FirstChildElement("PARAM");
+    const TiXmlElement *param = pforce->FirstChildElement("PARAM");
     while (param)
     {
         ASSERTL0(param->Attribute("NAME"),
@@ -1793,11 +2299,11 @@ void ForcingMovingBody::InitialiseFilter(
     // Creat the filter for MovingBody, where we performed the calculation of
     // fluid forces and write both the aerodynamic forces and motion variables
     // into the output files
-    m_filter = MemoryManager<FilterMovingBody>::
+    m_MovBodyfilter = MemoryManager<FilterMovingBody>::
                                     AllocateSharedPtr(pSession, vParams);
 
     // Initialise the object of MovingBody filter
-    m_filter->Initialise(pFields, 0.0);
+    m_MovBodyfilter->Initialise(pfields, 0.0);
 
 }
 

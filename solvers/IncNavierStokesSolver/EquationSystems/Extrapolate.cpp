@@ -330,7 +330,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-        
         static bool init = true;
         static bool noHOBC = false;
 
@@ -387,8 +386,8 @@ namespace Nektar
                 m_nonlinearterm_coeffs = Array<OneD, NekDouble> (totbndpts,0.0);
 
                 m_PBndCoeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_bnd_dim);
-                for(int i = 0; i < m_bnd_dim; ++i)
+                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
+                for(int i = 0; i < m_curl_dim; ++i)
                 {
                     m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
                 }
@@ -556,7 +555,7 @@ namespace Nektar
                         // extrapolate velocity
                         if(nint <= 1)
                         {
-                            for(int j = 0; j < m_bnd_dim; ++j)
+                            for(int j = 0; j < m_curl_dim; ++j)
                             {
                                 Vmath::Vcopy(nbc,
                                         veltmp = m_PhyoutfVel[j][0] +veloffset, 1,
@@ -565,7 +564,7 @@ namespace Nektar
                         }
                         else // only set up for 2nd order extrapolation
                         {
-                            for(int j = 0; j < m_bnd_dim; ++j)
+                            for(int j = 0; j < m_curl_dim; ++j)
                             {
                                 Vmath::Smul(nbc, 2.0,
                                         veltmp = m_PhyoutfVel[j][0] + veloffset, 1,
@@ -578,37 +577,17 @@ namespace Nektar
                         }
 
                         // Set up |u|^2, n.u in physical space
-                        for(int j = 0; j < m_bnd_dim; ++j)
+                        for(int j = 0; j < m_curl_dim; ++j)
                         {
                             Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
                                               utot,         1, utot,         1);
+                        }
+                        for(int j = 0; j < m_bnd_dim; ++j)
+                        {
                             Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
                                               normDotu,     1, normDotu,     1);
                         }
                         
-                        // Here we should include the contribution from the z-velocity
-                        Array<OneD, NekDouble> tmp (m_pressureBCsMaxPts,0.0);
-                        // extrapolate velocity
-                        if(nint <= 1)
-                        {
-                            Vmath::Vcopy(nbc,
-                                        veltmp = m_PhyoutfVel[2][0] +veloffset, 1,
-                                        tmp,                           1);
-                        }
-                        else // only set up for 2nd order extrapolation
-                        {
-                            Vmath::Smul(nbc, 2.0,
-                                        veltmp = m_PhyoutfVel[2][0] + veloffset, 1,
-                                        tmp,                            1);
-                            Vmath::Svtvp(nbc, -1.0,
-                                        veltmp = m_PhyoutfVel[2][1] + veloffset, 1,
-                                        tmp,                            1,
-                                        tmp,                            1);
-                        }
-
-                        Vmath::Vvtvp(nbc,  tmp, 1,  tmp, 1,
-                                          utot, 1, utot, 1);
-
                         int Offset = m_PBndExp[n]->GetPhys_Offset(i);
 
                         for(int k = 0; k < nbc; ++k)
@@ -631,14 +610,14 @@ namespace Nektar
                     // for e3DH1D, we need to make a forward fourier transformation
                     // for Dirichlet pressure boundary condition that is from input file
                     m_PBndExp[n]->HomogeneousFwdTrans(
-                            m_PBndExp[n]->GetPhys(),
+                            m_PBndExp[n]->UpdatePhys(),
                             m_PBndCoeffs);
                     // for e3DH1D, we need to make a forward fourier transformation
                     // for Neumann velocity boundary condition that is from input file
-                    for (int j = 0; j < m_bnd_dim; ++j)
+                    for (int j = 0; j < m_curl_dim; ++j)
                     {
                         UBndExp[j][n]->HomogeneousFwdTrans(
-                            UBndExp[j][n]->GetPhys(),
+                            UBndExp[j][n]->UpdatePhys(),
                             m_UBndCoeffs[j]);
                     }
                 }
@@ -686,7 +665,7 @@ namespace Nektar
                     normals=elmt->GetSurfaceNormal(boundary);
                     Vmath::Zero(m_bnd_dim*m_pressureBCsMaxPts,nGradu[0],1);
 
-                    for (int j = 0; j < m_bnd_dim; j++)
+                    for (int j = 0; j < m_curl_dim; j++)
                     {
                         // Calculate Grad u =  du/dx, du/dy, du/dz, etc. 
                         for (int k = 0; k< m_bnd_dim; k++)
@@ -721,8 +700,9 @@ namespace Nektar
                             // store in ptmp (m_UBndCoeffs contains Fourier Coeffs of the
                             // function from the input file )
 
-                            ptmp[k] =  kinvis * ptmp[k] - m_nonlinearterm_coeffs[k + p_offset]
-                                                        - m_PBndCoeffs[k + p_offset];
+                            ptmp[k] =  kinvis * ptmp[k] 
+                                        - m_nonlinearterm_coeffs[k + p_offset]
+                                                  - m_PBndCoeffs[k + p_offset];
                         }
 
                         int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
@@ -733,10 +713,22 @@ namespace Nektar
                             {
                                 ubc[j][k + u_offset] = (1.0 / kinvis)
                                                 * (m_UBndCoeffs[j][k + u_offset]
-                                                            + m_nonlinearterm_coeffs[k + u_offset]
-                                                            * normals[j][k]);
+                                          + m_nonlinearterm_coeffs[k + u_offset]
+                                                                * normals[j][k]);
                             }
                         }
+
+                        // boundary condition for velocity in homogenous direction
+                        for(int k = 0; k < nbc; ++k)
+                        {
+                            ubc[m_bnd_dim][k + u_offset] = (1.0 / kinvis)
+                                                * m_UBndCoeffs[m_bnd_dim][k + u_offset];
+                        }
+
+                        u_offset = UBndExp[m_bnd_dim][n]->GetPhys_Offset(i);
+                        UBCvals  = UBndExp[m_bnd_dim][n]->UpdateCoeffs()
+                                    + UBndExp[m_bnd_dim][n]->GetCoeff_Offset(i);
+                        Bc->IProductWRTBase(ubc[m_bnd_dim] + u_offset, UBCvals);
                     }
                     else
                     {

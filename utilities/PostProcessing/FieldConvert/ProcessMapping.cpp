@@ -81,9 +81,9 @@ void ProcessMapping::Process(po::variables_map &vm)
     GlobalMapping::MappingSharedPtr mapping = GetMapping(m_f);
         
     // Convert velocity to Cartesian system
-    if (m_f->m_fieldMetaDataMap["MappingCorrectVel"] == "False")
+    if (m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
     {
-        m_f->m_fieldMetaDataMap["MappingCorrectVel"] = "True";
+        m_f->m_fieldMetaDataMap["MappingCartesianVel"] = "True";
         
         Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
         // Initialize arrays and copy velocity

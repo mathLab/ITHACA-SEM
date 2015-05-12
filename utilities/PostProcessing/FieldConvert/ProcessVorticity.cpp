@@ -109,7 +109,7 @@ namespace Nektar
             // Get velocity and convert to Cartesian system,
             //      if it is still in transformed system
             Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
-            if(m_f->m_fieldMetaDataMap["MappingCorrectVel"] == "False")
+            if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
             {
                 // Initialize arrays and copy velocity
                 for ( int i =0; i<spacedim; ++i )
@@ -160,7 +160,7 @@ namespace Nektar
                                              tmp[0], 
                                              tmp[1]);
                     
-                    mapping->ContravarToCartesian(tmp, tmp);
+                    mapping->CovarToCartesian(tmp, tmp);
                     for( int j = 0; j<spacedim; j++)
                     {
                         Vmath::Vcopy(npoints, tmp[j], 1, grad[i*nfields+j], 1 );
@@ -181,7 +181,7 @@ namespace Nektar
                                              tmp[1],
                                              tmp[2]);
                     
-                    mapping->ContravarToCartesian(tmp, tmp);
+                    mapping->CovarToCartesian(tmp, tmp);
                     for( int j = 0; j<spacedim; j++)
                     {
                         Vmath::Vcopy(npoints, tmp[j], 1, grad[i*nfields+j], 1 );

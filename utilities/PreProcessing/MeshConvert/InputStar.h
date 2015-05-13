@@ -92,6 +92,7 @@ namespace Nektar
             CCMIOError m_ccmErr;        //Star CCM error flag
             CCMIOID    m_ccmTopology;   //Star CCM mesh topology
             CCMIOID    m_ccmProcessor;
+            map<int,string> m_faceLabels; // label from CCM into composite 
             
             void InitCCM(void);
 

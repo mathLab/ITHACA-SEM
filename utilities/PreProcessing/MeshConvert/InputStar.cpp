@@ -100,7 +100,7 @@ namespace Nektar
             ProcessEdges();
             ProcessFaces();
             ProcessElements();
-            ProcessComposites();
+            ProcessComposites(m_faceLabels);
         }
 
         void InputStar::SetupElements(void)
@@ -169,8 +169,7 @@ namespace Nektar
             cout << cnt << " Tets" << endl;
             nComposite++;
 
-            ProcessVertices();
-
+            
             // Add boundary zones/composites
             for(i = 0; i < BndElementFaces.size(); ++i)
             {
@@ -187,12 +186,13 @@ namespace Nektar
                     }
                     else
                     {
-                        
                         string msg = "Failed to find FaceNodes for Face ";
                         msg += boost::lexical_cast<string>(BndElementFaces[i][j]);
                         ASSERTL0(false,msg);
                     }
                 }
+                
+                m_faceLabels[nComposite] = Facelabels[i];
                 nComposite++;
             }
         }

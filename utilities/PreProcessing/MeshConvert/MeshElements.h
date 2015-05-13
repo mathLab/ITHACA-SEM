@@ -1051,6 +1051,8 @@ namespace Nektar
             unsigned int m_id;
             /// Element type tag.
             std::string m_tag;
+            /// boundary label 
+            std::string m_label;
             /// Determines whether items can be reordered.
             bool m_reorder;
             /// List of elements in this composite.

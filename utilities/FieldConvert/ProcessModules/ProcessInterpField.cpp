@@ -303,9 +303,14 @@ void ProcessInterpField::InterpolateField(
                 }
                 else
                 {
-                    value = (value > clamp_up)? clamp_up :
-                        ((value < clamp_low)? clamp_low :
-                         value);
+                    if(value > clamp_up)
+                    {
+                        value = clamp_up;
+                    }
+                    else if( value < clamp_low)
+                    {
+                        value = clamp_low;
+                    }
 
                     field1[f]->UpdatePhys()[r] = value;
                 }

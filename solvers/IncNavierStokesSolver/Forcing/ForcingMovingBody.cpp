@@ -1153,8 +1153,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
                 bndCondExps = pFields[dir]->GetPlane(plane)
                                             ->GetBndCondExpansions();
                 bndConds = pFields[dir]->GetPlane(plane)->GetBndConditions();
-                if (bndConds[i]->GetUserDefined() ==
-                                            SpatialDomains::eMovingBody)
+                if (boost::iequals(bndConds[i]->GetUserDefined(),"MovingBody"))
                 {
                     int npoints = bndCondExps[i]->GetNpoints();
                     Array<OneD, NekDouble> x0(npoints, 0.0);

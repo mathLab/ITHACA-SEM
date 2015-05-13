@@ -182,9 +182,23 @@ namespace Nektar
 
                 for(int j = 0; j < 2; ++j)
                 {	
-                    std::string BCType = vessel[0]->GetBndConditions()[j]->
-                        GetBndTypeAsString(vessel[0]->GetBndConditions()[j]->GetUserDefined());
+                    std::string BCType =vessel[0]->GetBndConditions()[j]->GetUserDefined();
+                    if(BCType.empty()) // if not condition given define it to be NoUserDefined
+                    {
+                        BCType = "NoUserDefined";
+                    }
+
                     m_Boundary[2*omega+j]=GetBoundaryFactory().CreateInstance(BCType,m_vessels,m_session,m_pressureArea);
+                    
+                    // turn on time depedent BCs 
+                    if(BCType == "Q-inflow")
+                    {
+                        vessel[0]->GetBndConditions()[j]->SetIsTimeDependent(true);
+                    }
+                    else if(BCType == "RCR-terminal")
+                    {
+                        vessel[0]->GetBndConditions()[j]->SetIsTimeDependent(true);
+                    }
                 }
             }
 

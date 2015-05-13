@@ -181,6 +181,7 @@ namespace Nektar
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &FaceID);
+            virtual void v_Reset();
 
             /*
              * @brief Obtain a copy of the periodic edges and vertices for this

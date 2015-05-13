@@ -141,7 +141,6 @@ namespace Nektar
             {
                 int id;             ///< Universal ID of the vertex
                 int partition;      ///< Index of the partition to which it belongs
-                int partid;         ///< Global ID of the vertex in the partition
                 MultiWeight weight; ///< Weightings to this graph vertex
             };
 
@@ -205,7 +204,7 @@ namespace Nektar
             std::map<int, NummodesPerField>     m_expansions;
 
             std::map<std::string, int>          m_fieldNameToId;
-            std::vector<MultiWeight>            m_vertWeights;
+            std::map<int, MultiWeight>          m_vertWeights;
 
             BndRegionOrdering                   m_bndRegOrder;
 

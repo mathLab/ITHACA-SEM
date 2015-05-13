@@ -40,7 +40,7 @@ namespace Nektar
 
     std::string QInflow::className
     = GetBoundaryFactory().RegisterCreatorFunction(
-        "Qinflow",
+        "Q-inflow",
         QInflow::create,
         "Inflow boundary condition");
 

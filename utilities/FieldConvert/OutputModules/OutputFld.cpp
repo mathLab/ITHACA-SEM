@@ -146,8 +146,16 @@ void OutputFld::Process(po::variables_map &vm)
                         BndExp[j][Border]->AppendFieldData(FieldDef[k],
                                                            FieldData[k]);
 
-                        FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->
-                                                        m_fields[j]);
+                        if (m_f->m_fielddef.size() > 0)
+                        {
+                            FieldDef[k]->m_fields.push_back(
+                                m_f->m_fielddef[0]->m_fields[j]);
+                        }
+                        else
+                        {
+                            FieldDef[k]->m_fields.push_back(
+                                m_f->m_session->GetVariable(j));
+                        }
                     }
                 }
 

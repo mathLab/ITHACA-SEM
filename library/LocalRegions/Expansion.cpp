@@ -150,6 +150,15 @@ namespace Nektar
             return m_geom;
         }
 
+        void Expansion::Reset()
+        {
+            // Clear metrics
+            m_metrics.clear();
+
+            // Regenerate geometry factors
+            m_metricinfo = m_geom->GetGeomFactors();
+        }
+
         const SpatialDomains::GeomFactorsSharedPtr& Expansion::v_GetMetricInfo() const
         {
             return m_metricinfo;

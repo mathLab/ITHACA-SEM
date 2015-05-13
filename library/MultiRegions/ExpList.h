@@ -357,6 +357,12 @@ namespace Nektar
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
+            /// Reset geometry information and reset matrices
+            MULTI_REGIONS_EXPORT void Reset()
+            {
+                v_Reset();
+            }
+
             void WriteTecplotHeader(std::ostream &outfile,
                                     std::string var = "")
             {
@@ -1119,6 +1125,7 @@ namespace Nektar
 
             virtual void v_FillBndCondFromField();
 
+            virtual void v_Reset();
 
             virtual void v_LocalToGlobal(void);
 

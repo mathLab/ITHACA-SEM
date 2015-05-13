@@ -41,7 +41,7 @@ namespace Nektar
 
     std::string RCROutflow::className
     = GetBoundaryFactory().RegisterCreatorFunction(
-        "RCRterminal",
+        "RCR-terminal",
         RCROutflow::create,
         "RCR  outflow boundary condition");
 

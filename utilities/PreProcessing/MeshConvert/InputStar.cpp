@@ -124,7 +124,9 @@ namespace Nektar
             ReadInternalFaces(FaceNodes,ElementFaces);
 
             vector< vector<int> > BndElementFaces;
-            ReadBoundaryFaces(BndElementFaces, FaceNodes,ElementFaces);
+            vector<string> Facelabels;
+            ReadBoundaryFaces(BndElementFaces, FaceNodes,ElementFaces, 
+                              Facelabels);
                 
             // 3D Zone
             // Reset node ordering so that all prism faces have 
@@ -173,7 +175,7 @@ namespace Nektar
             for(i = 0; i < BndElementFaces.size(); ++i)
             {
                 cout << " Generating 2D Zone (composite = " <<
-                    nComposite << ")" << endl;
+                    nComposite << ", label = "<< Facelabels[i] << ")" << endl;
                 
                 for(int j = 0; j < BndElementFaces[i].size(); ++j)
                 {
@@ -1003,14 +1005,16 @@ namespace Nektar
         
         void InputStar::ReadBoundaryFaces(vector< vector<int> > &BndElementFaces,
                                           map<int, vector<int> >&FacesNodes, 
-                                          Array<OneD, vector<int> > &ElementFaces)
+                                          Array<OneD, vector<int> > &ElementFaces,
+                                          vector<string> &Facelabels)
         {
             // Read the boundary faces.
             CCMIOSize_t index = CCMIOSIZEC(0);
             CCMIOID mapID, id;
             CCMIOSize_t nFaces,size;
             vector<int> faces, faceCells, mapData;
-
+            vector<string> facelabel;
+            
             while (CCMIONextEntity(NULL, m_ccmTopology, 
                                    kCCMIOBoundaryFaces, &index, &id)
                    == kCCMIONoErr)
@@ -1039,6 +1043,20 @@ namespace Nektar
                              CCMIOINDEXC(kCCMIOStart), CCMIOINDEXC(kCCMIOEnd));
                 
                 CCMIOGetEntityIndex(&m_ccmErr, id, &boundaryVal);
+
+                // check to see if we have a label for this boundary faces 
+                int size;
+                char *name;
+                if(CCMIOReadOptstr(NULL, id, "Label", &size, NULL) == kCCMIONoErr){
+                    name=new char[size+1];
+                    CCMIOReadOptstr(NULL, id, "Label", NULL, name);
+                    Facelabels.push_back(string(name));
+                }
+                else
+                {
+                    Facelabels.push_back("Not known");
+                }
+                
 
                 // Add face nodes
                 int cnt  = 0; 

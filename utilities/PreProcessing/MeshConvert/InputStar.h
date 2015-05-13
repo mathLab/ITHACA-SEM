@@ -102,7 +102,8 @@ namespace Nektar
 
             void ReadBoundaryFaces(vector< vector<int> > &BndElementFaces,
                                    map<int, vector<int> > &FacesNodes, 
-                                   Array<OneD, vector<int> > &ElementFaces);
+                                   Array<OneD, vector<int> > &ElementFaces,
+                                   vector<string> &facelabels);
 
             void SetupElements(void);
         };

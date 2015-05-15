@@ -83,7 +83,7 @@ void IterativeElasticSystem::v_InitObject()
 
         for (int i = 0; i < bndCond.num_elements(); ++i)
         {
-            if (bndCond[i]->GetUserDefined() == SpatialDomains::eWall)
+            if (!(bndCond[i]->GetUserDefined().compare("Wall")))
             {
                 m_toDeform.push_back(i);
             }

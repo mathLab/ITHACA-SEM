@@ -1151,6 +1151,48 @@ namespace Nektar
                 zscale = expEvaluator.Evaluate(expr_id);
             }
 
+            NekDouble xmove,ymove,zmove;
+
+            // check to see if any moving parameters are in
+            // attributes and determine these values
+
+            //LibUtilities::ExpressionEvaluator expEvaluator;
+            const char *xmov =  element->Attribute("XMOVE");
+            if(!xmov)
+            {
+                xmove = 0.0;
+            }
+            else
+            {
+                std::string xmovstr = xmov;
+                int expr_id = expEvaluator.DefineFunction("",xmovstr);
+                xmove = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *ymov =  element->Attribute("YMOVE");
+            if(!ymov)
+            {
+                ymove = 0.0;
+            }
+            else
+            {
+                std::string ymovstr = ymov;
+                int expr_id = expEvaluator.DefineFunction("",ymovstr);
+                ymove = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *zmov = element->Attribute("ZMOVE");
+            if(!zmov)
+            {
+                zmove = 0.0;
+            }
+            else
+            {
+                std::string zmovstr = zmov;
+                int expr_id = expEvaluator.DefineFunction("",zmovstr);
+                zmove = expEvaluator.Evaluate(expr_id);
+            }
+
             int err;
 
             /// Look for elements in CURVE block.
@@ -1233,9 +1275,10 @@ namespace Nektar
                         {
                             elementDataStrm >> xval >> yval >> zval;
 
-                            xval *= xscale;
-                            yval *= yscale;
-                            zval *= zscale;
+                            xval = xval*xscale + xmove;
+                            yval = yval*yscale + ymove;
+                            zval = zval*zscale + zmove;
+
                             // Need to check it here because we may not be
                             // good after the read indicating that there
                             // was nothing to read.

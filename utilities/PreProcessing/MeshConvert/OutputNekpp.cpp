@@ -396,6 +396,10 @@ namespace Nektar
 
                     doSort = doSort && it->second->m_reorder;
                     comp_tag->SetAttribute("ID", it->second->m_id);
+                    if(it->second->m_label.size())
+                    {
+                        comp_tag->SetAttribute("LABEL", it->second->m_label);
+                    }
                     comp_tag->LinkEndChild(
                         new TiXmlText(it->second->GetXmlString(doSort)));
                     verTag->LinkEndChild(comp_tag);

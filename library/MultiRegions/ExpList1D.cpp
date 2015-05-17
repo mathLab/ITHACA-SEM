@@ -370,6 +370,8 @@ namespace Nektar
         {
             SetExpType(e1D);
 
+            m_graph = graph2D;
+
             int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;

@@ -45,6 +45,11 @@ SET(MeshConvertSources
     ProcessTetSplit.cpp
 )
 
+IF (NEKTAR_USE_CCM)
+    SET(MeshConvertHeaders ${MeshConvertHeaders} InputStar.h)
+    SET(MeshConvertSources ${MeshConvertSources} InputStar.cpp)
+ENDIF (NEKTAR_USE_CCM)
+
 IF (NEKTAR_USE_VTK)
     SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h OutputVtk.h)
     SET(MeshConvertSources ${MeshConvertSources} InputVtk.cpp OutputVtk.cpp)
@@ -59,6 +64,9 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(MeshConvert vtkCommonCore vtkIOLegacy)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
+
+
+TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)
 
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)

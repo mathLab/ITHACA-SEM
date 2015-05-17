@@ -277,19 +277,27 @@ void OutputFld::Process(po::variables_map &vm)
         bool writefld = true;
         if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
         {
-            string answer;
-            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-            getline(cin,answer);
-            if(answer.compare("y") != 0)
+            LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
+            int rank = comm->GetRank();
+
+            if(rank == 0)
             {
-                writefld = false;
-                cout << "Not writing file " << filename << " because it already exists" << endl;
+                string answer;
+                cout << "Did you wish to overwrite " << filename << " (y/n)? ";
+                getline(cin,answer);
+                if(answer.compare("y") != 0)
+                {
+                    writefld = false;
+                    cout << "Not writing file " << filename << " because it already exists" << endl;
+                }
             }
+            comm->Block();
+            
         }
 
         if(writefld == true)
         {
-                m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
         }
 
         // output error for regression checking.

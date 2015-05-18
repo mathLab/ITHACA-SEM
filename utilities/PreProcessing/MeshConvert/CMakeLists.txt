@@ -50,12 +50,17 @@ IF (NEKTAR_USE_CCM)
     SET(MeshConvertSources ${MeshConvertSources} InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)
 
+
 IF (NEKTAR_USE_VTK)
     SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h OutputVtk.h)
     SET(MeshConvertSources ${MeshConvertSources} InputVtk.cpp OutputVtk.cpp)
 ENDIF (NEKTAR_USE_VTK)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
+
+IF (NEKTAR_USE_CCM)
+   TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)
+ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
     IF (VTK_MAJOR_VERSION LESS 6)
@@ -65,8 +70,6 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-
-TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)
 
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)

@@ -98,8 +98,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void UpdateMotion(
             const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
-            const Array<OneD, Array<OneD, NekDouble> >& inarray,
-              NekDouble                                     time);
+                  NekDouble time );
 
         void TensionedCableModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -115,12 +114,10 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void MappingBndConditions(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
-            const Array<OneD, Array<OneD, NekDouble> >        &fields,
                   NekDouble time );
 
         void CalcOutflowBCs(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const Array<OneD, Array<OneD, NekDouble> >        &fields);
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
         void EvaluateAccelaration(
             const Array<OneD, NekDouble> &input,
@@ -166,18 +163,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
         /// do determine if the the body motion come from an extern file
         Array<OneD, bool>        m_IsFromFile;
         ///
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_outflowVel;
-        ///
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_PhyoutfVel;
-        ///
-        Array<OneD, Array<OneD, NekDouble> > m_movbodyVel;
-        ///
-        Array<OneD, Array<OneD, NekDouble> > m_movbodyDev;
-        ///
-        Array<OneD, Array<OneD, NekDouble> > m_ub;
-        ///
-        Array<OneD, NekDouble> m_nonlinearterm_phys;
-        ///
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr> m_PBndConds;
         ///
         Array<OneD, MultiRegions::ExpListSharedPtr> m_PBndExp;
@@ -187,9 +172,9 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, int> m_pressureBCtoElmtID;
         /// Id of edge (2D) or face (3D) to which pressure boundary condition belongs
         Array<OneD, int> m_pressureBCtoTraceID;
-
+        /// Store the derivatives of motion variables in x-direction
         Array<OneD, Array< OneD, NekDouble> > m_zta;
-
+        /// Store the derivatives of motion variables in y-direction
         Array<OneD, Array< OneD, NekDouble> > m_eta;
 
         Array<OneD, Array< OneD, NekDouble> > m_forcing;
@@ -202,17 +187,13 @@ class ForcingMovingBody : public SolverUtils::Forcing
         /// bounday dimensionality
         int m_bnd_dim;
 
-        /// number of times the high-order pressure BCs have been called
-        int m_pressureCalls;
-
         /// Maximum points used in pressure BC evaluation
         int m_pressureBCsMaxPts;
 
         /// Maximum points used in Element adjacent to pressure BC evaluation
         int m_pressureBCsElmtMaxPts;
-
-        /// Maximum points used in pressure BC evaluation
-        int m_intSteps;
+	///
+	int m_totbndpts;
 };
 
 }

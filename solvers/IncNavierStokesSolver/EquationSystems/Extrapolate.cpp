@@ -665,7 +665,7 @@ namespace Nektar
                     normals=elmt->GetSurfaceNormal(boundary);
                     Vmath::Zero(m_bnd_dim*m_pressureBCsMaxPts,nGradu[0],1);
 
-                    for (int j = 0; j < m_curl_dim; j++)
+                    for (int j = 0; j < m_bnd_dim; j++)
                     {
                         // Calculate Grad u =  du/dx, du/dy, du/dz, etc. 
                         for (int k = 0; k< m_bnd_dim; k++)

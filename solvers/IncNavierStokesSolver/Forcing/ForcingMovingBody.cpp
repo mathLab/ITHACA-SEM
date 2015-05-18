@@ -73,8 +73,6 @@ void ForcingMovingBody::v_InitObject(
     // Initialise the cable model
     InitialiseCableModel(m_session, pfields);
 
-    m_pressureCalls = 0;
-
     m_zta = Array<OneD, Array< OneD, NekDouble> > (10);
     m_eta = Array<OneD, Array< OneD, NekDouble> > (10);
     // What are this bi-dimensional vectors ------------------------------------------
@@ -115,7 +113,7 @@ void ForcingMovingBody::v_Apply(
         const NekDouble&                                    time)
 {
     // Fill in m_zta and m_eta with all the required values
-    UpdateMotion(fields,inarray,time);
+    UpdateMotion(fields,time);
 
     //calcualte the m_forcing components Ax,Ay,Az and put them in m_forcing
     CalculateForcing(fields);
@@ -126,8 +124,8 @@ void ForcingMovingBody::v_Apply(
                                m_forcing[i], 1, outarray[i], 1);
     }
 
-	// Mapping boundary conditions
-    MappingBndConditions(fields, inarray, time);
+    // Mapping boundary conditions
+    MappingBndConditions(fields, time);
 }
 
 /**
@@ -135,7 +133,6 @@ void ForcingMovingBody::v_Apply(
  */
 void ForcingMovingBody::UpdateMotion(
         const Array<OneD, MultiRegions::ExpListSharedPtr>&  pfields,
-        const Array<OneD, Array<OneD, NekDouble> >       &  fields,
               NekDouble                                     time)
 {
     // Update the forces from the calculation of fluid field, which is
@@ -1034,7 +1031,6 @@ void ForcingMovingBody::EvaluateStructDynModel(
  */
 void ForcingMovingBody::MappingBndConditions(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
-            const Array<OneD, Array<OneD, NekDouble> >        &fields,
                   NekDouble  time) 
 {
     Array<OneD, Array<OneD, NekDouble> > BndV (
@@ -1110,7 +1106,7 @@ void ForcingMovingBody::MappingBndConditions(
     
     // Set up high order outflow conditions 
     // for movingbody module
-    CalcOutflowBCs(pfields, fields);
+    CalcOutflowBCs(pfields);
 }
 
 
@@ -1118,8 +1114,7 @@ void ForcingMovingBody::MappingBndConditions(
  *
  **/
 void ForcingMovingBody::CalcOutflowBCs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
-        const Array<OneD, Array<OneD, NekDouble> >        &fields)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields)
     {
         static bool init = true;
         static bool noHOBC = false;
@@ -1128,7 +1123,6 @@ void ForcingMovingBody::CalcOutflowBCs(
         {
            return;
         }
-        
         if(init) // set up storage for boundary velocity at outflow
         {
             init = false;
@@ -1136,25 +1130,29 @@ void ForcingMovingBody::CalcOutflowBCs(
             m_PBndConds = pfields[3]->GetBndConditions();
             m_PBndExp   = pfields[3]->GetBndCondExpansions();
 
-           int totbndpts = 0;
+            m_totbndpts = 0;
             for(int n = 0; n < m_PBndConds.num_elements(); ++n)
             {
                 if(m_PBndConds[n]->GetUserDefined()
                         == SpatialDomains::eHighOutflow)
                 {
-                    totbndpts += m_PBndExp[n]->GetTotPoints();
+                    m_totbndpts += m_PBndExp[n]->GetTotPoints();
                 }
             }
             
-            if(totbndpts == 0)
+            if(m_totbndpts == 0)
             {
                 noHOBC = true;
                 return;
             }
-            
+
+            if(pfields[0]->GetExpType() != MultiRegions::e3DH1D)
+            {
+                noHOBC = true;
+		        return;
+	        }
             m_curl_dim = 3;
             m_bnd_dim  = 2;
-            m_intSteps = 2;
 
             // find the maximum values of points for pressure BC evaluation
             m_pressureBCsMaxPts = 0;
@@ -1176,32 +1174,11 @@ void ForcingMovingBody::CalcOutflowBCs(
                 }
             }
  
-            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-            m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-            m_movbodyVel = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-            m_movbodyDev = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-            m_ub         = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-            m_nonlinearterm_phys   = Array<OneD, NekDouble> (totbndpts,0.0);
-            for(int i = 0; i < m_curl_dim; ++i)
-            {
-                m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-                m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-                for(int j = 0; j < m_curl_dim; ++j)
-                {             
-                    // currently just set up for 2nd order extrapolation 
-                    m_outflowVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
-                    m_PhyoutfVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
-                }
-                m_movbodyVel[i] = Array<OneD, NekDouble>(totbndpts,0.0);
-                m_movbodyDev[i] = Array<OneD, NekDouble>(totbndpts,0.0);
-                m_ub[i]         = Array<OneD, NekDouble>(totbndpts,0.0);
-            }
-
             Array<OneD, unsigned int> planes;
             planes = pfields[0]->GetZIDs();
             int num_planes = planes.num_elements();
             m_expsize_per_plane = 
-					Array<OneD, unsigned int> (m_PBndConds.num_elements());
+			Array<OneD, unsigned int> (m_PBndConds.num_elements());
             for(int n = 0; n < m_PBndConds.num_elements(); ++n)
             {
                 int exp_size = m_PBndExp[n]->GetExpSize();
@@ -1227,36 +1204,32 @@ void ForcingMovingBody::CalcOutflowBCs(
         }
 
         Array<OneD, Array<OneD, NekDouble> > BndValues(m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > MovValues(m_curl_dim);
         Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > ngradu   (m_curl_dim);
-        Array<OneD, NekDouble > gradtmp (m_pressureBCsElmtMaxPts),
-                                fgradtmp(m_pressureBCsElmtMaxPts);
-        
-        ngradu[0] = Array<OneD, NekDouble>(m_curl_dim*m_pressureBCsMaxPts);
+        Array<OneD, Array<OneD, NekDouble> > ub       (m_curl_dim);
         for(int i = 0; i < m_curl_dim; ++i)
         {
             BndElmt[i]   = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,
                                                    0.0);
             BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            MovValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            ngradu[i]  = ngradu[0] + i*m_pressureBCsMaxPts;
-            RollOver(m_outflowVel[i]);
-            RollOver(m_PhyoutfVel[i]);
+            ub[i]        = Array<OneD, NekDouble> (m_totbndpts,0.0);
         }
-            
-        m_pressureCalls++;
-        int  nint = min(m_pressureCalls,m_intSteps);
-
-        StdRegions::StdExpansionSharedPtr elmt;
+        StdRegions::StdExpansionSharedPtr elmt;    
         Array<OneD, NekDouble> PBCvals, UBCvals;
         Array<OneD, Array<OneD, NekDouble> > normals;
 
-        NekDouble U0,delta;
-        m_session->LoadParameter("U0_HighOrderBC",U0,1.0);
-        m_session->LoadParameter("Delta_HighOrderBC",delta,1/20.0);
+	    // store the forcing term in the physical space
+        Array<OneD, Array<OneD, NekDouble> > forcing(m_curl_dim);
+        // create the storage space for the body motion description
+        int phystot = pfields[0]->GetTotPoints();
+        for(int i = 0; i < m_curl_dim; i++)
+        {
+            forcing[i] = Array<OneD, NekDouble> (phystot, 0.0);
+        }
+        for(int j = 0; j < m_curl_dim; ++j)
+        {
+            pfields[0]->HomogeneousBwdTrans(m_forcing[j],forcing[j]);
+        }
 
-        int cnt;
         int count = 0;
         for(int n = 0; n < m_PBndConds.num_elements(); ++n)
         {
@@ -1265,201 +1238,6 @@ void ForcingMovingBody::CalcOutflowBCs(
             {
 
                 int cnt_exp   = 0; int cnt_plane = 0;
-                int veloffset = 0;
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
-                {
-                    // count the expansion list in each plane for e3DH1D case
-                    if(cnt_exp == m_expsize_per_plane[n])
-                    {
-                        cnt_exp = 0; cnt_plane++;
-                    }
-                    int cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
-
-                    // find element and edge of this expansion.
-                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion>
-                        (m_PBndExp[n]->GetExp(i));
-
-                    int elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt       = pfields[0]->GetExp(elmtid);
-                    int offset = pfields[0]->GetPhys_Offset(elmtid);
-
-                    int boundary = m_pressureBCtoTraceID[cnt];
-
-                    // Determine extrapolated U,V values
-                    int nq = elmt->GetTotPoints();
-                    int nbc = m_PBndExp[n]->GetExp(i)->GetTotPoints();
-                    // currently just using first order approximation here.
-                    // previously have obtained value from m_integrationSoln
-                    Array<OneD, NekDouble> veltmp;
-
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        Vmath::Vcopy(nq, &fields[j][offset], 1,
-                                         &BndElmt[j][0],     1);
-                        elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
-                                     veltmp = m_outflowVel[j][0] + veloffset);
-                    }
-
-                    for(int j = 0; j < m_bnd_dim; ++j)
-                    {
-                        if(j == 0)
-                        {
-                            Vmath::Vcopy(nq, &m_zta[1][offset], 1, &BndElmt[0][0], 1);
-                        }
-                        if(j == 1)
-                        {
-                            Vmath::Vcopy(nq, &m_eta[1][offset], 1, &BndElmt[1][0], 1);
-                        }
-                        // extract the values of velocity of movingbody on outflow boundaries
-                        elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
-                                         veltmp = m_movbodyVel[j] + veloffset);
-                        if(j == 0)
-                        {
-                            Vmath::Vcopy(nq, &m_zta[3][offset], 1, &BndElmt[0][0], 1);
-                        }
-                        if(j == 1)
-                        {
-                            Vmath::Vcopy(nq, &m_eta[3][offset], 1, &BndElmt[1][0], 1);
-                        }
-                        // extract the values of d(m_zta)/dz and d(m_eta)/dz on outflow boundaries
-                        elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
-                                         veltmp = m_movbodyDev[j] + veloffset);
-                    }
-
-                    veloffset += nbc;
-                }
-
-                // for velocity on the outflow boundary in e3DH1D,
-                // we need to make a backward fourier transformation
-                // to get the physical coeffs at the outflow BCs.
-                for(int j = 0; j < m_curl_dim; ++j)
-                {
-                    m_PBndExp[n]->HomogeneousBwdTrans(
-                            m_outflowVel[j][0],
-                            m_PhyoutfVel[j][0]);
-                }
-                
-                cnt_plane = 0; cnt_exp = 0;
-                veloffset = 0;
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
-                {   
-                    // count the expansion list for each plane for e3DH1D
-                    if(cnt_exp == m_expsize_per_plane[n])
-                    {
-                        cnt_exp = 0; cnt_plane++;
-                    }
-                    cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
-
-                    int elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt       = pfields[0]->GetExp(elmtid);
-                    int nbc = m_PBndExp[n]->GetExp(i)->GetTotPoints();
-
-                    Array<OneD, NekDouble>  veltmp(nbc,0.0),
-                                            normDotu(nbc,0.0), utot(nbc,0.0);
-                    int boundary = m_pressureBCtoTraceID[cnt];
-                    normals=elmt->GetSurfaceNormal(boundary);
-
-                    // extrapolate velocity
-                    if(nint <= 1)
-                    {
-                        for(int j = 0; j < m_curl_dim; ++j)
-                        {
-                            Vmath::Vcopy(nbc,
-                                    veltmp = m_PhyoutfVel[j][0] +veloffset, 1,
-                                    BndValues[j],                           1);
-                        }
-                    }
-                    else // only set up for 2nd order extrapolation
-                    {
-                        for(int j = 0; j < m_curl_dim; ++j)
-                        {
-                            Vmath::Smul(nbc, 2.0,
-                                    veltmp = m_PhyoutfVel[j][0] + veloffset, 1,
-                                    BndValues[j],                            1);
-                            Vmath::Svtvp(nbc, -1.0,
-                                    veltmp = m_PhyoutfVel[j][1] + veloffset, 1,
-                                    BndValues[j],                            1,
-                                    BndValues[j],                            1);
-                        }    
-                    }
-
-                    // Set up |u|^2, n.u in physical space
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
-                                          utot,         1, utot,         1);
-                    }
-                    for(int j = 0; j < m_bnd_dim; ++j)
-                    {
-                        Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
-                                          normDotu,     1, normDotu,     1);
-                    }
-                        
-                    int Offset = m_PBndExp[n]->GetPhys_Offset(i);
-
-                    for(int k = 0; k < nbc; ++k)
-                    {
-                        // calculate the nonlinear term (kinetic energy
-                        //  multiplies step function) in physical space
-                        NekDouble fac = 0.5*(1.0-tanh(normDotu[k]/(U0*delta)));
-                        m_nonlinearterm_phys[k + Offset] =  0.5 * utot[k] * fac;
-                    }
-
-
-                    // Include the constribution of movingbody effects
-                    for(int j = 0; j < m_bnd_dim; ++j)
-                    {
-                        Vmath::Vvtvp(nbc,veltmp = m_PhyoutfVel[2][0] + veloffset, 1,
-                                         veltmp = m_movbodyDev[j]    + veloffset, 1,
-                                         veltmp = m_movbodyVel[j]    + veloffset, 1,
-                                         MovValues[j],                            1);
-                        Vmath::Vadd(nbc, MovValues[j], 1,
-                                         BndValues[j], 1,
-                                         BndValues[j], 1);
-                    }
-
-
-                    Vmath::Zero(nbc,utot,1);
-                    Vmath::Zero(nbc,normDotu,1);
-
-                    // Set up |u|^2, n.u in physical space
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
-                                          utot,         1, utot,         1);
-                    }
-                    for(int j = 0; j < m_bnd_dim; ++j)
-                    {
-                        Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
-                                          normDotu,     1, normDotu,     1);
-                    }
-
-                    for(int k = 0; k < nbc; ++k)
-                    {
-                        // calculate the nonlinear term (kinetic energy
-                        //  multiplies step function) in physical space
-                        NekDouble fac = 0.5*(1.0-tanh(normDotu[k]/(U0*delta)));
-                        m_nonlinearterm_phys[k + Offset] += -0.5 * utot[k] * fac;
-                    }
-                    veloffset += nbc;
-                }
-
-                // m_forcing size (it must be 3: Ax, Ay and Az)
-                // total number of structural variables(Disp, Vel and Accel) must be 3
-                Array<OneD, Array<OneD, NekDouble> > Fields(3);
-                // create the storage space for the body motion description
-                int phystot = pfields[0]->GetTotPoints();
-                for(int i = 0; i < 3; i++)
-                {
-                    Fields[i] = Array<OneD, NekDouble> (phystot, 0.0);
-                }
-                for(int j = 0; j < m_curl_dim; ++j)
-                {
-                    pfields[0]->HomogeneousBwdTrans(fields[j],Fields[j]);
-                }
-    
-                veloffset = 0;
-                cnt_exp = 0; cnt_plane = 0; //only useful in e3DH1D case
                 for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
                 {
                     // count the expansion list for e3DH1D
@@ -1467,7 +1245,8 @@ void ForcingMovingBody::CalcOutflowBCs(
                     {
                         cnt_exp = 0; cnt_plane++;
                     }
-                    cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
+                    int cnt = cnt_plane * m_totexps_per_plane 
+                                            + cnt_exp + count;
                     cnt_exp++;
 
                     // find element and edge of this expansion. 
@@ -1478,99 +1257,51 @@ void ForcingMovingBody::CalcOutflowBCs(
                     elmt       = pfields[0]->GetExp(elmtid);
                     int offset = pfields[0]->GetPhys_Offset(elmtid);
 
-                    // Determine extrapolated U,V values
                     int nq = elmt->GetTotPoints();
 
-                    // currently just using first order approximation here. 
-                    // previously have obtained value from m_integrationSoln
                     for(int j = 0; j < m_curl_dim; ++j)
                     {
-                        Vmath::Vcopy(nq, &Fields[j][offset], 1,
-                                         &BndElmt[j][0],     1);
+                        Vmath::Vcopy(nq, &forcing[j][offset], 1,
+                                         &BndElmt[j][0],      1);
                     }
 
                     int nbc      = m_PBndExp[n]->GetExp(i)->GetTotPoints();
                     int boundary = m_pressureBCtoTraceID[cnt];
 
-                    Array<OneD, NekDouble>  ptmp(nbc,0.0),devtmp(nbc,0.0),
-                                            divU(nbc,0.0);
+                    Array<OneD, NekDouble>  ftmp(nbc,0.0),
+			     vtmp(nbc,0.0), utmp(nbc,0.0);
 
                     normals=elmt->GetSurfaceNormal(boundary);
-                    Vmath::Zero(m_bnd_dim*m_pressureBCsMaxPts,ngradu[0],1);
-
-                    for (int j = 0; j < m_bnd_dim; j++)
+                    for (int j = 0; j < m_curl_dim; j++)
                     {
-                        // Calculate gradient terms:
-                        // nx(w_x*d(m_zta)/dz)+ny(w_y*d(m_zta)/dz),
-                        // nx(w_x*d(m_eta)/dz)+ny(w_y*d(m_eta)/dz)
-                        for (int k = 0; k< m_bnd_dim; k++)
-                        {
-                            elmt->PhysDeriv(MultiRegions::DirCartesianMap[k],
-                                            BndElmt[2], gradtmp);
-                            elmt->GetTracePhysVals(boundary, Bc, gradtmp,
-                                                   fgradtmp);
-                            Vmath::Vmul(nbc, devtmp = m_movbodyDev[j] + veloffset, 1,
-                                             fgradtmp, 1, fgradtmp, 1);
-                            Vmath::Vvtvp(nbc,normals[k], 1, fgradtmp, 1,
-                                             ngradu[j],  1, ngradu[j],1);
-                        }
+                        elmt->GetTracePhysVals(boundary, Bc, BndElmt[j],
+                                                   	  BndValues[j]);
                     }
 
-                    // Set up (n.grad(u) . n) for
+                    // Set up (n.foring) for
                     // pressure condition
                     for(int j = 0; j < m_bnd_dim; ++j)
                     {
-                        Vmath::Vvtvp(nbc, normals[j],   1, ngradu[j],    1,
-                                          ptmp,         1, ptmp,         1);
-                    }
-                    int p_offset = m_PBndExp[n]->GetPhys_Offset(i);
-
-                    for(int k = 0; k < nbc; ++k)
-                    {
-                        // Set up Dirichlet pressure condition and
-                        // store in ptmp (m_UBndCoeffs contains Fourier Coeffs of the
-                        // function from the input file )
-
-                        ptmp[k] = - m_kinvis * ptmp[k] 
-                                  - m_nonlinearterm_phys[k + p_offset];
+                        Vmath::Vvtvp(nbc, normals[j], 1, BndValues[j], 1,
+                                          ftmp,       1, ftmp,         1);
                     }
 
                     // set up pressure boundary condition
                     PBCvals = m_PBndExp[n]->UpdatePhys()
                             + m_PBndExp[n]->GetPhys_Offset(i);
-                    Vmath::Vcopy(nbc, ptmp, 1, PBCvals, 1);
-                    for(int j = 0; j < m_curl_dim; j++)
+                    Vmath::Vcopy(nbc, ftmp, 1, PBCvals, 1);
+                    
+                    for(int j = 0; j < m_bnd_dim; j++)
                     {
                         int u_offset = UBndExp[j][n]->GetPhys_Offset(i);
-
-                        for(int k = 0; k < nbc; ++k)
-                        {
-                            if(j < m_curl_dim-1)
-                            {
-                                m_ub[j][k + u_offset] = - m_nonlinearterm_phys[k + u_offset] 
-                                                                  * normals[j][k] / m_kinvis
-                                                                              - ngradu[j][k];
-                            }
-                            else
-                            {
-                                m_ub[j][k + u_offset] = - ngradu[j][k];
-                            }
-                        }
+                        Vmath::Vvtvp(nbc, normals[j],1, BndValues[j], 1,
+                                          utmp,   	                  1, 
+                                          vtmp = ub[j] + u_offset,    1);
                     }
-
-                    veloffset += nbc;
-                }
-
-                //
-                for(int j = 0; j < m_curl_dim; ++j)
-                {
-                    m_PBndExp[n]->HomogeneousFwdTrans(
-                            m_ub[j],
-                            m_ub[j]);
                 }
 
                 // Now set up Velocity conditions.
-                for(int j = 0; j < m_curl_dim; j++)
+                for(int j = 0; j < m_curl_dim; ++j)
                 {
                     if(UBndConds[j][n]->GetUserDefined()
                                         == SpatialDomains::eHighOutflow)
@@ -1578,10 +1309,11 @@ void ForcingMovingBody::CalcOutflowBCs(
                         for(int i = 0; i < UBndExp[0][n]->GetExpSize();
                                        ++i)
                         {
-                            int u_offset = UBndExp[j][n]->GetPhys_Offset(i);
-                            UBCvals = UBndExp[j][n]->UpdateCoeffs()
-                                    + UBndExp[j][n]->GetCoeff_Offset(i);
-                            Bc->IProductWRTBase(m_ub[j]+u_offset,UBCvals);
+                            int nbc = UBndExp[0][n]->GetExp(i)->GetTotPoints();
+                            int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
+                            UBCvals = UBndExp[j][n]->UpdatePhys()
+                                    + UBndExp[j][n]->GetPhys_Offset(i);
+                            Vmath::Vcopy(nbc, ub[j]+u_offset, 1, UBCvals, 1);
                         }
                     }
                 }

@@ -1275,9 +1275,10 @@ namespace Nektar
                         {
                             elementDataStrm >> xval >> yval >> zval;
 
-                            xval *= xscale;
-                            yval *= yscale;
-                            zval *= zscale;
+                            xval = xval*xscale + xmove;
+                            yval = yval*yscale + ymove;
+                            zval = zval*zscale + zmove;
+
                             // Need to check it here because we may not be
                             // good after the read indicating that there
                             // was nothing to read.

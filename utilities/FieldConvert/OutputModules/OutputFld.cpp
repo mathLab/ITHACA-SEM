@@ -274,7 +274,7 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         fs::path writefile(filename);
-        bool writefld = true;
+        int writefld = 0;
         if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
         {
             LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
@@ -285,17 +285,21 @@ void OutputFld::Process(po::variables_map &vm)
                 string answer;
                 cout << "Did you wish to overwrite " << filename << " (y/n)? ";
                 getline(cin,answer);
-                if(answer.compare("y") != 0)
+                if(answer.compare("y") == 0)
                 {
-                    writefld = false;
+                    writefld = 1;
+                }
+                else
+                {
                     cout << "Not writing file " << filename << " because it already exists" << endl;
                 }
             }
-            comm->Block();
+            
+            comm->AllReduce(writefld,LibUtilities::ReduceSum);
             
         }
 
-        if(writefld == true)
+        if(writefld)
         {
             m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
         }

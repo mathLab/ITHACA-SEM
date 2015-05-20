@@ -427,15 +427,13 @@ namespace Nektar
       {	
 	
           // Wall Boundary Condition
-          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-              SpatialDomains::eWall)
+          if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
           {
               WallBoundary2D(n, cnt, inarray);
           }
 	
           // Time Dependent Boundary Condition (specified in meshfile)
-          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-              SpatialDomains::eTimeDependent)
+          if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
           {
               for (int i = 0; i < nvariables; ++i)
               {

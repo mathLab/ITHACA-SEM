@@ -643,23 +643,25 @@ namespace Nektar
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
                         ::AllocateSharedPtr(m_session, *(it->second), graph2D,
                                             DeclareCoeffPhysArrays, variable);
+
+                    m_bndCondExpansions[cnt]  = locExpList;
+                    m_bndConditions[cnt]      = bc;
                     
-                    // Set up normals on non-Dirichlet boundary conditions
-                    if(bc->GetBoundaryConditionType() != 
-                           SpatialDomains::eDirichlet)
+
+                    std::string type = m_bndConditions[cnt]->GetUserDefined();
+                    
+                    // Set up normals on non-Dirichlet boundary
+                    // conditions. Second two conditions ideally
+                    // should be in local solver setup (when made into factory)
+                    if((bc->GetBoundaryConditionType() != 
+                        SpatialDomains::eDirichlet)||
+                       boost::iequals(type,"I") || 
+                       boost::iequals(type,"CalcBC"))
                     {
                         SetUpPhysNormals();
                     }
 
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt]      = bc;
-                    SpatialDomains::BndUserDefinedType type = 
-                        m_bndConditions[cnt++]->GetUserDefined();
-                    if (type == SpatialDomains::eI || 
-                        type == SpatialDomains::eCalcBC)
-                    {
-                        SetUpPhysNormals();
-                    }
+                    cnt++;
                 }
             }
         }
@@ -2140,8 +2142,7 @@ namespace Nektar
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || 
-                    m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                    m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
@@ -2253,8 +2254,8 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
-                else if (m_bndConditions[i]->GetUserDefined()
-                            == SpatialDomains::eMovingBody)
+                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
+                                        "MovingBody"))
                 {
                     locExpList = m_bndCondExpansions[i];
                     if (m_bndConditions[i]->GetBoundaryConditionType()

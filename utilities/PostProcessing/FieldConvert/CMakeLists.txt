@@ -71,15 +71,16 @@ ADD_NEKTAR_TEST(bfs_vort_rng)
 
 # windows produces slightly differently formatted files which results in
 # different hashes
-IF(WIN32)
-    ADD_NEKTAR_TEST(chan3D_probe_win)
-    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
-    ADD_NEKTAR_TEST(chan3D_isocontour_win)
-ELSE(WIN32)
-    ADD_NEKTAR_TEST(chan3D_probe)
-    ADD_NEKTAR_TEST(chan3D_equispacedoutput)
-    ADD_NEKTAR_TEST(chan3D_isocontour)
-ENDIF(WIN32)
+# These are disabled now as Hash test is not suitable on 32-bit/64-bit
+#IF(WIN32)
+#    ADD_NEKTAR_TEST(chan3D_probe_win)
+#    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
+#    ADD_NEKTAR_TEST(chan3D_isocontour_win)
+#ELSE(WIN32)
+#    ADD_NEKTAR_TEST(chan3D_probe)
+#    ADD_NEKTAR_TEST(chan3D_equispacedoutput)
+#    ADD_NEKTAR_TEST(chan3D_isocontour)
+#ENDIF(WIN32)
 
 
 IF (NEKTAR_USE_MPI)

@@ -60,6 +60,7 @@ ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHea
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)
+   INCLUDE_DIRECTORIES(MeshConvert ${CCMIO_INCLUDE_DIR})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)

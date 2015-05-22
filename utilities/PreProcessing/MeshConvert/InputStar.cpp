@@ -169,6 +169,8 @@ namespace Nektar
             cout << cnt << " Tets" << endl;
             nComposite++;
 
+            ProcessVertices();
+
             
             // Add boundary zones/composites
             for(i = 0; i < BndElementFaces.size(); ++i)
@@ -708,9 +710,15 @@ namespace Nektar
                 if(isPrism) //Prism 
                 {
                     returnval = Array<OneD, int>(6);
+                    ASSERTL1(quadface0 != -1,"Quad face 0 not found");
+                    ASSERTL1(quadface1 != -1,"Quad face 1 not found");
+                    ASSERTL1(quadface2 != -1,"Quad face 2 not found");
+                    ASSERTL1(triface0  != -1,"Tri face 0 not found");
+                    ASSERTL1(triface1  != -1,"Tri face 1 not found");
                 }
                 else        //Pyramid
                 {
+                    ASSERTL0(false,"Not yet set up for pyramids");
                     returnval = Array<OneD, int>(5);
                 }
 

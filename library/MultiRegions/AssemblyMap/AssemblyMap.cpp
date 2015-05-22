@@ -1232,7 +1232,7 @@ namespace Nektar
         }
 
         void AssemblyMap::PrintStats(
-            std::ostream &out, std::string variable) const
+            std::ostream &out, std::string variable, bool printHeader) const
         {
             LibUtilities::CommSharedPtr vRowComm
                 = m_session->GetComm()->GetRowComm();
@@ -1262,7 +1262,9 @@ namespace Nektar
             Array<OneD, NekDouble> tmpLoc (m_numLocalBndCoeffs,  1.0);
             Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
 
-            Vmath::Assmb(m_numLocalBndCoeffs, tmpLoc.get(), m_localToGlobalBndMap.get(), tmpGlob.get());
+            Vmath::Assmb(
+                m_numLocalBndCoeffs, tmpLoc.get(),
+                m_localToGlobalBndMap.get(), tmpGlob.get());
             UniversalAssembleBnd(tmpGlob);
 
             int totGlobDof     = globCnt;
@@ -1307,8 +1309,12 @@ namespace Nektar
 
             if (isRoot)
             {
-                out << "Assembly map statistics for field " << variable << ":"
-                    << endl;
+                if (printHeader)
+                {
+                    out << "Assembly map statistics for field " << variable
+                        << ":" << endl;
+                }
+
                 out << "  - Number of local/global dof             : "
                     << totLocalDof << " " << totGlobDof << endl;
                 out << "  - Number of local/global boundary dof    : "
@@ -1318,6 +1324,12 @@ namespace Nektar
                 out << "  - dof valency (min/max/mean)             : "
                     << minValence << " " << maxValence << " " << meanValence
                     << endl;
+
+                if (m_staticCondLevel > 0)
+                {
+                    out << "  - Number of static cond. levels          : "
+                        << m_staticCondLevel << endl;
+                }
 
                 if (n > 1)
                 {
@@ -1380,6 +1392,22 @@ namespace Nektar
                 tmp[0] = m_numLocalBndCoeffs;
                 vRowComm->Send(0, tmp);
             }
+
+            AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap, tmp1;
+
+            if (!tmp)
+            {
+                return;
+            }
+
+            while (tmp)
+            {
+                tmp1 = tmp;
+                tmp  = tmp->m_nextLevelLocalToGlobalMap;
+            }
+
+            out << "Stats at lowest static cond. level:" << endl;
+            tmp1->PrintStats(out, variable, false);
         }
     } // namespace
 } // namespace

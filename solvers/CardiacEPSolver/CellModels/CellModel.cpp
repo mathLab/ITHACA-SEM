@@ -406,7 +406,7 @@ namespace Nektar
                 }
 
                 // Extract the data into the modal coefficients
-                for(int i = 0; i < FieldDef.size(); ++i)
+                for(int i = 0; i < FieldDef[file].size(); ++i)
                 {
                     m_field->ExtractDataToCoeffs(FieldDef[file][i],
                                                  FieldData[file][i],

@@ -2012,6 +2012,20 @@
         }
 
         /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField3D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
+        }
+
+        /**
          * Solving Helmholtz Equation in 3D
          */
         void DisContField3D::v_HelmSolve(
@@ -2424,8 +2438,7 @@
 
             for (i = 0; i < nbnd; ++i)
             {
-                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();

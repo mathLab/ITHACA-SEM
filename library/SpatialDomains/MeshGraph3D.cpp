@@ -118,20 +118,11 @@ namespace Nektar
             /// edge list.  We cannot handle missing edge numbers as we could
             /// with missing element numbers due to the text block format.
             std::string edgeStr;
-            int i,indx;
-            int nextEdgeNumber = -1;
-
-            // Curved Edges
-            map<int, int> edge_curved;
-            for(i = 0; i < m_curvedEdges.size(); ++i)
-            {
-                edge_curved[m_curvedEdges[i]->m_curveID] = i;
-            }
+            int indx;
+            CurveMap::iterator it;
 
             while(edge)
             {
-                nextEdgeNumber++;
-
                 int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
 
@@ -159,14 +150,15 @@ namespace Nektar
                         {
                             PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                             SegGeomSharedPtr edge;
+                            it = m_curvedEdges.find(indx);
 
-                            if (edge_curved.count(indx) == 0)
+                            if (it == m_curvedEdges.end())
                             {
                                 edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
                             }
                             else
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
                             }
 
                             m_segGeoms[indx] = edge;
@@ -194,17 +186,11 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find FACE tag in file.");
 
-            // Curved faces
-            map<int, int> face_curved;
-            for (int i = 0; i < m_curvedFaces.size(); ++i)
-            {
-                face_curved[m_curvedFaces[i]->m_curveID] = i;
-            }
-
             /// All faces are of the form: "<? ID="#"> ... </?>", with
             /// ? being an element type (either Q or T).
 
             TiXmlElement *element = field->FirstChildElement();
+            CurveMap::iterator it;
 
             while (element)
             {
@@ -217,6 +203,9 @@ namespace Nektar
                 int indx;
                 int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
+
+                /// See if this face has curves.
+                it = m_curvedFaces.find(indx);
 
                 /// Read text element description.
                 TiXmlNode* elementChild = element->FirstChild();
@@ -261,18 +250,18 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
-                        
+
                         TriGeomSharedPtr trigeom;
-                        
-                        if (face_curved.count(indx) == 0)
+
+                        if (it == m_curvedFaces.end())
                         {
                             trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
                         }
                         else
                         {
-                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
                         }
-                        
+
                         trigeom->SetGlobalID(indx);
 
                         m_triGeoms[indx] = trigeom;
@@ -313,11 +302,13 @@ namespace Nektar
 
                         QuadGeomSharedPtr quadgeom;
 
-                        if (face_curved.count(indx) == 0)
+                        if (it == m_curvedEdges.end())
                         {
                             quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
-                        } else {
-                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                        }
+                        else
+                        {
+                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
                         }
                         quadgeom->SetGlobalID(indx);
 
@@ -1018,6 +1009,9 @@ namespace Nektar
             // this element.
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,
                                                     variable);
+
+            ASSERTL0(expansion, "Could not find expansion connected to face "+
+                     boost::lexical_cast<string>(face->GetGlobalID()));
 
             // Retrieve the geometry object of the element as a Geometry3D.
             Geometry3DSharedPtr geom3d =

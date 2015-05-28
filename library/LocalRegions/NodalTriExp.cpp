@@ -120,18 +120,29 @@ namespace Nektar
 
 
         void NodalTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                                 Array<OneD, NekDouble> &outarray)
+                                                 Array<OneD, NekDouble> &outarray,
+                                                 bool multiplybyweights)
         { 
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order1 = m_base[1]->GetNumModes();
-            
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-            
-            MultiplyByQuadratureMetric(inarray,tmp);
-            StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
-            NodalToModalTranspose(outarray,outarray);  
+
+            if(multiplybyweights)
+            {
+                Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+                
+                MultiplyByQuadratureMetric(inarray,tmp);
+                StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
+                NodalToModalTranspose(outarray,outarray);  
+            }
+            else
+            {
+                Array<OneD,NekDouble> wsp(nquad0*order1);
+                
+                StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,outarray,wsp);
+                NodalToModalTranspose(outarray,outarray);  
+            }
         }
 
         void NodalTriExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
@@ -338,8 +349,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray); 
 
             // get Mass matrix inverse
-            MatrixKey  masskey(StdRegions::eInvMass, DetShapeType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,
-                               m_nodalPointsKey->GetPointsType());
+            MatrixKey  masskey(StdRegions::eInvMass, DetShapeType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,m_nodalPointsKey.GetPointsType());
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
             // copy inarray in case inarray == outarray
@@ -399,7 +409,7 @@ namespace Nektar
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
             LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-            LibUtilities::PointsType ntype = m_nodalPointsKey->GetPointsType();
+            LibUtilities::PointsType ntype = m_nodalPointsKey.GetPointsType();
             StdRegions::StdNodalTriExpSharedPtr tmp = MemoryManager<StdNodalTriExp>::
                 AllocateSharedPtr(bkey0,bkey1,ntype);
             
@@ -646,6 +656,16 @@ namespace Nektar
             }
             
             return returnval;
+        }
+
+
+        StdRegions::StdExpansionSharedPtr NodalTriExp::v_GetStdExp(void) const
+        {
+            
+            return MemoryManager<StdRegions::StdNodalTriExp>
+                    ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                        m_base[1]->GetBasisKey(),
+                                        m_nodalPointsKey.GetPointsType());
         }
 
         DNekMatSharedPtr NodalTriExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)

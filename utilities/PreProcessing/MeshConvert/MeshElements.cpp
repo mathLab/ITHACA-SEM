@@ -982,6 +982,7 @@ namespace Nektar
                     // Copy the face nodes back again.
                     faceNodes = hoTri.surfVerts;
                 }
+
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }

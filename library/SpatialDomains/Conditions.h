@@ -59,6 +59,7 @@ namespace Nektar
             eNotDefined
         };
 
+<<<<<<< HEAD
         enum BndUserDefinedType
         {
             eI,
@@ -124,13 +125,19 @@ namespace Nektar
   
         };
 
+=======
+>>>>>>> origin/master
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(
                 BoundaryConditionType type,
-                const std::string &userDefined = std::string("NoUserDefined")):
-                    m_boundaryConditionType(type)
+                const std::string &userDefined 
+                         = std::string("NoUserDefined")):
+                    m_boundaryConditionType(type),
+                    m_userDefined(userDefined),
+                    m_isTimeDependent(false)
             {
+<<<<<<< HEAD
                 std::map<const std::string, BndUserDefinedType> known_type;
                 known_type["H"]                   = eHigh;
                 known_type["HOutflow"]            = eHighOutflow;
@@ -172,6 +179,8 @@ namespace Nektar
                     //"user defined type [") + userDefined + std::string("]"));
                     m_userDefined = eNoUserDefined;
                 }
+=======
+>>>>>>> origin/master
             }
 
             virtual ~BoundaryConditionBase()
@@ -187,24 +196,30 @@ namespace Nektar
                 m_boundaryConditionType = boundaryType;
             }
 
-            void SetUserDefined(BndUserDefinedType type)
+            void SetUserDefined(std::string &type)
             {
                 m_userDefined = type;
             }
 
-            BndUserDefinedType GetUserDefined() const
+            const std::string GetUserDefined() const
             {
                 return m_userDefined;
             }
 
-            const std::string GetBndTypeAsString(BndUserDefinedType type)
+            void SetIsTimeDependent(bool value)
             {
-                return BndUserDefinedTypeMap[type];
+                m_isTimeDependent = value;
+            }
+
+            bool IsTimeDependent(void)
+            {
+                return m_isTimeDependent;
             }
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
-            BndUserDefinedType    m_userDefined;
+            std::string           m_userDefined;
+            bool                  m_isTimeDependent;
         };
 
 

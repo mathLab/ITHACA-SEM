@@ -209,29 +209,22 @@ namespace Nektar
         /// Set Radiation forcing term
         void SetRadiationBoundaryForcing(int fieldid);
 
-	/// Set Womersley Profile If specified
-	void SetWomersleyBoundary(int fieldid,int bndid);
-	void InitWomersleyBoundary(int fieldid,int bndid);
+    	/// Set Womersley Profile If specified
+    	void SetWomersleyBoundary(int fieldid,int bndid);
 
         /// evaluate steady state
         bool CalcSteadyState(void);
 
-	/// Evaluate Bessels for Wom
-	std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
+	    /// Evaluate Bessels for Wom
+    	std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
 
-	/// Real and imaginary velocity comp. of wom
-	Array<OneD, NekDouble> wom_vel_r;
-	Array<OneD, NekDouble> wom_vel_i;
+	    /// Real and imaginary velocity comp. of wom
+	    Array<OneD, NekDouble> wom_vel_r;
+	    Array<OneD, NekDouble> wom_vel_i;
 		
-	/// Wom constants
-	NekDouble R,M,n0,n1,n2,x0,y0,z0;
-	NekDouble T;
-//	NekDouble n0;
-//	NekDouble n1;
-//	NekDouble n2;
-//	NekDouble x0;
-//	NekDouble y0;
-//	NekDouble z0;
+    	/// Wom constants
+    	NekDouble R,M,n0,n1,n2,x0,y0,z0;
+    	NekDouble T;
 
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()

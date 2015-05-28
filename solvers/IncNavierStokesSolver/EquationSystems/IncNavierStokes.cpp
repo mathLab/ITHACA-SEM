@@ -252,8 +252,9 @@ namespace Nektar
         {
             for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {
-        		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
-		        	==SpatialDomains::eWomersley)
+//        		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
+//		        	==SpatialDomains::eWomersley)
+                if(boost::iequals(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),"Womersley"))
                 {
                     m_session->LoadParameter("Period",T);
                     m_session->LoadParameter("Radius",R);
@@ -434,8 +435,7 @@ namespace Nektar
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
-	    	    else if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eWomersley)  
+	    	    else if(boost::iequals(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),"Womersley")) 
                 {
                     SetWomersleyBoundary(i,n);
                 }

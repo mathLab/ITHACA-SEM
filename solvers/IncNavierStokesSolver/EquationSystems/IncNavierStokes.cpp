@@ -287,10 +287,12 @@ namespace Nektar
                     std::ifstream file("fourier_coef.txt");
                     std::string line;
 
+                    ASSERTL1(file.is_open(),"Missing file fourier_coef.txt");
+                        
                     int count = 0;
                     while(std::getline(file,line)){
                        std::stringstream stream(line);
-                           while((stream>>coef) && (count<=8))
+                           while((stream>>coef) && (count<M))
                            {
                         wom_vel_r[count] = coef.real();
                         wom_vel_i[count] = coef.imag();

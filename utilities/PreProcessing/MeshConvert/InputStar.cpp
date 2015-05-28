@@ -120,13 +120,14 @@ namespace Nektar
             Array<OneD, vector< int> > ElementFaces;
 
 
-            // Read interior faces and set up first part of Element Faces and FaceNodes
+            // Read interior faces and set up first part of Element
+            // Faces and FaceNodes
             ReadInternalFaces(FaceNodes,ElementFaces);
 
             vector< vector<int> > BndElementFaces;
-            vector<string> Facelabels;
-            ReadBoundaryFaces(BndElementFaces, FaceNodes,ElementFaces, 
-                              Facelabels);
+            vector<string>        Facelabels;
+            ReadBoundaryFaces(BndElementFaces, FaceNodes,
+                              ElementFaces, Facelabels);
                 
             // 3D Zone
             // Reset node ordering so that all prism faces have 
@@ -718,6 +719,22 @@ namespace Nektar
                 }
                 else        //Pyramid
                 {
+                    set<int> vertids;
+                    set<int>::iterator it; 
+                    // get list of vert ids
+                    cout << "Pyramid found with vertices: " << endl;
+                    for(i =0 ; i < 5; ++i)
+                    {
+                        for(j =0; j < FaceNodes[ElementFaces[i]].size(); ++j)
+                        {
+                            vertids.insert(FaceNodes[ElementFaces[i]][j]);
+                        }
+                    }
+                    for(it = vertids.begin(); it != vertids.end(); ++it)
+                    {
+                        cout << Vnodes[*it] << endl;
+                    }
+
                     ASSERTL0(false,"Not yet set up for pyramids");
                     returnval = Array<OneD, int>(5);
                 }
@@ -991,10 +1008,10 @@ namespace Nektar
                     }
                     cnt += nv+1;
                 }
-                FacesNodes[mapData[i]] = Fnodes;
+                FacesNodes[mapData[i]-1] = Fnodes;
             }
-
-
+            
+            
             // find number of elements; 
             int nelmt = 0; 
             for(int i = 0; i < faceCells.size();++i)
@@ -1005,8 +1022,17 @@ namespace Nektar
             ElementFaces = Array<OneD, vector<int> >(nelmt);
             for(int i = 0; i < nf; ++i)
             {
-                ElementFaces[faceCells[2*i]  -1].push_back(mapData[i]);  // left element
-                ElementFaces[faceCells[2*i+1]-1].push_back(mapData[i]);  // right element 
+                // left element
+                if(faceCells[2*i])
+                {
+                    ElementFaces[faceCells[2*i]  -1].push_back(mapData[i]-1); 
+                }
+
+                // right element 
+                if(faceCells[2*i+1])
+                {
+                    ElementFaces[faceCells[2*i+1]-1].push_back(mapData[i]-1); 
+                }
             }
             
         }
@@ -1087,15 +1113,18 @@ namespace Nektar
                         }
                         cnt += nv+1;
                     }
-                    FacesNodes[mapData[i]] = Fnodes;
+                    FacesNodes[mapData[i]-1] = Fnodes;
                 }
                 
                 
                 vector<int> BndFaces; 
                 for(int i = 0; i < nf; ++i)
                 {
-                    ElementFaces[faceCells[i]  -1].push_back(mapData[i]); 
-                    BndFaces.push_back(mapData[i]);
+                    if(faceCells[i])
+                    {
+                        ElementFaces[faceCells[i]-1].push_back(mapData[i]-1); 
+                    }
+                    BndFaces.push_back(mapData[i]-1);
                 }
                 BndElementFaces.push_back(BndFaces);
             }

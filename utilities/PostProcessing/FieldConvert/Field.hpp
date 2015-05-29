@@ -69,6 +69,7 @@ struct Field {
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_writeBndFld(false),
+              m_setUpEquiSpacedFields(false),
               m_fieldPts(LibUtilities::NullPtsField){}
 
     ~Field()

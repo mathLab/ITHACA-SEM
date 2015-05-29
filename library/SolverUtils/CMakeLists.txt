@@ -1,4 +1,5 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Deform.cpp
   Core/Misc.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
@@ -22,6 +23,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterAeroForces.cpp
   Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
+  Filters/FilterEnergy1D.cpp
   Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
@@ -40,6 +42,7 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Deform.h
   Core/Misc.h
   AdvectionSystem.h
   Advection/Advection.h
@@ -63,6 +66,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterAeroForces.h
   Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
+  Filters/FilterEnergy1D.h
   Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h

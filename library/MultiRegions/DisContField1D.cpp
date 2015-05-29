@@ -1327,12 +1327,7 @@ namespace Nektar
 
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eTimeDependent || 
-                    m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eQinflow  ||
-                    m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eRCRterminal )
+                if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
                     
@@ -1439,6 +1434,20 @@ namespace Nektar
             }
 
             ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
+        }
+
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField1D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
         }
 
         /**

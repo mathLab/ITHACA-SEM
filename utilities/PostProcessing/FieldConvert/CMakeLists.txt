@@ -9,9 +9,12 @@ SET(FieldConvertHeaders
     OutputTecplot.h
     OutputVtk.h
     OutputFld.h
+    OutputXml.h
     ProcessAddFld.h
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
+    ProcessDeform.h
+    ProcessDisplacement.h
     ProcessEquiSpacedOutput.h
     ProcessInterpField.h
     ProcessInterpPoints.h
@@ -35,9 +38,12 @@ SET(FieldConvertSources
     OutputTecplot.cpp
     OutputVtk.cpp
     OutputFld.cpp
+    OutputXml.cpp
     ProcessAddFld.cpp
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
+    ProcessDeform.cpp
+    ProcessDisplacement.cpp
     ProcessEquiSpacedOutput.cpp
     ProcessInterpField.cpp
     ProcessInterpPoints.cpp
@@ -51,7 +57,7 @@ SET(FieldConvertSources
 )
   
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
-
+TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
 
 #ADD_NEKTAR_TEST(chan3D_tec)
 #ADD_NEKTAR_TEST(chan3D_tec_n10)

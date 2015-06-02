@@ -57,4 +57,3 @@ ADD_SOLVER_EXECUTABLE(FldAddFalknerSkanBL   solvers FldAddFalknerSkanBL.cpp)
 ADD_SOLVER_EXECUTABLE(AddModeTo2DFld        solvers AddModeTo2DFld.cpp)
 ADD_SOLVER_EXECUTABLE(ExtractMeanModeFromHomo1DFld  
                                     solvers ExtractMeanModeFromHomo1DFld.cpp)
-ADD_SOLVER_EXECUTABLE(Aliasing              solvers ${AliasingSources})

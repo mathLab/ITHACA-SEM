@@ -64,13 +64,13 @@ namespace Nektar
         class GlobalMatrix;
 
         enum Direction
-	{
-	    eX,
-	    eY,
-	    eZ,
-	    eS,
-	    eN
-	};
+    {
+        eX,
+        eY,
+        eZ,
+        eS,
+        eN
+    };
 
         enum ExpansionType
         {
@@ -81,7 +81,7 @@ namespace Nektar
             e3DH2D,
             e3D,
             eNoType
-        };	   
+        };       
         
         MultiRegions::Direction const DirCartesianMap[] =
             {
@@ -95,7 +95,7 @@ namespace Nektar
         typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
-			       
+                   
 
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public boost::enable_shared_from_this<ExpList>
@@ -134,7 +134,7 @@ namespace Nektar
             
             /// Returns the type of the expansion
             MULTI_REGIONS_EXPORT void SetExpType(ExpansionType Type);
-	
+    
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
             inline int EvalBasisNumModesMax(void) const;
@@ -160,12 +160,12 @@ namespace Nektar
             /// Returns the total number of qudature points scaled by
             /// the factor scale on each 1D direction
             inline int Get1DScaledTotPoints(const NekDouble scale) const;
-			
+            
             /// Sets the wave space to the one of the possible configuration
             /// true or false
             inline void SetWaveSpace(const bool wavespace);
             
-			
+            
             ///Set Modified Basis for the stability analysis
             inline void SetModifiedBasis(const bool modbasis);
             
@@ -321,8 +321,8 @@ namespace Nektar
                 Array<OneD, NekDouble> &coord_0,
                 Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                 Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
-			
-			// Homogeneous transforms
+            
+            // Homogeneous transforms
             inline void HomogeneousFwdTrans(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray,
@@ -342,7 +342,7 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-			
+            
             inline void GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -353,7 +353,7 @@ namespace Nektar
                 Array<OneD, const NekDouble> &V2,
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
-			
+            
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
@@ -397,7 +397,7 @@ namespace Nektar
             }
 
             void WriteVtkPieceHeader(std::ofstream &outfile, int expansion,
-                                     int istrip)
+                                     int istrip = 0)
             {
                 v_WriteVtkPieceHeader(outfile, expansion, istrip);
             }
@@ -627,8 +627,8 @@ namespace Nektar
             inline void PhysDeriv(
                 Direction edir,
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD, NekDouble> &out_d);	
-	    
+                      Array<OneD, NekDouble> &out_d);    
+        
             /// This function discretely evaluates the derivative of a function
             /// \f$f(\boldsymbol{x})\f$ on the domain consisting of all
             /// elements of the expansion.
@@ -740,6 +740,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                 int NumHomoDir = 0,
+                int NumHomoStrip = 1,
                 Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis =
                     LibUtilities::NullBasisSharedPtr1DArray,
                 std::vector<NekDouble> &HomoLen =
@@ -823,15 +824,15 @@ namespace Nektar
                 const boost::shared_ptr<ExpList> &fromExpList,
                 const Array<OneD, const NekDouble> &fromCoeffs,
                       Array<OneD, NekDouble> &toCoeffs);
-			
-			
+            
+            
             //Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
             MULTI_REGIONS_EXPORT void ExtractDataToCoeffs(
                 LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                 std::vector<NekDouble> &fielddata,
                 std::string &field,
                 Array<OneD, NekDouble> &coeffs);
-			
+            
 
             /// Returns a shared pointer to the current object.
             boost::shared_ptr<ExpList> GetSharedThisPtr()
@@ -979,7 +980,7 @@ namespace Nektar
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
-			
+            
             //@todo should this be in ExpList or ExpListHomogeneous1D.cpp
             // it's a bool which determine if the expansion is in the wave space (coefficient space)
             // or not
@@ -1054,7 +1055,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Upwind);
 
             virtual boost::shared_ptr<ExpList> &v_GetTrace();
-			
+            
             virtual boost::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
 
             virtual const Array<OneD, const int> &v_GetTraceBndMap();
@@ -1140,11 +1141,11 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,      NekDouble> &outarray,
                       CoeffState coeffstate);
-			
+            
             virtual void v_BwdTrans_IterPerExp(
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray);
-	    
+        
             virtual void v_FwdTrans(
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,      NekDouble> &outarray,
@@ -1160,11 +1161,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 CoeffState                          coeffstate);
-			
+            
             virtual void v_IProductWRTBase_IterPerExp(
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,      NekDouble> &outarray);
-			
+            
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -1175,7 +1176,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &coord_0,
                 Array<OneD, NekDouble> &coord_1,
                 Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
-			
+            
             virtual void v_PhysDeriv(
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &out_d0,
@@ -1459,7 +1460,7 @@ namespace Nektar
         {
             m_WaveSpace = wavespace;
         }
-		
+        
         /**
          *
          */
@@ -1528,7 +1529,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray, coeffstate);
         }
 
-		/**
+        /**
          *
          */
         inline void ExpList::IProductWRTBase_IterPerExp(
@@ -1548,8 +1549,8 @@ namespace Nektar
         {
             v_FwdTrans(inarray,outarray,coeffstate);
         }
-		
-		/**
+        
+        /**
          *
          */
         inline void ExpList::FwdTrans_IterPerExp (
@@ -1577,8 +1578,8 @@ namespace Nektar
         {
             v_BwdTrans(inarray,outarray,coeffstate);
         }
-		
-		/**
+        
+        /**
          *
          */
         inline void ExpList::BwdTrans_IterPerExp (
@@ -1652,7 +1653,7 @@ namespace Nektar
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
-		
+        
         /**
          *
          */
@@ -1663,7 +1664,7 @@ namespace Nektar
         {
             v_PhysDeriv(inarray,out_d0,out_d1,out_d2);
         }
-	
+    
         /**
          *
          */
@@ -1681,8 +1682,8 @@ namespace Nektar
                   Array<OneD, NekDouble> &out_d)
         {
             v_PhysDeriv(edir, inarray,out_d);
-        }		
-	
+        }        
+    
         /**
          *
          */
@@ -1695,7 +1696,7 @@ namespace Nektar
         {
             v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-	
+    
         /**
          *
          */
@@ -1708,7 +1709,7 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-	
+    
         /**
          *
          */
@@ -1720,7 +1721,7 @@ namespace Nektar
         {
             v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
         }
-		
+        
         /**
          *
          */
@@ -1731,7 +1732,7 @@ namespace Nektar
         {
             v_GetBCValues(BndVals,TotField,BndID);
         }
-	
+    
         /**
          *
          */
@@ -1743,7 +1744,7 @@ namespace Nektar
         {
             v_NormVectorIProductWRTBase(V1,V2,outarray,BndID);
         }
-	
+    
         /**
          * @param   eid         The index of the element to be checked.
          * @return  The dimension of the coordinates of the specific element.

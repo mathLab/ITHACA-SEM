@@ -205,7 +205,7 @@ namespace Nektar
                     }
                     radpts += BndExp[n]->GetTotPoints();
                 }
-                if(BndConds[n]->GetUserDefined() == SpatialDomains::eZeroNormalComponent)
+                if(boost::iequals(BndConds[n]->GetUserDefined(),"ZeroNormalComponent"))
                 {
                     ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet,
                              "Zero Normal Component boundary condition option must be of type Dirichlet <D>");
@@ -378,8 +378,8 @@ namespace Nektar
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
                 if(m_fields[i]->GetBndConditions()[n]->IsTimeDependent()  ||
-                   m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   "MovingBody")
+                   boost::iequals(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),
+                   "MovingBody"))
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -492,7 +492,7 @@ namespace Nektar
 
         for(cnt = n = 0; n < BndConds[0].num_elements(); ++n)
         {            
-            if((BndConds[0][n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)&& (BndConds[0][n]->GetUserDefined() == SpatialDomains::eZeroNormalComponent))
+            if((BndConds[0][n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)&& (boost::iequals(BndConds[0][n]->GetUserDefined(),"ZeroNormalComponent")))
             {
                 for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i,cnt++)
                 {

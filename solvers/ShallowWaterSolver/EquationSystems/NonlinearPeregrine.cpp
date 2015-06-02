@@ -545,15 +545,13 @@ void NonlinearPeregrine::SetBoundaryConditions(
     {
 
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eWall)
+        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBoundary2D(n, cnt, inarray);
         }
 
         // Time Dependent Boundary Condition (specified in meshfile)
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eTimeDependent)
+        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
         {
             for (int i = 0; i < nvariables; ++i)
             {
@@ -973,15 +971,13 @@ void NonlinearPeregrine::SetBoundaryConditionsForcing(
     {
         // Use wall for all BC...
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eWall)
+        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBoundaryForcing(n, cnt, inarray);
         }
 
         //Timedependent Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eTimeDependent)
+        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
         {
             ASSERTL0(false, "time-dependent BC not implemented for Boussinesq");
         }
@@ -1086,14 +1082,12 @@ void NonlinearPeregrine::SetBoundaryConditionsContVariables(
     {
         // Use wall for all
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eWall)
+        if(boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBoundaryContVariables(n, cnt, inarray);
         }
 
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined()
-                == SpatialDomains::eTimeDependent)
+        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
         {
             WallBoundaryContVariables(n, cnt, inarray);
         }

@@ -570,13 +570,12 @@ namespace Nektar
         int  nlevels = m_pressureHBCs.num_elements();
         Vmath::Vsub(HBCPts, m_pressureHBCs[nlevels-1],1,accelerationTerm, 1,
                     m_pressureHBCs[nlevels-1],1);
-        
     }
 
     LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)
     {
         return m_subStepIntegrationScheme->GetIntegrationMethod();
     }
-    
+
 }
 

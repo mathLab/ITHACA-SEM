@@ -2486,8 +2486,7 @@
 
             for (i = 0; i < nbnd; ++i)
             {
-                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();

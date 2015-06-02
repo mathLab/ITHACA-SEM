@@ -1327,12 +1327,7 @@ namespace Nektar
 
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eTimeDependent || 
-                    m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eQinflow  ||
-                    m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eRCRterminal )
+                if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
                     

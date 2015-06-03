@@ -113,7 +113,7 @@ void ForcingMovingBody::v_Apply(
         const NekDouble&                                    time)
 {
     // Fill in m_zta and m_eta with all the required values
-    UpdateMotion(fields,time);
+    UpdateMotion(fields,inarray,time);
 
     //calcualte the m_forcing components Ax,Ay,Az and put them in m_forcing
     CalculateForcing(fields);
@@ -125,7 +125,7 @@ void ForcingMovingBody::v_Apply(
     }
 
     // Mapping boundary conditions
-    MappingBndConditions(fields, time);
+    MappingBndConditions(fields, inarray, time);
 }
 
 /**
@@ -133,6 +133,7 @@ void ForcingMovingBody::v_Apply(
  */
 void ForcingMovingBody::UpdateMotion(
         const Array<OneD, MultiRegions::ExpListSharedPtr>&  pfields,
+        const Array<OneD, Array<OneD, NekDouble> >       &  fields,
               NekDouble                                     time)
 {
     // Update the forces from the calculation of fluid field, which is
@@ -1031,6 +1032,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
  */
 void ForcingMovingBody::MappingBndConditions(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+            const Array<OneD, Array<OneD, NekDouble> >        &fields,
                   NekDouble  time) 
 {
     Array<OneD, Array<OneD, NekDouble> > BndV (
@@ -1103,228 +1105,9 @@ void ForcingMovingBody::MappingBndConditions(
             }
         }
     }
-    
-    // Set up high order outflow conditions 
-    // for movingbody module
-    CalcOutflowBCs(pfields);
 }
 
-
-/**
- *
- **/
-void ForcingMovingBody::CalcOutflowBCs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields)
-    {
-        static bool init = true;
-        static bool noHOBC = false;
-
-        if(noHOBC == true)
-        {
-           return;
-        }
-        if(init) // set up storage for boundary velocity at outflow
-        {
-            init = false;
-
-            m_PBndConds = pfields[3]->GetBndConditions();
-            m_PBndExp   = pfields[3]->GetBndCondExpansions();
-
-            m_totbndpts = 0;
-            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                if(m_PBndConds[n]->GetUserDefined()
-                        == SpatialDomains::eHighOutflow)
-                {
-                    m_totbndpts += m_PBndExp[n]->GetTotPoints();
-                }
-            }
-            
-            if(m_totbndpts == 0)
-            {
-                noHOBC = true;
-                return;
-            }
-
-            if(pfields[0]->GetExpType() != MultiRegions::e3DH1D)
-            {
-                noHOBC = true;
-		        return;
-	        }
-            m_curl_dim = 3;
-            m_bnd_dim  = 2;
-
-            // find the maximum values of points for pressure BC evaluation
-            m_pressureBCsMaxPts = 0;
-            m_pressureBCsElmtMaxPts = 0;
-            // Set up mapping from pressure boundary condition to pressure element
-            // dm_etails.
-            pfields[3]->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
-                                             m_pressureBCtoTraceID);
-            int cnt, n;
-            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
-                {
-                    m_pressureBCsMaxPts = max(m_pressureBCsMaxPts,
-                                    m_PBndExp[n]->GetExp(i)->GetTotPoints());
-                    m_pressureBCsElmtMaxPts = max(m_pressureBCsElmtMaxPts,
-                                    pfields[0]->GetExp(m_pressureBCtoElmtID[cnt++])
-                                                                ->GetTotPoints());
-                }
-            }
- 
-            Array<OneD, unsigned int> planes;
-            planes = pfields[0]->GetZIDs();
-            int num_planes = planes.num_elements();
-            m_expsize_per_plane = 
-			Array<OneD, unsigned int> (m_PBndConds.num_elements());
-            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                int exp_size = m_PBndExp[n]->GetExpSize();
-                m_expsize_per_plane[n] = exp_size/num_planes;
-            }
-            m_totexps_per_plane = 0;
-            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                m_totexps_per_plane += m_PBndExp[n]->GetExpSize()/num_planes;
-            }
-        }
-        
-        StdRegions::StdExpansionSharedPtr Bc; 
-        Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
-                                                        UBndConds(m_curl_dim);
-        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-                                                        UBndExp(m_curl_dim);
-
-        for (int i = 0; i < m_curl_dim; ++i)
-        {
-            UBndConds[i] = pfields[i]->GetBndConditions();
-            UBndExp[i]   = pfields[i]->GetBndCondExpansions();
-        }
-
-        Array<OneD, Array<OneD, NekDouble> > BndValues(m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > ub       (m_curl_dim);
-        for(int i = 0; i < m_curl_dim; ++i)
-        {
-            BndElmt[i]   = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,
-                                                   0.0);
-            BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            ub[i]        = Array<OneD, NekDouble> (m_totbndpts,0.0);
-        }
-        StdRegions::StdExpansionSharedPtr elmt;    
-        Array<OneD, NekDouble> PBCvals, UBCvals;
-        Array<OneD, Array<OneD, NekDouble> > normals;
-
-	    // store the forcing term in the physical space
-        Array<OneD, Array<OneD, NekDouble> > forcing(m_curl_dim);
-        // create the storage space for the body motion description
-        int phystot = pfields[0]->GetTotPoints();
-        for(int i = 0; i < m_curl_dim; i++)
-        {
-            forcing[i] = Array<OneD, NekDouble> (phystot, 0.0);
-        }
-        for(int j = 0; j < m_curl_dim; ++j)
-        {
-            pfields[0]->HomogeneousBwdTrans(m_forcing[j],forcing[j]);
-        }
-
-        int count = 0;
-        for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            // Do outflow boundary conditions if they exist
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHighOutflow)
-            {
-
-                int cnt_exp   = 0; int cnt_plane = 0;
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
-                {
-                    // count the expansion list for e3DH1D
-                    if(cnt_exp == m_expsize_per_plane[n])
-                    {
-                        cnt_exp = 0; cnt_plane++;
-                    }
-                    int cnt = cnt_plane * m_totexps_per_plane 
-                                            + cnt_exp + count;
-                    cnt_exp++;
-
-                    // find element and edge of this expansion. 
-                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                        (m_PBndExp[n]->GetExp(i));
-
-                    int elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt       = pfields[0]->GetExp(elmtid);
-                    int offset = pfields[0]->GetPhys_Offset(elmtid);
-
-                    int nq = elmt->GetTotPoints();
-
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        Vmath::Vcopy(nq, &forcing[j][offset], 1,
-                                         &BndElmt[j][0],      1);
-                    }
-
-                    int nbc      = m_PBndExp[n]->GetExp(i)->GetTotPoints();
-                    int boundary = m_pressureBCtoTraceID[cnt];
-
-                    Array<OneD, NekDouble>  ftmp(nbc,0.0),
-			     vtmp(nbc,0.0), utmp(nbc,0.0);
-
-                    normals=elmt->GetSurfaceNormal(boundary);
-                    for (int j = 0; j < m_curl_dim; j++)
-                    {
-                        elmt->GetTracePhysVals(boundary, Bc, BndElmt[j],
-                                                   	  BndValues[j]);
-                    }
-
-                    // Set up (n.foring) for
-                    // pressure condition
-                    for(int j = 0; j < m_bnd_dim; ++j)
-                    {
-                        Vmath::Vvtvp(nbc, normals[j], 1, BndValues[j], 1,
-                                          ftmp,       1, ftmp,         1);
-                    }
-
-                    // set up pressure boundary condition
-                    PBCvals = m_PBndExp[n]->UpdatePhys()
-                            + m_PBndExp[n]->GetPhys_Offset(i);
-                    Vmath::Vcopy(nbc, ftmp, 1, PBCvals, 1);
-                    
-                    for(int j = 0; j < m_bnd_dim; j++)
-                    {
-                        int u_offset = UBndExp[j][n]->GetPhys_Offset(i);
-                        Vmath::Vvtvp(nbc, normals[j],1, BndValues[j], 1,
-                                          utmp,   	                  1, 
-                                          vtmp = ub[j] + u_offset,    1);
-                    }
-                }
-
-                // Now set up Velocity conditions.
-                for(int j = 0; j < m_curl_dim; ++j)
-                {
-                    if(UBndConds[j][n]->GetUserDefined()
-                                        == SpatialDomains::eHighOutflow)
-                    {
-                        for(int i = 0; i < UBndExp[0][n]->GetExpSize();
-                                       ++i)
-                        {
-                            int nbc = UBndExp[0][n]->GetExp(i)->GetTotPoints();
-                            int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
-                            UBCvals = UBndExp[j][n]->UpdatePhys()
-                                    + UBndExp[j][n]->GetPhys_Offset(i);
-                            Vmath::Vcopy(nbc, ub[j]+u_offset, 1, UBCvals, 1);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                count  += m_expsize_per_plane[n];
-            }
-        }
-    }
-    
+   
 /**
  *
  */

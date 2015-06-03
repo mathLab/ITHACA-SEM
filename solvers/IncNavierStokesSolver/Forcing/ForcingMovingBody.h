@@ -98,6 +98,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void UpdateMotion(
             const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
+            const Array<OneD, Array<OneD, NekDouble> >       &  fields,
                   NekDouble time );
 
         void TensionedCableModel(
@@ -114,10 +115,8 @@ class ForcingMovingBody : public SolverUtils::Forcing
 
         void MappingBndConditions(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+            const Array<OneD, Array<OneD, NekDouble> >        & fields,
                   NekDouble time );
-
-        void CalcOutflowBCs(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
         void EvaluateAccelaration(
             const Array<OneD, NekDouble> &input,
@@ -162,38 +161,12 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, std::string> m_motion;
         /// do determine if the the body motion come from an extern file
         Array<OneD, bool>        m_IsFromFile;
-        ///
-        Array<OneD, const SpatialDomains::BoundaryConditionShPtr> m_PBndConds;
-        ///
-        Array<OneD, MultiRegions::ExpListSharedPtr> m_PBndExp;
-        ///
-        Array<OneD, unsigned int> m_expsize_per_plane;
-        /// Id of element to which pressure  boundary condition belongs
-        Array<OneD, int> m_pressureBCtoElmtID;
-        /// Id of edge (2D) or face (3D) to which pressure boundary condition belongs
-        Array<OneD, int> m_pressureBCtoTraceID;
         /// Store the derivatives of motion variables in x-direction
         Array<OneD, Array< OneD, NekDouble> > m_zta;
         /// Store the derivatives of motion variables in y-direction
         Array<OneD, Array< OneD, NekDouble> > m_eta;
-
+        ///
         Array<OneD, Array< OneD, NekDouble> > m_forcing;
-        /// total number of boundary expansions per plane
-        int m_totexps_per_plane;
-
-        /// Curl-curl dimensionality
-        int m_curl_dim;
-
-        /// bounday dimensionality
-        int m_bnd_dim;
-
-        /// Maximum points used in pressure BC evaluation
-        int m_pressureBCsMaxPts;
-
-        /// Maximum points used in Element adjacent to pressure BC evaluation
-        int m_pressureBCsElmtMaxPts;
-	///
-	int m_totbndpts;
 };
 
 }

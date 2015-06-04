@@ -434,8 +434,7 @@ int main(int argc, char *argv[])
         
         MultiRegions::ContField3DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField3D>
-            ::AllocateSharedPtr(vSession, graphShPt,
-                                vSession->GetVariable(0));
+            ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
         
         // Get the total number of elements
         nElements = Domain->GetExpSize();
@@ -555,62 +554,127 @@ int main(int argc, char *argv[])
         << setprecision(9)
         << "   " << err << endl;
         
-        if (err < errtol)
+        if (expdim == 2)
         {
-            cout << "Calculating" << endl;
-            OUTPUT(m_xpoints, xx, ff, nQuadraturePts, x_QuadraturePts,
-                   y_QuadraturePts, u_QuadraturePts, v_QuadraturePts,
-                   rho_QuadraturePts, T_QuadraturePts);
-            break;
+            if (err < errtol)
+            {
+                cout << "Calculating" << endl;
+                OUTPUT(m_xpoints, xx, ff, nQuadraturePts, x_QuadraturePts,
+                       y_QuadraturePts, u_QuadraturePts, v_QuadraturePts,
+                       rho_QuadraturePts, T_QuadraturePts);
+                break;
+            }
+            else
+            {
+                f[0]      = ff[1][m_xpoints] - 1;
+                f[1]      = ff[3][m_xpoints] - 1;
+                vstart[2] = v[0] + dv[0];
+            
+                if (m_Tw < 0)
+                {
+                    vstart[3] = v[1];
+                    m_Twall   = vstart[3];
+                }
+                else
+                {
+                    vstart[4] = v[1];
+                }
+            
+                RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
+            
+                f1[0] = ff[1][m_xpoints] - 1;
+                f1[1] = ff[3][m_xpoints] - 1;
+            
+                vstart[2] = v[0];
+            
+                if (m_Tw < 0)
+                {
+                    vstart[3] = v[1] + dv[1];
+                    m_Twall   = vstart[3];
+                }
+                else
+                {
+                    vstart[4] = v[1] + dv[1];
+                }
+            
+                RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
+            
+                f2[0] = ff[1][m_xpoints] - 1;
+                f2[1] = ff[3][m_xpoints] - 1;
+            
+                al11 = (f1[0] - f[0]) / dv[0];
+                al21 = (f1[1] - f[1]) / dv[0];
+                al12 = (f2[0] - f[0]) / dv[1];
+                al22 = (f2[1] - f[1]) / dv[1];
+                det = al11 * al22 - al21 * al12;
+            
+                dv[0] = ( - al22 * f[0] + al12 * f[1]) / det;
+                dv[1] = (al21 * f[0] - al11 * f[1]) / det;
+                v[0]  = v[0] + dv[0];
+                v[1]  = v[1] + dv[1];
+            }
         }
-        else
+        else if (expdim == 3)
         {
-            f[0]      = ff[1][m_xpoints] - 1;
-            f[1]      = ff[3][m_xpoints] - 1;
-            vstart[2] = v[0] + dv[0];
-            
-            if (m_Tw < 0)
             {
-                vstart[3] = v[1];
-                m_Twall   = vstart[3];
+                if (err < errtol)
+                {
+                    cout << "Calculating" << endl;
+                    OUTPUT(m_xpoints, xx, ff, nQuadraturePts, x_QuadraturePts,
+                           z_QuadraturePts, u_QuadraturePts, v_QuadraturePts,
+                           rho_QuadraturePts, T_QuadraturePts);
+                    break;
+                }
+                else
+                {
+                    f[0]      = ff[1][m_xpoints] - 1;
+                    f[1]      = ff[3][m_xpoints] - 1;
+                    vstart[2] = v[0] + dv[0];
+                    
+                    if (m_Tw < 0)
+                    {
+                        vstart[3] = v[1];
+                        m_Twall   = vstart[3];
+                    }
+                    else
+                    {
+                        vstart[4] = v[1];
+                    }
+                    
+                    RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
+                    
+                    f1[0] = ff[1][m_xpoints] - 1;
+                    f1[1] = ff[3][m_xpoints] - 1;
+                    
+                    vstart[2] = v[0];
+                    
+                    if (m_Tw < 0)
+                    {
+                        vstart[3] = v[1] + dv[1];
+                        m_Twall   = vstart[3];
+                    }
+                    else
+                    {
+                        vstart[4] = v[1] + dv[1];
+                    }
+                    
+                    RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
+                    
+                    f2[0] = ff[1][m_xpoints] - 1;
+                    f2[1] = ff[3][m_xpoints] - 1;
+                    
+                    al11 = (f1[0] - f[0]) / dv[0];
+                    al21 = (f1[1] - f[1]) / dv[0];
+                    al12 = (f2[0] - f[0]) / dv[1];
+                    al22 = (f2[1] - f[1]) / dv[1];
+                    det = al11 * al22 - al21 * al12;
+                    
+                    dv[0] = ( - al22 * f[0] + al12 * f[1]) / det;
+                    dv[1] = (al21 * f[0] - al11 * f[1]) / det;
+                    v[0]  = v[0] + dv[0];
+                    v[1]  = v[1] + dv[1];
+                }
             }
-            else
-            {
-                vstart[4] = v[1];
-            }
-            
-            RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
-            
-            f1[0] = ff[1][m_xpoints] - 1;
-            f1[1] = ff[3][m_xpoints] - 1;
-            
-            vstart[2] = v[0];
-            
-            if (m_Tw < 0)
-            {
-                vstart[3] = v[1] + dv[1];
-                m_Twall   = vstart[3];
-            }
-            else
-            {
-                vstart[4] = v[1] + dv[1];
-            }
-            
-            RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
-            
-            f2[0] = ff[1][m_xpoints] - 1;
-            f2[1] = ff[3][m_xpoints] - 1;
-            
-            al11 = (f1[0] - f[0]) / dv[0];
-            al21 = (f1[1] - f[1]) / dv[0];
-            al12 = (f2[0] - f[0]) / dv[1];
-            al22 = (f2[1] - f[1]) / dv[1];
-            det = al11 * al22 - al21 * al12;
-            
-            dv[0] = ( - al22 * f[0] + al12 * f[1]) / det;
-            dv[1] = (al21 * f[0] - al11 * f[1]) / det;
-            v[0]  = v[0] + dv[0];
-            v[1]  = v[1] + dv[1];
         }
     }
     
@@ -649,29 +713,28 @@ int main(int argc, char *argv[])
     if (expdim == 2)
     {
         graphShPt = MemoryManager<SpatialDomains::MeshGraph2D>
-        ::AllocateSharedPtr(vSession);
+            ::AllocateSharedPtr(vSession);
         
         MultiRegions::ContField2DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField2D>
-        ::AllocateSharedPtr(vSession, graphShPt,
-                            vSession->GetVariable(0));
+            ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
         
         Array<OneD, MultiRegions::ExpListSharedPtr> Exp(4);
         MultiRegions::ExpList2DSharedPtr Exp2D_uk;
-        Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>::
-        AllocateSharedPtr(vSession,graphShPt);
+        Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>
+            ::AllocateSharedPtr(vSession, graphShPt);
         
         MultiRegions::ExpList2DSharedPtr Exp2D_vk;
-        Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>::
-        AllocateSharedPtr(vSession,graphShPt);
+        Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>
+            ::AllocateSharedPtr(vSession, graphShPt);
         
         MultiRegions::ExpList2DSharedPtr Exp2D_rhok;
-        Exp2D_rhok = MemoryManager<MultiRegions::ExpList2D>::
-        AllocateSharedPtr(vSession,graphShPt);
+        Exp2D_rhok = MemoryManager<MultiRegions::ExpList2D>
+            ::AllocateSharedPtr(vSession, graphShPt);
         
         MultiRegions::ExpList2DSharedPtr Exp2D_Tk;
-        Exp2D_Tk = MemoryManager<MultiRegions::ExpList2D>::
-        AllocateSharedPtr(vSession,graphShPt);
+        Exp2D_Tk = MemoryManager<MultiRegions::ExpList2D>
+            ::AllocateSharedPtr(vSession, graphShPt);
         
         // Filling the 2D expansion using a recursive
         // algorithm based on the mesh ordering
@@ -748,36 +811,35 @@ int main(int argc, char *argv[])
     else if (expdim == 3)
     {
         graphShPt = MemoryManager<SpatialDomains::MeshGraph3D>
-        ::AllocateSharedPtr(vSession);
+            ::AllocateSharedPtr(vSession);
         
         MultiRegions::ContField3DSharedPtr Domain;
         Domain = MemoryManager<MultiRegions::ContField3D>
-        ::AllocateSharedPtr(vSession, graphShPt,
-                            vSession->GetVariable(0));
+            ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
         
         Array<OneD,NekDouble> w_QuadraturePts;
         w_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts, 0.0);
         Array<OneD, MultiRegions::ExpListSharedPtr> Exp(5);
         
         MultiRegions::ExpList3DSharedPtr Exp3D_uk;
-        Exp3D_uk = MemoryManager<MultiRegions::ExpList3D>::
-        AllocateSharedPtr(vSession, graphShPt);
+        Exp3D_uk = MemoryManager<MultiRegions::ExpList3D>
+            ::AllocateSharedPtr(vSession, graphShPt);
     
         MultiRegions::ExpList3DSharedPtr Exp3D_vk;
-        Exp3D_vk = MemoryManager<MultiRegions::ExpList3D>::
-        AllocateSharedPtr(vSession, graphShPt);
+        Exp3D_vk = MemoryManager<MultiRegions::ExpList3D>
+            ::AllocateSharedPtr(vSession, graphShPt);
     
         MultiRegions::ExpList3DSharedPtr Exp3D_wk;
-        Exp3D_wk = MemoryManager<MultiRegions::ExpList3D>::
-        AllocateSharedPtr(vSession, graphShPt);
+        Exp3D_wk = MemoryManager<MultiRegions::ExpList3D>
+            ::AllocateSharedPtr(vSession, graphShPt);
     
         MultiRegions::ExpList3DSharedPtr Exp3D_rhok;
-        Exp3D_rhok = MemoryManager<MultiRegions::ExpList3D>::
-        AllocateSharedPtr(vSession, graphShPt);
+        Exp3D_rhok = MemoryManager<MultiRegions::ExpList3D>
+            ::AllocateSharedPtr(vSession, graphShPt);
     
         MultiRegions::ExpList3DSharedPtr Exp3D_Tk;
-        Exp3D_Tk = MemoryManager<MultiRegions::ExpList3D>::
-        AllocateSharedPtr(vSession, graphShPt);
+        Exp3D_Tk = MemoryManager<MultiRegions::ExpList3D>
+            ::AllocateSharedPtr(vSession, graphShPt);
     
         // Filling the 3D expansion using a recursive algorithm based
         // on the mesh ordering

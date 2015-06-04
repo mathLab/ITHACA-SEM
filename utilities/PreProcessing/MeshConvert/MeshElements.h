@@ -713,7 +713,11 @@ namespace Nektar
             unsigned int GetNodeCount() const
             {
                 unsigned int n = m_volumeNodes.size();
-                if (m_dim == 2)
+                if (m_dim == 1)
+                {
+                    n += 2;
+                }
+                else if (m_dim == 2)
                 {
                     for (int i = 0; i < m_edge.size(); ++i)
                     {
@@ -831,7 +835,16 @@ namespace Nektar
 
                 // Node orderings are different for different elements.
                 // Triangle
-                if (m_vertex.size() == 3)
+                if (m_vertex.size() == 2)
+                {
+                    nodeList.push_back(m_vertex[0]);
+                    for (int i = 0; i < m_volumeNodes.size(); ++i)
+                    {
+                        nodeList.push_back(m_volumeNodes[i]);
+                    }
+                    nodeList.push_back(m_vertex[1]);
+                }
+                else if (m_vertex.size() == 3)
                 {
                     int n = m_edge[0]->GetNodeCount();
                     nodeList.resize(n*(n+1)/2);

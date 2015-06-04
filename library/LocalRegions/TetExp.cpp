@@ -293,7 +293,8 @@ namespace Nektar
 
         void TetExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+            Array<OneD,       NekDouble> &outarray,
+            bool multiplybyweights)
         {
             const int nquad0 = m_base[0]->GetNumPoints();
             const int nquad1 = m_base[1]->GetNumPoints();
@@ -302,14 +303,26 @@ namespace Nektar
             const int order1 = m_base[1]->GetNumModes();
             Array<OneD, NekDouble> wsp(nquad1*nquad2*order0 +
                                        nquad2*order0*(order1+1)/2);
-            Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
 
-            MultiplyByQuadratureMetric(inarray, tmp);
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,
-                                         true,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
+                
+                MultiplyByQuadratureMetric(inarray, tmp);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             inarray,outarray,wsp,
+                                             true,true,true);
+            }  
         }
 
         /**
@@ -529,12 +542,18 @@ namespace Nektar
             return LibUtilities::eTetrahedron;
         }
 
+        StdRegions::StdExpansionSharedPtr TetExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdTetExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
         int TetExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
         }
-
-
 
         void TetExp::v_ExtractDataToCoeffs(
                 const NekDouble *data,
@@ -718,7 +737,6 @@ namespace Nektar
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
 
-            
             LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
             LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
             
@@ -824,7 +842,8 @@ namespace Nektar
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
-                Array<OneD,NekDouble> normals(vCoordDim*nqtot, 0.0);
+                Array<OneD, NekDouble> faceJac(nqtot);
+                Array<OneD,NekDouble>  normals(vCoordDim*nqtot, 0.0);
 
                 // Extract Jacobian along face and recover local derivates
                 // (dx/dr) for polynomial interpolation by multiplying m_gmat by
@@ -838,6 +857,7 @@ namespace Nektar
                             normals[j]         = -df[2][j]*jac[j];
                             normals[nqtot+j]   = -df[5][j]*jac[j];
                             normals[2*nqtot+j] = -df[8][j]*jac[j];
+                            faceJac[j]         = jac[j];
                         }
 
                         points0 = ptsKeys[0];
@@ -858,6 +878,7 @@ namespace Nektar
                                     -df[4][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq0]  =
                                     -df[7][tmp]*jac[tmp];
+                                faceJac[j+k*nq0] = jac[tmp];
                             } 
                         }
 
@@ -882,6 +903,7 @@ namespace Nektar
                                 normals[2*nqtot+j+k*nq1] =
                                     (df[6][tmp]+df[7][tmp]+df[8][tmp])*
                                         jac[tmp];
+                                faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
 
@@ -903,6 +925,7 @@ namespace Nektar
                                     -df[3][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
                                     -df[6][tmp]*jac[tmp];
+                                faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
 
@@ -917,7 +940,7 @@ namespace Nektar
 
                 Array<OneD,NekDouble> work   (nq_face,   0.0);
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0, points1, jac,
+                LibUtilities::Interp2D(points0, points1, faceJac,
                                        tobasis0.GetPointsKey(),
                                        tobasis1.GetPointsKey(),
                                        work);
@@ -1493,7 +1516,7 @@ namespace Nektar
         {
             // This implementation is only valid when there are no
             // coefficients associated to the Laplacian operator
-            if (m_metrics.count(MetricLaplacian00) == 0)
+            if (m_metrics.count(eMetricLaplacian00) == 0)
             {
                 ComputeLaplacianMetric();
             }
@@ -1514,12 +1537,12 @@ namespace Nektar
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
-            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
-            const Array<OneD, const NekDouble>& metric02 = m_metrics[MetricLaplacian02];
-            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
-            const Array<OneD, const NekDouble>& metric12 = m_metrics[MetricLaplacian12];
-            const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[eMetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[eMetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric02 = m_metrics[eMetricLaplacian02];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[eMetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric12 = m_metrics[eMetricLaplacian12];
+            const Array<OneD, const NekDouble>& metric22 = m_metrics[eMetricLaplacian22];
 
             // Allocate temporary storage
             Array<OneD,NekDouble> wsp0 (2*nqtot, wsp);
@@ -1558,7 +1581,7 @@ namespace Nektar
 
         void TetExp::v_ComputeLaplacianMetric()
         {
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
@@ -1566,9 +1589,9 @@ namespace Nektar
             int i, j;
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 3;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            const MetricType m[3][3] = { {eMetricLaplacian00, eMetricLaplacian01, eMetricLaplacian02},
+                                       {eMetricLaplacian01, eMetricLaplacian11, eMetricLaplacian12},
+                                       {eMetricLaplacian02, eMetricLaplacian12, eMetricLaplacian22}
             };
 
             for (unsigned int i = 0; i < dim; ++i)

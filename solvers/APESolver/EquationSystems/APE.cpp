@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2014 Kilian Lackhove
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -30,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Acoustic perturbation equations in conservative variables
+// Description: APE1/APE4 (Acoustic Perturbation Equations)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@ namespace Nektar
 {
 string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
             "APE", APE::create,
-            "Acoustic perturbation equations in conservative variables.");
+            "APE1/APE4 (Acoustic Perturbation Equations)");
 
 
 APE::APE(
@@ -67,22 +67,22 @@ void APE::v_InitObject()
     ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
              "Only Projection=DisContinuous supported by the APE class.");
 
-    // Load constant incompressible density
-    m_session->LoadParameter("Rho0", m_Rho0, 1.204);
-
     // Load isentropic coefficient, Ratio of specific heats
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
     // Define Baseflow fields
-    m_basefield = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 1);
-    m_basefield_names.push_back("P0");
-    m_basefield_names.push_back("U0");
-    m_basefield_names.push_back("V0");
-    m_basefield_names.push_back("W0");
+    m_basefield = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
+    m_basefield_names.push_back("p0");
+    m_basefield_names.push_back("rho0");
+    m_basefield_names.push_back("u0");
+    m_basefield_names.push_back("v0");
+    m_basefield_names.push_back("w0");
 
     // Resize the advection velocities vector to dimension of the problem
-    m_basefield_names.resize(m_spacedim + 1);
+    m_basefield_names.resize(m_spacedim + 2);
 
+    //  Initialize the sourceterm
+    m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints());
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -90,8 +90,8 @@ void APE::v_InitObject()
     // Define the normal velocity fields
     if (m_fields[0]->GetTrace())
     {
-        m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 1);
-        for (int i = 0; i < m_spacedim + 1; i++)
+        m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
+        for (int i = 0; i < m_spacedim + 2; i++)
         {
             m_traceBasefield[i] = Array<OneD, NekDouble>(GetTraceNpoints());
         }
@@ -114,7 +114,6 @@ void APE::v_InitObject()
     m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
     m_riemannSolver->SetParam("Gamma",     &APE::GetGamma,     this);
-    m_riemannSolver->SetParam("Rho",       &APE::GetRho,       this);
 
     // Set up advection operator
     string advName;
@@ -167,58 +166,58 @@ void APE::GetFluxVector(
 {
     UpdateBasefield();
 
-    for (int i = 0; i < flux.num_elements(); ++i)
+    int nq = physfield[0].num_elements();
+    Array<OneD, NekDouble> tmp1(nq);
+    Array<OneD, NekDouble> tmp2(nq);
+
+    ASSERTL1(flux[0].num_elements() == m_spacedim,
+                 "Dimension of flux array and velocity array do not match");
+
+    // F_{adv,p',j} = \rho_0 u'_j + p' \bar{u}_j / c^2
+    for (int j = 0; j < m_spacedim; ++j)
+    {
+        Vmath::Zero(nq, flux[0][j], 1);
+
+        // construct rho_0 u'_j term
+        Vmath::Vmul(nq, m_basefield[1], 1, physfield[j + 1], 1, flux[0][j], 1);
+
+        // construct p' \bar{u}_j / c^2 term
+        // c^2
+        Vmath::Vdiv(nq, m_basefield[0], 1, m_basefield[1], 1, tmp1, 1);
+        Vmath::Smul(nq, m_gamma, tmp1, 1, tmp1, 1);
+
+        // p' \bar{u}_j / c^2 term
+        Vmath::Vmul(nq, physfield[0], 1, m_basefield[j + 2], 1, tmp2, 1);
+        Vmath::Vdiv(nq, tmp2, 1, tmp1, 1, tmp2, 1);
+
+        // \rho_0 u'_j + p' \bar{u}_j / c^2
+        Vmath::Vadd(nq, flux[0][j], 1, tmp2, 1, flux[0][j], 1);
+    }
+
+    for (int i = 1; i < flux.num_elements(); ++i)
     {
         ASSERTL1(flux[i].num_elements() == m_spacedim,
-                "Dimension of flux array and velocity array do not match");
+                 "Dimension of flux array and velocity array do not match");
 
-        int nq = physfield[0].num_elements();
-        NekDouble tmp0 = 0.0;
-        Array<OneD, NekDouble> tmp1(nq);
-        Array<OneD, NekDouble> tmp2(nq);
-
-        if (i == 0)
+        // F_{adv,u'_i,j} = (p'/ \bar{rho} + \bar{u}_k u'_k) \delta_{ij}
+        for (int j = 0; j < m_spacedim; ++j)
         {
-            // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
-            for (int j = 0; j < m_spacedim; ++j)
+            Vmath::Zero(nq, flux[i][j], 1);
+
+            if (i - 1 == j)
             {
-                Vmath::Zero(nq, flux[i][j], 1);
+                // contruct p'/ \bar{rho} term
+                Vmath::Vdiv(nq, physfield[0], 1, m_basefield[1], 1, flux[i][j], 1);
 
-                // construct \gamma p_0 u'_j term
-                Vmath::Smul(nq, m_gamma, m_basefield[0], 1, tmp1, 1);
-                Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
-
-                // construct p' \bar{u}_j term
-                Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+1], 1, tmp2, 1);
-
-                // add both terms
-                Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[i][j], 1);
-            }
-        }
-        else
-        {
-            // F_{adv,u'_i,j} = (p'/ rho + \bar{u}_k u'_k) \delta_{ij}
-            for (int j = 0; j < m_spacedim; ++j)
-            {
-                Vmath::Zero(nq, flux[i][j], 1);
-
-                if (i-1 == j)
+                // construct \bar{u}_k u'_k term
+                Vmath::Zero(nq, tmp1, 1);
+                for (int k = 0; k < m_spacedim; ++k)
                 {
-                    // contruct p'/ rho term
-                    tmp0 = 1 / m_Rho0;
-                    Vmath::Smul(nq, tmp0, physfield[0], 1, flux[i][j], 1);
-
-                    // construct \bar{u}_k u'_k term
-                    Vmath::Zero(nq, tmp1, 1);
-                    for (int k = 0; k < m_spacedim; ++k)
-                    {
-                        Vmath::Vmul(nq, physfield[k+1], 1, m_basefield[k+1], 1, tmp2, 1);
-                        Vmath::Vadd(nq, tmp1, 1, tmp2, 1, tmp1, 1);
-                    }
-
-                    // add terms
-                    Vmath::Vadd(nq, flux[i][j], 1, tmp1, 1, flux[i][j], 1);
+                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_basefield[k + 2], 1, tmp1, 1, tmp1, 1);
                 }
+
+                // add terms
+                Vmath::Vadd(nq, flux[i][j], 1, tmp1, 1, flux[i][j], 1);
             }
         }
     }
@@ -233,7 +232,8 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                    const NekDouble time)
 {
     int nVariables = inarray.num_elements();
-    int nq         = GetTotPoints();
+    int nq = GetTotPoints();
+    Array<OneD, NekDouble> tmp1(nq);
 
     // WeakDG does not use advVel, so we only provide a dummy array
     Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
@@ -241,6 +241,14 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 
     for (int i = 0; i < nVariables; ++i)
     {
+        if (i ==  0)
+        {
+            // c^2 = gamma*p0/rho0
+            Vmath::Vdiv(nq, m_basefield[0], 1, m_basefield[1], 1, tmp1, 1);
+            Vmath::Smul(nq, m_gamma, tmp1, 1, tmp1, 1);
+            Vmath::Vmul(nq, tmp1, 1, outarray[i], 1, outarray[i], 1);
+        }
+
         Vmath::Neg(nq, outarray[i], 1);
     }
 
@@ -283,13 +291,13 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
     {
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
+        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
             WallBC(n, cnt, inarray);
         }
 
         // Time Dependent Boundary Condition (specified in meshfile)
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
+        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
         {
             for (int i = 0; i < nvariables; ++i)
             {
@@ -375,19 +383,8 @@ void APE::WallBC(int bcRegion, int cnt,
  */
 void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
-    int nCoeffs = m_fields[0]->GetNcoeffs();
-    int nTotPoints = GetTotPoints();
-
-    Array<OneD, NekDouble> sourceP(nTotPoints);
-    Array<OneD, NekDouble> sourceC(nCoeffs);
-
-    EvaluateFunction("S", sourceP, "Source", m_time);
-
-    m_fields[0]->IProductWRTBase(sourceP, sourceC);
-    m_fields[0]->MultiplyByElmtInvMass(sourceC, sourceC);
-    m_fields[0]->BwdTrans(sourceC, sourceP);
-
-    Vmath::Vadd(nTotPoints, sourceP, 1, outarray[0], 1, outarray[0], 1);
+    UpdateSourceTerms();
+    Vmath::Vadd(GetTotPoints(), m_sourceTerms, 1, outarray[0], 1, outarray[0], 1);
 }
 
 
@@ -399,7 +396,7 @@ void APE::v_ExtraFldOutput(
 
     const int nCoeffs = m_fields[0]->GetNcoeffs();
 
-    for (int i = 0; i < m_spacedim + 1; i++)
+    for (int i = 0; i < m_spacedim + 2; i++)
     {
         variables.push_back(m_basefield_names[i]);
 
@@ -433,7 +430,7 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
  */
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
 {
-    for (int i = 0; i < m_spacedim +1; i++)
+    for (int i = 0; i < m_spacedim + 2; i++)
     {
         m_fields[0]->ExtractTracePhys(m_basefield[i], m_traceBasefield[i]);
     }
@@ -450,14 +447,6 @@ NekDouble APE::GetGamma()
 }
 
 
-/**
- * @brief Get the density.
- */
-NekDouble APE::GetRho()
-{
-    return m_Rho0;
-}
-
 void APE::UpdateBasefield()
 {
     static NekDouble last_update = -1.0;
@@ -465,9 +454,23 @@ void APE::UpdateBasefield()
     if (m_time > last_update)
     {
         EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+        last_update = m_time;
+    }
+}
 
-        //  some sanity chacks for the basefield
-        ASSERTL0(Vmath::Vmin(m_basefield[0].num_elements(), m_basefield[0], 1) >= 0.0, "Basefield contains negative pressures");
+void APE::UpdateSourceTerms()
+{
+    static NekDouble last_update = -1.0;
+
+    if (m_time > last_update)
+    {
+        Array<OneD, NekDouble> sourceC(m_fields[0]->GetNcoeffs());
+
+        EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+
+        m_fields[0]->IProductWRTBase(m_sourceTerms, sourceC);
+        m_fields[0]->MultiplyByElmtInvMass(sourceC, sourceC);
+        m_fields[0]->BwdTrans(sourceC, m_sourceTerms);
 
         last_update = m_time;
     }

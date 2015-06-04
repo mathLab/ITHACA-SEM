@@ -326,9 +326,11 @@ namespace Nektar
     {
         const bool root = (m_session->GetComm()->GetRank() == 0);
         const std::string fncName = "CellModelInitialConditions";
+        const int nvar = m_cellSol[0].num_elements();
         std::string varName;
         Array<OneD, NekDouble> coeffs(m_field->GetNcoeffs());
         Array<OneD, NekDouble> tmp;
+        int j = 0;
 
         SpatialDomains::MeshGraphSharedPtr vGraph = m_field->GetGraph();
 
@@ -337,10 +339,55 @@ namespace Nektar
             cout << "Cell model initial conditions: " << endl;
         }
 
+        // First determine all the files we need to load
+        std::set<std::string> filelist;
+        for (j = 1; j < nvar; ++j)
+        {
+            // Get the name of the jth variable
+            varName = GetCellVarName(j);
+
+            if (m_session->GetFunctionType(fncName, varName) ==
+                    LibUtilities::eFunctionTypeFile)
+            {
+                filelist.insert(m_session->GetFunctionFilename(fncName,
+                                                               varName));
+            }
+        }
+
+        // Read files
+        typedef std::vector<LibUtilities::FieldDefinitionsSharedPtr> FDef;
+        typedef std::vector<std::vector<NekDouble> > FData;
+        std::map<std::string, FDef>  FieldDef;
+        std::map<std::string, FData> FieldData;
+        LibUtilities::FieldMetaDataMap fieldMetaDataMap;
+        LibUtilities::FieldMetaDataMap::iterator iter;
+        std::set<std::string>::const_iterator setIt;
+        LibUtilities::FieldIOSharedPtr fld =
+                MemoryManager<LibUtilities::FieldIO>::
+                                AllocateSharedPtr(m_session->GetComm());
+        for (setIt = filelist.begin(); setIt != filelist.end(); ++setIt)
+        {
+            if (root)
+            {
+                cout << "  - Reading file: " << *setIt << endl;
+            }
+            FieldDef[*setIt] = FDef(0);
+            FieldData[*setIt] = FData(0);
+            fld->Import(*setIt, FieldDef[*setIt], FieldData[*setIt],
+                        fieldMetaDataMap);
+        }
+
+        // Get time of checkpoint from file if available
+        iter = fieldMetaDataMap.find("Time");
+        if(iter != fieldMetaDataMap.end())
+        {
+             m_lastTime = boost::lexical_cast<NekDouble>(iter->second);
+        }
+
         // Load each cell model variable
         // j=0 and j=1 are for transmembrane or intra/extra-cellular volt.
         Vmath::Zero(m_nq, m_cellSol[0], 1);
-        for(int j = 1; j < m_cellSol.num_elements(); ++j)
+        for(j = 1; j < m_cellSol.num_elements(); ++j)
         {
             // Get the name of the jth variable
             varName = GetCellVarName(j);
@@ -358,28 +405,11 @@ namespace Nektar
                          << file << endl;
                 }
 
-                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-                std::vector<std::vector<NekDouble> > FieldData;
-
-                // Read the restart file containing this variable
-                LibUtilities::FieldIOSharedPtr fld =
-                    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
-                fld->Import(file, FieldDef, FieldData);
-
-                LibUtilities::FieldMetaDataMap fieldMetaDataMap;
-                LibUtilities::FieldMetaDataMap::iterator iter;
-                fld->ImportFieldMetaData(file,fieldMetaDataMap);
-                iter = fieldMetaDataMap.find("Time");
-                if(iter != fieldMetaDataMap.end())
-                {
-                    m_lastTime = boost::lexical_cast<NekDouble>(iter->second);
-                }
-
                 // Extract the data into the modal coefficients
-                for(int i = 0; i < FieldDef.size(); ++i)
+                for(int i = 0; i < FieldDef[file].size(); ++i)
                 {
-                    m_field->ExtractDataToCoeffs(FieldDef[i],
-                                                 FieldData[i],
+                    m_field->ExtractDataToCoeffs(FieldDef[file][i],
+                                                 FieldData[file][i],
                                                  varName,
                                                  coeffs);
                 }

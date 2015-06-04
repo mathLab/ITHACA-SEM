@@ -142,6 +142,7 @@ namespace Nektar
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
         {
             m_schurCompl  = pSchurCompl;
+            m_S1Blk       = pSchurCompl;
             m_BinvD       = pBinvD;
             m_C           = pC;
             m_invD        = pInvD;
@@ -527,6 +528,19 @@ namespace Nektar
         {
             if (scLevel == 0)
             {
+                // When matrices are supplied to the constructor at the top
+                // level, the preconditioner is never set up.
+                if (!m_precon)
+                {
+                    MultiRegions::PreconditionerType pType
+                        = m_locToGloMap->GetPreconType();
+                    std::string PreconType
+                        = MultiRegions::PreconditionerTypeMap[pType];
+                    m_precon = GetPreconFactory().CreateInstance(
+                        PreconType, GetSharedThisPtr(), m_locToGloMap);
+                    m_precon->BuildPreconditioner();
+                }
+
                 Set_Rhs_Magnitude(F_GlobBnd);
                 return m_S1Blk;
             }

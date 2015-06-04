@@ -49,6 +49,10 @@ IF (NEKTAR_USE_VTK)
     SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h OutputVtk.h)
     SET(MeshConvertSources ${MeshConvertSources} InputVtk.cpp OutputVtk.cpp)
 ENDIF (NEKTAR_USE_VTK)
+IF (NEKTAR_USE_OCC)
+    SET(MeshConvertHeaders ${MeshConvertHeaders} InputCAD.h)
+    SET(MeshConvertSources ${MeshConvertSources} InputCAD.cpp)
+ENDIF (NEKTAR_USE_OCC)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 

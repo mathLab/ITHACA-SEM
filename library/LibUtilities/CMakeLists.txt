@@ -317,7 +317,6 @@ IF(NEKTAR_USE_OCC)
 
 	SET(CADSystemHeaders
 		./CADSystem/CADSystem.h
-		./CADSystem/occ.h
 		)
 
 	SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})

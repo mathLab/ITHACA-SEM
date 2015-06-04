@@ -1,5 +1,4 @@
 
-#include "occ.h"
 #include <LibUtilities/CADSystem/CADSystem.h>
 
 

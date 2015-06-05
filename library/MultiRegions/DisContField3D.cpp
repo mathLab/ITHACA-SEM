@@ -69,38 +69,39 @@
          }
 
          /**
-          * @brief Constructs a global discontinuous field based on an input mesh
-          * with boundary conditions.
+          * @brief Constructs a global discontinuous field based on an input
+          * mesh with boundary conditions.
           */
          DisContField3D::DisContField3D(
              const LibUtilities::SessionReaderSharedPtr &pSession,
              const SpatialDomains::MeshGraphSharedPtr   &graph3D,
              const std::string                          &variable,
              const bool                                  SetUpJustDG)
-             : ExpList3D          (pSession,graph3D,variable),
+             : ExpList3D          (pSession, graph3D, variable),
                m_bndCondExpansions(),
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
          {
-            if(variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
-            {
-                SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
+             // do not set up BCs if default variable
+             if (variable.compare("DefaultVar") != 0)
+             {
+                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 
-                GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-                EvaluateBoundaryConditions(0.0, variable);
+                 GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
+                 EvaluateBoundaryConditions(0.0, variable);
 
-                // Find periodic edges for this variable.
-                FindPeriodicFaces(bcs, variable);
-            }
+                 // Find periodic edges for this variable.
+                 FindPeriodicFaces(bcs, variable);
+             }
             
-            if(SetUpJustDG)
-            {
-                SetUpDG();
+             if(SetUpJustDG)
+             {
+                 SetUpDG();
              }
              else
              {
                  // Set element edges to point to Robin BC edges if required.
-                 int i,cnt,f;
+                 int i, cnt, f;
                  Array<OneD, int> ElmtID, FaceID;
                  GetBoundaryToElmtMap(ElmtID, FaceID);
 
@@ -112,11 +113,11 @@
                      for(f = 0; f < locExpList->GetExpSize(); ++f)
                      {
                          LocalRegions::Expansion3DSharedPtr exp3d
-                             = (*m_exp)[ElmtID[cnt+f]]->
-                                     as<LocalRegions::Expansion3D>();
+                            = (*m_exp)[ElmtID[cnt+f]]->
+                                as<LocalRegions::Expansion3D>();
                          LocalRegions::Expansion2DSharedPtr exp2d
-                             = locExpList->GetExp(f)->
-                                     as<LocalRegions::Expansion2D>();
+                            = locExpList->GetExp(f)->
+                                as<LocalRegions::Expansion2D>();
 
                          exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
                          exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
@@ -144,7 +145,7 @@
              EvaluateBoundaryConditions(0.0, variable);
              ApplyGeomInfo();
 
-             if(!SameTypeOfBoundaryConditions(In))
+             if (!SameTypeOfBoundaryConditions(In))
              {
                  // Find periodic edges for this variable.
                  FindPeriodicFaces(bcs, variable);
@@ -203,7 +204,8 @@
                      Array<OneD, int> ElmtID,FaceID;
                      GetBoundaryToElmtMap(ElmtID,FaceID);
 
-                     for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                     for (cnt = i = 0;
+                          i < m_bndCondExpansions.num_elements(); ++i)
                      {
                          MultiRegions::ExpListSharedPtr locExpList;
                          locExpList = m_bndCondExpansions[i];
@@ -217,14 +219,14 @@
                                  = locExpList->GetExp(f)->
                                          as<LocalRegions::Expansion2D>();
 
-                             exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
-                             exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                             exp3d->SetFaceExp(FaceID[cnt+f], exp2d);
+                             exp2d->SetAdjacentElementExp(FaceID[cnt+f], exp3d);
                          }
 
                          cnt += m_bndCondExpansions[i]->GetExpSize();
                      }
 
-                     if(m_session->DefinesSolverInfo("PROJECTION"))
+                     if (m_session->DefinesSolverInfo("PROJECTION"))
                      {
                          std::string ProjectStr = 
                              m_session->GetSolverInfo("PROJECTION");
@@ -285,7 +287,7 @@
 
              if (matrixIter == m_globalBndMat->end())
              {
-                 glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
+                 glo_matrix = GenGlobalBndLinSys(mkey, m_traceMap);
                  (*m_globalBndMat)[mkey] = glo_matrix;
              }
              else
@@ -330,11 +332,11 @@
              Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                  &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-             // Scatter trace segments to 3D elements. For each element, we find
-             // the trace segment associated to each edge. The element then
-             // retains a pointer to the trace space segments, to ensure
-             // uniqueness of normals when retrieving from two adjoining elements
-             // which do not lie in a plane.
+             // Scatter trace segments to 3D elements. For each element, we
+             // find the trace segment associated to each edge. The element
+             // then retains a pointer to the trace space segments, to ensure
+             // uniqueness of normals when retrieving from two adjoining
+             // elements which do not lie in a plane.
              for (int i = 0; i < m_exp->size(); ++i)
              {
                  for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
@@ -539,7 +541,9 @@
                 }
             }
 
-             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::AllocateSharedPtr(*this,m_trace,elmtToTrace,m_leftAdjacentFaces);
+             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
+                AllocateSharedPtr(*this, m_trace, elmtToTrace,
+                                  m_leftAdjacentFaces);
 
         }
 
@@ -1276,8 +1280,8 @@
                         }
                     }
 
-                    // Determine periodic edges. Logic is the same as above, and
-                    // perhaps should be condensed to avoid replication.
+                    // Determine periodic edges. Logic is the same as above,
+                    // and perhaps should be condensed to avoid replication.
                     for (i = 0; i < 2; ++i)
                     {
                         int other = (i+1) % 2;
@@ -1376,8 +1380,8 @@
                 allCompPairs[first[cnt]] = second[cnt];
             }
 
-            // Search for periodic vertices and edges which are not in
-            // a periodic composite but lie in this process. First,
+            // Search for periodic vertices and edges which are not
+            // in a periodic composite but lie in this process. First,
             // loop over all information we have from other
             // processors.
             for (cnt = i = 0; i < totFaces; ++i)
@@ -1707,19 +1711,21 @@
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            int n,cnt,npts, e;
+            int n, cnt, npts, e;
 
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
              
 #if 1 // blocked routine
-            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNLocTracePts());            
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
+                                            GetNLocTracePts());
             m_locTraceToTraceMap->LocTracesFromField(field,facevals);
-            m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,Fwd);
+            m_locTraceToTraceMap->InterpLocFacesToTrace(0, facevals, Fwd);
             
-            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->GetNFwdLocTracePts();
-            m_locTraceToTraceMap->InterpLocFacesToTrace(1,invals, Bwd);
+            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
+                                                        GetNFwdLocTracePts();
+            m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
 #else
             // Loop over elements and collect forward and backward expansions.
             int nexp = GetExpSize();
@@ -1762,8 +1768,8 @@
             }
 #endif
             
-            // fill boundary conditions into missing elements
-            int id1,id2 = 0;
+            // Fill boundary conditions into missing elements
+            int id1, id2 = 0;
             cnt = 0;
             
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
@@ -1908,16 +1914,15 @@
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-            for(n = 0; n < GetExpSize(); ++n)
+            for (n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
                 e_outarray = outarray+offset;
-                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                for (e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
                     t_offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,
-                                                        elmtToTrace[n][e],
+                    (*m_exp)[n]->AddFaceNormBoundaryInt(e, elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray);
                 }

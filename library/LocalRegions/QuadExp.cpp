@@ -852,7 +852,70 @@ namespace Nektar
                      break;
              }
         }
+        
+        
+        void QuadExp::v_GetEdgePhysMap(
+            const int                edge,
+            Array<OneD, int>        &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            
+            // Get points in Cartesian orientation
+            switch (edge)
+            {
+                case 0:
+                    outarray = Array<OneD, int>(nquad0);
+                    for (int i = 0; i < nquad0; ++i)
+                    {
+                        outarray[i] = i;
+                    }
+                    break;
+                case 1:
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
+                    {
+                        outarray[i] = (nquad0-1) + i*nquad1;
+                    }
+                    //Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
+                    //             nquad0, &(outarray[0]), 1);
+                    break;
+                case 2:
+                    outarray = Array<OneD, int>(nquad0);
+                    for (int i = 0; i < nquad0; ++i)
+                    {
+                        outarray[i] = i + nquad0*(nquad1-1);
+                    }
+                    //Vmath::Vcopy(nquad0, &(inarray[0])+nquad0*(nquad1-1), 1,
+                    //             &(outarray[0]), 1);
+                    break;
+                case 3:
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
+                    {
+                        outarray[i] = i + i*(nquad0-1);
+                    }
+                    //Vmath::Vcopy(nquad1, &(inarray[0]), nquad0,
+                    //             &(outarray[0]), 1);
+                    break;
+                default:
+                    ASSERTL0(false, "edge value (< 3) is out of range");
+                    break;
+            }
+            
+            // Reverse data if necessary
+            /*
+            if (GetCartesianEorient(edge) == StdRegions::eBackwards)
+            {
+                Vmath::Reverse(EdgeExp->GetNumPoints(0),
+                               &outarray[0], 1, &outarray[0], 1);
+            }
+             */
+        }
     
+        
+        
+        
         void QuadExp::v_GetEdgeQFactors(
                 const int edge,
                 Array<OneD, NekDouble> &outarray)

@@ -190,7 +190,11 @@ namespace Nektar
                 StdRegions::Orientation v_GetCartesianEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
-            LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(const int dir) const;
+            LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(
+                const int dir) const;
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysMap(
+                const int                edge,
+                Array<OneD, int>        &outarray);
 
 
             //---------------------------------------

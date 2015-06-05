@@ -3,7 +3,6 @@ SET(MULTI_REGIONS_SOURCES
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
 ./AssemblyMap/LocTraceToTraceMap.cpp
-./AssemblyMap/LocTraceToTraceMap2D.cpp
 ContField1D.cpp
 ContField2D.cpp
 ContField3D.cpp
@@ -92,7 +91,6 @@ SET(ASSEMBLY_MAP_HEADERS
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
 ./AssemblyMap/LocTraceToTraceMap.h
-./AssemblyMap/LocTraceToTraceMap2D.h
 )
 
 IF(NEKTAR_USE_MPI)

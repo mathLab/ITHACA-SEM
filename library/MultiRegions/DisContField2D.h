@@ -42,6 +42,7 @@
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
@@ -113,13 +114,19 @@ namespace Nektar
              */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
-            GlobalLinSysMapShPtr        m_globalBndMat;
-            ExpListSharedPtr            m_trace;
-            AssemblyMapDGSharedPtr      m_traceMap;
+            GlobalLinSysMapShPtr   m_globalBndMat;
+            ExpListSharedPtr       m_trace;
+            AssemblyMapDGSharedPtr m_traceMap;
             
-            Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
-            Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
-            Array<OneD,StdRegions::Orientation>         m_edgedir;
+            /**
+             * Map of local trace (the points at the face of
+             * the element) to the trace space discretisation
+             */
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap;
+
+            Array<OneD, Array<OneD, unsigned int> > m_mapEdgeToElmn;
+            Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
+            Array<OneD,StdRegions::Orientation>     m_edgedir;
 
             /**
              * @brief A set storing the global IDs of any boundary edges.

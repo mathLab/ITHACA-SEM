@@ -1954,6 +1954,7 @@ namespace Nektar
             ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
             Vmath::Scatr(nq0*nq1,o_tmp2,faceids,outarray);
         }
+        
         void Expansion3D::ReOrientFacePhysMap(const int nvert, 
                                               const StdRegions::Orientation orient,
                                               const int nq0, const int nq1,
@@ -1967,7 +1968,6 @@ namespace Nektar
             {
                 ReOrientQuadFacePhysMap(orient,nq0,nq1,idmap);
             }
-
         }
 
         void Expansion3D::ReOrientTriFacePhysMap(const StdRegions::Orientation orient,

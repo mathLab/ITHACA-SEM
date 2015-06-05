@@ -832,7 +832,7 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
-
+            
             void GetTracePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetTracePhysVals(edge,EdgeExp,inarray,outarray);
@@ -875,6 +875,13 @@ namespace Nektar
                 v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
             }
 
+            void GetEdgePhysMap(
+                const int           edge,
+                Array<OneD, int>   &outarray)
+            {
+                v_GetEdgePhysMap(edge, outarray);
+            }
+            
             void GetFacePhysMap(
                 const int           face,
                 Array<OneD, int>   &outarray)
@@ -1656,6 +1663,10 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
+            STD_REGIONS_EXPORT virtual void v_GetEdgePhysMap(
+                const int       edge,
+                Array<OneD,int> &outarray);
+            
             STD_REGIONS_EXPORT virtual void v_GetFacePhysMap(
                 const int       face,
                 Array<OneD,int> &outarray);

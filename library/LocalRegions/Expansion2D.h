@@ -117,6 +117,12 @@ namespace Nektar
                         Expansion3DSharedPtr &f);
 
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
+            
+            LOCAL_REGIONS_EXPORT void ReOrientEdgePhysMap(
+                const int nvert,
+                const StdRegions::Orientation orient,
+                const int nq0,
+                Array<OneD, int> &idmap);
 
         protected:
             std::vector<ExpansionWeakPtr> m_edgeExp;
@@ -163,6 +169,11 @@ namespace Nektar
                     ExpansionSharedPtr &EdgeExp,
                     const Array<OneD, const NekDouble>  &varcoeff,
                     Array<OneD,NekDouble> &outarray);
+            
+            LOCAL_REGIONS_EXPORT void ReOrientQuadEdgePhysMap(
+                const StdRegions::Orientation orient,
+                const int nq0,
+                Array<OneD, int> &idmap);
 
             Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
 
@@ -227,7 +238,7 @@ namespace Nektar
                 m_elementFaceLeft = face;
             }
         }
-
+        
         inline SpatialDomains::Geometry2DSharedPtr Expansion2D::GetGeom2D() const
         {
             return boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(m_geom);

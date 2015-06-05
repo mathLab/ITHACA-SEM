@@ -37,44 +37,73 @@
 #include <iostream>
 using namespace std;
 
+#include <LibUtilities/CADSystem/CADSystem.h>
+
 #include "MeshElements.h"
 #include "InputCAD.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+    
+    
+    ModuleKey InputCAD::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "CAD"), InputCAD::create,
+        "Reads CAD geometry and will generate the mesh file.");
+    
+    /**
+     * @brief Set up InputCAD object.
+     */
+    InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
     {
-        ModuleKey InputCAD::className =
-        GetModuleFactory().RegisterCreatorFunction(
-            ModuleKey(eInputModule, "STEP"), InputCAD::create,
-            "Reads CAD geometry and will generate the mesh file.");
-        
-        /**
-         * @brief Set up InputNekpp object.
-         */
-        InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
-        {
-            
-        }
-        
-        InputCAD::~InputCAD()
-        {
-            
-        }
-        
-        /**
-         * Gmsh file contains a list of nodes and their coordinates, along with
-         * a list of elements and those nodes which define them. We read in and
-         * store the list of nodes in #m_node and store the list of elements in
-         * #m_element. Each new element is supplied with a list of entries from
-         * #m_node which defines the element. Finally some mesh statistics are
-         * printed.
-         *
-         * @param   pFilename           Filename of Gmsh file to read.
-         */
-        void InputCAD::Process()
-        {
-            cout << "hello" << endl;
-        }
+        m_config["min"] = ConfigOption(false,"-1",
+                "minimum delta to be in mesh");
+        m_config["max"] = ConfigOption(false,"-1",
+                "maximum delta to be in mesh");
+        m_config["eps"] = ConfigOption(false,"-1",
+                "sensitivity to curvature");
+        m_config["order"] = ConfigOption(false,"-1",
+                "order of the mesh to be produced");
     }
+    
+    InputCAD::~InputCAD()
+    {
+        
+    }
+    
+    
+    void InputCAD::Process()
+    {
+        string CADName = m_config["infile"].as<string>();
+        NekDouble m_minDelta = m_config["min"].as<NekDouble>();
+        NekDouble m_maxDelta = m_config["max"].as<NekDouble>();
+        NekDouble m_eps = m_config["eps"].as<NekDouble>();
+        int m_order = m_config["order"].as<int>();
+        
+        ASSERTL0(!(m_minDelta == -1 || m_maxDelta == -1 ||
+                   m_eps == -1 || m_order == -1),
+                 "User parameters required");
+        
+        
+        LibUtilities::CADSystemSharedPtr CAD =
+            MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(CADName);
+        
+        cout << CAD->GetName() << endl;
+
+        ASSERTL0(CAD->LoadCAD(),
+                 "Failed to load CAD");
+        
+        if(m_mesh->m_verbose)
+        {
+            cout << "min delta: " << m_minDelta << " max delta: " << m_maxDelta
+                 << " esp: " << m_eps << " order: " << m_order << endl;
+            CAD->Report();
+        }
+        
+    }
+    
+    
+}
 }

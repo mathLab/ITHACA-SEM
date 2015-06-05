@@ -63,7 +63,7 @@ solvers in the nektar++-solvers package.")
 		
 		SET(CPACK_RPM_PACKAGE_URL "www.nektar.info")
 		SET(CPACK_RPM_COMPONENT_INSTALL ON)
-		SET(CPACK_RPM_PACKAGE_REQUIRES "fftw3, libboost_date_time1_44_0, libboost_filesystem1_44_0, libboost_iostreams1_44_0, libboost_system1_44_0, libboost_thread1_44_0, zlib")
+		SET(CPACK_RPM_PACKAGE_REQUIRES "fftw3, libboost_date_time1_44_0, libboost_filesystem1_44_0, libboost_iostreams1_44_0, libboost_system1_44_0, libboost_thread1_44_0, libboost_timer1_44_0, zlib")
 		SET(CPACK_RPM_PACKAGE_DESCRIPTION "
 The nektar++ packages provide a spectral/hp element framework for the numerical
 solution of partial differential equations (PDEs). Demonstration codes are 
@@ -75,7 +75,7 @@ solvers in the nektar++-solvers package.")
         MESSAGE(STATUS "Generating Packaging for DEB")
         SET(CPACK_DEB_PACKAGE_URL "www.nektar.info")
         SET(CPACK_DEB_COMPONENT_INSTALL ON)
-        SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-3,libboost-date-time1.42.0,libboost-filesystem1.42.0,libboost-iostreams1.42.0,libboost-program-options1.42.0,libboost-system1.42.0,libboost-thread1.42.0,zlib1g")
+        SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-3,libboost-date-time1.42.0,libboost-filesystem1.42.0,libboost-iostreams1.42.0,libboost-program-options1.42.0,libboost-system1.42.0,libboost-thread1.42.0,libboost-timer1.42.0,zlib1g")
         SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION 
             "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}
         ${CPACK_PACKAGE_DESCRIPTION}")

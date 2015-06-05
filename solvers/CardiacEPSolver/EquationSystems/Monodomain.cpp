@@ -196,6 +196,18 @@ namespace Nektar
                 }
             }
         }
+        else
+        {
+            // Otherwise apply isotropic conductivity value (o_max) to
+            // diagonal components of tensor
+            NekDouble o_max = m_session->GetParameter("o_max");
+            for (int i = 0; i < nVarDiffCmpts; ++i)
+            {
+                Vmath::Smul(nq,o_max,
+                                m_vardiff[varCoeffEnum[i]], 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
+            }
+        }
 
         // Scale by scar map (range 0->1) derived from intensity map
         // (range d_min -> d_max)
@@ -355,7 +367,7 @@ namespace Nektar
 
         // Compute I_stim
         for (unsigned int i = 0; i < m_stimulus.size(); ++i)
-        {   
+        {
             m_stimulus[i]->Update(outarray, time);
         }
     }
@@ -382,21 +394,21 @@ namespace Nektar
     {
         UnsteadySystem::v_GenerateSummary(s);
         if (m_session->DefinesFunction("d00") &&
-            m_session->GetFunctionType("d00", "intensity") 
+            m_session->GetFunctionType("d00", "intensity")
                     == LibUtilities::eFunctionTypeExpression)
         {
             AddSummaryItem(s, "Diffusivity-x",
                 m_session->GetFunction("d00", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d11") &&
-            m_session->GetFunctionType("d11", "intensity") 
+            m_session->GetFunctionType("d11", "intensity")
                     == LibUtilities::eFunctionTypeExpression)
         {
             AddSummaryItem(s, "Diffusivity-y",
                 m_session->GetFunction("d11", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d22") &&
-            m_session->GetFunctionType("d22", "intensity") 
+            m_session->GetFunctionType("d22", "intensity")
                     == LibUtilities::eFunctionTypeExpression)
         {
             AddSummaryItem(s, "Diffusivity-z",

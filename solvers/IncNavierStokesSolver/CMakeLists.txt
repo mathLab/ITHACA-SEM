@@ -15,8 +15,11 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./AdvectionTerms/LinearisedAdvection.cpp
        ./AdvectionTerms/NavierStokesAdvection.cpp
        ./AdvectionTerms/SkewSymmetricAdvection.cpp
+       ./AdvectionTerms/AlternateSkewAdvection.cpp
        ./AdvectionTerms/NoAdvection.cpp
        ./Filters/FilterEnergy.cpp
+       ./Filters/FilterMovingBody.cpp
+       ./Forcing/ForcingMovingBody.cpp	
        ./IncNavierStokesSolver.cpp 
        )
 
@@ -32,7 +35,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(2DFlow_lineforcing_bcfromfile)
     ADD_NEKTAR_TEST(ChanFlow2D_bcsfromfiles)
     ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH1D_MVM)
-    #ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH2D_MVM)
+    ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH2D_MVM)
     ADD_NEKTAR_TEST(ChanFlow_LinNS_m8)
     ADD_NEKTAR_TEST(ChanFlow_m3)
     ADD_NEKTAR_TEST(ChanFlow_m3_SKS)
@@ -73,6 +76,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(ChannelSpongeNSE)
     ADD_NEKTAR_TEST(ChannelSpongeLNSE)
     ADD_NEKTAR_TEST(ChanFlow_Standard_BodyForce)
+    ADD_NEKTAR_TEST(Cyl_AdaptiveSFD)
 
     #IF (NEKTAR_USING_ARPACK)
         #ADD_NEKTAR_TEST(ChanStability_adj_Ar) ###
@@ -80,10 +84,12 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         #ADD_NEKTAR_TEST(bfs_tg-AR)
     #ENDIF (NEKTAR_USING_ARPACK)
 
-    IF (NEKTAR_USING_FFTW)
+    IF (NEKTAR_USE_FFTW)
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_FFT)
         ADD_NEKTAR_TEST(ChanFlow_3DH2D_FFT)
-    ENDIF (NEKTAR_USING_FFTW)
+        ADD_NEKTAR_TEST(CylFlow_MovBody)
+        ADD_NEKTAR_TEST(KovaFlow_3DH1D_MVM_FFTW_Consistency)
+    ENDIF (NEKTAR_USE_FFTW)
 
     IF (NEKTAR_USE_MPI)
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode1)

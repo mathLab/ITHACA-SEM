@@ -9,9 +9,12 @@ SET(FieldConvertHeaders
     OutputTecplot.h
     OutputVtk.h
     OutputFld.h
+    OutputXml.h
     ProcessAddFld.h
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
+    ProcessDeform.h
+    ProcessDisplacement.h
     ProcessEquiSpacedOutput.h
     ProcessInterpField.h
     ProcessInterpPoints.h
@@ -35,9 +38,12 @@ SET(FieldConvertSources
     OutputTecplot.cpp
     OutputVtk.cpp
     OutputFld.cpp
+    OutputXml.cpp
     ProcessAddFld.cpp
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
+    ProcessDeform.cpp
+    ProcessDisplacement.cpp
     ProcessEquiSpacedOutput.cpp
     ProcessInterpField.cpp
     ProcessInterpPoints.cpp
@@ -51,7 +57,7 @@ SET(FieldConvertSources
 )
   
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
-
+TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
 
 #ADD_NEKTAR_TEST(chan3D_tec)
 #ADD_NEKTAR_TEST(chan3D_tec_n10)
@@ -61,6 +67,20 @@ ADD_NEKTAR_TEST(chan3D_vort)
 #ADD_NEKTAR_TEST(bfs_tec_rng)
 ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
+# ADD_NEKTAR_TEST(chan3D_pts)
+
+# windows produces slightly differently formatted files which results in
+# different hashes
+# disabled these tests completely as they are system-dependent -- cc
+#IF(WIN32)
+#    ADD_NEKTAR_TEST(chan3D_probe_win)
+#    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
+#    ADD_NEKTAR_TEST(chan3D_isocontour_win)
+#ELSE(WIN32)
+#    ADD_NEKTAR_TEST(chan3D_probe)
+#    ADD_NEKTAR_TEST(chan3D_equispacedoutput)
+#    ADD_NEKTAR_TEST(chan3D_isocontour)
+#ENDIF(WIN32)
 
 
 IF (NEKTAR_USE_MPI)

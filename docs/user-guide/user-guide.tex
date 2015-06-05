@@ -149,7 +149,7 @@ openany, % A chapter may start on either a recto or verso page.
 
 % Nektar++ version
 \usepackage{xspace}
-\newcommand{\nekver}{\input{../../VERSION}\xspace}
+\newcommand{\nekver} {\input{../../VERSION}\unskip}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -211,7 +211,9 @@ openany, % A chapter may start on either a recto or verso page.
   xleftmargin=0.05\linewidth,
   keepspaces=true
 }
-
+\lstset{%
+    escapeinside={(*}{*)},%
+}
 \usepackage{tikz}
 \newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
 rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
@@ -396,6 +398,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \import{xml/}{xml}
 
 \part{Applications and Utilities}
+\label{p:applications}
 
 \import{solvers/}{solvers}
 
@@ -418,7 +421,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 %%% -------------------------------------------------------------
 
 \bibliographystyle{plain}
-\bibliography{user-guide}
+\bibliography{../refs}
 
 \printindex
 

@@ -116,7 +116,8 @@ namespace Nektar
                               Array<OneD,       NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                         const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray);
+                        Array<OneD,       NekDouble> &outarray,
+                        bool multiplybyweights = true);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
@@ -137,6 +138,9 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                         const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,       NekDouble> &coords);

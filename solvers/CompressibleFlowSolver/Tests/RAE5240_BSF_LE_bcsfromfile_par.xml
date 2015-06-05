@@ -17379,11 +17379,13 @@
             <F VAR="rho,rhou,rhov,E"    FILE="RAE5240_BSF_LE_bcsfromfile_par.rst"/>
         </FUNCTION>
         
+        <!--
         <FUNCTION NAME="ExactSolution">
             <E VAR="rho"    VALUE="rhoInf"          />
             <E VAR="rhou"   VALUE="rhoInf * uInf"   />
             <E VAR="rhov"   VALUE="rhoInf * vInf"   />
             <E VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>
         </FUNCTION>
+        -->
     </CONDITIONS>
 </NEKTAR>

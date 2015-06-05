@@ -87,12 +87,16 @@ namespace Nektar
                 const int i, const int j) const;
             virtual int v_GetDir(
                 const int faceidx, const int facedir) const;
+            virtual void v_Reset(
+                CurveMap &curvedEdges,
+                CurveMap &curvedFaces);
 
         private:
             void SetUpLocalEdges();
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+            void SetUpXmap();
 
 	    static const unsigned int VertexEdgeConnectivity[4][3];
             static const unsigned int VertexFaceConnectivity[4][3];

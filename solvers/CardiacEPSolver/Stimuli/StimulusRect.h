@@ -45,7 +45,7 @@
 
 namespace Nektar
 {
-    
+
     /// Protocol base class.
     class StimulusRect: public Stimulus
     {
@@ -63,15 +63,13 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
-        StimulusRect(const LibUtilities::SessionReaderSharedPtr& pSession,
-                     const MultiRegions::ExpListSharedPtr& pField,
-                     const TiXmlElement* pXml);
-        
+        friend class MemoryManager<StimulusRect>;
+
         virtual ~StimulusRect() {}
-        
+
         /// Initialise the stimulus storage and set initial conditions
         void Initialise();
-        
+
     protected:
         NekDouble m_px1;
         NekDouble m_py1;
@@ -81,13 +79,19 @@ namespace Nektar
         NekDouble m_pz2;
         NekDouble m_pis;
         NekDouble m_strength;
+        NekDouble m_chiCapMembrane;
 
-        virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
-                              const NekDouble time);
-        
+        virtual void v_Update(
+                Array<OneD, Array<OneD, NekDouble> >&outarray,
+                const NekDouble time);
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        
+
+    private:
+        StimulusRect(const LibUtilities::SessionReaderSharedPtr& pSession,
+                     const MultiRegions::ExpListSharedPtr& pField,
+                     const TiXmlElement* pXml);
     };
 }
 
-#endif 
+#endif

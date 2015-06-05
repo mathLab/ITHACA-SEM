@@ -3,22 +3,23 @@
 A major challenge which arises when one aims to develop a software package that
 implements the spectral/hp element method is to implement the mathematical
 structure of the method in a digestible and coherent matter. Obviously, there
-are many ways to encapsulate the fundamental concepts related to the spectral/hp
-element method, depending on e.g. the intended goal of the developer or the
-chosen programming language. We will (without going in too much detail) give a
-an overview of how we have chosen to abstract and implement spectral/hp elements
-in the \nekpp library. However, we want to emphasise that this is not the
-only possible choice.
+are many ways to encapsulate the fundamental concepts related to the
+spectral/$hp$ element method, depending on e.g. the intended goal of the
+developer or the chosen programming language. We will (without going in too much
+detail) give a an overview of how we have chosen to abstract and implement
+spectral/hp elements in the \nekpp library. However, we want to emphasise that
+this is not the only possible choice.
 
 Five different sublibraries, employing this characteristic pattern, are provided
 in the full \nekpp library:
 
 \begin{itemize}
+\item the supporting utilities sublibrary (LibUtilities library)
 \item the standard elemental region sublibrary (StdRegions library)
 \item the parametric mapping sublibrary (SpatialDomains library)
 \item the local elemental region sublibrary (LocalRegions library)
 \item the global region sublibrary (MultiRegions library)
-\item the supporting utilities sublibrary (LibUtilities library)
+\item the solver support sublibrary (SolverUtils library)
 \end{itemize}
 
 This structure can also be related to the formulation of a global spectral/hp
@@ -31,18 +32,31 @@ element expansion, i.e.
   library}}}\hat{u}^e_n}_{\mbox{\scriptsize{StdRegions library}}}
 \end{align*}
 
-A more detailed overview of the \nekpp structure, including an overview of
-the most important classes per sublibrary, is depicted in the figure below.
+A more detailed overview of the \nekpp structure is given in
+Figure~\ref{f:library:structure}. A diagram showing the most important classes
+in the core sub-libraries, is depicted in the Figure~\ref{f:library:overview}.
 
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{img/architecture}
+\caption{Structural overview of the Nektar++ libraries}
+\label{f:library:structure}
+\end{figure}
+
+\begin{figure}
+\centering
 \includegraphics[width=\textwidth]{img/overview.png}
+\caption{Diagram of the important classes in each library.}
+\label{f:library:overview}
+\end{figure}
 
 \section{LibUtilities}
 
-This contains the underlying building blocks for constructing a Spectral Element
-formulation including linear algebra, polynomial routines and memory management.
-
-Contents
+This contains the underlying building blocks for constructing a spectral element
+formulation including linear algebra, polynomial routines and memory management
+\cite{Ga39,AbSt64,CaHuYoQu88,GhOs70,KaSh05}. This includes:
 \begin{itemize}
+\setlength{\itemsep}{0em}
 \item Basic Constants
 \item Basic Utilities ( Nektar++ Arrays)
 \item Expression Templates
@@ -61,98 +75,117 @@ These are routines for orthogonal polynomial calculus and interpolation based on
 codes by Einar Ronquist and Ron Henderson.
 
 \subsubsection{Abbreviations}
-\begin{itemize}
-\item z - Set of collocation/quadrature points
-\item w - Set of quadrature weights
-\item D - Derivative matrix
-\item h - Lagrange Interpolant
-\item I - Interpolation matrix
-\item g - Gauss
-\item k - Kronrod
-\item gr - Gauss-Radau
-\item gl - Gauss-Lobatto
-\item j - Jacobi
-\item m - point at minus 1 in Radau rules
-\item p - point at plus 1 in Radau rules
-\end{itemize}
+\begin{tabular}{ll}
+\toprule
+Character(s) & Description \\
+\midrule
+z & Set of collocation/quadrature points \\
+w & Set of quadrature weights \\
+D & Derivative matrix \\
+h & Lagrange Interpolant \\
+I & Interpolation matrix \\
+g & Gauss \\
+k & Kronrod \\
+gr & Gauss-Radau \\
+gl & Gauss-Lobatto \\
+j & Jacobi \\
+m & point at minus 1 in Radau rules \\
+p & point at plus 1 in Radau rules \\
+\bottomrule
+\end{tabular}
 
 
 \subsubsection{Main routines}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{l}{\textbf{Points and Weights}} \\
+Routine & Description \\
+\midrule
+zwgj & Compute Gauss-Jacobi points and weights \\
+zwgrjm & Compute Gauss-Radau-Jacobi points and weights (z=-1) \\
+zwgrjp & Compute Gauss-Radau-Jacobi points and weights (z= 1) \\
+zwglj & Compute Gauss-Lobatto-Jacobi points and weights \\
+zwgk & Compute Gauss-Kronrod-Jacobi points and weights \\
+zwrk & Compute Radau-Kronrod points and weights \\
+zwlk & Compute Lobatto-Kronrod points and weights \\
+JacZeros & Compute Gauss-Jacobi points and weights \\
+\bottomrule
+\end{tabular}
 
-Points and Weights
-\begin{itemize}
-\item zwgj Compute Gauss-Jacobi points and weights
-\item zwgrjm Compute Gauss-Radau-Jacobi points and weights (z=-1)
-\item zwgrjp Compute Gauss-Radau-Jacobi points and weights (z= 1)
-\item zwglj Compute Gauss-Lobatto-Jacobi points and weights
-\item zwgk Compute Gauss-Kronrod-Jacobi points and weights
-\item zwrk Compute Radau-Kronrod points and weights
-\item zwlk Compute Lobatto-Kronrod points and weights
-\item JacZeros Compute Gauss-Jacobi points and weights
-\end{itemize}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{l}{\textbf{Derivative Matrices}} \\
+Routine & Description \\
+\midrule
+Dgj & Compute Gauss-Jacobi derivative matrix \\
+Dgrjm & Compute Gauss-Radau-Jacobi derivative matrix (z=-1) \\
+Dgrjp & Compute Gauss-Radau-Jacobi derivative matrix (z= 1) \\
+Dglj & Compute Gauss-Lobatto-Jacobi derivative matrix \\
+\bottomrule
+\end{tabular}
 
-Derivative Matrices
-\begin{itemize}
-\item Dgj Compute Gauss-Jacobi derivative matrix
-\item Dgrjm Compute Gauss-Radau-Jacobi derivative matrix (z=-1)
-\item Dgrjp Compute Gauss-Radau-Jacobi derivative matrix (z= 1)
-\item Dglj Compute Gauss-Lobatto-Jacobi derivative matrix
-\end{itemize}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{l}{\textbf{Lagrange Interpolants}} \\
+Routine & Description \\
+\midrule
+hgj & Compute Gauss-Jacobi Lagrange interpolants \\
+hgrjm & Compute Gauss-Radau-Jacobi Lagrange interpolants (z=-1) \\
+hgrjp & Compute Gauss-Radau-Jacobi Lagrange interpolants (z= 1) \\
+hglj & Compute Gauss-Lobatto-Jacobi Lagrange interpolants \\
+\bottomrule
+\end{tabular}
 
-Lagrange Interpolants
-\begin{itemize}
-\item hgj Compute Gauss-Jacobi Lagrange interpolants
-\item hgrjm Compute Gauss-Radau-Jacobi Lagrange interpolants (z=-1)
-\item hgrjp Compute Gauss-Radau-Jacobi Lagrange interpolants (z= 1)
-\item hglj Compute Gauss-Lobatto-Jacobi Lagrange interpolants
-\end{itemize}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{l}{\textbf{Interpolation Operators}} \\
+Routine & Description \\
+\midrule
+Imgj & Compute interpolation operator gj->m \\
+Imgrjm & Compute interpolation operator grj->m (z=-1) \\
+Imgrjp & Compute interpolation operator grj->m (z= 1) \\
+Imglj & Compute interpolation operator glj->m \\
+\bottomrule
+\end{tabular}
 
-Interpolation Operators
-\begin{itemize}
-\item Imgj Compute interpolation operator gj->m
-\item Imgrjm Compute interpolation operator grj->m (z=-1)
-\item Imgrjp Compute interpolation operator grj->m (z= 1)
-\item Imglj Compute interpolation operator glj->m
-\end{itemize}
-
-Polynomial Evaluation
-\begin{itemize}
-\item jacobfd Returns value and derivative of Jacobi poly. at point z
-\item jacobd Returns derivative of Jacobi poly. at point z (valid at z=-1,1)
-\end{itemize}
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{l}{\textbf{Polynomial Evaluation}} \\
+Routine & Description \\
+\midrule
+jacobfd & Returns value and derivative of Jacobi poly. at point z \\
+jacobd & Returns derivative of Jacobi poly. at point z (valid at z=-1,1) \\
+\bottomrule
+\end{tabular}
 
 \subsubsection{Local routines}
-\begin{itemize}
-\item jacobz Returns Jacobi polynomial zeros
-\item gammaf Gamma function for integer values and halves
-\item RecCoeff Calculates the recurrence coefficients for orthogonal poly
-\item TriQL QL algorithm for symmetrix tridiagonal matrix
-\item JKMatrix Generates the Jacobi-Kronrod matrix
-\end{itemize}
-
-\subsubsection{Useful references}
-\begin{itemize}
-\item `[`1`]` Gabor Szego: Orthogonal Polynomials, American Mathematical
-Society, Providence, Rhode Island, 1939.
-\item `[`2`]` Abramowitz \& Stegun: Handbook of Mathematical Functions, Dover,
-New York, 1972.
-\item `[`3`]` Canuto, Hussaini, Quarteroni \& Zang: Spectral Methods in Fluid
- Dynamics, Springer-Verlag, 1988.
-\item `[`4`]` Ghizzetti \& Ossicini: Quadrature Formulae, Academic Press, 1970.
-\item `[`5`]` Karniadakis \& Sherwin: Spectral/hp element methods for CFD, 1999
-\end{itemize}
+\begin{tabular}{ll}
+\toprule
+Routine & Description \\
+\midrule
+jacobz & Returns Jacobi polynomial zeros \\
+gammaf & Gamma function for integer values and halves \\
+RecCoeff & Calculates the recurrence coefficients for orthogonal poly \\
+TriQL & QL algorithm for symmetrix tridiagonal matrix \\
+JKMatrix & Generates the Jacobi-Kronrod matrix \\
+\bottomrule
+\end{tabular}
 
 \subsubsection{Notes}
 \begin{itemize}
+\setlength{\itemsep}{0em}
 \item Legendre polynomial $\alpha = \beta = 0$
 \item Chebychev polynomial $\alpha = \beta = -0.5$
 \item All routines are double precision.
 \item All array subscripts start from zero, i.e. vector $0..N-1$
 \end{itemize}
 
+
+
 \section{StdRegions}
-The StdRegions library, see the figure below, bundles all classes that mimic a
-spectral/hp element expansion on a standard region. Such an expansion, i.e.
+The StdRegions library, a summary of which is shown in
+Figure~\ref{f:library:stdregions}, bundles all classes that mimic a
+spectral/$hp$ element expansion on a standard region. Such an expansion, i.e.
 \begin{align*}
 u(\boldsymbol{\xi}_i) =
   \sum_{n\in\mathcal{N}}\phi_n(\boldsymbol{\xi}_i)\hat{u}_n,
@@ -169,30 +202,34 @@ at the quadrature points $\boldsymbol{\xi}_i$.
 
 All standard expansions, independent of the dimensionality or shape of the
 standard region, can be abstracted in a similar way. Therefore, it is possible
-to define these data structures in an \emph{abstract} base class, i.e. the
-class !StdExpansion. This base class can also contain the implementation of methods
+to define these data structures in an \emph{abstract} base class, i.e. the class
+!StdExpansion. This base class can also contain the implementation of methods
 that are identical across all shapes. Derived from this base class is another
 level of abstraction, i.e. the abstract classes StdExpansion1D, StdExpansion2D
 and StdExpansion3D. All other shape-specific classes (such as e.g. StdSegExp or
-StdQuadExp) are inherited from these abstract base classes. These
-shape-specific classes are the classes from which objects will be instantiated.
+StdQuadExp) are inherited from these abstract base classes. These shape-specific
+classes are the classes from which objects will be instantiated.
 They also contain the shape-specific implementation for operations such as
 integration or differentiation.
 
-\begin{center}
-\includegraphics{img/StdRegions.png}
-\end{center}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{img/StdRegions.png}
+\caption{Main classes in the StdRegions library.}
+\label{f:library:stdregions}
+\end{figure}
 
 \section{SpatialDomains}
-The most important family of classes in the SpatialDomains library is the 
-Geometry family, as can also be seen in the figure below. These classes are the
-representation of a (geometric) element in \emph{physical space}. It has been
-indicated before that every local element can be considered as an image of the 
-standard element where the corresponding one-to-one mapping can be represented 
-as an elemental standard spectral/hp expansion. As such, a proper encapsulation
-should at least contain data structures that represent such an expansion in 
-order to completely define the geometry of the element. Therefore, we have 
-equipped the classes in the Geometry family with the following data structures:
+The most important family of classes in the SpatialDomains library is the
+Geometry family, as can also be seen in Figure~\ref{f:library:spatialdomains}.
+These classes are the representation of a (geometric) element in \emph{physical
+space}. It has been indicated before that every local element can be considered
+as an image of the standard element where the corresponding one-to-one mapping
+can be represented as an elemental standard spectral/hp expansion. As such, a
+proper encapsulation should at least contain data structures that represent such
+an expansion in order to completely define the geometry of the element.
+Therefore, we have equipped the classes in the Geometry family with the
+following data structures:
 
 \begin{itemize}
 \item an object of !StdExpansion class, and
@@ -208,9 +245,12 @@ However, for every shape-specific geometry class, it needs to be initialised
 according to the corresponding StdRegions class (e.g. for the QuadGeom class, 
 it needs to be initialised as an StdQuadExp object).
 
-\begin{center}
+\begin{figure}
+\centering
 \includegraphics{img/SpatialDomains.png}
-\end{center}
+\caption{Main classes in the SpatialDomains library.}
+\label{f:library:spatialdomains}
+\end{figure}
 
 
 \section{LocalRegions}
@@ -247,8 +287,8 @@ x = \chi(\xi) = \frac{1-\xi}{2}x_{e-1} + \frac{1+\xi}{2}x_e \quad \xi
 
 In two dimensions, for a quadrilateral, each coordinate is given by
 \begin{align*}
-x_i = \chi(\xi_1,\xi_2) = x_i^A\frac{1-\xi_1}{2}\frac{1-\xi_2}{2} +
-x_i^B\frac{1+\xi_1}{2}\frac{1-\xi_2}{2} +
+x_i = \chi(\xi_1,\xi_2) &= x_i^A\frac{1-\xi_1}{2}\frac{1-\xi_2}{2} +
+x_i^B\frac{1+\xi_1}{2}\frac{1-\xi_2}{2} \\ &\qquad+
 x_i^D\frac{1-\xi_1}{2}\frac{1+\xi_2}{2} +
 x_i^C\frac{1+\xi_1}{2}\frac{1+\xi_2}{2}, \quad i=1,2
 \end{align*}
@@ -263,10 +303,11 @@ shape functions, $f^A(\xi_1), f^B(\xi_2), f^C(\xi_1)$ and
 $f^D(\xi_2)$, in the local coordinate system. For example, the linear
 blending function is given by
 \begin{align*}
-  x_i = \chi_i(\xi_1,\xi_2) = f^A(\xi_1)\frac{1-\xi_2}{2} +
+  x_i = \chi_i(\xi_1,\xi_2) &= f^A(\xi_1)\frac{1-\xi_2}{2} +
   f^C(\xi_1)\frac{1+\xi_2}{2} + f^B(\xi_2)\frac{1-\xi_1}{2} +
-  f^D(\xi_2)\frac{1+\xi_1}{2}\\ - \frac{1-\xi_1}{2}\frac{1-\xi_2}{2}f^A(-1) -
-  \frac{1+\xi_1}{2}\frac{1-\xi_2}{2}f^A(1) -
+  f^D(\xi_2)\frac{1+\xi_1}{2}\\ &\qquad-
+  \frac{1-\xi_1}{2}\frac{1-\xi_2}{2}f^A(-1) - 
+  \frac{1+\xi_1}{2}\frac{1-\xi_2}{2}f^A(1)\\ &\qquad-
   \frac{1-\xi_1}{2}\frac{1+\xi_2}{2}f^C(-1) -
   \frac{1+\xi_1}{2}\frac{1+\xi_2}{2}f^C(1)
 \end{align*}
@@ -275,7 +316,8 @@ blending function is given by
 All local expansions are derived from the top level Expansion base class. Three
 classes, Expansion1D, Expansion2D and Expansion3D, are derived from this and
 provided base classes for expansions in one-, two- and three- dimensions,
-respectively. The various local expansions are derived from these.
+respectively. The various local expansions are derived from these. The class
+hierarchy is shown in Figure~\ref{f:library:localregions}.
 
 One dimension:
 \begin{itemize}
@@ -303,9 +345,107 @@ Other classes:
 \item MatrixKey
 \end{itemize}
 
-\begin{center}
-\includegraphics{img/LocalRegions.png}
-\end{center}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{img/LocalRegions.png}
+\caption{Main classes in the LocalRegions library.}
+\label{f:library:localregions}
+\end{figure}
+
+\section{Collections}
+The Collections library contains optimised approaches to performing finite
+element operations on multiple elements. Typically, the geometric information is
+handled separately to the core reference operator, allowing the reference
+operator to be applied to elements stored in contiguous blocks of memory. While
+this does not necessarily reduce the operation count, data transfer from
+memory to CPU is often substantially reduced and the contiguous storage
+structures enable more efficient access, thereby reducing runtime.
+
+\subsection{Structure}
+The top-level container is the \texttt{Collection} class, which manages one or
+more LocalRegions objects of the same type (shape and basis). The
+\texttt{Operator} class generically describes an operation of these elements.
+Derived classes from \texttt{Operator} are created for each specific operation
+(e.g. BwdTrans, IProductWRTBase) on each element type. A factory pattern is used
+to instantiate the correct class using the key triple (shape, operator, impl).
+All classes relating to a particular operator are collated in a single .cpp
+file.
+
+An example template for a specific \texttt{Operator} class is as follows:
+\begin{lstlisting}[style=C++Style]
+class [[NAME]] : public Operator
+{
+    public:
+        OPERATOR_CREATE([[NAME]])
+
+        virtual ~[[NAME]]()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            [[IMPLEMENTATION]]
+        }
+
+    protected:
+        [[MEMBERS]]
+
+    private:
+        [[NAME]](
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+            [[INITIALISATION]]
+        }
+};
+\end{lstlisting}
+The placeholders in double square brackets should be replaced as follows:
+\begin{itemize}
+	\item \texttt{[[NAME]]}: The name of the class in the form
+	\begin{lstlisting}
+	<operation>_<impl>{_<shape>}
+	\end{lstlisting}
+	where the shape need only be included if the operator is shape-specific.
+	\item \texttt{[[MEMBERS]]}: Any member variables necessary to store precomputed
+	quantities and ensure computational efficiency.
+    \item \texttt{[[IMPLEMENTATION]]}: The code which actually computes the action
+    of the operator on the elements in the collection.
+	\item \texttt{[[INITIALIZATION]]}: Code to initialize member variables and
+	precomputed quantities.
+\end{itemize}
+
+\subsection{Instantiation}
+Operators are instantiated through the OperatorFactory. Therefore the operator
+classes must be registered with the factory during start-up. This is achieved
+using static initialisation with either the \texttt{m\_type} or
+\texttt{m\_typeArr}. The latter is shown in the following example:
+\begin{lstlisting}[style=C++Style]
+OperatorKey BwdTrans_StdMat::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment,       eBwdTrans, eStdMat,false),
+        BwdTrans_StdMat::create, "BwdTrans_StdMat_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle,      eBwdTrans, eStdMat,false),
+        BwdTrans_StdMat::create, "BwdTrans_StdMat_Tri"),
+    ...
+};
+\end{lstlisting}
+This instructs the factory to use the \texttt{BwdTrans\_StdMat} class for all
+shapes when performing a backward transform using the \texttt{StdMat} approach.
+In contrast, if the class is shape specific, the non-array member variable would
+be initialised, for example:
+\begin{lstlisting}[style=C++Style]
+OperatorKey BwdTrans_SumFac_Seg::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(
+        OperatorKey(eSegment, eBwdTrans, eSumFac, false),
+        BwdTrans_SumFac_Seg::create, "BwdTrans_SumFac_Seg");
+\end{lstlisting}
 
 \section{MultiRegions}
 In the MultiRegions library, all classes and routines are related to the
@@ -453,8 +593,36 @@ located in the Fourier expansions quatradure points to create a 3D problem. As
 describer above, we can find the find the continuos or discontinuos case,
 depending on the spectral/hp element approach. ExpList2DHomogeneous1D and
 ExpList1DHomogeneous2D are used to manage boundary conditions. A description of
-the Quasi-3D approach usage can be found in Section~\ref{s:xml}.
+the Quasi-3D approach usage can be found in Chapter 3 in the User Guide.
 
 \begin{center}
-\includegraphics{img/Quasi3d.png}
+\includegraphics[width=\textwidth]{img/Quasi3d.png}
 \end{center}
+
+
+\section{SolverUtils}
+
+\subsection{Drivers}
+Drivers govern the high-level execution of a solver.
+
+\subsubsection{Implementing a new Driver}
+To take advantage of the Nektar++ architecture and implement an algorithm 
+which will wrap around an existing solver, new drivers can be created. This can
+be done in a few steps by using DriverStandard.cpp (and .h) as a template:
+\begin{itemize}
+\item Create the new files called DriverMyAlgorithm.cpp (and .h)
+\item Implement constructor and destructor
+\item Provide implementation for \texttt{v\_InitObject} and \texttt{v\_Execute}
+as necessary.
+\item Register the new driver with the driver factory.
+\begin{lstlisting}[style=C++Style]
+string DriverMyAlgorithm::className = 
+    GetDriverFactory().RegisterCreatorFunction("MyAlgorithm",
+                                               DriverMyAlgorithm::create); 
+string DriverMyAlgorithm::driverLookupId = 
+    LibUtilities::SessionReader::RegisterEnumValue("Driver","MyAlgorithm",0);
+\end{lstlisting}
+\item Add the new driver to the library. In \inlsh{CMakeLists.txt}, 
+DriverMyAlgorithm.cpp must be added in the \inlsh{SOLVER\_UTILS\_SOURCES} 
+section and DriverMyAlgorithm.h in the \inlsh{SOLVER\_UTILS\_HEADERS} section.
+\end{itemize}

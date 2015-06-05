@@ -126,26 +126,10 @@ namespace Nektar
                 break;
             }
         }
-        
-        //insert white noise in initial condition
-        NekDouble Noise;
-        int phystot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> noise(phystot);
-        
-        m_session->LoadParameter("Noise", Noise,0.0);
-        int m_nConvectiveFields =  m_fields.num_elements();
-        
-        if(Noise > 0.0)
-        {
-            for(int i = 0; i < m_nConvectiveFields; i++)
-            {
-                Vmath::FillWhiteNoise(phystot,Noise,noise,1,m_comm->GetColumnComm()->GetRank()+1);
-                Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        
-        if (dumpInitialConditions)
+
+        CompressibleFlowSystem::v_SetInitialConditions();
+
+        if (dumpInitialConditions && m_checksteps)
         {
             // Dump initial conditions to file
             Checkpoint_Output(0);
@@ -172,6 +156,13 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(npoints, outarray[i], 1);
+        }
+        
+        // Add sponge layer if defined in the session file
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray, time);
         }
     }
     
@@ -229,77 +220,42 @@ namespace Nektar
         NekDouble                             time)
     {
         std::string varName;
-        int nvariables = m_fields.num_elements();
         int cnt        = 0;
         
+        std::string userDefStr;
+        int nreg = m_fields[0]->GetBndConditions().num_elements();
         // Loop over Boundary Regions
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        for (int n = 0; n < nreg; ++n)
         {
-            // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWall)
+            userDefStr = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+            if(!userDefStr.empty())
             {
-                WallBC(n, cnt, inarray);
-            }
-            
-            // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWallViscous)
-            {
-                ASSERTL0(false, "WallViscous is a wrong bc for the "
-                "Euler equations");
-            }
-            
-            // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eSymmetry)
-            {
-                SymmetryBC(n, cnt, inarray);
-            }
-            
-            // Riemann invariant characteristic Boundary Condition (CBC)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eRiemannInvariant)
-            {
-                RiemannInvariantBC(n, cnt, inarray);
-            }
-            
-            // Extrapolation of the data at the boundaries
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eExtrapOrder0)
-            {
-                ExtrapOrder0BC(n, cnt, inarray);
-            }
-            
-            // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eTimeDependent)
-            {
-                for (int i = 0; i < nvariables; ++i)
+                if(boost::iequals(userDefStr,"WallViscous"))
                 {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
+                    ASSERTL0(false, "WallViscous is a wrong bc for the "
+                             "Euler equations");
+                }
+                else if(boost::iequals(userDefStr, "IsentropicVortex"))
+                {
+                    // Isentropic Vortex Boundary Condition
+                    SetBoundaryIsentropicVortex(n, time, cnt, inarray);
+                }
+                else if (boost::iequals(userDefStr,"RinglebFlow"))
+                {
+                    SetBoundaryRinglebFlow(n, time, cnt, inarray);
+                }
+                else
+                {
+                    // set up userdefined BC common to all solvers
+                    SetCommonBC(userDefStr,n,time, cnt,inarray);
                 }
             }
-            
-            // Isentropic Vortex Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eIsentropicVortex)
-            {
-                SetBoundaryIsentropicVortex(n, time, cnt, inarray);
-            }
-            
-            // Ringleb Flow Inflow and outflow Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eRinglebFlow)
-            {
-                SetBoundaryRinglebFlow(n, time, cnt, inarray);
-            }
-            
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+
+            // no User Defined conditions provided so skip cnt 
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize(); 
         }
     }
-    
+
     /**
      * @brief Get the exact solutions for isentropic vortex and Ringleb
      * flow problems.
@@ -323,6 +279,7 @@ namespace Nektar
             }
             default:
             {
+                EquationSystem::v_EvaluateExactSolution(field, outfield, time);
                 break;
             }
         }

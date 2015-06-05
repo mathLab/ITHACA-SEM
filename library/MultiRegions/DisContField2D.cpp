@@ -627,7 +627,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {  	
+        {      
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
@@ -652,7 +652,7 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions     = 
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-	    
+        
             cnt = 0;
 
             // list non-periodic boundaries
@@ -663,25 +663,27 @@ namespace Nektar
                 if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(*(it->second), graph2D,
+                        ::AllocateSharedPtr(m_session, *(it->second), graph2D,
                                             DeclareCoeffPhysArrays, variable);
+
+                    m_bndCondExpansions[cnt]  = locExpList;
+                    m_bndConditions[cnt]      = bc;
                     
-                    // Set up normals on non-Dirichlet boundary conditions
-                    if(bc->GetBoundaryConditionType() != 
-                           SpatialDomains::eDirichlet)
+
+                    std::string type = m_bndConditions[cnt]->GetUserDefined();
+                    
+                    // Set up normals on non-Dirichlet boundary
+                    // conditions. Second two conditions ideally
+                    // should be in local solver setup (when made into factory)
+                    if((bc->GetBoundaryConditionType() != 
+                        SpatialDomains::eDirichlet)||
+                       boost::iequals(type,"I") || 
+                       boost::iequals(type,"CalcBC"))
                     {
                         SetUpPhysNormals();
                     }
 
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt]      = bc;
-                    SpatialDomains::BndUserDefinedType type = 
-                        m_bndConditions[cnt++]->GetUserDefined();
-                    if (type == SpatialDomains::eI || 
-                        type == SpatialDomains::eCalcBC)
-                    {
-                        SetUpPhysNormals();
-                    }
+                    cnt++;
                 }
             }
         }
@@ -1409,7 +1411,7 @@ namespace Nektar
             int id1, id2 = 0;
             
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {				
+            {
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                 {
@@ -1702,6 +1704,20 @@ namespace Nektar
                         m_Element->GetGlobalID()];
                     EdgeID[cnt] = (*tmp)[0]->m_EdgeIndx;
                 }
+            }
+        }
+
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField2D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
             }
         }
 
@@ -2084,7 +2100,7 @@ namespace Nektar
 
                 //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
                 //LocalRegions::QuadExpSharedPtr ppExp = 
-                //	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                //    MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
                 //Orthogonal expansion created
 
                 //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
@@ -2095,7 +2111,7 @@ namespace Nektar
                 //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
                 //===============================================================================================
                
-                //DGDeriv	
+                //DGDeriv    
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
@@ -2165,8 +2181,7 @@ namespace Nektar
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || 
-                    m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                    m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
@@ -2273,6 +2288,22 @@ namespace Nektar
                         coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
                     }    
+                    else
+                    {
+                        ASSERTL0(false, "This type of BC not implemented yet");
+                    }
+                }
+                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
+                                        "MovingBody"))
+                {
+                    locExpList = m_bndCondExpansions[i];
+                    if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eDirichlet)
+                    {
+                        locExpList->FwdTrans_IterPerExp(
+                                    locExpList->GetPhys(),
+                                    locExpList->UpdateCoeffs());
+                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

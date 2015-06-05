@@ -88,7 +88,7 @@ void DriverSteadyState::v_Execute(ostream &out)
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
     m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
     m_session->LoadParameter("ControlCoeff",m_X, 1);
-    m_session->LoadParameter("FilterWidth", m_Delta, 1);
+    m_session->LoadParameter("FilterWidth", m_Delta, 2);
 
     // To evaluate optimum SFD parameters if growth rate provided in the
     // xml file
@@ -105,7 +105,7 @@ void DriverSteadyState::v_Execute(ostream &out)
     m_session->LoadParameter("AdaptiveTOL", AdaptiveTOL, 1.0e-02);
 
     // Used only for the Adaptive SFD method
-    m_session->LoadParameter("AdaptiveTime", AdaptiveTime, 25.0);
+    m_session->LoadParameter("AdaptiveTime", AdaptiveTime, 50.0*m_Delta);
 
     if (m_comm->GetRank() == 0)
     {
@@ -166,7 +166,7 @@ void DriverSteadyState::v_Execute(ostream &out)
         q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ-1]->GetTotPoints(), 
                                         0.0); //q0 is initialised
         qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ-1]->GetTotPoints(),
-                                        0.0); //qBar0 initially set to zero
+                                        0.0);
         m_equ[m_nequ - 1]->CopyFromPhysField(i, qBar0[i]);
     }
 
@@ -296,9 +296,22 @@ void DriverSteadyState::v_Execute(ostream &out)
     }
 
     m_file.close();
-
+    
     ///We save the final solution into a .fld file
     m_equ[m_nequ - 1]->Output();
+
+    for(int j = 0; j < m_equ[m_nequ - 1]->GetNvariables(); ++j)
+    {
+        NekDouble vL2Error = m_equ[m_nequ - 1]->L2Error(j,false);
+        NekDouble vLinfError = m_equ[m_nequ - 1]->LinfError(j);
+        if (m_comm->GetRank() == 0)
+        {
+            out << "L 2 error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
+                << ") : " << vL2Error << endl;
+            out << "L inf error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
+                << ") : " << vLinfError << endl;
+        }
+    }
 }
 
 

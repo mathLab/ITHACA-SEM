@@ -74,9 +74,9 @@ namespace Nektar
             static std::string className;
 
             SOLVER_UTILS_EXPORT FilterModalEnergy(
-                const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const std::map<std::string, std::string>    &pParams);
-            SOLVER_UTILS_EXPORT ~FilterModalEnergy();
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::map<std::string, std::string> &pParams);
+            SOLVER_UTILS_EXPORT virtual ~FilterModalEnergy();
 
         protected:
             virtual void v_Initialise(

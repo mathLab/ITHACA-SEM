@@ -1,8 +1,12 @@
-function (find_lib_files PKG_INSTALL_LIBS PKG_INSTALL_LIBS_FILES)
+function (write_lib_files PKG_INSTALL_LIBS OUTPUT_FILE)
     # Find library file and add the versioned form of each library
     set(PKG_INSTALL_LIBS_FILES)
     foreach(l ${PKG_INSTALL_LIBS})
-        get_target_property(TARGET_LOCATION ${l} LOCATION)
+        IF(${CMAKE_MAJOR_VERSION} LESS 3)
+            get_target_property(TARGET_LOCATION ${l} LOCATION)
+        ELSE ()
+            SET(TARGET_LOCATION $<TARGET_LINKER_FILE:${l}>)
+        ENDIF()
         if (NOT TARGET_LOCATION)
             message(FATAL_ERROR "Target '${l}' could not be found.")
         endif ()
@@ -15,22 +19,38 @@ function (find_lib_files PKG_INSTALL_LIBS PKG_INSTALL_LIBS_FILES)
                         ${TARGET_LOCATION}.${NEKTAR_VERSION})
         endif()
     endforeach()
-    set(PKG_INSTALL_LIBS_FILES ${PKG_INSTALL_LIBS_FILES} PARENT_SCOPE)
+
+    # Output the list of files to be installed in the package
+    IF(${CMAKE_MAJOR_VERSION} LESS 3)
+        file(WRITE "${OUTPUT_FILE}" "${PKG_INSTALL_LIBS_FILES}")
+    ELSE ()
+        file(GENERATE OUTPUT "${OUTPUT_FILE}"
+             CONTENT "${PKG_INSTALL_LIBS_FILES}")
+    ENDIF ()
 endfunction ()
 
-function (find_bin_files PKG_INSTALL_BINS PKG_INSTALL_BINS_FILES)
+function (write_bin_files PKG_INSTALL_BINS OUTPUT_FILE)
     # Find binary files
     set(PKG_INSTALL_BINS_FILES)
     foreach(b ${PKG_INSTALL_BINS})
-        get_target_property(TARGET_LOCATION ${b} LOCATION)
+        IF(${CMAKE_MAJOR_VERSION} LESS 3)
+            get_target_property(TARGET_LOCATION ${b} LOCATION)
+        ELSE ()
+            SET(TARGET_LOCATION $<TARGET_FILE:${b}>)
+        ENDIF ()
         if (NOT TARGET_LOCATION)
             message(FATAL_ERROR "Target '${b}' could not be found.")
         endif ()
         list(APPEND PKG_INSTALL_BINS_FILES ${TARGET_LOCATION})
-        list(APPEND PKG_INSTALL_BINS_FILES 
-                        ${TARGET_LOCATION}-${NEKTAR_VERSION})
     endforeach()
-    set(PKG_INSTALL_BINS_FILES ${PKG_INSTALL_BINS_FILES} PARENT_SCOPE)
+
+    # Output the list of files to be installed in the package
+    IF(${CMAKE_MAJOR_VERSION} LESS 3)
+        file(WRITE "${OUTPUT_FILE}" "${PKG_INSTALL_BINS_FILES}")
+    ELSE ()
+        file(GENERATE OUTPUT "${OUTPUT_FILE}"
+             CONTENT "${PKG_INSTALL_BINS_FILES}")
+    ENDIF ()
 endfunction ()
 
 macro (add_deb_package)
@@ -43,8 +63,11 @@ macro (add_deb_package)
 
         set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-deb)
 
-        find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
-        find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+        file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
+        write_lib_files("${PKG_INSTALL_LIBS}" 
+                        "${BUILD_DIR}/targets/install_libs.txt")
+        write_bin_files("${PKG_INSTALL_BINS}"
+                        "${BUILD_DIR}/targets/install_bins.txt")
 
         # Configure project for this package
         configure_file(CMakeListsDpkg.txt.in
@@ -75,8 +98,11 @@ macro (add_rpm_package)
 
         set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-rpm)
 
-        find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
-        find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+        file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
+        write_lib_files("${PKG_INSTALL_LIBS}"
+                        "${BUILD_DIR}/targets/install_libs.txt")
+        write_bin_files("${PKG_INSTALL_BINS}"
+                        "${BUILD_DIR}/targets/install_bins.txt")
 
         configure_file(CMakeListsRpm.txt.in
                 ${BUILD_DIR}/CMakeLists.txt @ONLY)
@@ -104,8 +130,11 @@ macro (add_tgz_package)
 
     set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-tgz)
 
-    find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
-    find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+    file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
+    write_lib_files("${PKG_INSTALL_LIBS}"
+                    "${BUILD_DIR}/targets/install_libs.txt")
+    write_bin_files("${PKG_INSTALL_BINS}"
+                    "${BUILD_DIR}/targets/install_bins.txt")
 
     configure_file(CMakeListsTgz.txt.in
                 ${BUILD_DIR}/CMakeLists.txt @ONLY)

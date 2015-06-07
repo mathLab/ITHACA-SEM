@@ -43,6 +43,7 @@
 
 #include <LibUtilities/CADSystem/CADSystem.h>
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -60,7 +61,9 @@ namespace Nektar {
                 {
                 };
                 
-                
+                LIB_UTILITIES_EXPORT void Build(const NekDouble &m_minDelta,
+                                                const NekDouble &m_maxDelta,
+                                                const NekDouble &m_eps);
                 
             private:
                 

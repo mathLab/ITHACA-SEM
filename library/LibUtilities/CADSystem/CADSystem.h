@@ -41,6 +41,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -73,6 +74,7 @@ namespace LibUtilities {
     {
     public:
         CADCurve(int i, TopoDS_Shape in);
+        void GetMinMax(gp_Pnt &start, gp_Pnt &end);
     
     private:
         int ID;
@@ -103,6 +105,7 @@ namespace LibUtilities {
 	    LIB_UTILITIES_EXPORT std::string GetName();
         LIB_UTILITIES_EXPORT bool LoadCAD();
         LIB_UTILITIES_EXPORT void Report();
+        LIB_UTILITIES_EXPORT void GetBoundingBox(Array<OneD, NekDouble>& out);
 
 	private:
         

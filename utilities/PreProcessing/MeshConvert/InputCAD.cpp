@@ -107,6 +107,8 @@ namespace Utilities
         LibUtilities::MeshUtils::OctreeSharedPtr m_octree =
             MemoryManager<LibUtilities::MeshUtils::Octree>::AllocateSharedPtr(m_cad);
         
+        m_octree->Build(m_minDelta, m_maxDelta, m_eps);
+        
         
     }
     

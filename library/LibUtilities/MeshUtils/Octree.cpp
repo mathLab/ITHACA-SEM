@@ -41,7 +41,21 @@ namespace Nektar{
     namespace LibUtilities{
         namespace MeshUtils {
             
-
+            void Octree::Build(const NekDouble &m_minDelta,
+                               const NekDouble &m_maxDelta,
+                               const NekDouble &m_eps)
+            {
+                Array<OneD, NekDouble> BoundingBox(6);
+                m_cad->GetBoundingBox(BoundingBox);
+                
+                cout << BoundingBox[0] << endl;
+                cout << BoundingBox[1] << endl;
+                cout << BoundingBox[2] << endl;
+                cout << BoundingBox[3] << endl;
+                cout << BoundingBox[4] << endl;
+                cout << BoundingBox[5] << endl;
+            }
+            
             
         }
     }

@@ -51,6 +51,12 @@ namespace LibUtilities{
         occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
     }
     
+    void CADCurve::GetMinMax(gp_Pnt &start, gp_Pnt &end)
+    {
+        start = occCurve.Value(occCurve.FirstParameter());
+        end  = occCurve.Value(occCurve.LastParameter());
+    }
+    
     CADSurf::CADSurf(int i, TopoDS_Shape in, vector<int> ein) : ID(i), edges(ein)
     {
         gp_Trsf transform;
@@ -71,6 +77,47 @@ namespace LibUtilities{
     {
         cout << "CAD has: " << m_numCurve << " curves." << endl;
         cout << "CAD has: " << m_numSurf << " surfaces." << endl;
+    }
+    
+    void CADSystem::GetBoundingBox(Array<OneD, NekDouble>& out)
+    {
+        out[0]=1000000.0;
+        out[1]=0.0;
+        out[2]=1000000.0;
+        out[3]=0.0;
+        out[4]=1000000.0;
+        out[5]=0.0;
+        
+        for(int i = 0; i < m_curves.size(); i++)
+        {
+            gp_Pnt start, end;
+            m_curves[i].GetMinMax(start,end);
+            if(start.X()<out[0])
+                out[0]=start.X();
+            if(start.X()>out[1])
+                out[1]=start.X();
+            if(start.Y()<out[2])
+                out[2]=start.Y();
+            if(start.Y()>out[3])
+                out[3]=start.Y();
+            if(start.Z()<out[4])
+                out[4]=start.Z();
+            if(start.Z()>out[5])
+                out[5]=start.Z();
+            
+            if(end.X()<out[0])
+                out[0]=end.X();
+            if(end.X()>out[1])
+                out[1]=end.X();
+            if(end.Y()<out[2])
+                out[2]=end.Y();
+            if(end.Y()>out[3])
+                out[3]=end.Y();
+            if(end.Z()<out[4])
+                out[4]=end.Z();
+            if(end.Z()>out[5])
+                out[5]=end.Z();
+        }
     }
 
     bool CADSystem::LoadCAD()

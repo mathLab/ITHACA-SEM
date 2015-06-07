@@ -42,6 +42,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/CADSystem/CADSystem.h>
+#include <LibUtilities/MeshUtils/CurvaturePoint.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -67,7 +68,13 @@ namespace Nektar {
                 
             private:
                 
+                void CompileCuravturePointList(const NekDouble &m_minDelta,
+                                               const NekDouble &m_maxDelta,
+                                               const NekDouble &m_eps);
+                
                 CADSystemSharedPtr m_cad;
+                Array<OneD, NekDouble> BoundingBox;
+                std::vector<CurvaturePointSharedPtr> m_cpList;
                
             };
             

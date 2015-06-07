@@ -85,6 +85,13 @@ namespace LibUtilities {
     {
     public:
         CADSurf(int i, TopoDS_Shape in, std::vector<int> ein);
+        NekDouble minU(){return occSurface.FirstUParameter();}
+        NekDouble maxU(){return occSurface.LastUParameter();}
+        NekDouble minV(){return occSurface.FirstVParameter();}
+        NekDouble maxV(){return occSurface.LastVParameter();}
+        Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
+        Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
+        Array<OneD, NekDouble> D2(NekDouble u, NekDouble v);
         
     private:
         int ID;
@@ -106,6 +113,15 @@ namespace LibUtilities {
         LIB_UTILITIES_EXPORT bool LoadCAD();
         LIB_UTILITIES_EXPORT void Report();
         LIB_UTILITIES_EXPORT void GetBoundingBox(Array<OneD, NekDouble>& out);
+        LIB_UTILITIES_EXPORT int GetNumSurf(){return m_numSurf;}
+        LIB_UTILITIES_EXPORT void GetParameterPlaneBounds(int i,
+                                                    Array<OneD, NekDouble>& out);
+        LIB_UTILITIES_EXPORT void N(int i, NekDouble u, NekDouble v,
+                                    Array<OneD, NekDouble>& out);
+        LIB_UTILITIES_EXPORT void D1(int i, NekDouble u, NekDouble v,
+                                    Array<OneD, NekDouble>& out);
+        LIB_UTILITIES_EXPORT void D2(int i, NekDouble u, NekDouble v,
+                                    Array<OneD, NekDouble>& out);
 
 	private:
         

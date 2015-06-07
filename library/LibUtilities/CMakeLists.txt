@@ -321,6 +321,18 @@ IF(NEKTAR_USE_OCC)
 
 	SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})
 	SOURCE_GROUP("CAD System Sources" FILES ${CADSystemSources})
+
+	SET(MeshUtilsSources
+		./MeshUtils/Octree.cpp
+		)
+
+    SET(MeshUtilsHeaders
+        ./MeshUtils/Octree.h
+        )
+
+    SOURCE_GROUP("Mesh utilities headers" FILES ${MeshUtilsHeaders})
+    SOURCE_GROUP("Mesh utilities sources" FILES ${MeshUtilsSources})
+
 ENDIF(NEKTAR_USE_OCC)
 
 SOURCE_GROUP("Base" FILES ${BaseHeaders})
@@ -333,6 +345,7 @@ SET(LibUtilityHeaders
     ${CommunicationHeaders}
 	${FoundationHeaders}
 	${CADSystemHeaders}
+    ${MeshUtilsHeaders}
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
 	${InterpreterHeaders}
@@ -353,6 +366,7 @@ SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
     ${CADSystemSources}
+    ${MeshUtilsSources}
     ${PolylibSources}
     ${CommunicationSources}
     ${LinearAlgebraSources}

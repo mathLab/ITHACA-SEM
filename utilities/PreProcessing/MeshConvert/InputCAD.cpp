@@ -38,6 +38,7 @@
 using namespace std;
 
 #include <LibUtilities/CADSystem/CADSystem.h>
+#include <LibUtilities/MeshUtils/Octree.h>
 
 #include "MeshElements.h"
 #include "InputCAD.h"
@@ -87,20 +88,25 @@ namespace Utilities
                  "User parameters required");
         
         
-        LibUtilities::CADSystemSharedPtr CAD =
+        LibUtilities::CADSystemSharedPtr m_cad =
             MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(CADName);
         
-        cout << CAD->GetName() << endl;
+        cout << m_cad->GetName() << endl;
 
-        ASSERTL0(CAD->LoadCAD(),
+        ASSERTL0(m_cad->LoadCAD(),
                  "Failed to load CAD");
         
         if(m_mesh->m_verbose)
         {
             cout << "min delta: " << m_minDelta << " max delta: " << m_maxDelta
                  << " esp: " << m_eps << " order: " << m_order << endl;
-            CAD->Report();
+            m_cad->Report();
         }
+        
+        
+        LibUtilities::MeshUtils::OctreeSharedPtr m_octree =
+            MemoryManager<LibUtilities::MeshUtils::Octree>::AllocateSharedPtr(m_cad);
+        
         
     }
     

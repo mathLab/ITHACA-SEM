@@ -85,6 +85,11 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
                                         "Negative diffusion coefficient "
                                         "(0 < mu < 1), default = 0.495");
 
+    m_config["removesmallcontour"] = ConfigOption(false,"0",
+                                        "Remove contours with less than specified number of triangles."
+                                                    "Only valid with GlobalCondense or Smooth options.");
+
+
 }
 
 ProcessIsoContour::~ProcessIsoContour(void)
@@ -135,9 +140,11 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
     else
     {
+        ASSERTL0(m_config["fieldid"].as<string>() != "NotSet", "fieldid must be specified");
         fieldid = m_config["fieldid"].as<int>();
     }
 
+    ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
     value   = m_config["fieldvalue"].as<NekDouble>();
 
     iso = ExtractContour(fieldid,value);
@@ -148,6 +155,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         vector<IsoSharedPtr> glob_iso;
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
+        int mincontour = 0; 
 
         g_iso->globalcondense(iso);
 
@@ -159,8 +167,15 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             g_iso->smooth(niter,lambda,-mu);
         }
 
-        glob_iso.push_back(g_iso);
 
+        if((mincontour = m_config["removesmallcontour"].as<int>()))
+        {
+            g_iso->separate_regions(glob_iso,mincontour);
+        }
+        else
+        {
+            glob_iso.push_back(g_iso);
+        }
         ResetFieldPts(glob_iso);
     }
     else
@@ -746,9 +761,9 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         for(n = 0; n < isocon[i].size(); ++n)
         {
             int con = isocon[i][n];
-            for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
+            for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
             {
-                for(id2 = 0; id2 < iso[con]->m_nvert;++id2,++cnt)
+                for(id2 = 0; id2 < iso[con]->m_nvert; ++id2, ++cnt)
                 {
                     if(cnt%1000000 == 0)
                     {
@@ -930,6 +945,154 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
     }
 }
 
+
+    void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso, int minsize)
+    {
+        int i,j,k,id;
+        Array<OneD, vector<int> >vertcon(m_nvert);
+        vector<int>::iterator ipt;
+        list<int> tocheck;  
+        list<int>::iterator cid;
+
+        Array<OneD, bool> viddone(m_nvert,false);
+        
+        // make list of connecting tris around each vertex
+        for(i = 0; i < m_ntris; ++i)
+        {
+            for(j = 0; j < 3; ++j)
+            {
+                vertcon[m_vid[3*i+j]].push_back(i);
+            }
+        }
+        
+        Array<OneD, int> vidregion(m_nvert,-1);
+  
+        int nregions = -1;
+
+        // check all points are assigned;
+        for(k = 0; k < m_nvert; ++k)
+        {
+            if(vidregion[k] == -1)
+            {
+                vidregion[k] = ++nregions;
+      
+                // find all elmts around this.. vertex  that need to be checked
+                for(ipt = vertcon[k].begin(); ipt != vertcon[k].end(); ++ipt)
+                {
+                    for(i = 0; i < 3; ++i)
+                    {
+                        if(vidregion[id = m_vid[3*(ipt[0])+i]] == -1)
+                        {
+                            tocheck.push_back(id);
+                            vidregion[id] = nregions;
+                        }
+                    }
+                }
+                viddone[k] = 1;
+                
+                // check all other neighbouring vertices
+                while(tocheck.size())
+                {
+                    cid = tocheck.begin();
+                    while(cid != tocheck.end())
+                    {
+                        if(!viddone[*cid])
+                        {
+                            for(ipt = vertcon[*cid].begin(); ipt != vertcon[*cid].end(); ++ipt)
+                            {
+                                for(i = 0; i < 3; ++i)
+                                {
+                                    if(vidregion[id = m_vid[3*(ipt[0])+i]] == -1)
+                                    {
+                                        tocheck.push_back(id);
+                                        vidregion[id] = nregions;
+                                    }
+                                }
+                            }
+                            viddone[*cid] = 1;
+                            ++cid;
+                            tocheck.pop_front();
+                        }
+                    }
+                }
+            }
+        }
+        nregions++;
+        
+        Array<OneD, int> nvert(nregions,0);
+        Array<OneD, int> nelmt(nregions,0);
+
+        // count nverts
+        for(i = 0; i < m_nvert; ++i)
+        {
+            nvert[vidregion[i]] +=1;
+        }
+
+        // count nelmts
+        for(i = 0; i < m_ntris; ++i)
+        {
+            nelmt[vidregion[m_vid[3*i]]] +=1;
+        }
+
+        Array<OneD, int> vidmap(m_nvert);
+        // generate new list of isocontour
+        for(int n = 0; n < nregions; ++n)
+        {
+            if(nelmt[n] > minsize)
+            {
+                int nfields = m_fields.size();
+                IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields);
+                
+                iso->m_ntris = nelmt[n];
+                iso->m_vid = Array<OneD, int>(3*nelmt[n]);
+                
+                iso->m_nvert = nvert[n];
+                iso->m_x.resize(nvert[n]);
+                iso->m_y.resize(nvert[n]);
+                iso->m_z.resize(nvert[n]);
+                
+                iso->m_fields.resize(nfields);
+                for(i = 0; i < nfields; ++i)
+                {
+                    iso->m_fields[i].resize(nvert[n]);
+                }
+
+
+                int cnt = 0; 
+                // generate vid map; 
+                Vmath::Zero(m_nvert,vidmap,1);
+                for(i = 0; i < m_nvert; ++i)
+                {
+                    if(vidregion[i] == n)
+                    {
+                        vidmap[i] = cnt++;
+                    }
+                }
+
+                cnt = 0; 
+                for(i = 0; i < m_ntris; ++i)
+                {
+                    if(vidregion[m_vid[3*i]] == n)
+                    {
+                        for(j = 0; j < 3; ++j)
+                        {
+                            iso->m_vid[3*cnt+j] = vidmap[m_vid[3*i+j]];
+                            
+                            iso->m_x[vidmap[m_vid[3*i+j]]] = m_x[m_vid[3*i+j]];
+                            iso->m_y[vidmap[m_vid[3*i+j]]] = m_y[m_vid[3*i+j]];
+                            iso->m_z[vidmap[m_vid[3*i+j]]] = m_z[m_vid[3*i+j]];
+
+                            for(k = 0; k < nfields; ++k)
+                            {
+                                iso->m_fields[k][vidmap[m_vid[3*i+j]]] = m_fields[k][m_vid[3*i+j]];
+                            }
+                        }
+                    }
+                }
+                sep_iso.push_back(iso);
+            }
+        }
+    }
 }
 }
 

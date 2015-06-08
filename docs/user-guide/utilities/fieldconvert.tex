@@ -392,6 +392,11 @@ automatically calls a \inltt{globalcondense} option which remove
 multiply defined verties from the simplex definition which arise as
 isocontour are generated element by element. 
 
+In addition to the \inltt{smooth} or \inltt{globalcondense} options
+you can specify \inltt{removesmallcontour}=100 which will remove
+separate isocontours of less than 100 triangles. This optin requires
+\inltt{smooth} or \inltt{globalcondense} to be specified.
+
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,
  tetrahedrons and prisms. 

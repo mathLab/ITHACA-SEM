@@ -56,6 +56,7 @@ ModuleKey ProcessWSS::className =
 ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
+    m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
     m_f->m_fldToBnd = false;
@@ -72,6 +73,7 @@ void ProcessWSS::Process(po::variables_map &vm)
         cout << "ProcessWSS: Calculating wall shear stress..." << endl;
     }
 
+    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 
     // Set up Field options to output boundary fld
     string bvalues =  m_config["bnd"].as<string>();
@@ -114,7 +116,7 @@ void ProcessWSS::Process(po::variables_map &vm)
                  "be computed");
     }
 
-    int newfields = (spacedim == 2)? 5:7;
+    int newfields = (spacedim == 2)? 3:4;
     int nshear    = (spacedim == 2)? 3:4;
     int nstress   = (spacedim == 2)? 3:6;
     int ngrad     = nfields*nfields;
@@ -143,8 +145,6 @@ void ProcessWSS::Process(po::variables_map &vm)
         m_f->m_fielddef[0]->m_fields[0] = "Shear_x";
         m_f->m_fielddef[0]->m_fields[1] = "Shear_y";
         m_f->m_fielddef[0]->m_fields[2] = "Shear_mag";
-        m_f->m_fielddef[0]->m_fields[3] = "norm_x";
-        m_f->m_fielddef[0]->m_fields[4] = "norm_y";
     }
     else
     {
@@ -152,9 +152,6 @@ void ProcessWSS::Process(po::variables_map &vm)
         m_f->m_fielddef[0]->m_fields[1] = "Shear_y";
         m_f->m_fielddef[0]->m_fields[2] = "Shear_z";
         m_f->m_fielddef[0]->m_fields[3] = "Shear_mag";
-        m_f->m_fielddef[0]->m_fields[4] = "norm_x";
-        m_f->m_fielddef[0]->m_fields[5] = "norm_y";
-        m_f->m_fielddef[0]->m_fields[6] = "norm_z";
     }
 
 
@@ -351,11 +348,6 @@ void ProcessWSS::Process(po::variables_map &vm)
                         Vmath::Vsqrt(nfq, fshear[3], 1, fshear[3], 1);
                         bc->FwdTrans(fshear[3], outfield[3]);
 
-
-                        for (j=0; j < spacedim; j++)
-                        {
-                            bc->FwdTrans(normals[j], outfield[nshear+j]);
-                        }
                     }
                 }
             }

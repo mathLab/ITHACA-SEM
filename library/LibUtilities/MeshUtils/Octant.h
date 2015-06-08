@@ -59,8 +59,8 @@ namespace Nektar {
                 Octant(NekDouble x, NekDouble y, NekDouble z,
                        NekDouble dx, NekDouble dy, NekDouble dz,
                        int p, int l,
-                       std::vector<CurvaturePointSharedPtr> &CurvaturePointList,
-                       std::vector<OctantSharedPtr> &OctantList);
+                       const std::vector<CurvaturePointSharedPtr> &CurvaturePointList,
+                       const std::vector<int> &CPList);
                 
                 void AddCurvaturePoint(int i, bool valid, NekDouble delta,
                                        NekDouble &maxDif, NekDouble &minDif,

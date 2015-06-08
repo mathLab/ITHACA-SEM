@@ -94,8 +94,14 @@ namespace Nektar {
                 bool IsValid(){return m_valid;}
                 NekDouble GetDelta()
                 {
-                    ASSERTL0(m_valid,"Attempted to accsess NULL data");
-                    return m_delta;
+                    if(m_valid)
+                    {
+                        return m_delta;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
                 }
                 NekDouble X(){return m_x;}
                 NekDouble Y(){return m_y;}

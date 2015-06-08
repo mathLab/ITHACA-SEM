@@ -51,22 +51,24 @@ namespace Nektar{
                 CompileCuravturePointList(m_minDelta,m_maxDelta,m_eps);
                 
                 cout << m_cpList.size() << endl;
-                exit(-1);
                 
-                /*octant newOctant((BoundingBox[1]+BoundingBox[0])/2,
-                                 (BoundingBox[3]+BoundingBox[2])/2,
-                                 (BoundingBox[5]+BoundingBox[4])/2,
-                                 (BoundingBox[1]-BoundingBox[0])/2,
-                                 (BoundingBox[3]-BoundingBox[2])/2,
-                                 (BoundingBox[5]-BoundingBox[4])/2,
-                                 -1, 0, P, curvaturePointList, octantList);
+                vector<int> dum;
+                OctantSharedPtr newOctant =
+                MemoryManager<Octant>::AllocateSharedPtr
+                ((BoundingBox[1]+BoundingBox[0])/2,
+                 (BoundingBox[3]+BoundingBox[2])/2,
+                 (BoundingBox[5]+BoundingBox[4])/2,
+                 (BoundingBox[1]-BoundingBox[0])/2,
+                 (BoundingBox[3]-BoundingBox[2])/2,
+                 (BoundingBox[5]-BoundingBox[4])/2,
+                 -1, 0, m_cpList, dum);
                 
-                octantList.push_back(newOctant);
+                OctantList.push_back(newOctant);
                 //parent created.
                 
                 cout << endl << "Parent created. Dividing based on geometry" << endl;
                 
-                if(octantList[0].Divide())
+/*                if(octantList[0].Divide())
                 {
                     octantList[0].LeafFalse();
                     subdivide(0, P, curvaturePointList, octantList);

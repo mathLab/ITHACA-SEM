@@ -43,8 +43,8 @@ namespace MeshUtils {
     Octant::Octant(NekDouble x, NekDouble y, NekDouble z,
                    NekDouble dx, NekDouble dy, NekDouble dz,
                    int p, int l,
-                   vector<CurvaturePointSharedPtr> &CurvaturePointList,
-                   vector<OctantSharedPtr> &OctantList):
+                   const vector<CurvaturePointSharedPtr> &CurvaturePointList,
+                   const vector<int> &CPList):
                    m_parent(p),m_level(l),
                    m_x(x),m_y(y),m_z(z),m_dx(dx),m_dy(dy),m_dz(dz)
     {
@@ -60,7 +60,6 @@ namespace MeshUtils {
         
         if(m_parent!=-1)
         {
-            vector<int> CPList = OctantList[m_parent]->GetCPList();
             for(int i = 0; i<CPList.size(); i++)
             {
                 if(CurvaturePointList[CPList[i]]->X()>=FX(-1) &&

@@ -75,10 +75,19 @@ namespace LibUtilities{
         gp_Vec D1U,D1V;
         occSurface.D1(u,v,Loc,D1U,D1V);
         gp_Vec n = D1U.Crossed(D1V);
-        n.Normalize();
-        out[0]=n.X();
-        out[1]=n.Y();
-        out[2]=n.Z();
+        if(n.X()==0 && n.Y() ==0 && n.Z()==0)
+        {
+            out[0]=0.0;
+            out[1]=0.0;
+            out[2]=0.0;
+        }
+        else
+        {
+            n.Normalize();
+            out[0]=n.X();
+            out[1]=n.Y();
+            out[2]=n.Z();
+        }
         
         return out;
     }
@@ -150,16 +159,28 @@ namespace LibUtilities{
     void CADSystem::N(int i, NekDouble u, NekDouble v,
                       Array<OneD, NekDouble>& out)
     {
+        ASSERTL0(u>=m_surfs[i-1].minU() &&
+                 u<=m_surfs[i-1].maxU() &&
+                 v>=m_surfs[i-1].minV() &&
+                 v<=m_surfs[i-1].maxV(), "(u,v) out of bounds");
         out = m_surfs[i-1].N(u,v);
     }
     void CADSystem::D1(int i, NekDouble u, NekDouble v,
                                  Array<OneD, NekDouble>& out)
     {
+        ASSERTL0(u>=m_surfs[i-1].minU() &&
+                 u<=m_surfs[i-1].maxU() &&
+                 v>=m_surfs[i-1].minV() &&
+                 v<=m_surfs[i-1].maxV(), "(u,v) out of bounds");
         out = m_surfs[i-1].D1(u,v);
     }
     void CADSystem::D2(int i, NekDouble u, NekDouble v,
                                  Array<OneD, NekDouble>& out)
     {
+        ASSERTL0(u>=m_surfs[i-1].minU() &&
+                 u<=m_surfs[i-1].maxU() &&
+                 v>=m_surfs[i-1].minV() &&
+                 v<=m_surfs[i-1].maxV(), "(u,v) out of bounds");
         out = m_surfs[i-1].D2(u,v);
     }
     

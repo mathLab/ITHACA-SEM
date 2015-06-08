@@ -50,13 +50,16 @@ namespace Nektar{
                 
                 CompileCuravturePointList(m_minDelta,m_maxDelta,m_eps);
                 
+                cout << m_cpList.size() << endl;
+                exit(-1);
+                
                 /*octant newOctant((BoundingBox[1]+BoundingBox[0])/2,
                                  (BoundingBox[3]+BoundingBox[2])/2,
                                  (BoundingBox[5]+BoundingBox[4])/2,
                                  (BoundingBox[1]-BoundingBox[0])/2,
                                  (BoundingBox[3]-BoundingBox[2])/2,
                                  (BoundingBox[5]-BoundingBox[4])/2,
-                                 NULL, 0, P, curvaturePointList, octantList);
+                                 -1, 0, P, curvaturePointList, octantList);
                 
                 octantList.push_back(newOctant);
                 //parent created.
@@ -97,8 +100,6 @@ namespace Nektar{
                 if(BoundingBox[5]-BoundingBox[4]>MaxDim)
                     MaxDim = BoundingBox[5]-BoundingBox[4];
                 
-                
-                
                 int ns = MaxDim/m_minDelta;
                 
                 for(int i = 1; i <= m_cad->GetNumSurf(); i++)
@@ -106,35 +107,37 @@ namespace Nektar{
                     Array<OneD, NekDouble> ParameterPlaneBounds;
                     m_cad->GetParameterPlaneBounds(i,ParameterPlaneBounds);
                     
-                    NekDouble du = (ParameterPlaneBounds[1]-ParameterPlaneBounds[0])
-                                    /(ns-1);
-                    NekDouble dv = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])
-                                        /(ns-1);
-                    
                     for(int j = 0; j < ns; j++)
                     {
                         for(int k = 0; k < ns; k++)
                         {
-                            NekDouble u = du*j + ParameterPlaneBounds[0];
-                            NekDouble v = dv*k + ParameterPlaneBounds[2];
+                            NekDouble u = (ParameterPlaneBounds[1]-ParameterPlaneBounds[0])
+                                            /(ns-1)*j + ParameterPlaneBounds[0];
+                            NekDouble v = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])
+                                            /(ns-1)*k + ParameterPlaneBounds[2];
+                            if(j==ns-1)
+                                u=ParameterPlaneBounds[1]; //These statements prevent floating point error at end of loop
+                            if(k==ns-1)
+                                v=ParameterPlaneBounds[3];
                             
                             Array<OneD, NekDouble> N;
                             Array<OneD, NekDouble> r;
                             
                             m_cad->N(i,u,v,N);
-                            m_cad->D2(i,u,v,r);
                             
                             if(N[0]==0 && N[1]==0 && N[2]==0)
                             {
                                 continue;
                             }
                             
+                            m_cad->D2(i,u,v,r);
+                            
                             NekDouble E = r[3]*r[3] + r[4]*r[4] + r[5]*r[5];
                             NekDouble F = r[3]*r[6] + r[4]*r[7] + r[5]*r[8];
                             NekDouble G = r[6]*r[6] + r[7]*r[7] + r[8]*r[8];
-                            NekDouble e = N[3]*r[9] + N[4]*r[10] + N[5]*r[11];
-                            NekDouble f = N[3]*r[15] + N[4]*r[16] + N[5]*r[17];
-                            NekDouble g = N[3]*r[12] + N[4]*r[13] + N[5]*r[14];
+                            NekDouble e = N[0]*r[9] + N[1]*r[10] + N[2]*r[11];
+                            NekDouble f = N[0]*r[15] + N[1]*r[16] + N[2]*r[17];
+                            NekDouble g = N[0]*r[12] + N[1]*r[13] + N[2]*r[14];
                             
                             if(E*G-F*F<1E-30)
                             {

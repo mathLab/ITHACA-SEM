@@ -37,12 +37,11 @@
 #ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_OCTREE_OCTREE_H
 #define NEKTAR_LIB_UTILITIES_MESHUTILS_OCTREE_OCTREE_H
 
-#include <string>
-
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/CADSystem/CADSystem.h>
 #include <LibUtilities/MeshUtils/CurvaturePoint.h>
+#include <LibUtilities/MeshUtils/Octant.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -75,12 +74,12 @@ namespace Nektar {
                 CADSystemSharedPtr m_cad;
                 Array<OneD, NekDouble> BoundingBox;
                 std::vector<CurvaturePointSharedPtr> m_cpList;
+                std::vector<OctantSharedPtr> OctantList;
                
             };
             
             typedef boost::shared_ptr<Octree> OctreeSharedPtr;
         }
-        
     }
 }
 

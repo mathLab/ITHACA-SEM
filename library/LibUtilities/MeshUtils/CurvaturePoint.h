@@ -100,9 +100,7 @@ namespace Nektar {
                 NekDouble X(){return m_x;}
                 NekDouble Y(){return m_y;}
                 NekDouble Z(){return m_z;}
-                void GetNormal(NekDouble &x,
-                                                    NekDouble &y,
-                                                    NekDouble &z)
+                void GetNormal(NekDouble &x, NekDouble &y, NekDouble &z)
                 {
                     x = m_nx;
                     y = m_ny;

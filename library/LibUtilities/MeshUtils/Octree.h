@@ -69,6 +69,13 @@ namespace Nektar {
                 
                 void CompileCuravturePointList();
                 void subdivide(int parent);
+                void SmoothOctants();
+                void SubDivideLevel(int parent);
+                void SmoothSurfaceOctants();
+                void PropagateDomain();
+                void SmoothAllOctants();
+                int CountElemt();
+                NekDouble ddx(int i, int j);
                 
                 NekDouble m_minDelta;
                 NekDouble m_maxDelta;

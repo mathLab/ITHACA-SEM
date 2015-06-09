@@ -54,6 +54,7 @@ namespace MeshUtils {
         m_orientSet = false;
         m_orientation = -1;
         m_numValidPoints = 0;
+        m_delta = -1;
         NekDouble av=0;
         NekDouble maxDif=0;
         NekDouble minDif=10000.0;
@@ -134,7 +135,395 @@ namespace MeshUtils {
         }
     }
     
-    
+    void Octant::CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList)
+    {
+        DeleteNeighbourList();
+        
+        for(int i = 0; i<OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf())
+            {
+                NekDouble rmax = sqrt(DX()*DX()+DY()*DY()+DZ()*DZ()) +
+                sqrt(OctantList[i]->DX()*OctantList[i]->DX() +
+                     OctantList[i]->DY()*OctantList[i]->DY() +
+                     OctantList[i]->DZ()*OctantList[i]->DZ());
+                
+                NekDouble ractual = sqrt((X()-OctantList[i]->X())*
+                                         (X()-OctantList[i]->X())+
+                                         (Y()-OctantList[i]->Y())*
+                                         (Y()-OctantList[i]->Y())+
+                                         (Z()-OctantList[i]->Z())*
+                                         (Z()-OctantList[i]->Z()));
+                
+                if(ractual > 1.0*rmax)
+                {
+                    continue;
+                }
+                
+                bool isSmaller = DX() < OctantList[i]->DX();
+                bool isBigger = DX() > OctantList[i]->DX();
+                bool isSame = DX() == OctantList[i]->DX();
+                
+                if(isSmaller)
+                {
+                    if(X()+DX() == OctantList[i]->X()-OctantList[i]->DX() ||
+                       X()-DX() == OctantList[i]->X()+OctantList[i]->DX())
+                    {
+                        if(Y()<OctantList[i]->Y()+OctantList[i]->DY() &&
+                           Y()>OctantList[i]->Y()-OctantList[i]->DY() &&
+                           Z()<OctantList[i]->Z()+OctantList[i]->DZ() &&
+                           Z()>OctantList[i]->Z()-OctantList[i]->DZ())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if(Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY() ||
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        if(X()<OctantList[i]->X()+OctantList[i]->DX() &&
+                           X()>OctantList[i]->X()-OctantList[i]->DX() &&
+                           Z()<OctantList[i]->Z()+OctantList[i]->DZ() &&
+                           Z()>OctantList[i]->Z()-OctantList[i]->DZ())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if(Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ() ||
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        if(Y()<OctantList[i]->Y()+OctantList[i]->DY() &&
+                           Y()>OctantList[i]->Y()-OctantList[i]->DY() &&
+                           X()<OctantList[i]->X()+OctantList[i]->DX() &&
+                           X()>OctantList[i]->X()-OctantList[i]->DX())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()>=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()<=Y()-DY()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()>=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()<=Y()-DY()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()>=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()<=Y()-DY()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()>=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()<=Y()-DY()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()>=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()<=Z()-DZ()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Y()+DY()==OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()>=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()<=Z()-DZ()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()>=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()<=Z()-DZ()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()>=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()<=Z()-DZ()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Y()+DY()==OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX()>=X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX()<=X()-DX()) &&
+                             Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ() &&
+                             Y()+DY()==OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX()>=X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX()<=X()-DX()) &&
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ() &&
+                             Y()+DY()==OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX()>=X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX()<=X()-DX()) &&
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX()>=X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX()<=X()-DX()) &&
+                             Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }
+                    
+                }else if(isBigger)
+                {
+                    if(X()+DX()==OctantList[i]->X()-OctantList[i]->DX() ||
+                       X()-DX()==OctantList[i]->X()+OctantList[i]->DX())
+                    {
+                        if(OctantList[i]->Y()<Y()+DY() &&
+                           OctantList[i]->Y()>Y()-DY() &&
+                           OctantList[i]->Z()<Z()+DZ() &&
+                           OctantList[i]->Z()>Z()-DZ())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if(Y()+DY()==OctantList[i]->Y()-OctantList[i]->DY() ||
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        if(OctantList[i]->X()<X()+DX() &&
+                           OctantList[i]->X()>X()-DX() &&
+                           OctantList[i]->Z()<Z()+DZ() &&
+                           OctantList[i]->Z()>Z()-DZ())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if(Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ() ||
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        if(OctantList[i]->Y()<Y()+DY() &&
+                           OctantList[i]->Y()>Y()-DY() &&
+                           OctantList[i]->X()<X()+DX() &&
+                           OctantList[i]->X()>X()-DX())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()<=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()>=Y()-DY()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()<=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()>=Y()-DY()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Z()+DZ()==OctantList[i]->Z()-OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()<=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()>=Y()-DY()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY()<=Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY()>=Y()-DY()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Z()-DZ()==OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()<=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()>=Z()-DZ()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Y()+DY()==OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()<=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()>=Z()-DZ()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ()<=Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ()>=Z()-DZ()) &&
+                             X()+DX()==OctantList[i]->X()-OctantList[i]->DX() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ() <= Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ() >= Z()-DZ()) &&
+                             X()+DX() == OctantList[i]->X()-OctantList[i]->DX() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() <= X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() >= X()-DX()) &&
+                             Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() <= X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() >= X()-DX()) &&
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() <= X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() >= X()-DX()) &&
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ() &&
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() <= X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() >= X()-DX()) &&
+                             Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ() &&
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }
+                    
+                }else if(isSame)
+                {
+                    if(X()+DX() == OctantList[i]->X()-OctantList[i]->DX() ||
+                       X()-DX() == OctantList[i]->X()+OctantList[i]->DX())
+                    {
+                        if(Y()-DY() == OctantList[i]->Y()-DY() &&
+                           Z()-DZ() == OctantList[i]->Z()-DZ())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if(Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY() ||
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        if(X()-DX() == OctantList[i]->X()-DX() &&
+                           Z()-DZ() == OctantList[i]->Z()-DZ())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if(Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ() ||
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        if(Y()-DY() == OctantList[i]->Y()-DY() &&
+                           X()-DX() == OctantList[i]->X()-DX())
+                        {
+                            m_neighbourList.push_back(i);
+                            continue;
+                        }
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY() == Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY() == Y()-DY()) &&
+                             X()+DX() == OctantList[i]->X()-OctantList[i]->DX() &&
+                             Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY() == Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY() == Y()-DY()) &&
+                             X()-DX() == OctantList[i]->X()+OctantList[i]->DX() &&
+                             Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY() == Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY() == Y()-DY()) &&
+                             X()+DX() == OctantList[i]->X()-OctantList[i]->DX() &&
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Y()+OctantList[i]->DY() == Y()+DY() &&
+                              OctantList[i]->Y()-OctantList[i]->DY() == Y()-DY()) &&
+                             X()-DX() == OctantList[i]->X()+OctantList[i]->DX() &&
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ() == Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ() == Z()-DZ()) &&
+                             X()-DX() == OctantList[i]->X()+OctantList[i]->DX() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ() == Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ() == Z()-DZ()) &&
+                             X()-DX()==OctantList[i]->X()+OctantList[i]->DX() &&
+                             Y()-DY()==OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ() == Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ() == Z()-DZ()) &&
+                             X()+DX() == OctantList[i]->X()-OctantList[i]->DX() &&
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->Z()+OctantList[i]->DZ() == Z()+DZ() &&
+                              OctantList[i]->Z()-OctantList[i]->DZ() == Z()-DZ()) &&
+                             X()+DX() == OctantList[i]->X()-OctantList[i]->DX() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() == X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() == X()-DX()) &&
+                             Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() == X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() == X()-DX()) &&
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ() &&
+                             Y()+DY() == OctantList[i]->Y()-OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX() == X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX() == X()-DX()) &&
+                             Z()-DZ() == OctantList[i]->Z()+OctantList[i]->DZ() &&
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }else if((OctantList[i]->X()+OctantList[i]->DX()==X()+DX() &&
+                              OctantList[i]->X()-OctantList[i]->DX()==X()-DX()) &&
+                             Z()+DZ() == OctantList[i]->Z()-OctantList[i]->DZ() &&
+                             Y()-DY() == OctantList[i]->Y()+OctantList[i]->DY())
+                    {
+                        m_neighbourList.push_back(i);
+                        continue;
+                    }
+                }
+            }
+        }
+    }
     
 }
 }

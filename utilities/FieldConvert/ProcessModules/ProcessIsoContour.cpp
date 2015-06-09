@@ -757,16 +757,16 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
     cout << "GlobalCondense: Matching Vertices [" << endl << flush;
     int cnt = 0;
     // count up amount of checking to be done
-    int totchk = 0; 
+    NekDouble totpts = 0; 
     for(i = 0; i < niso; ++i)
     {
         for(n = 0; n < isocon[i].size(); ++n)
         {
             int con = isocon[i][n];
-            totchk += iso[i]->m_nvert*iso[con]->m_nvert;
+            totpts += iso[i]->m_nvert*iso[con]->m_nvert;
         }
     }
-    totchk /= 50;
+    int totchk  = totpts/50;
     int cnt_out = 0; 
     for(i = 0; i < niso; ++i)
     {
@@ -783,7 +783,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
                         cnt_out +=2; 
                     }
 
-                    if((vidmap[con][id2] != -1)||(vidmap[i][id1] != -1))
+                    if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
                     {
                         if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
                                 iso[i]->m_z[id1],  iso[con]->m_x[id2],

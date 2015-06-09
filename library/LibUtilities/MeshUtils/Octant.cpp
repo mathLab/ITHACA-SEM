@@ -53,7 +53,7 @@ namespace MeshUtils {
         m_deltaSet = false;
         m_orientSet = false;
         m_orientation = -1;
-        int m_numValidPoints = 0;
+        m_numValidPoints = 0;
         NekDouble av=0;
         NekDouble maxDif=0;
         NekDouble minDif=10000.0;
@@ -67,28 +67,51 @@ namespace MeshUtils {
                    CurvaturePointList[CPList[i]]->Y()>=FY(-1) &&
                    CurvaturePointList[CPList[i]]->Y()<=FY(+1) &&
                    CurvaturePointList[CPList[i]]->Z()>=FZ(-1) &&
-                   CurvaturePointList[CPList[i]]->Z()<=FX(+1))
+                   CurvaturePointList[CPList[i]]->Z()<=FZ(+1))
                 {
-                    AddCurvaturePoint(CPList[i],
-                                      CurvaturePointList[CPList[i]]->IsValid(),
-                                      CurvaturePointList[CPList[i]]->GetDelta(),
-                                      maxDif, minDif, av);
+                    if(CurvaturePointList[CPList[i]]->IsValid())
+                    {
+                        if(CurvaturePointList[CPList[i]]->GetDelta()>maxDif)
+                        {
+                            maxDif = CurvaturePointList[CPList[i]]->GetDelta();
+                        }
+                        
+                        if(CurvaturePointList[CPList[i]]->GetDelta()<minDif)
+                        {
+                            minDif = CurvaturePointList[CPList[i]]->GetDelta();
+                        }
+                        av+=CurvaturePointList[CPList[i]]->GetDelta();
+                        m_localCPIDList.push_back(CPList[i]);
+                        m_numValidPoints++;
+                    }
+                    else
+                    {
+                        m_localCPIDList.push_back(CPList[i]);
+                    }
                 }
             }
         }else
         {
             for(int i = 0; i<CurvaturePointList.size(); i++)
             {
-                if(CurvaturePointList[i]->X() >= FX(-1) &&
-                   CurvaturePointList[i]->X() <= FX(+1) &&
-                   CurvaturePointList[i]->Y() >= FY(-1) &&
-                   CurvaturePointList[i]->Y() <= FY(+1) &&
-                   CurvaturePointList[i]->Z() >= FZ(-1) &&
-                   CurvaturePointList[i]->Z() <= FZ(+1))
+                if(CurvaturePointList[i]->IsValid())
                 {
-                    AddCurvaturePoint(i, CurvaturePointList[i]->IsValid(),
-                                      CurvaturePointList[i]->GetDelta(),
-                                      maxDif, minDif, av);
+                    if(CurvaturePointList[i]->GetDelta()>maxDif)
+                    {
+                        maxDif = CurvaturePointList[i]->GetDelta();
+                    }
+                    
+                    if(CurvaturePointList[i]->GetDelta()<minDif)
+                    {
+                        minDif = CurvaturePointList[i]->GetDelta();
+                    }
+                    av+=CurvaturePointList[i]->GetDelta();
+                    m_localCPIDList.push_back(i);
+                    m_numValidPoints++;
+                }
+                else
+                {
+                    m_localCPIDList.push_back(i);
                 }
             }
         }
@@ -108,31 +131,6 @@ namespace MeshUtils {
             
             ASSERTL0(GetDelta()>0, "negative delta assignment");
             
-        }
-    }
-    
-    void Octant::AddCurvaturePoint(int i, bool valid, NekDouble delta,
-                                   NekDouble &maxDif, NekDouble &minDif,
-                                   NekDouble &av)
-    {
-        if(valid)
-        {
-            if(delta>maxDif)
-            {
-                maxDif = delta;
-            }
-            
-            if(delta<minDif)
-            {
-                minDif = delta;
-            }
-            av+=delta;
-            m_localCPIDList.push_back(i);
-            m_numValidPoints++;
-        }
-        else
-        {
-            m_localCPIDList.push_back(i);
         }
     }
     

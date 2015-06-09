@@ -61,15 +61,18 @@ namespace Nektar {
                 {
                 };
                 
-                LIB_UTILITIES_EXPORT void Build(const NekDouble &m_minDelta,
-                                                const NekDouble &m_maxDelta,
-                                                const NekDouble &m_eps);
+                LIB_UTILITIES_EXPORT void Build(const NekDouble &min,
+                                                const NekDouble &max,
+                                                const NekDouble &eps);
                 
             private:
                 
-                void CompileCuravturePointList(const NekDouble &m_minDelta,
-                                               const NekDouble &m_maxDelta,
-                                               const NekDouble &m_eps);
+                void CompileCuravturePointList();
+                void subdivide(int parent);
+                
+                NekDouble m_minDelta;
+                NekDouble m_maxDelta;
+                NekDouble m_eps;
                 
                 CADSystemSharedPtr m_cad;
                 Array<OneD, NekDouble> BoundingBox;

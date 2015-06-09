@@ -48,13 +48,10 @@ namespace Nektar {
                 public:
                 friend class MemoryManager<CurvaturePoint>;
                 
-                CurvaturePoint(const NekDouble &x,
-                                                    const NekDouble &y,
-                                                    const NekDouble &z,
-                                                    const NekDouble &R,
-                                                    const NekDouble &Nx,
-                                                    const NekDouble &Ny,
-                                                    const NekDouble &Nz) :
+                CurvaturePoint(const NekDouble &x,const NekDouble &y,
+                               const NekDouble &z,const NekDouble &R,
+                               const NekDouble &Nx,const NekDouble &Ny,
+                               const NekDouble &Nz) :
                                                     m_x(x),m_y(y),m_z(z),
                                                     m_nx(Nx),m_ny(Ny),m_nz(Nz),
                                                     m_radius(R)
@@ -62,16 +59,13 @@ namespace Nektar {
                     m_valid = true;
                 }
                 
-                CurvaturePoint(const NekDouble &x,
-                                                    const NekDouble &y,
-                                                    const NekDouble &z,
-                                                    const NekDouble &Nx,
-                                                    const NekDouble &Ny,
-                                                    const NekDouble &Nz) :
+                CurvaturePoint(const NekDouble &x,const NekDouble &y,
+                               const NekDouble &z,const NekDouble &Nx,
+                               const NekDouble &Ny,const NekDouble &Nz) :
                                                     m_x(x),m_y(y),m_z(z),
                                                     m_nx(Nx),m_ny(Ny),m_nz(Nz)
                 {
-                    m_delta = 0.0;
+                    m_delta = -1;
                     m_valid = false;
                 }
                 
@@ -79,15 +73,18 @@ namespace Nektar {
                                                   const NekDouble &max,
                                                   const NekDouble &eps)
                 {
-                    m_delta = 2.0*m_radius*sqrt(eps*(2.0-eps));
-                    
-                    if(m_delta>max)
+                    if(m_valid)
                     {
-                        m_delta = max;
-                    }
-                    if(m_delta<min)
-                    {
-                        m_delta = min;
+                        m_delta = 2.0*m_radius*sqrt(eps*(2.0-eps));
+                        
+                        if(m_delta>max)
+                        {
+                            m_delta = max;
+                        }
+                        if(m_delta<min)
+                        {
+                            m_delta = min;
+                        }
                     }
                 }
                 

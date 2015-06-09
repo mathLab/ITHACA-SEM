@@ -62,11 +62,6 @@ namespace Nektar {
                        const std::vector<CurvaturePointSharedPtr> &CurvaturePointList,
                        const std::vector<int> &CPList);
                 
-                void AddCurvaturePoint(int i, bool valid, NekDouble delta,
-                                       NekDouble &maxDif, NekDouble &minDif,
-                                       NekDouble &av);
-                
-                
                 bool Divide(){return m_needToDivide;}
                 int GetChild(int i){return m_children[i];}
                 bool isLeaf(){return m_leaf;}
@@ -111,8 +106,6 @@ namespace Nektar {
                 int GetLevel(){return m_level;}
                 void SetChildren(Array<OneD, int> i){m_children = i;}
                 void LeafFalse(){m_leaf = false;}
-                
-                
                 
                 
                 

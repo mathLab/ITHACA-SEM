@@ -257,8 +257,8 @@ namespace Nektar
             splitEdge[LibUtilities::eHexahedron][5] = splitHex0Edge;
 
             map<LibUtilities::ShapeType, map<int, bool> > revPoints;
-            revPoints[LibUtilities::ePrism][1] = false;
-            revPoints[LibUtilities::ePrism][3] = true;
+            revPoints[LibUtilities::ePrism][1] = true;
+            revPoints[LibUtilities::ePrism][3] = false;
 
             revPoints[LibUtilities::eHexahedron][0] = true;
             revPoints[LibUtilities::eHexahedron][5] = false;

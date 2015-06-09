@@ -1087,8 +1087,11 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
                                 iso->m_fields[k][vidmap[m_vid[3*i+j]]] = m_fields[k][m_vid[3*i+j]];
                             }
                         }
+                        cnt++;
                     }
                 }
+
+                ASSERTL0(cnt == nvert[n],"Number of elements do not match");
                 sep_iso.push_back(iso);
             }
         }

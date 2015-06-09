@@ -754,8 +754,20 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
     }
     nvert = 0;
     // identify which vertices are connected to tolerance
-    cout << "Matching Vertices [" <<flush;
+    cout << "GlobalCondense: Matching Vertices [" << endl << flush;
     int cnt = 0;
+    // count up amount of checking to be done
+    int totchk = 0; 
+    for(i = 0; i < niso; ++i)
+    {
+        for(n = 0; n < isocon[i].size(); ++n)
+        {
+            int con = isocon[i][n];
+            totchk += iso[i]->m_nvert*iso[con]->m_nvert;
+        }
+    }
+    totchk /= 50;
+    int cnt_out = 0; 
     for(i = 0; i < niso; ++i)
     {
         for(n = 0; n < isocon[i].size(); ++n)
@@ -765,12 +777,13 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             {
                 for(id2 = 0; id2 < iso[con]->m_nvert; ++id2, ++cnt)
                 {
-                    if(cnt%1000000 == 0)
+                    if(cnt%totchk == 0)
                     {
-                        cout <<"." <<flush;
+                        cout <<cnt_out << "%" << '\r' << flush;
+                        cnt_out +=2; 
                     }
 
-                    //if((vidmap[con][id2] != -1)&&(vidmap[i][id1] != -1))
+                    if((vidmap[con][id2] != -1)||(vidmap[i][id1] != -1))
                     {
                         if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
                                 iso[i]->m_z[id1],  iso[con]->m_x[id2],
@@ -805,7 +818,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             }
         }
     }
-    cout <<"]"<<endl;
+    cout <<endl << "]"<<endl;
     m_nvert = nvert;
 
     nelmt = 0;
@@ -969,6 +982,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
   
         int nregions = -1;
 
+        cout << "Identifying separate regions [." << flush ;
         // check all points are assigned;
         for(k = 0; k < m_nvert; ++k)
         {
@@ -1018,6 +1032,8 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
             }
         }
         nregions++;
+
+        cout << "]" << endl <<  flush ;
         
         Array<OneD, int> nvert(nregions,0);
         Array<OneD, int> nelmt(nregions,0);
@@ -1091,7 +1107,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
                     }
                 }
 
-                ASSERTL0(cnt == nvert[n],"Number of elements do not match");
+                WARNINGL0(cnt == nelmt[n],"Number of elements do not match");
                 sep_iso.push_back(iso);
             }
         }

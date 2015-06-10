@@ -62,6 +62,7 @@ namespace Nektar
                                             = pExpList.lock()->GetSession();
 
             m_tolerance = pLocToGloMap->GetIterativeTolerance();
+            m_maxiter   = pLocToGloMap->GetMaxIterations();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root    = (vComm->GetRank())? false : true;
@@ -465,8 +466,19 @@ namespace Nektar
             // Continue until convergence
             while (true)
             {
-                ASSERTL0(k < 5000,
-                         "Exceeded maximum number of iterations (5000)");
+                if(k >= m_maxiter)
+                {
+                    if (m_root)
+                    {
+                        cout << "CG iterations made = " << m_totalIterations 
+                             << " using tolerance of "  << m_tolerance 
+                             << " (error = " << sqrt(eps/m_rhs_magnitude)
+                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
+                             << endl;
+                        ASSERTL0(false,
+                                 "Exceeded maximum number of iterations");
+                    }
+                }
 
                 // Compute new search direction p_k, q_k
                 Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);

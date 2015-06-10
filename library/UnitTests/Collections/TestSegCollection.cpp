@@ -319,8 +319,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
@@ -376,8 +377,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
@@ -433,8 +435,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
@@ -538,10 +541,12 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
-                Exp->PhysDeriv(phys, tmp = diff1+i*nq);
+                Exp->PhysDeriv(phys + i*nq, tmp = diff1+i*nq);
             }
 
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
@@ -645,10 +650,12 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
-                Exp->PhysDeriv(phys, tmp = diff1+i*nq);
+                Exp->PhysDeriv(phys + i*nq, tmp = diff1+i*nq);
             }
 
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
@@ -703,10 +710,12 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
-                Exp->PhysDeriv(phys, tmp = diff1+i*nq);
+                Exp->PhysDeriv(phys + i*nq, tmp = diff1+i*nq);
             }
 
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
@@ -818,11 +827,12 @@ namespace Nektar
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
             }
+            Exp->IProductWRTDerivBase(0, phys1, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
-                
+
                 // Standard routines
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, 
                                           tmp  = coeffs1 + i*nm);
@@ -936,8 +946,9 @@ namespace Nektar
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
             }
+            Exp->IProductWRTDerivBase(0, phys1, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 
@@ -1053,8 +1064,9 @@ namespace Nektar
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
             }
+            Exp->IProductWRTDerivBase(0, phys1, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 

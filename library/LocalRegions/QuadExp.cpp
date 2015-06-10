@@ -793,15 +793,15 @@ namespace Nektar
                 outtmp = outarray;
 				
                 LibUtilities::Interp1D(
-                    m_base[edge%2]->GetPointsKey(),outtmp,
-                    EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+                    m_base[edge%2]->GetPointsKey(), outtmp,
+                    EdgeExp->GetBasis(0)->GetPointsKey(), outarray);
             }
             
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
-                               &outarray[0],1);
+                Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0], 1,
+                               &outarray[0], 1);
             }
         }
         
@@ -921,13 +921,12 @@ namespace Nektar
             }
             
             // Reverse data if necessary
-            /*
             if (GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                Vmath::Reverse(EdgeExp->GetNumPoints(0),
-                               &outarray[0], 1, &outarray[0], 1);
+                cout << "eBackwards" << endl;
+                //Vmath::Reverse(EdgeExp->GetNumPoints(0),
+                //               &outarray[0], 1, &outarray[0], 1);
             }
-             */
         }
     
         

@@ -1432,7 +1432,7 @@ namespace Nektar
                 }
                     break;
                 default:
-                    ASSERTL0(false, "Unknow orientation");
+                    ASSERTL0(false, "Unknown orientation");
                     break;
             }
         }

@@ -325,12 +325,16 @@ IF(NEKTAR_USE_OCC)
 	SET(MeshUtilsSources
 		./MeshUtils/Octree.cpp
         ./MeshUtils/Octant.cpp
+        ./MeshUtils/SurfaceMeshing.cpp
+        ./MeshUtils/SurfaceMesh.cpp
 		)
 
     SET(MeshUtilsHeaders
         ./MeshUtils/Octree.h
         ./MeshUtils/CurvaturePoint.h
         ./MeshUtils/Octant.h
+        ./MeshUtils/SurfaceMeshing.h
+        ./MeshUtils/SurfaceMesh.h
         )
 
     SOURCE_GROUP("Mesh utilities headers" FILES ${MeshUtilsHeaders})

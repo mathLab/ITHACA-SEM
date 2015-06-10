@@ -1798,7 +1798,7 @@
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
 
-                        ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,
+                        ASSERTL1((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,
                                  "method not set up for non-zero Neumann "
                                  "boundary condition");
                         

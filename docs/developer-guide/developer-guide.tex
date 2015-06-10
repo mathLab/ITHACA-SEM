@@ -31,6 +31,7 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{makeidx}
 \usepackage{import}
 
+
 %%% PAGE LAYOUT 
 %%%-----------------------------------------------------------------------------
 \setlrmarginsandblock{0.15\paperwidth}{*}{1} % Left and right margin
@@ -207,7 +208,9 @@ openany, % A chapter may start on either a recto or verso page.
   columns=fullflexible,
   backgroundcolor=\color{black!05},
   linewidth=0.9\linewidth,
-  xleftmargin=0.1\linewidth
+  xleftmargin=0.1\linewidth,
+  showspaces=false,
+  showstringspaces=false
 }
 
 \usepackage{tikz}
@@ -371,7 +374,42 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \clearpage
 
 \chapter{Introduction}
-Welcome to the developer's guide for Nektar++\cite{nektar-website}.
+Nektar++ \cite{CaMoCoBoRo15} is a tensor product based finite element package
+designed to allow one to construct efficient classical low polynomial order
+$h$-type solvers (where $h$ is the size of the finite element) as well as higher
+$p$-order piecewise polynomial order solvers.  The framework currently has the
+following capabilities:
+
+\begin{itemize}
+\item Representation of one, two and three-dimensional fields as a collection of
+ piecewise continuous or discontinuous polynomial domains.
+\item Segment, plane and volume domains are permissible, as well as domains
+ representing curves and surfaces (dimensionally-embedded domains).
+\item Hybrid shaped elements, i.e triangles and quadrilaterals or tetrahedra,
+prisms and hexahedra.
+\item Both hierarchical and nodal expansion bases.
+\item Continuous or discontinuous Galerkin operators.
+\item Cross platform support for Linux, Mac OS X and Windows.
+\end{itemize}
+
+The framework comes with a number of solvers and also allows one to construct a
+variety of new solvers.
+
+Our current goals are to develop:
+\begin{itemize}
+\item Automatic auto-tuning of optimal operator implementations based upon not
+only $h$ and $p$ but also hardware considerations and mesh connectivity.
+\item Temporal and spatial adaption.
+\item Features enabling evaluation of high-order meshing techniques.
+\end{itemize}
+
+This document provides implementation details for the design of the libraries,
+Nektar++-specific data structures and algorithms and other development
+information.
+
+\begin{warningbox}
+This document is still under development and may be incomplete in parts.
+\end{warningbox}
 
 \mainmatter
 
@@ -392,7 +430,7 @@ Welcome to the developer's guide for Nektar++\cite{nektar-website}.
 %%% -------------------------------------------------------------
 
 \bibliographystyle{plain}
-\bibliography{developer-guide}
+\bibliography{../refs}
 
 \printindex
 

@@ -15,4 +15,4 @@ ADD_NEKTAR_EXECUTABLE(${ProjectName} unit-test Sources Headers)
 
 TARGET_LINK_LIBRARIES(${ProjectName} LocalRegions)
 
-#ADD_TEST(NAME LocalRegions COMMAND ${ProjectName} --detect_memory_leaks=0)
+ADD_TEST(NAME LocalRegions COMMAND ${ProjectName} --detect_memory_leaks=0)

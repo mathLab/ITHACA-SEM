@@ -146,8 +146,16 @@ void OutputFld::Process(po::variables_map &vm)
                         BndExp[j][Border]->AppendFieldData(FieldDef[k],
                                                            FieldData[k]);
 
-                        FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->
-                                                        m_fields[j]);
+                        if (m_f->m_fielddef.size() > 0)
+                        {
+                            FieldDef[k]->m_fields.push_back(
+                                m_f->m_fielddef[0]->m_fields[j]);
+                        }
+                        else
+                        {
+                            FieldDef[k]->m_fields.push_back(
+                                m_f->m_session->GetVariable(j));
+                        }
                     }
                 }
 
@@ -184,7 +192,8 @@ void OutputFld::Process(po::variables_map &vm)
                 }
             }
 
-            m_f->m_fld->Write(outname, FieldDef, FieldData);
+            m_f->m_fld->Write(outname, FieldDef, FieldData,
+                                                 m_f->m_fieldMetaDataMap);
 
         }
     }
@@ -196,7 +205,8 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         // Write the output file
-        m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+        m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                                                     m_f->m_fieldMetaDataMap);
 
 
         // output error for regression checking.

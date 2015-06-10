@@ -259,7 +259,7 @@ namespace Nektar
 
         void QuadExp::v_FwdTrans(
             const Array<OneD, const NekDouble> & inarray,
-                  Array<OneD,NekDouble> &outarray)
+            Array<OneD,NekDouble> &outarray)
         {
             if ((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
@@ -432,20 +432,31 @@ namespace Nektar
 
         void QuadExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble> &outarray,
+                                               bool multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
 
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-
-            MultiplyByQuadratureMetric(inarray,tmp);
-            StdQuadExp::IProductWRTBase_SumFacKernel(
-                m_base[0]->GetBdata(),
-                m_base[1]->GetBdata(),
-                tmp,outarray,wsp,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+                
+                MultiplyByQuadratureMetric(inarray,tmp);
+                StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                         m_base[1]->GetBdata(),
+                                                         tmp,outarray,wsp,true,true);
+            }
+            else
+            {
+                Array<OneD,NekDouble> wsp(nquad1*order0);
+                
+                StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                         m_base[1]->GetBdata(),
+                                                         inarray,outarray,wsp,true,true);
+            }
         }
 
 
@@ -591,6 +602,12 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
+        StdRegions::StdExpansionSharedPtr QuadExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdQuadExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey());
+        }
 
         void QuadExp::v_GetCoords(
             Array<OneD, NekDouble> &coords_0,
@@ -2141,7 +2158,7 @@ namespace Nektar
                           Array<OneD,       NekDouble> &outarray,
                           Array<OneD,       NekDouble> &wsp)
         {
-            if (m_metrics.count(MetricLaplacian00) == 0)
+            if (m_metrics.count(eMetricLaplacian00) == 0)
             {
                 ComputeLaplacianMetric();
             }
@@ -2160,9 +2177,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
-            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
-            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[eMetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[eMetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[eMetricLaplacian11];
 
             // Allocate temporary storage
             Array<OneD,NekDouble> wsp0(wsp);
@@ -2190,7 +2207,7 @@ namespace Nektar
 
         void QuadExp::v_ComputeLaplacianMetric()
         {
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
@@ -2198,9 +2215,9 @@ namespace Nektar
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 2;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            const MetricType m[3][3] = { {eMetricLaplacian00, eMetricLaplacian01, eMetricLaplacian02},
+                                       {eMetricLaplacian01, eMetricLaplacian11, eMetricLaplacian12},
+                                       {eMetricLaplacian02, eMetricLaplacian12, eMetricLaplacian22}
             };
 
             const Array<TwoD, const NekDouble> gmat =

@@ -4,7 +4,7 @@
 The aim of APESolver is to predict aerodynamic sound generation. Through
 the application of a splitting technique, the flow-induced acoustic field is
 totally decoupled from the underlying incompressible hydrodynamic field. The
-acoustic perturbation equations proposed by Ewert and Shroeder are employed as
+acoustic perturbation equations (APE-1/APE-4) proposed by Ewert and Shroeder are employed as
 the governing equations of the acoustic field and they assure stable
 aeroacoustic simulation due to the suppression of the term related to the
 production of perturbed vorticity. These equations are similar to the linearised
@@ -12,16 +12,21 @@ perturbed compressible equations, but while in the original formulation the flow
 decomposition is based on solenoidal vortical perturbations as well as
 irrotational acoustic perturbations, in this case perturbations are assumed to
 be exclusively of acoustic nature.
-\begin{align*}
-      \frac{\partial \mathbf{u}'}{\partial t}
-        +\nabla(\mathbf{u}' \cdot \mathbf{U})+\frac{1}{\rho_0}\nabla p' &= 0 \\
-      \frac{\partial p'}{\partial t}
-        +\nabla \cdot (\gamma P \mathbf{u}' + p'\mathbf{U})&=-\frac{DP'}{Dt}
-\end{align*}
-where $(\mathbf{U},P)$ represents the base flow, $(\mathbf{u}',p')$
-the perturbations and $\mathrm{D}/\mathrm{D}t$ the material derivative.
-$P'=P-p_{\infty}$ is the acoustic source term, with $p_\infty$
-the pressure at a reference value.
+\begin{subequations}
+    \begin{align*}
+	\frac{\partial p'}{\partial t}
+	+ \overline{c}^2 \frac{\partial \overline{\rho} u'_i}{\partial x_i}
+	+ \overline{c}^2 \frac{\partial \overline{u}_i p' / \overline{c}^2}{\partial x_i}
+	&= \overline{c}^2 q_c
+	\\
+	\frac{\partial u'_i}{\partial t}
+	+ \frac{\partial \overline{u}_j u'_j}{\partial x_i}
+	+ \frac{\partial p' / \overline{\rho}}{\partial x_i}
+	&= 0
+	\end{align*}
+\end{subequations}
+where $(\overline{u}_i,\overline{p}, \overline{\rho}, \overline{c}^2 = \gamma \overline{p} / \overline{\rho} )$ represents the base flow and $(u'_i,p')$ the perturbations.
+$\overline{c}^2 q_c$ is the acoustic source term.
 
 \section{Usage}
 \begin{lstlisting}[style=BashInputStyle]
@@ -40,15 +45,13 @@ Currently, only \inltt{APEUpwind} supported.
 
 \subsection{Parameters}
 \begin{itemize}
-\item \inltt{Rho0}: Density
 \item \inltt{Gamma}: Ratio of specific heats
-\item \inltt{Pinfinity}: Ambient pressure
 \end{itemize}
 
 \subsection{Functions}
 \begin{itemize}
-\item \inltt{BaseFlow} Baseflow $(\mathbf{U},P)$ defined by the variables \inltt{U0,V0,W0,P0}
-\item \inltt{Source} Source term $P'=P-p_{\infty}$
+\item \inltt{BaseFlow} Baseflow $(\overline{u}_i, \overline{p}, \overline{\rho})$ defined by the variables \inltt{u0,v0,w0,p0,rho0}
+\item \inltt{Source} Source term $\overline{c}^2 q_c$
 \item \inltt{InitialConditions}
 \end{itemize}
 
@@ -57,14 +60,14 @@ Currently, only \inltt{APEUpwind} supported.
 \subsection{Aeroacoustic Wave Propagation}
 In this section we explain how to set up a simple simulation of aeroacoustics in
 Nektar++. We will study the propagation of an acoustic wave in the simple case
-where the base flow is $\mathbf{U}=0, P=p_{\infty}=10^6$. The geometry consists
+where the base flow is $\overline{u}_i = 0, \, \overline{p}=p_{\infty}=10^6, \, \overline{\rho} = \rho_0 = 1.204$. The geometry consists
 of $64$ quadrilateral elements, as shown in Fig.~\ref{f:apesolver:geometry}.
 
 \begin{figure}
 	\centering
 	\includegraphics[width=0.5\linewidth]{Figures/APE_Geometry.png}
 	\caption{Geometry used for the example case of modelling propagation of
-	acoustic waves where $\mathbf{U}=0, P=p_{\infty}=10^6$}
+	acoustic waves where $\overline{u}_i = 0, \, \overline{p}=p_{\infty}=10^6, \, \overline{\rho} = \rho_0 = 1.204$}
 	\label{f:apesolver:geometry}
 \end{figure}
 
@@ -86,8 +89,8 @@ ambient pressure.
 <P> TimeStep       = 0.00001             </P>
 <P> NumSteps       = 150                 </P>
 <P> FinTime        = TimeStep*NumSteps   </P>
-<P> Rho0             = 1.204             </P> <!-- Incompressible density -->
-<P> Gamma            = 1.4               </P> <!-- Ratio of specific heats -->
+<P> Rho0           = 1.204               </P> <!-- Incompressible density -->
+<P> Gamma          = 1.4                 </P> <!-- Ratio of specific heats -->
 <P> Pinfinity      = 100000              </P> <!-- Ambient pressure -->
 \end{lstlisting}
 
@@ -99,9 +102,10 @@ eventual source terms using the following functions:
 
 \begin{lstlisting}[style=XmlStyle]
 <FUNCTION NAME="Baseflow"> 
-    <E VAR="U0" VALUE="0" />
-    <E VAR="V0" VALUE="0" />
-    <E VAR="P0" VALUE="Pinfinity" />
+    <E VAR="u0"   VALUE="0" />
+    <E VAR="v0"   VALUE="0" />
+    <E VAR="p0"   VALUE="Pinfinity" />
+    <E VAR="rho0" VALUE="Rho0" />
 </FUNCTION>
 
 <FUNCTION NAME="Source"> 

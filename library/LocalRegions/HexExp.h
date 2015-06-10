@@ -113,7 +113,8 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
+                Array<OneD,       NekDouble> &outarray,
+                bool multiplybyweights = true);
 
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
                 const int                           dir,
@@ -157,6 +158,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 LibUtilities::ShapeType v_DetShapeType() const;
     
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+            
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(const NekDouble *data,
                                            const std::vector<unsigned int > &nummodes,  
                                            const int mode_offset,   

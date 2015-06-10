@@ -276,7 +276,8 @@ namespace Nektar
 
         void PrismExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+            Array<OneD,       NekDouble>& outarray,
+            bool multiplybyweights)
         {
             const int nquad0 = m_base[0]->GetNumPoints();
             const int nquad1 = m_base[1]->GetNumPoints();
@@ -284,16 +285,28 @@ namespace Nektar
             const int order0 = m_base[0]->GetNumModes();
             const int order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
             Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
 
-            MultiplyByQuadratureMetric(inarray, tmp);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,
-                                         true,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
+                
+                MultiplyByQuadratureMetric(inarray, tmp);
+                
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             inarray,outarray,wsp,
+                                             true,true,true);
+            }
         }
 
         /**
@@ -432,6 +445,14 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
+        
+        StdRegions::StdExpansionSharedPtr PrismExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdPrismExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
 
         /**
          * @brief Get the coordinates #coords at the local coordinates
@@ -972,6 +993,7 @@ namespace Nektar
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
+                Array<OneD, NekDouble> faceJac(nqtot);
                 Array<OneD, NekDouble> normals(vCoordDim*nqtot,0.0);
 
                 // Extract Jacobian along face and recover local derivatives
@@ -986,6 +1008,7 @@ namespace Nektar
                             normals[j]         = -df[2][j]*jac[j];
                             normals[nqtot+j]   = -df[5][j]*jac[j];
                             normals[2*nqtot+j] = -df[8][j]*jac[j];
+                            faceJac[j]         = jac[j];
                         }
 
                         points0 = ptsKeys[0];
@@ -1006,6 +1029,7 @@ namespace Nektar
                                     -df[4][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq0]  =
                                     -df[7][tmp]*jac[tmp];
+                                faceJac[j+k*nq0] = jac[tmp];
                             }
                         }
 
@@ -1027,6 +1051,7 @@ namespace Nektar
                                     (df[3][tmp]+df[5][tmp])*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
                                     (df[6][tmp]+df[8][tmp])*jac[tmp];
+                                faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
 
@@ -1048,6 +1073,7 @@ namespace Nektar
                                     df[4][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq0] =
                                     df[7][tmp]*jac[tmp];
+                                faceJac[j+k*nq0] = jac[tmp];
                             }
                         }
 
@@ -1069,6 +1095,7 @@ namespace Nektar
                                     -df[3][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
                                     -df[6][tmp]*jac[tmp];
+                                faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
 
@@ -1084,7 +1111,7 @@ namespace Nektar
 
                 Array<OneD, NekDouble> work   (nq_face, 0.0);
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0, points1, jac,
+                LibUtilities::Interp2D(points0, points1, faceJac,
                                        tobasis0.GetPointsKey(),
                                        tobasis1.GetPointsKey(),
                                        work);

@@ -158,7 +158,7 @@ namespace Nektar
         {
             // PressureOutflowFile Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureOutflowFile)
+                "PressureOutflowFile")
             {
                 int numBCPts = m_fields[0]->
                     GetBndCondExpansions()[n]->GetNpoints();
@@ -182,7 +182,7 @@ namespace Nektar
         {
             // PressureInflowFile Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::ePressureInflowFile)
+                "PressureInflowFile")
             {
                 int numBCPts = m_fields[0]->
                     GetBndCondExpansions()[n]->GetNpoints();
@@ -308,6 +308,88 @@ namespace Nektar
     void CompressibleFlowSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         UnsteadySystem::v_GenerateSummary(s);
+    }
+
+    /**
+     * @brief Set boundary conditions which can be: 
+     * a) Wall and Symmerty BCs implemented at CompressibleFlowSystem level
+     *          since they are compressible solver specific;
+     * b) Time dependent BCs.
+     * 
+     * @param inarray: fields array.
+     * @param time:    time.
+     */
+    void CompressibleFlowSystem::SetCommonBC(
+                      const std::string &userDefStr,
+                      const int n,
+                      const NekDouble time,
+                      int &cnt,
+                      Array<OneD, Array<OneD, NekDouble> > &inarray)
+    {
+        std::string varName;
+        int nvariables = m_fields.num_elements();
+     
+        if(!userDefStr.empty())
+        {
+            if(boost::iequals(userDefStr,"Wall"))
+            {
+                WallBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"WallViscous"))
+            {
+                // Wall Boundary Condition
+                WallViscousBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"Symmetry"))
+            {
+                // Symmetric Boundary Condition
+                SymmetryBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"RiemannInvariant"))
+            {
+                // Riemann invariant characteristic Boundary Condition
+                RiemannInvariantBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureOutflowNonReflective"))
+            {
+                // Pressure outflow non-reflective Boundary Condition
+                PressureOutflowNonReflectiveBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureOutflow"))
+            {
+                // Pressure outflow Boundary Condition
+                PressureOutflowBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureOutflowFile"))
+            {
+                // Pressure outflow Boundary Condition from file 
+                PressureOutflowFileBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureInflowFile"))
+            {
+                // Pressure inflow Boundary Condition from file
+                PressureInflowFileBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"ExtrapOrder0"))
+            {
+                // Extrapolation of the data at the boundaries
+                ExtrapOrder0BC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"TimeDependent"))
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
+                }
+            }
+            else
+            {
+                string errmsg = "Unrecognised boundary condition: ";
+                errmsg += userDefStr;
+                ASSERTL0(false,errmsg.c_str());
+            }
+        }
     }
 
     /**

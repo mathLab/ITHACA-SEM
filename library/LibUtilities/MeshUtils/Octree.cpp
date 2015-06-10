@@ -73,12 +73,14 @@ namespace MeshUtils {
         //parent created.
         
         cout << endl << "Parent created. Dividing based on geometry" << endl;
+        m_totNotDividing=0;
         
         if(OctantList[0]->Divide())
         {
             OctantList[0]->LeafFalse();
             subdivide(0);
         }
+        cout << endl << "Completed" << endl;
         
         int ct=0;
         int maxLevel=0;
@@ -91,31 +93,6 @@ namespace MeshUtils {
         
         cout << endl << "No. octant leaves" << endl;
         cout << ct << " " << maxLevel << endl;
-        
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
-            {
-                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
-                         "Error in initial octree construction");
-            }
-        }
-        
-        string fn = "pre.oct";
-        ofstream out;
-        out.open(fn.c_str());
-        
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf())
-            {
-                if(abs(OctantList[i]->X()-OctantList[i]->DX()) <1E-5)
-                {
-                    out << OctantList[i]->Y() << " " << OctantList[i]->Z() << " " <<OctantList[i]->DY() << " " << OctantList[i]->DZ() << endl;
-                }
-            }
-        }
-        out.close();
         
         cout << endl << "Populating initial neighbours list" << endl;
         
@@ -142,7 +119,9 @@ namespace MeshUtils {
         
         //smooth levels first
         cout << endl << "Smoothing octant levels" << endl;
+        
         SmoothOctants();
+        
         ct=0;
         for(int i = 0; i < OctantList.size(); i++)
         {
@@ -151,32 +130,6 @@ namespace MeshUtils {
         cout << "New Stats" << endl;
         cout << "No. octant leaves" << endl;
         cout << ct << endl;
-        
-        fn = "post.oct";
-        out.open(fn.c_str());
-        
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf())
-            {
-                if(abs(OctantList[i]->X()-OctantList[i]->DX()) <1E-5)
-                {
-                    out << OctantList[i]->Y() << " " << OctantList[i]->Z() << " " <<OctantList[i]->DY() << " " << OctantList[i]->DZ() << endl;
-                }
-            }
-        }
-        out.close();
-        
-        exit(-1);
-        
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
-            {
-                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
-                         "Error in initial octree construction");
-            }
-        }
         
         cout << endl << "Smoothing across the geometry surface" << endl;
         
@@ -191,7 +144,7 @@ namespace MeshUtils {
             }
         }
         
-        cout << "complete" << endl;
+        cout<< endl << "complete" << endl;
         
         cout << endl << "Propagating spacing out to domain boundary" << endl;
         
@@ -210,20 +163,10 @@ namespace MeshUtils {
         
         SmoothAllOctants();
         
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf())
-            {
-                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
-                         "Error in initial octree construction");
-            }
-        }
-        
         int elem=CountElemt();
         
         cout << endl<< "Predicted mesh: " << elem << " elements" << endl;
         
-        exit(-1);
     }
     
     int Octree::CountElemt()
@@ -523,16 +466,6 @@ namespace MeshUtils {
             
         }while(ct>0);
         
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf() && OctantList[i]->GetDelta()<m_minDelta)
-            {
-                cout << OctantList[i]->X() << " " << OctantList[i]->Y() << " " << OctantList[i]->Z()<< " : ";
-                cout << OctantList[i]->DX() << " " << OctantList[i]->DY() << " " << OctantList[i]->DZ()<<" : ";
-                cout << OctantList[i]->GetNeighbourList().size() << " " << OctantList[i]->GetParent()<< " " << OctantList[i]->isDeltaKnown()<<" " <<OctantList[i]->hasPoints()<< endl;
-            }
-        }
-        exit(-1);
     }
     
     void Octree::SmoothSurfaceOctants()
@@ -606,6 +539,7 @@ namespace MeshUtils {
     void Octree::SmoothOctants()
     {
         int ct=0;
+        int imax=0;
         
         do
         {
@@ -623,6 +557,8 @@ namespace MeshUtils {
                            OctantList[j]->GetLevel() > 1)
                         {
                             ct+=1;
+                            if(j>imax)
+                                imax = j;
                             SubDivideLevel(j);
                             break;
                         }
@@ -633,7 +569,19 @@ namespace MeshUtils {
                     nList.clear();
                 }
             }
+            
+            int pos = 70*imax/OctantList.size();
+            cout << "[";
+            for (int k = 0; k < 70; ++k) {
+                if (k < pos) cout << "=";
+                else if (k == pos) cout << ">";
+                else cout << " ";
+            }
+            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
+            cout.flush();
+            
         }while(ct>0);
+        cout <<endl;
     }
     
     void Octree::SubDivideLevel(int parent)
@@ -791,6 +739,7 @@ namespace MeshUtils {
                     subdivide(children[i]);
                 }
             }
+            
         }
         
         OctantList[parent]->SetChildren(children);

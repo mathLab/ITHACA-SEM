@@ -85,6 +85,7 @@ namespace Nektar {
                 Array<OneD, NekDouble> BoundingBox;
                 std::vector<CurvaturePointSharedPtr> m_cpList;
                 std::vector<OctantSharedPtr> OctantList;
+                int m_totNotDividing;
                
             };
             

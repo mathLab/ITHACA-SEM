@@ -110,6 +110,7 @@ namespace Nektar {
                 void LeafFalse(){m_leaf = false;}
                 void DeleteNeighbourList(){m_neighbourList.clear();}
                 int GetCPID(int i){return m_localCPIDList[i];}
+                int GetParent(){return m_parent;}
                 
                 
                 

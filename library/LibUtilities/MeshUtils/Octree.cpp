@@ -92,6 +92,31 @@ namespace MeshUtils {
         cout << endl << "No. octant leaves" << endl;
         cout << ct << " " << maxLevel << endl;
         
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
+            {
+                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                         "Error in initial octree construction");
+            }
+        }
+        
+        string fn = "pre.oct";
+        ofstream out;
+        out.open(fn.c_str());
+        
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf())
+            {
+                if(abs(OctantList[i]->X()-OctantList[i]->DX()) <1E-5)
+                {
+                    out << OctantList[i]->Y() << " " << OctantList[i]->Z() << " " <<OctantList[i]->DY() << " " << OctantList[i]->DZ() << endl;
+                }
+            }
+        }
+        out.close();
+        
         cout << endl << "Populating initial neighbours list" << endl;
         
         for(int i = 0; i < OctantList.size(); i++)
@@ -127,9 +152,44 @@ namespace MeshUtils {
         cout << "No. octant leaves" << endl;
         cout << ct << endl;
         
+        fn = "post.oct";
+        out.open(fn.c_str());
+        
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf())
+            {
+                if(abs(OctantList[i]->X()-OctantList[i]->DX()) <1E-5)
+                {
+                    out << OctantList[i]->Y() << " " << OctantList[i]->Z() << " " <<OctantList[i]->DY() << " " << OctantList[i]->DZ() << endl;
+                }
+            }
+        }
+        out.close();
+        
+        exit(-1);
+        
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
+            {
+                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                         "Error in initial octree construction");
+            }
+        }
+        
         cout << endl << "Smoothing across the geometry surface" << endl;
         
         SmoothSurfaceOctants();
+        
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
+            {
+                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                         "Error in initial octree construction");
+            }
+        }
         
         cout << "complete" << endl;
         
@@ -137,9 +197,27 @@ namespace MeshUtils {
         
         PropagateDomain();
         
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf())
+            {
+                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                         "Error in initial octree construction");
+            }
+        }
+        
         cout << endl << "Recersively ensuring smoothness between all nodes" << endl;
         
         SmoothAllOctants();
+        
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf())
+            {
+                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                         "Error in initial octree construction");
+            }
+        }
         
         int elem=CountElemt();
         
@@ -230,6 +308,7 @@ namespace MeshUtils {
                             }
                         }
                         OctantList[i]->SetDelta(deltaSM);
+                        ASSERTL0(deltaSM>=m_minDelta,"Delta assignment less than min delta");
                         ct+=1;
                     }
                 }
@@ -242,6 +321,15 @@ namespace MeshUtils {
     {
         int ct=0;
         
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
+            {
+                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                         "Error in initial octree construction");
+            }
+        }
+        
         do
         {
             ct=0;
@@ -249,8 +337,10 @@ namespace MeshUtils {
             {
                 if(OctantList[i]->isLeaf() && !OctantList[i]->isDeltaKnown())
                 { //if it is leaf, has no points and delta has not been asigned
+                    
                     vector<int> knownID;
                     vector<int> nList = OctantList[i]->GetNeighbourList();
+                    
                     for(int j = 0; j<nList.size(); j++)
                     {
                         if(OctantList[nList[j]]->isDeltaKnown())
@@ -290,13 +380,9 @@ namespace MeshUtils {
                             }
                         }
                         OctantList[i]->SetDelta(min);
-                        if(min < 0.0)
-                        {
-                            cout << "ERROR in assignment is here, negative "
-                            "delta" << endl;
-                            exit(-1);
-                        }
+                        ASSERTL0(min>=m_minDelta,"Delta assignment less than min delta");
                         ct+=1;
+                        
                         deltaPrime.clear();
                     }
                     knownID.clear();
@@ -436,6 +522,17 @@ namespace MeshUtils {
             }
             
         }while(ct>0);
+        
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->isLeaf() && OctantList[i]->GetDelta()<m_minDelta)
+            {
+                cout << OctantList[i]->X() << " " << OctantList[i]->Y() << " " << OctantList[i]->Z()<< " : ";
+                cout << OctantList[i]->DX() << " " << OctantList[i]->DY() << " " << OctantList[i]->DZ()<<" : ";
+                cout << OctantList[i]->GetNeighbourList().size() << " " << OctantList[i]->GetParent()<< " " << OctantList[i]->isDeltaKnown()<<" " <<OctantList[i]->hasPoints()<< endl;
+            }
+        }
+        exit(-1);
     }
     
     void Octree::SmoothSurfaceOctants()
@@ -486,6 +583,7 @@ namespace MeshUtils {
                             }
                         }
                         OctantList[i]->SetDelta(deltaSM);
+                        ASSERTL0(deltaSM>=m_minDelta,"Delta assignment less than min delta");
                         ct+=1;
                     }
                 }
@@ -529,6 +627,8 @@ namespace MeshUtils {
                             break;
                         }
                     }
+                    if(ct>0)
+                        break;
                     
                     nList.clear();
                 }

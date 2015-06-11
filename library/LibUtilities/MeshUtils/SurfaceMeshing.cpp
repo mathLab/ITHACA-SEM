@@ -43,7 +43,13 @@ namespace Nektar{
 namespace LibUtilities{
 namespace MeshUtils {
     
-    
+    void SurfaceMeshing::Mesh()
+    {
+        for(int i = 1; i <= m_cad->GetNumCurve(); i++)
+        {
+            
+        }
+    }
             
 }
 }

@@ -41,6 +41,8 @@
 
 #include <LibUtilities/CADSystem/CADSystem.h>
 #include <LibUtilities/MeshUtils/Octree.h>
+#include <LibUtilities/MeshUtils/SurfaceMesh.h>
+#include <LibUtilities/MeshUtils/CurveMesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -62,12 +64,17 @@ namespace MeshUtils {
         {
         };
         
+        LIB_UTILITIES_EXPORT void Mesh();
+        
         
     private:
         
         
         CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
+        
+        std::vector<SurfaceMeshSharedPtr> m_surfacemeshes;
+        std::vector<CurveMeshSharedPtr> m_curvemeshes;
         
         
     };

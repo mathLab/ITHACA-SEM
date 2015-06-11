@@ -41,114 +41,14 @@ using namespace std;
 namespace Nektar{
 namespace LibUtilities{
     
-    CADCurve::CADCurve(int i, TopoDS_Shape in) : ID(i)
-    {
-        gp_Trsf transform;
-        gp_Pnt ori(0.0,0.0,0.0);
-        transform.SetScale(ori,1.0/1000.0);
-        TopLoc_Location mv(transform);
-        in.Move(mv);
-        occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
-    }
-    
-    void CADCurve::GetMinMax(gp_Pnt &start, gp_Pnt &end)
-    {
-        start = occCurve.Value(occCurve.FirstParameter());
-        end  = occCurve.Value(occCurve.LastParameter());
-    }
-    
-    CADSurf::CADSurf(int i, TopoDS_Shape in, vector<int> ein) : ID(i), edges(ein)
-    {
-        gp_Trsf transform;
-        gp_Pnt ori(0.0,0.0,0.0);
-        transform.SetScale(ori,1.0/1000.0);
-        TopLoc_Location mv(transform);
-        s = BRep_Tool::Surface(TopoDS::Face(in));
-        in.Move(mv);
-        occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
-    }
-    
-    Array<OneD, NekDouble> CADSurf::N(NekDouble u, NekDouble v)
-    {
-        Array<OneD, NekDouble> out(3);
-        gp_Pnt Loc;
-        gp_Vec D1U,D1V;
-        occSurface.D1(u,v,Loc,D1U,D1V);
-        gp_Vec n = D1U.Crossed(D1V);
-        if(n.X()==0 && n.Y() ==0 && n.Z()==0)
-        {
-            out[0]=0.0;
-            out[1]=0.0;
-            out[2]=0.0;
-        }
-        else
-        {
-            n.Normalize();
-            out[0]=n.X();
-            out[1]=n.Y();
-            out[2]=n.Z();
-        }
-        
-        return out;
-    }
-    
-    Array<OneD, NekDouble> CADSurf::D1(NekDouble u, NekDouble v)
-    {
-        Array<OneD, NekDouble> out(9);
-        gp_Pnt Loc;
-        gp_Vec D1U,D1V;
-        occSurface.D1(u,v,Loc,D1U,D1V);
-
-        out[0]=Loc.X();
-        out[1]=Loc.Y();
-        out[2]=Loc.Z();
-        out[3]=D1U.X();
-        out[4]=D1U.Y();
-        out[5]=D1U.Z();
-        out[6]=D1V.X();
-        out[7]=D1V.Y();
-        out[8]=D1V.Z();
-        
-        return out;
-    }
-    
-    Array<OneD, NekDouble> CADSurf::D2(NekDouble u, NekDouble v)
-    {
-        Array<OneD, NekDouble> out(18);
-        gp_Pnt Loc;
-        gp_Vec D1U,D1V,D2U,D2V,D2UV;
-        occSurface.D2(u,v,Loc,D1U,D1V,D2U,D2V,D2UV);
-        
-        out[0]=Loc.X();
-        out[1]=Loc.Y();
-        out[2]=Loc.Z();
-        out[3]=D1U.X();
-        out[4]=D1U.Y();
-        out[5]=D1U.Z();
-        out[6]=D1V.X();
-        out[7]=D1V.Y();
-        out[8]=D1V.Z();
-        out[9]=D2U.X();
-        out[10]=D2U.Y();
-        out[11]=D2U.Z();
-        out[12]=D2V.X();
-        out[13]=D2V.Y();
-        out[14]=D2V.Z();
-        out[15]=D2UV.X();
-        out[16]=D2UV.Y();
-        out[17]=D2UV.Z();
-        
-        return out;
-    }
-    
     void CADSystem::GetParameterPlaneBounds(int i,
                                             Array<OneD, NekDouble>& out)
     {
         out = Array<OneD, NekDouble>(4);
-        out[0]=m_surfs[i-1].minU();
-        out[1]=m_surfs[i-1].maxU();
-        out[2]=m_surfs[i-1].minV();
-        out[3]=m_surfs[i-1].maxV();
+        out[0]=m_surfs[i-1]->minU();
+        out[1]=m_surfs[i-1]->maxU();
+        out[2]=m_surfs[i-1]->minV();
+        out[3]=m_surfs[i-1]->maxV();
     }
 
     string CADSystem::GetName()
@@ -159,29 +59,29 @@ namespace LibUtilities{
     void CADSystem::N(int i, NekDouble u, NekDouble v,
                       Array<OneD, NekDouble>& out)
     {
-        ASSERTL0(u>=m_surfs[i-1].minU() &&
-                 u<=m_surfs[i-1].maxU() &&
-                 v>=m_surfs[i-1].minV() &&
-                 v<=m_surfs[i-1].maxV(), "(u,v) out of bounds");
-        out = m_surfs[i-1].N(u,v);
+        ASSERTL0(u>=m_surfs[i-1]->minU() &&
+                 u<=m_surfs[i-1]->maxU() &&
+                 v>=m_surfs[i-1]->minV() &&
+                 v<=m_surfs[i-1]->maxV(), "(u,v) out of bounds");
+        out = m_surfs[i-1]->N(u,v);
     }
     void CADSystem::D1(int i, NekDouble u, NekDouble v,
                                  Array<OneD, NekDouble>& out)
     {
-        ASSERTL0(u>=m_surfs[i-1].minU() &&
-                 u<=m_surfs[i-1].maxU() &&
-                 v>=m_surfs[i-1].minV() &&
-                 v<=m_surfs[i-1].maxV(), "(u,v) out of bounds");
-        out = m_surfs[i-1].D1(u,v);
+        ASSERTL0(u>=m_surfs[i-1]->minU() &&
+                 u<=m_surfs[i-1]->maxU() &&
+                 v>=m_surfs[i-1]->minV() &&
+                 v<=m_surfs[i-1]->maxV(), "(u,v) out of bounds");
+        out = m_surfs[i-1]->D1(u,v);
     }
     void CADSystem::D2(int i, NekDouble u, NekDouble v,
                                  Array<OneD, NekDouble>& out)
     {
-        ASSERTL0(u>=m_surfs[i-1].minU() &&
-                 u<=m_surfs[i-1].maxU() &&
-                 v>=m_surfs[i-1].minV() &&
-                 v<=m_surfs[i-1].maxV(), "(u,v) out of bounds");
-        out = m_surfs[i-1].D2(u,v);
+        ASSERTL0(u>=m_surfs[i-1]->minU() &&
+                 u<=m_surfs[i-1]->maxU() &&
+                 v>=m_surfs[i-1]->minV() &&
+                 v<=m_surfs[i-1]->maxV(), "(u,v) out of bounds");
+        out = m_surfs[i-1]->D2(u,v);
     }
     
     void CADSystem::Report()
@@ -202,7 +102,7 @@ namespace LibUtilities{
         for(int i = 0; i < m_curves.size(); i++)
         {
             gp_Pnt start, end;
-            m_curves[i].GetMinMax(start,end);
+            m_curves[i]->GetMinMax(start,end);
             if(start.X()<out[0])
                 out[0]=start.X();
             if(start.X()>out[1])
@@ -343,7 +243,20 @@ namespace LibUtilities{
         return true;
     }
     
-    
+    void CADSystem::AddCurve(int i, TopoDS_Shape in)
+    {
+        CADCurveSharedPtr newCurve =
+            MemoryManager<CADCurve>::
+                AllocateSharedPtr(i,in);
+        m_curves.push_back(newCurve);
+    }
+    void CADSystem::AddSurf(int i, TopoDS_Shape in, std::vector<int> ein)
+    {
+        CADSurfSharedPtr newSurf =
+            MemoryManager<CADSurf>::
+                AllocateSharedPtr(i,in,ein);
+        m_surfs.push_back(newSurf);
+    }
 
 }
 }

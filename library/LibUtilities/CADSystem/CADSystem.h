@@ -41,6 +41,9 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <LibUtilities/CADSystem/CADCurve.h>
+#include <LibUtilities/CADSystem/CADSurf.h>
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -67,38 +70,12 @@
 
 #include <TopLoc_Location.hxx>
 
+
+
 namespace Nektar {
 namespace LibUtilities {
-    
-    class CADCurve
-    {
-    public:
-        CADCurve(int i, TopoDS_Shape in);
-        void GetMinMax(gp_Pnt &start, gp_Pnt &end);
-    
-    private:
-        int ID;
-        BRepAdaptor_Curve occCurve;
-    };
         
-    class CADSurf
-    {
-    public:
-        CADSurf(int i, TopoDS_Shape in, std::vector<int> ein);
-        NekDouble minU(){return occSurface.FirstUParameter();}
-        NekDouble maxU(){return occSurface.LastUParameter();}
-        NekDouble minV(){return occSurface.FirstVParameter();}
-        NekDouble maxV(){return occSurface.LastVParameter();}
-        Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> D2(NekDouble u, NekDouble v);
-        
-    private:
-        int ID;
-        BRepAdaptor_Surface occSurface;
-        Handle(Geom_Surface) s;
-        std::vector<int> edges;
-    };
+    
 
 	class CADSystem
 	{
@@ -114,6 +91,7 @@ namespace LibUtilities {
         LIB_UTILITIES_EXPORT void Report();
         LIB_UTILITIES_EXPORT void GetBoundingBox(Array<OneD, NekDouble>& out);
         LIB_UTILITIES_EXPORT int GetNumSurf(){return m_numSurf;}
+        LIB_UTILITIES_EXPORT int GetNumCurve(){return m_numCurve;}
         LIB_UTILITIES_EXPORT void GetParameterPlaneBounds(int i,
                                                     Array<OneD, NekDouble>& out);
         LIB_UTILITIES_EXPORT void N(int i, NekDouble u, NekDouble v,
@@ -122,25 +100,18 @@ namespace LibUtilities {
                                     Array<OneD, NekDouble>& out);
         LIB_UTILITIES_EXPORT void D2(int i, NekDouble u, NekDouble v,
                                     Array<OneD, NekDouble>& out);
+        
 
 	private:
         
-        void AddCurve(int i, TopoDS_Shape in)
-        {
-            CADCurve newCurve(i, in);
-            m_curves.push_back(newCurve);
-        }
-        void AddSurf(int i, TopoDS_Shape in, std::vector<int> ein)
-        {
-            CADSurf newSurf(i, in, ein);
-            m_surfs.push_back(newSurf);
-        }
+        void AddCurve(int i, TopoDS_Shape in);
+        void AddSurf(int i, TopoDS_Shape in, std::vector<int> ein);
         
 	    std::string m_name;
         int m_numCurve;
         int m_numSurf;
-        std::vector<CADCurve> m_curves;
-        std::vector<CADSurf> m_surfs;
+        std::vector<CADCurveSharedPtr> m_curves;
+        std::vector<CADSurfSharedPtr> m_surfs;
 	};
 
 	typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

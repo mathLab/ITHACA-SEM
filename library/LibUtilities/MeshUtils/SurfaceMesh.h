@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESHING_SURFACEMESHING_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESHING_SURFACEMESHING_H
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
 
 #include <boost/shared_ptr.hpp>
 
@@ -54,9 +54,10 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<SurfaceMesh>;
         
-        LIB_UTILITIES_EXPORT SurfaceMesh()
+        SurfaceMesh()
         {
         };
+        
         
         
     private:

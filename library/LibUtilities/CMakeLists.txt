@@ -313,10 +313,14 @@ SOURCE_GROUP("FFT Sources" FILES ${FFTSources})
 IF(NEKTAR_USE_OCC)
 	SET(CADSystemSources
 		./CADSystem/CADSystem.cpp
+        ./CADSystem/CADCurve.cpp
+        ./CADSystem/CADSurf.cpp
 		)
 
 	SET(CADSystemHeaders
 		./CADSystem/CADSystem.h
+        ./CADSystem/CADCurve.h
+        ./CADSystem/CADSurf.h
 		)
 
 	SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})
@@ -327,6 +331,7 @@ IF(NEKTAR_USE_OCC)
         ./MeshUtils/Octant.cpp
         ./MeshUtils/SurfaceMeshing.cpp
         ./MeshUtils/SurfaceMesh.cpp
+        ./MeshUtils/CurveMesh.cpp
 		)
 
     SET(MeshUtilsHeaders
@@ -335,6 +340,7 @@ IF(NEKTAR_USE_OCC)
         ./MeshUtils/Octant.h
         ./MeshUtils/SurfaceMeshing.h
         ./MeshUtils/SurfaceMesh.h
+        ./MeshUtils/CurveMesh.h
         )
 
     SOURCE_GROUP("Mesh utilities headers" FILES ${MeshUtilsHeaders})

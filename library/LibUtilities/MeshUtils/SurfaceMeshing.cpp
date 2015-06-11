@@ -47,7 +47,13 @@ namespace MeshUtils {
     {
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
         {
+            CurveMeshSharedPtr cmesh =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(
+                    m_cad->GetCurve(i), m_octree);
             
+            cmesh->Mesh();
+            
+            m_curvemeshes.push_back(cmesh);
         }
     }
             

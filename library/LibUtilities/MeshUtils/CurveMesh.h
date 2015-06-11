@@ -39,6 +39,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <LibUtilities/CADSystem/CADCurve.h>
+#include <LibUtilities/MeshUtils/Octree.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -54,15 +56,32 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<CurveMesh>;
         
-        CurveMesh()
+        CurveMesh(const CADCurveSharedPtr &cad,
+                  const OctreeSharedPtr &oct) : m_cadcurve(cad),m_octree(oct)
         {
         };
+        
+        void Mesh();
         
         
     private:
         
+        void GetSampleFunction();
+        void GetPhiFunction();
+        NekDouble EvaluateDS(NekDouble s);
+        NekDouble EvaluatePS(NekDouble s);
         
-        
+        CADCurveSharedPtr m_cadcurve;
+        OctreeSharedPtr m_octree;
+        NekDouble m_curvelength;
+        int m_numSamplePoints;
+        Array<OneD, NekDouble> m_bounds;
+        Array<OneD, Array<OneD, NekDouble> > m_dst;
+        Array<OneD, Array<OneD, NekDouble> > m_ps;
+        NekDouble Ae;
+        int Ne;
+        Array<OneD, NekDouble> meshsvalue;
+        Array<OneD, Array<OneD, NekDouble> > m_meshpoints;
         
     };
     

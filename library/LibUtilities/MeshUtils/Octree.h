@@ -64,6 +64,9 @@ namespace Nektar {
                 LIB_UTILITIES_EXPORT void Build(const NekDouble &min,
                                                 const NekDouble &max,
                                                 const NekDouble &eps);
+                LIB_UTILITIES_EXPORT NekDouble Query(Array<OneD, NekDouble> loc);
+                
+                NekDouble GetMinDelta(){return m_minDelta;}
                 
             private:
                 

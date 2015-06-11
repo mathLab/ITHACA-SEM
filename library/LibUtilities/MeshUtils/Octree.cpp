@@ -42,6 +42,66 @@ using namespace std;
 namespace Nektar{
 namespace LibUtilities{
 namespace MeshUtils {
+    
+    
+    NekDouble Octree::Query(Array<OneD, NekDouble> loc)
+    {
+        int n = 0;
+        int quad;
+        
+        bool found=false;
+        
+        while(!found)
+        {
+            
+            if(loc[0]>=OctantList[n]->X() && loc[1]>OctantList[n]->Y() && loc[2]>OctantList[n]->Z())
+            {
+                quad=0;
+            }
+            else if(loc[0]>OctantList[n]->X() && loc[1]<=OctantList[n]->Y() &&
+                     loc[2]>OctantList[n]->Z())
+            {
+                quad=1;
+            }
+            else if(loc[0]<=OctantList[n]->X() && loc[1]<=OctantList[n]->Y() &&
+                     loc[2]>OctantList[n]->Z())
+            {
+                quad=2;
+            }
+            else if(loc[0]<=OctantList[n]->X() && loc[1]>OctantList[n]->Y() &&
+                     loc[2]>OctantList[n]->Z())
+            {
+                quad=3;
+            }
+            else if(loc[0]>OctantList[n]->X() && loc[1]>OctantList[n]->Y() &&
+                     loc[2]<=OctantList[n]->Z()){
+                quad=4;
+            }
+            else if(loc[0]>OctantList[n]->X() && loc[1]<=OctantList[n]->Y() &&
+                     loc[2]<=OctantList[n]->Z())
+            {
+                quad=5;
+            }
+            else if(loc[0]<=OctantList[n]->X() && loc[1]<=OctantList[n]->Y() &&
+                     loc[2]<=OctantList[n]->Z())
+            {
+                quad=6;
+            }
+            else if(loc[0]<=OctantList[n]->X() && loc[1]>OctantList[n]->Y() &&
+                     loc[2]<=OctantList[n]->Z())
+            {
+                quad=7;
+            }
+            
+            n=OctantList[n]->GetChild(quad);
+            
+            if(OctantList[n]->isLeaf())
+            {
+                found=true;
+            }
+        }
+        return OctantList[n]->GetDelta();
+    }
             
     void Octree::Build(const NekDouble &min,
                        const NekDouble &max,

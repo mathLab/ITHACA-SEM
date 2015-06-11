@@ -100,7 +100,10 @@ namespace LibUtilities {
                                     Array<OneD, NekDouble>& out);
         LIB_UTILITIES_EXPORT void D2(int i, NekDouble u, NekDouble v,
                                     Array<OneD, NekDouble>& out);
-        
+        LIB_UTILITIES_EXPORT CADCurveSharedPtr GetCurve(int i )
+        {
+            return m_curves[i-1];
+        }
 
 	private:
         

@@ -77,6 +77,10 @@ namespace Nektar {
             
             CADCurve(int i, TopoDS_Shape in);
             void GetMinMax(gp_Pnt &start, gp_Pnt &end);
+            void Bounds(Array<OneD, NekDouble> &out);
+            NekDouble Length(NekDouble ti, NekDouble tf);
+            void P(NekDouble t, Array<OneD, NekDouble> &out);
+            NekDouble tAtArcLength(NekDouble s);
             
         private:
             int ID;

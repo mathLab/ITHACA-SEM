@@ -1024,13 +1024,13 @@ namespace Nektar
                     //HalfMode
                     if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
                     {
-                        beta = 2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        beta = 2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
             
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
                     else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                     {
-                        beta = -2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        beta = -2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
             
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }

@@ -8,27 +8,28 @@
 
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
+SET(MIN_VER "1.52.0")
 SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
     program_options regex timer)
 SET(Boost_DEBUG 0)
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )
     SET(Boost_NO_SYSTEM_PATHS ON)
-    FIND_PACKAGE( Boost COMPONENTS ${NEEDED_BOOST_LIBS})
+    FIND_PACKAGE( Boost ${MIN_VER} COMPONENTS ${NEEDED_BOOST_LIBS})
 ELSE ()
     SET(TEST_ENV1 $ENV{BOOST_HOME})
     SET(TEST_ENV2 $ENV{BOOST_DIR})
     IF (DEFINED TEST_ENV1)
         SET(BOOST_ROOT $ENV{BOOST_HOME})
         SET(Boost_NO_SYSTEM_PATHS ON)
-        FIND_PACKAGE( Boost QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+        FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
     ELSEIF (DEFINED TEST_ENV2)
         SET(BOOST_ROOT $ENV{BOOST_DIR})
         SET(Boost_NO_SYSTEM_PATHS ON)
-        FIND_PACKAGE( Boost QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+        FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
     ELSE ()
         SET(BOOST_ROOT ${TPDIST})
-        FIND_PACKAGE( Boost QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
+        FIND_PACKAGE( Boost ${MIN_VER} QUIET COMPONENTS ${NEEDED_BOOST_LIBS} )
     ENDIF()
 ENDIF()
 
@@ -148,7 +149,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     IF (APPLE)
         EXTERNALPROJECT_ADD_STEP(boost patch-install-path
-            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPBUILD}/boost/tools/build/v2/tools/darwin.jam
+            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPBUILD}/boost/tools/build/src/tools/darwin.jam
             DEPENDERS build
             DEPENDEES download)
     ENDIF (APPLE)

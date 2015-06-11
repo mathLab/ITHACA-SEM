@@ -566,9 +566,9 @@ namespace Nektar
         
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
+            std::string type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == SpatialDomains::eHigh)
+            if(boost::iequals(type,"H"))
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -620,16 +620,9 @@ namespace Nektar
                                 Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
                 }
             }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || 
-					type == SpatialDomains::eTimeDependent ||
-					type == SpatialDomains::eMovingBody) 
+            else  // No High order
             {
                 cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
         }        
     }
@@ -669,9 +662,9 @@ namespace Nektar
         
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
+            std::string type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == SpatialDomains::eHigh)
+            if(boost::iequals(type,"H"))
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -732,16 +725,9 @@ namespace Nektar
                         1);
                 }
             }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || 
-					type == SpatialDomains::eTimeDependent ||
-					type == SpatialDomains::eMovingBody) 
+            else  // No High order
             {
                 cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
         }        
     }    

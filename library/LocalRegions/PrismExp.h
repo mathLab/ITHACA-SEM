@@ -182,6 +182,10 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
             //---------------------------------------
             // Matrix creation functions
             //---------------------------------------
@@ -204,6 +208,7 @@ namespace Nektar
             virtual void v_GetSimplexEquiSpacedConnectivity(
                 Array<OneD, int> &conn,
                 bool standard = true);
+            
 
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat,

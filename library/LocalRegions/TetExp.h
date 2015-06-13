@@ -174,6 +174,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
 
             //-----------------------------
             // Matrix creation functions

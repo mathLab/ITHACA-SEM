@@ -332,6 +332,7 @@ IF(NEKTAR_USE_OCC)
         ./MeshUtils/SurfaceMeshing.cpp
         ./MeshUtils/SurfaceMesh.cpp
         ./MeshUtils/CurveMesh.cpp
+        ./MeshUtils/TriangleInterface.cpp
 		)
 
     SET(MeshUtilsHeaders
@@ -341,6 +342,8 @@ IF(NEKTAR_USE_OCC)
         ./MeshUtils/SurfaceMeshing.h
         ./MeshUtils/SurfaceMesh.h
         ./MeshUtils/CurveMesh.h
+        ./MeshUtils/TriangleInterface.h
+        ./MeshUtils/ExternalLib/triangle.h
         )
 
     SOURCE_GROUP("Mesh utilities headers" FILES ${MeshUtilsHeaders})
@@ -504,6 +507,7 @@ IF(NEKTAR_USE_OCC)
 		    )
 	SET_TARGET_PROPERTIES(LibUtilities PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
 	TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OCC_LIBS})
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${TRILIB})
 ENDIF(NEKTAR_USE_OCC)
 
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)

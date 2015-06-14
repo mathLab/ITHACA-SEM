@@ -18,7 +18,10 @@ FIND_LIBRARY(lTKXSBase NAMES TKXSBase PATHS ${OCC_DIR}/lib)
 FIND_LIBRARY(lTKPShape NAMES TKPShape PATHS ${OCC_DIR}/lib)
 FIND_LIBRARY(lTKTopAlgo NAMES TKTopAlgo PATHS ${OCC_DIR}/lib)
 
-
+FIND_LIBRARY(triangle NAMES Triangle PATHS ${CMAKE_SOURCE_DIR}/library/LibUtilities/MeshUtils/ExternalLib)
+IF(triangle)
+    SET(TRILIB ${triangle})
+ENDIF(triangle)
 
 SET(OOC_FOUND FALSE)
 IF(lPTKernel)

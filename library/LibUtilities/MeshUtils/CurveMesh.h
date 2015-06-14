@@ -63,6 +63,11 @@ namespace MeshUtils {
         
         void Mesh();
         
+        Array<OneD, NekDouble> GetFirstPoint(){return m_meshpoints[0];}
+        Array<OneD, NekDouble> GetLastPoint(){return m_meshpoints[Ne];}
+        Array<OneD, Array<OneD, NekDouble> > GetMeshPoints()
+                    {return m_meshpoints;}
+        int GetNumPoints(){return Ne+1;}
         
     private:
         

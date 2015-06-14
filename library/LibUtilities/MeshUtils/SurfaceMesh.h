@@ -39,6 +39,10 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <LibUtilities/MeshUtils/Octree.h>
+#include <LibUtilities/CADSystem/CADSurf.h>
+#include <LibUtilities/MeshUtils/CurveMesh.h>
+
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -54,16 +58,32 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<SurfaceMesh>;
         
-        SurfaceMesh()
+        SurfaceMesh(const CADSurfSharedPtr &cad,
+                    const OctreeSharedPtr &oct,
+                    const std::vector<CurveMeshSharedPtr> &cmeshes)
+                        : m_cadsurf(cad), m_octree(oct),
+                          m_curvemeshes(cmeshes)
+        
         {
+            m_edges = m_cadsurf->GetEdges();
+            m_numedges = m_edges.size();
         };
         
-        
+        void Mesh();
         
     private:
         
+        void OrientateCurves();
+        int firstEdgeNotUsed();
         
-        
+        CADSurfSharedPtr m_cadsurf;
+        OctreeSharedPtr m_octree;
+        std::vector<CurveMeshSharedPtr> m_curvemeshes;
+        int m_numedges;
+        std::vector<int> m_edges;
+        std::vector<std::vector<int> > m_edgeloops;
+        std::vector<std::vector<std::vector<NekDouble> > > m_uvloops;
+        std::vector<std::vector<NekDouble> > m_centers;
         
     };
     

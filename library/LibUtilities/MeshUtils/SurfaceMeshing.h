@@ -69,7 +69,6 @@ namespace MeshUtils {
         
     private:
         
-        
         CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
         

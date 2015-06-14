@@ -104,6 +104,10 @@ namespace LibUtilities {
         {
             return m_curves[i-1];
         }
+        LIB_UTILITIES_EXPORT CADSurfSharedPtr GetSurf(int i)
+        {
+            return m_surfs[i-1];
+        }
 
 	private:
         

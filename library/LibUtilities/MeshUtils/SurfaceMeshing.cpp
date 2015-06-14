@@ -55,8 +55,21 @@ namespace MeshUtils {
             
             m_curvemeshes.push_back(cmesh);
         }
-    }
+        
+        for(int i = 1; i <= m_cad->GetNumSurf(); i++)
+        {
+            SurfaceMeshSharedPtr smesh =
+                MemoryManager<SurfaceMesh>::AllocateSharedPtr(
+                    m_cad->GetSurf(i), m_octree,
+                    m_curvemeshes);
             
+            smesh->Mesh();
+            
+            m_surfacemeshes.push_back(smesh);
+        }
+    }
+    
+    
 }
 }
 }

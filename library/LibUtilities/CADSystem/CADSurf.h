@@ -80,9 +80,13 @@ namespace Nektar {
             NekDouble maxU(){return occSurface.LastUParameter();}
             NekDouble minV(){return occSurface.FirstVParameter();}
             NekDouble maxV(){return occSurface.LastVParameter();}
+            std::vector<int> GetEdges(){return edges;}
+            
             Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
             Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
             Array<OneD, NekDouble> D2(NekDouble u, NekDouble v);
+            
+            void locuv(NekDouble &u, NekDouble &v, Array<OneD, NekDouble> p);
             
         private:
             int ID;

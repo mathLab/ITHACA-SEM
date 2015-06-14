@@ -50,6 +50,39 @@ namespace Nektar{
             occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
         }
         
+        void CADSurf::locuv(NekDouble &u, NekDouble &v,
+                            Array<OneD, NekDouble> p)
+        {
+            gp_Pnt loc(p[0]*1000.0,p[1]*1000.0,p[2]*1000.0);
+            
+            GeomAPI_ProjectPointOnSurf projection(loc, s,
+                                occSurface.FirstUParameter(),
+                                occSurface.LastUParameter(),
+                                occSurface.FirstVParameter(),
+                                occSurface.LastVParameter(),
+                                Extrema_ExtAlgo_Tree);
+            
+            ASSERTL0(projection.NbPoints()>0, "locuv failed");
+            
+            Quantity_Parameter ui;
+            Quantity_Parameter vi;
+            
+            projection.Parameters(1,ui,vi);
+            
+            ASSERTL0(ui >= occSurface.FirstUParameter() &&
+                     ui <= occSurface.LastUParameter() &&
+                     vi >= occSurface.FirstVParameter() &&
+                     vi <= occSurface.LastVParameter(),
+                     "locuv exceeded bounds");
+            
+            u = ui;
+            v = vi;
+            
+            ASSERTL1(projection.Distance(1)<1E-3,
+                     "Warning large distance to surace from projected point");
+            
+        }
+        
         Array<OneD, NekDouble> CADSurf::N(NekDouble u, NekDouble v)
         {
             Array<OneD, NekDouble> out(3);

@@ -45,8 +45,12 @@ namespace MeshUtils {
     
     void SurfaceMeshing::Mesh()
     {
+        cout << m_cad->GetNumCurve() << endl;
+        
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
         {
+            cout << "Meshing Curve: " << i;
+            
             CurveMeshSharedPtr cmesh =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(
                     m_cad->GetCurve(i), m_octree);
@@ -54,7 +58,11 @@ namespace MeshUtils {
             cmesh->Mesh();
             
             m_curvemeshes.push_back(cmesh);
+            
+            exit(-1);
         }
+        
+        exit(-1);
         
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
@@ -64,6 +72,8 @@ namespace MeshUtils {
                     m_curvemeshes);
             
             smesh->Mesh();
+            
+            exit(-1);
             
             m_surfacemeshes.push_back(smesh);
         }

@@ -84,6 +84,7 @@ namespace MeshUtils {
         std::vector<std::vector<int> > m_edgeloops;
         std::vector<std::vector<std::vector<NekDouble> > > m_uvloops;
         std::vector<std::vector<NekDouble> > m_centers;
+        std::vector<std::vector<NekDouble> > m_extrapoints;
         
     };
     

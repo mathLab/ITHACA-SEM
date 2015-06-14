@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_TRIANGLEINTERFACE_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_TRIANGLEINTERFACE_H
 
 #include <boost/shared_ptr.hpp>
 

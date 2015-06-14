@@ -84,6 +84,7 @@ namespace MeshUtils {
         Array<OneD, Array<OneD, NekDouble> > m_dst;
         Array<OneD, Array<OneD, NekDouble> > m_ps;
         NekDouble Ae;
+        NekDouble ds;
         int Ne;
         Array<OneD, NekDouble> meshsvalue;
         Array<OneD, Array<OneD, NekDouble> > m_meshpoints;

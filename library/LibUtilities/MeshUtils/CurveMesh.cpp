@@ -50,16 +50,22 @@ namespace MeshUtils {
         
         m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+1;
         
+        ds = m_curvelength/(m_numSamplePoints-1);
+        
+        cout << " Curve length: " << m_curvelength <<  " Sample Points: " << m_numSamplePoints;
+        
         GetSampleFunction();
         
         Ae = 0.0;
         
         for(int i = 0; i < m_numSamplePoints-1; i++)
         {
-            Ae+=m_dst[1][1]*(1.0/m_dst[i][0]+1.0/m_dst[i+1][0])/2.0;
+            Ae+=ds*(1.0/m_dst[i][0]+1.0/m_dst[i+1][0])/2.0;
         }
         
         Ne=round(Ae);
+        
+        cout << ". Points: " << Ne+1 << endl;
         
         GetPhiFunction();
         
@@ -69,6 +75,7 @@ namespace MeshUtils {
         
         for(int i = 1; i < Ne; i++)
         {
+            cout << i << endl;
             bool iterate = true;
             int k = i;
             NekDouble ski = meshsvalue[i-1];
@@ -116,7 +123,7 @@ namespace MeshUtils {
         
         for(int i = 1; i < m_numSamplePoints; i++)
         {
-            runningInt+=(1.0/m_dst[i-1][0]+1.0/m_dst[i][0])/2.0*m_dst[1][1];
+            runningInt+=(1.0/m_dst[i-1][0]+1.0/m_dst[i][0])/2.0*ds;
             newPhi[0]=Ne/Ae*runningInt;
             newPhi[1]=m_dst[i][1];
             m_ps[i]=newPhi;
@@ -208,11 +215,9 @@ namespace MeshUtils {
         
         m_dst[0] = dsti;
         
-        NekDouble targetLength = m_curvelength/(m_numSamplePoints-1);
-        
         for(int i = 1; i < m_numSamplePoints; i++)
         {
-            dsti[1]=i*targetLength;
+            dsti[1]=i*ds;
             NekDouble t = m_cadcurve->tAtArcLength(dsti[1]);
             
             m_cadcurve->P(t,loc);

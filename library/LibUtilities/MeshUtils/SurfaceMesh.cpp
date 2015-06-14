@@ -37,6 +37,7 @@
 #include <fstream>
 
 #include <LibUtilities/MeshUtils/SurfaceMesh.h>
+#include <LibUtilities/MeshUtils/TriangleInterface.h>
 
 using namespace std;
 namespace Nektar{
@@ -46,6 +47,18 @@ namespace MeshUtils {
     void SurfaceMesh::Mesh()
     {
         OrientateCurves();
+        
+        TriangleInterfaceSharedPtr pplanemesh =
+            MemoryManager<TriangleInterface>::AllocateSharedPtr();
+        
+        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
+        
+        pplanemesh->Mesh();
+        
+        Array<OneD, Array<OneD, NekDouble> > Points;
+        Array<OneD, Array<OneD, int> > Connec;
+        
+        pplanemesh->Extract(Points,Connec);
     }
     
     void SurfaceMesh::OrientateCurves()

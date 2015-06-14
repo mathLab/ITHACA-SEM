@@ -115,25 +115,7 @@ namespace Nektar
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
                 m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
-                m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
-            
-                // check to see if any user defined boundary condition is
-                // indeed implemented
-                
-                for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-                {    
-                    std::string type =m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-                    if(!type.empty())
-                        // Time Dependent Boundary Condition (if no user
-                        // defined then this is empty)
-                        ASSERTL0 (boost::iequals(type,"Wall_Forces")   ||
-                                  boost::iequals(type,"TimeDependent") ||
-                                  boost::iequals(type,"MovingBody")    ||
-                                  boost::iequals(type,"Radiation")     ||
-                                  boost::iequals(type,"I")             ||
-                                  boost::iequals(type,"HOutflow"),
-                                  "Unknown USERDEFINEDTYPE boundary condition");
-                }
+                m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);            
             }
             break;
         case eNoEquationType:

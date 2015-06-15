@@ -69,6 +69,32 @@ void ProcessC0Projection::Process(po::variables_map &vm)
              << endl;
     }
 
+    // ensure not using diagonal preconditioner since tends not to converge fo
+    // mass matrix
+    if(m_f->m_graph->GetMeshDimension() == 3)
+    {
+        if(boost::iequals(m_f->m_session->GetSolverInfo("GLOBALSYSSOLN"),
+                          "IterativeStaticCond"))
+        {
+            if(boost::iequals(m_f->m_session->GetSolverInfo("PRECONDITIONER"),
+                              "Diagonal"))
+            {
+                m_f->m_session->SetSolverInfo("PRECONDITIONER","LowEnergyBlock");
+            }
+            if(boost::iequals(m_f->m_session->GetSolverInfo("PRECONDITIONER"),
+                              "FullLinearSpaceWithDiagonal"))
+            {
+                m_f->m_session->SetSolverInfo("PRECONDITIONER","FullLinearSpaceWithLowEnergyBlock");
+            }
+            
+            if(m_f->m_verbose)
+            {
+                cout << "Resetting diagonal precondition to low energy block " << endl;;
+            }
+        }
+    }
+    
+
     // generate an C0 expansion field with no boundary conditions.
     bool savedef = m_f->m_declareExpansionAsContField;
     m_f->m_declareExpansionAsContField = true;

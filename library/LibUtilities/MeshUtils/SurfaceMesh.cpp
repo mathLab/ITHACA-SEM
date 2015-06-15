@@ -61,8 +61,23 @@ namespace MeshUtils {
         
         pplanemesh->Extract(numpoints, numtris, Points,Connec);
         
+        bool repeat = true;
         
+        while (repeat)
+        {
+            repeat = Validate(numpoints,numtris,Points,Connec);
+            if(!repeat)
+            {
+                break;
+            }
+            pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
+            pplanemesh->Mesh();
+            pplanemesh->Extract(numpoints,numtris,Points,Connec);
+        }
         
+        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
+        pplanemesh->Mesh(false,true);
+        pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
         FILE* fro;
         fro = fopen("testREAL.fro","w");
@@ -78,6 +93,135 @@ namespace MeshUtils {
             fprintf(fro,"%d %d %d %d %d\n",i+1,Connec[i][0]+1,Connec[i][1]+1,Connec[i][2]+1,1);
         }
         fclose(fro);
+    }
+    
+    bool SurfaceMesh::Validate(int &np,
+                               int &nt,
+                               Array<OneD, Array<OneD, NekDouble> > &Points,
+                               Array<OneD, Array<OneD, int> > &Connec)
+    {
+        int pointBefore = m_extrapoints.size();
+        for(int i = 0; i < nt; i++)
+        {
+            int triVert[3];
+            triVert[0]=Connec[i][0];
+            triVert[1]=Connec[i][1];
+            triVert[2]=Connec[i][2];
+            
+            NekDouble triUV[3][2];
+            triUV[0][0]=Points[triVert[0]][0];
+            triUV[0][1]=Points[triVert[0]][1];
+            triUV[1][0]=Points[triVert[1]][0];
+            triUV[1][1]=Points[triVert[1]][1];
+            triUV[2][0]=Points[triVert[2]][0];
+            triUV[2][1]=Points[triVert[2]][1];
+            
+            Array<OneD, Array<OneD, NekDouble> > locs(3);
+            Array<OneD, NekDouble> triDelta(3);
+            for(int i = 0; i < 3; i++)
+            {
+                locs[i] = m_cadsurf->P(triUV[i][0],triUV[i][1]);
+                triDelta[i] = m_octree->Query(locs[i]);
+            }
+            
+            Array<OneD, NekDouble> r(3);
+            
+            r[0]=sqrt((locs[0][0]-locs[1][0])*(locs[0][0]-locs[1][0]) +
+                      (locs[0][1]-locs[1][1])*(locs[0][1]-locs[1][1]) +
+                      (locs[0][2]-locs[1][2])*(locs[0][2]-locs[1][2]));
+            r[1]=sqrt((locs[1][0]-locs[2][0])*(locs[1][0]-locs[2][0]) +
+                      (locs[1][1]-locs[2][1])*(locs[1][1]-locs[2][1]) +
+                      (locs[1][2]-locs[2][2])*(locs[1][2]-locs[2][2]));
+            r[2]=sqrt((locs[2][0]-locs[0][0])*(locs[2][0]-locs[0][0]) +
+                      (locs[2][1]-locs[0][1])*(locs[2][1]-locs[0][1]) +
+                      (locs[2][2]-locs[0][2])*(locs[2][2]-locs[0][2]));
+            
+            int numValid = 0;
+            
+            if(r[0] < triDelta[0])
+                numValid++;
+            
+            if(r[1] < triDelta[1])
+                numValid++;
+            
+            if(r[2] < triDelta[2])
+                numValid++;
+            
+            if(numValid != 3)
+            {
+                NekDouble uc = (triUV[0][0]+triUV[1][0]+triUV[2][0])/3.0;
+                NekDouble vc = (triUV[0][1]+triUV[1][1]+triUV[2][1])/3.0;
+                AddNewPoint(uc,vc);
+            }
+        }
+        
+        if(m_extrapoints.size() == pointBefore)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    
+    void SurfaceMesh::AddNewPoint(NekDouble u, NekDouble v)
+    {
+        Array<OneD, NekDouble> newPoint = m_cadsurf->P(u,v);
+        NekDouble newPointDelta = m_octree->Query(newPoint);
+        
+        bool add = true;
+        
+        for(int i = 0; i < m_uvloops.size(); i++)
+        {
+            for(int j = 0; j < m_uvloops[i].size(); j++)
+            {
+                Array<OneD, NekDouble> testPoint =
+                        m_cadsurf->P(m_uvloops[i][j][0],m_uvloops[i][j][1]);
+                
+                NekDouble r =
+                sqrt((testPoint[0]-newPoint[0])*(testPoint[0]-newPoint[0]) +
+                     (testPoint[1]-newPoint[1])*(testPoint[1]-newPoint[1]) +
+                     (testPoint[2]-newPoint[2])*(testPoint[2]-newPoint[2]));
+                
+                if(r<newPointDelta/1.414)
+                {
+                    add = false;
+                    break;
+                }
+            }
+            if(add==false)
+            {
+                break;
+            }
+        }
+        if(add==true)
+        {
+            for(int i = 0; i < m_extrapoints.size(); i++)
+            {
+                Array<OneD, NekDouble> testPoint =
+                    m_cadsurf->P(m_extrapoints[i][0],m_extrapoints[i][1]);
+                
+                NekDouble r =
+                sqrt((testPoint[0]-newPoint[0])*(testPoint[0]-newPoint[0]) +
+                     (testPoint[1]-newPoint[1])*(testPoint[1]-newPoint[1]) +
+                     (testPoint[2]-newPoint[2])*(testPoint[2]-newPoint[2]));
+                
+                if(r<newPointDelta/1.414)
+                {
+                    add = false;
+                    break;
+                }
+            }
+        }
+        
+        if(add)
+        {
+            vector<NekDouble> uv;
+            uv.push_back(u);
+            uv.push_back(v);
+            m_extrapoints.push_back(uv);
+        }
     }
     
     void SurfaceMesh::OrientateCurves()

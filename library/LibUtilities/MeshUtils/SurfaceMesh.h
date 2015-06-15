@@ -73,8 +73,14 @@ namespace MeshUtils {
         
     private:
         
+        bool Validate(int &np,
+                      int &nt,
+                      Array<OneD, Array<OneD, NekDouble> > &Points,
+                      Array<OneD, Array<OneD, int> > &Connec);
+        
         void OrientateCurves();
         int firstEdgeNotUsed();
+        void AddNewPoint(NekDouble u, NekDouble v);
         
         CADSurfSharedPtr m_cadsurf;
         OctreeSharedPtr m_octree;

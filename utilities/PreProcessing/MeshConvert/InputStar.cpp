@@ -100,7 +100,7 @@ namespace Nektar
             ProcessEdges();
             ProcessFaces();
             ProcessElements();
-            ProcessComposites(m_faceLabels);
+            ProcessComposites();
         }
 
         void InputStar::SetupElements(void)
@@ -195,7 +195,7 @@ namespace Nektar
                     }
                 }
                 
-                m_faceLabels[nComposite] = Facelabels[i];
+                m_mesh->m_faceLabels[nComposite] = Facelabels[i];
                 nComposite++;
             }
         }

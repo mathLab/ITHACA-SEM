@@ -49,7 +49,7 @@
 #define TRILIBRARY
 #define VOID int
 
-#include <LibUtilities/MeshUtils/ExternalLib/triangle.h>
+#include <triangle.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -57,7 +57,6 @@
 
 
 namespace Nektar {
-    namespace LibUtilities {
         namespace MeshUtils {
             
             class TriangleInterface
@@ -127,7 +126,6 @@ namespace Nektar {
             typedef boost::shared_ptr<TriangleInterface>
                             TriangleInterfaceSharedPtr;
         }
-    }
 }
 
 #endif

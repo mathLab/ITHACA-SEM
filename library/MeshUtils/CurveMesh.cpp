@@ -35,11 +35,10 @@
 
 #include <string>
 
-#include <LibUtilities/MeshUtils/CurveMesh.h>
+#include <MeshUtils/CurveMesh.h>
 
 using namespace std;
 namespace Nektar{
-namespace LibUtilities{
 namespace MeshUtils {
     
     void CurveMesh::Mesh()
@@ -241,7 +240,6 @@ namespace MeshUtils {
     
     
             
-}
 }
 }
 

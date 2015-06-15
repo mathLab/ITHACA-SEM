@@ -36,11 +36,10 @@
 #include <string>
 #include <fstream>
 
-#include <LibUtilities/MeshUtils/TriangleInterface.h>
+#include <MeshUtils/TriangleInterface.h>
 
 using namespace std;
 namespace Nektar{
-namespace LibUtilities{
 namespace MeshUtils {
     
     void TriangleInterface::Mesh(bool Quiet, bool Quality)
@@ -191,7 +190,6 @@ namespace MeshUtils {
         meshloaded = false;
     }
     
-}
 }
 }
 

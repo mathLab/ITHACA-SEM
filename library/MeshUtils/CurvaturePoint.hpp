@@ -40,7 +40,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar {
-    namespace LibUtilities {
         namespace MeshUtils {
             
             class CurvaturePoint {
@@ -123,7 +122,6 @@ namespace Nektar {
             typedef boost::shared_ptr<CurvaturePoint> CurvaturePointSharedPtr;
             
         }
-    }
 }
 
 #endif

@@ -34,10 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_OCTREE_OCTANT_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_OCTREE_OCTANT_H
+#ifndef NEKTAR_MESHUTILS_OCTREE_OCTANT_H
+#define NEKTAR_MESHUTILS_OCTREE_OCTANT_H
 
-#include <LibUtilities/MeshUtils/CurvaturePoint.h>
+#include <MeshUtils/CurvaturePoint.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -45,7 +45,6 @@
 
 
 namespace Nektar {
-    namespace LibUtilities {
         namespace MeshUtils {
             
             class Octant; //have to forward declare the class for the sharedptr
@@ -137,7 +136,6 @@ namespace Nektar {
                 
             };
         }
-    }
 }
 
 

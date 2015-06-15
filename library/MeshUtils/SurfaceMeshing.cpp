@@ -36,11 +36,10 @@
 #include <string>
 #include <fstream>
 
-#include <LibUtilities/MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing.h>
 
 using namespace std;
 namespace Nektar{
-namespace LibUtilities{
 namespace MeshUtils {
     
     void SurfaceMeshing::Mesh()
@@ -77,7 +76,6 @@ namespace MeshUtils {
     }
     
     
-}
 }
 }
 

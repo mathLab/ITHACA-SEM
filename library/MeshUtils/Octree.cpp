@@ -36,11 +36,10 @@
 #include <string>
 #include <fstream>
 
-#include <LibUtilities/MeshUtils/Octree.h>
+#include <MeshUtils/Octree.h>
 
 using namespace std;
 namespace Nektar{
-namespace LibUtilities{
 namespace MeshUtils {
     
     
@@ -898,6 +897,5 @@ namespace MeshUtils {
         }
     }
     
-}
 }
 }

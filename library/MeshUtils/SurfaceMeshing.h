@@ -34,68 +34,49 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESHING_SURFACEMESHING_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESHING_SURFACEMESHING_H
 
 #include <boost/shared_ptr.hpp>
 
-#include <LibUtilities/MeshUtils/Octree.h>
-#include <LibUtilities/CADSystem/CADSurf.h>
-#include <LibUtilities/MeshUtils/CurveMesh.h>
-
+#include <LibUtilities/CADSystem/CADSystem.h>
+#include <MeshUtils/Octree.h>
+#include <MeshUtils/SurfaceMesh.h>
+#include <MeshUtils/CurveMesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-
 namespace Nektar {
-namespace LibUtilities {
 namespace MeshUtils {
             
-    class SurfaceMesh
+    class SurfaceMeshing
     {
     public:
-        friend class MemoryManager<SurfaceMesh>;
+        friend class MemoryManager<SurfaceMeshing>;
         
-        SurfaceMesh(const CADSurfSharedPtr &cad,
-                    const OctreeSharedPtr &oct,
-                    const std::vector<CurveMeshSharedPtr> &cmeshes)
-                        : m_cadsurf(cad), m_octree(oct),
-                          m_curvemeshes(cmeshes)
-        
+        LIB_UTILITIES_EXPORT SurfaceMeshing(const CADSystemSharedPtr &cad,
+                                            const OctreeSharedPtr &octree) :
+                                                m_cad(cad),m_octree(octree)
         {
-            m_edges = m_cadsurf->GetEdges();
-            m_numedges = m_edges.size();
         };
         
-        void Mesh();
+        LIB_UTILITIES_EXPORT void Mesh();
+        
         
     private:
         
-        bool Validate(int &np,
-                      int &nt,
-                      Array<OneD, Array<OneD, NekDouble> > &Points,
-                      Array<OneD, Array<OneD, int> > &Connec);
-        
-        void OrientateCurves();
-        int firstEdgeNotUsed();
-        void AddNewPoint(NekDouble u, NekDouble v);
-        
-        CADSurfSharedPtr m_cadsurf;
+        CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
+        
+        std::vector<SurfaceMeshSharedPtr> m_surfacemeshes;
         std::vector<CurveMeshSharedPtr> m_curvemeshes;
-        int m_numedges;
-        std::vector<int> m_edges;
-        std::vector<std::vector<int> > m_edgeloops;
-        std::vector<std::vector<std::vector<NekDouble> > > m_uvloops;
-        std::vector<std::vector<NekDouble> > m_centers;
-        std::vector<std::vector<NekDouble> > m_extrapoints;
+        
         
     };
     
-    typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
-}
+    typedef boost::shared_ptr<SurfaceMeshing> SurfaceMeshingSharedPtr;
 }
 }
 

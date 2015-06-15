@@ -36,12 +36,11 @@
 #include <string>
 #include <fstream>
 
-#include <LibUtilities/MeshUtils/SurfaceMesh.h>
-#include <LibUtilities/MeshUtils/TriangleInterface.h>
+#include <MeshUtils/SurfaceMesh.h>
+#include <MeshUtils/TriangleInterface.h>
 
 using namespace std;
 namespace Nektar{
-namespace LibUtilities{
 namespace MeshUtils {
     
     void SurfaceMesh::Mesh()
@@ -455,7 +454,6 @@ namespace MeshUtils {
         return -1;
     }
     
-}
 }
 }
 

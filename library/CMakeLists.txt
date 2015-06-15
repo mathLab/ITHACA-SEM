@@ -1,4 +1,4 @@
-SET(LibrarySubDirs LibUtilities LocalRegions Collections
+SET(LibrarySubDirs LibUtilities LocalRegions Collections MeshUtils
     MultiRegions SpatialDomains StdRegions SolverUtils)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs     Demos)

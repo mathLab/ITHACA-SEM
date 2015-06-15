@@ -33,11 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/MeshUtils/Octant.h>
+#include <MeshUtils/Octant.h>
 
 using namespace std;
 namespace Nektar {
-namespace LibUtilities {
 namespace MeshUtils {
     
     Octant::Octant(NekDouble x, NekDouble y, NekDouble z,
@@ -227,6 +226,5 @@ namespace MeshUtils {
         }
     }
     
-}
 }
 }

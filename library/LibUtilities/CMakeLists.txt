@@ -326,29 +326,6 @@ IF(NEKTAR_USE_OCC)
 	SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})
 	SOURCE_GROUP("CAD System Sources" FILES ${CADSystemSources})
 
-	SET(MeshUtilsSources
-		./MeshUtils/Octree.cpp
-        ./MeshUtils/Octant.cpp
-        ./MeshUtils/SurfaceMeshing.cpp
-        ./MeshUtils/SurfaceMesh.cpp
-        ./MeshUtils/CurveMesh.cpp
-        ./MeshUtils/TriangleInterface.cpp
-		)
-
-    SET(MeshUtilsHeaders
-        ./MeshUtils/Octree.h
-        ./MeshUtils/CurvaturePoint.h
-        ./MeshUtils/Octant.h
-        ./MeshUtils/SurfaceMeshing.h
-        ./MeshUtils/SurfaceMesh.h
-        ./MeshUtils/CurveMesh.h
-        ./MeshUtils/TriangleInterface.h
-        ./MeshUtils/ExternalLib/triangle.h
-        )
-
-    SOURCE_GROUP("Mesh utilities headers" FILES ${MeshUtilsHeaders})
-    SOURCE_GROUP("Mesh utilities sources" FILES ${MeshUtilsSources})
-
 ENDIF(NEKTAR_USE_OCC)
 
 SOURCE_GROUP("Base" FILES ${BaseHeaders})
@@ -361,7 +338,6 @@ SET(LibUtilityHeaders
     ${CommunicationHeaders}
 	${FoundationHeaders}
 	${CADSystemHeaders}
-    ${MeshUtilsHeaders}
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
 	${InterpreterHeaders}
@@ -382,7 +358,6 @@ SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
     ${CADSystemSources}
-    ${MeshUtilsSources}
     ${PolylibSources}
     ${CommunicationSources}
     ${LinearAlgebraSources}
@@ -507,7 +482,6 @@ IF(NEKTAR_USE_OCC)
 		    )
 	SET_TARGET_PROPERTIES(LibUtilities PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
 	TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OCC_LIBS})
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${TRILIB})
 ENDIF(NEKTAR_USE_OCC)
 
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)

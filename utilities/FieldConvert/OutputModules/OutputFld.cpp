@@ -274,11 +274,12 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         fs::path writefile(filename);
-        int writefld = 0;
+        int writefld = 1;
         if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
         {
             LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
             int rank = comm->GetRank();
+            writefld = 0; // set to zero for reduce all to be correct. 
 
             if(rank == 0)
             {

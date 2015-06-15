@@ -271,6 +271,10 @@ namespace Nektar
 			
         }
 
+		void CommSerial::v_Bcast(int& data, int rootProc)
+		{
+
+		}
 
         /**
          *

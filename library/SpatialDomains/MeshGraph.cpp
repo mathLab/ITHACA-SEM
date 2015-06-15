@@ -37,6 +37,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPyrExp.h>
@@ -62,6 +63,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/make_shared.hpp>
 
 namespace Nektar
 {
@@ -989,7 +991,9 @@ namespace Nektar
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::FieldIOSharedPtr f = LibUtilities::MakeDefaultFieldIO(m_session);
+                    //LibUtilities::FieldIOSharedPtr f = LibUtilities::GetFieldIOFactory().CreateInstance("Xml", m_session->GetComm());
+                    // This has to use the XML reader.
+                    boost::shared_ptr<LibUtilities::FieldIOXml> f = boost::make_shared<LibUtilities::FieldIOXml>(m_session->GetComm());
                     f->ImportFieldDefs(doc, fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);

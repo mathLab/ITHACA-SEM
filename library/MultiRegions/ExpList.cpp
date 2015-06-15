@@ -1828,7 +1828,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::FieldIOSharedPtr f = LibUtilities::MakeDefaultFieldIO(m_session);
+            LibUtilities::FieldIOSharedPtr f = LibUtilities::MakeFieldIOForFile(m_session, fileName);
             f->Import(fileName, FieldDef, FieldData);
 
             bool found = false;

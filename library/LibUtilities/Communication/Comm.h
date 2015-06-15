@@ -130,6 +130,8 @@ namespace Nektar
                                                            Array<OneD, int>& pRecvDataSizeMap,
                                                            Array<OneD, int>& pRecvDataOffsetMap);
                 
+                LIB_UTILITIES_EXPORT inline void Bcast(int& data, int rootProc);
+
                 LIB_UTILITIES_EXPORT inline void SplitComm(int pRows, int pColumns);
                 LIB_UTILITIES_EXPORT inline CommSharedPtr GetRowComm();
                 LIB_UTILITIES_EXPORT inline CommSharedPtr GetColumnComm();
@@ -195,6 +197,7 @@ namespace Nektar
 										Array<OneD, int>& pRecvData,
 										Array<OneD, int>& pRecvDataSizeMap,
 										Array<OneD, int>& pRecvDataOffsetMap) = 0;
+				virtual void v_Bcast(int& data, int rootProc) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
                 virtual bool v_TreatAsRankZero(void) = 0;
                 LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles(void);
@@ -424,6 +427,10 @@ namespace Nektar
 			v_AlltoAllv(pSendData,pSendDataSizeMap,pSendDataOffsetMap,pRecvData,pRecvDataSizeMap,pRecvDataOffsetMap);
 		}
 
+		inline void Comm::Bcast(int& data, int rootProc)
+		{
+		    v_Bcast(data, rootProc);
+		}
 
         /**
          * @brief Splits this communicator into a grid of size pRows*pColumns

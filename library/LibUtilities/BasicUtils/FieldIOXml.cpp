@@ -341,5 +341,636 @@ namespace Nektar
             return Z_OK;
         }
 
+        /**
+         * Decompress a zlib-compressed string into a vector of NekDouble
+         * values.
+         */
+        int FieldIOXml::Inflate(std::string& in, std::vector<NekDouble>& out)
+        {
+            int ret;
+            unsigned have;
+            z_stream strm;
+            string buffer;
+            buffer.resize(CHUNK);
+            string output;
+
+            strm.zalloc = Z_NULL;
+            strm.zfree = Z_NULL;
+            strm.opaque = Z_NULL;
+            strm.avail_in = 0;
+            strm.next_in = Z_NULL;
+            ret = inflateInit(&strm);
+            ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
+
+            strm.avail_in = in.size();
+            strm.next_in = (unsigned char*) (&in[0]);
+
+            do
+            {
+                strm.avail_out = CHUNK;
+                strm.next_out = (unsigned char*) (&buffer[0]);
+
+                ret = inflate(&strm, Z_NO_FLUSH);
+
+                ASSERTL0(ret != Z_STREAM_ERROR, "Stream error occured.");
+
+                switch (ret)
+                {
+                    case Z_NEED_DICT:
+                        ret = Z_DATA_ERROR; /* and fall through */
+                    case Z_DATA_ERROR:
+                    case Z_MEM_ERROR:
+                        (void) inflateEnd(&strm);
+                        return ret;
+                }
+
+                have = CHUNK - strm.avail_out;
+                output += buffer.substr(0, have);
+
+            } while (strm.avail_out == 0);
+
+            (void) inflateEnd(&strm);
+
+            if (ret == Z_STREAM_END)
+            {
+                NekDouble* readFieldData = (NekDouble*) output.c_str();
+                unsigned int len = output.size() * sizeof(*output.c_str())
+                        / sizeof(NekDouble);
+                out.assign(readFieldData, readFieldData + len);
+                return Z_OK;
+            }
+            else
+            {
+                return Z_DATA_ERROR;
+            }
+        }
+
+        /**
+         *
+         */
+        void FieldIOXml::v_Import(const std::string& infilename,
+                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                std::vector<std::vector<NekDouble> > &fielddata,
+                FieldMetaDataMap &fieldmetadatamap,
+                const Array<OneD, int> ElementIDs)
+        {
+
+            std::string infile = infilename;
+
+            fs::path pinfilename(infilename);
+
+            if (fs::is_directory(pinfilename)) // check to see that infile is a directory
+            {
+                fs::path infofile("Info.xml");
+                fs::path fullpath = pinfilename / infofile;
+                infile = PortablePath(fullpath);
+
+                std::vector < std::string > filenames;
+                std::vector < std::vector<unsigned int>
+                        > elementIDs_OnPartitions;
+
+                ImportMultiFldFileIDs(infile, filenames,
+                        elementIDs_OnPartitions, fieldmetadatamap);
+
+                // Load metadata
+                ImportFieldMetaData(infile, fieldmetadatamap);
+
+                if (ElementIDs == NullInt1DArray) //load all fields
+                {
+                    for (int i = 0; i < filenames.size(); ++i)
+                    {
+                        fs::path pfilename(filenames[i]);
+                        fullpath = pinfilename / pfilename;
+                        string fname = PortablePath(fullpath);
+
+                        TiXmlDocument doc1(fname);
+                        bool loadOkay1 = doc1.LoadFile();
+
+                        std::stringstream errstr;
+                        errstr << "Unable to load file: " << fname << std::endl;
+                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow()
+                                << ", Column " << doc1.ErrorCol() << std::endl;
+                        ASSERTL0(loadOkay1, errstr.str());
+
+                        ImportFieldDefs(doc1, fielddefs, false);
+                        if (fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
+                    }
+
+                }
+                else // only load relevant partitions
+                {
+                    int i, j;
+                    map<int, vector<int> > FileIDs;
+                    map<int, vector<int> >::iterator it;
+                    set<int> LoadFile;
+
+                    for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
+                    {
+                        for (j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
+                        {
+                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
+                        }
+                    }
+
+                    for (i = 0; i < ElementIDs.num_elements(); ++i)
+                    {
+                        it = FileIDs.find(ElementIDs[i]);
+                        if (it != FileIDs.end())
+                        {
+                            for (j = 0; j < it->second.size(); ++j)
+                            {
+                                LoadFile.insert(it->second[j]);
+                            }
+                        }
+                    }
+
+                    set<int>::iterator iter;
+                    for (iter = LoadFile.begin(); iter != LoadFile.end();
+                            ++iter)
+                    {
+                        fs::path pfilename(filenames[*iter]);
+                        fullpath = pinfilename / pfilename;
+                        string fname = PortablePath(fullpath);
+                        TiXmlDocument doc1(fname);
+                        bool loadOkay1 = doc1.LoadFile();
+
+                        std::stringstream errstr;
+                        errstr << "Unable to load file: " << fname << std::endl;
+                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow()
+                                << ", Column " << doc1.ErrorCol() << std::endl;
+                        ASSERTL0(loadOkay1, errstr.str());
+
+                        ImportFieldDefs(doc1, fielddefs, false);
+                        if (fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
+                    }
+                }
+            }
+            else // serial format case
+            {
+
+                TiXmlDocument doc(infile);
+                bool loadOkay = doc.LoadFile();
+
+                std::stringstream errstr;
+                errstr << "Unable to load file: " << infile << std::endl;
+                errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+                errstr << "Position: Line " << doc.ErrorRow() << ", Column "
+                        << doc.ErrorCol() << std::endl;
+                ASSERTL0(loadOkay, errstr.str());
+
+                v_ImportFieldMetaData(doc, fieldmetadatamap);
+                ImportFieldDefs(doc, fielddefs, false);
+                if (fielddata != NullVectorNekDoubleVector)
+                {
+                    ImportFieldData(doc, fielddefs, fielddata);
+                }
+            }
+        }
+
+        void FieldIOXml::v_ImportFieldMetaData(std::string filename,
+                FieldMetaDataMap &fieldmetadatamap)
+        {
+            TiXmlDocument doc(filename);
+            bool loadOkay = doc.LoadFile();
+
+            std::stringstream errstr;
+            errstr << "Unable to load file: " << filename << std::endl;
+            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+            errstr << "Position: Line " << doc.ErrorRow() << ", Column "
+                    << doc.ErrorCol() << std::endl;
+            ASSERTL0(loadOkay, errstr.str());
+
+            v_ImportFieldMetaData(doc, fieldmetadatamap);
+        }
+
+        void FieldIOXml::v_ImportFieldMetaData(TiXmlDocument &doc,
+                FieldMetaDataMap &fieldmetadatamap)
+        {
+
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = 0; // Master tag within which all data is contained.
+            TiXmlElement* metadata = 0;
+
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+            std::string strLoop = "NEKTAR";
+
+            // Retain original metadata structure for backwards compatibility
+            // TODO: Remove old metadata format
+            metadata = master->FirstChildElement("FIELDMETADATA");
+            if (metadata)
+            {
+                TiXmlElement *param = metadata->FirstChildElement("P");
+
+                while (param)
+                {
+                    TiXmlAttribute *paramAttr = param->FirstAttribute();
+                    std::string attrName(paramAttr->Name());
+                    std::string paramString;
+
+                    if (attrName == "PARAM")
+                    {
+                        paramString.insert(0, paramAttr->Value());
+                    }
+                    else
+                    {
+                        ASSERTL0(false,
+                                "PARAM not provided as an attribute in FIELDMETADATA section");
+                    }
+
+                    // Now read body of param
+                    std::string paramBodyStr;
+
+                    TiXmlNode *paramBody = param->FirstChild();
+
+                    paramBodyStr += paramBody->ToText()->Value();
+
+                    fieldmetadatamap[paramString] = paramBodyStr;
+                    param = param->NextSiblingElement("P");
+                }
+            }
+
+            // New metadata format
+            metadata = master->FirstChildElement("Metadata");
+            if (metadata)
+            {
+                TiXmlElement *param = metadata->FirstChildElement();
+
+                while (param)
+                {
+                    std::string paramString = param->Value();
+                    if (paramString != "Provenance")
+                    {
+                        // Now read body of param
+                        TiXmlNode *paramBody = param->FirstChild();
+                        std::string paramBodyStr = paramBody->ToText()->Value();
+
+                        fieldmetadatamap[paramString] = paramBodyStr;
+                    }
+                    param = param->NextSiblingElement();
+                }
+            }
+
+        }
+
+        /**
+         * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
+         */
+        void FieldIOXml::ImportFieldDefs(TiXmlDocument &doc,
+                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                bool expChild)
+        {
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = NULL; // Master tag within which all data is contained.
+
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+            std::string strLoop = "NEKTAR";
+            TiXmlElement* loopXml = master;
+
+            TiXmlElement *expansionTypes;
+            if (expChild)
+            {
+                expansionTypes = master->FirstChildElement("EXPANSIONS");
+                ASSERTL0(expansionTypes,
+                        "Unable to find EXPANSIONS tag in file.");
+                loopXml = expansionTypes;
+                strLoop = "EXPANSIONS";
+            }
+
+            // Loop through all nektar tags, finding all of the element tags.
+            while (loopXml)
+            {
+                TiXmlElement* element = loopXml->FirstChildElement("ELEMENTS");
+                ASSERTL0(element,
+                        "Unable to find ELEMENTS tag within nektar tag.");
+
+                while (element)
+                {
+                    // Extract the attributes.
+                    std::string idString;
+                    std::string shapeString;
+                    std::string basisString;
+                    std::string homoLengthsString;
+                    std::string homoZIDsString;
+                    std::string homoYIDsString;
+                    std::string numModesString;
+                    std::string numPointsString;
+                    std::string fieldsString;
+                    std::string pointsString;
+                    bool pointDef = false;
+                    bool numPointDef = false;
+                    TiXmlAttribute *attr = element->FirstAttribute();
+                    while (attr)
+                    {
+                        std::string attrName(attr->Name());
+                        if (attrName == "FIELDS")
+                        {
+                            fieldsString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "SHAPE")
+                        {
+                            shapeString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "BASIS")
+                        {
+                            basisString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "HOMOGENEOUSLENGTHS")
+                        {
+                            homoLengthsString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "HOMOGENEOUSZIDS")
+                        {
+                            homoZIDsString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "HOMOGENEOUSYIDS")
+                        {
+                            homoYIDsString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "NUMMODESPERDIR")
+                        {
+                            numModesString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "ID")
+                        {
+                            idString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "POINTSTYPE")
+                        {
+                            pointsString.insert(0, attr->Value());
+                            pointDef = true;
+                        }
+                        else if (attrName == "NUMPOINTSPERDIR")
+                        {
+                            numPointsString.insert(0, attr->Value());
+                            numPointDef = true;
+                        }
+                        else
+                        {
+                            std::string errstr("Unknown attribute: ");
+                            errstr += attrName;
+                            ASSERTL1(false, errstr.c_str());
+                        }
+
+                        // Get the next attribute.
+                        attr = attr->Next();
+                    }
+
+                    // Check to see if homogeneous expansion and if so
+                    // strip down the shapeString definition
+                    int numHomoDir = 0;
+                    size_t loc;
+                    //---> This finds the first location of  'n'!
+                    if ((loc = shapeString.find_first_of("-")) != string::npos)
+                    {
+                        if (shapeString.find("Exp1D") != string::npos)
+                        {
+                            numHomoDir = 1;
+                        }
+                        else // HomogeneousExp1D
+                        {
+                            numHomoDir = 2;
+                        }
+
+                        shapeString.erase(loc, shapeString.length());
+                    }
+
+                    // Reconstruct the fielddefs.
+                    std::vector<unsigned int> elementIds;
+                    {
+                        bool valid = ParseUtils::GenerateSeqVector(
+                                idString.c_str(), elementIds);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse the element ids.");
+                    }
+
+                    // Get the geometrical shape
+                    ShapeType shape;
+                    bool valid = false;
+                    for (unsigned int j = 0; j < SIZE_ShapeType; j++)
+                    {
+                        if (ShapeTypeMap[j] == shapeString)
+                        {
+                            shape = (ShapeType) j;
+                            valid = true;
+                            break;
+                        }
+                    }
+
+                    ASSERTL0(valid,
+                            std::string(
+                                    "Unable to correctly parse the shape type: ").append(
+                                    shapeString).c_str());
+
+                    // Get the basis
+                    std::vector < std::string > basisStrings;
+                    std::vector<BasisType> basis;
+                    valid = ParseUtils::GenerateOrderedStringVector(
+                            basisString.c_str(), basisStrings);
+                    ASSERTL0(valid,
+                            "Unable to correctly parse the basis types.");
+                    for (std::vector<std::string>::size_type i = 0;
+                            i < basisStrings.size(); i++)
+                    {
+                        valid = false;
+                        for (unsigned int j = 0; j < SIZE_BasisType; j++)
+                        {
+                            if (BasisTypeMap[j] == basisStrings[i])
+                            {
+                                basis.push_back((BasisType) j);
+                                valid = true;
+                                break;
+                            }
+                        }
+                        ASSERTL0(valid,
+                                std::string(
+                                        "Unable to correctly parse the basis type: ").append(
+                                        basisStrings[i]).c_str());
+                    }
+
+                    // Get homoLengths
+                    std::vector<NekDouble> homoLengths;
+                    if (numHomoDir)
+                    {
+                        valid = ParseUtils::GenerateUnOrderedVector(
+                                homoLengthsString.c_str(), homoLengths);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse the number of homogeneous lengths.");
+                    }
+
+                    // Get Homogeneous points IDs
+                    std::vector<unsigned int> homoZIDs;
+                    std::vector<unsigned int> homoYIDs;
+
+                    if (numHomoDir == 1)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(
+                                homoZIDsString.c_str(), homoZIDs);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse homogeneous planes IDs.");
+                    }
+
+                    if (numHomoDir == 2)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(
+                                homoZIDsString.c_str(), homoZIDs);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse homogeneous lines IDs in z-direction.");
+                        valid = ParseUtils::GenerateSeqVector(
+                                homoYIDsString.c_str(), homoYIDs);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse homogeneous lines IDs in y-direction.");
+                    }
+
+                    // Get points type
+                    std::vector<PointsType> points;
+
+                    if (pointDef)
+                    {
+                        std::vector < std::string > pointsStrings;
+                        valid = ParseUtils::GenerateOrderedStringVector(
+                                pointsString.c_str(), pointsStrings);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse the points types.");
+                        for (std::vector<std::string>::size_type i = 0;
+                                i < pointsStrings.size(); i++)
+                        {
+                            valid = false;
+                            for (unsigned int j = 0; j < SIZE_PointsType; j++)
+                            {
+                                if (kPointsTypeStr[j] == pointsStrings[i])
+                                {
+                                    points.push_back((PointsType) j);
+                                    valid = true;
+                                    break;
+                                }
+                            }
+
+                            ASSERTL0(valid,
+                                    std::string(
+                                            "Unable to correctly parse the points type: ").append(
+                                            pointsStrings[i]).c_str());
+                        }
+                    }
+
+                    // Get numModes
+                    std::vector<unsigned int> numModes;
+                    bool UniOrder = false;
+
+                    if (strstr(numModesString.c_str(), "UNIORDER:"))
+                    {
+                        UniOrder = true;
+                    }
+
+                    valid = ParseUtils::GenerateOrderedVector(
+                            numModesString.c_str() + 9, numModes);
+                    ASSERTL0(valid,
+                            "Unable to correctly parse the number of modes.");
+
+                    // Get numPoints
+                    std::vector<unsigned int> numPoints;
+                    if (numPointDef)
+                    {
+                        valid = ParseUtils::GenerateOrderedVector(
+                                numPointsString.c_str(), numPoints);
+                        ASSERTL0(valid,
+                                "Unable to correctly parse the number of points.");
+                    }
+
+                    // Get fields names
+                    std::vector < std::string > Fields;
+                    valid = ParseUtils::GenerateOrderedStringVector(
+                            fieldsString.c_str(), Fields);
+                    ASSERTL0(valid,
+                            "Unable to correctly parse the number of fields.");
+
+                    FieldDefinitionsSharedPtr fielddef = MemoryManager<
+                            FieldDefinitions>::AllocateSharedPtr(shape,
+                            elementIds, basis, UniOrder, numModes, Fields,
+                            numHomoDir, homoLengths, homoZIDs, homoYIDs, points,
+                            pointDef, numPoints, numPointDef);
+
+                    fielddefs.push_back(fielddef);
+
+                    element = element->NextSiblingElement("ELEMENTS");
+                }
+                loopXml = loopXml->NextSiblingElement(strLoop);
+            }
+        }
+
+        /**
+         *
+         */
+        void FieldIOXml::ImportFieldData(TiXmlDocument &doc,
+                const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                std::vector<std::vector<NekDouble> > &fielddata)
+        {
+            int cntdumps = 0;
+
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = NULL; // Master tag within which all data is contained.
+
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+            // Loop through all nektar tags, finding all of the element tags.
+            while (master)
+            {
+                TiXmlElement* element = master->FirstChildElement("ELEMENTS");
+                ASSERTL0(element,
+                        "Unable to find ELEMENTS tag within nektar tag.");
+                while (element)
+                {
+                    // Extract the body, which the "data".
+                    TiXmlNode* elementChild = element->FirstChild();
+                    ASSERTL0(elementChild,
+                            "Unable to extract the data from the element tag.");
+                    std::string elementStr;
+                    while (elementChild)
+                    {
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elementStr += elementChild->ToText()->ValueStr();
+                        }
+                        elementChild = elementChild->NextSibling();
+                    }
+
+                    // Convert from base64 to binary.
+                    typedef boost::archive::iterators::transform_width<
+                            boost::archive::iterators::binary_from_base64<
+                                    std::string::const_iterator>, 8, 6> binary_t;
+                    std::string vCompressed(binary_t(elementStr.begin()),
+                            binary_t(elementStr.end()));
+
+                    std::vector<NekDouble> elementFieldData;
+                    ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
+                            "Failed to decompress field data.");
+
+                    fielddata.push_back(elementFieldData);
+
+                    int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
+                    ASSERTL0(
+                            fielddata[cntdumps].size()
+                                    == datasize
+                                            * fielddefs[cntdumps]->m_fields.size(),
+                            "Input data is not the same length as header infoarmation");
+
+                    cntdumps++;
+
+                    element = element->NextSiblingElement("ELEMENTS");
+                }
+                master = master->NextSiblingElement("NEKTAR");
+            }
+        }
+
     }
 }

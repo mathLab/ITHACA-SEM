@@ -106,8 +106,6 @@ namespace Nektar
                 }
             }
 
-            m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
-
         }
 
         /**
@@ -625,7 +623,9 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             // Get Homogeneous
-            m_fld->Import(pInfile,FieldDef,FieldData);
+            LibUtilities::FieldIOSharedPtr field_fld =
+                                LibUtilities::MakeFieldIOForFile(m_session, pInfile);
+            field_fld->Import(pInfile,FieldDef,FieldData);
 
             int nvar = m_session->GetVariables().size();
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))

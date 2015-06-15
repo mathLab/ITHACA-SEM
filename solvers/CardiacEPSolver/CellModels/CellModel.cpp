@@ -362,7 +362,6 @@ namespace Nektar
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
         LibUtilities::FieldMetaDataMap::iterator iter;
         std::set<std::string>::const_iterator setIt;
-        LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeDefaultFieldIO(m_session);
 	
         for (setIt = filelist.begin(); setIt != filelist.end(); ++setIt)
         {
@@ -372,6 +371,7 @@ namespace Nektar
             }
             FieldDef[*setIt] = FDef(0);
             FieldData[*setIt] = FData(0);
+            LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeFieldIOForFile(m_session, *setIt);
             fld->Import(*setIt, FieldDef[*setIt], FieldData[*setIt],
                         fieldMetaDataMap);
         }

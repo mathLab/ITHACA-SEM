@@ -624,6 +624,12 @@ namespace Nektar
 					 "MPI error performing All-to-All-v.");
 		}
 
+		void CommMpi::v_Bcast(int& data, int rootProc)
+		{
+		    int retval = MPI_Bcast(&data, 1, MPI_INT, rootProc, m_comm);
+            ASSERTL0(retval == MPI_SUCCESS,
+                     "MPI error performing Bcast-v.");
+		}
 
         /**
          * Processes are considered as a grid of size pRows*pColumns. Comm

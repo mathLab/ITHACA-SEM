@@ -254,7 +254,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     // Read in local from field partitions
     const SpatialDomains::ExpansionMap &expansions = m_fromField->m_graph->GetExpansions();
 
-    m_fromField->m_fld = LibUtilities::MakeDefaultFieldIO(m_fromField->m_session);
 
     Array<OneD,int> ElementGIDs(expansions.size());
     SpatialDomains::ExpansionMap::const_iterator expIt;
@@ -267,7 +266,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     }
 
     string fromfld = m_config["fromfld"].as<string>();
-    m_fromField->m_fld->Import(fromfld,m_fromField->m_fielddef,
+    m_fromField->m_fld = LibUtilities::MakeFieldIOForFile(m_fromField->m_session, fromfld);
+    m_fromField->m_fld->Import(fromfld, m_fromField->m_fielddef,
                   m_fromField->m_data,
                   LibUtilities::NullFieldMetaDataMap,
                                ElementGIDs);

@@ -595,7 +595,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
 
     //Get Homogeneous
-    LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeDefaultFieldIO(m_session);
+    LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeFieldIOForFile(m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData);
 
 

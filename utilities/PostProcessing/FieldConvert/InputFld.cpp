@@ -106,14 +106,16 @@ namespace Nektar
 
             if(!m_f->m_fld)
             {
+                const std::string& filename = m_f->m_inputfiles[fldending][0];
                 if(m_f->m_session)
                 {
-                    m_f->m_fld = LibUtilities::MakeDefaultFieldIO(m_f->m_session);
+                    m_f->m_fld = LibUtilities::MakeFieldIOForFile(m_f->m_session, filename);
                 }
                 else // serial communicator
                 {
                     LibUtilities::CommSharedPtr c = LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-                    m_f->m_fld = LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c);
+                    const std::string iofmt = LibUtilities::FieldIO::GetFileType(filename, m_f->m_session->GetComm());
+                    m_f->m_fld = LibUtilities::GetFieldIOFactory().CreateInstance(iofmt, c);
                 }
             }
 

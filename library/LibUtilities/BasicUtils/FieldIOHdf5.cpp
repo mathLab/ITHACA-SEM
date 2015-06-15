@@ -233,5 +233,20 @@ namespace Nektar
             }
             // Destruction of the H5::File and Group objects closes them. Yay RAII
         }
+
+        void FieldIOHdf5::v_Import(const std::string& infilename,
+                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                std::vector<std::vector<NekDouble> > &fielddata,
+                FieldMetaDataMap &fieldinfomap,
+                const Array<OneD, int> ElementiDs)
+        {
+            ASSERTL1(0, "Import of HDF not implemented.");
+        }
+
+        void FieldIOHdf5::v_ImportFieldMetaData(std::string filename,
+                FieldMetaDataMap &fieldmetadatamap)
+        {
+            ASSERTL1(0, "Import of HDF metadata not implemented.");
+        }
     }
 }

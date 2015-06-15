@@ -126,6 +126,7 @@ namespace Nektar
 									Array<OneD, int>& pRecvData,
 									Array<OneD, int>& pRecvDataSizeMap,
 									Array<OneD, int>& pRecvDataOffsetMap);
+			virtual void v_Bcast(int& data, int rootProc);
             virtual void v_SplitComm(int pRows, int pColumns);
 
         private:

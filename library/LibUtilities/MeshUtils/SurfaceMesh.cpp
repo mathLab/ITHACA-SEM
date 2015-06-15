@@ -47,7 +47,7 @@ namespace MeshUtils {
     void SurfaceMesh::Mesh()
     {
         OrientateCurves();
-        
+
         TriangleInterfaceSharedPtr pplanemesh =
             MemoryManager<TriangleInterface>::AllocateSharedPtr();
         
@@ -57,8 +57,27 @@ namespace MeshUtils {
         
         Array<OneD, Array<OneD, NekDouble> > Points;
         Array<OneD, Array<OneD, int> > Connec;
+        int numpoints, numtris;
         
-        pplanemesh->Extract(Points,Connec);
+        pplanemesh->Extract(numpoints, numtris, Points,Connec);
+        
+        
+        
+        
+        FILE* fro;
+        fro = fopen("testREAL.fro","w");
+        fprintf(fro,"%d %d 0 0 0 0\n",numtris,numpoints);
+        
+        for(int i = 0; i < numpoints; i++)
+        {
+            Array<OneD, NekDouble> p = m_cadsurf->P(Points[i][0],Points[i][1]);
+            fprintf(fro,"%d %f %f %f\n",i+1,p[0],p[1],p[2]);
+        }
+        for(int i = 0; i < numtris; i++)
+        {
+            fprintf(fro,"%d %d %d %d %d\n",i+1,Connec[i][0]+1,Connec[i][1]+1,Connec[i][2]+1,1);
+        }
+        fclose(fro);
     }
     
     void SurfaceMesh::OrientateCurves()
@@ -183,12 +202,11 @@ namespace MeshUtils {
         
         //loops made need to orientate on which is biggest and define holes
         
-        
         for(int i = 0; i < m_uvloops.size(); i++)
         {
             NekDouble ua = 0.0;
             NekDouble va = 0.0;
-            for(int j = 0; i < m_uvloops[i].size(); i++)
+            for(int j = 0; j < m_uvloops[i].size(); j++)
             {
                 ua+=m_uvloops[i][j][0];
                 va+=m_uvloops[i][j][1];

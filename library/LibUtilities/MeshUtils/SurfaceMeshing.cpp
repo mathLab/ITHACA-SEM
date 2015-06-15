@@ -60,8 +60,6 @@ namespace MeshUtils {
             m_curvemeshes.push_back(cmesh);
         }
         
-        exit(-1);
-        
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             SurfaceMeshSharedPtr smesh =

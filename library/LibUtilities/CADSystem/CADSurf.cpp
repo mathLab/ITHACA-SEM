@@ -83,6 +83,17 @@ namespace Nektar{
             
         }
         
+        Array<OneD, NekDouble> CADSurf::P(NekDouble u, NekDouble v)
+        {
+            Array<OneD, NekDouble> out(3);
+            gp_Pnt loc;
+            loc = occSurface.Value(u,v);
+            out[0]=loc.X();
+            out[1]=loc.Y();
+            out[2]=loc.Z();
+            return out;
+        }
+        
         Array<OneD, NekDouble> CADSurf::N(NekDouble u, NekDouble v)
         {
             Array<OneD, NekDouble> out(3);

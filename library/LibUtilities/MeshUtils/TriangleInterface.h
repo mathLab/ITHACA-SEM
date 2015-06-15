@@ -104,7 +104,9 @@ namespace Nektar {
                 
                 void Mesh(bool Quiet = true, bool Quality = false);
                 
-                void Extract(Array<OneD, Array<OneD, NekDouble> > &Points,
+                void Extract(int &np,
+                             int &nt,
+                             Array<OneD, Array<OneD, NekDouble> > &Points,
                              Array<OneD, Array<OneD, int> > &Connec);
                 
             private:

@@ -85,6 +85,7 @@ namespace Nektar {
             Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
             Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
             Array<OneD, NekDouble> D2(NekDouble u, NekDouble v);
+            Array<OneD, NekDouble> P(NekDouble u, NekDouble v);
             
             void locuv(NekDouble &u, NekDouble &v, std::vector<NekDouble> p);
             

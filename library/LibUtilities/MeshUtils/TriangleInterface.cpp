@@ -83,23 +83,22 @@ namespace MeshUtils {
         }
         
         in.numberofsegments = numSeg;
-        in.segmentlist = (int *) malloc(in.numberofsegments * 2 * sizeof(int));
+        in.segmentlist = (int *) malloc(in.numberofsegments*2*sizeof(int));
         pointc=0;
-        
         for(int i = 0; i < m_boundingloops.size(); i++)
         {
-            int pointBefore = pointc;
+            float pointBefore = pointc;
             for(int j = 0; j < m_boundingloops[i].size()-1; j++)
             {
                 in.segmentlist[pointc*2+0] = j+pointBefore;
                 in.segmentlist[pointc*2+1] = j+1+pointBefore;
                 pointc++;
             }
-            in.segmentlist[pointc*2+0] = m_boundingloops.size()-1+pointBefore;
-            in.segmentlist[pointc*2+0] = 0+pointBefore;
+            in.segmentlist[pointc*2+0] = m_boundingloops[i].size()-1+pointBefore;
+            in.segmentlist[pointc*2+1] = 0+pointBefore;
             pointc++;
         }
-        
+       
         in.numberofregions = 0;
         in.numberofholes = m_boundingloops.size()-1;
         in.holelist = (REAL *) malloc(in.numberofholes*2*sizeof(REAL));
@@ -124,7 +123,7 @@ namespace MeshUtils {
         
         if(Quiet && Quality)
         {
-            triangulate("pqzenQYY", &in, &out,  NULL);
+            triangulate("pzenqQYY", &in, &out,  NULL);
         }
         else if(Quiet && !Quality)
         {
@@ -138,12 +137,16 @@ namespace MeshUtils {
         {
             triangulate("pzenYY", &in, &out,  NULL);
         }
+
     }
     
-    void TriangleInterface::Extract(Array<OneD, Array<OneD, NekDouble> > &Points,
+    void TriangleInterface::Extract(int &np,
+                                    int &nt,
+                                    Array<OneD, Array<OneD, NekDouble> > &Points,
                                     Array<OneD, Array<OneD, int> > &Connec)
     {
         Points = Array<OneD, Array<OneD, NekDouble> >(out.numberofpoints);
+        np = out.numberofpoints;
         for(int i = 0; i < out.numberofpoints; i++)
         {
             Array<OneD, NekDouble> loc(2);
@@ -153,6 +156,7 @@ namespace MeshUtils {
         }
         
         Connec = Array<OneD, Array<OneD, int> >(out.numberoftriangles);
+        nt = out.numberoftriangles;
         for(int i = 0; i < out.numberoftriangles; i++)
         {
             Array<OneD, int> tri(3);

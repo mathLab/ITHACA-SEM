@@ -65,8 +65,6 @@ namespace Nektar{
         
         NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
         {
-            ASSERTL0(tf<=occCurve.LastParameter() &&
-                     ti>=occCurve.FirstParameter(), "out of bounds");
             
             NekDouble len = 0;
             NekDouble dt = (occCurve.LastParameter()-occCurve.FirstParameter())/(1000-1);
@@ -89,8 +87,6 @@ namespace Nektar{
         
         void CADCurve::P(NekDouble t, Array<OneD, NekDouble> &out)
         {
-            ASSERTL0(t<=occCurve.LastParameter() &&
-                     t>=occCurve.FirstParameter(), "out of bounds");
             
             out = Array<OneD, NekDouble>(3);
             gp_Pnt loc = occCurve.Value(t);

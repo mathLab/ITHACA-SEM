@@ -63,9 +63,9 @@ namespace MeshUtils {
         
         void Mesh();
         
-        Array<OneD, NekDouble> GetFirstPoint(){return m_meshpoints[0];}
-        Array<OneD, NekDouble> GetLastPoint(){return m_meshpoints[Ne];}
-        Array<OneD, Array<OneD, NekDouble> > GetMeshPoints()
+        std::vector<NekDouble> GetFirstPoint(){return m_meshpoints[0];}
+        std::vector<NekDouble> GetLastPoint(){return m_meshpoints[Ne];}
+        std::vector<std::vector<NekDouble> > GetMeshPoints()
                     {return m_meshpoints;}
         int GetNumPoints(){return Ne+1;}
         
@@ -81,13 +81,13 @@ namespace MeshUtils {
         NekDouble m_curvelength;
         int m_numSamplePoints;
         Array<OneD, NekDouble> m_bounds;
-        Array<OneD, Array<OneD, NekDouble> > m_dst;
-        Array<OneD, Array<OneD, NekDouble> > m_ps;
+        std::vector<std::vector<NekDouble> > m_dst;
+        std::vector<std::vector<NekDouble> > m_ps;
         NekDouble Ae;
         NekDouble ds;
         int Ne;
-        Array<OneD, NekDouble> meshsvalue;
-        Array<OneD, Array<OneD, NekDouble> > m_meshpoints;
+        std::vector<NekDouble> meshsvalue;
+        std::vector<std::vector<NekDouble> > m_meshpoints;
         
     };
     

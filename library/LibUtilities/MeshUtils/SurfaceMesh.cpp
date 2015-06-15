@@ -73,14 +73,14 @@ namespace MeshUtils {
             
             vector<int> currentLoop;
             
-            Array<OneD, NekDouble> origin = m_curvemeshes[currentEdge-1]->
+            vector<NekDouble> origin = m_curvemeshes[currentEdge-1]->
                                                 GetFirstPoint();
             currentLoop.push_back(currentEdge);
             edgeCounter--;
             
             while(notClosed)
             {
-                Array<OneD, NekDouble> loc;
+                vector<NekDouble> loc;
                 if(currentEdgeForward)
                 {
                     loc = m_curvemeshes[currentEdge-1]->GetLastPoint();
@@ -98,7 +98,7 @@ namespace MeshUtils {
                     break;
                 }
                 
-                Array<OneD, NekDouble> test;
+                vector<NekDouble> test;
                 for(int i = 0; i < m_numedges; i++)
                 {
                     if(m_edges[i]==currentEdge)
@@ -138,14 +138,14 @@ namespace MeshUtils {
         
         //create list of continuous loop locs
         
-        vector<vector<Array<OneD, NekDouble> > > orderedLoops;
+        vector<vector<vector<NekDouble> > > orderedLoops;
         
         for(int i = 0; i < m_edgeloops.size(); i++)
         {
-            vector<Array<OneD, NekDouble> > cE;
+            vector<vector<NekDouble> > cE;
             for(int j = 0; j < m_edgeloops[i].size(); j++)
             {
-                Array<OneD, Array<OneD, NekDouble> > edgePoints =
+                vector<vector<NekDouble> > edgePoints =
                         m_curvemeshes[abs(m_edgeloops[i][j])-1]->
                             GetMeshPoints();
                 int numPoints = m_curvemeshes[abs(m_edgeloops[i][j])-1]->

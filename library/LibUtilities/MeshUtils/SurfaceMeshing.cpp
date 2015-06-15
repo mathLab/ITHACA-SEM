@@ -58,8 +58,6 @@ namespace MeshUtils {
             cmesh->Mesh();
             
             m_curvemeshes.push_back(cmesh);
-            
-            exit(-1);
         }
         
         exit(-1);

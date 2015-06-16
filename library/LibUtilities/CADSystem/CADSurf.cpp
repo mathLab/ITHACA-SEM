@@ -78,8 +78,8 @@ namespace Nektar{
             u = ui;
             v = vi;
             
-            ASSERTL1(projection.Distance(1)<1E-3,
-                     "Warning large distance to surace from projected point");
+            if(!(projection.Distance(1)<1E-3))
+                cout << projection.Distance(1) << endl;
             
         }
         

@@ -49,7 +49,9 @@
 #define TRILIBRARY
 #define VOID int
 
+extern "C"{
 #include <triangle.h>
+}
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>

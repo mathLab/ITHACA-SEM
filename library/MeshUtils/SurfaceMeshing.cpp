@@ -69,8 +69,6 @@ namespace MeshUtils {
             
             smesh->Mesh();
             
-            exit(-1);
-            
             m_surfacemeshes.push_back(smesh);
         }
     }

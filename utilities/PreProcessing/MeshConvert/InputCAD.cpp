@@ -116,6 +116,10 @@ namespace Utilities
         
         m_surfacemeshing->Mesh();
         
+        
+        
+        exit(-1);
+        
     }
     
     

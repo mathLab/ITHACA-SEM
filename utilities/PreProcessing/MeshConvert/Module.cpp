@@ -337,7 +337,7 @@ namespace Nektar
          * then generate the composite objects and populate them with a second
          * scan through the element list.
          */
-        void Module::ProcessComposites(map<int,string> &faceLabels)
+        void Module::ProcessComposites()
         {
             m_mesh->m_composite.clear();
 
@@ -362,9 +362,9 @@ namespace Nektar
                         pair<CompositeMap::iterator, bool> testIns;
                         tmp->m_id  = tagid;
                         tmp->m_tag = elmt[i]->GetTag();
-                        if(faceLabels.count(tmp->m_id) != 0)
+                        if(m_mesh->m_faceLabels.count(tmp->m_id) != 0)
                         {
-                            tmp->m_label =  faceLabels[tmp->m_id];
+                            tmp->m_label =  m_mesh->m_faceLabels[tmp->m_id];
                         }
 
                         testIns  = m_mesh->m_composite.insert(

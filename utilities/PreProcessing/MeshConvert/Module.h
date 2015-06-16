@@ -138,8 +138,6 @@ namespace Nektar
         };
 
 
-        static map<int,string> NullFaceLabel;
-
         /**
          * Abstract base class for mesh converter modules. Each subclass
          * implements the Process() function, which in some way alters the
@@ -175,7 +173,7 @@ namespace Nektar
             /// Generate element IDs
             virtual void ProcessElements();
             /// Generate composites
-            virtual void ProcessComposites(map<int,string> &facelabel = NullFaceLabel);
+            virtual void ProcessComposites();
 
             void ReorderPrisms(PerMap                   &perFaces);
             void PrismLines   (int                       prism,

@@ -1130,6 +1130,9 @@ namespace Nektar
             /// Set of all pairs of element ID and edge/face number on which to
             /// apply spherigon surface smoothing.
             set<pair<int,int> >             m_spherigonSurfs;
+            /// List of face labels for composite annotation
+            map<int,string>                 m_faceLabels;
+
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
             unsigned int                    GetNumElements();
@@ -1138,6 +1141,7 @@ namespace Nektar
             unsigned int                    GetNumBndryElements();
             /// Returns the total number of entities in the mesh.
             unsigned int                    GetNumEntities();
+
         };
         /// Shared pointer to a mesh.
         typedef boost::shared_ptr<Mesh> MeshSharedPtr;

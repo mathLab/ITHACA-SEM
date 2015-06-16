@@ -102,7 +102,15 @@ namespace Nektar
                 stringstream s(line);
                 string word;
                 s >> word;
-                if (word == "element")
+                if(word == "format")
+                {
+                    s >> word;
+                    if(word != "ascii")
+                    {
+                        ASSERTL0(false,"InputPly file currently only set up to read ascii formatted ply files");
+                    }
+                }
+                else if (word == "element")
                 {
                     s >> word;
                     if (word == "vertex")
@@ -200,7 +208,7 @@ namespace Nektar
                     }
                 }
             }
-    }
+        }
 
     }
 }

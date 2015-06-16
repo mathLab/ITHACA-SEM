@@ -63,6 +63,23 @@ namespace MeshUtils {
         
         void Mesh();
         
+        void Extract(int i,
+                     int &np,
+                     int & nt,
+                     Array<OneD, Array<OneD, NekDouble> > &points,
+                     Array<OneD, Array<OneD, int> > &connec)
+        {
+            m_surfacemeshes[i-1]->Extract(np,nt,points,connec);
+        }
+        
+        void HOMesh(int order)
+        {
+            for(int i = 0; i < m_surfacemeshes.size(); i++)
+            {
+                m_surfacemeshes[i]->HOMesh(order);
+            }
+        }
+        
         
     private:
         

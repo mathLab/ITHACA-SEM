@@ -41,6 +41,8 @@ using namespace std;
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/SurfaceMeshing.h>
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include "MeshElements.h"
 #include "InputCAD.h"
 
@@ -115,10 +117,60 @@ namespace Utilities
                 AllocateSharedPtr(m_cad,m_octree);
         
         m_surfacemeshing->Mesh();
-        
-        
+        m_surfacemeshing->HOMesh(m_order);
         
         exit(-1);
+        
+        int nodeCounter=0;
+        
+        int numpoints, numtris;
+        Array<OneD, Array<OneD, NekDouble> > points;
+        Array<OneD, Array<OneD, int> > connec;
+        
+        m_mesh->m_expDim = 2;
+        m_mesh->m_spaceDim = 3;
+        
+        m_mesh->m_fields.push_back("u");
+        m_mesh->m_fields.push_back("v");
+        m_mesh->m_fields.push_back("p");
+        
+        for(int i = 1; i <=m_cad->GetNumSurf(); i++)
+        {
+            m_surfacemeshing->Extract(i,numpoints,numtris,points,connec);
+            
+            vector<NodeSharedPtr> nodes;
+            
+            for(int j = 0; j < numpoints; j++)
+            {
+                NodeSharedPtr n = boost::shared_ptr<Node>(
+                                    new Node(nodeCounter++,points[j][0],
+                                             points[j][1],points[j][2]));
+                nodes.push_back(n);
+            }
+            
+            for(int j = 0; j < numtris; j++)
+            {
+                ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                
+                vector<NodeSharedPtr> nodeList;
+                nodeList.push_back(nodes[connec[j][0]]);
+                nodeList.push_back(nodes[connec[j][1]]);
+                nodeList.push_back(nodes[connec[j][2]]);
+                vector<int> tags;
+                tags.push_back(i);
+                ElementSharedPtr E = GetElementFactory().
+                            CreateInstance(LibUtilities::eTriangle,
+                                           conf,nodeList,tags);
+                m_mesh->m_element[2].push_back(E);
+                
+            }
+        }
+        
+        ProcessVertices  ();
+        ProcessEdges     ();
+        ProcessFaces     ();
+        ProcessElements  ();
+        ProcessComposites();
         
     }
     

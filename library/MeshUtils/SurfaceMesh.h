@@ -68,7 +68,21 @@ namespace MeshUtils {
         
         void Mesh();
         
+        void Extract(int &np,
+                     int &nt,
+                     Array<OneD, Array<OneD, NekDouble> > &ps,
+                     Array<OneD, Array<OneD, int> > &co)
+        {
+            np = numpoints;
+            nt = numtris;
+            ps = Points;
+            co = Connec;
+        }
+        
+        void HOMesh(int order);
+        
     private:
+    
         
         bool Validate(int &np,
                       int &nt,
@@ -88,6 +102,11 @@ namespace MeshUtils {
         std::vector<std::vector<std::vector<NekDouble> > > m_uvloops;
         std::vector<std::vector<NekDouble> > m_centers;
         std::vector<std::vector<NekDouble> > m_extrapoints;
+        
+        Array<OneD, Array<OneD, NekDouble> > Points;
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > HOPoints;
+        Array<OneD, Array<OneD, int> > Connec;
+        int numpoints, numtris;
         
     };
     

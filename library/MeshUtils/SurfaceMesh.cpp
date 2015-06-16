@@ -39,6 +39,8 @@
 #include <MeshUtils/SurfaceMesh.h>
 #include <MeshUtils/TriangleInterface.h>
 
+#include <LocalRegions/MatrixKey.h>
+
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
@@ -53,10 +55,6 @@ namespace MeshUtils {
         pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
         
         pplanemesh->Mesh();
-        
-        Array<OneD, Array<OneD, NekDouble> > Points;
-        Array<OneD, Array<OneD, int> > Connec;
-        int numpoints, numtris;
         
         pplanemesh->Extract(numpoints, numtris, Points,Connec);
         
@@ -78,20 +76,52 @@ namespace MeshUtils {
         pplanemesh->Mesh(false,true);
         pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
-        FILE* fro;
-        fro = fopen("testREAL.fro","w");
-        fprintf(fro,"%d %d 0 0 0 0\n",numtris,numpoints);
-        
-        for(int i = 0; i < numpoints; i++)
+        /*for(int i = 0; i < numpoints; i++)
         {
             Array<OneD, NekDouble> p = m_cadsurf->P(Points[i][0],Points[i][1]);
-            fprintf(fro,"%d %f %f %f\n",i+1,p[0],p[1],p[2]);
-        }
+            Points[i]=p;
+        }*/
+
+    }
+    
+    void SurfaceMesh::HOMesh(int order)
+    {
         for(int i = 0; i < numtris; i++)
         {
-            fprintf(fro,"%d %d %d %d %d\n",i+1,Connec[i][0]+1,Connec[i][1]+1,Connec[i][2]+1,1);
+            DNekMat a (3,3,1.0);
+            a(0,0) = Points[Connec[i][0]][0];
+            a(1,0) = Points[Connec[i][0]][1];
+            a(0,1) = Points[Connec[i][1]][0];
+            a(1,1) = Points[Connec[i][1]][1];
+            a(0,2) = Points[Connec[i][2]][0];
+            a(1,2) = Points[Connec[i][2]][1];
+            
+            DNekMat b (3,3,1.0);
+            
+            DNekMat c (3,3,1.0);
+            c(0,0) = -1.0;
+            c(1,0) = -1.0;
+            c(0,1) = 1.0;
+            c(1,1) = -1.0;
+            c(0,2) = -1.0;
+            c(1,2) = 1.0;
+            
+            c.Invert();
+            
+            b = a*c;
+            
+            DNekMat C (3,3,1.0);
+            c(0,0) = -1.0;
+            c(1,0) = -1.0;
+            c(0,1) = 1.0;
+            c(1,1) = -1.0;
+            c(0,2) = -1.0;
+            c(1,2) = 1.0;
+            
+            a= b*C;
+            
+            cout << a(0,0) << " " << Points[Connec[i][0]][0] << endl;
         }
-        fclose(fro);
     }
     
     bool SurfaceMesh::Validate(int &np,

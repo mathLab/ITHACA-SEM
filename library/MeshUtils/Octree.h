@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_OCTREE_OCTREE_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_OCTREE_OCTREE_H
+#ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE_H
+#define NEKTAR_MESHUTILS_OCTREE_OCTREE_H
 
 #include <boost/shared_ptr.hpp>
 
@@ -45,6 +45,8 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+#include <MeshUtils/MeshUtilsDeclspec.h>
 
 
 namespace Nektar {

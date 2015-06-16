@@ -54,7 +54,10 @@ IF (NEKTAR_USE_OCC)
     SET(MeshConvertSources ${MeshConvertSources} InputCAD.cpp)
 ENDIF (NEKTAR_USE_OCC)
 
+
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
+
+TARGET_LINK_LIBRARIES(MeshConvert MeshUtils)
 
 IF (NEKTAR_USE_VTK)
     IF (VTK_MAJOR_VERSION LESS 6)

@@ -45,7 +45,6 @@
 #include <MeshUtils/CurveMesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar {
@@ -56,18 +55,18 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<SurfaceMeshing>;
         
-        LIB_UTILITIES_EXPORT SurfaceMeshing(const CADSystemSharedPtr &cad,
+        SurfaceMeshing(const LibUtilities::CADSystemSharedPtr &cad,
                                             const OctreeSharedPtr &octree) :
                                                 m_cad(cad),m_octree(octree)
         {
         };
         
-        LIB_UTILITIES_EXPORT void Mesh();
+        void Mesh();
         
         
     private:
         
-        CADSystemSharedPtr m_cad;
+        LibUtilities::CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
         
         std::vector<SurfaceMeshSharedPtr> m_surfacemeshes;

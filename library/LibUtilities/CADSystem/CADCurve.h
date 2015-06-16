@@ -68,7 +68,7 @@
 #include <TopLoc_Location.hxx>
 
 namespace Nektar {
-    namespace LibUtilities {
+namespace LibUtilities {
         
         class CADCurve
         {
@@ -88,7 +88,7 @@ namespace Nektar {
         };
         
         typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
-    }
+}
 }
 
 #endif

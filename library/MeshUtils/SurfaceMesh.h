@@ -44,7 +44,6 @@
 #include <MeshUtils/CurveMesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
@@ -56,7 +55,7 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<SurfaceMesh>;
         
-        SurfaceMesh(const CADSurfSharedPtr &cad,
+        SurfaceMesh(const LibUtilities::CADSurfSharedPtr &cad,
                     const OctreeSharedPtr &oct,
                     const std::vector<CurveMeshSharedPtr> &cmeshes)
                         : m_cadsurf(cad), m_octree(oct),
@@ -80,7 +79,7 @@ namespace MeshUtils {
         int firstEdgeNotUsed();
         void AddNewPoint(NekDouble u, NekDouble v);
         
-        CADSurfSharedPtr m_cadsurf;
+        LibUtilities::CADSurfSharedPtr m_cadsurf;
         OctreeSharedPtr m_octree;
         std::vector<CurveMeshSharedPtr> m_curvemeshes;
         int m_numedges;

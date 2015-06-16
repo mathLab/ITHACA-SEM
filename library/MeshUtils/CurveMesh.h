@@ -43,7 +43,6 @@
 #include <MeshUtils/Octree.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
@@ -55,7 +54,7 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<CurveMesh>;
         
-        CurveMesh(const CADCurveSharedPtr &cad,
+        CurveMesh(const LibUtilities::CADCurveSharedPtr &cad,
                   const OctreeSharedPtr &oct) : m_cadcurve(cad),m_octree(oct)
         {
         };
@@ -75,7 +74,7 @@ namespace MeshUtils {
         NekDouble EvaluateDS(NekDouble s);
         NekDouble EvaluatePS(NekDouble s);
         
-        CADCurveSharedPtr m_cadcurve;
+        LibUtilities::CADCurveSharedPtr m_cadcurve;
         OctreeSharedPtr m_octree;
         NekDouble m_curvelength;
         int m_numSamplePoints;

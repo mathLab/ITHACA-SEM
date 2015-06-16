@@ -44,7 +44,6 @@
 #include <MeshUtils/Octant.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
@@ -56,14 +55,14 @@ class Octree
 public:
     friend class MemoryManager<Octree>;
 
-    LIB_UTILITIES_EXPORT Octree(const CADSystemSharedPtr &cad) : m_cad(cad)
+    Octree(const LibUtilities::CADSystemSharedPtr &cad) : m_cad(cad)
     {
     };
 
-    LIB_UTILITIES_EXPORT void Build(const NekDouble &min,
+    void Build(const NekDouble &min,
                                     const NekDouble &max,
                                     const NekDouble &eps);
-    LIB_UTILITIES_EXPORT NekDouble Query(Array<OneD, NekDouble> loc);
+    NekDouble Query(Array<OneD, NekDouble> loc);
 
     NekDouble GetMinDelta(){return m_minDelta;}
 
@@ -83,7 +82,7 @@ private:
     NekDouble m_maxDelta;
     NekDouble m_eps;
 
-    CADSystemSharedPtr m_cad;
+    LibUtilities::CADSystemSharedPtr m_cad;
     Array<OneD, NekDouble> BoundingBox;
     std::vector<CurvaturePointSharedPtr> m_cpList;
     std::vector<OctantSharedPtr> OctantList;

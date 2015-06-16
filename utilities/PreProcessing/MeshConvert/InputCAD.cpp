@@ -38,8 +38,8 @@
 using namespace std;
 
 #include <LibUtilities/CADSystem/CADSystem.h>
-#include <LibUtilities/MeshUtils/Octree.h>
-#include <LibUtilities/MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/Octree.h>
+#include <MeshUtils/SurfaceMeshing.h>
 
 #include "MeshElements.h"
 #include "InputCAD.h"
@@ -105,13 +105,13 @@ namespace Utilities
         }
         
         
-        LibUtilities::MeshUtils::OctreeSharedPtr m_octree =
-            MemoryManager<LibUtilities::MeshUtils::Octree>::AllocateSharedPtr(m_cad);
+        MeshUtils::OctreeSharedPtr m_octree =
+            MemoryManager<MeshUtils::Octree>::AllocateSharedPtr(m_cad);
         
         m_octree->Build(m_minDelta, m_maxDelta, m_eps);
         
-        LibUtilities::MeshUtils::SurfaceMeshingSharedPtr m_surfacemeshing =
-            MemoryManager<LibUtilities::MeshUtils::SurfaceMeshing>::
+        MeshUtils::SurfaceMeshingSharedPtr m_surfacemeshing =
+            MemoryManager<MeshUtils::SurfaceMeshing>::
                 AllocateSharedPtr(m_cad,m_octree);
         
         m_surfacemeshing->Mesh();

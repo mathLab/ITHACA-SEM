@@ -923,9 +923,16 @@ namespace Nektar
             // Reverse data if necessary
             if (GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                cout << "eBackwards" << endl;
-                //Vmath::Reverse(EdgeExp->GetNumPoints(0),
-                //               &outarray[0], 1, &outarray[0], 1);
+                int nn = outarray.num_elements();
+                int nloop = nn/2;
+                int store;
+                    
+                for (int rev = 0; rev < nloop; ++rev)
+                {
+                    store = outarray[nn-1-rev];
+                    outarray[nn-1-rev] = outarray[rev];
+                    outarray[rev] = store;
+                }
             }
         }
     

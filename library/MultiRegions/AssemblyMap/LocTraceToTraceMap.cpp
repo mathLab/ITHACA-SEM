@@ -39,6 +39,9 @@
 #include <LocalRegions/Expansion2D.h> 
 #include <LocalRegions/Expansion3D.h> 
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -56,10 +59,10 @@ namespace Nektar
                 *(locExp.GetExp());
             
             // Assume that all the elements have same dimension
-            int nDim    = locExpVector[0]->GetShapeDimension();
+            int m_expdim    = locExpVector[0]->GetShapeDimension();
             
             // Switch between 1D, 2D and 3D
-            switch (nDim)
+            switch (m_expdim)
             {
                 case 1:
                     break;
@@ -307,25 +310,35 @@ namespace Nektar
                     exp2d = (*exp)[n]->as<LocalRegions::Expansion2D>();
                     phys_offset = locExp.GetPhys_Offset(n);
                     
-                    // mapping of new edge order to one that loops over elmts
+                    // Mapping of new edge order to one that loops over elmts
                     // then faces set up mapping of faces in standard cartesian
                     // order
                     exp2d->GetEdgePhysMap(e, edgeids);
-                    cout << "EDGE = " << e << endl;
-                    cout << "edgeids = " << edgeids[0] << endl;
-                    cout << "edgeids = " << edgeids[1] << endl;
-                    cout << "edgeids = " << edgeids[2] << endl;
                     
                     nedgepts  = exp2d->GetEdgeNumPoints(e);
                     nedgepts1 = edge->GetTotPoints();
                     
                     StdRegions::Orientation orient = exp2d->GetEorient(e);
                     
-                    // TODO: account for eBackwards orientation
+                    // Account for eBackwards orientation
                     exp2d->ReOrientEdgePhysMap(
                             elmtToTrace[n][e]->GetNverts(),
                             orient, toPointsKey0.GetNumPoints(),
                             locTraceToTraceMap);
+                    
+                    if (orient == StdRegions::eBackwards)
+                    {
+                        int nn = toPointsKey0.GetNumPoints();
+                        int nloop = nn/2;
+                        int store;
+                        
+                        for (int rev = 0; rev < nloop; ++rev)
+                        {
+                            store = edgeids[nn-1-rev];
+                            edgeids[nn-1-rev] = edgeids[rev];
+                            edgeids[rev] = store;
+                        }
+                    }
                     
                     
                     int offset = trace->GetPhys_Offset(elmtToTrace[n][e]->
@@ -353,7 +366,7 @@ namespace Nektar
                     {
                         for (int i = 0; i < nedgepts; ++i)
                         {
-                            m_fieldToLocTraceMap[m_nFwdLocTracePts + cntBwd +i]
+                            m_fieldToLocTraceMap[m_nFwdLocTracePts + cntBwd + i]
                                 = phys_offset + edgeids[i];
                         }
                         
@@ -377,12 +390,10 @@ namespace Nektar
                         
                         if (fromPointsKey0 == toPointsKey0)
                         {
-                            cout << "noInterp" << endl;
                             m_interpTrace[set][cnt1] = eNoInterp;
                         }
                         else
                         {
-                            cout << "Interp" << endl;
                             m_interpTrace[set][cnt1]   = eInterpDir0;
                             m_interpTraceI0[set][cnt1] = LibUtilities::
                                 PointsManager()[fromPointsKey0]->
@@ -870,7 +881,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> faces)
         {
             Vmath::Gathr(m_fieldToLocTraceMap.num_elements(),
-                         field,m_fieldToLocTraceMap,faces);
+                         field, m_fieldToLocTraceMap, faces);
         }
 
 
@@ -882,6 +893,181 @@ namespace Nektar
         }
 
 
+        /// interpolate local edges to trace face point distribution
+        void LocTraceToTraceMap::InterpLocEdgesToTrace(
+            const int dir,
+            const Array<OneD, const NekDouble> &locedges,
+                  Array<OneD,       NekDouble> edges)
+        {
+            ASSERTL1(dir < 2, "option dir out of range, "
+                     " dir=0 is fwd, dir=1 is bwd");
+            
+            int cnt1 = 0;
+            int cnt  = 0;
+            
+            // tmp space assuming forward map is of size of trace
+            Array<OneD, NekDouble> tmp(m_nTracePts);
+            
+            for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
+            {
+                // Check if there are edges to interpolate
+                if (m_interpNfaces[dir][i])
+                {
+                    // Get to/from points
+                    LibUtilities::PointsKey fromPointsKey0
+                    = m_interpPoints[dir][i].get<0>();
+                    LibUtilities::PointsKey fromPointsKey1
+                    = m_interpPoints[dir][i].get<1>();
+                    LibUtilities::PointsKey toPointsKey0
+                    = m_interpPoints[dir][i].get<2>();
+                    LibUtilities::PointsKey toPointsKey1
+                    = m_interpPoints[dir][i].get<3>();
+                    
+                    
+                    int fnp0 = fromPointsKey0.GetNumPoints();
+                    int fnp1 = fromPointsKey1.GetNumPoints();
+                    int tnp0 = toPointsKey0.GetNumPoints();
+                    int tnp1 = toPointsKey1.GetNumPoints();
+                    int nfromfacepts = m_interpNfaces[dir][i]*fnp0;
+                    
+                    // Do interpolation here if required
+                    switch(m_interpTrace[dir][i])
+                    {
+                        case eNoInterp: // Just copy
+                        {
+                            Vmath::Vcopy(nfromfacepts,
+                                         locedges.get()+cnt, 1,
+                                         tmp.get()+cnt1, 1);
+                        }
+                            break;
+                        case eInterpDir0:
+                        {
+                            DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
+                            Blas::Dgemm('N', 'N', tnp0, tnp1, fnp0, 1.0,
+                                        I0->GetPtr().get(),
+                                        tnp0, locedges.get()+cnt, fnp0, 0.0,
+                                        tmp.get()+cnt1, tnp0);
+                        }
+                            break;
+                        case eInterpEndPtDir0:
+                        {
+                            int nfaces = m_interpNfaces[dir][i];
+                            for(int k = 0; k < fnp0; ++k)
+                            {
+                                Vmath::Vcopy(nfaces*fnp1,locedges.get()+cnt+k,
+                                             fnp0,tmp.get()+cnt1+k,tnp0);
+                            }
+                            Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+                            Blas::Dgemv('T', fnp0, tnp1*m_interpNfaces[dir][i],
+                                        1.0, tmp.get()+cnt1, tnp0,I0.get(),1,
+                                        0.0, tmp.get()+cnt1+ tnp0-1, tnp0);
+                        }
+                            break;
+                        case eInterpDir1:
+                        {
+                            DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                            for(int j = 0; j <  m_interpNfaces[dir][i]; ++j)
+                            {
+                                Blas::Dgemm('N', 'T', tnp0, tnp1, fnp1, 1.0,
+                                            locedges.get()+cnt + j*fnp0*fnp1,
+                                            tnp0, I1->GetPtr().get(), tnp1,
+                                            0.0, tmp.get()+cnt1 + j*tnp0*tnp1,
+                                            tnp0);
+                            }
+                        }
+                            break;
+                        case eInterpEndPtDir1:
+                        {
+                            Array<OneD, NekDouble> I1 = m_interpEndPtI1[dir][i];
+                            for(int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                            {
+                                // copy all points
+                                Vmath::Vcopy(fnp0*fnp1,
+                                             locedges.get()+cnt+j*fnp0*fnp1, 1,
+                                             tmp.get()+cnt1+j*tnp0*tnp1, 1);
+                                
+                                // interpolate end points
+                                for(int k = 0; k < tnp0; ++k)
+                                {
+#if 0
+                                    tmp[cnt1+k+(j+1)*tnp0*tnp1-tnp0]
+                                    = Blas::Ddot(fnp1,
+                                                 locedges.get()+cnt+
+                                                 j*fnp0*fnp1+k, fnp0,
+                                                 I1->GetPtr().get()+tnp1-1,
+                                                 tnp1);
+#else
+                                    tmp[cnt1+k+(j+1)*tnp0*tnp1-tnp0]
+                                    = Blas::Ddot(fnp1, locedges.get()+
+                                                 cnt+j*fnp0*fnp1+k, fnp0,
+                                                 &I1[0], 1);
+#endif
+                                }
+                            }
+                        }
+                            break;
+                        case eInterpBothDirs:
+                        {
+                            DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
+                            DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                            Array<OneD, NekDouble > wsp(
+                                                        m_interpNfaces[dir][i] * fnp0 * tnp1 * fnp0);
+                            
+                            for(int j = 0; j <  m_interpNfaces[dir][i]; ++j)
+                            {
+                                Blas::Dgemm('N', 'T', fnp0, tnp1, fnp1, 1.0,
+                                            locedges.get()+cnt+j*fnp0*fnp1,
+                                            fnp0, I1->GetPtr().get(), tnp1,
+                                            0.0, wsp.get()+j*fnp0*tnp1, fnp0);
+                            }
+                            Blas::Dgemm('N', 'N', tnp0,
+                                        tnp1*m_interpNfaces[dir][i],
+                                        fnp0, 1.0, I0->GetPtr().get(),
+                                        tnp0, wsp.get(), fnp0, 0.0,
+                                        tmp.get()+cnt1, tnp0);
+                        }
+                            break;
+                        case eInterpEndPtDir0InterpDir1:
+                        {
+                            DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                            
+                            for (int j = 0; j <  m_interpNfaces[dir][i]; ++j)
+                            {
+                                Blas::Dgemm('N', 'T', fnp0, tnp1, fnp1, 1.0,
+                                            locedges.get()+cnt+j*fnp0*fnp1,
+                                            fnp0, I1->GetPtr().get(), tnp1, 0.0,
+                                            tmp.get()+cnt1+j*tnp0*tnp1, tnp0);
+                            }
+                            
+                            Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+#if 0
+                            for (int j = 0;
+                                 j < tnp1*m_interpNfaces[dir][i]; ++j)
+                            {
+                                tmp[cnt1+(j+1)*tnp0-1]
+                                = Blas::Ddot(fnp0,
+                                             tmp.get()+cnt1 + j*tnp0, 1,
+                                             I0.get(), 1);
+                            }
+#else
+                            Blas::Dgemv('T', fnp0, tnp1*m_interpNfaces[dir][i],
+                                        1.0, tmp.get()+cnt1, tnp0,I0.get(), 1,
+                                        0.0, tmp.get()+cnt1+ tnp0-1, tnp0);
+#endif
+                        }
+                            break;
+                    }
+                    cnt  += nfromfacepts;
+                    cnt1 += m_interpNfaces[dir][i]*tnp0*tnp1;
+                }
+            }
+            
+            Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
+                         tmp.get(),m_LocTraceToTraceMap[dir].get(),
+                         edges.get());
+        }
+    
+    
         /// interpolate local faces to trace face point distribution
         void LocTraceToTraceMap::InterpLocFacesToTrace(
             const int dir,
@@ -899,7 +1085,7 @@ namespace Nektar
 
             for (int i = 0; i < m_interpTrace[dir].num_elements(); ++i)
             {
-                // Check there are faces to interpolate
+                // Check if there are faces to interpolate
                 if (m_interpNfaces[dir][i])
                 {
                     // Get to/from points
@@ -911,20 +1097,21 @@ namespace Nektar
                                     = m_interpPoints[dir][i].get<2>();
                     LibUtilities::PointsKey toPointsKey1
                                     = m_interpPoints[dir][i].get<3>();
+                    
                     int fnp0 = fromPointsKey0.GetNumPoints();
                     int fnp1 = fromPointsKey1.GetNumPoints();
                     int tnp0 = toPointsKey0.GetNumPoints();
                     int tnp1 = toPointsKey1.GetNumPoints();
-                
-                    int nfromfacepts = m_interpNfaces[dir][i]*fnp0*fnp1;
+                    int nfromfacepts = m_interpNfaces[dir][i]*fnp0*fnp1;;
                     
                     // Do interpolation here if required
                     switch(m_interpTrace[dir][i])
                     {
                         case eNoInterp: // Just copy
                         {
-                            Vmath::Vcopy(nfromfacepts,locfaces.get()+cnt,1,
-                                         tmp.get()+cnt1,1);
+                            Vmath::Vcopy(nfromfacepts,
+                                         locfaces.get()+cnt, 1,
+                                         tmp.get()+cnt1, 1);
                         }
                         break;
                         case eInterpDir0:
@@ -1044,7 +1231,7 @@ namespace Nektar
                         }
                             break;
                     }
-                    cnt  += nfromfacepts; 
+                    cnt  += nfromfacepts;
                     cnt1 += m_interpNfaces[dir][i]*tnp0*tnp1;
                 }
             }

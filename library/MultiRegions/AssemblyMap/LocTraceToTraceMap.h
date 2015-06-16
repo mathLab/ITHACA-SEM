@@ -131,7 +131,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void FwdLocTracesFromField(
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> faces);
-                                                        
+            
+            MULTI_REGIONS_EXPORT void InterpLocEdgesToTrace(
+                const int dir,
+                const Array<OneD, const NekDouble> &locfaces,
+                      Array<OneD,       NekDouble> edges);
+            
             MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(
                 const int dir,
                 const Array<OneD, const NekDouble> &locfaces,
@@ -161,6 +166,7 @@ namespace Nektar
             int m_nFwdLocTracePts;  
             int m_nLocTracePts;
             int m_nTracePts;
+            int m_expdim;
             
             // mapping from field to local trace
             Array<OneD, int> m_fieldToLocTraceMap; 

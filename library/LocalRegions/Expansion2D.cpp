@@ -1425,7 +1425,7 @@ namespace Nektar
                 case StdRegions::eBackwards:
                 {
                     // Bwd
-                    for (int i =0; i < nq0; ++i)
+                    for (int i = 0; i < nq0; ++i)
                     {
                         idmap[i] = nq0-1-i;
                     }

@@ -1356,21 +1356,22 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-#if 1
+//#if 0
             // blocked routine
-            //cout << "Ciao 1 --------------------" << endl;
-            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNLocTracePts());
-            //cout << "Ciao 2" << endl;
-            m_locTraceToTraceMap->LocTracesFromField(field, facevals);
-            //cout << "Ciao 3" << endl;
-            m_locTraceToTraceMap->InterpLocFacesToTrace(0, facevals, Fwd);
-            //cout << "Ciao 4" << endl;
-            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
+            Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
+                                            GetNLocTracePts());
+
+            m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
+            
+            m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
+
+            Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
-            //cout << "Ciao 5" << endl;
+
             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
-            //cout << "Ciao 6" << endl;
-#else
+
+//#else
+            /*
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
             Array<OneD,NekDouble> e_tmp;
@@ -1405,7 +1406,17 @@ namespace Nektar
                     }
                 }
             }
-#endif
+            for (int mm = 0; mm < Fwd.num_elements(); ++mm)
+            {
+                cout << "Fwd = " << Fwd[mm] << endl;
+            }
+            for (int mm = 0; mm < Bwd.num_elements(); ++mm)
+            {
+                cout << "Bwd = " << Bwd[mm] << endl;
+            }
+            int num; cin >> num;
+             */
+//#endif
             
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;

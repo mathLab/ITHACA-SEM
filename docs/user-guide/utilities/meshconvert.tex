@@ -213,7 +213,8 @@ where it exists. The table below indicates support currently implemented.
     Nektar++ & \texttt{xml} & \cmark & Fully supported. \\
     PLY & \texttt{ply} & \xmark & Reads only the ASCII format.. \\
     Semtex & \texttt{sem} & \cmark & Reads elements and boundary conditions. In order to read high-order information, run \inltt{meshpr session.sem > session.msh} and place in the same directory as the session file.\\
-    Star-CCM+ & \texttt{dat} & \xmark & Reads mesh only, only support for quads and triangles (2D) and hexes, prisms, tetrahedra (3D).\\
+    Star-CCM+ & \texttt{dat} & \xmark & Star outputs plt file which currently needs to be coverted to ascii using Tecplot. Reads mesh only, only support for quads and triangles (2D) and hexes, prisms, tetrahedra (3D).\\
+    Star-CCM+ & \texttt{ccm} & \xmark & Reads start ccm format. Reads mesh only, only support for quads and triangles (2D) and hexes, prisms, tetrahedra (3D). Requires NEKTAR\_USE\_CCM option to be activated in cmake and then requires ccmio library to be compiled by user.  \\
     VTK & \texttt{vtk} & \xmark & Experimental support. Only ASCII triangular data is supported. \\
     \bottomrule
   \end{tabularx}
@@ -290,6 +291,15 @@ use the \inltt{extract} boolean parameter:
 \begin{lstlisting}[style=BashInputStyle]
 MeshConvert -m jac:extract Mesh.xml MeshWithNegativeElements.xml
 \end{lstlisting}
+
+To turn off curvature associated with negative jacobians one can try to use the \inltt{removecurveifsingular} boolean parameter: 
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m jac:removecurveifsingular  Mesh.xml output.xml
+\end{lstlisting}
+This option will remove the high order curvature on prismatic faces
+with singular jacobians. This does not guarantee a non-singular mesh
+since it is possible for neighbouring element then to have singular
+jacobians. Multiple calls to the module might help with this scenario.
 
 \subsubsection{Spherigon patches}
 

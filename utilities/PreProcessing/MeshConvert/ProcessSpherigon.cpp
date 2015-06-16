@@ -464,7 +464,9 @@ namespace Nektar
                 InputPlySharedPtr  plyfile;
                 
                 inply.open(normalfile.c_str());
-                
+                ASSERTL0(inply,string("Could not open input ply file: ") +
+                         normalfile);
+
                 int j;
                 MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
                 plyfile = boost::shared_ptr<InputPly>(new InputPly(m));

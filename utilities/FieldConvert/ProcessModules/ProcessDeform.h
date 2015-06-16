@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessDisplacement.h
+//  File: ProcessDeform.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,10 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSDISPLACEMENT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSDISPLACEMENT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
@@ -46,17 +46,17 @@ namespace Nektar
          * @brief This processing module calculates the Q Criterion and adds it
          * as an extra-field to the output file.
          */
-        class ProcessDisplacement : public ProcessModule
+        class ProcessDeform : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessDisplacement>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessDeform>::AllocateSharedPtr(f);
             }
             static ModuleKey className;
             
-            ProcessDisplacement(FieldSharedPtr f);
-            virtual ~ProcessDisplacement();
+            ProcessDeform(FieldSharedPtr f);
+            virtual ~ProcessDeform();
             
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);

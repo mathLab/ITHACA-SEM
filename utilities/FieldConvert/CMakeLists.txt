@@ -9,9 +9,12 @@ SET(FieldConvertHeaders
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
+    OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessConcatenateFld.h
+    ProcessModules/ProcessDeform.h
+    ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessInterpField.h
@@ -40,9 +43,12 @@ SET(FieldConvertSources
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp
     OutputModules/OutputFld.cpp
+    OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessConcatenateFld.cpp
+    ProcessModules/ProcessDeform.cpp
+    ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessInterpField.cpp

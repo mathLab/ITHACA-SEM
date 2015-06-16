@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessDeform.h
+//  File: OutputXml.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,36 +29,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Vtk output module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSQCRITERION
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTXML
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTXML
 
-#include "Module.h"
+#include <tinyxml.h>
+#include "../Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /**
-         * @brief This processing module calculates the Q Criterion and adds it
-         * as an extra-field to the output file.
-         */
-        class ProcessDeform : public ProcessModule
+        /// Converter from fld to vtk.
+        class OutputXml : public OutputModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessDeform>::AllocateSharedPtr(f);
+                return MemoryManager<OutputXml>::AllocateSharedPtr(f);
             }
-            static ModuleKey className;
+            static ModuleKey m_className;
             
-            ProcessDeform(FieldSharedPtr f);
-            virtual ~ProcessDeform();
+            OutputXml(FieldSharedPtr f);
+            virtual ~OutputXml();
             
-            /// Write mesh to output file.
+            /// Write fld to output file.
             virtual void Process(po::variables_map &vm);
         };
     }

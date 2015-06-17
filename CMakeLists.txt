@@ -179,6 +179,7 @@ INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyTriangle)
+INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)
 

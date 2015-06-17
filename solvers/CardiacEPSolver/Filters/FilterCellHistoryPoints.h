@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterHistoryPoints.h
+// File FilterCellHistoryPoints.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,62 +33,51 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERHISTORYPOINTS_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERHISTORYPOINTS_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FilterCellHistoryPoints_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FilterCellHistoryPoints_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/FilterHistoryPoints.h>
+#include <CardiacEPSolver/CellModels/CellModel.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-class FilterHistoryPoints : public Filter
+class FilterCellHistoryPoints : public FilterHistoryPoints
 {
     public:
-        friend class MemoryManager<FilterHistoryPoints>;
+        friend class MemoryManager<FilterCellHistoryPoints>;
 
         /// Creates an instance of this class
         static FilterSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams) {
-            FilterSharedPtr p = MemoryManager<FilterHistoryPoints>
-                ::AllocateSharedPtr(pSession, pParams);
+            FilterSharedPtr p = MemoryManager<FilterCellHistoryPoints>
+                                    ::AllocateSharedPtr(pSession, pParams);
             return p;
         }
 
         ///Name of the class
         static std::string className;
 
-        SOLVER_UTILS_EXPORT FilterHistoryPoints(
+        FilterCellHistoryPoints(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams);
-        SOLVER_UTILS_EXPORT ~FilterHistoryPoints();
+        ~FilterCellHistoryPoints();
+
+        void SetCellModel(CellModelSharedPtr &pCellModel)
+        {
+            m_cell = pCellModel;
+        }
 
     protected:
-        SOLVER_UTILS_EXPORT virtual void v_Initialise(
+        virtual void v_Update(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time);
-        SOLVER_UTILS_EXPORT virtual void v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
-        SOLVER_UTILS_EXPORT virtual void v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
-        SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
 
-        SpatialDomains::PointGeomVector         m_historyPoints;
-        unsigned int                            m_index;
-        unsigned int                            m_outputFrequency;
-         /// plane to take history point from if using a homogeneous1D expansion
-        unsigned int                            m_outputPlane;
-        bool                                    m_isHomogeneous1D;
-        std::string                             m_outputFile;
-        std::ofstream                           m_outputStream;
-        std::stringstream                       m_historyPointStream;
-        std::list<std::pair<SpatialDomains::PointGeomSharedPtr,
-                            Array<OneD, NekDouble> > > m_historyList;
-        std::map<int, int >                     m_historyLocalPointMap;
+        CellModelSharedPtr m_cell;
+
 };
 
 }

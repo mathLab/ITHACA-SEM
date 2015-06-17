@@ -362,6 +362,11 @@ namespace Nektar
                         pair<CompositeMap::iterator, bool> testIns;
                         tmp->m_id  = tagid;
                         tmp->m_tag = elmt[i]->GetTag();
+                        if(m_mesh->m_faceLabels.count(tmp->m_id) != 0)
+                        {
+                            tmp->m_label =  m_mesh->m_faceLabels[tmp->m_id];
+                        }
+
                         testIns  = m_mesh->m_composite.insert(
                             pair<unsigned int, CompositeSharedPtr>(tagid,tmp));
                         it       = testIns.first;

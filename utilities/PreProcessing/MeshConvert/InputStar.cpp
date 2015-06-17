@@ -38,7 +38,7 @@
 #include <iostream>
 using namespace std;
 
-#include "InputStarTec.h"
+#include "InputStar.h"
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/algorithm/string.hpp>
@@ -48,22 +48,23 @@ using namespace std;
 #include <sstream>
 
 
-
 namespace Nektar
 {
+    static char const kDefaultState[] = "default";
+
     namespace Utilities
     {
-        ModuleKey InputTec::className =
+        ModuleKey InputStar::className =
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eInputModule, "dat"), InputTec::create,
-                "Reads Tecplot polyhedron ascii format converted from Star CCM (.dat).");
+                ModuleKey(eInputModule, "ccm"), InputStar::create,
+                "Reads mesh from Star CCM (.ccm).");
 
-        InputTec::InputTec(MeshSharedPtr m) : InputModule(m)
+        InputStar::InputStar(MeshSharedPtr m) : InputModule(m)
         {
 
         }
 
-        InputTec::~InputTec()
+        InputStar::~InputStar()
         {
 
         }
@@ -79,7 +80,7 @@ namespace Nektar
          *
          * @param pFilename Filename of Tecplot file to read.
          */
-        void InputTec::Process()
+        void InputStar::Process()
         {
             m_mesh->m_expDim   = 3;
             m_mesh->m_spaceDim = 3;
@@ -89,35 +90,12 @@ namespace Nektar
                 cout << "InputStarTec: Start reading file..." << endl;
             }
 
-            string      line, word;
+            InitCCM();
 
-            // Open the file stream.
-            OpenStream();
-
-            int  nComposite = 0;
+            SetupElements();
             
-            // read first zone (Hopefully 3D)
-            while (!m_mshFile.eof())
-            {
-                getline(m_mshFile, line);
-                if(line.find("ZONE") != string::npos) 
-                {
-                    ReadZone(nComposite);
-                    break;
-                }
-            }
-            
-            // read remaining 2D zones
-            while (!m_mshFile.eof())
-            {            
-                if(line.find("ZONE") != string::npos) 
-                {
-                    ReadZone(nComposite);
-                }
-            }
-
             PrintSummary();
-            m_mshFile.close();
+
 
             ProcessEdges();
             ProcessFaces();
@@ -125,314 +103,112 @@ namespace Nektar
             ProcessComposites();
         }
 
-        void InputTec::ReadZone(int &nComposite)
+        void InputStar::SetupElements(void)
         {
             int i;
             string line,tag;
-            int nfaces, nnodes, nelements;
-            int start,end;
             stringstream s;
-            NekDouble value;
             streampos pos;
-            static int zcnt=1;
-
-            // Read Zone Header
-            nnodes  = nfaces = nelements = 0;
-            while (!m_mshFile.eof())
-            {
-                pos = m_mshFile.tellg();
-
-                getline(m_mshFile, line);
-
-                boost::to_upper(line);
-                
-                // cehck to see if readable data. 
-                if(sscanf(line.c_str(),"%lf",&value) == 1)
-                {
-                    m_mshFile.seekg(pos);
-                    break;
-                }
-
-                if ((line.find("NODES") != string::npos)&&
-                    (line.find("TOTALNUMFACENODES") == string::npos))
-                {
-                    s.clear();
-                    s.str(line);
-                    
-                    tag    = s.str();
-                    start  = tag.find("NODES=");
-                    end    = tag.find_first_of(',',start);
-                    nnodes = atoi(tag.substr(start+6,end).c_str());
-                }
-
-                if ((line.find("FACES") != string::npos)&&
-                    (line.find("NUMCONNECTEDBOUNDARYFACES") == string::npos))
-                {
-                    s.clear();
-                    s.str(line);
-                    
-                    tag    = s.str();
-                    start  = tag.find("FACES=");
-                    end    = tag.find_first_of(',',start);
-                    nfaces = atoi(tag.substr(start+6,end).c_str());
-                }
-                
-                if (line.find("ELEMENTS") != string::npos)
-                {
-                    s.clear();
-                    s.str(line);
-                    
-                    tag    = s.str();
-                    start  = tag.find("ELEMENTS=");
-                    end    = tag.find_first_of(',',start);
-                    nelements = atoi(tag.substr(start+9,end).c_str());
-                }
-
-                if (line.find("ZONETYPE") != string::npos)
-                {
-                    s.clear();
-                    s.str(line);
-                    
-                    if((line.find("FEPOLYGON") == string::npos)&&
-                       (line.find("FEPOLYHEDRON") == string::npos))
-                    {
-                        ASSERTL0(false,"Routine only set up for FEPolygon or FEPolyhedron");
-                    }
-                }
-            }
-            if(!nnodes) // No zone found
-            {
-                return;
-            }
-
-            cout << "Setting up zone "<<  zcnt++;
-
-            vector<NekDouble> x,y,z;
+            int nComposite = 0; 
             
             // Read in Nodes
-            for(i = 0; i < nnodes; ++i)
-            {
-                m_mshFile >> value; 
-                x.push_back(value);
-            }
-
-            for(i = 0; i < nnodes; ++i)
-            {
-                m_mshFile >> value; 
-                y.push_back(value);
-            }
-
-            for(i = 0; i < nnodes; ++i)
-            {
-                m_mshFile >> value; 
-                z.push_back(value);
-            }
-
             std::vector<NodeSharedPtr> Nodes;
-            for(i = 0; i < nnodes; ++i)
-            {
-                Nodes.push_back(boost::shared_ptr<Node>(new Node(i,x[i],y[i],z[i])));
-            }
+            ReadNodes(Nodes);
+
+            // Get list of faces nodes and adjacents elements. 
+            map<int, vector<int> > FaceNodes;
+            Array<OneD, vector< int> > ElementFaces;
+
+
+            // Read interior faces and set up first part of Element
+            // Faces and FaceNodes
+            ReadInternalFaces(FaceNodes,ElementFaces);
+
+            vector< vector<int> > BndElementFaces;
+            vector<string>        Facelabels;
+            ReadBoundaryFaces(BndElementFaces, FaceNodes,
+                              ElementFaces, Facelabels);
+                
+            // 3D Zone
+            // Reset node ordering so that all prism faces have 
+            // consistent numbering for singular vertex re-ordering
+            ResetNodes(Nodes,ElementFaces,FaceNodes);
             
-            // Read Node count per face 
-            getline(m_mshFile, line);
-            if(line.find("node count per face") == string::npos)
-            {
-                if(line.find("face nodes") == string::npos)
+            m_mesh->m_node = Nodes;
+            
+            
+            // create Prisms/Pyramids first
+            int nelements = ElementFaces.num_elements();
+            cout << " Generating 3D Zones: " ;
+            int cnt = 0; 
+            for(i = 0; i < nelements; ++i)
+            {                
+
+                if(ElementFaces[i].size() > 4)
                 {
-                    getline(m_mshFile,line);
+                    GenElement3D(Nodes,i,ElementFaces[i],
+                                 FaceNodes,nComposite,true);
+                    ++cnt; 
                 }
             }
+            cout << cnt << " Prisms,"; 
 
-            s.clear();
-            s.str(line);
-
-            vector<int> Nodes_per_face;
-            if(line.find("node count per face") != string::npos)
-            {
-                int nodes;
-                for(i = 0; i < nfaces; ++i)
-                {
-                    m_mshFile>> nodes;
-                    ASSERTL0(nodes <= 4,"Can only handle meshes with "
-                             "up to four nodes per face");
-                    Nodes_per_face.push_back(nodes);
-                }
-                // Read next line
-                getline(m_mshFile, line);
-            }
-
-            // Read face nodes; 
-            if(line.find("face nodes") == string::npos)
-            {
-                getline(m_mshFile,line);
-            }
-            s.clear();
-            s.str(line);
+            nComposite++;
             
-            vector<vector<int> > FaceNodes;
-
-            if(line.find("face nodes") != string::npos)
-            {
-
-                for(i = 0; i < nfaces; ++i)
+            // create Tets second 
+            cnt = 0; 
+            for(i = 0; i < nelements; ++i)
+            {                
+                if(ElementFaces[i].size() == 4)
                 {
-                    // check to see if Nodes_per_face is defined and
-                    // if not assume 2 nodes for 2D case
-                    int nodes = (Nodes_per_face.size())? Nodes_per_face[i]: 2;
-                    
-                    int nodeID;
-                    vector<int> Fnodes; 
-                    for(int j = 0; j < nodes; ++j)
-                    {
-                        
-                        m_mshFile>> nodeID;
-                        
-                        Fnodes.push_back(nodeID-1);
-                    }
-
-                    FaceNodes.push_back(Fnodes);
+                    GenElement3D(Nodes,i,ElementFaces[i],
+                                 FaceNodes,nComposite,true); 
+                    ++cnt;
                 }
                 
-            }
-            else
-            {
-                ASSERTL0(false,"Failed to find face node section");
-            }
+            } 
+            cout << cnt << " Tets" << endl;
+            nComposite++;
 
-            // Read left elements
-            Array<OneD, vector< int> > ElementFaces(nelements);
-
-            // check to see if next line contains left elements
-            getline(m_mshFile, line);
-            if(line.find("left elements") == string::npos)
-            {
-                getline(m_mshFile,line);
-            }
-
-            if(line.find("left elements") != string::npos)
-            {
-                int elmtID;
-
-                for(i = 0; i < nfaces; ++i)
-                {
-                    m_mshFile>> elmtID;
-                    
-                    if(elmtID > 0)
-                    {
-                        ElementFaces[elmtID-1].push_back(i);
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false,"Left element not found");
-            }
-                
-            
-            // check to see if next line contains right elements
-            getline(m_mshFile, line);
-            if(line.find("right elements") == string::npos)
-            {
-                getline(m_mshFile, line);
-            }
-
-            if(line.find("right elements") != string::npos)
-
-            {
-                int elmtID;
-
-                for(i = 0; i < nfaces; ++i)
-                {
-                    m_mshFile>> elmtID;
-                    
-                    if(elmtID > 0)
-                    {
-                        ElementFaces[elmtID-1].push_back(i);
-                    }
-                }
-                
-                // read to end of line
-                getline(m_mshFile, line);
-            }
-            else
-            {
-                ASSERTL0(false,"Left element not found");
-            }
-            
+            ProcessVertices();
 
             
-            if(Nodes_per_face.size()) // 3D Zone
+            // Add boundary zones/composites
+            for(i = 0; i < BndElementFaces.size(); ++i)
             {
-                cout << " (3D) "<<  endl;
-
-                // Reset node ordering so that all prism faces have 
-                // consistent numbering for singular vertex re-ordering
-                ResetNodes(Nodes,ElementFaces,FaceNodes);
+                cout << " Generating 2D Zone (composite = " <<
+                    nComposite << ", label = "<< Facelabels[i] << ")" << endl;
                 
-                m_mesh->m_node = Nodes;
-
-                // create Prisms/Pyramids first
-                for(i = 0; i < nelements; ++i)
-                {                
-                    if(ElementFaces[i].size() > 4)
-                    {
-                        GenElement3D(Nodes,i,ElementFaces[i],FaceNodes,nComposite,true);
-                    }
-                }
-                
-                nComposite++;
-
-                // create Tets second 
-                for(i = 0; i < nelements; ++i)
-                {                
-                    if(ElementFaces[i].size() == 4)
-                    {
-                        GenElement3D(Nodes,i,ElementFaces[i],FaceNodes,nComposite,true); 
-                    }
-                    
-                } 
-                nComposite++;
-
-                ProcessVertices();
-            }
-            else // 2D Zone
-            {
-                cout << " (2D)" << endl;
-
-                // find ids of VertNodes from m_mesh->m_vertexSet so that we can identify
-                for(i = 0; i < Nodes.size(); ++i)
+                for(int j = 0; j < BndElementFaces[i].size(); ++j)
                 {
-                    NodeSet::iterator it = m_mesh->m_vertexSet.find(Nodes[i]);
                     
-                    if (it == m_mesh->m_vertexSet.end())
+                    if(FaceNodes.count(BndElementFaces[i][j]))
                     {
-                        ASSERTL0(false,"Failed to find face vertex in 3D list");
+                        GenElement2D(Nodes,j,FaceNodes[BndElementFaces[i][j]],
+                                     nComposite);
                     }
                     else
                     {
-                        Nodes[i] = *it;
+                        string msg = "Failed to find FaceNodes for Face ";
+                        msg += boost::lexical_cast<string>(BndElementFaces[i][j]);
+                        ASSERTL0(false,msg);
                     }
                 }
-
-                for(i = 0; i < nelements; ++i)
-                {
-                    GenElement2D(Nodes,i,ElementFaces[i],FaceNodes,nComposite);
-                }
-
+                
+                m_mesh->m_faceLabels[nComposite] = Facelabels[i];
                 nComposite++;
             }
         }
-
-
+        
+        
         static void PrismLineFaces(int prismid,  map<int, int> &facelist, 
-                            vector<vector<int> > &FacesToPrisms, 
-                            vector<vector<int> > &PrismsToFaces,
-                            vector<bool> &PrismDone);
+                                   vector<vector<int> > &FacesToPrisms, 
+                                   vector<vector<int> > &PrismsToFaces,
+                                   vector<bool> &PrismDone);
 
-        void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
-                                  Array<OneD, vector<int> >&ElementFaces,
-                                  vector<vector<int> >&FaceNodes)
+        void InputStar::ResetNodes(vector<NodeSharedPtr> &Vnodes,
+                                   Array<OneD, vector<int> >&ElementFaces,
+                                   map<int, vector<int> >&FaceNodes)
         {
             int i,j;
             Array<OneD,int> NodeReordering(Vnodes.size(),-1);
@@ -533,7 +309,7 @@ namespace Nektar
                                     }
                                 }
  
-                               for(i = 0; i < 3; ++i)
+                                for(i = 0; i < 3; ++i)
                                 {                                    
                                     if(NodeReordering[Nodes[face3_map[i]]] == -1)
                                     {
@@ -581,7 +357,7 @@ namespace Nektar
                                 
 
                                 max_id1 = (NodeReordering[Nodes[face1_map[0]]] < 
-                                          NodeReordering[Nodes[face1_map[1]]] )? 1:0;
+                                           NodeReordering[Nodes[face1_map[1]]] )? 1:0;
                                 max_id2 = (NodeReordering[Nodes[face1_map[max_id1]]] < 
                                            NodeReordering[Nodes[face1_map[2]]] )? 2:max_id1;
 
@@ -606,13 +382,13 @@ namespace Nektar
                                     NodeReordering[Nodes[face3_map[max_id2]]] = 
                                         nodeid++;
                                 }
-
+                                
                             }
                         }
                     }
                 }
             }
-
+            
             // fill in any unset nodes at from other shapes
             for(i = 0; i < NodeReordering.num_elements(); ++i)
             {
@@ -624,7 +400,7 @@ namespace Nektar
             
             ASSERTL1(nodeid == NodeReordering.num_elements(),"Have not renumbered all nodes");
 
-            // Renumbering successfull so resort nodes and faceNodes; 
+            // Renumbering successfull so reset nodes and faceNodes; 
             for(i = 0; i < FaceNodes.size(); ++i)
             {
                 for(j = 0; j < FaceNodes[i].size(); ++j)
@@ -645,9 +421,9 @@ namespace Nektar
             
             
         static void PrismLineFaces(int prismid,  map<int, int> &facelist, 
-                            vector<vector<int> > &FaceToPrisms, 
-                            vector<vector<int> > &PrismToFaces,
-                            vector<bool> &PrismDone)
+                                   vector<vector<int> > &FaceToPrisms, 
+                                   vector<vector<int> > &PrismToFaces,
+                                   vector<bool> &PrismDone)
         {
             if(PrismDone[prismid] == false)
             {
@@ -659,7 +435,7 @@ namespace Nektar
                 for(int i = 0; i < FaceToPrisms[face].size(); ++i)
                 {
                     PrismLineFaces(FaceToPrisms[face][i], facelist, FaceToPrisms, 
-                             PrismToFaces, PrismDone);
+                                   PrismToFaces, PrismDone);
                 }
                 
                 // Add faces1
@@ -668,24 +444,23 @@ namespace Nektar
                 for(int i = 0; i < FaceToPrisms[face].size(); ++i)
                 {
                     PrismLineFaces(FaceToPrisms[face][i], facelist, FaceToPrisms, 
-                             PrismToFaces, PrismDone);
+                                   PrismToFaces, PrismDone);
                 }
             }
         }         
         
-        void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
-                                    int i, vector<int> &ElementFaces, 
-                                    vector<vector<int> >&FaceNodes,
-                                    int nComposite)
+        void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
+                                     int i, 
+                                     vector<int> &FaceNodes,
+                                     int nComposite)
         {
             LibUtilities::ShapeType elType;
-            // set up Node list
 
-            if(ElementFaces.size() == 3)
+            if(FaceNodes.size() == 3)
             {
                 elType = LibUtilities::eTriangle;
             }
-            else if(ElementFaces.size() == 4)
+            else if(FaceNodes.size() == 4)
             {
                 elType = LibUtilities::eQuadrilateral;
             }
@@ -700,7 +475,7 @@ namespace Nektar
             
             // make unique node list
             vector<NodeSharedPtr> nodeList;
-            Array<OneD, int> Nodes = SortEdgeNodes(VertNodes, ElementFaces, FaceNodes);
+            Array<OneD, int> Nodes = SortEdgeNodes(VertNodes,FaceNodes);
             for(int j  = 0; j < Nodes.num_elements(); ++j)
             {
                 nodeList.push_back(VertNodes[Nodes[j]]);
@@ -708,16 +483,15 @@ namespace Nektar
             
             // Create element
             ElmtConfig conf(elType,1,true,true);
-            ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
-                                                                     nodeList,tags);
+            ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,  nodeList,tags);
             
             m_mesh->m_element[E->GetDim()].push_back(E);
         }
 
-        void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
-                                    int i, vector<int> &ElementFaces, 
-                                    vector<vector<int> >&FaceNodes,
-                                    int nComposite, bool DoOrient)
+        void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
+                                     int i, vector<int> &ElementFaces, 
+                                     map<int, vector<int> >&FaceNodes,
+                                     int nComposite, bool DoOrient)
         {
             LibUtilities::ShapeType elType;
             // set up Node list
@@ -765,7 +539,7 @@ namespace Nektar
             {
                 ElmtConfig conf(elType,1,true,true,DoOrient);
                 ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
-                                                           nodeList,tags);
+                                                                         nodeList,tags);
                 
                 m_mesh->m_element[E->GetDim()].push_back(E);
             }
@@ -775,63 +549,27 @@ namespace Nektar
             }
         }
         
-        Array<OneD, int> InputTec::SortEdgeNodes(vector<NodeSharedPtr> &Vnodes,
-                                                 vector<int> &ElementFaces, 
-                                                 vector<vector<int> >&FaceNodes)
+        Array<OneD, int> InputStar::SortEdgeNodes(vector<NodeSharedPtr> &Vnodes,
+                                                  vector<int> &FaceNodes)
         {
-            int i,j;
             Array<OneD, int> returnval;
             
-            if(ElementFaces.size() == 3) // Triangle
+            if(FaceNodes.size() == 3) // Triangle
             {
                 returnval = Array<OneD, int>(3);
 
-                returnval[0] = FaceNodes[ElementFaces[0]][0];
-                returnval[1] = FaceNodes[ElementFaces[0]][1];
-                
-                // Find third node index;
-                for(i = 0; i < 2; ++i)
-                {
-                    if((FaceNodes[ElementFaces[1]][i] != returnval[0])&&(FaceNodes[ElementFaces[1]][i] != returnval[1]))
-                    {
-                        returnval[2]=  FaceNodes[ElementFaces[1]][i];
-                        break;
-                    }
-                }
+                returnval[0] = FaceNodes[0];
+                returnval[1] = FaceNodes[1];
+                returnval[2] = FaceNodes[2];
             }
-            else if(ElementFaces.size() == 4) // quadrilateral
+            else if(FaceNodes.size() == 4) // quadrilateral
             {
                 returnval = Array<OneD, int>(4);
                 
-                int indx0 = FaceNodes[ElementFaces[0]][0];
-                int indx1 = FaceNodes[ElementFaces[0]][1];
-                int indx2,indx3;
-
-                indx2 = indx3 = -1;
-                // Find third, fourth node index;
-                for(j = 1; j < 4; ++j)
-                {
-                    for(i = 0; i < 2; ++i)
-                    {
-                        if((FaceNodes[ElementFaces[j]][i] != indx0)&&(FaceNodes[ElementFaces[j]][i] != indx1))
-                        {
-                            if(indx2 == -1)
-                            {
-                                indx2 =  FaceNodes[ElementFaces[j]][i];
-                            }
-                            else if(indx2 != -1)
-                            {
-                                if(FaceNodes[ElementFaces[j]][i] != indx2)
-                                {
-                                    indx3 =  FaceNodes[ElementFaces[j]][i];
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                ASSERTL1((indx2 != -1)&&(indx3 != -1),"Failed to find vertex 3 or 4");
-                
+                int indx0 = FaceNodes[0];
+                int indx1 = FaceNodes[1];
+                int indx2 = FaceNodes[2];
+                int indx3 = FaceNodes[3];
 
                 // calculate 0-1,
                 Node a = *(Vnodes[indx1]) - *(Vnodes[indx0]);
@@ -866,9 +604,9 @@ namespace Nektar
             return returnval;
         }
         
-        Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
-                                                 vector<int> &ElementFaces, 
-                                                 vector<vector<int> >&FaceNodes)
+        Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
+                                                  vector<int> &ElementFaces, 
+                                                  map<int, vector<int> >&FaceNodes)
         {
 
             int i,j;
@@ -973,9 +711,31 @@ namespace Nektar
                 if(isPrism) //Prism 
                 {
                     returnval = Array<OneD, int>(6);
+                    ASSERTL1(quadface0 != -1,"Quad face 0 not found");
+                    ASSERTL1(quadface1 != -1,"Quad face 1 not found");
+                    ASSERTL1(quadface2 != -1,"Quad face 2 not found");
+                    ASSERTL1(triface0  != -1,"Tri face 0 not found");
+                    ASSERTL1(triface1  != -1,"Tri face 1 not found");
                 }
                 else        //Pyramid
                 {
+                    set<int> vertids;
+                    set<int>::iterator it; 
+                    // get list of vert ids
+                    cout << "Pyramid found with vertices: " << endl;
+                    for(i =0 ; i < 5; ++i)
+                    {
+                        for(j =0; j < FaceNodes[ElementFaces[i]].size(); ++j)
+                        {
+                            vertids.insert(FaceNodes[ElementFaces[i]][j]);
+                        }
+                    }
+                    for(it = vertids.begin(); it != vertids.end(); ++it)
+                    {
+                        cout << Vnodes[*it] << endl;
+                    }
+
+                    ASSERTL0(false,"Not yet set up for pyramids");
                     returnval = Array<OneD, int>(5);
                 }
 
@@ -1022,7 +782,7 @@ namespace Nektar
                         }
                         else
                         {
-                            indx1 =  FaceNodes[ElementFaces[quadface0]][i];
+                            indx1 = FaceNodes[ElementFaces[quadface0]][i];
                         }
                     }
                 }
@@ -1128,6 +888,246 @@ namespace Nektar
             return returnval;
         }
 
-    }
 
+            // initialise and read ccm file to ccm structure
+        void InputStar::InitCCM(void)
+        {
+            // Open ccm file for reading. 
+            CCMIOID root;
+            // Open the file.  Because we did not initialize 'err' we
+            // need to pass in NULL (which always means kCCMIONoErr)
+            // and then assign the return value to 'err'.).
+            string fname  = m_config["infile"].as<string>();
+            m_ccmErr = CCMIOOpenFile(NULL, fname.c_str(), kCCMIORead, &root);
+            
+            CCMIOSize_t i = CCMIOSIZEC(0);
+            CCMIOID state, problem;
+            
+            // We are going to assume that we have a state with a
+            // known name.  We could instead use CCMIONextEntity() to
+            // walk through all the states in the file and present the
+            // list to the user for selection.
+            CCMIOGetState(&m_ccmErr, root, kDefaultState, &problem, &state);
+            if (m_ccmErr != kCCMIONoErr)
+            {
+                cout << "No state named '" << kDefaultState << "'" << endl;
+                exit(0);
+            }
+            
+            // Find the first processor (i has previously been
+            // initialized to 0) and read the mesh and solution
+            // information.
+            CCMIONextEntity(&m_ccmErr, state, kCCMIOProcessor, &i, &m_ccmProcessor);
+        }
+        
+        void InputStar::ReadNodes( std::vector<NodeSharedPtr> &Nodes)
+        {
+            CCMIOID     mapID, vertices;
+            CCMIOSize_t nVertices, size, dims = CCMIOSIZEC(1);
+            
+            CCMIOReadProcessor(&m_ccmErr, m_ccmProcessor, &vertices, 
+                               &m_ccmTopology, NULL, NULL);
+            CCMIOEntitySize(&m_ccmErr, vertices, &nVertices, NULL);
+            
+            // Read the vertices.  This involves reading both the vertex data and
+            // the map, which maps the index into the data array with the ID number.
+            // As we process the vertices we need to be sure to scale them by the
+            // appropriate scaling factor.  The offset is just to show you can read
+            // any chunk.  Normally this would be in a for loop.
+            float scale;
+            int mapData[nVertices.getValue()]; 
+            float verts[3*nVertices.getValue()];
+            for(int k = 0; k < nVertices; ++k)
+            {
+                verts[3*k] = verts[3*k+1] = verts[3*k+2] = 0.0; 
+                mapData[k] = 0;
+            }
+            CCMIOReadVerticesf(&m_ccmErr, vertices, &dims, &scale, &mapID, verts,
+                               CCMIOINDEXC(0), 
+                               CCMIOINDEXC(0+nVertices));
+            CCMIOReadMap(&m_ccmErr, mapID, mapData,
+                         CCMIOINDEXC(0), CCMIOINDEXC(0+nVertices));
+            
+            for(int i = 0; i < nVertices; ++i)
+            {
+                Nodes.push_back(boost::shared_ptr<Node>(new Node(i,verts[3*i],
+                                                                 verts[3*i+1],
+                                                                 verts[3*i+2])));
+            }
+
+        }
+        
+        void InputStar::ReadInternalFaces(map<int, vector<int> >&FacesNodes, 
+                                          Array<OneD, vector<int> > &ElementFaces)
+        {
+            
+            CCMIOID mapID, id;
+            CCMIOSize_t nFaces,size;
+            vector<int> faces, faceCells, mapData;
+
+            // Read the internal faces.
+            CCMIOGetEntity(&m_ccmErr, m_ccmTopology, 
+                           kCCMIOInternalFaces, 0, &id);
+            CCMIOEntitySize(&m_ccmErr, id, &nFaces, NULL);
+
+            int nf = TOINT64(nFaces);
+            mapData.resize(nf);
+            faceCells.resize(2 * nf);
+
+            CCMIOReadFaces(&m_ccmErr, id, kCCMIOInternalFaces, NULL, 
+                           &size, NULL, CCMIOINDEXC(kCCMIOStart), 
+                           CCMIOINDEXC(kCCMIOEnd));
+            faces.resize(TOINT64(size));
+            CCMIOReadFaces(&m_ccmErr, id, kCCMIOInternalFaces, &mapID, 
+                           NULL, &faces[0],CCMIOINDEXC(kCCMIOStart), 
+                           CCMIOINDEXC(kCCMIOEnd));
+            CCMIOReadFaceCells(&m_ccmErr, id, kCCMIOInternalFaces,
+                               &faceCells[0], CCMIOINDEXC(kCCMIOStart), 
+                               CCMIOINDEXC(kCCMIOEnd));
+            CCMIOReadMap(&m_ccmErr, mapID, &mapData[0],
+                         CCMIOINDEXC(kCCMIOStart), CCMIOINDEXC(kCCMIOEnd));
+
+            // Add face nodes
+            int cnt  = 0; 
+            for(int i = 0; i < nf; ++i)
+            {
+                vector<int> Fnodes;
+                int j;
+                if(cnt < faces.size())
+                {
+                    int nv = faces[cnt];
+                    ASSERTL0(nv<= 4,"Can only handle meshes with "
+                             "up to four nodes per face");
+                    
+                    for(j = 0; j < nv; ++j)
+                    {
+                        if(cnt+1+j < faces.size())
+                        {
+                            Fnodes.push_back(faces[cnt+1+j]-1);
+                        }
+                    }
+                    cnt += nv+1;
+                }
+                FacesNodes[mapData[i]-1] = Fnodes;
+            }
+            
+            
+            // find number of elements; 
+            int nelmt = 0; 
+            for(int i = 0; i < faceCells.size();++i)
+            {
+                nelmt = max(nelmt,faceCells[i]);
+            }
+
+            ElementFaces = Array<OneD, vector<int> >(nelmt);
+            for(int i = 0; i < nf; ++i)
+            {
+                // left element
+                if(faceCells[2*i])
+                {
+                    ElementFaces[faceCells[2*i]  -1].push_back(mapData[i]-1); 
+                }
+
+                // right element 
+                if(faceCells[2*i+1])
+                {
+                    ElementFaces[faceCells[2*i+1]-1].push_back(mapData[i]-1); 
+                }
+            }
+            
+        }
+        
+        void InputStar::ReadBoundaryFaces(vector< vector<int> > &BndElementFaces,
+                                          map<int, vector<int> >&FacesNodes, 
+                                          Array<OneD, vector<int> > &ElementFaces,
+                                          vector<string> &Facelabels)
+        {
+            // Read the boundary faces.
+            CCMIOSize_t index = CCMIOSIZEC(0);
+            CCMIOID mapID, id;
+            CCMIOSize_t nFaces,size;
+            vector<int> faces, faceCells, mapData;
+            vector<string> facelabel;
+            
+            while (CCMIONextEntity(NULL, m_ccmTopology, 
+                                   kCCMIOBoundaryFaces, &index, &id)
+                   == kCCMIONoErr)
+            {
+                int boundaryVal;
+                
+                CCMIOEntitySize(&m_ccmErr, id, &nFaces, NULL);
+                int nf = TOINT64(nFaces);
+                mapData.resize(nf);
+                faceCells.resize(nf);
+                CCMIOReadFaces(&m_ccmErr, id, kCCMIOBoundaryFaces, 
+                               NULL, &size, NULL,
+                               CCMIOINDEXC(kCCMIOStart), 
+                               CCMIOINDEXC(kCCMIOEnd));
+
+                faces.resize(TOINT64(size));
+                CCMIOReadFaces(&m_ccmErr, id, kCCMIOBoundaryFaces, 
+                               &mapID, NULL, &faces[0],
+                               CCMIOINDEXC(kCCMIOStart), 
+                               CCMIOINDEXC(kCCMIOEnd));
+                CCMIOReadFaceCells(&m_ccmErr, id, kCCMIOBoundaryFaces,
+                                   &faceCells[0],
+                                   CCMIOINDEXC(kCCMIOStart),
+                                   CCMIOINDEXC(kCCMIOEnd));
+                CCMIOReadMap(&m_ccmErr, mapID, &mapData[0],
+                             CCMIOINDEXC(kCCMIOStart), CCMIOINDEXC(kCCMIOEnd));
+                
+                CCMIOGetEntityIndex(&m_ccmErr, id, &boundaryVal);
+
+                // check to see if we have a label for this boundary faces 
+                int size;
+                char *name;
+                if(CCMIOReadOptstr(NULL, id, "Label", &size, NULL) == kCCMIONoErr){
+                    name=new char[size+1];
+                    CCMIOReadOptstr(NULL, id, "Label", NULL, name);
+                    Facelabels.push_back(string(name));
+                }
+                else
+                {
+                    Facelabels.push_back("Not known");
+                }
+                
+
+                // Add face nodes
+                int cnt  = 0; 
+                for(int i = 0; i < nf; ++i)
+                {
+                    vector<int> Fnodes;
+                    int j;
+                    if(cnt < faces.size())
+                    {
+                        int nv = faces[cnt];
+                        ASSERTL0(nv<= 4,"Can only handle meshes with "
+                                 "up to four nodes per face");
+                        
+                        for(j = 0; j < nv; ++j)
+                        {
+                            if(cnt+1+j < faces.size())
+                            {
+                                Fnodes.push_back(faces[cnt+1+j]-1);
+                            }
+                        }
+                        cnt += nv+1;
+                    }
+                    FacesNodes[mapData[i]-1] = Fnodes;
+                }
+                
+                
+                vector<int> BndFaces; 
+                for(int i = 0; i < nf; ++i)
+                {
+                    if(faceCells[i])
+                    {
+                        ElementFaces[faceCells[i]-1].push_back(mapData[i]-1); 
+                    }
+                    BndFaces.push_back(mapData[i]-1);
+                }
+                BndElementFaces.push_back(BndFaces);
+            }
+        }
+    }
 }

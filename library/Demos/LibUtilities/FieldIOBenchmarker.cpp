@@ -260,7 +260,7 @@ void PrintResults(Experiment& exp, Results& results)
     double sum = 0.0;
     double sumSq = 0.0;
 
-    for (Results::const_iterator it = results.cbegin(); it != results.cend(); ++it)
+    for (Results::const_iterator it = results.begin(); it != results.end(); ++it)
     {
         double x = *it;
         sum += x;

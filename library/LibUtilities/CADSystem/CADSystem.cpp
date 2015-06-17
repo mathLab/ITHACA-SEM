@@ -33,6 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <fstream>
+#include <string>
+#include <sstream>
+
 #include <boost/filesystem.hpp>
 
 #include <LibUtilities/CADSystem/CADSystem.h>
@@ -181,25 +185,31 @@ namespace LibUtilities{
             return false;
         }
         
-        TopTools_IndexedMapOfShape unfilteredEdges;
         TopTools_IndexedMapOfShape mapOfFaces;
         TopTools_IndexedMapOfShape mapOfEdges;
         TopExp::MapShapes(shape,TopAbs_FACE,mapOfFaces);
-        TopExp::MapShapes(shape,TopAbs_EDGE,unfilteredEdges);
         
-        for(int i=1; i<=unfilteredEdges.Extent(); i++)
+        for(int i = 1; i <= mapOfFaces.Extent(); i++)
         {
-            TopoDS_Shape edge = unfilteredEdges.FindKey(i);
-            BRepAdaptor_Curve curve = BRepAdaptor_Curve(TopoDS::Edge(edge));
-            if(curve.GetType() == 7)
+            TopoDS_Shape face= mapOfFaces.FindKey(i);
+            
+            TopTools_IndexedMapOfShape localEdges;
+            TopExp::MapShapes(face,TopAbs_EDGE,localEdges);
+            
+            for(int j = 1; j <= localEdges.Extent(); j++)
             {
-                continue;
+                TopoDS_Shape edge = localEdges.FindKey(j);
+                BRepAdaptor_Curve curve = BRepAdaptor_Curve(TopoDS::Edge(edge));
+                if(curve.GetType() != 7)
+                {
+                    if(!(mapOfEdges.Contains(edge)))
+                    {
+                        mapOfEdges.Add(edge);
+                    }
+                }
             }
-            mapOfEdges.Add(edge);
+            
         }
-
-        m_numCurve = mapOfFaces.Extent();
-        m_numSurf =  mapOfEdges.Extent();
         
         for(int i=1; i<=mapOfEdges.Extent(); i++)
         {
@@ -213,28 +223,25 @@ namespace LibUtilities{
             TopoDS_Shape face= mapOfFaces.FindKey(i);
             
             TopTools_IndexedMapOfShape localEdges;
-            TopTools_IndexedMapOfShape unfilteredLocalEdges;
-            TopExp::MapShapes(face,TopAbs_EDGE,unfilteredLocalEdges);
-
-            for(int j = 1; j <= unfilteredLocalEdges.Extent(); j++)
+            TopExp::MapShapes(face,TopAbs_EDGE,localEdges);
+            
+            vector<int> edges;
+            
+            for(int j = 1; j <= localEdges.Extent(); j++)
             {
-                TopoDS_Shape edge = unfilteredLocalEdges.FindKey(j);
+                TopoDS_Shape edge = localEdges.FindKey(j);
                 BRepAdaptor_Curve curve = BRepAdaptor_Curve(TopoDS::Edge(edge));
                 if(curve.GetType() != 7)
                 {
-                    localEdges.Add(edge);
+                    if(mapOfEdges.Contains(edge))
+                    {
+                        edges.push_back(mapOfEdges.FindIndex(edge));
+                    }
                 }
             }
-            
-            vector<int> edges;
-            edges.resize(localEdges.Extent());
-            
-            for(int j=0; j<localEdges.Extent(); j++)
-            {
-                edges[j] = mapOfEdges.FindIndex(localEdges.FindKey(j+1));
-            }
-            
+             
             AddSurf(i, face, edges);
+            
         }
         
         m_numCurve = m_curves.size();

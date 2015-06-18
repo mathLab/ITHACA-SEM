@@ -269,7 +269,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections MeshUtils)
+        MultiRegions Collections)
+    IF(NEKTAR_USE_MESH)
+	SET(NEKTAR++_LIBRARIES ${NEKTAR++_LIBRARIES} MeshUtils)
+    ENDIF(NEKTAR_USE_MESH)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)

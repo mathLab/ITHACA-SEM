@@ -1,4 +1,4 @@
-SET(LibrarySubDirs LibUtilities LocalRegions Collections MeshUtils
+SET(LibrarySubDirs LibUtilities LocalRegions Collections
     MultiRegions SpatialDomains StdRegions SolverUtils)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs     Demos)
@@ -19,4 +19,8 @@ ENDIF( NEKTAR_BUILD_DEMOS )
 IF( NEKTAR_BUILD_TIMINGS ) 
     SUBDIRS(${TimingsSubDirs})
 ENDIF( NEKTAR_BUILD_TIMINGS ) 
+
+IF(NEKTAR_USE_MESH)
+	SET(LibrarySubDirs ${LibrarySubDirs} MeshUtils)
+ ENDIF(NEKTAR_USE_MESH)
 

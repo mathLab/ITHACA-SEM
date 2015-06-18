@@ -79,10 +79,10 @@ void ProcessGrad::Process(po::variables_map &vm)
     int addfields = nfields*spacedim;
 
     int npoints = m_f->m_exp[0]->GetNpoints();
-    Array<OneD, Array<OneD, NekDouble> > grad(nfields*spacedim);
+    Array<OneD, Array<OneD, NekDouble> > grad(addfields);
     m_f->m_exp.resize(nfields+addfields);
 
-    for (i = 0; i < nfields*spacedim; ++i)
+    for (i = 0; i < addfields; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);
     }

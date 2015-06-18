@@ -40,28 +40,28 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+    /**
+     * @brief This processing module calculates the Q Criterion and adds it
+     * as an extra-field to the output file.
+     */
+    class ProcessDisplacement : public ProcessModule
     {
-        /**
-         * @brief This processing module calculates the Q Criterion and adds it
-         * as an extra-field to the output file.
-         */
-        class ProcessDisplacement : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessDisplacement>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessDisplacement(FieldSharedPtr f);
-            virtual ~ProcessDisplacement();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-        };
-    }
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessDisplacement>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
+        
+        ProcessDisplacement(FieldSharedPtr f);
+        virtual ~ProcessDisplacement();
+        
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
+    };
+}
 }
 
 #endif

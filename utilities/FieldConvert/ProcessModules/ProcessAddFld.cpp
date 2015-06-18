@@ -81,7 +81,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 
     string fromfld = m_config["fromfld"].as<string>();
-    m_fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
 
     if(m_f->m_exp.size())
     {
@@ -91,31 +91,31 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
         }
-        m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
-                           m_fromField->m_data,
+        m_f->m_fld->Import(fromfld,fromField->m_fielddef,
+                           fromField->m_data,
                            LibUtilities::NullFieldMetaDataMap,
                            ElementGIDs);
     }
     else
     {
-        m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
-                           m_fromField->m_data,
+        m_f->m_fld->Import(fromfld,fromField->m_fielddef,
+                           fromField->m_data,
                            LibUtilities::NullFieldMetaDataMap);
     }
 
     bool samelength = true;
-    if(m_fromField->m_data.size() != m_f->m_data.size())
+    if(fromField->m_data.size() != m_f->m_data.size())
     {
         samelength = false;
     }
 
     // scale input field
-    for(int i = 0; i < m_fromField->m_data.size(); ++i)
+    for(int i = 0; i < fromField->m_data.size(); ++i)
     {
-        int datalen = m_fromField->m_data[i].size();
+        int datalen = fromField->m_data[i].size();
 
-        Vmath::Smul(datalen, scale, &(m_fromField->m_data[i][0]), 1,
-                                    &(m_fromField->m_data[i][0]), 1);
+        Vmath::Smul(datalen, scale, &(fromField->m_data[i][0]), 1,
+                                    &(fromField->m_data[i][0]), 1);
 
         if(samelength)
         {
@@ -134,7 +134,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
             int datalen = m_f->m_data[i].size();
 
             Vmath::Vadd(datalen, &(m_f->m_data[i][0]),         1,
-                                 &(m_fromField->m_data[i][0]), 1,
+                                 &(fromField->m_data[i][0]), 1,
                                  &(m_f->m_data[i][0]),         1);
         }
     }
@@ -153,12 +153,12 @@ void ProcessAddFld::Process(po::variables_map &vm)
             Vmath::Vcopy(ncoeffs,m_f->m_exp[j]->GetCoeffs(),1, SaveFld,1);
 
             // load new field
-            for (int i = 0; i < m_fromField->m_data.size(); ++i)
+            for (int i = 0; i < fromField->m_data.size(); ++i)
             {
                 m_f->m_exp[j]->ExtractDataToCoeffs(
-                                       m_fromField->m_fielddef[i],
-                                       m_fromField->m_data[i],
-                                       m_fromField->m_fielddef[i]->m_fields[j],
+                                       fromField->m_fielddef[i],
+                                       fromField->m_data[i],
+                                       fromField->m_fielddef[i]->m_fields[j],
                                        m_f->m_exp[j]->UpdateCoeffs());
             }
 

@@ -64,7 +64,6 @@ class ProcessAddFld : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
-        FieldSharedPtr m_fromField;
 };
 
 }

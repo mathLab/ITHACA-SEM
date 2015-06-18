@@ -77,6 +77,8 @@ class Collection
                       Array<OneD,       NekDouble>           &output1,
                       Array<OneD,       NekDouble>           &output2);
 
+        inline bool HasOperator(const OperatorType &op);
+
     protected:
         StdRegions::StdExpansionSharedPtr                     m_stdExp;
         vector<SpatialDomains::GeometrySharedPtr>             m_geom;
@@ -129,6 +131,11 @@ inline void Collection::ApplyOperator(
 {
     Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
     (*m_ops[op])(inarray, output0, output1, output2, wsp);
+}
+
+inline bool Collection::HasOperator(const OperatorType &op)
+{
+    return (m_ops.find(op) != m_ops.end());
 }
 
 }

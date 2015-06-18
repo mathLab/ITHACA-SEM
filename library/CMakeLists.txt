@@ -4,6 +4,10 @@ SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs     Demos)
 SET(TimingsSubDirs  Timings)
 
+IF(NEKTAR_USE_MESH)
+	SET(LibrarySubDirs ${LibrarySubDirs} MeshUtils)
+ENDIF(NEKTAR_USE_MESH)
+
 SUBDIRS(${LibrarySubDirs} )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
@@ -20,7 +24,4 @@ IF( NEKTAR_BUILD_TIMINGS )
     SUBDIRS(${TimingsSubDirs})
 ENDIF( NEKTAR_BUILD_TIMINGS ) 
 
-IF(NEKTAR_USE_MESH)
-	SET(LibrarySubDirs ${LibrarySubDirs} MeshUtils)
- ENDIF(NEKTAR_USE_MESH)
 

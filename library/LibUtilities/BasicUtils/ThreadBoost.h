@@ -58,7 +58,6 @@ class ThreadWorkerBoost;
  */
 class ThreadManagerBoost: public ThreadManager
 {
-
     /**
      * So the workers can access the master queue and locks.
      */
@@ -87,7 +86,8 @@ class ThreadManagerBoost: public ThreadManager
         /// Called by the factory method.
         static ThreadManagerSharedPtr Create(unsigned int numT)
         {
-            return boost::shared_ptr<ThreadManager>(new ThreadManagerBoost(numT));
+            return boost::shared_ptr<ThreadManager>(
+                new ThreadManagerBoost(numT));
         }
 
     private:
@@ -97,24 +97,24 @@ class ThreadManagerBoost: public ThreadManager
         void SetNumWorkersImpl(const unsigned int num);
 
         // Member variables
-        const unsigned int m_numThreads;
-        unsigned int m_numWorkers;
-        std::queue<ThreadJob*> m_masterQueue;
-        boost::mutex m_masterQueueMutex;
-        boost::mutex m_masterActiveMutex;
-        boost::condition_variable m_masterQueueCondVar;
-        boost::condition_variable m_masterActiveCondVar;
-        ThreadWorkerBoost** m_threadList;
-        boost::thread** m_threadThreadList;
-        boost::thread::id m_masterThreadId;
-        bool* m_threadBusyList;
-        bool* m_threadActiveList;
-        unsigned int m_chunkSize;
-        SchedType m_schedType;
-        boost::barrier *m_barrier;
-        std::map<boost::thread::id, unsigned int> m_threadMap;
-        static std::string className;
-        std::string m_type;
+        const unsigned int                         m_numThreads;
+        unsigned int                               m_numWorkers;
+        std::queue<ThreadJob*>                     m_masterQueue;
+        boost::mutex                               m_masterQueueMutex;
+        boost::mutex                               m_masterActiveMutex;
+        boost::condition_variable                  m_masterQueueCondVar;
+        boost::condition_variable                  m_masterActiveCondVar;
+        ThreadWorkerBoost**                        m_threadList;
+        boost::thread**                            m_threadThreadList;
+        boost::thread::id                          m_masterThreadId;
+        bool*                                      m_threadBusyList;
+        bool*                                      m_threadActiveList;
+        unsigned int                               m_chunkSize;
+        SchedType                                  m_schedType;
+        boost::barrier*                            m_barrier;
+        std::map<boost::thread::id, unsigned int>  m_threadMap;
+        static std::string                         className;
+        std::string                                m_type;
 };
 
 /**
@@ -123,27 +123,29 @@ class ThreadManagerBoost: public ThreadManager
  * Each instance of this class corresponds to a worker thread.
  * Instances manage their own queue of jobs to run, grabbing new
  * jobs from the master queue when it is exhausted.
- *
  */
 class ThreadWorkerBoost
 {
     public:
         /// Constructor
-        ThreadWorkerBoost(ThreadManagerBoost *threadManager, unsigned int workerNum);
+        ThreadWorkerBoost(ThreadManagerBoost *threadManager,
+                          unsigned int workerNum);
         /// Destructor.
         ~ThreadWorkerBoost();
-        /// This provides the interface that boost::thread uses to start the worker.
+        /// This provides the interface that boost::thread uses to start the
+        /// worker.
         void operator()() { MainLoop(); };
         /**
          * @brief Return the index of the worker thread.
-         * @returns Index of worker thread, an integer between 0 and (number_of_threads - 1)
+         * @return Index of worker thread, an integer between 0 and
+         *        (number_of_threads - 1)
          */
         unsigned int GetWorkerNum() { return m_threadNum; };
         /**
          * @brief A signal to shut down.
          *
-         * If this method is called the worker will shut down.  Used by
-         * the ThreadManagerBoost to stop threading.
+         * If this method is called the worker will shut down.  Used by the
+         * ThreadManagerBoost to stop threading.
          */
         void Stop() { m_keepgoing = false;} ;
 
@@ -157,11 +159,10 @@ class ThreadWorkerBoost
         void RunJobs();
 
         // Member variables
-        ThreadManagerBoost *m_threadManager;
-        std::queue<ThreadJob *> m_workerQueue;
-        bool m_keepgoing;
-        unsigned int m_threadNum;
-
+        ThreadManagerBoost*      m_threadManager;
+        std::queue<ThreadJob *>  m_workerQueue;
+        bool                     m_keepgoing;
+        unsigned int             m_threadNum;
 };
 
 

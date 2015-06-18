@@ -54,9 +54,9 @@ std::string ThreadManagerBoost::className =
  * @note Do not use, use factory instead.
  */
 ThreadManagerBoost::ThreadManagerBoost(unsigned int numT) :
-        m_numThreads(numT), m_numWorkers(numT), m_masterQueue(), m_masterQueueMutex(),
-        m_masterActiveMutex(), m_masterQueueCondVar(), m_masterActiveCondVar(),
-        m_chunkSize(1), m_schedType(e_dynamic),
+        m_numThreads(numT), m_numWorkers(numT), m_masterQueue(),
+        m_masterQueueMutex(), m_masterActiveMutex(), m_masterQueueCondVar(),
+        m_masterActiveCondVar(), m_chunkSize(1), m_schedType(e_dynamic),
         m_threadMap()
 {
     using namespace std;
@@ -321,12 +321,14 @@ const std::string& ThreadManagerBoost::GetType() const
 
 
 /**
- * @param threadManager Pointer to the ThreadManagerBoost that is controlling this worker.
+ * @param threadManager Pointer to the ThreadManagerBoost that is controlling
+ *                      this worker.
  * @param workerNum Unique number from 0..(number_of_threads - 1)
  *
  * Called by the ThreadManagerBoost instance.
  */
-ThreadWorkerBoost::ThreadWorkerBoost(ThreadManagerBoost *tm, unsigned int workerNum) :
+ThreadWorkerBoost::ThreadWorkerBoost(
+    ThreadManagerBoost *tm, unsigned int workerNum) :
         m_threadManager(tm), m_workerQueue(),
         m_keepgoing(true), m_threadNum(workerNum)
 {
@@ -343,7 +345,7 @@ ThreadWorkerBoost::~ThreadWorkerBoost()
     if (m_keepgoing)
     {
         std::cerr << "Warning: ThreadWorker: " << m_threadNum
-                << "destroyed while running!" << std::endl;
+                  << "destroyed while running!" << std::endl;
     }
     // on destuction the m_workerQueue will be destructed and that
     // will destruct any ThreadJobs still in there.
@@ -395,8 +397,11 @@ unsigned int ThreadWorkerBoost::GetNumToLoad()
     switch (m_threadManager->m_schedType)
     {
         case e_guided:
-            numToLoad = std::max(static_cast<unsigned long>(m_threadManager->m_chunkSize),
-                    static_cast<unsigned long>(m_threadManager->m_masterQueue.size() / (2*m_threadManager->m_numWorkers +1)));
+            numToLoad = std::max(
+                static_cast<unsigned long>(m_threadManager->m_chunkSize),
+                static_cast<unsigned long>(
+                    m_threadManager->m_masterQueue.size()
+                    / (2*m_threadManager->m_numWorkers +1)));
             break;
 
         case e_dynamic:

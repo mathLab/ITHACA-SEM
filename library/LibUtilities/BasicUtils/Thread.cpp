@@ -153,8 +153,8 @@ ThreadMaster& GetThreadMaster()
 /**
  * @param p_type String to be passed to the ThreadManagerFactory
  *
- * Subsequent CreateInstance calls will pass this string to the ThreadManagerFactory
- * to create a ThreadManager.
+ * Subsequent CreateInstance calls will pass this string to the
+ * ThreadManagerFactory to create a ThreadManager.
  *
  * It is an error to call this more than once (since having different kinds of
  * ThreadManager active is probably a stupendously bad idea).

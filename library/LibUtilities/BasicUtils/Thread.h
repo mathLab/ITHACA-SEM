@@ -73,7 +73,8 @@ enum SchedType
 
 class ThreadManager;
 typedef boost::shared_ptr<ThreadManager> ThreadManagerSharedPtr;
-typedef LibUtilities::NekFactory< std::string, ThreadManager, unsigned int> ThreadManagerFactory;
+typedef LibUtilities::NekFactory<std::string, ThreadManager, unsigned int>
+    ThreadManagerFactory;
 LIB_UTILITIES_EXPORT ThreadManagerFactory& GetThreadManagerFactory();
 
 /**
@@ -95,7 +96,8 @@ LIB_UTILITIES_EXPORT ThreadManagerFactory& GetThreadManagerFactory();
  * Instance of the subclass will be destructed once the ThreadManager has
  * finished the Run() method.
  */
-class ThreadJob {
+class ThreadJob
+{
     public:
         /// Base constructor
         ThreadJob();
@@ -122,7 +124,6 @@ class ThreadJob {
 
     private:
         unsigned int m_workerNum;
-
 };
 
 
@@ -172,12 +173,11 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * @brief Pass a list of tasklets to the master queue.
          * @param joblist Vector of ThreadJob pointers.
          *
-         * The list of jobs is copied into the master queue.
-         * Jobs may be available for running *immediately*,
-         * even before the list has been fully copied.  This can
-         * have consequences for the scheduling.
-         * If this is an issue then suspend the workers with SetNumWorkers(0)
-         * until the jobs are queued.
+         * The list of jobs is copied into the master queue.  Jobs may be
+         * available for running *immediately*, even before the list has been
+         * fully copied.  This can have consequences for the scheduling.  If
+         * this is an issue then suspend the workers with SetNumWorkers(0) until
+         * the jobs are queued.
          *
          * @see SchedType
          */
@@ -186,9 +186,9 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * @brief Pass a single job to the master queue.
          * @param job A pointer to a ThreadJob subclass.
          *
-         * The job may become available for running immediately.
-         * If this is an issue then suspend the workers with SetNumWorkers(0)
-         * until the jobs are queued.
+         * The job may become available for running immediately.  If this is an
+         * issue then suspend the workers with SetNumWorkers(0) until the jobs
+         * are queued.
          */
         virtual void QueueJob(ThreadJob* job) = 0;
         /**
@@ -201,34 +201,31 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
         /**
          * @brief Returns the worker number of the executing thread.
          *
-         * Returns an unsigned int between 0 and N-1 where N is the
-         * number of active worker threads.  Repeated calls from within
-         * this thread will always return the same value and the value
-         * will be the same as returned from ThreadJob.GetWorkerNum().
-         * The same thread will run a job until it finishes.
+         * Returns an unsigned int between 0 and N-1 where N is the number of
+         * active worker threads.  Repeated calls from within this thread will
+         * always return the same value and the value will be the same as
+         * returned from ThreadJob.GetWorkerNum().  The same thread will run a
+         * job until it finishes.
          *
-         * Although if there are active threads then thread 0 is always
-         * one of them, it is possible that thread 0 does not run for
-         * a given set of jobs.  For example, if there are 4 active threads
-         * and 3 jobs are submitted with a e_static scheduling strategy
-         * and a chunksize of 1, then it is possible that threads 1,2,
-         * and 3 pick up the jobs and thread 0 remains idle.
+         * Although if there are active threads then thread 0 is always one of
+         * them, it is possible that thread 0 does not run for a given set of
+         * jobs.  For example, if there are 4 active threads and 3 jobs are
+         * submitted with a e_static scheduling strategy and a chunksize of 1,
+         * then it is possible that threads 1,2, and 3 pick up the jobs and
+         * thread 0 remains idle.
          *
          * Returns 0 if called by non-thread.
-         *
-         *
          */
         virtual unsigned int GetWorkerNum() = 0;
         /**
          * @brief Sets the number of active workers.
          * @param num The number of active workers.
          *
-         * Active workers are threads that are either running jobs
-         * or are waiting for jobs to be queued.
+         * Active workers are threads that are either running jobs or are
+         * waiting for jobs to be queued.
          *
-         * If num is greater than the maximum allowed number
-         * of active workers, then the maximum value will be
-         * used instead.
+         * If num is greater than the maximum allowed number of active workers,
+         * then the maximum value will be used instead.
          */
         virtual void SetNumWorkers(const unsigned int num) = 0;
         /**
@@ -246,12 +243,11 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * @brief Waits until all queued jobs are finished.
          *
          * If there are no jobs running or queued this method returns
-         * immediately.  Otherwise it blocks until the queue is empty
-         * and the worker threads are idle.
+         * immediately.  Otherwise it blocks until the queue is empty and the
+         * worker threads are idle.
          *
-         * Implementations *must*
-         * ensure that trivial deadlocks are not possible from this method,
-         * that is, that this code:
+         * Implementations *must* ensure that trivial deadlocks are not possible
+         * from this method, that is, that this code:
          * @code
          *  // assume ThreadManager* tm
          *  // assume SomeJob is subclass of ThreadJob
@@ -261,15 +257,16 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          *  tm->QueueJob(job);
          *  tm->Wait();
          * @endcode
-         * does not wait forever.  Since the master thread is counted in
-         * the number of worker threads, implementations should increase
-         * the number of active workers by 1 on entering Wait().
+         * does not wait forever.  Since the master thread is counted in the
+         * number of worker threads, implementations should increase the number
+         * of active workers by 1 on entering Wait().
          */
         virtual void Wait() = 0;
         /**
          * @brief Controls how many jobs are sent to each worker at a time.
          *
-         * The exact meaning of this parameter depends on the current scheduling algorithm.
+         * The exact meaning of this parameter depends on the current scheduling
+         * algorithm.
          *
          * @see SchedType
          * @see SetSchedType()
@@ -286,10 +283,12 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          */
         virtual bool InThread() = 0;
         /**
-         * @brief A calling threads holds until all active threads call this method.
+         * @brief A calling threads holds until all active threads call this
+         * method.
          *
-         * When called, the calling thread will sleep until all active workers have called
-         * this method.  Once all have done so all threads awake and continue execution.
+         * When called, the calling thread will sleep until all active workers
+         * have called this method.  Once all have done so all threads awake and
+         * continue execution.
          *
          * @note Behaviour is likely undefined if the number of active workers
          * is altered after a thread has called this method.  It is only safe to
@@ -320,9 +319,7 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
         {
             return pRank * GetMaxNumWorkers() + pThr;
         }
-
 };
-
 
 typedef boost::unique_lock<boost::shared_mutex> WriteLock;
 typedef boost::shared_lock<boost::shared_mutex> ReadLock;
@@ -334,8 +331,8 @@ typedef boost::shared_lock<boost::shared_mutex> ReadLock;
  * simple implementation of ThreadManager, ThreadStartupManager, which behaves
  * as a single-threaded ThreadManager that fails if anything non-trivial is
  * attempted. This means code should be cautious about caching the value of
- * GetInstance(string), as it might change once that particular threading
- * system is initialised.
+ * GetInstance(string), as it might change once that particular threading system
+ * is initialised.
  *
  * Multiple ThreadManagers should now be possible.  Each is identified with a
  * string and can be recovered by calling

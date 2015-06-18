@@ -186,6 +186,10 @@ Results TestRead(Experiment& exp)
     {
         if (exp.verbose)
             std::cout << "Test " << i << " of " << exp.n;
+	
+	// Synchronise
+	exp.comm->Block();
+	
         double t0 = MPI_Wtime();
 
         FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm);
@@ -237,6 +241,9 @@ Results TestWrite(Experiment& exp)
     {
         if (exp.verbose)
             std::cout << "Test " << i << " of " << exp.n << std::endl;
+	
+	// Synchronise
+	exp.comm->Block();
         double t0 = MPI_Wtime();
 
         FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(outtype, exp.comm);
@@ -247,7 +254,8 @@ Results TestWrite(Experiment& exp)
 
         double t1 = MPI_Wtime();
         t1 -= t0;
-
+	
+	
         if (exp.verbose)
             std::cout << ": t = " << t1 << " s" << std::endl;
 
@@ -266,10 +274,20 @@ void PrintResults(Experiment& exp, Results& results)
         sum += x;
         sumSq += x*x;
     }
+    
     double mean = sum / exp.n;
-    double var = sumSq / exp.n - mean*mean;
-    double std = std::sqrt(var);
-
-    std::cout << "Mean: " << mean << std::endl;
-    std::cout << "Std: " << std << std::endl;
+    // double var = sumSq / exp.n - mean*mean;
+    // double std = std::sqrt(var);
+    
+    if (exp.comm->GetSize() > 1) {
+      // Use all version since reduce to specified rank isn't wrapped.
+      exp.comm->AllReduce(mean, ReduceSum);
+      mean  /= exp.comm->GetSize();
+    }
+    
+    if (exp.comm->GetRank() == 0)
+    {
+      std::cout << "Mean: " << mean << std::endl;
+      // std::cout << "Std: " << std << std::endl;
+    }
 }

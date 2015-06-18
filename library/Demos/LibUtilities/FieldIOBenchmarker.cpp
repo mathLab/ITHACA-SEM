@@ -51,6 +51,7 @@ struct Experiment
         bool verbose;
         int n;
         std::string dataSource;
+        std::string dataDest;
         CommSharedPtr comm;
 };
 
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
 
     po::options_description hidden("Hidden options");
     hidden.add_options()("input-file", po::value<std::string>(),
-            "Input filename");
+            "Input filename")("output-file", po::value<std::string>());
 
     po::options_description cmdline_options;
     cmdline_options.add(hidden).add(desc);
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
     visible.add(desc);
 
     po::positional_options_description p;
-    p.add("input-file", -1);
+    p.add("input-file", 1).add("output-file", 1);
 
     po::variables_map vm;
 
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
 
     if (vm.count("help") || vm.count("input-file") != 1)
     {
-        std::cerr << "Usage: FieldIOBenchmarker [options] inputfile" << endl;
+        std::cerr << "Usage: FieldIOBenchmarker [options] inputfile [outputfile]" << endl;
         std::cout << desc;
         std::cout << endl;
         return 1;
@@ -153,6 +154,11 @@ int main(int argc, char* argv[])
     Results res;
     if (exp.write)
     {
+        if (vm.count("output-file"))
+            exp.dataDest = vm["output-file"].as<std::string>();
+        else
+            exp.dataDest = exp.dataSource + ".tmp";
+
         res = TestWrite(exp);
     }
     else
@@ -216,7 +222,6 @@ Results TestWrite(Experiment& exp)
     std::vector < std::vector<NekDouble> > fielddata;
     fioRead->Import(exp.dataSource, fielddefs, fielddata);
 
-    std::string outfile = exp.dataSource + ".tmp";
     std::string outtype;
     if (exp.hdf)
         outtype = "Hdf5";
@@ -227,7 +232,7 @@ Results TestWrite(Experiment& exp)
     {
         std::cout << "Beginning write (" << outtype << ") experiment with "
                 << exp.n << " loops." << std::endl;
-        std::cout << "Writing to temp file: " << outfile << std::endl;
+        std::cout << "Writing to temp file: " << exp.dataDest<< std::endl;
     }
 
     Results res(exp.n, 0);
@@ -243,7 +248,7 @@ Results TestWrite(Experiment& exp)
         FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(outtype,
                 exp.comm);
 
-        fio->Write(outfile, fielddefs, fielddata);
+        fio->Write(exp.dataDest, fielddefs, fielddata);
 
         double t1 = MPI_Wtime();
         t1 -= t0;

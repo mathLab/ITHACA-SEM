@@ -114,18 +114,16 @@ namespace Utilities
         
         MeshUtils::SurfaceMeshingSharedPtr m_surfacemeshing =
             MemoryManager<MeshUtils::SurfaceMeshing>::
-                AllocateSharedPtr(m_cad,m_octree);
+                AllocateSharedPtr(m_cad,m_octree,m_order);
         
         m_surfacemeshing->Mesh();
-        m_surfacemeshing->HOMesh(m_order);
         
         exit(-1);
         
         int nodeCounter=0;
         
-        int numpoints, numtris;
-        Array<OneD, Array<OneD, NekDouble> > points;
-        Array<OneD, Array<OneD, int> > connec;
+        int numtris, numppt;
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > points;
         
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
@@ -136,31 +134,28 @@ namespace Utilities
         
         for(int i = 1; i <=m_cad->GetNumSurf(); i++)
         {
-            m_surfacemeshing->Extract(i,numpoints,numtris,points,connec);
-            
-            vector<NodeSharedPtr> nodes;
-            
-            for(int j = 0; j < numpoints; j++)
-            {
-                NodeSharedPtr n = boost::shared_ptr<Node>(
-                                    new Node(nodeCounter++,points[j][0],
-                                             points[j][1],points[j][2]));
-                nodes.push_back(n);
-            }
+            m_surfacemeshing->Extract(i,numtris,numppt,points);
             
             for(int j = 0; j < numtris; j++)
             {
+                vector<NodeSharedPtr> nodes;
+                for(int k = 0; k < 3; k++) //numppt
+                {
+                    NodeSharedPtr n =
+                    boost::shared_ptr<Node>(
+                                new Node(nodeCounter++,points[j][k][0],
+                                         points[j][k][1],points[j][k][2]));
+                    nodes.push_back(n);
+                }
+                
+                
                 ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
                 
-                vector<NodeSharedPtr> nodeList;
-                nodeList.push_back(nodes[connec[j][0]]);
-                nodeList.push_back(nodes[connec[j][1]]);
-                nodeList.push_back(nodes[connec[j][2]]);
                 vector<int> tags;
                 tags.push_back(i);
                 ElementSharedPtr E = GetElementFactory().
                             CreateInstance(LibUtilities::eTriangle,
-                                           conf,nodeList,tags);
+                                           conf,nodes,tags);
                 m_mesh->m_element[2].push_back(E);
                 
             }

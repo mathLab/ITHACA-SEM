@@ -40,6 +40,7 @@
 #include <MeshUtils/TriangleInterface.h>
 
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 namespace Nektar{
@@ -76,51 +77,77 @@ namespace MeshUtils {
         pplanemesh->Mesh(false,true);
         pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
-        /*for(int i = 0; i < numpoints; i++)
+        HOMesh();
+        
+        for(int i = 0; i < numtris; i++)
         {
-            Array<OneD, NekDouble> p = m_cadsurf->P(Points[i][0],Points[i][1]);
-            Points[i]=p;
-        }*/
+            for(int j = 0; j < TotNumPoints; j++)
+            {
+                Array<OneD, NekDouble> p = m_cadsurf->
+                                    P(HOPoints[i][j][0],HOPoints[i][j][1]);
+                HOPoints[i][j]=p;
+            }
+        }
 
     }
     
-    void SurfaceMesh::HOMesh(int order)
+    void SurfaceMesh::HOMesh()
     {
+        LibUtilities::PointsKey pkey(m_order, LibUtilities::eNodalTriFekete);
+        Array<OneD, NekDouble> u,v;
+        TotNumPoints = LibUtilities::PointsManager()[pkey]->
+                                                        GetTotNumPoints();
+        LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
+        
+        HOPoints = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(numtris);
+        
         for(int i = 0; i < numtris; i++)
         {
             DNekMat a (3,3,1.0);
             a(0,0) = Points[Connec[i][0]][0];
             a(1,0) = Points[Connec[i][0]][1];
+            a(2,0) = 1.0;
             a(0,1) = Points[Connec[i][1]][0];
             a(1,1) = Points[Connec[i][1]][1];
+            a(2,1) = 1.0;
             a(0,2) = Points[Connec[i][2]][0];
             a(1,2) = Points[Connec[i][2]][1];
-            
-            DNekMat b (3,3,1.0);
+            a(2,2) = 1.0;
             
             DNekMat c (3,3,1.0);
-            c(0,0) = -1.0;
-            c(1,0) = -1.0;
-            c(0,1) = 1.0;
-            c(1,1) = -1.0;
-            c(0,2) = -1.0;
-            c(1,2) = 1.0;
+            c(0,0) = u[0];
+            c(1,0) = v[0];
+            c(2,0) = 1.0;
+            c(0,1) = u[1];
+            c(1,1) = v[1];
+            c(2,1) = 1.0;
+            c(0,2) = u[2];
+            c(1,2) = v[2];
+            c(2,2) = 1.0;
             
             c.Invert();
             
-            b = a*c;
+            DNekMat M = a*c;
             
-            DNekMat C (3,3,1.0);
-            c(0,0) = -1.0;
-            c(1,0) = -1.0;
-            c(0,1) = 1.0;
-            c(1,1) = -1.0;
-            c(0,2) = -1.0;
-            c(1,2) = 1.0;
+            DNekMat p (3,TotNumPoints,1.0);
             
-            a= b*C;
+            for(int j = 0; j < TotNumPoints; j++)
+            {
+                p(0,j) = u[j];
+                p(1,j) = v[j];
+            }
             
-            cout << a(0,0) << " " << Points[Connec[i][0]][0] << endl;
+            DNekMat result = M*p;
+            
+            HOPoints[i] = Array<OneD, Array<OneD, NekDouble> >(TotNumPoints);
+            
+            for(int j = 0; j < TotNumPoints; j++)
+            {
+                Array<OneD, NekDouble> P(2);
+                P[0] = result(0,j);
+                P[1] = result(1,j);
+                HOPoints[i][j]=P;
+            }
         }
     }
     

@@ -57,9 +57,10 @@ namespace MeshUtils {
         
         SurfaceMesh(const LibUtilities::CADSurfSharedPtr &cad,
                     const OctreeSharedPtr &oct,
-                    const std::vector<CurveMeshSharedPtr> &cmeshes)
+                    const std::vector<CurveMeshSharedPtr> &cmeshes,
+                    const int &order)
                         : m_cadsurf(cad), m_octree(oct),
-                          m_curvemeshes(cmeshes)
+                          m_curvemeshes(cmeshes),m_order(order)
         
         {
             m_edges = m_cadsurf->GetEdges();
@@ -68,21 +69,20 @@ namespace MeshUtils {
         
         void Mesh();
         
-        void Extract(int &np,
-                     int &nt,
-                     Array<OneD, Array<OneD, NekDouble> > &ps,
-                     Array<OneD, Array<OneD, int> > &co)
+        void Extract(int &nt,
+                     int &tnp,
+                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
         {
-            np = numpoints;
             nt = numtris;
-            ps = Points;
-            co = Connec;
+            tnp = TotNumPoints;
+            p = HOPoints;
         }
         
-        void HOMesh(int order);
+        
         
     private:
-    
+        
+        void HOMesh();
         
         bool Validate(int &np,
                       int &nt,
@@ -107,6 +107,8 @@ namespace MeshUtils {
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > HOPoints;
         Array<OneD, Array<OneD, int> > Connec;
         int numpoints, numtris;
+        int TotNumPoints;
+        int m_order;
         
     };
     

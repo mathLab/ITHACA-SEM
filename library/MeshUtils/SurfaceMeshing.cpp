@@ -65,7 +65,7 @@ namespace MeshUtils {
             SurfaceMeshSharedPtr smesh =
                 MemoryManager<SurfaceMesh>::AllocateSharedPtr(
                     m_cad->GetSurf(i), m_octree,
-                    m_curvemeshes);
+                    m_curvemeshes,m_order);
             
             smesh->Mesh();
             

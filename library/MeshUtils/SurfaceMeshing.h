@@ -56,28 +56,20 @@ namespace MeshUtils {
         friend class MemoryManager<SurfaceMeshing>;
         
         SurfaceMeshing(const LibUtilities::CADSystemSharedPtr &cad,
-                                            const OctreeSharedPtr &octree) :
-                                                m_cad(cad),m_octree(octree)
+                       const OctreeSharedPtr &octree,
+                       const int &order) : m_cad(cad),m_octree(octree),
+                                           m_order(order)
         {
         };
         
         void Mesh();
         
         void Extract(int i,
-                     int &np,
-                     int & nt,
-                     Array<OneD, Array<OneD, NekDouble> > &points,
-                     Array<OneD, Array<OneD, int> > &connec)
+                     int &nt,
+                     int &tnp,
+                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
         {
-            m_surfacemeshes[i-1]->Extract(np,nt,points,connec);
-        }
-        
-        void HOMesh(int order)
-        {
-            for(int i = 0; i < m_surfacemeshes.size(); i++)
-            {
-                m_surfacemeshes[i]->HOMesh(order);
-            }
+            m_surfacemeshes[i-1]->Extract(nt,tnp,p);
         }
         
         
@@ -88,6 +80,7 @@ namespace MeshUtils {
         
         std::vector<SurfaceMeshSharedPtr> m_surfacemeshes;
         std::vector<CurveMeshSharedPtr> m_curvemeshes;
+        int m_order;
         
         
     };

@@ -187,16 +187,12 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
             if(m_f->m_exp[0]->GetExp(i)->DetShapeType() !=
                     LibUtilities::eTetrahedron)
             {
-                if(i == nel-1)
-                {
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
+                continue;
             }
         }
+
+        ppe.push_back(newpoints);
+        newtotpoints += newpoints;
 
         switch(e->DetShapeType())
         {
@@ -206,8 +202,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints = LibUtilities::StdSegData::
                                     getNumberOfCoefficients(npoints0);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eTriangle:
@@ -217,8 +211,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np = max(np0,np1);
                 newpoints     = LibUtilities::StdTriData::
                                     getNumberOfCoefficients(np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eQuadrilateral:
@@ -229,8 +221,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints  = LibUtilities::StdQuadData::
                                     getNumberOfCoefficients(np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eTetrahedron:
@@ -242,8 +232,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints  = LibUtilities::StdTetData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::ePrism:
@@ -255,8 +243,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints  = LibUtilities::StdPrismData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::ePyramid:
@@ -268,8 +254,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints     = LibUtilities::StdPyrData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eHexahedron:
@@ -281,8 +265,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints     = LibUtilities::StdPyrData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         default:

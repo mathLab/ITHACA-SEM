@@ -57,7 +57,7 @@ Collection::Collection(
         OperatorType opType = (OperatorType)i;
         ImplementationType impType;
 
-        if (it = impTypes.find(opType) != impTypes.end())
+        if ((it = impTypes.find(opType)) != impTypes.end())
         {
             impType = it->second;
             OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,

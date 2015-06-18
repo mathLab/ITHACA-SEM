@@ -44,7 +44,8 @@ using namespace LibUtilities;
 
 namespace po = boost::program_options;
 
-struct Experiment {
+struct Experiment
+{
         bool write;
         bool hdf;
         bool verbose;
@@ -69,19 +70,15 @@ int main(int argc, char* argv[])
     exp.comm = GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
 
     po::options_description desc("Available options");
-    desc.add_options()
-        ("help,h",
-                "Produce this help message.")
-        ("mode,m", po::value<char>(),
-                "Choose r[ead] (default), x[ml write] or h[df5 write]")
-        ("number,n", po::value<unsigned>(),
-                "Number of iterations to perform, default 3")
-        ("verbose,v",
-                "Enable verbose mode.");
+    desc.add_options()("help,h", "Produce this help message.")("mode,m",
+            po::value<char>(),
+            "Choose r[ead] (default), x[ml write] or h[df5 write]")("number,n",
+            po::value<unsigned>(), "Number of iterations to perform, default 3")(
+            "verbose,v", "Enable verbose mode.");
 
     po::options_description hidden("Hidden options");
-    hidden.add_options()
-        ("input-file",   po::value<std::string>(), "Input filename");
+    hidden.add_options()("input-file", po::value<std::string>(),
+            "Input filename");
 
     po::options_description cmdline_options;
     cmdline_options.add(hidden).add(desc);
@@ -96,33 +93,30 @@ int main(int argc, char* argv[])
 
     try
     {
-        po::store(po::command_line_parser(argc, argv).
-                  options(cmdline_options).positional(p).run(), vm);
+        po::store(
+                po::command_line_parser(argc, argv).options(cmdline_options).positional(
+                        p).run(), vm);
         po::notify(vm);
-    }
-    catch (const std::exception& e)
+    } catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
         std::cerr << desc;
         return 1;
     }
 
-
-    if (vm.count("help") || vm.count("input-file") != 1) {
-        std::cerr << "Usage: FieldIOBenchmarker [options] inputfile"
-             << endl;
+    if (vm.count("help") || vm.count("input-file") != 1)
+    {
+        std::cerr << "Usage: FieldIOBenchmarker [options] inputfile" << endl;
         std::cout << desc;
         std::cout << endl;
         return 1;
     }
 
-    ASSERTL0(vm.count("input-file"),
-             "Must specify input.");
+    ASSERTL0(vm.count("input-file"), "Must specify input.");
 
     exp.dataSource = vm["input-file"].as<std::string>();
 
-
-    if (vm.count("verbose") && exp.comm->GetRank()==0)
+    if (vm.count("verbose") && exp.comm->GetRank() == 0)
     {
         exp.verbose = true;
     }
@@ -135,7 +129,8 @@ int main(int argc, char* argv[])
     if (vm.count("mode"))
     {
         char mode = vm["mode"].as<char>();
-        switch (mode) {
+        switch (mode)
+        {
             case 'r':
                 exp.write = false;
                 break;
@@ -173,7 +168,8 @@ Results TestRead(Experiment& exp)
 {
     if (exp.verbose)
     {
-        std::cout << "Beginning read experiment with " << exp.n << " loops." << std::endl;
+        std::cout << "Beginning read experiment with " << exp.n << " loops."
+                << std::endl;
         std::cout << "Determining file type... ";
     }
 
@@ -182,23 +178,21 @@ Results TestRead(Experiment& exp)
         std::cout << ft << endl;
 
     Results res(exp.n, 0.0);
-    for (unsigned i=0; i<exp.n; ++i)
+    for (unsigned i = 0; i < exp.n; ++i)
     {
         if (exp.verbose)
             std::cout << "Test " << i << " of " << exp.n;
-	
-	// Synchronise
-	exp.comm->Block();
-	
+
+        // Synchronise
+        exp.comm->Block();
+
         double t0 = MPI_Wtime();
 
         FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm);
         std::vector<FieldDefinitionsSharedPtr> fielddefs;
-        std::vector<std::vector<NekDouble> > fielddata;
+        std::vector < std::vector<NekDouble> > fielddata;
 
-        fio->Import(exp.dataSource,
-                 fielddefs,
-                fielddata);
+        fio->Import(exp.dataSource, fielddefs, fielddata);
 
         double t1 = MPI_Wtime();
         t1 -= t0;
@@ -216,12 +210,11 @@ Results TestWrite(Experiment& exp)
         std::cout << "Reading in input: " << exp.dataSource << std::endl;
 
     const std::string intype = FieldIO::GetFileType(exp.dataSource, exp.comm);
-    FieldIOSharedPtr fioRead = GetFieldIOFactory().CreateInstance(intype, exp.comm);
+    FieldIOSharedPtr fioRead = GetFieldIOFactory().CreateInstance(intype,
+            exp.comm);
     std::vector<FieldDefinitionsSharedPtr> fielddefs;
-    std::vector<std::vector<NekDouble> > fielddata;
-    fioRead->Import(exp.dataSource,
-            fielddefs,
-            fielddata);
+    std::vector < std::vector<NekDouble> > fielddata;
+    fioRead->Import(exp.dataSource, fielddefs, fielddata);
 
     std::string outfile = exp.dataSource + ".tmp";
     std::string outtype;
@@ -232,30 +225,29 @@ Results TestWrite(Experiment& exp)
 
     if (exp.verbose)
     {
-        std::cout << "Beginning write (" << outtype << ") experiment with " << exp.n << " loops." << std::endl;
+        std::cout << "Beginning write (" << outtype << ") experiment with "
+                << exp.n << " loops." << std::endl;
         std::cout << "Writing to temp file: " << outfile << std::endl;
     }
 
     Results res(exp.n, 0);
-    for (unsigned i=0; i<exp.n; ++i)
+    for (unsigned i = 0; i < exp.n; ++i)
     {
         if (exp.verbose)
             std::cout << "Test " << i << " of " << exp.n << std::endl;
-	
-	// Synchronise
-	exp.comm->Block();
+
+        // Synchronise
+        exp.comm->Block();
         double t0 = MPI_Wtime();
 
-        FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(outtype, exp.comm);
+        FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(outtype,
+                exp.comm);
 
-        fio->Write(outfile,
-                 fielddefs,
-                 fielddata);
+        fio->Write(outfile, fielddefs, fielddata);
 
         double t1 = MPI_Wtime();
         t1 -= t0;
-	
-	
+
         if (exp.verbose)
             std::cout << ": t = " << t1 << " s" << std::endl;
 
@@ -268,26 +260,28 @@ void PrintResults(Experiment& exp, Results& results)
     double sum = 0.0;
     double sumSq = 0.0;
 
-    for (Results::const_iterator it = results.begin(); it != results.end(); ++it)
+    for (Results::const_iterator it = results.begin(); it != results.end();
+            ++it)
     {
         double x = *it;
         sum += x;
-        sumSq += x*x;
+        sumSq += x * x;
     }
-    
+
     double mean = sum / exp.n;
     // double var = sumSq / exp.n - mean*mean;
     // double std = std::sqrt(var);
-    
-    if (exp.comm->GetSize() > 1) {
-      // Use all version since reduce to specified rank isn't wrapped.
-      exp.comm->AllReduce(mean, ReduceSum);
-      mean  /= exp.comm->GetSize();
+
+    if (exp.comm->GetSize() > 1)
+    {
+        // Use all version since reduce to specified rank isn't wrapped.
+        exp.comm->AllReduce(mean, ReduceSum);
+        mean /= exp.comm->GetSize();
     }
-    
+
     if (exp.comm->GetRank() == 0)
     {
-      std::cout << "Mean: " << mean << std::endl;
-      // std::cout << "Std: " << std << std::endl;
+        std::cout << "Mean: " << mean << std::endl;
+        // std::cout << "Std: " << std << std::endl;
     }
 }

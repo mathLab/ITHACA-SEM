@@ -280,7 +280,7 @@ void ThreeSimilar (const int i, const int j, const int k,
             ps = 1;
             break;
         default:
-            printf("Error in 5-point triangulation in ThreeSimilar");
+            ASSERTL0(false,"Error in 5-point triangulation in ThreeSimilar");
             break;
     }
 }

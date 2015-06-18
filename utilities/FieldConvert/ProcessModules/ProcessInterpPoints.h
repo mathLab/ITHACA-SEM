@@ -62,7 +62,6 @@ class ProcessInterpPoints : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
-        FieldSharedPtr m_fromField;
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                    Array<OneD, Array<OneD, NekDouble> >   &pts,

@@ -54,15 +54,6 @@ ModuleKey ProcessAddFld::className =
 
 ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
 {
-    if((f->m_inputfiles.count("fld") == 0) &&
-       (f->m_inputfiles.count("rst") == 0) &&
-       (f->m_inputfiles.count("chk") == 0))
-    {
-        cout << "A fld, chk or rst input file must be specified for the "
-                "scaleinputfld module" << endl;
-        exit(3);
-    }
-
     m_config["scale"]   = ConfigOption(false, "1.0", "scale factor");
 
     m_config["fromfld"] = ConfigOption(false, "NotSet",
@@ -85,12 +76,12 @@ void ProcessAddFld::Process(po::variables_map &vm)
     }
 
     ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
-
+    
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 
     string fromfld = m_config["fromfld"].as<string>();
-    m_fromField =  boost::shared_ptr<Field>(new Field());
+    m_fromField = boost::shared_ptr<Field>(new Field());
 
     if(m_f->m_exp.size())
     {

@@ -114,7 +114,7 @@ namespace Utilities
         
         MeshUtils::SurfaceMeshingSharedPtr m_surfacemeshing =
             MemoryManager<MeshUtils::SurfaceMeshing>::
-                AllocateSharedPtr(m_cad,m_octree);
+                AllocateSharedPtr(m_mesh->m_verbose,m_cad,m_octree);
         
         m_surfacemeshing->Mesh();
         m_surfacemeshing->HOMesh(m_order);

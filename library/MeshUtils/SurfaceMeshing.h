@@ -55,9 +55,10 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<SurfaceMeshing>;
         
-        SurfaceMeshing(const LibUtilities::CADSystemSharedPtr &cad,
-                                            const OctreeSharedPtr &octree) :
-                                                m_cad(cad),m_octree(octree)
+        SurfaceMeshing(bool verbose,
+                       const LibUtilities::CADSystemSharedPtr &cad,
+                       const OctreeSharedPtr &octree) :
+                           m_cad(cad),m_octree(octree),m_verbose(verbose)
         {
         };
         
@@ -88,6 +89,8 @@ namespace MeshUtils {
         
         std::vector<SurfaceMeshSharedPtr> m_surfacemeshes;
         std::vector<CurveMeshSharedPtr> m_curvemeshes;
+        
+        bool m_verbose;
         
         
     };

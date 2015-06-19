@@ -37,6 +37,7 @@
 #include <fstream>
 
 #include <MeshUtils/Octree.h>
+#include <LibUtilities/CADSystem/CADSurf.h>
 
 using namespace std;
 namespace Nektar{
@@ -816,25 +817,68 @@ namespace MeshUtils {
         if(BoundingBox[5]-BoundingBox[4]>MaxDim)
             MaxDim = BoundingBox[5]-BoundingBox[4];
         
-        //int ns = MaxDim/m_minDelta;
-        int ns = 320;
-        
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             Array<OneD, NekDouble> ParameterPlaneBounds;
             m_cad->GetParameterPlaneBounds(i,ParameterPlaneBounds);
+            LibUtilities::CADSurfSharedPtr surf = m_cad->GetSurf(i);
             
-            for(int j = 0; j < ns; j++)
+            NekDouble du = (ParameterPlaneBounds[1]-ParameterPlaneBounds[0])/(40-1);
+            NekDouble dv = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])/(40-1);
+            
+            NekDouble DeltaU = 0.0;
+            NekDouble DeltaV = 0.0;
+            
+            Array<TwoD, Array<OneD, NekDouble> > samplepoints(40,40);
+            
+            for(int j = 0; j < 40; j++)
             {
-                for(int k = 0; k < ns; k++)
+                for(int k = 0; k < 40; k++)
+                {
+                    NekDouble u = k*du + ParameterPlaneBounds[0];
+                    NekDouble v = j*dv + ParameterPlaneBounds[2];
+                    samplepoints[k][j] = surf->P(u,v);
+                }
+            }
+            
+            for(int j = 0; j < 40-1; j++)
+            {
+                for(int k = 0; k < 40-1; k++)
+                {
+                    NekDouble deltau = sqrt((samplepoints[k][j][0]-samplepoints[k+1][j][0])*
+                                            (samplepoints[k][j][0]-samplepoints[k+1][j][0])+
+                                            (samplepoints[k][j][1]-samplepoints[k+1][j][1])*
+                                            (samplepoints[k][j][1]-samplepoints[k+1][j][1])+
+                                            (samplepoints[k][j][2]-samplepoints[k+1][j][2])*
+                                            (samplepoints[k][j][2]-samplepoints[k+1][j][2]));
+                    NekDouble deltav = sqrt((samplepoints[k][j][0]-samplepoints[k][j+1][0])*
+                                            (samplepoints[k][j][0]-samplepoints[k][j+1][0])+
+                                            (samplepoints[k][j][1]-samplepoints[k][j+1][1])*
+                                            (samplepoints[k][j][1]-samplepoints[k][j+1][1])+
+                                            (samplepoints[k][j][2]-samplepoints[k][j+1][2])*
+                                            (samplepoints[k][j][2]-samplepoints[k][j+1][2]));
+                    
+                    if(deltau > DeltaU)
+                        DeltaU = deltau;
+                    if(deltav > DeltaV)
+                        DeltaV = deltav;
+                }
+            }
+            
+            int nu = ceil(DeltaU/m_minDelta)*40*1.5;
+            int nv = ceil(DeltaV/m_minDelta)*40*1.5;
+
+            for(int j = 0; j < nu; j++)
+            {
+                for(int k = 0; k < nv; k++)
                 {
                     NekDouble u = (ParameterPlaneBounds[1]-ParameterPlaneBounds[0])
-                                    /(ns-1)*j + ParameterPlaneBounds[0];
+                                    /(nu-1)*j + ParameterPlaneBounds[0];
                     NekDouble v = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])
-                                    /(ns-1)*k + ParameterPlaneBounds[2];
-                    if(j==ns-1)
+                                    /(nv-1)*k + ParameterPlaneBounds[2];
+                    if(j==nu-1)
                         u=ParameterPlaneBounds[1]; //These statements prevent floating point error at end of loop
-                    if(k==ns-1)
+                    if(k==nv-1)
                         v=ParameterPlaneBounds[3];
                     
                     Array<OneD, NekDouble> N;

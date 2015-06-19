@@ -195,33 +195,24 @@ namespace MeshUtils {
         
         SmoothSurfaceOctants();
         
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
-            {
-                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
-                         "Error in initial octree construction");
-            }
-        }
-        
         cout<< endl << "complete" << endl;
         
         cout << endl << "Propagating spacing out to domain boundary" << endl;
         
         PropagateDomain();
         
+        cout << endl << "Recersively ensuring smoothness between all nodes" << endl;
+        
+        SmoothAllOctants();
+        
         for(int i = 0; i < OctantList.size(); i++)
         {
             if(OctantList[i]->isLeaf())
             {
-                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
+                ASSERTL0(OctantList[i]->GetDelta()-m_minDelta>-0.0000001,
                          "Error in initial octree construction");
             }
         }
-        
-        cout << endl << "Recersively ensuring smoothness between all nodes" << endl;
-        
-        SmoothAllOctants();
         
         int elem=CountElemt();
         
@@ -247,7 +238,7 @@ namespace MeshUtils {
                     NekDouble volumeOct = OctantList[i]->DX()*OctantList[i]->DY()*
                     OctantList[i]->DZ()*8.0;
                     
-                    if(OctantList[i]->GetDelta()<m_minDelta)
+                    if(OctantList[i]->GetDelta()-m_minDelta<-0.00001)
                     {
                         cout << "error " << OctantList[i]->GetDelta() << endl;
                     }
@@ -323,15 +314,6 @@ namespace MeshUtils {
     void Octree::PropagateDomain()
     {
         int ct=0;
-        
-        for(int i = 0; i < OctantList.size(); i++)
-        {
-            if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
-            {
-                ASSERTL0(OctantList[i]->GetDelta()>=m_minDelta,
-                         "Error in initial octree construction");
-            }
-        }
         
         do
         {

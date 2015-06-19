@@ -54,8 +54,10 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<CurveMesh>;
         
-        CurveMesh(const LibUtilities::CADCurveSharedPtr &cad,
-                  const OctreeSharedPtr &oct) : m_cadcurve(cad),m_octree(oct)
+        CurveMesh(bool verbose,
+                  const LibUtilities::CADCurveSharedPtr &cad,
+                  const OctreeSharedPtr &oct) :
+                        m_cadcurve(cad),m_octree(oct),m_verbose(verbose)
         {
         };
         
@@ -86,6 +88,8 @@ namespace MeshUtils {
         int Ne;
         std::vector<NekDouble> meshsvalue;
         std::vector<std::vector<NekDouble> > m_meshpoints;
+        
+        bool m_verbose;
         
     };
     

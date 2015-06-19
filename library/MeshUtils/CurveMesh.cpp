@@ -50,7 +50,8 @@ namespace MeshUtils {
         
         ds = m_curvelength/(m_numSamplePoints-1);
         
-        cout << "\tCurve length: " << m_curvelength <<  "\tSample Points: " << m_numSamplePoints;
+        if(m_verbose)
+            cout << "\tCurve length: " << m_curvelength <<  "\tSample Points: " << m_numSamplePoints;
         
         GetSampleFunction();
         
@@ -63,8 +64,6 @@ namespace MeshUtils {
         
         Ne=round(Ae);
         
-        cout << ".\tPoints: " << Ne+1 << endl;
-        
         GetPhiFunction();
         
         meshsvalue.resize(Ne+1);
@@ -73,12 +72,14 @@ namespace MeshUtils {
         
         for(int i = 1; i < Ne; i++)
         {
+            int iterationcounter=0;
             bool iterate = true;
             int k = i;
             NekDouble ski = meshsvalue[i-1];
             NekDouble lastSki;
             while(iterate)
             {
+                iterationcounter++;
                 NekDouble rhs =EvaluateDS(ski)/Ae*(EvaluatePS(ski)-k);
                 lastSki=ski;
                 ski=ski-rhs;
@@ -86,10 +87,15 @@ namespace MeshUtils {
                 {
                     iterate = false;
                 }
+                
+                ASSERTL0(iterationcounter<1000000, "iteration failed");
             }
             
             meshsvalue[i]=ski;
         }
+        
+        if(m_verbose)
+            cout << ".\tPoints: " << Ne+1 << endl;
         
         m_meshpoints.resize(Ne+1);
         
@@ -153,7 +159,7 @@ namespace MeshUtils {
             return m_dst[m_numSamplePoints-1][0];
         }
         
-        for(int i = 0; i < m_numSamplePoints-2; i++)
+        for(int i = 0; i < m_numSamplePoints-1; i++)
         {
             if(m_dst[i][1]<s && m_dst[i+1][1]>=s)
             {
@@ -170,6 +176,8 @@ namespace MeshUtils {
         
         NekDouble m  = (d2-d1)/(s2-s1);
         NekDouble c = d2- m*s2;
+        
+        ASSERTL0(m*s+c==m*s+c,"DS");
         
         return m*s+c;
     }
@@ -188,7 +196,7 @@ namespace MeshUtils {
             return m_ps[m_numSamplePoints-1][0];
         }
         
-        for(int i = 0; i < m_numSamplePoints-2; i++)
+        for(int i = 0; i < m_numSamplePoints-1; i++)
         {
             if(m_ps[i][1]<s && m_ps[i+1][1]>=s)
             {
@@ -198,6 +206,14 @@ namespace MeshUtils {
             }
         }
         
+        if(a==b)
+        {
+            cout << endl;
+            cout << a << " " << b << endl;
+            cout << s << endl;
+            exit(-1);
+        }
+        
         NekDouble s1 = m_ps[a][1];
         NekDouble s2 = m_ps[b][1];
         NekDouble d1 = m_ps[a][0];
@@ -205,6 +221,8 @@ namespace MeshUtils {
         
         NekDouble m  = (d2-d1)/(s2-s1);
         NekDouble c = d2- m*s2;
+        
+        ASSERTL0(m*s+c==m*s+c,"PS");
         
         return m*s+c;
     }

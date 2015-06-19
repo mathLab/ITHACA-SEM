@@ -48,11 +48,12 @@ namespace MeshUtils {
         
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
         {
-            cout << "Meshing Curve: " << i;
+            if(m_verbose)
+                cout << "Meshing Curve: " << i;
             
             CurveMeshSharedPtr cmesh =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(
-                    m_cad->GetCurve(i), m_octree);
+                    m_verbose, m_cad->GetCurve(i), m_octree);
             
             cmesh->Mesh();
             

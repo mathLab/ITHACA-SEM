@@ -118,8 +118,6 @@ namespace Utilities
         
         m_surfacemeshing->Mesh();
         
-        exit(-1);
-        
         int nodeCounter=0;
         
         int numtris, numppt;
@@ -139,7 +137,7 @@ namespace Utilities
             for(int j = 0; j < numtris; j++)
             {
                 vector<NodeSharedPtr> nodes;
-                for(int k = 0; k < 3; k++) //numppt
+                for(int k = 0; k < numppt; k++) //numppt
                 {
                     NodeSharedPtr n =
                     boost::shared_ptr<Node>(
@@ -149,7 +147,7 @@ namespace Utilities
                 }
                 
                 
-                ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false);
                 
                 vector<int> tags;
                 tags.push_back(i);

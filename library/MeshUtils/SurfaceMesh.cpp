@@ -93,7 +93,7 @@ namespace MeshUtils {
     
     void SurfaceMesh::HOMesh()
     {
-        LibUtilities::PointsKey pkey(m_order, LibUtilities::eNodalTriFekete);
+        LibUtilities::PointsKey pkey(m_order+1, LibUtilities::eNodalTriFekete);
         Array<OneD, NekDouble> u,v;
         TotNumPoints = LibUtilities::PointsManager()[pkey]->
                                                         GetTotNumPoints();

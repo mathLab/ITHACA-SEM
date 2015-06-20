@@ -57,8 +57,10 @@ namespace MeshUtils {
         
         SurfaceMeshing(bool verbose,
                        const LibUtilities::CADSystemSharedPtr &cad,
-                       const OctreeSharedPtr &octree) :
-                           m_cad(cad),m_octree(octree),m_verbose(verbose)
+                       const OctreeSharedPtr &octree,
+                       const int &order) :
+                           m_cad(cad),m_octree(octree),
+                           m_order(order),m_verbose(verbose)
         {
         };
         

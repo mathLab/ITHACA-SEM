@@ -95,11 +95,13 @@ namespace MeshUtils {
     {
         LibUtilities::PointsKey pkey(m_order+1, LibUtilities::eNodalTriFekete);
         Array<OneD, NekDouble> u,v;
+        
         TotNumPoints = LibUtilities::PointsManager()[pkey]->
                                                         GetTotNumPoints();
         LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
         
         HOPoints = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(numtris);
+        
         
         for(int i = 0; i < numtris; i++)
         {

@@ -1665,6 +1665,13 @@ namespace Nektar
             int Q   = m_base[1]->GetNumModes() - 1, q;
             int R   = m_base[2]->GetNumModes() - 1, r;
             int idx = 0;
+            
+            int nBnd = NumBndryCoeffs();
+            
+            if (maparray.num_elements() != nBnd)
+            {
+                maparray = Array<OneD, unsigned int>(nBnd);
+            }
 
             // Loop over all boundary modes (in ascending order).
             for (p = 0; p <= P; ++p)
@@ -1927,7 +1934,11 @@ namespace Nektar
                     {
                         if(j >= cutoff ||  i + k >= cutoff)
                         {
-                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                            orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
                         }
                         cnt++;
                     }

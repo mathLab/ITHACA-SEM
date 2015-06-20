@@ -136,7 +136,8 @@ namespace Nektar
             /// Description of the configuration option.
             string desc;
         };
-        
+
+
         /**
          * Abstract base class for mesh converter modules. Each subclass
          * implements the Process() function, which in some way alters the

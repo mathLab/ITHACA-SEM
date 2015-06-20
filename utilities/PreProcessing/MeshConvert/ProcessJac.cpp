@@ -55,6 +55,8 @@ namespace Nektar
         {
             m_config["extract"] = ConfigOption(
                 true, "0", "Extract non-valid elements from mesh.");
+            m_config["removecurveifsingular"] = ConfigOption(
+                true, "0", "remove curve nodes if element is singular.");
             m_config["list"]    = ConfigOption(
                 true, "0", "Print list of elements having negative Jacobian.");
         }
@@ -73,7 +75,7 @@ namespace Nektar
 
             bool extract = m_config["extract"].as<bool>();
             bool printList = m_config["list"].as<bool>();
-
+            bool RemoveCurveIfSingular = m_config["removecurveifsingular"].as<bool>();
             vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
 
             if (extract)
@@ -112,6 +114,29 @@ namespace Nektar
                              << ")" << endl;
                     }
 
+                    if(RemoveCurveIfSingular)
+                    {
+                        int nSurf = el[i]->GetFaceCount(); 
+                        if(nSurf == 5) // prism mesh 
+                        {
+                            // find edges ndoes and blend to far side.
+                            for(int e = 0; e < el[i]->GetEdgeCount(); ++e)
+                            {
+                                EdgeSharedPtr ed = el[i]->GetEdge(e);
+                                EdgeSet::iterator it; 
+                                // find edge in m_edgeSet; 
+                                if((it = m_mesh->m_edgeSet.find(ed)) != m_mesh->m_edgeSet.end())
+                                {
+                                    if((*it)->m_edgeNodes.size())
+                                    {
+                                        vector<NodeSharedPtr> zeroNodes;
+                                        (*it)->m_edgeNodes = zeroNodes;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (extract)
                     {
                         m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
@@ -128,7 +153,7 @@ namespace Nektar
                 ProcessElements();
                 ProcessComposites();
             }
-            
+
             if (printList || m_mesh->m_verbose)
             {
                 cout << "Total negative Jacobians: " << nNeg << endl;

@@ -49,7 +49,8 @@ namespace Nektar
         {
             typedef Loki::SingletonHolder<ModuleFactory,
                 Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                Loki::NoDestroy,
+                Loki::SingleThreaded> Type;
             return Type::Instance();
         }
 
@@ -110,16 +111,16 @@ namespace Nektar
         void Module::ProcessVertices()
         {
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-            
+
             m_mesh->m_vertexSet.clear();
-            
+
             for (int i = 0, vid = 0; i < elmt.size(); ++i)
             {
                 for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
                 {
                     pair<NodeSet::iterator,bool> testIns =
                         m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
-                    
+
                     if (testIns.second)
                     {
                         (*(testIns.first))->m_id = vid++;
@@ -154,9 +155,9 @@ namespace Nektar
             if(ReprocessEdges)
             {
                 vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-                
+
                 m_mesh->m_edgeSet.clear();
-                
+
                 // Scan all elements and generate list of unique edges
                 for (int i = 0, eid = 0; i < elmt.size(); ++i)
                 {
@@ -165,7 +166,7 @@ namespace Nektar
                         pair<EdgeSet::iterator,bool> testIns;
                         EdgeSharedPtr ed = elmt[i]->GetEdge(j);
                         testIns = m_mesh->m_edgeSet.insert(ed);
-                        
+
                         if (testIns.second)
                         {
                             (*(testIns.first))->m_id = eid++;
@@ -179,7 +180,7 @@ namespace Nektar
                             {
                                 e2->m_curveType = ed->m_curveType;
                                 e2->m_edgeNodes = ed->m_edgeNodes;
-                                
+
                                 // Reverse nodes if appropriate.
                                 if (e2->m_n1->m_id != ed->m_n1->m_id)
                                 {
@@ -187,10 +188,10 @@ namespace Nektar
                                             e2->m_edgeNodes.end());
                                 }
                             }
-                            
+
                             // Update edge to element map.
                             (*(testIns.first))->m_elLink.push_back(
-                                             pair<ElementSharedPtr,int>(elmt[i],j));
+                                pair<ElementSharedPtr,int>(elmt[i],j));
                         }
                     }
                 }
@@ -221,6 +222,16 @@ namespace Nektar
                          "Too many elements in boundary map!");
                 pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
+
+                // Copy curvature to edge.
+                if ((*it)->m_edgeNodes.size() > 0)
+                {
+                    ElementSharedPtr edge = m_mesh->m_element[1][i];
+                    if (edge->GetVertex(0) == (*it)->m_n1)
+                    {
+                        edge->SetVolumeNodes((*it)->m_edgeNodes);
+                    }
+                }
             }
         }
 
@@ -247,9 +258,9 @@ namespace Nektar
             if(ReprocessFaces)
             {
                 vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-                
+
                 m_mesh->m_faceSet.clear();
-                
+
                 // Scan all elements and generate list of unique faces
                 for (int i = 0, fid = 0; i < elmt.size(); ++i)
                 {
@@ -257,7 +268,7 @@ namespace Nektar
                     {
                         pair<FaceSet::iterator,bool> testIns;
                         testIns = m_mesh->m_faceSet.insert(elmt[i]->GetFace(j));
-                        
+
                         if (testIns.second)
                         {
                             (*(testIns.first))->m_id = fid++;
@@ -344,7 +355,7 @@ namespace Nektar
                     unsigned int tagid = elmt[i]->GetTagList()[0];
 
                     it = m_mesh->m_composite.find(tagid);
-                    
+
                     if (it == m_mesh->m_composite.end())
                     {
                         CompositeSharedPtr tmp = boost::shared_ptr<Composite>(
@@ -352,6 +363,11 @@ namespace Nektar
                         pair<CompositeMap::iterator, bool> testIns;
                         tmp->m_id  = tagid;
                         tmp->m_tag = elmt[i]->GetTag();
+                        if(m_mesh->m_faceLabels.count(tmp->m_id) != 0)
+                        {
+                            tmp->m_label =  m_mesh->m_faceLabels[tmp->m_id];
+                        }
+
                         testIns  = m_mesh->m_composite.insert(
                             pair<unsigned int, CompositeSharedPtr>(tagid,tmp));
                         it       = testIns.first;
@@ -392,7 +408,8 @@ namespace Nektar
          *
          * The last step is to eliminate duplicate edges/faces and reenumerate.
          *
-         * NOTE: This routine does not copy high-order information yet!
+         * NOTE: This routine does not copy face-interior high-order information
+         * yet!
          */
         void Module::ReorderPrisms(PerMap &perFaces)
         {
@@ -433,6 +450,9 @@ namespace Nektar
             // Counter for new node IDs.
             int nodeId = 0;
             int prismTris[2][3] = {{0,1,4}, {3,2,5}};
+
+            // Warning flag for high-order curvature information.
+            bool warnCurvature = false;
 
             // facesDone tracks face IDs inside prisms which have already been
             // aligned.
@@ -570,9 +590,51 @@ namespace Nektar
                     ElementSharedPtr el = GetElementFactory().CreateInstance(
                         LibUtilities::ePrism, conf, nodes, tags);
 
+                    // Now transfer high-order information back into
+                    // place. TODO: Face curvature.
+                    for (j = 0; j < 9; ++j)
+                    {
+                        EdgeSharedPtr e1 = line[i]->GetEdge(j);
+                        for (k = 0; k < 9; ++k)
+                        {
+                            EdgeSharedPtr e2 = el->GetEdge(k);
+                            if (e1->m_n1 == e2->m_n1 && e1->m_n2 == e2->m_n2)
+                            {
+                                e2->m_edgeNodes = e1->m_edgeNodes;
+                            }
+                            else if (e1->m_n1 == e2->m_n1 && e1->m_n2 == e2->m_n2)
+                            {
+                                e2->m_edgeNodes = e1->m_edgeNodes;
+                                std::reverse(e2->m_edgeNodes.begin(),
+                                             e2->m_edgeNodes.end());
+                            }
+                        }
+                    }
+
+                    // Warn users that we're throwing away face curvature
+                    if (!warnCurvature)
+                    {
+                        for (j = 0; j < 5; ++j)
+                        {
+                            if (line[i]->GetFace(j)->m_faceNodes.size() > 0)
+                            {
+                                warnCurvature = true;
+                                break;
+                            }
+                        }
+                    }
+
                     // Replace old prism.
                     m_mesh->m_element[3][line[i]->GetId()] = el;
                 }
+            }
+
+            if (warnCurvature)
+            {
+                cerr << "[ReorderPrisms] WARNING: Face curvature detected in "
+                     << "some prisms; this will be ignored in further module "
+                     << "evaluations."
+                     << endl;
             }
 
             // Loop over periodic faces, enumerate vertices.
@@ -667,7 +729,7 @@ namespace Nektar
 
                 // See if this face is periodic.
                 it2 = perFaces.find(f->m_id);
-                
+
                 if (it2 != perFaces.end())
                 {
                     int id2 = it2->second.first->m_id;

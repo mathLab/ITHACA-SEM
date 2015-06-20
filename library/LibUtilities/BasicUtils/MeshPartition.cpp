@@ -66,7 +66,8 @@ namespace Nektar
         {
             typedef Loki::SingletonHolder<MeshPartitionFactory,
                 Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                Loki::NoDestroy,
+                Loki::SingleThreaded> Type;
             return Type::Instance();
         }
 
@@ -286,7 +287,6 @@ namespace Nektar
         {
             TiXmlElement* x;
             TiXmlElement *vGeometry, *vSubElement;
-            int i;
 
             vGeometry = pSession->GetElement("Nektar/Geometry");
             m_dim = atoi(vGeometry->Attribute("DIM"));
@@ -297,7 +297,7 @@ namespace Nektar
             // Retrieve any VERTEX attributes specifying mesh transforms
             std::string attr[] = {"XSCALE", "YSCALE", "ZSCALE",
                                   "XMOVE",  "YMOVE",  "ZMOVE" };
-            for (i = 0; i < 6; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 const char *val =  vSubElement->Attribute(attr[i].c_str());
                 if (val)
@@ -307,18 +307,13 @@ namespace Nektar
             }
 
             x = vSubElement->FirstChildElement();
-            i = 0;
-            if (x->FirstAttribute())
-            {
-                i = x->FirstAttribute()->IntValue();
-            }
+
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();
                 ASSERTL0(y, "Failed to get attribute.");
                 MeshVertex v;
                 v.id = y->IntValue();
-                ASSERTL0(v.id == i++, "Vertex IDs not sequential.");
                 std::vector<std::string> vCoords;
                 std::string vCoordStr = x->FirstChild()->ToText()->Value();
                 boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
@@ -335,7 +330,6 @@ namespace Nektar
                 vSubElement = pSession->GetElement("Nektar/Geometry/Edge");
                 ASSERTL0(vSubElement, "Cannot read edges");
                 x = vSubElement->FirstChildElement();
-                i = 0;
                 while(x)
                 {
                     TiXmlAttribute* y = x->FirstAttribute();
@@ -343,7 +337,6 @@ namespace Nektar
                     MeshEntity e;
                     e.id = y->IntValue();
                     e.type = 'E';
-                    ASSERTL0(e.id == i++, "Edge IDs not sequential.");
                     std::vector<std::string> vVertices;
                     std::string vVerticesString = x->FirstChild()->ToText()->Value();
                     boost::split(vVertices, vVerticesString, boost::is_any_of("\t "));
@@ -360,7 +353,6 @@ namespace Nektar
                 vSubElement = pSession->GetElement("Nektar/Geometry/Face");
                 ASSERTL0(vSubElement, "Cannot read faces.");
                 x = vSubElement->FirstChildElement();
-                i = 0;
                 while(x)
                 {
                     TiXmlAttribute* y = x->FirstAttribute();
@@ -368,7 +360,6 @@ namespace Nektar
                     MeshEntity f;
                     f.id = y->IntValue();
                     f.type = x->Value()[0];
-                    ASSERTL0(f.id == i++, "Face IDs not sequential.");
                     std::vector<std::string> vEdges;
                     std::string vEdgeStr = x->FirstChild()->ToText()->Value();
                     boost::split(vEdges, vEdgeStr, boost::is_any_of("\t "));
@@ -385,14 +376,12 @@ namespace Nektar
             vSubElement = pSession->GetElement("Nektar/Geometry/Element");
             ASSERTL0(vSubElement, "Cannot read elements.");
             x = vSubElement->FirstChildElement();
-            i = 0;
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();
                 ASSERTL0(y, "Failed to get attribute.");
                 MeshEntity e;
                 e.id = y->IntValue();
-                ASSERTL0(e.id == i++, "Element IDs not sequential.");
                 std::vector<std::string> vItems;
                 std::string vItemStr = x->FirstChild()->ToText()->Value();
                 boost::split(vItems, vItemStr, boost::is_any_of("\t "));
@@ -410,7 +399,6 @@ namespace Nektar
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
                 x = vSubElement->FirstChildElement();
-                i = 0;
                 while(x)
                 {
                     MeshCurved c;
@@ -446,7 +434,6 @@ namespace Nektar
             vSubElement = pSession->GetElement("Nektar/Geometry/Composite");
             ASSERTL0(vSubElement, "Cannot read composites.");
             x = vSubElement->FirstChildElement();
-            i = 0;
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();
@@ -497,7 +484,7 @@ namespace Nektar
 
             std::map<int, int> elmtSizes;
             std::map<int, int> elmtBndSizes;
-            
+
             for (unsigned int i = 0; i < m_domain.size(); ++i)
             {
                 int cId = m_domain[i];
@@ -528,7 +515,7 @@ namespace Nektar
 
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
-                        int elid = m_meshComposites[cId].list[j]; 
+                        int elid = m_meshComposites[cId].list[j];
                         elmtSizes[elid] = weight;
                         elmtBndSizes[elid] = bndWeight;
                     }
@@ -622,9 +609,10 @@ namespace Nektar
         void MeshPartition::WeightElements()
         {
             std::vector<unsigned int> weight(m_numFields, 1);
-            for (int i = 0; i < m_meshElements.size(); ++i)
+            std::map<int, MeshEntity>::iterator eIt;
+            for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
             {
-                m_vertWeights.push_back( weight );
+                m_vertWeights[eIt->first] = weight;
             }
 
             for (unsigned int i = 0; i < m_domain.size(); ++i)
@@ -671,33 +659,36 @@ namespace Nektar
             // Maps edge/face to first mesh element id.
             // On locating second mesh element id, graph edge is created instead.
             std::map<int, int> vGraphEdges;
+            std::map<int, MeshEntity>::iterator eIt;
+            int vcnt = 0;
 
-            for (unsigned int i = 0; i < m_meshElements.size(); ++i)
+            for (eIt = m_meshElements.begin(); eIt != m_meshElements.end();
+                 ++eIt, ++vcnt)
             {
-                int p = m_meshElements[i].id;
                 BoostVertex v = boost::add_vertex(pGraph);
-                pGraph[v].id = p;
+                pGraph[v].id = eIt->first;
                 pGraph[v].partition = 0;
+
                 if (m_weightingRequired)
                 {
-                    pGraph[v].weight = m_vertWeights[i];
+                    pGraph[v].weight = m_vertWeights[eIt->first];
                 }
 
                 // Process element entries and add graph edges
-                for (unsigned j = 0; j < m_meshElements[i].list.size(); ++j)
+                for (unsigned j = 0; j < eIt->second.list.size(); ++j)
                 {
-                    int eId = m_meshElements[i].list[j];
+                    int eId = eIt->second.list[j];
 
                     // Look to see if we've examined this edge/face before
                     // If so, we've got both graph vertices so add edge
                     if (vGraphEdges.find(eId) != vGraphEdges.end())
                     {
-                        BoostEdge e = boost::add_edge( p, vGraphEdges[eId], pGraph).first;
-                        pGraph[e].id = eId;
+                        BoostEdge e = boost::add_edge(vcnt, vGraphEdges[eId], pGraph).first;
+                        pGraph[e].id = vcnt;
                     }
                     else
                     {
-                        vGraphEdges[eId] = p;
+                        vGraphEdges[eId] = vcnt;
                     }
                 }
             }
@@ -725,6 +716,7 @@ namespace Nektar
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
+
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
                       ++vertit)
@@ -734,17 +726,17 @@ namespace Nektar
                           ++adjvertit)
                     {
                         adjncy[acnt++] = *adjvertit;
-
                     }
+
                     xadj[++vcnt] = acnt;
 
                     if (m_weightingRequired)
                     {
-                        vwgt[pGraph[*vertit].id ] = pGraph[*vertit].weight[0];
+                        vwgt[vcnt-1] = pGraph[*vertit].weight[0];
                     }
                     else
                     {
-                        vwgt[pGraph[*vertit].id] = 1;
+                        vwgt[vcnt-1] = 1;
                     }
                 }
 
@@ -773,7 +765,7 @@ namespace Nektar
                             }
                         }
                     }
-                    else 
+                    else
                     {
                         m_comm->GetColumnComm()->Recv(0, part);
                     }
@@ -815,7 +807,6 @@ namespace Nektar
                   ++vertit, ++i)
             {
                 pGraph[*vertit].partition = part[i];
-                pGraph[*vertit].partid = boost::num_vertices(pLocalPartition[part[i]]);
                 boost::add_vertex(i, pLocalPartition[part[i]]);
             }
         }

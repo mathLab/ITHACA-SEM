@@ -1063,11 +1063,8 @@ void ForcingMovingBody::MappingBndConditions(
             {
                 bndCondExps = pfields[dim]->GetPlane(plane)
                                             ->GetBndCondExpansions();
-                bndConds    = pfields[dim]->GetPlane(plane)
-                                            ->GetBndConditions();
-
-                if (bndConds[i]->GetUserDefined() ==
-                                            SpatialDomains::eMovingBody)
+                bndConds = pFields[dir]->GetPlane(plane)->GetBndConditions();
+                if (boost::iequals(bndConds[i]->GetUserDefined(),"MovingBody"))
                 {
                     int npoints = bndCondExps[i]->GetNpoints();
                     Array<OneD, NekDouble> x0(npoints, 0.0);

@@ -982,6 +982,7 @@ namespace Nektar
                     // Copy the face nodes back again.
                     faceNodes = hoTri.surfVerts;
                 }
+
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }
@@ -1219,30 +1220,66 @@ namespace Nektar
             // point.
             sort(m_vertex.begin(), m_vertex.end());
             
-            // Calculate a.(b x c) to determine tet volume; if negative,
-            // reverse order of non-degenerate points to correctly orientate
-            // the tet.
-            double ax  = m_vertex[1]->m_x-m_vertex[0]->m_x;
-            double ay  = m_vertex[1]->m_y-m_vertex[0]->m_y;
-            double az  = m_vertex[1]->m_z-m_vertex[0]->m_z;
-            double bx  = m_vertex[2]->m_x-m_vertex[0]->m_x;
-            double by  = m_vertex[2]->m_y-m_vertex[0]->m_y;
-            double bz  = m_vertex[2]->m_z-m_vertex[0]->m_z;
-            double cx  = m_vertex[3]->m_x-m_vertex[0]->m_x;
-            double cy  = m_vertex[3]->m_y-m_vertex[0]->m_y;
-            double cz  = m_vertex[3]->m_z-m_vertex[0]->m_z;
-            double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
-            vol       /= 6.0;
-            
-            if (fabs(vol) <= 1e-10)
+            // Calculate a.(b x c) if negative, reverse order of
+            // non-degenerate points to correctly orientate the tet.
+
+            NekDouble ax  = m_vertex[1]->m_x-m_vertex[0]->m_x;
+            NekDouble ay  = m_vertex[1]->m_y-m_vertex[0]->m_y;
+            NekDouble az  = m_vertex[1]->m_z-m_vertex[0]->m_z;
+            NekDouble bx  = m_vertex[2]->m_x-m_vertex[0]->m_x;
+            NekDouble by  = m_vertex[2]->m_y-m_vertex[0]->m_y;
+            NekDouble bz  = m_vertex[2]->m_z-m_vertex[0]->m_z;
+            NekDouble cx  = m_vertex[3]->m_x-m_vertex[0]->m_x;
+            NekDouble cy  = m_vertex[3]->m_y-m_vertex[0]->m_y;
+            NekDouble cz  = m_vertex[3]->m_z-m_vertex[0]->m_z;
+
+            NekDouble nx = (ay*bz-az*by);
+            NekDouble ny = (az*bx-ax*bz);
+            NekDouble nz = (ax*by-ay*bx);
+            NekDouble nmag = sqrt(nx*nx+ny*ny+nz*nz);
+            nx /= nmag; ny /= nmag; nz /= nmag; 
+
+            // distance of top vertex from base 
+            NekDouble dist = cx*nx+cy*ny+cz*nz;
+
+            if (fabs(dist) <= 1e-4)
             {
-                cerr << "Warning: degenerate tetrahedron, volume = " << vol << endl;
+                cerr << "Warning: degenerate tetrahedron, 3rd vertex is = " << dist <<" from face" << endl;
             }
 
-            if (vol < 0)
+            if (dist < 0)
             {
                 swap(m_vertex[0], m_vertex[1]);
             }
+
+            nx = (ay*cz-az*cy);
+            ny = (az*cx-ax*cz);
+            nz = (ax*cy-ay*cx);
+            nmag = sqrt(nx*nx+ny*ny+nz*nz);
+            nx /= nmag; ny /= nmag; nz /= nmag; 
+            
+            // distance of top vertex from base 
+            dist = bx*nx+by*ny+bz*nz;
+
+            if (fabs(dist) <= 1e-4)
+            {
+                cerr << "Warning: degenerate tetrahedron, 2nd vertex is = " << dist <<" from face" << endl;
+            }
+
+            nx = (by*cz-bz*cy);
+            ny = (bz*cx-bx*cz);
+            nz = (bx*cy-by*cx);
+            nmag = sqrt(nx*nx+ny*ny+nz*nz);
+            nx /= nmag; ny /= nmag; nz /= nmag; 
+            
+            // distance of top vertex from base 
+            dist = ax*nx+ay*ny+az*nz;
+
+            if (fabs(dist) <= 1e-4)
+            {
+                cerr << "Warning: degenerate tetrahedron, 1st vertex is = " << dist <<" from face" << endl;
+            }
+
             
             TetOrientSet::iterator it;
             
@@ -1498,15 +1535,23 @@ namespace Nektar
                     faceVertices.push_back(m_vertex[face_ids[j][k]]);
                     NodeSharedPtr a = m_vertex[face_ids[j][k]];
                     NodeSharedPtr b = m_vertex[face_ids[j][(k+1) % nEdge]];
-                    for (unsigned int i = 0; i < m_edge.size(); ++i)
+                    unsigned int i;
+                    for (i = 0; i < m_edge.size(); ++i)
                     {
-                        if ((m_edge[i]->m_n1 == a && m_edge[i]->m_n2 == b) || 
-                            (m_edge[i]->m_n1 == b && m_edge[i]->m_n2 == a))
+                        if ((m_edge[i]->m_n1->m_id == a->m_id 
+                             && m_edge[i]->m_n2->m_id == b->m_id) || 
+                            (m_edge[i]->m_n1->m_id == b->m_id 
+                             && m_edge[i]->m_n2->m_id == a->m_id))
                         {
                             faceEdges.push_back(m_edge[i]);
                             face_edges[j][k] = i;
                             break;
                         }
+                    }
+                    
+                    if(i == m_edge.size())
+                    {
+                        face_edges[j][k] = -1;
                     }
                 }
 
@@ -1543,14 +1588,23 @@ namespace Nektar
 
             // Re-order edge array to be consistent with Nektar++ ordering.
             vector<EdgeSharedPtr> tmp(9);
+            ASSERTL1(face_edges[0][0] != -1,"face_edges[0][0] == -1");
             tmp[0] = m_edge[face_edges[0][0]];
+            ASSERTL1(face_edges[0][1] != -1,"face_edges[0][1] == -1");
             tmp[1] = m_edge[face_edges[0][1]];
+            ASSERTL1(face_edges[0][2] != -1,"face_edges[0][2] == -1");
             tmp[2] = m_edge[face_edges[0][2]];
+            ASSERTL1(face_edges[0][3] != -1,"face_edges[0][3] == -1");
             tmp[3] = m_edge[face_edges[0][3]];
+            ASSERTL1(face_edges[1][2] != -1,"face_edges[1][2] == -1");
             tmp[4] = m_edge[face_edges[1][2]];
+            ASSERTL1(face_edges[1][1] != -1,"face_edges[1][1] == -1");
             tmp[5] = m_edge[face_edges[1][1]];
+            ASSERTL1(face_edges[2][1] != -1,"face_edges[2][1] == -1");
             tmp[6] = m_edge[face_edges[2][1]];
+            ASSERTL1(face_edges[3][2] != -1,"face_edges[3][2] == -1");
             tmp[7] = m_edge[face_edges[3][2]];
+            ASSERTL1(face_edges[4][2] != -1,"face_edges[4][2] == -1");
             tmp[8] = m_edge[face_edges[4][2]];
             m_edge = tmp;
         }

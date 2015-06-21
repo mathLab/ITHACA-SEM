@@ -86,7 +86,8 @@ namespace Nektar {
                             const std::vector<std::vector<NekDouble> >
                             &centers,
                             const std::vector<std::vector<NekDouble> >
-                            &stienerp)
+                            &stienerp,
+                            NekDouble str = 1.0)
                 {
                     if(meshloaded)
                     {
@@ -95,6 +96,7 @@ namespace Nektar {
                     m_boundingloops = boundingloops;
                     m_centers = centers;
                     m_stienerpoints = stienerp;
+                    m_str = str;
                 }
                 
                 ~TriangleInterface()
@@ -120,6 +122,8 @@ namespace Nektar {
                 std::vector<std::vector<NekDouble> > m_stienerpoints;
                 
                 bool meshloaded;
+                
+                NekDouble m_str;
                 
                 struct triangulateio in,out;
                 

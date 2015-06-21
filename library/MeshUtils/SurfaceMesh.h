@@ -84,6 +84,8 @@ namespace MeshUtils {
         
         void HOMesh();
         
+        void Stretching();
+        
         bool Validate(int &np,
                       int &nt,
                       Array<OneD, Array<OneD, NekDouble> > &Points,
@@ -109,6 +111,8 @@ namespace MeshUtils {
         int numpoints, numtris;
         int TotNumPoints;
         int m_order;
+        
+        NekDouble pasr,asr;
         
     };
     

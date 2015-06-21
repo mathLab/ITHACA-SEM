@@ -48,12 +48,14 @@ namespace MeshUtils {
     
     void SurfaceMesh::Mesh()
     {
+        Stretching();
+        
         OrientateCurves();
 
         TriangleInterfaceSharedPtr pplanemesh =
             MemoryManager<TriangleInterface>::AllocateSharedPtr();
         
-        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
+        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
         
         pplanemesh->Mesh();
         
@@ -68,13 +70,13 @@ namespace MeshUtils {
             {
                 break;
             }
-            pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
+            pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
             pplanemesh->Mesh();
             pplanemesh->Extract(numpoints,numtris,Points,Connec);
         }
         
-        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints);
-        pplanemesh->Mesh(false,true);
+        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
+        pplanemesh->Mesh(true,true);
         pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
         HOMesh();
@@ -93,7 +95,7 @@ namespace MeshUtils {
     
     void SurfaceMesh::HOMesh()
     {
-        LibUtilities::PointsKey pkey(m_order+1, LibUtilities::eNodalTriFekete);
+        LibUtilities::PointsKey pkey(m_order+1, LibUtilities::eNodalTriEvenlySpaced);
         Array<OneD, NekDouble> u,v;
         
         TotNumPoints = LibUtilities::PointsManager()[pkey]->
@@ -151,6 +153,50 @@ namespace MeshUtils {
                 HOPoints[i][j]=P;
             }
         }
+    }
+    
+    void SurfaceMesh::Stretching()
+    {
+        asr = 0.0;
+        pasr = (m_cadsurf->maxU() - m_cadsurf->minU())/
+               (m_cadsurf->maxV() - m_cadsurf->minV());
+        
+        Array<TwoD, Array<OneD,NekDouble> > stretch(40,40);
+        
+        NekDouble du = (m_cadsurf->maxU()-m_cadsurf->minU())/(40-1);
+        NekDouble dv = (m_cadsurf->maxV()-m_cadsurf->minV())/(40-1);
+        
+        for(int i = 0; i < 40; i++)
+        {
+            for(int j = 0; j < 40; j++)
+            {
+                stretch[i][j]=m_cadsurf->P(m_cadsurf->minU() + i*du,
+                                           m_cadsurf->minV() + j*dv);
+            }
+        }
+        
+        for(int i = 0; i < 40-1; i++)
+        {
+            for(int j = 0; j < 40-1; j++)
+            {
+                NekDouble ru = sqrt((stretch[i][j][0]-stretch[i+1][j][0])*
+                                    (stretch[i][j][0]-stretch[i+1][j][0])+
+                                    (stretch[i][j][1]-stretch[i+1][j][1])*
+                                    (stretch[i][j][1]-stretch[i+1][j][1])+
+                                    (stretch[i][j][2]-stretch[i+1][j][2])*
+                                    (stretch[i][j][2]-stretch[i+1][j][2]));
+                NekDouble rv = sqrt((stretch[i][j][0]-stretch[i][j+1][0])*
+                                    (stretch[i][j][0]-stretch[i][j+1][0])+
+                                    (stretch[i][j][1]-stretch[i][j+1][1])*
+                                    (stretch[i][j][1]-stretch[i][j+1][1])+
+                                    (stretch[i][j][2]-stretch[i][j+1][2])*
+                                    (stretch[i][j][2]-stretch[i][j+1][2]));
+                asr += ru/rv;
+            }
+        }
+        
+        asr/=(40-1)*(40-1);
+        
     }
     
     bool SurfaceMesh::Validate(int &np,

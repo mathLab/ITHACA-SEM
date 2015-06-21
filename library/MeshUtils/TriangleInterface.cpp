@@ -44,6 +44,8 @@ namespace MeshUtils {
     
     void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
+        cout << m_str << endl;
+        
         if(meshloaded)
         {
             freetri();
@@ -69,14 +71,14 @@ namespace MeshUtils {
         {
             for(int j = 0; j < m_boundingloops[i].size(); j++)
             {
-                in.pointlist[pointc*2+0] = m_boundingloops[i][j][0];
+                in.pointlist[pointc*2+0] = m_boundingloops[i][j][0]*m_str;
                 in.pointlist[pointc*2+1] = m_boundingloops[i][j][1];
                 pointc++;
             }
         }
         for(int i = 0; i < m_stienerpoints.size(); i++)
         {
-            in.pointlist[pointc*2+0] = m_stienerpoints[i][0];
+            in.pointlist[pointc*2+0] = m_stienerpoints[i][0]*m_str;
             in.pointlist[pointc*2+1] = m_stienerpoints[i][1];
             pointc++;
         }
@@ -104,7 +106,7 @@ namespace MeshUtils {
         
         for(int i = 1; i < m_centers.size(); i++)
         {
-            in.holelist[(i-1)*2+0] = m_centers[i][0];
+            in.holelist[(i-1)*2+0] = m_centers[i][0]*m_str;
             in.holelist[(i-1)*2+1] = m_centers[i][1];
         }
         
@@ -135,6 +137,11 @@ namespace MeshUtils {
         else if(!Quiet && !Quality)
         {
             triangulate("pzenYY", &in, &out,  NULL);
+        }
+        
+        for(int i = 0; i < out.numberofpoints; i++)
+        {
+            out.pointlist[i*2+0] = out.pointlist[i*2+0]/m_str;
         }
 
     }

@@ -147,7 +147,7 @@ namespace Utilities
                 }
                 
                 
-                ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false);
+                ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
                 
                 vector<int> tags;
                 tags.push_back(i);

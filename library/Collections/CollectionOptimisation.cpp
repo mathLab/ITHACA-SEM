@@ -56,9 +56,9 @@ CollectionOptimisation::CollectionOptimisation(
                     (pSession->GetComm()->GetRank() == 0);
 
     m_setByXml    = false;
-    m_autotune    = true;
+    m_autotune    = false;
     m_maxCollSize = 0;
-    m_defaultType = defaultType == eNoImpType ? eNoCollection : defaultType;
+    m_defaultType = defaultType == eNoImpType ? eIterPerExp : defaultType;
 
     map<string, LibUtilities::ShapeType> elTypes;
     map<string, LibUtilities::ShapeType>::iterator it2;
@@ -74,6 +74,17 @@ CollectionOptimisation::CollectionOptimisation(
     for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
     {
         defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+    }
+
+    if (defaultType == eNoImpType)
+    {
+        for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+        {
+            for (int i = 1; i < 5; ++i)
+            {
+                defaults[ElmtOrder(it2->second, i)] = eStdMat;
+            }
+        }
     }
 
     map<string, OperatorType> opTypes;
@@ -108,34 +119,38 @@ CollectionOptimisation::CollectionOptimisation(
             const char *defaultImpl = xmlCol->Attribute("DEFAULT");
             m_defaultType = defaultType;
 
-            // If user has specified a default impl type, turn off autotuning
+            // If user has specified a default impl type, autotuning
             // and set this default across all operators.
             if (defaultType == eNoImpType && defaultImpl)
             {
-                m_autotune = false;
                 const std::string collinfo = string(defaultImpl);
-                for(i = 1; i < Collections::SIZE_ImplementationType; ++i)
-                {
-                    if(boost::iequals(collinfo,
-                            Collections::ImplementationTypeMap[i]))
-                    {
-                        m_defaultType = (Collections::ImplementationType) i;
-                        break;
-                    }
-                }
+                m_autotune = boost::iequals(collinfo, "auto");
 
-                ASSERTL0(i != Collections::SIZE_ImplementationType,
+                if (!m_autotune)
+                {
+                    for(i = 1; i < Collections::SIZE_ImplementationType; ++i)
+                    {
+                        if(boost::iequals(collinfo,
+                                Collections::ImplementationTypeMap[i]))
+                        {
+                            m_defaultType = (Collections::ImplementationType) i;
+                            break;
+                        }
+                    }
+
+                    ASSERTL0(i != Collections::SIZE_ImplementationType,
                          "Unknown default collection scheme: "+collinfo);
 
-                // Override default types
-                for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
-                {
-                    defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
-                }
+                    // Override default types
+                    for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+                    {
+                        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+                    }
 
-                for (i = 0; i < SIZE_OperatorType; ++i)
-                {
-                    m_global[(OperatorType)i] = defaults;
+                    for (i = 0; i < SIZE_OperatorType; ++i)
+                    {
+                        m_global[(OperatorType)i] = defaults;
+                    }
                 }
             }
 

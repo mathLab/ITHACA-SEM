@@ -211,11 +211,16 @@ namespace LibUtilities{
             
         }
         
+        vector<int> edgeTest;
+        edgeTest.resize(mapOfEdges.Extent());
+        
         for(int i=1; i<=mapOfEdges.Extent(); i++)
         {
             TopoDS_Shape edge = mapOfEdges.FindKey(i);
             
             AddCurve(i, edge);
+            
+            edgeTest[i-1]=0;
         }
         
         for(int i = 1; i <= mapOfFaces.Extent(); i++)
@@ -242,7 +247,21 @@ namespace LibUtilities{
              
             AddSurf(i, face, edges);
             
+            for(int j = 0; j < edges.size(); j++)
+            {
+                edgeTest[edges[j]-1]++;
+            }
+            
         }
+        int ct= 0;
+        for(int i = 0; i < edgeTest.size(); i++)
+        {
+            if(edgeTest[i]!=2)
+            {
+                ct++;
+            }
+        }
+        ASSERTL0(ct==0,"geometry will fail to mesh");
         
         m_numCurve = m_curves.size();
         m_numSurf = m_surfs.size();

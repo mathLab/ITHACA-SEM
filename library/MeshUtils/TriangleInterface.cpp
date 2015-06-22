@@ -44,7 +44,6 @@ namespace MeshUtils {
     
     void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
-        cout << m_str << endl;
         
         if(meshloaded)
         {

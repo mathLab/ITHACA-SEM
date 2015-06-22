@@ -330,6 +330,21 @@ namespace MeshUtils {
     
     void SurfaceMesh::OrientateCurves()
     {
+        cout << m_numedges << endl;
+        
+        ofstream out;
+        out.open("test.txt");
+        
+        for(int i = 0; i < m_numedges;i++)
+        {
+            vector<vector<NekDouble> > points = m_curvemeshes[i]->GetMeshPoints();
+            for(int j = 0; j < m_curvemeshes[i]->GetNumPoints(); j++)
+            {
+                out << points[j][0] << " " << points[j][1] << " " << points[j][2] << endl;
+            }
+        }
+        out.close();
+        
         int edgeCounter = m_numedges;
         
         while(edgeCounter>0)
@@ -366,6 +381,7 @@ namespace MeshUtils {
                 }
                 
                 vector<NekDouble> test;
+                bool falid = true;
                 for(int i = 0; i < m_numedges; i++)
                 {
                     if(m_edges[i]==currentEdge)
@@ -380,6 +396,7 @@ namespace MeshUtils {
                         edgeCounter--;
                         currentEdge=m_edges[i];
                         currentEdgeForward=true;
+                        falid = false;
                         break;
                     }
                     else
@@ -393,9 +410,15 @@ namespace MeshUtils {
                             edgeCounter--;
                             currentEdge=m_edges[i];
                             currentEdgeForward=false;
+                            falid=false;
                             break;
                         }
                     }
+                }
+                if(falid)
+                {
+                    cout << "falid to find curve connectivity" << endl;
+                    exit(-1);
                 }
                 
             }

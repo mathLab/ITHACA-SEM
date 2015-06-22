@@ -159,8 +159,8 @@ namespace MeshUtils {
                     continue;
                 }
                 
-                if(FX(-1) == OctantList[i]->FX(+1) ||
-                   FX(+1) == OctantList[i]->FX(-1))
+                if(abs(FX(-1) - OctantList[i]->FX(+1)) < 1E-6 ||
+                   abs(FX(+1) - OctantList[i]->FX(-1)) < 1E-6 )
                 {
                     //check yz rects
                     bool Cond1 = false;
@@ -180,8 +180,8 @@ namespace MeshUtils {
                         m_neighbourList.push_back(i);
                     }
                 }
-                else if(FY(-1) == OctantList[i]->FY(+1) ||
-                   FY(+1) == OctantList[i]->FY(-1))
+                else if(abs(FY(-1) - OctantList[i]->FY(+1)) <1E-6 ||
+                        abs(FY(+1) - OctantList[i]->FY(-1)) <1E-6)
                 {
                     //check xz rects
                     bool Cond1 = false;
@@ -201,8 +201,8 @@ namespace MeshUtils {
                         m_neighbourList.push_back(i);
                     }
                 }
-                else if(FZ(-1) == OctantList[i]->FZ(+1) ||
-                   FZ(+1) == OctantList[i]->FZ(-1))
+                else if(abs(FZ(-1) - OctantList[i]->FZ(+1)) <1E-6 ||
+                        abs(FZ(+1) - OctantList[i]->FZ(-1)) <1E-6)
                 {
                     //check xy rects
                     bool Cond1 = false;

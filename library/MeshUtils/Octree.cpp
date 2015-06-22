@@ -195,6 +195,7 @@ namespace MeshUtils {
         
         SmoothSurfaceOctants();
         
+        
         cout<< endl << "complete" << endl;
         
         cout << endl << "Propagating spacing out to domain boundary" << endl;

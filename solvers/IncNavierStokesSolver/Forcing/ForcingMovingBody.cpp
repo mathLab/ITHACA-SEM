@@ -51,12 +51,12 @@ ForcingMovingBody::ForcingMovingBody(
 }
 
 void ForcingMovingBody::v_InitObject(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>& pfields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
         const unsigned int& pNumForcingFields,
-        const TiXmlElement* pforce)
+        const TiXmlElement* pForce)
 {
     // Just 3D homogenous 1D problems can use this techinque
-    ASSERTL0(pfields[0]->GetExpType()==MultiRegions::e3DH1D,
+    ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,
              "Moving body implemented just for 3D Homogenous 1D expansions.");
 
     // At this point we know in the xml file where those quantities
@@ -65,13 +65,13 @@ void ForcingMovingBody::v_InitObject(
     // m_zta and m_eta vectors (actuallythey are matrices) Array to control if
     // the motion is determined by an equation or is from a file.(not Nektar++)
     // check if we need to load a file or we have an equation
-    CheckIsFromFile(pforce);
+    CheckIsFromFile(pForce);
 
     // Initialise movingbody filter
-    InitialiseFilter(m_session, pfields, pforce);
+    InitialiseFilter(m_session, pFields, pForce);
 
     // Initialise the cable model
-    InitialiseCableModel(m_session, pfields);
+    InitialiseCableModel(m_session, pFields);
 
     m_zta = Array<OneD, Array< OneD, NekDouble> > (10);
     m_eta = Array<OneD, Array< OneD, NekDouble> > (10);
@@ -87,7 +87,7 @@ void ForcingMovingBody::v_InitObject(
     // m_zta[8] = (d(m_zta)/dz)(d(m_eta)/dz)|  m_eta[8] = (d(m_eta)/dz)(d(m_zta)/dz) |
     // m_zta[9] = (d(zm_zta)/dz)^2          |  m_eta[9] = (d(m_eta)/dz)^2            |
     //--------------------------------------------------------------------------------
-    int phystot = pfields[0]->GetTotPoints();
+    int phystot = pFields[0]->GetTotPoints();
     for(int i = 0; i < m_zta.num_elements(); i++)
     {
         m_zta[i] = Array<OneD, NekDouble>(phystot,0.0);
@@ -132,13 +132,13 @@ void ForcingMovingBody::v_Apply(
  *
  */
 void ForcingMovingBody::UpdateMotion(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pfields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
         const Array<OneD, Array<OneD, NekDouble> >       &  fields,
               NekDouble                                     time)
 {
     // Update the forces from the calculation of fluid field, which is
     // implemented in the movingbody filter
-    m_MovBodyfilter->UpdateForce(m_session, pfields, m_Aeroforces, time);
+    m_MovBodyfilter->UpdateForce(m_session, pFields, m_Aeroforces, time);
 
     // for "free" type, the cable vibrates both in streamwise and crossflow
     // dimections, for "constrained" type, the cable only vibrates in crossflow
@@ -150,7 +150,7 @@ void ForcingMovingBody::UpdateMotion(
     {
         // For free vibration case, displacements, velocities and acceleartions
         // are obtained through solving structure dynamic model
-        EvaluateStructDynModel(pfields, time);
+        EvaluateStructDynModel(pFields, time);
     }
     else if(vibtype == "Forced" || vibtype == "FORCED")
     {
@@ -165,9 +165,9 @@ void ForcingMovingBody::UpdateMotion(
             }
             else
             {
-                EvaluateFunction(pfields, m_session, m_motion[0], m_zta[j],
+                EvaluateFunction(pFields, m_session, m_motion[0], m_zta[j],
                                  m_funcName[j], time);
-                EvaluateFunction(pfields, m_session, m_motion[1], m_eta[j],
+                EvaluateFunction(pFields, m_session, m_motion[1], m_eta[j],
                                  m_funcName[j], time);
                 cnt = cnt + 2;
             }
@@ -177,7 +177,7 @@ void ForcingMovingBody::UpdateMotion(
         {
             for(int plane = 0; plane < m_np; plane++)
             {
-                int n = pfields[0]->GetPlane(plane)->GetTotPoints();
+                int n = pFields[0]->GetPlane(plane)->GetTotPoints();
                 int offset  = plane * n;
                 int xoffset = var * m_np+plane;
                 int yoffset = 3*m_np+xoffset;
@@ -194,37 +194,37 @@ void ForcingMovingBody::UpdateMotion(
     }
 
     // Pass the variables of the cable's motion to the movingbody filter
-    m_MovBodyfilter->UpdateMotion(m_session, pfields, m_MotionVars, time);
+    m_MovBodyfilter->UpdateMotion(m_session, pFields, m_MotionVars, time);
 
     // Now we need to calcualte all the required z-derivatives
-    bool OriginalWaveSpace = pfields[0]->GetWaveSpace();
-    pfields[0]->SetWaveSpace(false);
+    bool OriginalWaveSpace = pFields[0]->GetWaveSpace();
+    pFields[0]->SetWaveSpace(false);
 
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_zta[0], m_zta[3]); //d(m_zta)/dz
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_zta[3], m_zta[4]); //dd(m_zta)/ddzz
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_zta[4], m_zta[5]); //ddd(m_zta)/dddzzz
 
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_eta[0], m_eta[3]); //d(m_eta)/dz
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_eta[3], m_eta[4]); //dd(m_eta)/ddzz
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_eta[4], m_eta[5]); //ddd(m_eta)/dddzzz
 
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_zta[1], m_zta[6]); //dd(m_zta)/ddtz
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_zta[6], m_zta[7]); //ddd(m_zta)/ddtzz
 
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_eta[1], m_eta[6]); //dd(m_eta)/ddtz
-    pfields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                             m_eta[6], m_eta[7]); //ddd(m_eta)/ddtzz
 
-    int NumPoints = pfields[0]->GetTotPoints();
+    int NumPoints = pFields[0]->GetTotPoints();
 
     // (d(m_zta)/dz)(d(m_eta)/dz)
     Vmath::Vmul(NumPoints, m_zta[3], 1, m_eta[3], 1, m_zta[8], 1);
@@ -236,7 +236,7 @@ void ForcingMovingBody::UpdateMotion(
     // (d(m_eta)/dz)^2
     Vmath::Vmul(NumPoints, m_eta[3], 1, m_eta[3], 1, m_eta[9], 1);
 
-    pfields[0]->SetWaveSpace(OriginalWaveSpace);
+    pFields[0]->SetWaveSpace(OriginalWaveSpace);
 }
 
 
@@ -579,7 +579,7 @@ void ForcingMovingBody::CalculateForcing(
  *
  */
 void ForcingMovingBody::TensionedCableModel(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
               Array<OneD, NekDouble> &AeroForces,
               Array<OneD, NekDouble> &CableMotions)
 {  
@@ -614,7 +614,7 @@ void ForcingMovingBody::TensionedCableModel(
         fft_o[i] = Array<OneD, NekDouble>(npts, 0.0);
     }
 
-    LibUtilities::CommSharedPtr vcomm = pfields[0]->GetComm();
+    LibUtilities::CommSharedPtr vcomm = pFields[0]->GetComm();
     int colrank = vcomm->GetColumnComm()->GetRank();
     int nproc   = vcomm->GetColumnComm()->GetSize();
     
@@ -924,7 +924,7 @@ void ForcingMovingBody::TensionedCableModel(
  *
  */
 void ForcingMovingBody::EvaluateStructDynModel(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
               NekDouble  time)
 {
     //Get the hydrodynamic forces from the fluid solver
@@ -1004,7 +1004,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
     {
         int offset = cn*3*m_np;
         Array<OneD, NekDouble> tmp(3*m_np);
-        TensionedCableModel(pfields, fces[cn], 
+        TensionedCableModel(pFields, fces[cn], 
                             tmp = m_MotionVars+offset);
     }
 
@@ -1013,7 +1013,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
     {
         for(int plane = 0; plane < m_np; plane++)
         {
-            int n = pfields[0]->GetPlane(plane)->GetTotPoints();
+            int n = pFields[0]->GetPlane(plane)->GetTotPoints();
 
             Array<OneD, NekDouble> tmp;
 
@@ -1031,7 +1031,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
  *
  */
 void ForcingMovingBody::MappingBndConditions(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, Array<OneD, NekDouble> >        &fields,
                   NekDouble  time) 
 {
@@ -1052,8 +1052,8 @@ void ForcingMovingBody::MappingBndConditions(
     Array<OneD, const SpatialDomains::BoundaryConditionShPtr> bndConds;
 
     const Array<OneD, const NekDouble> z
-                            = pfields[0]->GetHomogeneousBasis()->GetZ();
-    int nbnd = pfields[0]->GetBndCondExpansions().num_elements();
+                            = pFields[0]->GetHomogeneousBasis()->GetZ();
+    int nbnd = pFields[0]->GetBndCondExpansions().num_elements();
 
     for (int i = 0; i < nbnd; ++i)
     {
@@ -1061,9 +1061,9 @@ void ForcingMovingBody::MappingBndConditions(
         {
             for ( int dim = 0; dim < m_motion.num_elements(); dim++)
             {
-                bndCondExps = pfields[dim]->GetPlane(plane)
+                bndCondExps = pFields[dim]->GetPlane(plane)
                                             ->GetBndCondExpansions();
-                bndConds = pFields[dir]->GetPlane(plane)->GetBndConditions();
+                bndConds = pFields[dim]->GetPlane(plane)->GetBndConditions();
                 if (boost::iequals(bndConds[i]->GetUserDefined(),"MovingBody"))
                 {
                     int npoints = bndCondExps[i]->GetNpoints();
@@ -1072,7 +1072,7 @@ void ForcingMovingBody::MappingBndConditions(
                     Array<OneD, NekDouble> x2(npoints, 0.0);
                     Array<OneD, NekDouble> tmp(npoints,0.0);
 
-                    NekDouble local_z = z[pfields[0]->GetTransposition()
+                    NekDouble local_z = z[pFields[0]->GetTransposition()
                                                     ->GetPlaneID(plane)];
                     NekDouble x2_in   = 0.5*m_lhom*(1.0+local_z);
                     // Homogeneous input case for x2.
@@ -1110,11 +1110,11 @@ void ForcingMovingBody::MappingBndConditions(
  */
 void ForcingMovingBody::InitialiseCableModel(
         const LibUtilities::SessionReaderSharedPtr& pSession,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
 {
     // storage of spanwise-velocity for current and previous time levels
     // used to calculate dw/dt in m_forcing term
-    int nPointsTot = pfields[0]->GetNpoints();
+    int nPointsTot = pFields[0]->GetNpoints();
     m_W = Array<OneD, Array<OneD, NekDouble> > (2);
     for(int n = 0; n < 2; ++n)
     {
@@ -1127,7 +1127,7 @@ void ForcingMovingBody::InitialiseCableModel(
     m_movingBodyCalls = 0;
 
     Array<OneD, unsigned int> ZIDs;
-    ZIDs = pfields[0]->GetZIDs();
+    ZIDs = pFields[0]->GetZIDs();
     m_np = ZIDs.num_elements();
     
     m_Aeroforces = Array<OneD, NekDouble>(2*m_np,0.0);
@@ -1148,7 +1148,7 @@ void ForcingMovingBody::InitialiseCableModel(
         return;
     }
 
-    LibUtilities::CommSharedPtr vcomm = pfields[0]->GetComm();
+    LibUtilities::CommSharedPtr vcomm = pFields[0]->GetComm();
 
     bool homostrip;
     m_session->MatchSolverInfo("HomoStrip","True",homostrip,false);
@@ -1212,7 +1212,7 @@ void ForcingMovingBody::InitialiseCableModel(
     }
 
     // Setting the coefficient matrices for solving structural dynamic ODEs
-    SetDynEqCoeffMatrix(pfields);
+    SetDynEqCoeffMatrix(pFields);
 
     // Set initial condition for cable's motion
     int cnt = 0;
@@ -1236,7 +1236,7 @@ void ForcingMovingBody::InitialiseCableModel(
             }
             else
             { 
-                nzpoints = pfields[0]->GetHomogeneousBasis()->GetNumModes();
+                nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
             }
 
  
@@ -1406,10 +1406,10 @@ void ForcingMovingBody::InitialiseCableModel(
             
             if(!homostrip)
             {
-                int nzpoints = pfields[0]->GetHomogeneousBasis()->GetNumModes();
+                int nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
                 Array<OneD, NekDouble> z_coords(nzpoints,0.0);
                 Array<OneD, const NekDouble> pts
-                                    = pfields[0]->GetHomogeneousBasis()->GetZ();
+                                    = pFields[0]->GetHomogeneousBasis()->GetZ();
 
                 Vmath::Smul(nzpoints,m_lhom/2.0,pts,1,z_coords,1);
                 Vmath::Sadd(nzpoints,m_lhom/2.0,z_coords,1,z_coords,1);
@@ -1470,7 +1470,7 @@ void ForcingMovingBody::InitialiseCableModel(
  *
  */
 void ForcingMovingBody::SetDynEqCoeffMatrix(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
 {
     int nplanes;
 
@@ -1631,7 +1631,7 @@ void ForcingMovingBody::EvaluateAccelaration(
 /**
  *
  */
-void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pforce)
+void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
 {
 
     m_funcName = Array<OneD, std::string> (3);
@@ -1648,7 +1648,7 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pforce)
 
     //Get the body displacement: m_zta and m_eta
     const TiXmlElement* funcNameElmt_D
-                    = pforce->FirstChildElement("DISPLACEMENTS");
+                    = pForce->FirstChildElement("DISPLACEMENTS");
     ASSERTL0(funcNameElmt_D,
              "MOVINGBODYFORCE tag has to specify a function name which "
              "prescribes the body displacement as d(z,t).");
@@ -1659,7 +1659,7 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pforce)
 
     //Get the body velocity of movement: d(m_zta)/dt and d(m_eta)/dt
     const TiXmlElement* funcNameElmt_V
-                    = pforce->FirstChildElement("VELOCITIES");
+                    = pForce->FirstChildElement("VELOCITIES");
     ASSERTL0(funcNameElmt_D,
              "MOVINGBODYFORCE tag has to specify a function name which "
              "prescribes the body velocity of movement as v(z,t).");
@@ -1671,7 +1671,7 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pforce)
 
     //Get the body acceleration: dd(m_zta)/ddt and dd(m_eta)/ddt
     const TiXmlElement* funcNameElmt_A
-                    = pforce->FirstChildElement("ACCELERATIONS");
+                    = pForce->FirstChildElement("ACCELERATIONS");
     ASSERTL0(funcNameElmt_A,
              "MOVINGBODYFORCE tag has to specify a function name which "
              "prescribes the body acceleration as a(z,t).");
@@ -1784,15 +1784,15 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pforce)
  */
 void ForcingMovingBody::InitialiseFilter(
         const LibUtilities::SessionReaderSharedPtr& pSession,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
-        const TiXmlElement* pforce)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const TiXmlElement* pForce)
 {
     // Get the outputfile name, output frequency and 
     // the boundary's ID for the cable's wall
-    std::string typeStr = pforce->Attribute("TYPE");
+    std::string typeStr = pForce->Attribute("TYPE");
     std::map<std::string, std::string> vParams;
 
-    const TiXmlElement *param = pforce->FirstChildElement("PARAM");
+    const TiXmlElement *param = pForce->FirstChildElement("PARAM");
     while (param)
     {
         ASSERTL0(param->Attribute("NAME"),
@@ -1815,7 +1815,7 @@ void ForcingMovingBody::InitialiseFilter(
                                     AllocateSharedPtr(pSession, vParams);
 
     // Initialise the object of MovingBody filter
-    m_MovBodyfilter->Initialise(pfields, 0.0);
+    m_MovBodyfilter->Initialise(pFields, 0.0);
 
 }
 

@@ -76,7 +76,7 @@ namespace MeshUtils {
         }
         
         pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
-        pplanemesh->Mesh(true,true);
+        pplanemesh->Mesh(false,true);
         pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
         HOMesh();
@@ -330,19 +330,21 @@ namespace MeshUtils {
     
     void SurfaceMesh::OrientateCurves()
     {
+        
         cout << m_numedges << endl;
         
         ofstream out;
         out.open("test.txt");
         
-        for(int i = 0; i < m_numedges;i++)
+        for(int i = 0; i < m_numedges; i++)
         {
-            vector<vector<NekDouble> > points = m_curvemeshes[i]->GetMeshPoints();
-            for(int j = 0; j < m_curvemeshes[i]->GetNumPoints(); j++)
+            vector<vector<NekDouble> > points = m_curvemeshes[m_edges[i]-1]->GetMeshPoints();
+            for(int j = 0; j < points.size(); j++)
             {
                 out << points[j][0] << " " << points[j][1] << " " << points[j][2] << endl;
             }
         }
+        
         out.close();
         
         int edgeCounter = m_numedges;

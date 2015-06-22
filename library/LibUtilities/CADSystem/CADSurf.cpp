@@ -69,10 +69,10 @@ namespace Nektar{
             
             projection.Parameters(1,ui,vi);
             
-            ASSERTL0(ui >= occSurface.FirstUParameter() &&
-                     ui <= occSurface.LastUParameter() &&
-                     vi >= occSurface.FirstVParameter() &&
-                     vi <= occSurface.LastVParameter(),
+            ASSERTL0(abs(ui - occSurface.FirstUParameter()) > -1E-6 &&
+                     abs(occSurface.LastUParameter() - ui ) > -1E-6 &&
+                     abs(vi - occSurface.FirstVParameter()) > -1E-6 &&
+                     abs(occSurface.LastVParameter() - vi ) > -1E-6,
                      "locuv exceeded bounds");
             
             u = ui;

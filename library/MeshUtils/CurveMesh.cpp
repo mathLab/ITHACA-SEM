@@ -46,7 +46,7 @@ namespace MeshUtils {
         m_cadcurve->Bounds(m_bounds);
         m_curvelength = m_cadcurve->Length(m_bounds[0],m_bounds[1]);
         
-        m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+1;
+        m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+5;
         
         ds = m_curvelength/(m_numSamplePoints-1);
         
@@ -64,42 +64,55 @@ namespace MeshUtils {
         
         Ne=round(Ae);
         
-        GetPhiFunction();
-        
-        meshsvalue.resize(Ne+1);
-        meshsvalue[0]=0.0;
-        meshsvalue[Ne]=m_curvelength;
-        
-        for(int i = 1; i < Ne; i++)
+        if(Ne+1<2)
         {
-            int iterationcounter=0;
-            bool iterate = true;
-            int k = i;
-            NekDouble ski = meshsvalue[i-1];
-            NekDouble lastSki;
-            while(iterate)
+            meshsvalue.resize(2);
+            meshsvalue[0]=0.0;
+            meshsvalue[Ne]=m_curvelength;
+            
+            if(m_verbose)
+                cout << ".\tPoints: " << 2 << endl;
+        }
+        else
+        {
+        
+            GetPhiFunction();
+            
+            meshsvalue.resize(Ne+1);
+            meshsvalue[0]=0.0;
+            meshsvalue[Ne]=m_curvelength;
+            
+            for(int i = 1; i < Ne; i++)
             {
-                iterationcounter++;
-                NekDouble rhs =EvaluateDS(ski)/Ae*(EvaluatePS(ski)-k);
-                lastSki=ski;
-                ski=ski-rhs;
-                if(abs(lastSki-ski)<1E-10)
+                int iterationcounter=0;
+                bool iterate = true;
+                int k = i;
+                NekDouble ski = meshsvalue[i-1];
+                NekDouble lastSki;
+                while(iterate)
                 {
-                    iterate = false;
+                    iterationcounter++;
+                    NekDouble rhs =EvaluateDS(ski)/Ae*(EvaluatePS(ski)-k);
+                    lastSki=ski;
+                    ski=ski-rhs;
+                    if(abs(lastSki-ski)<1E-10)
+                    {
+                        iterate = false;
+                    }
+                    
+                    ASSERTL0(iterationcounter<1000000, "iteration failed");
                 }
                 
-                ASSERTL0(iterationcounter<1000000, "iteration failed");
+                meshsvalue[i]=ski;
             }
             
-            meshsvalue[i]=ski;
+            if(m_verbose)
+                cout << ".\tPoints: " << Ne+1 << endl;
         }
         
-        if(m_verbose)
-            cout << ".\tPoints: " << Ne+1 << endl;
+        m_meshpoints.resize(meshsvalue.size());
         
-        m_meshpoints.resize(Ne+1);
-        
-        for(int i = 0; i < Ne; i++)
+        for(int i = 0; i < meshsvalue.size()-1; i++)
         {
             NekDouble t = m_cadcurve->tAtArcLength(meshsvalue[i]);
             Array<OneD, NekDouble> loc;
@@ -119,7 +132,7 @@ namespace MeshUtils {
         Point[0]=loc[0];
         Point[1]=loc[1];
         Point[2]=loc[2];
-        m_meshpoints[Ne]=Point;
+        m_meshpoints[meshsvalue.size()-1]=Point;
     }
     
     void CurveMesh::GetPhiFunction()

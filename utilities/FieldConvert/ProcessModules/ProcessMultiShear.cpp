@@ -78,6 +78,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     }
 
     int nstart, i, j, nfields;
+    bool wssg = false;
     NekDouble nfld = m_config["N"].as<NekDouble>();
     string fromfld, basename, endname, nstartStr;
     stringstream filename;
@@ -138,6 +139,11 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         nfields    = m_fromField[i]->m_fielddef[0]->m_fields.size();
         int NumHomogeneousDir = m_fromField[i]->m_fielddef[0]->m_numHomogeneousDir;
 
+        if (nfields == 5 || nfields == 7)
+        {
+            wssg = true;
+        }
+
         // Set up Expansion information to use mode order from field
         m_fromField[i]->m_graph->SetExpansions(m_fromField[i]->m_fielddef);
 
@@ -174,27 +180,23 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     }
 
 
+    int nout = 5; // TAWSS, OSI, transWSS, AFI, CFI (optional WSSG)
+    if (wssg) { nout = 6; }
+
     int npoints = m_fromField[0]->m_exp[0]->GetNpoints();
-    int nout = 6; // TAWSS, OSI, transWSS, AFI, CFI, WSSG.
-    Array<OneD, Array<OneD, NekDouble> > shear(spacedim), TemporalMeanVec(spacedim), normals(spacedim);
-    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),outfield(nout);
-    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanPerp(spacedim),dTm(spacedim),dTn(spacedim);
-    Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0),Tm(npoints,0.0);
-    Array<OneD, NekDouble> wss(npoints), temp(npoints,0.0),Tn(npoints,0.0), WSSG(npoints,0.0);
-    Array<OneD, NekDouble> ndTn(npoints,0.0),mdTm(npoints,0.0);
+    Array<OneD, Array<OneD, NekDouble> > normTemporalMeanVec(spacedim),normCrossDir(spacedim),  outfield(nout), dtemp(spacedim);
+    Array<OneD, NekDouble> TemporalMeanMag(npoints,0.0), DotProduct(npoints,0.0), temp(npoints,0.0);
+
 
     for (i = 0; i < spacedim; ++i)
     {
-        shear[i] = Array<OneD, NekDouble>(npoints);
-        normals[i] = Array<OneD, NekDouble>(npoints);
-        dTm[i] = Array<OneD, NekDouble>(npoints);
-        dTn[i] = Array<OneD, NekDouble>(npoints);
-        TemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
         normTemporalMeanVec[i] = Array<OneD, NekDouble>(npoints);
-        normTemporalMeanPerp[i] = Array<OneD, NekDouble>(npoints);
-        Vmath::Zero(npoints, TemporalMeanVec[i],1);
+        normCrossDir[i] = Array<OneD, NekDouble>(npoints);
+        dtemp[i] = Array<OneD, NekDouble>(npoints);
+        Vmath::Zero(npoints, normTemporalMeanVec[i],1);
+        Vmath::Zero(npoints, normCrossDir[i],1);
     }
-
+    
     for (i = 0; i < nout; ++i)
     {
         outfield[i] = Array<OneD, NekDouble>(npoints);
@@ -208,15 +210,14 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     {
         for (j = 0; j < spacedim; ++j)
         {
-            shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
-            Vmath::Vadd(npoints, shear[j], 1, TemporalMeanVec[j], 1, TemporalMeanVec[j], 1);
+            Vmath::Vadd(npoints,m_fromField[i]->m_exp[j]->GetPhys(), 1, normTemporalMeanVec[j], 1, normTemporalMeanVec[j], 1); 
         }
     }
 
     for (i = 0; i < spacedim; ++i)
     {
-        Vmath::Smul(npoints, 1.0/nfld, TemporalMeanVec[i], 1, TemporalMeanVec[i], 1);
-        Vmath::Vvtvp(npoints, TemporalMeanVec[i], 1, TemporalMeanVec[i], 1,
+        Vmath::Smul(npoints, 1.0/nfld, normTemporalMeanVec[i], 1, normTemporalMeanVec[i], 1);
+        Vmath::Vvtvp(npoints, normTemporalMeanVec[i], 1, normTemporalMeanVec[i], 1,
                      TemporalMeanMag, 1, TemporalMeanMag, 1);
     }
 
@@ -224,65 +225,55 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 
     for (i = 0; i < spacedim; ++i)
     {
-        Vmath::Vdiv(npoints, TemporalMeanVec[i], 1, TemporalMeanMag, 1, normTemporalMeanVec[i], 1);
+        Vmath::Vdiv(npoints, normTemporalMeanVec[i], 1, TemporalMeanMag, 1, normTemporalMeanVec[i], 1);
     }
-    // -----------------------------------------------------
+    //---------------------------------------------------
 
-    //------------------------------------------------------
-    // Grab Noramls from first field - same for all fields - Compute the vector perpindicular
-    // to normTemporalMeanVec in plane
-    for (i = 0; i < spacedim; ++i)
+    if (wssg) //cross product with normals to obtain direction parallel to temporal mean vector. 
     {
-        normals[i] = m_fromField[0]->m_exp[i+4]->GetPhys();
+        Vmath::Vmul(npoints,m_fromField[0]->m_exp[nfields-1]->GetPhys(),1,normTemporalMeanVec[1],1,normCrossDir[0],1);
+        Vmath::Vvtvm(npoints,m_fromField[0]->m_exp[nfields-2]->GetPhys(),1,normTemporalMeanVec[2],1,normCrossDir[0],1,
+                     normCrossDir[0],1);
+
+        Vmath::Vmul(npoints,m_fromField[0]->m_exp[nfields-3]->GetPhys(),1,normTemporalMeanVec[2],1,normCrossDir[1],1);
+        Vmath::Vvtvm(npoints,m_fromField[0]->m_exp[nfields-1]->GetPhys(),1,normTemporalMeanVec[0],1,normCrossDir[1],1,
+                     normCrossDir[1],1);
+        
+        Vmath::Vmul(npoints,m_fromField[0]->m_exp[nfields-2]->GetPhys(),1,normTemporalMeanVec[0],1,normCrossDir[2],1);
+        Vmath::Vvtvm(npoints,m_fromField[0]->m_exp[nfields-3]->GetPhys(),1,normTemporalMeanVec[1],1,normCrossDir[2],1,
+                     normCrossDir[2],1);
     }
 
-    // Cross Product
-    Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[0],1);
-    Vmath::Vvtvm(npoints,normals[1],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[0],1,
-                        normTemporalMeanPerp[0],1);
-
-    Vmath::Vmul(npoints,normals[2],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[1],1);
-    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[2],1,normTemporalMeanPerp[1],1,
-                        normTemporalMeanPerp[1],1);
-
-    Vmath::Vmul(npoints,normals[1],1,normTemporalMeanVec[0],1,normTemporalMeanPerp[2],1);
-    Vmath::Vvtvm(npoints,normals[0],1,normTemporalMeanVec[1],1,normTemporalMeanPerp[2],1,
-                        normTemporalMeanPerp[2],1);
-
-    Vmath::Smul(npoints,-1.0,normTemporalMeanPerp[1],1,normTemporalMeanPerp[1],1);
 
     // Compute tawss, trs,  osi, taafi, tacfi, WSSG.
     for (i = 0; i < nfld; ++i)
     {
         for (j = 0; j < spacedim; ++j)
         {
-            shear[j] = m_fromField[i]->m_exp[j]->GetPhys();
-        }
-        wss = m_fromField[i]->m_exp[3]->GetPhys();
-
-        for (j = 0; j < spacedim; ++j)
-        {
-            Vmath::Vvtvp(npoints, shear[j], 1, normTemporalMeanVec[j], 1,
+            Vmath::Vvtvp(npoints, m_fromField[i]->m_exp[j]->GetPhys(), 1, normTemporalMeanVec[j], 1,
                          DotProduct, 1, DotProduct, 1);
         }
-
+        
         //TAWSS
-        Vmath::Vadd(npoints, wss, 1, outfield[0], 1, outfield[0], 1);
-
+        Vmath::Vadd(npoints, m_fromField[i]->m_exp[spacedim]->GetPhys(), 1, outfield[0], 1, outfield[0], 1);
+        
         //transWSS
+        Vmath::Vmul(npoints, DotProduct, 1, DotProduct, 1, temp,1);
+        Vmath::Vvtvm(npoints, m_fromField[i]->m_exp[spacedim]->GetPhys(), 1, 
+                     m_fromField[i]->m_exp[spacedim]->GetPhys(), 1, temp, 1, temp, 1);
+        
         for (j = 0; j < npoints; ++j)
         {
-            temp[j] = wss[j]*wss[j] - DotProduct[j]*DotProduct[j];
             if(temp[j] > 0.0)
             {
                 outfield[1][j] = outfield[1][j] + sqrt(temp[j]);
             }
         }
-
+        
         //TAAFI
-        Vmath::Vdiv(npoints, DotProduct, 1, wss, 1, temp, 1);
+        Vmath::Vdiv(npoints, DotProduct, 1, m_fromField[i]->m_exp[spacedim]->GetPhys(), 1, temp, 1);
         Vmath::Vadd(npoints, temp, 1, outfield[3], 1, outfield[3], 1);
-
+        
         //TACFI
         for (j = 0; j < npoints; ++j)
         {
@@ -292,36 +283,46 @@ void ProcessMultiShear::Process(po::variables_map &vm)
                 outfield[4][j] = outfield[4][j] + sqrt(temp[j]);
             }
         }
-
+        
         // WSSG
-        for(j = 0; j < spacedim; ++j)
+        if (wssg)
         {
-            Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanVec[j],1,
-                        Tm, 1, Tm, 1);
-            Vmath::Vvtvp(npoints,shear[j],1,normTemporalMeanPerp[j],1,
-                        Tn, 1, Tn, 1);
+            //parallel component:
+            Vmath::Zero(npoints, temp,1);
+
+            m_fromField[i]->m_exp[0]->PhysDeriv(DotProduct,dtemp[0],dtemp[1],dtemp[2]);
+            for(j=0; j<spacedim; j++)
+            {
+                Vmath::Vvtvp(npoints,dtemp[j],1,normTemporalMeanVec[j],1,temp,1,temp,1); 
+            }
+            Vmath::Vmul(npoints,temp,1,temp,1,temp,1);
+
+
+            //perpendicular component:
+            Vmath::Zero(npoints, DotProduct,1);
+           
+            for(j = 0; j < spacedim; ++j)
+            {
+                Vmath::Vvtvp(npoints,m_fromField[i]->m_exp[j]->GetPhys(),1,normCrossDir[j],1,
+                             DotProduct, 1, DotProduct, 1);
+                
+            }
+            m_fromField[i]->m_exp[0]->PhysDeriv(DotProduct,dtemp[0],dtemp[1],dtemp[2]);
+            Vmath::Zero(npoints, DotProduct,1);
+
+            for(j=0; j<spacedim; j++)
+            {
+                Vmath::Vvtvp(npoints,dtemp[j],1,normCrossDir[j],1,DotProduct,1,DotProduct,1); 
+            }
+            Vmath::Vvtvp(npoints,DotProduct,1,DotProduct,1,temp,1, temp,1);
+
+            //Final wssg computation
+            Vmath::Vsqrt(npoints,temp,1,temp,1);
+            Vmath::Vadd(npoints, temp, 1, outfield[5], 1, outfield[5], 1);
         }
-
-        m_fromField[i]->m_exp[0]->PhysDeriv(Tm,dTm[0],dTm[1],dTm[2]);
-        m_fromField[i]->m_exp[0]->PhysDeriv(Tn,dTn[0],dTn[1],dTn[2]);
-
-        for(j = 0;j < spacedim; ++j)
-        {
-            Vmath::Vvtvp(npoints,dTm[j],1,normTemporalMeanVec[j],1,mdTm,1,mdTm,1);
-            Vmath::Vvtvp(npoints,dTn[j],1,normTemporalMeanPerp[j],1,ndTn,1,ndTn,1);
-        }
-
-        Vmath::Vmul(npoints,mdTm,1,mdTm,1,mdTm,1);
-        Vmath::Vvtvp(npoints,ndTn,1,ndTn,1,mdTm,1,WSSG,1);
-        Vmath::Vsqrt(npoints,WSSG,1,WSSG,1);
-        Vmath::Vadd(npoints, WSSG, 1, outfield[5], 1, outfield[5], 1);
-
+        
+        
         Vmath::Zero(npoints, DotProduct,1);
-        Vmath::Zero(npoints, Tm,1);
-        Vmath::Zero(npoints, Tn,1);
-        Vmath::Zero(npoints, ndTn,1);
-        Vmath::Zero(npoints, mdTm,1);
-
     }
 
     //Divide by nfld
@@ -329,7 +330,6 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     Vmath::Smul(npoints, 1.0/nfld, outfield[1], 1, outfield[1], 1);
     Vmath::Smul(npoints, 1.0/nfld, outfield[3], 1, outfield[3], 1);
     Vmath::Smul(npoints, 1.0/nfld, outfield[4], 1, outfield[4], 1);
-    Vmath::Smul(npoints, 1.0/nfld, outfield[5], 1, outfield[5], 1);
 
     //OSI
     for (i = 0; i < npoints; ++i)
@@ -359,7 +359,13 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     m_f->m_fielddef[0]->m_fields[2] = "OSI";
     m_f->m_fielddef[0]->m_fields[3] = "TAAFI";
     m_f->m_fielddef[0]->m_fields[4] = "TACFI";
-    m_f->m_fielddef[0]->m_fields[5] = "|WSSG|";
+
+    if (wssg)
+    { 
+        m_f->m_fielddef[0]->m_fields[5] = "|WSSG|"; 
+        Vmath::Smul(npoints, 1.0/nfld, outfield[5], 1, outfield[5], 1);
+    }
+
 
     for(i = 0; i < nout; ++i)
     {

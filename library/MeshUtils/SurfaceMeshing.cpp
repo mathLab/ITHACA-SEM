@@ -35,6 +35,7 @@
 
 #include <string>
 #include <fstream>
+#include <sstream>
 
 #include <MeshUtils/SurfaceMeshing.h>
 
@@ -68,7 +69,7 @@ namespace MeshUtils {
                     m_cad->GetSurf(i), m_octree,
                     m_curvemeshes,m_order);
             
-            smesh->Mesh();
+            smesh->Mesh();         
             
             m_surfacemeshes.push_back(smesh);
         }

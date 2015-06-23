@@ -76,7 +76,7 @@ namespace MeshUtils {
         }
         
         pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
-        pplanemesh->Mesh(false,true);
+        pplanemesh->Mesh(true,true);
         pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
         HOMesh();

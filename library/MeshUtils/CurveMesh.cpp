@@ -68,7 +68,8 @@ namespace MeshUtils {
         {
             meshsvalue.resize(2);
             meshsvalue[0]=0.0;
-            meshsvalue[Ne]=m_curvelength;
+            meshsvalue[1]=m_curvelength;
+            Ne=1;
             
             if(m_verbose)
                 cout << ".\tPoints: " << 2 << endl;

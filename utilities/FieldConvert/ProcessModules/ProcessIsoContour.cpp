@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Set up fields as interpolation to equispaced output
+//  Description: Generate isocontours from field data.
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <string>
@@ -51,7 +51,10 @@ ModuleKey ProcessIsoContour::className =
     GetModuleFactory().RegisterCreatorFunction(
                         ModuleKey(eProcessModule, "isocontour"),
                         ProcessIsoContour::create,
-                        "Extract an isocontour of fieldid variable and at value fieldvalue, Optionally fieldstr can be specified for a string defiition or smooth for smoothing");
+                        "Extract an isocontour of fieldid variable and at "
+                        "value fieldvalue, Optionally fieldstr can be "
+                        "specified for a string defiition or smooth for "
+                        "smoothing");
 
 ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
     ProcessEquiSpacedOutput(f)
@@ -205,7 +208,8 @@ void TwoPairs (Array<OneD, NekDouble> &cx,
             ((cz[2]-cz[3])==0.0))
         {
             pr=4;
-        } else
+        }
+        else
         {
             pr=3;
         }
@@ -382,7 +386,6 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
                     for(j = 0; j < 3; ++j)
                     {
                         iso->set_fields(3*(n-1)+j,intfields,j);
-
                     }
                     break;
                 case 4:
@@ -393,7 +396,6 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
                     {
                         iso->set_fields(3*(n-2)+j,intfields,j);
                         iso->set_fields(3*(n-1)+j,intfields,j+1);
-
                     }
                     break;
                 case 5:

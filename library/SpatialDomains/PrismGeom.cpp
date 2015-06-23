@@ -310,7 +310,7 @@ namespace Nektar
                 Lcoords[2] = 2.0*delta - 1.0;
 
                 // Set ptdist to distance to nearest vertex 
-                for(int i = 0; i < 5; ++i)
+                for(int i = 0; i < 6; ++i)
                 {
                     ptdist = min(ptdist,r.dist(*m_verts[i]));
                 }

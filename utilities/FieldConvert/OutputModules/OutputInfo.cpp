@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: FLD file format output.
+//  Description: Generates a Nektar++ info XML file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

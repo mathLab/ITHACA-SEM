@@ -69,13 +69,8 @@ void ProcessGrad::Process(po::variables_map &vm)
 
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
-    int spacedim  = expdim;
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
-    {
-        spacedim = 3;
-    }
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int spacedim  = m_f->m_fielddef[0]->m_numHomogeneousDir + expdim;
+    int nfields   = m_f->m_fielddef[0]->m_fields.size();
     int addfields = nfields*spacedim;
 
     int npoints = m_f->m_exp[0]->GetNpoints();

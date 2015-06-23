@@ -332,7 +332,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 void ProcessInterpPoints::InterpolateFieldToPts(
                          vector<MultiRegions::ExpListSharedPtr> &field0,
-                         Array<OneD, Array<OneD, NekDouble> >    &pts,
+                         Array<OneD, Array<OneD, NekDouble> >   &pts,
                          NekDouble                              clamp_low,
                          NekDouble                              clamp_up,
                          NekDouble                              def_value)

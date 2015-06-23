@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: GMSH converter.
+//  Description: Reads a Nektar++ FLD file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -216,8 +216,7 @@ void InputFld::Process(po::variables_map &vm)
                     {
                         m_f->m_exp[s*nfields+i] =
                             m_f->AppendExpList(
-                                m_f->m_fielddef[0]->m_numHomogeneousDir
-                            );
+                                m_f->m_fielddef[0]->m_numHomogeneousDir);
                     }
                 }
             }

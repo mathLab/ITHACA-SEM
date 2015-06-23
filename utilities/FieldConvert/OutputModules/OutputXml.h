@@ -41,25 +41,25 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /// Converter from fld to vtk.
-        class OutputXml : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<OutputXml>::AllocateSharedPtr(f);
-            }
-            static ModuleKey m_className;
-            
-            OutputXml(FieldSharedPtr f);
-            virtual ~OutputXml();
-            
-            /// Write fld to output file.
-            virtual void Process(po::variables_map &vm);
-        };
+namespace Utilities
+{
+/// Converter from fld to vtk.
+class OutputXml : public OutputModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+        return MemoryManager<OutputXml>::AllocateSharedPtr(f);
     }
+    static ModuleKey m_className;
+
+    OutputXml(FieldSharedPtr f);
+    virtual ~OutputXml();
+
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
+};
+}
 }
 
 #endif

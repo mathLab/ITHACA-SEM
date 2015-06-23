@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Deforms grid.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,11 +39,7 @@ using namespace std;
 
 #include "ProcessDeform.h"
 
-#include <StdRegions/StdSegExp.h>
-#include <StdRegions/StdQuadExp.h>
-#include <StdRegions/StdTriExp.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <MultiRegions/ExpList.h>
 #include <SolverUtils/Core/Deform.h>
 
 namespace Nektar

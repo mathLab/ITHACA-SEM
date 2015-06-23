@@ -41,39 +41,41 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey OutputXml::m_className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "xml"), OutputXml::create,
+        "Writes an XML file.");
+
+OutputXml::OutputXml(FieldSharedPtr f) : OutputModule(f)
+{
+
+}
+
+OutputXml::~OutputXml()
+{
+}
+
+void OutputXml::Process(po::variables_map &vm)
+{
+    if(!m_f->m_exp.size()) // do nothing if no expansion defined
     {
-        ModuleKey OutputXml::m_className =
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eOutputModule, "xml"), OutputXml::create,
-                "Writes an XML file.");
-
-        OutputXml::OutputXml(FieldSharedPtr f) : OutputModule(f)
-        {
-
-        }
-
-        OutputXml::~OutputXml()
-        {
-        }
-        
-        void OutputXml::Process(po::variables_map &vm)
-        {
-            if(!m_f->m_exp.size()) // do nothing if no expansion defined
-            {
-                return; 
-            }
-
-            if (m_f->m_verbose)
-            {
-                cout << "OutputXml: Writing file..." << endl;
-            }
-
-            // Extract the output filename and extension
-            string filename = m_config["outfile"].as<string>();
-
-            m_f->m_graph->WriteGeometry(filename);
-            cout << "Written file: " << filename << endl;
-        }        
+        return;
     }
+
+    if (m_f->m_verbose)
+    {
+        cout << "OutputXml: Writing file..." << endl;
+    }
+
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+
+    m_f->m_graph->WriteGeometry(filename);
+    cout << "Written file: " << filename << endl;
+}
+
+}
 }

@@ -199,8 +199,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
     
     for (i = 0; i < nout; ++i)
     {
-        outfield[i] = Array<OneD, NekDouble>(npoints);
-        Vmath::Zero(npoints, outfield[i],1);
+        outfield[i] = Array<OneD, NekDouble>(npoints, 0.0);
     }
 
     // -----------------------------------------------------

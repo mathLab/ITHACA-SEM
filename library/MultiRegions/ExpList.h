@@ -64,13 +64,13 @@ namespace Nektar
         class GlobalMatrix;
 
         enum Direction
-    {
-        eX,
-        eY,
-        eZ,
-        eS,
-        eN
-    };
+        {
+            eX,
+            eY,
+            eZ,
+            eS,
+            eN
+        };
 
         enum ExpansionType
         {
@@ -84,11 +84,11 @@ namespace Nektar
         };       
         
         MultiRegions::Direction const DirCartesianMap[] =
-            {
-                eX,
-                eY,
-                eZ
-            }; 
+        {
+            eX,
+            eY,
+            eZ
+        }; 
     
         /// A map between global matrix keys and their associated block
         /// matrices.

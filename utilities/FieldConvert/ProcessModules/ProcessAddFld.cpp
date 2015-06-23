@@ -128,14 +128,13 @@ void ProcessAddFld::Process(po::variables_map &vm)
 
     if(samelength == true)
     {
-
         for(int i = 0; i < m_f->m_data.size(); ++i)
         {
             int datalen = m_f->m_data[i].size();
 
-            Vmath::Vadd(datalen, &(m_f->m_data[i][0]),         1,
+            Vmath::Vadd(datalen, &(m_f->m_data[i][0]),       1,
                                  &(fromField->m_data[i][0]), 1,
-                                 &(m_f->m_data[i][0]),         1);
+                                 &(m_f->m_data[i][0]),       1);
         }
     }
     else

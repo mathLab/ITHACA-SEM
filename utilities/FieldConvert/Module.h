@@ -61,7 +61,8 @@ namespace Nektar
          * Denotes different types of mesh converter modules: so far only
          * input, output and process modules are defined.
          */
-        enum ModuleType {
+        enum ModuleType
+        {
             eInputModule,
             eProcessModule,
             eOutputModule,
@@ -87,12 +88,12 @@ namespace Nektar
              * @param defValue  Default value of the option.
              * @param desc      Description of the option.
              */
-        ConfigOption(bool isBool, string defValue, string desc) :
-            m_isBool(isBool), m_beenSet(false), m_value(),
-                m_defValue(defValue), m_desc(desc) {}
-        ConfigOption() :
-            m_isBool(false), m_beenSet(false), m_value(),
-                m_defValue(), m_desc() {}
+            ConfigOption(bool isBool, string defValue, string desc) :
+                m_isBool(isBool), m_beenSet(false), m_value(),
+                    m_defValue(defValue), m_desc(desc) {}
+            ConfigOption() :
+                m_isBool(false), m_beenSet(false), m_value(),
+                    m_defValue(), m_desc() {}
 
             /**
              * @brief Re-interpret the value stored in #value as some type using
@@ -246,9 +247,11 @@ namespace Nektar
             virtual ~FieldConvertComm() {}
             void v_SplitComm(int pRows, int pColumns)
             {
-            // Compute row and column in grid.
-                m_commRow    = boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(pColumns,m_rank));
-                m_commColumn = boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows,0));
+                // Compute row and column in grid.
+                m_commRow    = boost::shared_ptr<FieldConvertComm>(
+                                    new FieldConvertComm(pColumns,m_rank));
+                m_commColumn = boost::shared_ptr<FieldConvertComm>(
+                                    new FieldConvertComm(pRows,0));
             }
 
         protected:

@@ -93,9 +93,9 @@ stands for \inltt{m}odule)..
 Specifically, FieldConvert has these additional functionalities
 %
 \begin{enumerate}
-\item \inltt{AddFld}: Sum two .fld files;
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{addFld}: Sum two .fld files;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
@@ -103,8 +103,13 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing; 
-\item \inltt{scaleinputfld}: Rescale input field by a constant factor.
+\item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
+\item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
+\item \inltt{scalargrad}: Computes scalar gradient field;
+\item \inltt{scaleinputfld}: Rescale input field by a constant factor;
+\item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
 \item \inltt{vorticity}: Computes the vorticity field.
+\item \inltt{wss}: Computes wall shear stress field.
 \end{enumerate}
 The module list above can be seen by running the command
 %
@@ -117,25 +122,6 @@ In the following we will detail the usage of each module.
 %
 %
 
-\subsubsection{Sum two .fld files: \textit{AddFld} module}
-To sum two .fld files one can use the \inltt{AddFld} module of FieldConvert
-%
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
-\end{lstlisting}
-%
-In this case we use it in conjunction with the command \inltt{scale} 
-which multiply the values of a given .fld file by a constant \inltt{value}. 
-\inltt{file1.fld} is the file multiplied by \inltt{value}, \inltt{file1.xml} 
-is the associated session file, \inltt{file2.fld} is the .fld file which 
-is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output 
-which contain the sum of the two .fld files.
-\inltt{file3.fld} can be processed in a similar way as described 
-in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
-it either in Tecplot or in Paraview the result.
-%
-%
-%
 \subsubsection{Smooth the data: \textit{C0Projection} module}
 To smooth the data of a given .fld file one can 
 use the \inltt{C0Projection} module of FieldConvert
@@ -159,6 +145,26 @@ FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
 where the file \inltt{test-QCrit.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+
+\subsubsection{Sum two .fld files: \textit{addFld} module}
+To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
+\end{lstlisting}
+%
+In this case we use it in conjunction with the command \inltt{scale} 
+which multiply the values of a given .fld file by a constant \inltt{value}. 
+\inltt{file1.fld} is the file multiplied by \inltt{value}, \inltt{file1.xml} 
+is the associated session file, \inltt{file2.fld} is the .fld file which 
+is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output 
+which contain the sum of the two .fld files.
+\inltt{file3.fld} can be processed in a similar way as described 
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
+it either in Tecplot or in Paraview the result.
 %
 %
 %
@@ -230,6 +236,20 @@ FieldConvert  test-b0.xml test-b0.fld test-b0.dat
 This will obviously generate a Tecplot output if a .dat file 
 is specified as last argument. A .vtu extension will produce 
 a Paraview output.
+%
+%
+%
+\subsubsection{Compute the gradient of a field: \textit{gradient} module}
+To compute the spatial gradients of all fields one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m gradient test.xml  test.fld  test-grad.fld
+\end{lstlisting}
+%
+where the file \inltt{file-grad.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+%
 %
 %
 %
@@ -401,10 +421,45 @@ separate isocontours of less than 100 triangles. This optin requires
 Currently this option is only set up for triangles, quadrilaterals,
  tetrahedrons and prisms. 
 \end{notebox}
+%
+%
+%
+%
 
+\subsubsection{Show high frequency energy of the Jacobian: \textit{jacobianenergy} module}
+
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m sacleinputfld test.xml test.fld test-jacenergy.fld
+\end{lstlisting}
+
+The output file \inltt{file-jacenergy.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+
+\subsubsection{Print L2 and LInf norms: \textit{printfldnorms} module}
+
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m printfldnorms test.xml test.fld 
+\end{lstlisting}
+
+This module does not create an output file. The L2 and LInf norms for each field variable is printed to the stdout. 
+
+%
+%
+%
+
+\subsubsection{Computes the scalar gradient: \textit{scalargrad} module}
+
+%
+%
+%
 
 \subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
-
+To scale a .fld file by a given scalar quantity, the user can run:
 \begin{lstlisting}[style=BashInputStyle] 
 FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld
 \end{lstlisting}
@@ -413,6 +468,11 @@ The argument \inltt{scale=value} rescales of a factor \inltt{value}
 The output file \inltt{file-conc.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+\subsubsection{Time-averaged shear stress metrics:} \textit{shear} module}
 
 %
 %
@@ -428,6 +488,13 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}.
 %
 %
 %
+
+\subsubsection{Computing the wall shear stress:} \textit{wss} module}
+
+%
+%
+%
+
 \subsubsection{Manipulating meshes with FieldConvert}
 FieldConvert has support for two modules that can be used in conjunction with
 the linear elastic solver, as shown in chapter~\ref{s:elasticity}. To do this,

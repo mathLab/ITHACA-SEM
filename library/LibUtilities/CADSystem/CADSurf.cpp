@@ -39,7 +39,8 @@ using namespace std;
 namespace Nektar{
     namespace LibUtilities{
         
-        CADSurf::CADSurf(int i, TopoDS_Shape in, vector<int> ein) : ID(i), edges(ein)
+        CADSurf::CADSurf(int i, TopoDS_Shape in,
+                         vector<vector<pair<int,int> > > ein) : ID(i), edges(ein)
         {
             gp_Trsf transform;
             gp_Pnt ori(0.0,0.0,0.0);
@@ -48,6 +49,7 @@ namespace Nektar{
             s = BRep_Tool::Surface(TopoDS::Face(in));
             in.Move(mv);
             occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
+            
         }
         
         void CADSurf::locuv(NekDouble &u, NekDouble &v,

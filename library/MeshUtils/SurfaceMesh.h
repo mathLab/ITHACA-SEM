@@ -64,7 +64,6 @@ namespace MeshUtils {
         
         {
             m_edges = m_cadsurf->GetEdges();
-            m_numedges = m_edges.size();
         };
         
         void Mesh();
@@ -92,15 +91,13 @@ namespace MeshUtils {
                       Array<OneD, Array<OneD, int> > &Connec);
         
         void OrientateCurves();
-        int firstEdgeNotUsed();
         void AddNewPoint(NekDouble u, NekDouble v);
         
         LibUtilities::CADSurfSharedPtr m_cadsurf;
         OctreeSharedPtr m_octree;
         std::vector<CurveMeshSharedPtr> m_curvemeshes;
-        int m_numedges;
-        std::vector<int> m_edges;
-        std::vector<std::vector<int> > m_edgeloops;
+
+        std::vector<std::vector<std::pair<int,int> > > m_edges;
         std::vector<std::vector<std::vector<NekDouble> > > m_uvloops;
         std::vector<std::vector<NekDouble> > m_centers;
         std::vector<std::vector<NekDouble> > m_extrapoints;

@@ -71,6 +71,8 @@
 #include <TopLoc_Location.hxx>
 
 
+#include <BRepTools_WireExplorer.hxx>
+#include <ShapeAnalysis_Wire.hxx>
 
 namespace Nektar {
 namespace LibUtilities {
@@ -112,9 +114,8 @@ namespace LibUtilities {
 	private:
         
         void AddCurve(int i, TopoDS_Shape in);
-        void AddSurf(int i, TopoDS_Shape in, std::vector<int> ein);
-        
-        void OrientateEdgesOnSurface();
+        void AddSurf(int i, TopoDS_Shape in,
+                     std::vector<std::vector<std::pair<int,int> > > ein);
         
 	    std::string m_name;
         int m_numCurve;

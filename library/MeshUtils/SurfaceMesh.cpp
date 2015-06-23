@@ -330,119 +330,21 @@ namespace MeshUtils {
     
     void SurfaceMesh::OrientateCurves()
     {
-        
-        cout << m_numedges << endl;
-        
-        ofstream out;
-        out.open("test.txt");
-        
-        for(int i = 0; i < m_numedges; i++)
-        {
-            vector<vector<NekDouble> > points = m_curvemeshes[m_edges[i]-1]->GetMeshPoints();
-            for(int j = 0; j < points.size(); j++)
-            {
-                out << points[j][0] << " " << points[j][1] << " " << points[j][2] << endl;
-            }
-        }
-        
-        out.close();
-        
-        int edgeCounter = m_numedges;
-        
-        while(edgeCounter>0)
-        {
-            int currentEdge = firstEdgeNotUsed();
-            bool currentEdgeForward = true;
-            bool notClosed = true;
-            
-            vector<int> currentLoop;
-            
-            vector<NekDouble> origin = m_curvemeshes[currentEdge-1]->
-                                                GetFirstPoint();
-            currentLoop.push_back(currentEdge);
-            edgeCounter--;
-            
-            while(notClosed)
-            {
-                vector<NekDouble> loc;
-                if(currentEdgeForward)
-                {
-                    loc = m_curvemeshes[currentEdge-1]->GetLastPoint();
-                }
-                else
-                {
-                    loc = m_curvemeshes[currentEdge-1]->GetFirstPoint();
-                }
-                
-                if(abs(loc[0]-origin[0]) < 1E-6 &&
-                   abs(loc[1]-origin[1]) < 1E-6 &&
-                   abs(loc[2]-origin[2]) < 1E-6 )
-                {
-                    notClosed = false;
-                    break;
-                }
-                
-                vector<NekDouble> test;
-                bool falid = true;
-                for(int i = 0; i < m_numedges; i++)
-                {
-                    if(m_edges[i]==currentEdge)
-                        continue;
-                    
-                    test = m_curvemeshes[m_edges[i]-1]->GetFirstPoint();
-                    if(abs(loc[0]-test[0]) < 1E-6 &&
-                       abs(loc[1]-test[1]) < 1E-6 &&
-                       abs(loc[2]-test[2]) < 1E-6 )
-                    {
-                        currentLoop.push_back(m_edges[i]);
-                        edgeCounter--;
-                        currentEdge=m_edges[i];
-                        currentEdgeForward=true;
-                        falid = false;
-                        break;
-                    }
-                    else
-                    {
-                        test = m_curvemeshes[m_edges[i]-1]->GetLastPoint();
-                        if(abs(loc[0]-test[0]) < 1E-6 &&
-                           abs(loc[1]-test[1]) < 1E-6 &&
-                           abs(loc[2]-test[2]) < 1E-6 )
-                        {
-                            currentLoop.push_back(-1*m_edges[i]);
-                            edgeCounter--;
-                            currentEdge=m_edges[i];
-                            currentEdgeForward=false;
-                            falid=false;
-                            break;
-                        }
-                    }
-                }
-                if(falid)
-                {
-                    cout << "falid to find curve connectivity" << endl;
-                    exit(-1);
-                }
-                
-            }
-            
-            m_edgeloops.push_back(currentLoop);
-        }
-        
-        //create list of continuous loop locs
-        
         vector<vector<vector<NekDouble> > > orderedLoops;
         
-        for(int i = 0; i < m_edgeloops.size(); i++)
+        for(int i = 0; i < m_edges.size(); i++)
         {
             vector<vector<NekDouble> > cE;
-            for(int j = 0; j < m_edgeloops[i].size(); j++)
+            for(int j = 0; j < m_edges[i].size(); j++)
             {
                 vector<vector<NekDouble> > edgePoints =
-                        m_curvemeshes[abs(m_edgeloops[i][j])-1]->
+                        m_curvemeshes[m_edges[i][j].first-1]->
                             GetMeshPoints();
-                int numPoints = m_curvemeshes[abs(m_edgeloops[i][j])-1]->
+                
+                int numPoints = m_curvemeshes[m_edges[i][j].first-1]->
                                     GetNumPoints();
-                if(m_edgeloops[i][j]>0)
+                
+                if(m_edges[i][j].second == 0)
                 {
                     for(int k = 0; k < numPoints-1; k++)
                     {
@@ -521,17 +423,17 @@ namespace MeshUtils {
                     NekDouble areatmp = areas[i];
                     vector<NekDouble> centerstmp = m_centers[i];
                     vector<vector<NekDouble> > uvLoopstmp = m_uvloops[i];
-                    vector<int> edgeLoopstmp = m_edgeloops[i];
+                    vector<pair<int,int> > edgeLoopstmp = m_edges[i];
                     
                     areas[i]=areas[i+1];
                     m_centers[i]=m_centers[i+1];
                     m_uvloops[i]=m_uvloops[i+1];
-                    m_edgeloops[i]=m_edgeloops[i+1];
+                    m_edges[i]=m_edges[i+1];
                     
                     areas[i+1]=areatmp;
                     m_centers[i+1]=centerstmp;
                     m_uvloops[i+1]=uvLoopstmp;
-                    m_edgeloops[i+1]=edgeLoopstmp;
+                    m_edges[i+1]=edgeLoopstmp;
                     
                     ct+=1;
                 }
@@ -557,31 +459,6 @@ namespace MeshUtils {
         }
         
         
-    }
-    
-    
-    int SurfaceMesh::firstEdgeNotUsed()
-    {
-        for(int i = 0; i < m_numedges; i++)
-        {
-            bool found = false;
-            for(int j = 0; j < m_edgeloops.size(); j++)
-            {
-                for(int k = 0; k < m_edgeloops[j].size(); k++)
-                {
-                    if(m_edges[i]==abs(m_edgeloops[j][k]))
-                    {
-                        found = true;
-                    }
-                }
-            }
-            if(found==false)
-            {
-                return m_edges[i];
-                break;
-            }
-        }
-        return -1;
     }
     
 }

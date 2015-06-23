@@ -75,12 +75,14 @@ namespace Nektar {
         public:
             friend class MemoryManager<CADSurf>;
             
-            CADSurf(int i, TopoDS_Shape in, std::vector<int> ein);
+            CADSurf(int i, TopoDS_Shape in,
+                    std::vector<std::vector<std::pair<int,int> > > ein);
             NekDouble minU(){return occSurface.FirstUParameter();}
             NekDouble maxU(){return occSurface.LastUParameter();}
             NekDouble minV(){return occSurface.FirstVParameter();}
             NekDouble maxV(){return occSurface.LastVParameter();}
-            std::vector<int> GetEdges(){return edges;}
+            std::vector<std::vector<std::pair<int,int> > >
+                            GetEdges(){return edges;}
             
             Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
             Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
@@ -93,7 +95,7 @@ namespace Nektar {
             int ID;
             BRepAdaptor_Surface occSurface;
             Handle(Geom_Surface) s;
-            std::vector<int> edges;
+            std::vector<std::vector<std::pair<int,int> > > edges;
         };
         
         typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;

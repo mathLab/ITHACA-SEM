@@ -266,6 +266,8 @@ namespace LibUtilities{
         m_numCurve = m_curves.size();
         m_numSurf = m_surfs.size();
         
+        OrientateEdgesOnSurface();
+        
         return true;
     }
     
@@ -282,6 +284,78 @@ namespace LibUtilities{
             MemoryManager<CADSurf>::
                 AllocateSharedPtr(i,in,ein);
         m_surfs.push_back(newSurf);
+    }
+    
+    void CADSystem::OrientateEdgesOnSurface()
+    {
+        
+        for(int i = 0; i < 2; i++)
+        {
+            vector<vector<int> > edgeloops;
+            
+            vector<int> edges = m_surfs[i]->GetEdges();
+            
+            vector<vector<int> > edgesfb;
+            
+            for(int j = 0; j < edges.size(); j++)
+            {
+                gp_Pnt start,end;
+                m_curves[edges[j]-1]->GetMinMax(start,end);
+                vector<int> fb;
+                fb.resize(2);
+                for(int k = 0 ; k < edges.size(); k++)
+                {
+                    if(j==k)
+                        continue;
+                    gp_Pnt starttest,endtest;
+                    m_curves[edges[k]-1]->GetMinMax(starttest,endtest);
+                    if(start.Distance(starttest)<1E-5 ||
+                       start.Distance(endtest)<1E-5)
+                    {
+                        fb[0]=edges[k];
+                    }
+                    if(end.Distance(starttest)<1E-5 ||
+                       end.Distance(endtest)<1E-5)
+                    {
+                        fb[1]=edges[k];
+                    }
+                }
+                edgesfb.push_back(fb);
+            }
+            
+            vector<pair<int,int> > edgelog(edgesfb.size());
+            
+            for(int j = 0; j < edges.size(); j++)
+            {
+                edgelog[j].first = edges[j];
+                edgelog[j].second = 0;
+            }
+            
+            for(int j = 0; j < edgesfb.size(); j++)
+            {
+                for(int k = 0; k < edges.size(); k++)
+                {
+                    if(edgelog[k].first == edgesfb[j][0])
+                        edgelog[k].second++;
+                    if(edgelog[k].first == edgesfb[j][1])
+                        edgelog[k].second++;
+                }
+            }
+            
+            int ct= 0;
+            for(int j = 0; j < edgelog.size(); j++)
+            {
+                if(edgelog[j].second !=2)
+                {
+                    ct++;
+                }
+            }
+            ASSERTL0(ct==0,"error in connecting edges, cannot mesh");
+            
+            
+        }
+        
+        exit(-1);
     }
 
 }

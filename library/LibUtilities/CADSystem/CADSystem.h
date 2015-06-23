@@ -114,6 +114,8 @@ namespace LibUtilities {
         void AddCurve(int i, TopoDS_Shape in);
         void AddSurf(int i, TopoDS_Shape in, std::vector<int> ein);
         
+        void OrientateEdgesOnSurface();
+        
 	    std::string m_name;
         int m_numCurve;
         int m_numSurf;

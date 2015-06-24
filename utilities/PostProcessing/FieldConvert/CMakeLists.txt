@@ -71,7 +71,7 @@ ADD_NEKTAR_TEST(bfs_vort_rng)
 
 # windows produces slightly differently formatted files which results in
 # different hashes
-# disabled these tests completely as they are system-dependent -- cc
+# These are disabled now as Hash test is not suitable on 32-bit/64-bit
 #IF(WIN32)
 #    ADD_NEKTAR_TEST(chan3D_probe_win)
 #    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)

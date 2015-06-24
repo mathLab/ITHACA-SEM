@@ -29,6 +29,8 @@ SET(BasicUtilsHeaders
     ./BasicUtils/SessionReader.h
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
+    ./BasicUtils/Thread.h
+    ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
@@ -45,6 +47,8 @@ SET(BasicUtilsSources
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
+    ./BasicUtils/Thread.cpp
+    ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
     ./BasicUtils/XmlUtil.cpp

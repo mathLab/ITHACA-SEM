@@ -50,6 +50,7 @@ CollectionOptimisation::CollectionOptimisation(
 {
     int i;
     map<ElmtOrder, ImplementationType> defaults;
+    map<ElmtOrder, ImplementationType> defaultsPhysDeriv;
     map<ElmtOrder, ImplementationType>::iterator it;
     bool verbose  = (pSession.get()) &&
                     (pSession->DefinesCmdLineArgument("verbose")) &&
@@ -73,16 +74,22 @@ CollectionOptimisation::CollectionOptimisation(
     // Set defaults for all element types.
     for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
     {
-        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+        defaults          [ElmtOrder(it2->second, -1)] = m_defaultType;
+        defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = m_defaultType;
     }
 
     if (defaultType == eNoImpType)
     {
         for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
         {
+            defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = eNoCollection;
             for (int i = 1; i < 5; ++i)
             {
                 defaults[ElmtOrder(it2->second, i)] = eStdMat;
+            }
+            for (int i = 1; i < 3; ++i)
+            {
+                defaultsPhysDeriv[ElmtOrder(it2->second, i)] = eSumFac;
             }
         }
     }
@@ -91,7 +98,14 @@ CollectionOptimisation::CollectionOptimisation(
     for (i = 0; i < SIZE_OperatorType; ++i)
     {
         opTypes[OperatorTypeMap[i]] = (OperatorType)i;
-        m_global[(OperatorType)i] = defaults;
+        switch ((OperatorType)i)
+        {
+            case ePhysDeriv:
+                m_global[(OperatorType)i] = defaultsPhysDeriv;
+                break;
+            default:
+                m_global[(OperatorType)i] = defaults;
+        }
     }
 
     map<string, ImplementationType> impTypes;

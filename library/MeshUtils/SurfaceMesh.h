@@ -83,6 +83,10 @@ namespace MeshUtils {
         
         void HOMesh();
         
+        void LinearOptimise();
+        
+        void EdgeSwap();
+        
         void Stretching();
         
         bool Validate(int &np,
@@ -105,6 +109,7 @@ namespace MeshUtils {
         Array<OneD, Array<OneD, NekDouble> > Points;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > HOPoints;
         Array<OneD, Array<OneD, int> > Connec;
+        Array<OneD, Array<OneD, int> > neigbourlist;
         int numpoints, numtris;
         int TotNumPoints;
         int m_order;

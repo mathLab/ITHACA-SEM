@@ -172,6 +172,20 @@ namespace MeshUtils {
         }
     }
     
+    void TriangleInterface::GetNeighbour(
+                            Array<OneD, Array<OneD, int> > &neigbourlist)
+    {
+        neigbourlist = Array<OneD, Array<OneD, int> >(out.numberoftriangles);
+        for(int i = 0; i < out.numberoftriangles; i++)
+        {
+            Array<OneD, int> nl(3);
+            nl[0] = out.neighborlist[i*3+0];
+            nl[1] = out.neighborlist[i*3+1];
+            nl[2] = out.neighborlist[i*3+2];
+            neigbourlist[i]=nl;
+        }
+    }
+    
     void TriangleInterface::freetri()
     {
         if(meshloaded)

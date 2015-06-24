@@ -112,6 +112,8 @@ namespace Nektar {
                              Array<OneD, Array<OneD, NekDouble> > &Points,
                              Array<OneD, Array<OneD, int> > &Connec);
                 
+                void GetNeighbour(Array<OneD, Array<OneD, int> > &neigbourlist);
+                
             private:
                 
                 void freetri();

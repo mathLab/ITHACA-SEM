@@ -79,6 +79,10 @@ namespace MeshUtils {
         pplanemesh->Mesh(true,true);
         pplanemesh->Extract(numpoints,numtris,Points,Connec);
         
+        pplanemesh->GetNeighbour(neigbourlist);
+        
+        //LinearOptimise();
+        
         HOMesh();
         
         for(int i = 0; i < numtris; i++)
@@ -93,9 +97,54 @@ namespace MeshUtils {
 
     }
     
+    void SurfaceMesh::LinearOptimise()
+    {
+        for(int i = 0; i < 1; i++)
+        {
+            EdgeSwap();
+        }
+    }
+    
+    void SurfaceMesh::EdgeSwap()
+    {
+        for(int i = 0; i < numtris; i++)
+        {
+            for(int j = 0; j < 3; j++)
+            {
+                if(neigbourlist[i][j] != -1) //has a edge to swap
+                {
+                    int A,B,C,D;
+                    
+                    if(j==0)
+                    {
+                        A = Connec[i][0];
+                        B = Connec[i][1];
+                        C = Connec[i][2];
+                    }
+                    else if(j==1)
+                    {
+                        A = Connec[i][1];
+                        B = Connec[i][2];
+                        C = Connec[i][0];
+                    }
+                    else if(j==2)
+                    {
+                        A = Connec[i][2];
+                        B = Connec[i][0];
+                        C = Connec[i][1];
+                    }
+                    
+                    
+                    
+                }
+            }
+        }
+    }
+    
     void SurfaceMesh::HOMesh()
     {
-        LibUtilities::PointsKey pkey(m_order+1, LibUtilities::eNodalTriEvenlySpaced);
+        LibUtilities::PointsKey pkey(m_order+1,
+                                     LibUtilities::eNodalTriEvenlySpaced);
         Array<OneD, NekDouble> u,v;
         
         TotNumPoints = LibUtilities::PointsManager()[pkey]->

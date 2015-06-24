@@ -100,7 +100,7 @@ namespace MeshUtils {
         }
        
         in.numberofregions = 0;
-        in.numberofholes = m_boundingloops.size()-1;
+        in.numberofholes = m_centers.size()-1;
         in.holelist = (REAL *) malloc(in.numberofholes*2*sizeof(REAL));
         
         for(int i = 1; i < m_centers.size(); i++)

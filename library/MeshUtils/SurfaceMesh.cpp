@@ -428,15 +428,9 @@ namespace MeshUtils {
         
         for(int i = 0; i < m_uvloops.size(); i++)
         {
-            NekDouble ua = 0.0;
-            NekDouble va = 0.0;
-            for(int j = 0; j < m_uvloops[i].size(); j++)
-            {
-                ua+=m_uvloops[i][j][0];
-                va+=m_uvloops[i][j][1];
-            }
-            ua/=m_uvloops[i].size();
-            va/=m_uvloops[i].size();
+            NekDouble ua = (m_uvloops[i][0][0]+m_uvloops[i][1][0])/2.0 +0.00001;
+            NekDouble va = (m_uvloops[i][0][1]+m_uvloops[i][1][1])/2.0 ;
+            
             vector<NekDouble> tmp;
             tmp.push_back(ua);
             tmp.push_back(va);
@@ -508,6 +502,26 @@ namespace MeshUtils {
         }
         
         
+    }
+    
+    bool SurfaceMesh::inrange(NekDouble p, NekDouble s, NekDouble e)
+    {
+        if(s > e)
+        {
+            NekDouble tmp = s;
+            s = e;
+            e = tmp;
+        }
+        
+        if(p - s > -1E-6 &&
+           e - p > -1E-6)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     
 }

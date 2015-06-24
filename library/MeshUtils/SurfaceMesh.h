@@ -89,6 +89,8 @@ namespace MeshUtils {
         
         void Stretching();
         
+        bool inrange(NekDouble p, NekDouble s, NekDouble e);
+        
         bool Validate(int &np,
                       int &nt,
                       Array<OneD, Array<OneD, NekDouble> > &Points,

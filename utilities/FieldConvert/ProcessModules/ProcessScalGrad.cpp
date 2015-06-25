@@ -91,7 +91,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                                                    m_f->m_bndRegionsToWrite),"Failed to interpret range string");
     }
 
-    int i, j;
+    int i, j, k;
     int spacedim  = m_f->m_graph->GetSpaceDimension();
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
         (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
@@ -100,7 +100,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     }
 
     int nfields = m_f->m_fielddef[0]->m_fields.size();
-    ASSERTL0(nfields == 1,"Implicit assumption that input is in ADR format of (u)");
+    //ASSERTL0(nfields == 1,"Implicit assumption that input is in ADR format of (u)");
 
     if (spacedim == 1)
     {
@@ -110,35 +110,31 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
 
     int ngrad     = spacedim;
-    int newfields = 1;
-
     int n, cnt, elmtid, nq, offset, boundary, nfq;
     int npoints = m_f->m_exp[0]->GetNpoints();
-    Array<OneD, NekDouble> scalar(npoints);
-    Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad), outfield(newfields);
+    string var;
+    Array<OneD, NekDouble> scalar;
+    Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad), outfield(nfields);
 
     StdRegions::StdExpansionSharedPtr elmt;
     StdRegions::StdExpansion2DSharedPtr bc;
     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
-    Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(newfields);
-
-    m_f->m_exp.resize(newfields);
-    string var = "u";
-    for(i = nfields; i < newfields; ++i)
-    {
-        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, var);
-    }
-
-    m_f->m_fielddef[0]->m_fields.resize(newfields);
-    m_f->m_fielddef[0]->m_fields[0] = "scalar gradient";
+    Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(nfields);
 
     m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
-    for (i = 0; i < newfields; i++)
+
+    for (i = 0; i < nfields; i++)
     {
+        var = m_f->m_fielddef[0]->m_fields[i];
+        stringstream filename;
+        filename << var << "_scalar_gradient";
+        filename >> var;
+        m_f->m_fielddef[0]->m_fields[i] = var;
+        
         BndExp[i] = m_f->m_exp[i]->GetBndCondExpansions();
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
-
+    
     // loop over the types of boundary conditions
     for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
     {
@@ -164,13 +160,13 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         grad[j] = Array<OneD, NekDouble>(nq);
                     }
 
-                    if(nfields == 2)
+                    if(spacedim == 2)
                     {
                         //Not implemented in 2D.
                     }
                     else
                     {
-                        for(j = 0; j < newfields; j++)
+                        for(j = 0; j < nfields; j++)
                         {
                             outfield[j] = BndExp[j][n]->UpdateCoeffs() + BndExp[j][n]->GetCoeff_Offset(i);
                         }
@@ -193,34 +189,38 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         {
                             fgrad[j] = Array<OneD, NekDouble>(nfq);
                         }
-                        Array<OneD, NekDouble>  gradnorm(nfq, 0.0);
+                        Array<OneD, NekDouble>  gradnorm(nfq);
 
-
-                        scalar = m_f->m_exp[0]->GetPhys() + offset;
-                        elmt->PhysDeriv(scalar, grad[0],grad[1],grad[2]);
-
-                        for(j = 0; j < ngrad; ++j)
+                        for(k = 0; k < nfields; k++)
                         {
-                            elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]);
-                        }
+                            Vmath::Zero(nfq, gradnorm, 1);
 
-                        //surface curved
-                        if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                        {
-                            for (j=0; j<ngrad; j++)
+                            scalar = m_f->m_exp[k]->GetPhys() + offset;
+                            elmt->PhysDeriv(scalar, grad[0],grad[1],grad[2]);
+                            
+                            for(j = 0; j < ngrad; ++j)
                             {
-                                Vmath::Vvtvp(nfq, normals[j], 1, fgrad[j], 1, gradnorm, 1, gradnorm, 1);
+                                elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]);
                             }
-                        }
-                        else
-                        {
-                            for (j=0; j<ngrad; j++)
+                            
+                            //surface curved
+                            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                             {
-                                Vmath::Svtvp(nfq, normals[j][0], fgrad[j], 1, gradnorm, 1, gradnorm, 1);
+                                for (j=0; j<ngrad; j++)
+                                {
+                                    Vmath::Vvtvp(nfq, normals[j], 1, fgrad[j], 1, gradnorm, 1, gradnorm, 1);
+                                }
                             }
+                            else
+                            {
+                                for (j=0; j<ngrad; j++)
+                                {
+                                    Vmath::Svtvp(nfq, normals[j][0], fgrad[j], 1, gradnorm, 1, gradnorm, 1);
+                                }
+                            }
+                            bc->FwdTrans(gradnorm, outfield[k]);
                         }
 
-                        bc->FwdTrans(gradnorm, outfield[0]);
                     }
                 }
             }
@@ -231,11 +231,11 @@ void ProcessScalGrad::Process(po::variables_map &vm)
         }
     }
 
-    for(int j = 0; j < newfields; ++j)
+    for(int j = 0; j < nfields; ++j)
     {
         for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
         {
-            m_f->m_exp[0]->UpdateBndCondExpansion(m_f->m_bndRegionsToWrite[b]) = BndExp[0][m_f->m_bndRegionsToWrite[b]];
+            m_f->m_exp[j]->UpdateBndCondExpansion(m_f->m_bndRegionsToWrite[b]) = BndExp[j][m_f->m_bndRegionsToWrite[b]];
         }
 
     }

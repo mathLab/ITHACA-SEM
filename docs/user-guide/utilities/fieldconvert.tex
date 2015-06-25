@@ -201,6 +201,7 @@ output.
 \end{notebox}
 
 \subsubsection{Extract a boundary region: \textit{extract} module}
+\label{extract}
 The boundary region of a domain can be extracted from the output 
 data using the following command line
 %
@@ -453,6 +454,11 @@ This module does not create an output file. The L2 and LInf norms for each field
 %
 
 \subsubsection{Computes the scalar gradient: \textit{scalargrad} module}
+The scalar gradient of a field is computed by running:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m scalargrad:bnd=0 test.xml test.fld test-scalgrad.fld
+\end{lstlisting}
+As in \S \ref{extract}, the option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. To process this file you will need an xml file of the same region. 
 
 %
 %
@@ -461,7 +467,7 @@ This module does not create an output file. The L2 and LInf norms for each field
 \subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
 To scale a .fld file by a given scalar quantity, the user can run:
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld
+FieldConvert -m scaleinputfld:scale=value test.xml test.fld test-scal.fld
 \end{lstlisting}
 The argument \inltt{scale=value} rescales of a factor \inltt{value} 
 \inltt{test.fld} by the factor value.
@@ -473,7 +479,24 @@ to visualise it either in Tecplot or in Paraview the result.
 %
 %
 \subsubsection{Time-averaged shear stress metrics:} \textit{shear} module}
+Time-dependent wall shear stress derived metrics relevant to cardiovascular fluid dynamics research can be computed using this module. They are
 
+\begin{itemize}
+\item TAWSS: time-averaged wall shear stress;
+\item OSI: oscillatory shear index;
+\item transWSS: transverse wall shear stress;
+\item TACFI: time-averaged cross-flow index;
+\item TAAFI: time-averaged aneurysm formation index;
+\item |WSSG|: wall shear stress gradient.
+\end{itemize}
+
+To compute these, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m shear:N=value:fromfld=test_id_b0.fld test.xml test-multishear.fld
+\end{lstlisting}
+The argument \inltt{N} and \inltt{fromfld} are compulsory arguments that respectively define the number of \inltt{.fld} files corresponding to the number of discrete equispaced time-steps, and the first \inltt{.fld} file which should have the form of \inltt{test_id_b0.fld} where the first underscore in the name marks the starting time-step file ID. 
+
+The input \inltt{.fld} files are the outputs of the \textit{wss} module If they do not contain the surface normals (an optional output of the \textit{wss} modle), then the \textit{shear} module will not compute the last metric, |WSSG|. 
 %
 %
 %
@@ -490,7 +513,11 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}.
 %
 
 \subsubsection{Computing the wall shear stress:} \textit{wss} module}
-
+To obtain the wall shear stres vector and magnitude, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m wss:bnd=0:addnormals=1 test.xml test.fld test-wss.fld
+\end{lstlisting}
+As in \S \ref{extract}, the option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. The \inltt{addnormals} is an optional command argument which, when turned on, outputs the normal vector of the extracted boundary region as well as the shear stress vector and magnitude. This option is off by default. To process the output file(s) you will need an xml file of the same region. 
 %
 %
 %

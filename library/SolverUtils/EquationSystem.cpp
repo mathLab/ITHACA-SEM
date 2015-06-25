@@ -829,7 +829,7 @@ namespace Nektar
                                 ElementGIDs);
 
                     int idx = -1;
-            
+
                     // Loop over all the expansions
                     for (int i = 0; i < FieldDef.size(); ++i)
                     {
@@ -844,13 +844,10 @@ namespace Nektar
                         }
 
                         if (idx >= 0)
-                        { 
-                            if(m_session->GetComm()->GetRank() == i)
-                            {
-                                m_fields[0]->ExtractDataToCoeffs(
-                                    FieldDef[i], FieldData[i],
-                                    FieldDef[i]->m_fields[idx], vCoeffs);
-                            }
+                        {
+                            m_fields[0]->ExtractDataToCoeffs(
+                                FieldDef[i], FieldData[i],
+                                FieldDef[i]->m_fields[idx], vCoeffs);
                         }
                         else
                         {

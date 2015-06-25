@@ -125,8 +125,7 @@ void FilterMovingBody::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    m_index_v = 0;
-    m_index_f = 0;
+    m_index = 0;
     m_outputStream =  Array<OneD, std::ofstream>(2);
     // Parse the boundary regions into a list.
     std::string::size_type FirstInd = m_BoundaryString.find_first_of('[') + 1;
@@ -517,7 +516,7 @@ void FilterMovingBody::UpdateForce(
         }
 
         // Only output every m_outputFrequency.
-        if ((m_index_f++) % m_outputFrequency)
+        if ((m_index++) % m_outputFrequency)
         {
             return;
         }
@@ -611,7 +610,7 @@ void FilterMovingBody::UpdateForce(
         }
 
         // Only output every m_outputFrequency.
-        if ((m_index_f++) % m_outputFrequency)
+        if ((m_index) % m_outputFrequency)
         {
             return;
         }
@@ -703,7 +702,7 @@ void FilterMovingBody::UpdateMotion(
         const NekDouble                                         &time)
 {
     // Only output every m_outputFrequency.
-    if ((m_index_v++) % m_outputFrequency)
+    if ((m_index++) % m_outputFrequency)
     {
         return;
     }
@@ -874,7 +873,7 @@ void FilterMovingBody::UpdateMotion(
         {
             for (int var = 0; var < nStrVars; var++)
             {
-                int xoffset = var*local_planes+plane;
+                int xoffset = plane*nStrVars+var;
                 int yoffset = nStrVars*local_planes+xoffset;
                 Motion_x[var][plane] = MotionVars[xoffset];
                 Motion_y[var][plane] = MotionVars[yoffset];

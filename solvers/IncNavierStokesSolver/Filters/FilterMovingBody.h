@@ -104,8 +104,7 @@ class FilterMovingBody : public SolverUtils::Filter
         /// Determines if a given Boundary Region is in
         /// m_boundaryRegionsIdList
         vector<bool>                    m_boundaryRegionIsInList;
-        unsigned int                    m_index_f;
-        unsigned int                    m_index_v;
+        unsigned int                    m_index;
         unsigned int                    m_outputFrequency;
         /// plane to take history point from if using a homogeneous1D
         /// expansion

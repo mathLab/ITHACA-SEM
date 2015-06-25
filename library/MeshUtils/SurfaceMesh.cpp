@@ -428,8 +428,17 @@ namespace MeshUtils {
         
         for(int i = 0; i < m_uvloops.size(); i++)
         {
-            NekDouble ua = (m_uvloops[i][0][0]+m_uvloops[i][1][0])/2.0 +0.00001;
-            NekDouble va = (m_uvloops[i][0][1]+m_uvloops[i][1][1])/2.0 ;
+            int half = int(m_uvloops[i].size()/2) - 1;
+            
+            NekDouble ua = (100.0*m_uvloops[i][0][0]+
+                            100.0*m_uvloops[i][1][0]+
+                            1.0* m_uvloops[i][half][0])/201.0 ;
+            NekDouble va = (100.0*m_uvloops[i][0][1]+
+                            100.0*m_uvloops[i][1][1]+
+                            1.0* m_uvloops[i][half][1])/201.0 ;
+            
+            
+            
             
             vector<NekDouble> tmp;
             tmp.push_back(ua);

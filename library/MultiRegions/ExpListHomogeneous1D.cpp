@@ -612,7 +612,10 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, PlanesIDs);
+            int NumHomoStrip;
+            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
+ 
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, NumHomoStrip, HomoBasis, HomoLen, PlanesIDs);
             
             return returnval;
         }
@@ -632,8 +635,11 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
+            int NumHomoStrip;
+            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
+
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen,PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, NumHomoStrip, HomoBasis,HomoLen,PlanesIDs);
         }
 
 

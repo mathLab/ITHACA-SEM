@@ -875,6 +875,10 @@ namespace Nektar
 	    }
 	}
 
+        /** \brief  Get the normals along specficied face 
+         * Get the face normals interplated to a points0 x points 0
+         * type distribution
+         **/ 
         void PrismExp::v_ComputeFaceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =

@@ -429,10 +429,13 @@ Currently this option is only set up for triangles, quadrilaterals,
 \subsubsection{Show high frequency energy of the Jacobian: \textit{jacobianenergy} module}
 
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m sacleinputfld test.xml test.fld test-jacenergy.fld
+FieldConvert -m jacobianenergy file.xml file.fld jacenergy.fld
 \end{lstlisting}
 
-The output file \inltt{file-jacenergy.fld} can be processed in a similar 
+The option \inltt{topmodes} can be used to specify the number of top modes to
+keep.
+
+The output file \inltt{jacenergy.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview the result.
 

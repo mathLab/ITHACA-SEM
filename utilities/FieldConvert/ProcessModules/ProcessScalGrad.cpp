@@ -67,6 +67,7 @@ ProcessScalGrad::~ProcessScalGrad()
 
 void ProcessScalGrad::Process(po::variables_map &vm)
 {
+    int i, j, k;
     if (m_f->m_verbose)
     {
         cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
@@ -80,7 +81,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
         Array<OneD, const MultiRegions::ExpListSharedPtr>
             BndExp = m_f->m_exp[0]->GetBndCondExpansions();
 
-        for(int i = 0; i < BndExp.num_elements(); ++i)
+        for(i = 0; i < BndExp.num_elements(); ++i)
         {
             m_f->m_bndRegionsToWrite.push_back(i);
         }
@@ -91,7 +92,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                                                    m_f->m_bndRegionsToWrite),"Failed to interpret range string");
     }
 
-    int i, j, k;
     int spacedim  = m_f->m_graph->GetSpaceDimension();
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
         (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
@@ -145,7 +145,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
             if(n == m_f->m_bndRegionsToWrite[b])
             {
                 doneBnd = true;
-                for(int i = 0; i < BndExp[0][n]->GetExpSize(); ++i, cnt++)
+                for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i, cnt++)
                 {
                     // find element and face of this expansion.
                     elmtid = BoundarytoElmtID[cnt];
@@ -155,7 +155,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
                     // Initialise local arrays for the velocity gradients, and stress components
                     // size of total number of quadrature points for each element (hence local).
-                    for(int j = 0; j < ngrad; ++j)
+                    for(j = 0; j < ngrad; ++j)
                     {
                         grad[j] = Array<OneD, NekDouble>(nq);
                     }
@@ -185,7 +185,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                             = elmt->GetFaceNormal(boundary);
 
                         // initialise arrays
-                        for(int j = 0; j < ngrad; ++j)
+                        for(j = 0; j < ngrad; ++j)
                         {
                             fgrad[j] = Array<OneD, NekDouble>(nfq);
                         }
@@ -231,7 +231,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
         }
     }
 
-    for(int j = 0; j < nfields; ++j)
+    for(j = 0; j < nfields; ++j)
     {
         for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
         {

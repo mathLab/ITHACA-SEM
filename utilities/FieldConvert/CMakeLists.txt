@@ -67,7 +67,7 @@ SET(FieldConvertSources
 )
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
-
+TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
 
 #ADD_NEKTAR_TEST(chan3D_tec)
 #ADD_NEKTAR_TEST(chan3D_tec_n10)

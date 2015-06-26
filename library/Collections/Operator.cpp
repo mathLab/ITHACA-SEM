@@ -111,7 +111,8 @@ OperatorFactory& GetOperatorFactory()
 {
     typedef Loki::SingletonHolder<OperatorFactory,
                                   Loki::CreateUsingNew,
-                                  Loki::NoDestroy > Type;
+                                  Loki::NoDestroy,
+                                  Loki::SingleThreaded> Type;
     return Type::Instance();
 }
 

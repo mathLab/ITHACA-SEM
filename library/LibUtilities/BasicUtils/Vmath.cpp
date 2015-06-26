@@ -131,11 +131,14 @@ namespace Vmath
     #undef EPS
     #undef RNMX
 
+    static boost::mutex mutex;
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
     template<class T>  void FillWhiteNoise( int n, const T eps, T *x, const int incx, int outseed)
     {
+        // Protect the static vars here and in ran2
+        boost::mutex::scoped_lock l(mutex);
         while( n-- )
         {
             static int     iset = 0;

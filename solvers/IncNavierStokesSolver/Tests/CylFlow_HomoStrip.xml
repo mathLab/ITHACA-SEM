@@ -1831,6 +1831,7 @@
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
             <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
             <I PROPERTY="USEFFT" VALUE="FFTW"/>
+            <I PROPERTY="HomoStrip" VALUE="True"/>
             <I PROPERTY="VibrationType" VALUE="CONSTRAINED"/>
             <I PROPERTY="SupportType" VALUE="FREE-FREE"/>
             <I PROPERTY="FictitiousMassMethod" VALUE="True"/>
@@ -1842,16 +1843,20 @@
             <P> IO_InfoSteps  = 5                </P>
             <P> Re            = 100              </P>
             <P> Kinvis        = 1/Re             </P>
-            <P> HomModesZ     = 4                </P>
-            <P> LZ            = 4*PI             </P>
+            <P> HomModesZ     = 2                </P>
+            <P> LZ            = PI/8             </P>
+            <P> LC            = 4*PI             </P>
             <P> A             = 0.025            </P>
             <P> omega         = 1.0              </P>
+            <P> PROC_Z        = 16               </P>
+            <P> Strip_Z       = 16               </P>
+            <P> DistStrip     = PI/2             </P>
             <P> StructStiff   = 0.02             </P>
             <P> StructRho     = 2.0              </P>
             <P> CableTension  = 8.82             </P>
             <P> BendingStiff  = 0.0              </P>
-            <P> FictDamp      = 1000             </P>
-            <P> FictMass      = 1.5              </P>
+            <P> FictDamp      = 0.0              </P>
+            <P> FictMass      = 3.0              </P>
         </PARAMETERS>
         <VARIABLES>
             <V ID="0"> u </V>
@@ -1893,15 +1898,15 @@
         </BOUNDARYCONDITIONS>
         <FUNCTION NAME="displacements">
             <E VAR="x" VALUE="0.0" />
-            <E VAR="y" VALUE="A*cos(omega*t)*cos(2*PI*z/LZ)" />
+            <E VAR="y" VALUE="A*cos(omega*t)*cos(2*PI*z/LC)" />
         </FUNCTION>
         <FUNCTION NAME="velocities">
             <E VAR="x" VALUE="0.0" />
-            <E VAR="y" VALUE="-1.0*omega*A*sin(omega*t)*cos(2*PI*z/LZ)" />
+            <E VAR="y" VALUE="-1.0*omega*A*sin(omega*t)*cos(2*PI*z/LC)" />
         </FUNCTION>
         <FUNCTION NAME="accelerations">
             <E VAR="x" VALUE="0.0" />
-            <E VAR="y" VALUE="-1.0*omega*omega*A*cos(omega*t)*cos(2*PI*z/LZ)" />
+            <E VAR="y" VALUE="-1.0*omega*omega*A*cos(omega*t)*cos(2*PI*z/LC)" />
         </FUNCTION>
     </CONDITIONS>
     <FORCING>

@@ -34,11 +34,21 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
-#include <unordered_set>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/Communication/CommMpi.h>
+
+// Below, we'd like to use an unordered set for its faster lookup performance
+// However this is only available if C++11 is.
+//
+#if __cplusplus >= 201103L
+#include <unordered_set>
+typedef std::unordered_set<int> IntSet;
+#else
+#include <set>
+typedef std::set<int> IntSet;
+#endif
 
 using namespace Nektar;
 using namespace LibUtilities;
@@ -250,7 +260,7 @@ void FilterDataForThisRank(const DefVec& inFieldDefs, const DatVec& inFieldData,
         Array<OneD, int> ElementIDs, DefVec& outFieldDefs, DatVec& outFieldData)
 {
     // Create a set with all the IDs
-    std::unordered_set<int> IDs(ElementIDs.begin(), ElementIDs.end());
+    IntSet IDs(ElementIDs.begin(), ElementIDs.end());
 
     // Clear the output vectors
     outFieldDefs.clear();

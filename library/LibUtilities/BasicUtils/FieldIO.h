@@ -209,6 +209,12 @@ namespace Nektar
                         const FieldMetaDataMap &fieldinfomap =
                                 NullFieldMetaDataMap);
 
+                LIB_UTILITIES_EXPORT
+                void ImportMultiFldFileIDs(const std::string &inFile,
+                        std::vector<std::string> &fileNames,
+                        std::vector<std::vector<unsigned int> > &elementList,
+                        FieldMetaDataMap &fieldmetadatamap);
+
                 static const std::string GetFileType(
                         const std::string& filename, CommSharedPtr comm);
 
@@ -232,12 +238,6 @@ namespace Nektar
                 std::string SetUpOutput(const std::string outname,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         const FieldMetaDataMap &fieldmetadatamap);
-
-                LIB_UTILITIES_EXPORT
-                void ImportMultiFldFileIDs(const std::string &inFile,
-                        std::vector<std::string> &fileNames,
-                        std::vector<std::vector<unsigned int> > &elementList,
-                        FieldMetaDataMap &fieldmetadatamap);
 
                 LIB_UTILITIES_EXPORT
                 int CheckFieldDefinition(

@@ -105,7 +105,7 @@ namespace Nektar
                 // so we'll just assume it's OK if it's not HDF
                 const char magic[8] = {0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
-                std::ifstream datafile(datafilename, ios_base::binary);
+                std::ifstream datafile(datafilename.c_str(), ios_base::binary);
                 char filedata[8];
                 datafile.read(filedata, 8);
 

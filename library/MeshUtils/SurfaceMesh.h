@@ -39,6 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <MeshUtils/Node.hpp>
 #include <LibUtilities/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/CurveMesh.h>
@@ -73,7 +74,7 @@ namespace MeshUtils {
                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
         {
             nt = numtris;
-            tnp = TotNumPoints;
+            tnp = 3;
             p = HOPoints;
         }
         
@@ -88,8 +89,6 @@ namespace MeshUtils {
         void EdgeSwap();
         
         void Stretching();
-        
-        bool inrange(NekDouble p, NekDouble s, NekDouble e);
         
         bool Validate(int &np,
                       int &nt,
@@ -115,6 +114,8 @@ namespace MeshUtils {
         int numpoints, numtris;
         int TotNumPoints;
         int m_order;
+        
+        std::vector<Node> Nodes;
         
         NekDouble pasr,asr;
         

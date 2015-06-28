@@ -39,6 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <MeshUtils/Node.hpp>
 #include <LibUtilities/CADSystem/CADCurve.h>
 #include <MeshUtils/Octree.h>
 
@@ -55,17 +56,19 @@ namespace MeshUtils {
         friend class MemoryManager<CurveMesh>;
         
         CurveMesh(bool verbose,
+                  int id,
                   const LibUtilities::CADCurveSharedPtr &cad,
                   const OctreeSharedPtr &oct) :
-                        m_cadcurve(cad),m_octree(oct),m_verbose(verbose)
+                  m_cadcurve(cad),m_octree(oct),m_verbose(verbose),
+                  m_id(id)
         {
         };
         
         void Mesh();
         
-        std::vector<NekDouble> GetFirstPoint(){return m_meshpoints[0];}
-        std::vector<NekDouble> GetLastPoint(){return m_meshpoints[Ne];}
-        std::vector<std::vector<NekDouble> > GetMeshPoints()
+        Node GetFirstPoint(){return m_meshpoints[0];}
+        Node GetLastPoint(){return m_meshpoints[Ne];}
+        std::vector<Node> GetMeshPoints()
                     {return m_meshpoints;}
         int GetNumPoints(){return Ne+1;}
         
@@ -87,9 +90,11 @@ namespace MeshUtils {
         NekDouble ds;
         int Ne;
         std::vector<NekDouble> meshsvalue;
-        std::vector<std::vector<NekDouble> > m_meshpoints;
+        std::vector<Node> m_meshpoints;
         
         bool m_verbose;
+        
+        int m_id;
         
     };
     

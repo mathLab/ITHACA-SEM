@@ -36,6 +36,7 @@
 #include <string>
 #include <fstream>
 
+#include <MeshUtils/Node.hpp>
 #include <MeshUtils/SurfaceMesh.h>
 #include <MeshUtils/TriangleInterface.h>
 
@@ -83,17 +84,11 @@ namespace MeshUtils {
         
         //LinearOptimise();
         
-        HOMesh();
+        //HOMesh();
         
-        for(int i = 0; i < numtris; i++)
-        {
-            for(int j = 0; j < TotNumPoints; j++)
-            {
-                Array<OneD, NekDouble> p = m_cadsurf->
-                                    P(HOPoints[i][j][0],HOPoints[i][j][1]);
-                HOPoints[i][j]=p;
-            }
-        }
+        cout << Points[0][0] << " " << Points[0][1] << endl;
+        cout << m_uvloops[0][0][0] << " " << m_uvloops[0][0][1] << endl;
+        exit(-1);
 
     }
     
@@ -113,7 +108,7 @@ namespace MeshUtils {
             {
                 if(neigbourlist[i][j] != -1) //has a edge to swap
                 {
-                    int A,B,C,D;
+                    /*int A,B,C,D;
                     
                     if(j==0)
                     {
@@ -132,7 +127,7 @@ namespace MeshUtils {
                         A = Connec[i][2];
                         B = Connec[i][0];
                         C = Connec[i][1];
-                    }
+                        }*/
                     
                     
                     
@@ -379,14 +374,14 @@ namespace MeshUtils {
     
     void SurfaceMesh::OrientateCurves()
     {
-        vector<vector<vector<NekDouble> > > orderedLoops;
+        vector<vector<Node> > orderedLoops;
         
         for(int i = 0; i < m_edges.size(); i++)
         {
-            vector<vector<NekDouble> > cE;
+            vector<Node> cE;
             for(int j = 0; j < m_edges[i].size(); j++)
             {
-                vector<vector<NekDouble> > edgePoints =
+                vector<Node> edgePoints =
                         m_curvemeshes[m_edges[i][j].first-1]->
                             GetMeshPoints();
                 
@@ -397,6 +392,9 @@ namespace MeshUtils {
                 {
                     for(int k = 0; k < numPoints-1; k++)
                     {
+                        //add surface info to node
+                        //nodes that are the ends of curves need to know they
+                        //belong to two curves
                         cE.push_back(edgePoints[k]);
                     }
                 }
@@ -418,7 +416,7 @@ namespace MeshUtils {
             {
                 vector<NekDouble> P;
                 P.resize(2);
-                m_cadsurf->locuv(P[0],P[1],orderedLoops[i][j]);
+                m_cadsurf->locuv(P[0],P[1],orderedLoops[i][j].GetLoc());
                 lP.push_back(P);
             }
             m_uvloops.push_back(lP);
@@ -511,26 +509,6 @@ namespace MeshUtils {
         }
         
         
-    }
-    
-    bool SurfaceMesh::inrange(NekDouble p, NekDouble s, NekDouble e)
-    {
-        if(s > e)
-        {
-            NekDouble tmp = s;
-            s = e;
-            e = tmp;
-        }
-        
-        if(p - s > -1E-6 &&
-           e - p > -1E-6)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
     }
     
 }

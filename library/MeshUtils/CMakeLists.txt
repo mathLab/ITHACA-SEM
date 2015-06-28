@@ -9,6 +9,7 @@ SET(MESHUTILS_SOURCES
 
 SET(MESHUTILS_HEADERS
     CurvaturePoint.hpp
+    Node.hpp
     CurveMesh.h
     Octant.h
     Octree.h

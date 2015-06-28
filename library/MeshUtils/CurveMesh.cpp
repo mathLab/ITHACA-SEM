@@ -51,7 +51,8 @@ namespace MeshUtils {
         ds = m_curvelength/(m_numSamplePoints-1);
         
         if(m_verbose)
-            cout << "\tCurve length: " << m_curvelength <<  "\tSample Points: " << m_numSamplePoints;
+            cout << "\tCurve length: " << m_curvelength << endl <<
+                    "\tSample Points: " << m_numSamplePoints << endl;
         
         GetSampleFunction();
         
@@ -72,7 +73,7 @@ namespace MeshUtils {
             Ne=1;
             
             if(m_verbose)
-                cout << ".\tPoints: " << 2 << endl;
+                cout << "\tPoints: " << 2 << endl;
         }
         else
         {
@@ -108,10 +109,8 @@ namespace MeshUtils {
             }
             
             if(m_verbose)
-                cout << ".\tPoints: " << Ne+1 << endl;
+                cout << "\tPoints: " << Ne+1 << endl;
         }
-        
-        m_meshpoints.resize(meshsvalue.size());
         
         for(int i = 0; i < meshsvalue.size()-1; i++)
         {
@@ -119,21 +118,17 @@ namespace MeshUtils {
             Array<OneD, NekDouble> loc;
             m_cadcurve->P(t,loc);
             vector<NekDouble> Point;
-            Point.resize(3);
-            Point[0]=loc[0];
-            Point[1]=loc[1];
-            Point[2]=loc[2];
-            m_meshpoints[i]=Point;
+            Node newnode(loc[0],loc[1],loc[2]);
+            newnode.SetCurve(m_id,t);
+            m_meshpoints.push_back(newnode);
         }
         NekDouble t = m_bounds[1];
         Array<OneD, NekDouble> loc;
         m_cadcurve->P(t,loc);
         vector<NekDouble> Point;
-        Point.resize(3);
-        Point[0]=loc[0];
-        Point[1]=loc[1];
-        Point[2]=loc[2];
-        m_meshpoints[meshsvalue.size()-1]=Point;
+        Node newnode(loc[0],loc[1],loc[2]);
+        newnode.SetCurve(m_id,t);
+        m_meshpoints.push_back(newnode);
     }
     
     void CurveMesh::GetPhiFunction()

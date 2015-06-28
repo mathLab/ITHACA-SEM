@@ -53,7 +53,7 @@ namespace Nektar{
         }
         
         void CADSurf::locuv(NekDouble &u, NekDouble &v,
-                            vector<NekDouble> p)
+                            Array<OneD, NekDouble> p)
         {
             gp_Pnt loc(p[0]*1000.0,p[1]*1000.0,p[2]*1000.0);
             

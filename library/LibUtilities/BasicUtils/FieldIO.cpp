@@ -86,7 +86,17 @@ namespace Nektar
 
             if (size == 1 || rank == 0)
             {
-
+                std::string datafilename;
+                if (fs::is_directory(filename)) // check to see that infile is a directory
+                {
+                    fs::path p0file("P0000000.fld");
+                    fs::path fullpath = filename / p0file;
+                    datafilename = PortablePath(fullpath);
+                }
+                else
+                {
+                    datafilename = filename;
+                }
                 // Read first 8 bytes
                 // If they are (in hex) 89  48  44  46  0d  0a  1a  0a
                 // then it's an HDF5 file.
@@ -95,7 +105,7 @@ namespace Nektar
                 // so we'll just assume it's OK if it's not HDF
                 const char magic[8] = {0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
-                std::ifstream datafile(filename.c_str(), ios_base::binary);
+                std::ifstream datafile(datafilename, ios_base::binary);
                 char filedata[8];
                 datafile.read(filedata, 8);
 
@@ -120,7 +130,7 @@ namespace Nektar
                 iofmt = "Hdf5";
             else
                 // Error
-                ;
+                ASSERTL0(false, "Unknown file format");
             return iofmt;
         }
 

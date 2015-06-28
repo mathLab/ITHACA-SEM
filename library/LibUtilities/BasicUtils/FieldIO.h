@@ -214,7 +214,8 @@ namespace Nektar
                         std::vector<std::string> &fileNames,
                         std::vector<std::vector<unsigned int> > &elementList,
                         FieldMetaDataMap &fieldmetadatamap);
-
+                // Figure out what type of FLD file we have.
+                // Collective on comm.
                 static const std::string GetFileType(
                         const std::string& filename, CommSharedPtr comm);
 
@@ -276,7 +277,7 @@ namespace Nektar
             }
             return GetFieldIOFactory().CreateInstance(iofmt, session->GetComm());
         }
-
+        // Collective on session's communicator
         FieldIOSharedPtr MakeFieldIOForFile(
                 const LibUtilities::SessionReaderSharedPtr session,
                 const std::string& filename);

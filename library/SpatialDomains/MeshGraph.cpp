@@ -2228,20 +2228,19 @@ namespace Nektar
                 int check = 0;
                 for (j=0; j< basis.size(); ++j)
                 {
-                    if ( 
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Ortho_A") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Ortho_B") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Ortho_C") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
-			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
-		      {
+                    if ( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
+                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
+                    {
                         check++;
                     }
                 }
@@ -2399,32 +2398,6 @@ namespace Nektar
                             }
                             geom = m_tetGeoms[k];
 
-#if 0 //all gll
-                            for(int b = 0; b < 3; ++b)
-                            {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b], LibUtilities::eGaussLobattoLegendre);
-
-                                if(numPointDef&&pointDef)
-                                {
-                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
-                                    pkey = pkey2;
-                                }
-                                else if(!numPointDef&&pointDef)
-                                {
-                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
-                                    pkey = pkey2;
-                                }
-                                else if(numPointDef&&!pointDef)
-                                {
-                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
-                                    pkey = pkey2;
-                                }
-
-                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
-
-                                bkeyvec.push_back(bkey);
-                            }
-#else
                             {
                                 LibUtilities::PointsKey pkey(nmodes[cnt], LibUtilities::eGaussLobattoLegendre);
 
@@ -2495,7 +2468,6 @@ namespace Nektar
 
                                 bkeyvec.push_back(bkey);
                             }
-#endif
 
                             if(!UniOrder)
                             {
@@ -2512,34 +2484,9 @@ namespace Nektar
                             }
                             geom = m_prismGeoms[k];
 
-#if 0  // all GLL
-                            for(int b = 0; b < 3; ++b)
-                            {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b],LibUtilities::eGaussLobattoLegendre);
-
-                                if(numPointDef&&pointDef)
-                                {
-                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
-                                    pkey = pkey2;
-                                }
-                                else if(!numPointDef&&pointDef)
-                                {
-                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
-                                    pkey = pkey2;
-                                }
-                                else if(numPointDef&&!pointDef)
-                                {
-                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
-                                    pkey = pkey2;
-                                }
-
-                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
-                                bkeyvec.push_back(bkey);
-                            }
-#else
                             for(int b = 0; b < 2; ++b)
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b],LibUtilities::eGaussLobattoLegendre);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b]+1,LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {
@@ -2583,7 +2530,7 @@ namespace Nektar
                                 LibUtilities::BasisKey bkey(basis[2],nmodes[cnt+2],pkey);
                                 bkeyvec.push_back(bkey);
                             }
-#endif
+
                             if(!UniOrder)
                             {
                                 cnt += 3;
@@ -2597,9 +2544,10 @@ namespace Nektar
                                     "Failed to find geometry with same global id");
                             geom = m_pyrGeoms[k];
 
-                            for(int b = 0; b < 3; ++b)
+
+                            for(int b = 0; b < 2; ++b)
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b]+1,LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {
@@ -2618,6 +2566,29 @@ namespace Nektar
                                 }
 
                                 LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                                bkeyvec.push_back(bkey);
+                            }
+
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt+2],LibUtilities::eGaussRadauMAlpha2Beta0);
+
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+2],points[2]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+2]+1,points[2]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+2],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[2],nmodes[cnt+2],pkey);
                                 bkeyvec.push_back(bkey);
                             }
 

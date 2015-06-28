@@ -14,8 +14,8 @@ list(APPEND nektar++-adr-solver_BINS ADRSolver)
 list(APPEND nektar++-diffusion-solver_BINS DiffusionSolver 
                                            DiffusionSolverTimeInt)
 list(APPEND nektar++-shallowwater-solver_BINS ShallowWaterSolver)
-list(APPEND nektar++-utilities_BINS MeshConvert FieldConvert FldToVtk
-    FldToTecplot XmlToVtk XmlToTecplot ProbeFld)
+list(APPEND nektar++-utilities_BINS MeshConvert FieldConvert
+    XmlToVtk XmlToTecplot ProbeFld)
 list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
     Helmholtz3DHomo1D Helmholtz3DHomo2D
     StdProject0D StdProject1D StdProject2D StdProject3D 

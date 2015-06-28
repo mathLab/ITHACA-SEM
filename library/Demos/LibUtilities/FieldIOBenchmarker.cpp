@@ -37,6 +37,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/Communication/CommMpi.h>
 
 // Below, we'd like to use an unordered set for its faster lookup performance
@@ -54,6 +55,7 @@ using namespace Nektar;
 using namespace LibUtilities;
 
 namespace po = boost::program_options;
+namespace berrc = boost::system::errc;
 
 typedef std::vector<FieldDefinitionsSharedPtr> DefVec;
 typedef std::vector<std::vector<NekDouble> > DatVec;
@@ -419,8 +421,25 @@ Results TestWrite(Experiment& exp)
         if (exp.verbose)
             std::cout << "Test " << i << " of " << exp.n << std::endl;
 
-        // Synchronise
+        // Synchronise - have to do this before removing any old data in case
+        // any ranks haven't closed their file yet.
         exp.comm->Block();
+        // Remove any existing files
+        fs::path specPath(exp.dataDest);
+        try
+        {
+            fs::remove_all(specPath);
+        } catch (fs::filesystem_error& e)
+        {
+            ASSERTL0(
+                    e.code().value()
+                    == berrc::no_such_file_or_directory,
+                    "Filesystem error: " + string(e.what()));
+        }
+
+        // Synchronise to make sure we're all at the same point.
+        exp.comm->Block();
+
         double t0 = MPI_Wtime();
 
         FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(outtype,

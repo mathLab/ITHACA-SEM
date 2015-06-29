@@ -42,14 +42,17 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        BoundaryConditions::BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph)
-            : m_meshGraph(meshGraph), 
-              m_session  (pSession)
-              
+        /**
+         * Constructor - collective on the session's communicator.
+         */
+        BoundaryConditions::BoundaryConditions(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const MeshGraphSharedPtr &meshGraph) :
+                m_meshGraph(meshGraph), m_session(pSession)
+
         {
             Read(m_session->GetElement("Nektar/Conditions"));
         }
-
 
         BoundaryConditions::BoundaryConditions(void)
         {
@@ -59,9 +62,139 @@ namespace Nektar
         {
         }
 
+        /**
+         * Helper that turns a set into an array.
+         */
+        Array<OneD, int> ToArray(const std::set<int>& set)
+        {
+            Array<OneD, int> ans(set.size());
+            std::set<int>::const_iterator it = set.begin(),
+                    end = set.end();
+            int i = 0;
+            for (; it != end; ++it, ++i)
+                ans[i] = *it;
+            return ans;
+        }
+
+        /*
+         * Helper function that effectively does an MPI_Allreduce for the
+         * sets of boundary region IDs.
+         *
+         * Can't actually use an MPI_Allreduce because the sizes of the input
+         * sets and output set are (in general) different.
+         *
+         * Instead, use a simple binary tree reduction and two MPI_Bcast calls.
+         */
+        std::set<int> ShareAllBoundaryIDs(
+                const BoundaryRegionCollection& boundaryRegions,
+                LibUtilities::CommSharedPtr comm)
+        {
+            // Turn the keys of boundaryRegions into set.
+            std::set<int> ids;
+            BoundaryRegionCollection::const_iterator it =
+                    boundaryRegions.begin(), end = boundaryRegions.end();
+            int i = 0;
+            for (; it != end; ++it, ++i)
+                ids.insert(it->first);
+
+            int np = comm->GetSize();
+            int ip = comm->GetRank();
+
+            int half_size = 1;
+            bool involved = true;
+            while (involved && half_size < np)
+            {
+                if (ip & half_size)
+                {
+                    // I'm sender
+
+                    // The receiver rank
+                    int receiver = ip - half_size;
+
+                    Array<OneD, int> idsArray = ToArray(ids);
+                    // Send my size (to alloc the reciever array)
+                    Array<OneD, int> sender_size(1);
+                    sender_size[0] = idsArray.num_elements();
+                    comm->Send(receiver, sender_size);
+
+                    // Send my data
+                    comm->Send(receiver, idsArray);
+
+                    // Once we've sent, we're no longer involved.
+                    involved = false;
+                }
+                else
+                {
+                    // I'm receiver
+
+                    // The sender rank
+                    int sender = ip + half_size;
+
+                    if (sender < np)
+                    {
+                        // Receive the size
+                        Array<OneD, int> sender_size(1);
+                        comm->Recv(sender, sender_size);
+
+                        // Receive the data
+                        Array<OneD, int> other_ids(sender_size[0]);
+                        comm->Recv(sender, other_ids);
+
+                        // Merge
+                        ids.insert(other_ids.begin(), other_ids.end());
+                    }
+                }
+                half_size *= 2;
+            }
+
+            // Bcast the size
+            int nIds;
+            if (ip == 0)
+                nIds = ids.size();
+
+            comm->Bcast(nIds, 0);
+
+            // Bcast the data
+            Array<OneD, int> idsArray;
+            if (ip == 0)
+                idsArray = ToArray(ids);
+            else
+                idsArray = Array<OneD, int>(nIds);
+
+            comm->Bcast(idsArray, 0);
+
+            return std::set<int>(idsArray.begin(), idsArray.end());
+        }
 
         /**
-         *
+         * Create a new communicator for each boundary region.
+         * Collective on the session's communicator.
+         */
+        void BoundaryConditions::CreateBoundaryComms()
+        {
+            LibUtilities::CommSharedPtr comm = m_session->GetComm();
+
+            std::set<int> allids = ShareAllBoundaryIDs(m_boundaryRegions, comm);
+
+            std::set<int>::const_iterator it = allids.begin(), end =
+                    allids.end();
+            for (; it != end; ++it)
+            {
+                BoundaryRegionCollection::iterator reg_it = m_boundaryRegions.find(*it);
+                int this_rank_participates = (reg_it != m_boundaryRegions.end());
+                LibUtilities::CommSharedPtr comm_region = comm->CommCreateIf(this_rank_participates);
+
+                ASSERTL0(bool(comm_region) == bool(this_rank_participates),
+                        "Rank should be in communicator but wasn't or is in communicator but shouldn't be.");
+
+                if (this_rank_participates)
+                    m_boundaryCommunicators[reg_it->first] = comm_region;
+            }
+
+        }
+
+        /**
+         * Collective on the session's communicator.
          */
         void BoundaryConditions::Read(TiXmlElement *conditions)
         {
@@ -72,7 +205,7 @@ namespace Nektar
             if(boundaryRegions)
             {
                 ReadBoundaryRegions(conditions);
-
+                CreateBoundaryComms();
                 ReadBoundaryConditions(conditions);
             }
         }
@@ -151,7 +284,7 @@ namespace Nektar
             {
                 return;
             }
-            
+
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
             ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
@@ -179,6 +312,9 @@ namespace Nektar
                 ASSERTL0(m_boundaryRegions.count(boundaryRegionID) == 1,
                          "Boundary region " + boost::lexical_cast<
                          string>(boundaryRegionID)+ " not found");
+
+                // Find the communicator that belongs to this ID
+                LibUtilities::CommSharedPtr boundaryRegionComm = m_boundaryCommunicators[boundaryRegionID];
 
                 TiXmlElement *conditionElement = regionElement->FirstChildElement();
                 std::vector<std::string> vars = m_session->GetVariables();
@@ -214,7 +350,7 @@ namespace Nektar
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session,"00.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
-                        }                       
+                        }
                         else
                         {
                             // Use the iterator from above, which must point to the variable.
@@ -265,7 +401,7 @@ namespace Nektar
                                       }
                                       attr = attr->Next();
                                 }
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename, boundaryRegionComm));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
@@ -336,7 +472,7 @@ namespace Nektar
                                    attr = attr->Next();
                                 }
 
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename, boundaryRegionComm));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
@@ -428,7 +564,7 @@ namespace Nektar
 
                                 }
 
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, equation1, equation2, userDefined, filename));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, equation1, equation2, userDefined, filename, boundaryRegionComm));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                             else

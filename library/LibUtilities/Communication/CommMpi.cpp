@@ -631,6 +631,14 @@ namespace Nektar
                      "MPI error performing Bcast-v.");
 		}
 
+        void CommMpi::v_Bcast(Array<OneD, int>& data, int rootProc)
+        {
+            int retval = MPI_Bcast(data.get(), data.num_elements(), MPI_INT, rootProc, m_comm);
+            ASSERTL0(retval == MPI_SUCCESS,
+                    "MPI error performing Bcast-v.");
+        }
+
+
         /**
          * Processes are considered as a grid of size pRows*pColumns. Comm
          * objects are created corresponding to the rows and columns of this
@@ -660,5 +668,26 @@ namespace Nektar
             MPI_Comm_split(m_comm, myCol, myRow, &newComm);
             m_commColumn = boost::shared_ptr<Comm>(new CommMpi(newComm));
         }
+
+        /**
+         * Create a new communicator if the flag is non-zero.
+         */
+        CommSharedPtr CommMpi::v_CommCreateIf(int flag)
+        {
+            MPI_Comm newComm;
+            // color == MPI_UNDEF => not in the new communicator
+            // key == 0 on all => use rank to order them. OpenMPI, at least,
+            // implies this is faster than ordering them ourselves.
+            MPI_Comm_split(m_comm, flag ? 0 : MPI_UNDEFINED, 0, &newComm);
+
+            if (flag == 0)
+                // flag == 0 => get back MPI_COMM_NULL, return a null ptr instead.
+                return boost::shared_ptr<Comm>();
+            else
+                // Return a real communicator
+                return boost::shared_ptr<Comm>(new CommMpi(newComm));
+
+        }
+
     }
 }

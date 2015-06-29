@@ -276,6 +276,11 @@ namespace Nektar
 
 		}
 
+        void CommSerial::v_Bcast(Array<OneD, int>& data, int rootProc)
+        {
+
+        }
+
         /**
          *
          */
@@ -283,5 +288,13 @@ namespace Nektar
         {
             ASSERTL0(false, "Cannot split a serial process.");
         }
+        /**
+         *
+         */
+        CommSharedPtr CommSerial::v_CommCreateIf(int flag)
+        {
+            ASSERTL0(false, "Cannot split a serial process.");
+        }
+
     }
 }

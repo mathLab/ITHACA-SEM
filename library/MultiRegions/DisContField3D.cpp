@@ -2439,13 +2439,14 @@
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-                        string filebcs = boost::static_pointer_cast<
+                        SpatialDomains::DirichletBCShPtr bcPtr = boost::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
-                                m_bndConditions[i])->m_filename;
+                                m_bndConditions[i]);
+                        string filebcs = bcPtr->m_filename;
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                         }
                         else
                         {

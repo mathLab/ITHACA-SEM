@@ -1266,6 +1266,7 @@ namespace Nektar
                       Array<OneD, NekDouble> &outarray);
 
             void ExtractFileBCs(const std::string                &fileName,
+                                LibUtilities::CommSharedPtr       comm,
                                 const std::string                &varName,
                                 const boost::shared_ptr<ExpList>  locExpList);
             

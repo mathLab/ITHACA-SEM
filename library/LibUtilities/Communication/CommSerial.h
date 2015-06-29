@@ -120,8 +120,10 @@ namespace Nektar
                                                           Array<OneD, int>& pRecvDataSizeMap,
                                                           Array<OneD, int>& pRecvDataOffsetMap);
             LIB_UTILITIES_EXPORT virtual void v_Bcast(int& data, int rootProc);
+            LIB_UTILITIES_EXPORT virtual void v_Bcast(Array<OneD, int>& data, int rootProc);
             LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
-            
+            LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
+
         };
 
     }

@@ -127,7 +127,9 @@ namespace Nektar
 									Array<OneD, int>& pRecvDataSizeMap,
 									Array<OneD, int>& pRecvDataOffsetMap);
 			virtual void v_Bcast(int& data, int rootProc);
+			virtual void v_Bcast(Array<OneD, int>& pData, int rootProc);
             virtual void v_SplitComm(int pRows, int pColumns);
+            virtual CommSharedPtr v_CommCreateIf(int flag);
 
         private:
             MPI_Comm m_comm;

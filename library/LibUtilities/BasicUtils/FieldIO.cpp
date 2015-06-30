@@ -471,15 +471,16 @@ namespace Nektar
             // Remove any existing file which is in the way
             if (m_comm->RemoveExistingFiles())
             {
-                try
+                if (rank == 0)
                 {
-                    fs::remove_all(specPath);
-                } catch (fs::filesystem_error& e)
-                {
-                    ASSERTL0(
-                            e.code().value()
-                                    == berrc::no_such_file_or_directory,
-                            "Filesystem error: " + string(e.what()));
+                    try
+                    {
+                        fs::remove_all(specPath);
+                    } catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                "Filesystem error: " + string(e.what()));
+                    }
                 }
             }
 

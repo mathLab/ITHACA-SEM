@@ -56,12 +56,13 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<SurfaceMesh>;
         
-        SurfaceMesh(const LibUtilities::CADSurfSharedPtr &cad,
+        SurfaceMesh(const int id,
+                    const LibUtilities::CADSurfSharedPtr &cad,
                     const OctreeSharedPtr &oct,
                     const std::vector<CurveMeshSharedPtr> &cmeshes,
                     const int &order)
                         : m_cadsurf(cad), m_octree(oct),
-                          m_curvemeshes(cmeshes),m_order(order)
+                          m_curvemeshes(cmeshes),m_order(order),m_id(id)
         
         {
             m_edges = m_cadsurf->GetEdges();
@@ -73,9 +74,7 @@ namespace MeshUtils {
                      int &tnp,
                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
         {
-            nt = numtris;
-            tnp = 3;
-            p = HOPoints;
+            
         }
         
         
@@ -90,10 +89,7 @@ namespace MeshUtils {
         
         void Stretching();
         
-        bool Validate(int &np,
-                      int &nt,
-                      Array<OneD, Array<OneD, NekDouble> > &Points,
-                      Array<OneD, Array<OneD, int> > &Connec);
+        bool Validate();
         
         void OrientateCurves();
         void AddNewPoint(NekDouble u, NekDouble v);
@@ -103,19 +99,16 @@ namespace MeshUtils {
         std::vector<CurveMeshSharedPtr> m_curvemeshes;
 
         std::vector<std::vector<std::pair<int,int> > > m_edges;
-        std::vector<std::vector<std::vector<NekDouble> > > m_uvloops;
-        std::vector<std::vector<NekDouble> > m_centers;
-        std::vector<std::vector<NekDouble> > m_extrapoints;
-        
-        Array<OneD, Array<OneD, NekDouble> > Points;
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > HOPoints;
-        Array<OneD, Array<OneD, int> > Connec;
-        Array<OneD, Array<OneD, int> > neigbourlist;
-        int numpoints, numtris;
-        int TotNumPoints;
+       
         int m_order;
         
-        std::vector<Node> Nodes;
+        int m_id;
+        std::vector<NodeSharedPtr> Nodes;
+        std::vector<std::vector<int> > orderedLoops;
+        std::vector<std::vector<NekDouble> > m_centers;
+        
+        int numtri;
+        Array<OneD, Array<OneD, int> > Connec;
         
         NekDouble pasr,asr;
         

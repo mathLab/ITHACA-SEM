@@ -66,9 +66,9 @@ namespace MeshUtils {
         
         void Mesh();
         
-        Node GetFirstPoint(){return m_meshpoints[0];}
-        Node GetLastPoint(){return m_meshpoints[Ne];}
-        std::vector<Node> GetMeshPoints()
+        NodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
+        NodeSharedPtr GetLastPoint(){return m_meshpoints[Ne];}
+        std::vector<NodeSharedPtr> GetMeshPoints()
                     {return m_meshpoints;}
         int GetNumPoints(){return Ne+1;}
         
@@ -90,7 +90,7 @@ namespace MeshUtils {
         NekDouble ds;
         int Ne;
         std::vector<NekDouble> meshsvalue;
-        std::vector<Node> m_meshpoints;
+        std::vector<NodeSharedPtr> m_meshpoints;
         
         bool m_verbose;
         

@@ -65,7 +65,7 @@ namespace MeshUtils {
         {
             cout << "Surface: " <<  i <<  endl;
             SurfaceMeshSharedPtr smesh =
-                MemoryManager<SurfaceMesh>::AllocateSharedPtr(
+                MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,
                     m_cad->GetSurf(i), m_octree,
                     m_curvemeshes,m_order);
             

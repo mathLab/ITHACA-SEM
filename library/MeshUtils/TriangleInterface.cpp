@@ -57,7 +57,7 @@ namespace MeshUtils {
         {
             numSeg+=m_boundingloops[i].size();
         }
-        numPoints = numSeg + m_stienerpoints.size();
+        numPoints = m_nodes.size();
         
         in.numberofpoints = numPoints;
         in.numberofpointattributes = 0;
@@ -66,19 +66,11 @@ namespace MeshUtils {
         
         int pointc = 0;
         
-        for(int i = 0; i < m_boundingloops.size(); i++)
+        for(int i = 0; i < m_nodes.size(); i++)
         {
-            for(int j = 0; j < m_boundingloops[i].size(); j++)
-            {
-                in.pointlist[pointc*2+0] = m_boundingloops[i][j][0]*m_str;
-                in.pointlist[pointc*2+1] = m_boundingloops[i][j][1];
-                pointc++;
-            }
-        }
-        for(int i = 0; i < m_stienerpoints.size(); i++)
-        {
-            in.pointlist[pointc*2+0] = m_stienerpoints[i][0]*m_str;
-            in.pointlist[pointc*2+1] = m_stienerpoints[i][1];
+            vector<pair<int, Array<OneD,NekDouble> > > n = m_nodes[i]->GetS();
+            in.pointlist[pointc*2+0] = n[0].second[0]*m_str;
+            in.pointlist[pointc*2+1] = n[0].second[1];
             pointc++;
         }
         
@@ -87,15 +79,14 @@ namespace MeshUtils {
         pointc=0;
         for(int i = 0; i < m_boundingloops.size(); i++)
         {
-            float pointBefore = pointc;
             for(int j = 0; j < m_boundingloops[i].size()-1; j++)
             {
-                in.segmentlist[pointc*2+0] = j+pointBefore;
-                in.segmentlist[pointc*2+1] = j+1+pointBefore;
+                in.segmentlist[pointc*2+0] = m_boundingloops[i][j];
+                in.segmentlist[pointc*2+1] = m_boundingloops[i][j+1];
                 pointc++;
             }
-            in.segmentlist[pointc*2+0] = m_boundingloops[i].size()-1+pointBefore;
-            in.segmentlist[pointc*2+1] = 0+pointBefore;
+            in.segmentlist[pointc*2+0] = m_boundingloops[i].back();
+            in.segmentlist[pointc*2+1] = m_boundingloops[i][0];
             pointc++;
         }
        
@@ -145,21 +136,9 @@ namespace MeshUtils {
 
     }
     
-    void TriangleInterface::Extract(int &np,
-                                    int &nt,
-                                    Array<OneD, Array<OneD, NekDouble> > &Points,
+    void TriangleInterface::Extract(int &nt,
                                     Array<OneD, Array<OneD, int> > &Connec)
     {
-        Points = Array<OneD, Array<OneD, NekDouble> >(out.numberofpoints);
-        np = out.numberofpoints;
-        for(int i = 0; i < out.numberofpoints; i++)
-        {
-            Array<OneD, NekDouble> loc(2);
-            loc[0] = out.pointlist[i*2+0];
-            loc[1] = out.pointlist[i*2+1];
-            Points[i] = loc;
-        }
-        
         Connec = Array<OneD, Array<OneD, int> >(out.numberoftriangles);
         nt = out.numberoftriangles;
         for(int i = 0; i < out.numberoftriangles; i++)

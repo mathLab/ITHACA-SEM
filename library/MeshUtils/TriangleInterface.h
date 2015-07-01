@@ -53,6 +53,7 @@ extern "C"{
 #include <triangle.h>
 }
 
+#include <MeshUtils/Node.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -66,27 +67,15 @@ namespace Nektar {
             public:
                 friend class MemoryManager<TriangleInterface>;
                 
-                TriangleInterface(const std::vector<std::vector<
-                                  std::vector<NekDouble> > > &boundingloops,
-                                  const std::vector<std::vector<NekDouble> >
-                                  &centers,
-                                  const std::vector<std::vector<NekDouble> >
-                                  &stienerp) : m_boundingloops(boundingloops),
-                                  m_centers(centers), m_stienerpoints(stienerp)
-                {
-                    meshloaded = false;
-                };
                 TriangleInterface()
                 {
                     meshloaded = false;
                 };
                 
-                void Assign(const std::vector<std::vector<
-                            std::vector<NekDouble> > > &boundingloops,
+                void Assign(const std::vector<std::vector<int> > &boundingloops,
                             const std::vector<std::vector<NekDouble> >
                             &centers,
-                            const std::vector<std::vector<NekDouble> >
-                            &stienerp,
+                            const std::vector<NodeSharedPtr> &nodes,
                             NekDouble str = 1.0)
                 {
                     if(meshloaded)
@@ -95,7 +84,7 @@ namespace Nektar {
                     }
                     m_boundingloops = boundingloops;
                     m_centers = centers;
-                    m_stienerpoints = stienerp;
+                    m_nodes = nodes;
                     m_str = str;
                 }
                 
@@ -107,9 +96,7 @@ namespace Nektar {
                 
                 void Mesh(bool Quiet = true, bool Quality = false);
                 
-                void Extract(int &np,
-                             int &nt,
-                             Array<OneD, Array<OneD, NekDouble> > &Points,
+                void Extract(int &nt,
                              Array<OneD, Array<OneD, int> > &Connec);
                 
                 void GetNeighbour(Array<OneD, Array<OneD, int> > &neigbourlist);
@@ -118,10 +105,9 @@ namespace Nektar {
                 
                 void freetri();
                 
-                std::vector<std::vector<std::vector<NekDouble> > >
-                        m_boundingloops;
+                std::vector<std::vector<int> > m_boundingloops;
                 std::vector<std::vector<NekDouble> > m_centers;
-                std::vector<std::vector<NekDouble> > m_stienerpoints;
+                std::vector<NodeSharedPtr> m_nodes;
                 
                 bool meshloaded;
                 

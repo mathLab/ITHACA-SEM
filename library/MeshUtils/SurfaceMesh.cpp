@@ -56,59 +56,52 @@ namespace MeshUtils {
         TriangleInterfaceSharedPtr pplanemesh =
             MemoryManager<TriangleInterface>::AllocateSharedPtr();
         
-        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
+        pplanemesh->Assign(orderedLoops, m_centers, Nodes,asr/pasr);
         
         pplanemesh->Mesh();
         
-        pplanemesh->Extract(numpoints, numtris, Points,Connec);
+        pplanemesh->Extract(numtri, Connec);
         
         bool repeat = true;
         
         while (repeat)
         {
-            repeat = Validate(numpoints,numtris,Points,Connec);
+            repeat = Validate();
             if(!repeat)
             {
                 break;
             }
-            pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
+            pplanemesh->Assign(orderedLoops, m_centers, Nodes,asr/pasr);
             pplanemesh->Mesh();
-            pplanemesh->Extract(numpoints,numtris,Points,Connec);
+            pplanemesh->Extract(numtri,Connec);
         }
-        
-        pplanemesh->Assign(m_uvloops, m_centers, m_extrapoints,asr/pasr);
-        pplanemesh->Mesh(true,true);
-        pplanemesh->Extract(numpoints,numtris,Points,Connec);
-        
-        pplanemesh->GetNeighbour(neigbourlist);
         
         //LinearOptimise();
         
         //HOMesh();
         
-        cout << Points[0][0] << " " << Points[0][1] << endl;
-        cout << m_uvloops[0][0][0] << " " << m_uvloops[0][0][1] << endl;
+
         exit(-1);
 
     }
     
     void SurfaceMesh::LinearOptimise()
     {
-        for(int i = 0; i < 1; i++)
+        /*for(int i = 0; i < 1; i++)
         {
             EdgeSwap();
-        }
+        }*/
     }
     
     void SurfaceMesh::EdgeSwap()
     {
-        for(int i = 0; i < numtris; i++)
+        /*for(int i = 0; i < numtris; i++)
         {
             for(int j = 0; j < 3; j++)
             {
                 if(neigbourlist[i][j] != -1) //has a edge to swap
                 {
-                    /*int A,B,C,D;
+                    int A,B,C,D;
                     
                     if(j==0)
                     {
@@ -127,18 +120,18 @@ namespace MeshUtils {
                         A = Connec[i][2];
                         B = Connec[i][0];
                         C = Connec[i][1];
-                        }*/
+                        }
                     
                     
                     
                 }
             }
-        }
+        }*/
     }
     
     void SurfaceMesh::HOMesh()
     {
-        LibUtilities::PointsKey pkey(m_order+1,
+        /*LibUtilities::PointsKey pkey(m_order+1,
                                      LibUtilities::eNodalTriEvenlySpaced);
         Array<OneD, NekDouble> u,v;
         
@@ -196,7 +189,7 @@ namespace MeshUtils {
                 P[1] = result(1,j);
                 HOPoints[i][j]=P;
             }
-        }
+        }*/
     }
     
     void SurfaceMesh::Stretching()
@@ -243,46 +236,27 @@ namespace MeshUtils {
         
     }
     
-    bool SurfaceMesh::Validate(int &np,
-                               int &nt,
-                               Array<OneD, Array<OneD, NekDouble> > &Points,
-                               Array<OneD, Array<OneD, int> > &Connec)
+    bool SurfaceMesh::Validate()
     {
-        int pointBefore = m_extrapoints.size();
-        for(int i = 0; i < nt; i++)
+        int pointBefore = Nodes.size();
+        for(int i = 0; i < numtri; i++)
         {
             int triVert[3];
             triVert[0]=Connec[i][0];
             triVert[1]=Connec[i][1];
             triVert[2]=Connec[i][2];
             
-            NekDouble triUV[3][2];
-            triUV[0][0]=Points[triVert[0]][0];
-            triUV[0][1]=Points[triVert[0]][1];
-            triUV[1][0]=Points[triVert[1]][0];
-            triUV[1][1]=Points[triVert[1]][1];
-            triUV[2][0]=Points[triVert[2]][0];
-            triUV[2][1]=Points[triVert[2]][1];
-            
-            Array<OneD, Array<OneD, NekDouble> > locs(3);
             Array<OneD, NekDouble> triDelta(3);
-            for(int i = 0; i < 3; i++)
-            {
-                locs[i] = m_cadsurf->P(triUV[i][0],triUV[i][1]);
-                triDelta[i] = m_octree->Query(locs[i]);
-            }
             
             Array<OneD, NekDouble> r(3);
             
-            r[0]=sqrt((locs[0][0]-locs[1][0])*(locs[0][0]-locs[1][0]) +
-                      (locs[0][1]-locs[1][1])*(locs[0][1]-locs[1][1]) +
-                      (locs[0][2]-locs[1][2])*(locs[0][2]-locs[1][2]));
-            r[1]=sqrt((locs[1][0]-locs[2][0])*(locs[1][0]-locs[2][0]) +
-                      (locs[1][1]-locs[2][1])*(locs[1][1]-locs[2][1]) +
-                      (locs[1][2]-locs[2][2])*(locs[1][2]-locs[2][2]));
-            r[2]=sqrt((locs[2][0]-locs[0][0])*(locs[2][0]-locs[0][0]) +
-                      (locs[2][1]-locs[0][1])*(locs[2][1]-locs[0][1]) +
-                      (locs[2][2]-locs[0][2])*(locs[2][2]-locs[0][2]));
+            r[0]=Nodes[triVert[0]]->Distance(Nodes[triVert[1]]);
+            r[1]=Nodes[triVert[1]]->Distance(Nodes[triVert[2]]);
+            r[2]=Nodes[triVert[2]]->Distance(Nodes[triVert[0]]);
+            
+            triDelta[0] = m_octree->Query(Nodes[triVert[0]]->GetLoc());
+            triDelta[1] = m_octree->Query(Nodes[triVert[1]]->GetLoc());
+            triDelta[2] = m_octree->Query(Nodes[triVert[2]]->GetLoc());
             
             int numValid = 0;
             
@@ -297,13 +271,22 @@ namespace MeshUtils {
             
             if(numValid != 3)
             {
-                NekDouble uc = (triUV[0][0]+triUV[1][0]+triUV[2][0])/3.0;
-                NekDouble vc = (triUV[0][1]+triUV[1][1]+triUV[2][1])/3.0;
+                vector<pair<int, Array<OneD,NekDouble> > > ainfo,binfo,cinfo;
+                ainfo = Nodes[triVert[0]]->GetS();
+                binfo = Nodes[triVert[1]]->GetS();
+                cinfo = Nodes[triVert[2]]->GetS();
+                
+                NekDouble uc = (ainfo[0].second[0]+
+                                binfo[0].second[0]+
+                                cinfo[0].second[0])/3.0;
+                NekDouble vc = (ainfo[0].second[1]+
+                                binfo[0].second[1]+
+                                cinfo[0].second[1])/3.0;
                 AddNewPoint(uc,vc);
             }
         }
         
-        if(m_extrapoints.size() == pointBefore)
+        if(Nodes.size() == pointBefore)
         {
             return false;
         }
@@ -315,73 +298,129 @@ namespace MeshUtils {
     
     void SurfaceMesh::AddNewPoint(NekDouble u, NekDouble v)
     {
-        Array<OneD, NekDouble> newPoint = m_cadsurf->P(u,v);
-        NekDouble newPointDelta = m_octree->Query(newPoint);
+        Array<OneD, NekDouble> np = m_cadsurf->P(u,v);
+        NekDouble npDelta = m_octree->Query(np);
+        
+        NodeSharedPtr n = boost::shared_ptr<Node>(
+                            new Node(np[0],np[1],np[2]));
         
         bool add = true;
         
-        for(int i = 0; i < m_uvloops.size(); i++)
+        for(int i = 0; i < Nodes.size(); i++)
         {
-            for(int j = 0; j < m_uvloops[i].size(); j++)
+            NekDouble r = Nodes[i]->Distance(n);
+            
+            if(r<npDelta/1.414)
             {
-                Array<OneD, NekDouble> testPoint =
-                        m_cadsurf->P(m_uvloops[i][j][0],m_uvloops[i][j][1]);
-                
-                NekDouble r =
-                sqrt((testPoint[0]-newPoint[0])*(testPoint[0]-newPoint[0]) +
-                     (testPoint[1]-newPoint[1])*(testPoint[1]-newPoint[1]) +
-                     (testPoint[2]-newPoint[2])*(testPoint[2]-newPoint[2]));
-                
-                if(r<newPointDelta/1.414)
-                {
-                    add = false;
-                    break;
-                }
-            }
-            if(add==false)
-            {
+                add = false;
                 break;
-            }
-        }
-        if(add==true)
-        {
-            for(int i = 0; i < m_extrapoints.size(); i++)
-            {
-                Array<OneD, NekDouble> testPoint =
-                    m_cadsurf->P(m_extrapoints[i][0],m_extrapoints[i][1]);
-                
-                NekDouble r =
-                sqrt((testPoint[0]-newPoint[0])*(testPoint[0]-newPoint[0]) +
-                     (testPoint[1]-newPoint[1])*(testPoint[1]-newPoint[1]) +
-                     (testPoint[2]-newPoint[2])*(testPoint[2]-newPoint[2]));
-                
-                if(r<newPointDelta/1.414)
-                {
-                    add = false;
-                    break;
-                }
             }
         }
         
         if(add)
         {
-            vector<NekDouble> uv;
-            uv.push_back(u);
-            uv.push_back(v);
-            m_extrapoints.push_back(uv);
+            n->SetSurf(m_id,u,v);
+            Nodes.push_back(n);
         }
     }
     
     void SurfaceMesh::OrientateCurves()
     {
-        vector<vector<Node> > orderedLoops;
+        //assign nodes with common curves. done
+        //fetch nodes from curves. done
+        //create integer list of bounding loop node id's. done
+        //locuv nodes to get uv. done
+        
+        NodeSharedPtr ce,ne;
+        vector<pair<int, NekDouble> > ceinfo,neinfo;
+        for(int i = 0; i < m_edges.size(); i++)
+        {
+            for(int j = 0; j < m_edges[i].size()-1; j++)
+            {
+                if(m_edges[i][j].second == 0)
+                {
+                    ce=m_curvemeshes[m_edges[i][j].first-1]->
+                    GetLastPoint();
+                    if(m_edges[i][j+1].second == 0)
+                    {
+                        ne=m_curvemeshes[m_edges[i][j+1].first-1]
+                                         ->GetFirstPoint();
+                    }
+                    else
+                    {
+                        ne=m_curvemeshes[m_edges[i][j+1].first-1]
+                                         ->GetLastPoint();
+                    }
+                }
+                else
+                {
+                    ce=m_curvemeshes[m_edges[i][j].first-1]->
+                    GetFirstPoint();
+                    if(m_edges[i][j+1].second == 0)
+                    {
+                        ne=m_curvemeshes[m_edges[i][j+1].first-1]
+                        ->GetFirstPoint();
+                    }
+                    else
+                    {
+                        ne=m_curvemeshes[m_edges[i][j+1].first-1]
+                        ->GetLastPoint();
+                    }
+                }
+                
+                ceinfo = ce->GetC();
+                neinfo = ne->GetC();
+                
+                ce->SetCurve(neinfo[0].first,neinfo[0].second);
+                ne->SetCurve(ceinfo[0].first,ceinfo[0].second);
+                //at this point know they only have 1 entry
+            }
+            
+            if(m_edges[i].back().second == 0)
+            {
+                ce=m_curvemeshes[m_edges[i].back().first-1]->
+                GetLastPoint();
+                if(m_edges[i][0].second == 0)
+                {
+                    ne=m_curvemeshes[m_edges[i][0].first-1]
+                    ->GetFirstPoint();
+                }
+                else
+                {
+                    ne=m_curvemeshes[m_edges[i][0].first-1]
+                    ->GetLastPoint();
+                }
+            }
+            else
+            {
+                ce=m_curvemeshes[m_edges[i].back().first-1]->
+                GetFirstPoint();
+                if(m_edges[i][0].second == 0)
+                {
+                    ne=m_curvemeshes[m_edges[i][0].first-1]
+                    ->GetFirstPoint();
+                }
+                else
+                {
+                    ne=m_curvemeshes[m_edges[i][0].first-1]
+                    ->GetLastPoint();
+                }
+            }
+            ceinfo = ce->GetC();
+            neinfo = ne->GetC();
+            
+            ce->SetCurve(neinfo[0].first,neinfo[0].second);
+            ne->SetCurve(ceinfo[0].first,ceinfo[0].second);
+        }
+        
+        int nodecounter=0;
         
         for(int i = 0; i < m_edges.size(); i++)
         {
-            vector<Node> cE;
+            vector<int> cE;
             for(int j = 0; j < m_edges[i].size(); j++)
             {
-                vector<Node> edgePoints =
+                vector<NodeSharedPtr> edgePoints =
                         m_curvemeshes[m_edges[i][j].first-1]->
                             GetMeshPoints();
                 
@@ -392,51 +431,56 @@ namespace MeshUtils {
                 {
                     for(int k = 0; k < numPoints-1; k++)
                     {
-                        //add surface info to node
-                        //nodes that are the ends of curves need to know they
-                        //belong to two curves
-                        cE.push_back(edgePoints[k]);
+                        Nodes.push_back(edgePoints[k]);
+                        cE.push_back(nodecounter);
+                        nodecounter++;
+                        
                     }
                 }
                 else
                 {
                     for(int k = numPoints-1; k >0; k--)
                     {
-                        cE.push_back(edgePoints[k]);
+                        Nodes.push_back(edgePoints[k]);
+                        cE.push_back(nodecounter);
+                        nodecounter++;
                     }
                 }
             }
             orderedLoops.push_back(cE);
         }
         
-        for(int i = 0; i < orderedLoops.size(); i++)
+        for(int i = 0; i < Nodes.size(); i++)
         {
-            vector<vector<NekDouble> > lP;
-            for(int j = 0; j < orderedLoops[i].size(); j++)
-            {
-                vector<NekDouble> P;
-                P.resize(2);
-                m_cadsurf->locuv(P[0],P[1],orderedLoops[i][j].GetLoc());
-                lP.push_back(P);
-            }
-            m_uvloops.push_back(lP);
+            vector<NekDouble> P;
+            P.resize(2);
+            m_cadsurf->locuv(P[0],P[1],Nodes[i]->GetLoc());
+            Nodes[i]->SetSurf(m_id,P[0],P[1]);
         }
         
         //loops made need to orientate on which is biggest and define holes
         
-        for(int i = 0; i < m_uvloops.size(); i++)
+        for(int i = 0; i < orderedLoops.size(); i++)
         {
-            int half = int(m_uvloops[i].size()/2) - 1;
+            int half = int(orderedLoops[i].size()/2) - 1;
             
-            NekDouble ua = (100.0*m_uvloops[i][0][0]+
-                            100.0*m_uvloops[i][1][0]+
-                            1.0* m_uvloops[i][half][0])/201.0 ;
-            NekDouble va = (100.0*m_uvloops[i][0][1]+
-                            100.0*m_uvloops[i][1][1]+
-                            1.0* m_uvloops[i][half][1])/201.0 ;
+            NodeSharedPtr n1,n2,nh;
             
+            n1 = Nodes[orderedLoops[i][0]];
+            n2 = Nodes[orderedLoops[i][1]];
+            nh = Nodes[orderedLoops[i][half]];
             
+            vector<pair<int, Array<OneD,NekDouble> > > n1info,n2info,nhinfo;
+            n1info = n1->GetS();
+            n2info = n2->GetS();
+            nhinfo = nh->GetS();
             
+            NekDouble ua = (100.0*n1info[0].second[0]+
+                            100.0*n2info[0].second[0]+
+                            1.0* nhinfo[0].second[0])/201.0 ;
+            NekDouble va = (100.0*n1info[0].second[1]+
+                            100.0*n2info[0].second[1]+
+                            1.0* nhinfo[0].second[1])/201.0 ;
             
             vector<NekDouble> tmp;
             tmp.push_back(ua);
@@ -446,15 +490,22 @@ namespace MeshUtils {
         
         vector<NekDouble> areas;
         
-        for(int i = 0; i < m_uvloops.size(); i++)
+        for(int i = 0; i < orderedLoops.size(); i++)
         {
             NekDouble area=0.0;
-            for(int j = 0; j < m_uvloops[i].size()-1; j++)
+            for(int j = 0; j < orderedLoops[i].size()-1; j++)
             {
-                area+=-m_uvloops[i][j][1]*
-                            (m_uvloops[i][j+1][0]-m_uvloops[i][j][0])
-                      +m_uvloops[i][j][0]*
-                            (m_uvloops[i][j+1][1]-m_uvloops[i][j][1]);
+                NodeSharedPtr n1,n2;
+                n1 = Nodes[orderedLoops[i][j]];
+                n2 = Nodes[orderedLoops[i][j+1]];
+                vector<pair<int, Array<OneD,NekDouble> > > n1info,n2info;
+                n1info = n1->GetS();
+                n2info = n2->GetS();
+                
+                area+=-n2info[0].second[1]*
+                            (n2info[0].second[0]-n1info[0].second[0])
+                      +n1info[0].second[0]*
+                            (n2info[0].second[1]-n1info[0].second[1]);
             }
             area*=0.5;
             areas.push_back(area);
@@ -472,17 +523,17 @@ namespace MeshUtils {
                     //swap
                     NekDouble areatmp = areas[i];
                     vector<NekDouble> centerstmp = m_centers[i];
-                    vector<vector<NekDouble> > uvLoopstmp = m_uvloops[i];
+                    vector<int> orderedlooptmp = orderedLoops[i];
                     vector<pair<int,int> > edgeLoopstmp = m_edges[i];
                     
                     areas[i]=areas[i+1];
                     m_centers[i]=m_centers[i+1];
-                    m_uvloops[i]=m_uvloops[i+1];
+                    orderedLoops[i]=orderedLoops[i+1];
                     m_edges[i]=m_edges[i+1];
                     
                     areas[i+1]=areatmp;
                     m_centers[i+1]=centerstmp;
-                    m_uvloops[i+1]=uvLoopstmp;
+                    orderedLoops[i+1]=orderedlooptmp;
                     m_edges[i+1]=edgeLoopstmp;
                     
                     ct+=1;
@@ -493,18 +544,18 @@ namespace MeshUtils {
         
         if(areas[0]<0) //reverse the first uvLoop
         {
-            vector<vector<NekDouble> > tmp = m_uvloops[0];
+            vector<int > tmp = orderedLoops[0];
             reverse(tmp.begin(), tmp.end());
-            m_uvloops[0]=tmp;
+            orderedLoops[0]=tmp;
         }
         
-        for(int i = 1; i < m_uvloops.size(); i++)
+        for(int i = 1; i < orderedLoops.size(); i++)
         {
             if(areas[i]>0) //reverse the loop
             {
-                vector<vector<NekDouble> > tmp = m_uvloops[i];
+                vector<int> tmp = orderedLoops[i];
                 reverse(tmp.begin(), tmp.end());
-                m_uvloops[i]=tmp;
+                orderedLoops[i]=tmp;
             }
         }
         

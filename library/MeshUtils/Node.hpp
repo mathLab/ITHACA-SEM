@@ -43,9 +43,13 @@
 namespace Nektar {
 namespace MeshUtils {
     
+    class Node;
+    typedef boost::shared_ptr<Node> NodeSharedPtr;
+    
     class Node
     {
     public:
+        friend class MemoryManager<Node>;
         
         Node(NekDouble x, NekDouble y, NekDouble z) :
                     m_x(x), m_y(y), m_z(z)
@@ -57,6 +61,14 @@ namespace MeshUtils {
             CADCurve.push_back(i);
             CurveT.push_back(t);
         }
+        
+        void SetSurf(int i, NekDouble u, NekDouble v)
+        {
+            CADSurf.push_back(i);
+            std::vector<NekDouble> UV;
+            UV.push_back(u); UV.push_back(v);
+            SurfUV.push_back(UV);
+        }
 
         Array<OneD, NekDouble> GetLoc()
         {
@@ -65,6 +77,44 @@ namespace MeshUtils {
             out[1]=m_y;
             out[2]=m_z;
             return out;
+        }
+        
+        std::vector<std::pair<int,NekDouble> > GetC()
+        {
+            std::vector<std::pair<int,NekDouble> > out;
+            for(int i = 0; i < CADCurve.size(); i++)
+            {
+                std::pair<int,NekDouble> out1;
+                out1.first = CADCurve[i];
+                out1.second = CurveT[i];
+                out.push_back(out1);
+            }
+            return out;
+        }
+        
+        std::vector<std::pair<int, Array<OneD,NekDouble> > > GetS()
+        {
+            std::vector<std::pair<int, Array<OneD,NekDouble> > > out;
+            for(int i = 0; i < CADSurf.size(); i++)
+            {
+                std::pair<int, Array<OneD,NekDouble> > out1;
+                Array<OneD,NekDouble> out2(2);
+                out2[0] = SurfUV[i][0];
+                out2[1] = SurfUV[i][1];
+                out1.first = CADSurf[i];
+                out1.second = out2;
+                out.push_back(out1);
+            }
+            return out;
+        }
+        
+        NekDouble Distance(const NodeSharedPtr &n)
+        {
+            Array<OneD,NekDouble> loc = n->GetLoc();
+            
+            return sqrt((m_x-loc[0])*(m_x-loc[0])+
+                        (m_y-loc[1])*(m_y-loc[1])+
+                        (m_z-loc[2])*(m_z-loc[2]));
         }
         
         
@@ -77,7 +127,7 @@ namespace MeshUtils {
         std::vector<std::vector<NekDouble> > SurfUV;
         
     };
-        
+    
 }
 }
 

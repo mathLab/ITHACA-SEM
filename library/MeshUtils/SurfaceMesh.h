@@ -71,10 +71,12 @@ namespace MeshUtils {
         void Mesh();
         
         void Extract(int &nt,
-                     int &tnp,
-                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
+                     Array<OneD, Array<OneD, int> > &c,
+                     std::vector<NodeSharedPtr> &n)
         {
-            
+            nt = numtri;
+            c = Connec;
+            n = Nodes;
         }
         
         

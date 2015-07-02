@@ -79,9 +79,6 @@ namespace MeshUtils {
         //LinearOptimise();
         
         //HOMesh();
-        
-
-        exit(-1);
 
     }
     

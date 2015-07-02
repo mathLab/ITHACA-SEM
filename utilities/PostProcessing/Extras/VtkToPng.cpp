@@ -69,11 +69,13 @@ int main(int argc, char * argv[])
     graphics_factory->SetUseMesaClasses( 1 );
 
     // Create a poly data reader and retrieve dataset from file
-    vtkXMLUnstructuredGridReader* reader = vtkXMLUnstructuredGridReader::New();
+    vtkSmartPointer<vtkXMLUnstructuredGridReader> reader =
+            vtkSmartPointer<vtkXMLUnstructuredGridReader>::New();
     reader->SetFileName(vInput.c_str());
     reader->Update();
 
-    vtkDataSet* data = reader->GetOutputAsDataSet();
+    vtkSmartPointer<vtkDataSet> data = 
+            vtkSmartPointer<vtkDataSet>(reader->GetOutputAsDataSet());
     data->GetPointData()->SetActiveScalars("u");
 
     double scalar_range[2];
@@ -113,7 +115,7 @@ int main(int argc, char * argv[])
     actor->SetMapper(mapper);
 
     // Configure camera position and direction
-    vtkCamera *camera = vtkCamera::New();
+    vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
     camera->SetPosition(0.0,-1.0,1.0);
     camera->SetFocalPoint(0,0,0);
 

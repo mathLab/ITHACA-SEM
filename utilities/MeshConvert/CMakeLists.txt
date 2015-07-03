@@ -1,59 +1,59 @@
 SET(MeshConvertHeaders 
-    InputGmsh.h
-    InputNek.h
-    InputNekpp.h
-    InputPly.h
-    InputSem.h
-    InputSwan.h
-    InputStarTec.h
+    InputModules/InputGmsh.h
+    InputModules/InputNek.h
+    InputModules/InputNekpp.h
+    InputModules/InputPly.h
+    InputModules/InputSem.h
+    InputModules/InputSwan.h
+    InputModules/InputStarTec.h
     MeshElements.h
     Module.h
-    OutputGmsh.h
-    OutputNekpp.h
-    ProcessBL.h
-    ProcessCyl.h
-    ProcessDetectSurf.h
-    ProcessExtractSurf.h
-    ProcessJac.h
-    ProcessPerAlign.h
-    ProcessScalar.h
-    ProcessSpherigon.h
-    ProcessTetSplit.h
+    OutputModules/OutputGmsh.h
+    OutputModules/OutputNekpp.h
+    ProcessModules/ProcessBL.h
+    ProcessModules/ProcessCyl.h
+    ProcessModules/ProcessDetectSurf.h
+    ProcessModules/ProcessExtractSurf.h
+    ProcessModules/ProcessJac.h
+    ProcessModules/ProcessPerAlign.h
+    ProcessModules/ProcessScalar.h
+    ProcessModules/ProcessSpherigon.h
+    ProcessModules/ProcessTetSplit.h
 )
 
 SET(MeshConvertSources 
-    InputGmsh.cpp
-    InputNek.cpp
-    InputNekpp.cpp
-    InputPly.cpp
-    InputSem.cpp
-    InputSwan.cpp
-    InputStarTec.cpp
+    InputModules/InputGmsh.cpp
+    InputModules/InputNek.cpp
+    InputModules/InputNekpp.cpp
+    InputModules/InputPly.cpp
+    InputModules/InputSem.cpp
+    InputModules/InputSwan.cpp
+    InputModules/InputStarTec.cpp
     MeshConvert.cpp
     MeshElements.cpp
     Module.cpp
-    OutputGmsh.cpp
-    OutputNekpp.cpp
-    ProcessBL.cpp
-    ProcessCyl.cpp
-    ProcessDetectSurf.cpp
-    ProcessExtractSurf.cpp
-    ProcessJac.cpp
-    ProcessPerAlign.cpp
-    ProcessScalar.cpp
-    ProcessSpherigon.cpp
-    ProcessTetSplit.cpp
+    OutputModules/OutputGmsh.cpp
+    OutputModules/OutputNekpp.cpp
+    ProcessModules/ProcessBL.cpp
+    ProcessModules/ProcessCyl.cpp
+    ProcessModules/ProcessDetectSurf.cpp
+    ProcessModules/ProcessExtractSurf.cpp
+    ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessPerAlign.cpp
+    ProcessModules/ProcessScalar.cpp
+    ProcessModules/ProcessSpherigon.cpp
+    ProcessModules/ProcessTetSplit.cpp
 )
 
 IF (NEKTAR_USE_CCM)
-    SET(MeshConvertHeaders ${MeshConvertHeaders} InputStar.h)
-    SET(MeshConvertSources ${MeshConvertSources} InputStar.cpp)
+    SET(MeshConvertHeaders ${MeshConvertHeaders} InputModules/InputStar.h)
+    SET(MeshConvertSources ${MeshConvertSources} InputModules/InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)
 
 
 IF (NEKTAR_USE_VTK)
-    SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h OutputVtk.h)
-    SET(MeshConvertSources ${MeshConvertSources} InputVtk.cpp OutputVtk.cpp)
+    SET(MeshConvertHeaders ${MeshConvertHeaders} InputModules/InputVtk.h OutputModules/OutputVtk.h)
+    SET(MeshConvertSources ${MeshConvertSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
 ENDIF (NEKTAR_USE_VTK)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})

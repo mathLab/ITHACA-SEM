@@ -37,7 +37,7 @@
 #define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTVTK
 
 #include <tinyxml.h>
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {

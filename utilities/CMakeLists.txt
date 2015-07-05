@@ -4,7 +4,7 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
 
     SET_COMMON_PROPERTIES(${name})
 
-    TARGET_LINK_LIBRARIES(${name} MultiRegions)
+    TARGET_LINK_LIBRARIES(${name} SolverUtils)
     
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 
@@ -18,7 +18,7 @@ ENDMACRO(ADD_UTILITIES_EXECUTABLE name component source)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library ${CMAKE_SOURCE_DIR}/utilities)
 
-SUBDIRS(PreProcessing PostProcessing)
+SUBDIRS(PreProcessing PostProcessing FieldConvert)
 
 SET(CPACK_COMPONENTS_ALL util)
 

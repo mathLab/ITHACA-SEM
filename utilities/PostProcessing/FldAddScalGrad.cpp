@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = 1;
-    int addfields = 1;
+    int addfields = 7;
     Array<OneD, MultiRegions::ExpListSharedPtr> exp(nfields + addfields);
     MultiRegions::AssemblyMapCGSharedPtr m_locToGlobalMap;
 
@@ -72,10 +72,12 @@ int main(int argc, char *argv[])
             m_locToGlobalMap = originalfield->GetLocalToGlobalMap();
             
             exp[0] = originalfield;
-            
-            exp[1] = MemoryManager<MultiRegions::ContField3D>
-                ::AllocateSharedPtr(*originalfield, graphShPt, 
-                                    vSession->GetVariable(0));
+            for (i=0; i<addfields; i++)
+            {
+                exp[i+1] = MemoryManager<MultiRegions::ContField3D>
+                    ::AllocateSharedPtr(*originalfield, graphShPt, 
+                                        vSession->GetVariable(0));
+            }
         }
         break;
         default:
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
         for(int i = 0; i < fielddata.size(); ++i)
         {
             exp[j]->ExtractDataToCoeffs(fielddef [i],
-                                        fielddata[i],
+                                       fielddata[i],
                                         fielddef [i]->m_fields[0],
                                         exp[j]->UpdateCoeffs());
         }
@@ -107,36 +109,39 @@ int main(int argc, char *argv[])
     nt = exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > grad(expdim);
     Array<OneD, Array<OneD, NekDouble> > fgrad(expdim);
+    Array<OneD, Array<OneD, NekDouble> > values(addfields);
    
     // Set up mapping from Boundary condition to element details.
     StdRegions::StdExpansionSharedPtr elmt;
     StdRegions::StdExpansion2DSharedPtr bc;
     Array<OneD, int> BoundarytoElmtID;
     Array<OneD, int> BoundarytoTraceID;
-    Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+    Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(addfields);
     Array<OneD, const NekDouble> U(nt);
-    Array<OneD, NekDouble> values;
     Array<OneD, NekDouble> outvalues;
     
     exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID); 
 
     //get boundary expansions for each field
-    BndExp = exp[0]->GetBndCondExpansions();
+    for (i = 0; i<addfields; i++)
+    {
+        BndExp[i] = exp[i]->GetBndCondExpansions();
+    }
 
     // loop over the types of boundary conditions
-    for(cnt = n = 0; n < BndExp.num_elements(); ++n)
+    for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
     {   
         // identify boundary which the user wanted
         if(n == surfID)
         {   
-            for(i = 0; i < BndExp[n]->GetExpSize(); ++i, cnt++)
+            for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i, cnt++)
             {
                 // find element and face of this expansion.
                 elmtid = BoundarytoElmtID[cnt];
                 elmt   = exp[0]->GetExp(elmtid);
                 nq     = elmt->GetTotPoints();
                 offset = exp[0]->GetPhys_Offset(elmtid);
-
+                
                 // Initialise local arrays for the velocity gradients
                 // size of total number of quadrature points for each element (hence local).
                 for(j = 0; j < expdim; ++j)
@@ -146,43 +151,16 @@ int main(int argc, char *argv[])
                 
                 if(expdim == 2)
                 { 
-                    //identify boundary of element
-                    boundary = BoundarytoTraceID[cnt];
-                    
-                    //Extract scalar field
-                    U = exp[0]->GetPhys() + offset;
-                    
-                    //Compute gradients (velocity correction scheme method)
-                    elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],U,grad[0]);
-                    elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,grad[1]);  
-                
-                    // Get face 2D expansion from element expansion
-                    bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[n]->GetExp(i));
-
-                    
-                    for(j = 0; j < expdim; ++j)
-                    {
-                        fgrad[j] = Array<OneD, NekDouble>(nq);
-                    } 
-                    
-                    //identify boundary of element looking at.
-                    boundary = BoundarytoTraceID[cnt];
-                    
-                    // Get face stress values.
-                    for(j = 0; j < expdim; ++j)
-                    {
-                        elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]);
-                    }
-
-
-                    // calcuate wss, and update velocity coefficients in the elemental boundary expansion
-                    values = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
-                    bc->NormVectorIProductWRTBase(fgrad[0],fgrad[1],values);
                 }
                 else
                 {   
+                    for (j = 0; j< addfields; j++)
+                    {
+                        values[j] = BndExp[j][n]->UpdateCoeffs() + BndExp[j][n]->GetCoeff_Offset(i);
+                    }
+                   
                     // Get face 2D expansion from element expansion
-                    bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[n]->GetExp(i));
+                    bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (BndExp[0][n]->GetExp(i));
 
                     // Number of face quadrature points
                     nfq = bc->GetTotPoints();
@@ -195,16 +173,34 @@ int main(int argc, char *argv[])
 
                     //Compute gradients
                     elmt->PhysDeriv(U,grad[0],grad[1],grad[2]);
+                    
+                    if(i ==0)
+                    {
+                        for (j = 0; j< nq; j++)
+                        {
+                            cout << "element grad: " << grad[0][j] << endl;
+                        }
+                    }
 
                     for(j = 0; j < expdim; ++j)
                     {
                         fgrad[j] = Array<OneD, NekDouble>(nfq);
                     }
 
+
                     // Get gradient at the quadrature points of the face
                     for(j = 0; j < expdim; ++j)
                     {
                         elmt->GetFacePhysVals(boundary,bc,grad[j],fgrad[j]); 
+                        bc->FwdTrans(fgrad[j],values[j]);
+                    }
+
+                    if(i ==0)
+                    {
+                        for (j = 0; j< nfq; j++)
+                        {
+                            cout << "face grad: " << fgrad[0][j] << endl;
+                        }
                     }
 
                     const SpatialDomains::GeomFactorsSharedPtr m_metricinfo=bc->GetMetricInfo();
@@ -213,9 +209,6 @@ int main(int argc, char *argv[])
                                 = elmt->GetFaceNormal(boundary);
 
                     Array<OneD, NekDouble>  gradnorm(nfq);
-
-                    // calcuate gradient and update coefficients in the elemental boundary expansion
-                    values = BndExp[n]->UpdateCoeffs() + BndExp[n]->GetCoeff_Offset(i);
 
                     if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
@@ -229,48 +222,59 @@ int main(int argc, char *argv[])
                                           normals[1][0],fgrad[1],1,gradnorm,1);
                         Vmath::Svtvp(nfq,normals[2][0],fgrad[2],1,gradnorm,1,gradnorm,1);
                     }
+                    
+                    for(j = 0; j<expdim; j++)
+                    {
+                        bc->FwdTrans(normals[j],values[j+expdim]);
+                    }
 
                     //gradient (grad(u) n)
                     Vmath::Smul(nfq,-1.0,gradnorm,1,gradnorm,1);
-                    bc->FwdTrans(gradnorm,values);
+                    bc->FwdTrans(gradnorm,values[expdim*2]);
                 }
             }
             
         }
         else 
         {
-            cnt += BndExp[n]->GetExpSize();
+            cnt += BndExp[0][n]->GetExpSize();
         }
     }
 
-    int ncoeffs = exp[1]->GetNcoeffs();
-    Array<OneD, NekDouble> output(ncoeffs);
-    
-    output=exp[1]->UpdateCoeffs();
-        
-    int nGlobal=m_locToGlobalMap->GetNumGlobalCoeffs();
-    Array<OneD, NekDouble> outarray(nGlobal,0.0);
-
-    int bndcnt=0;
-          
-    const Array<OneD,const int>& map = m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsMap();
-        
-    for(i = 0; i < BndExp.num_elements(); ++i)
+    for(int j = 0; j < addfields; ++j)
     {
-        if(i==surfID)
+        int ncoeffs = exp[0]->GetNcoeffs();
+        Array<OneD, NekDouble> output(ncoeffs);
+        
+        output=exp[j+1]->UpdateCoeffs();
+        
+        int nGlobal=m_locToGlobalMap->GetNumGlobalCoeffs();
+        Array<OneD, NekDouble> outarray(nGlobal,0.0);
+        
+        int bndcnt=0;
+        
+        const Array<OneD,const int>& map = m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsMap();
+        NekDouble sign;
+        
+        for(int i = 0; i < BndExp[j].num_elements(); ++i)
         {
-            const Array<OneD,const NekDouble>& coeffs = BndExp[i]->GetCoeffs();
-            for(int k = 0; k < (BndExp[i])->GetNcoeffs(); ++k)
+            if(i==surfID)
             {
-                outarray[map[bndcnt++]] = coeffs[k];
+                const Array<OneD,const NekDouble>& coeffs = BndExp[j][i]->GetCoeffs();
+                for(int k = 0; k < (BndExp[j][i])->GetNcoeffs(); ++k)
+                {
+                    sign = m_locToGlobalMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                    outarray[map[bndcnt++]] = sign * coeffs[k];
+                }
+            }
+            else
+            {
+                bndcnt += BndExp[j][i]->GetNcoeffs();
             }
         }
-        else
-        {
-            bndcnt += BndExp[i]->GetNcoeffs();
-        }
+        m_locToGlobalMap->GlobalToLocal(outarray,output);
     }
-    m_locToGlobalMap->GlobalToLocal(outarray,output);
+    
 
     //-----------------------------------------------
     // Write solution to file with additional computed fields
@@ -281,8 +285,14 @@ int main(int argc, char *argv[])
     
     vector<string > outname;
     
+    outname.push_back("du/dx");
+    outname.push_back("du/dy");
+    outname.push_back("du/dz");
+    outname.push_back("nx");
+    outname.push_back("ny");
+    outname.push_back("nz");
     outname.push_back("gradient");
-
+    
     
     for(j = 0; j < nfields+addfields; ++j)
     {

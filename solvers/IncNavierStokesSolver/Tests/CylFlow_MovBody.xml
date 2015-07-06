@@ -1832,6 +1832,7 @@
             <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
             <I PROPERTY="USEFFT" VALUE="FFTW"/>
             <I PROPERTY="VibrationType" VALUE="CONSTRAINED"/>
+            <I PROPERTY="SupportType" VALUE="FREE-FREE"/>
             <I PROPERTY="FictitiousMassMethod" VALUE="True"/>
         </SOLVERINFO>
         <PARAMETERS>

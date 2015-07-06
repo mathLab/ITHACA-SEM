@@ -88,10 +88,10 @@ bool operator< (OperatorKey const &p1, OperatorKey const &p2)
  */
 std::ostream &operator<<(std::ostream &os, OperatorKey const &p)
 {
-    os <<                       boost::get<0>(p)  << " "
-       << OperatorTypeMap      [boost::get<1>(p)] << " "
-       << ImplementationTypeMap[boost::get<2>(p)] << " "
-       << ImplementationTypeMap[boost::get<3>(p)];
+    os << LibUtilities::ShapeTypeMap[boost::get<0>(p)] << ", "
+       << OperatorTypeMap           [boost::get<1>(p)] << ", "
+       << ImplementationTypeMap     [boost::get<2>(p)] << ", "
+       << (boost::get<3>(p) ? "Nodal" : "Modal");
     return os;
 }
 

@@ -1184,9 +1184,12 @@ namespace Nektar
                             }
                         }
                         int p = atoi(vItem->Attribute("ID"));
+
                         if (vListStr.length() == 0)
                         {
-                            vBndRegions->RemoveChild(vItem);
+                            TiXmlElement* tmp = vItem;
+                            vItem = vItem->NextSiblingElement();
+                            vBndRegions->RemoveChild(tmp);
                         }
                         else
                         {
@@ -1197,12 +1200,12 @@ namespace Nektar
                             vNewElement->LinkEndChild(vList);
                             vNewBndRegions->LinkEndChild(vNewElement);
                             vBndRegionIdList.insert(p);
+                            vItem = vItem->NextSiblingElement();
                         }
 
                         // Store original order of boundary region.
                         m_bndRegOrder[p] = vSeq;
                         
-                        vItem = vItem->NextSiblingElement();
                     }
                     vConditions->ReplaceChild(vBndRegions, *vNewBndRegions);
                 }
@@ -1216,12 +1219,14 @@ namespace Nektar
                         if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
                         {
                             vItem->SetAttribute("REF", *x);
+                            vItem = vItem->NextSiblingElement();
                         }
                         else
                         {
-                            vBndConditions->RemoveChild(vItem);
+                            TiXmlElement* tmp = vItem;
+                            vItem = vItem->NextSiblingElement();
+                            vBndConditions->RemoveChild(tmp);
                         }
-                        vItem = vItem->NextSiblingElement();
                     }
                 }
                 pNektar->LinkEndChild(vConditions);

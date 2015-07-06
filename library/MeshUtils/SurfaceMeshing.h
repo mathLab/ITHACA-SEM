@@ -71,7 +71,7 @@ namespace MeshUtils {
                      int &tnp,
                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
         {
-            m_surfacemeshes[i-1]->Extract(nt,tnp,p);
+            //m_surfacemeshes[i-1]->Extract(nt,tnp,p);
         }
         
         

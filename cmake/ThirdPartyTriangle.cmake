@@ -29,8 +29,8 @@ IF (THIRDPARTY_BUILD_TRIANGLE)
     EXTERNALPROJECT_ADD(
         triangle-1.6
         PREFIX ${TPSRC}
-        URL ${TPURL}/triangle.zip
-        URL_MD5 ebc48aa34d79b2a03080c8647e8164a6
+        URL http:/ae-nektar.ae.ic.ac.uk/~mt4313/triangle.zip
+        URL_MD5 c7c8e5286f8bb02f85e03ea5c79755bc
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/triangle-1.6

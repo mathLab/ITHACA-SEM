@@ -48,41 +48,85 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        std::string FieldIOXml::className
-            = GetFieldIOFactory().RegisterCreatorFunction(
-                    "Xml",
-                    FieldIOXml::create,
-                    "XML-based output of field data.");
 
-        FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm) : FieldIO(pComm)
+        XmlDataSource::XmlDataSource(TiXmlDocument& doc) :
+                m_doc(&doc)
         {
         }
+
+        XmlDataSource::XmlDataSource(const std::string& fn) :
+                m_doc(new TiXmlDocument(fn))
+        {
+            bool loadOkay = m_doc->LoadFile();
+
+            std::stringstream errstr;
+            errstr << "Unable to load file: " << fn << std::endl;
+            errstr << "Reason: " << m_doc->ErrorDesc() << std::endl;
+            errstr << "Position: Line " << m_doc->ErrorRow() << ", Column "
+                    << m_doc->ErrorCol() << std::endl;
+            ASSERTL0(loadOkay, errstr.str());
+        }
+        XmlDataSource::~XmlDataSource()
+        {
+            delete m_doc;
+        }
+
+        TiXmlDocument& XmlDataSource::Get()
+        {
+            return *m_doc;
+        }
+        const TiXmlDocument& XmlDataSource::Get() const
+        {
+            return *m_doc;
+        }
+
+        DataSourceSharedPtr XmlDataSource::create(const std::string& fn)
+        {
+            return DataSourceSharedPtr(new XmlDataSource(fn));
+        }
+        DataSourceSharedPtr XmlDataSource::create(TiXmlDocument& doc)
+        {
+            return DataSourceSharedPtr(new XmlDataSource(doc));
+        }
+
+        typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
+
+        std::string FieldIOXml::className =
+                GetFieldIOFactory().RegisterCreatorFunction("Xml",
+                        FieldIOXml::create, "XML-based output of field data.");
+
+        FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm) :
+                FieldIO(pComm)
+        {
+        }
+
         /**
          *
          */
         void FieldIOXml::v_Write(const std::string &outFile,
-                   std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                   std::vector<std::vector<NekDouble> > &fielddata,
-                   const FieldMetaDataMap &fieldmetadatamap)
+                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                std::vector<std::vector<NekDouble> > &fielddata,
+                const FieldMetaDataMap &fieldmetadatamap)
         {
             // Check everything seems sensible
             ASSERTL1(fielddefs.size() == fielddata.size(),
-                      "Length of fielddefs and fielddata incompatible");
+                    "Length of fielddefs and fielddata incompatible");
             for (int f = 0; f < fielddefs.size(); ++f)
             {
                 ASSERTL1(fielddata[f].size() > 0,
                         "Fielddata vector must contain at least one value.");
 
                 ASSERTL1(fielddata[f].size() ==
-                             fielddefs[f]->m_fields.size() *
-                             CheckFieldDefinition(fielddefs[f]),
-                         "Invalid size of fielddata vector.");
+                        fielddefs[f]->m_fields.size() *
+                        CheckFieldDefinition(fielddefs[f]),
+                        "Invalid size of fielddata vector.");
             }
 
             // Prepare to write out data. In parallel, we must create directory
             // and determine the full pathname to the file to write out.
             // Any existing file/directory which is in the way is removed.
-            std::string filename = SetUpOutput(outFile, fielddefs, fieldmetadatamap);
+            std::string filename = SetUpOutput(outFile, fielddefs,
+                    fieldmetadatamap);
 
             // Create the file (partition)
             TiXmlDocument doc;
@@ -92,7 +136,7 @@ namespace Nektar
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
 
-            AddInfoTag(root,fieldmetadatamap);
+            AddInfoTag(root, fieldmetadatamap);
 
             for (int f = 0; f < fielddefs.size(); ++f)
             {
@@ -106,8 +150,8 @@ namespace Nektar
                 {
                     std::stringstream fieldsStringStream;
                     bool first = true;
-                    for (std::vector<int>::size_type i = 0; i
-                    < fielddefs[f]->m_fields.size(); i++)
+                    for (std::vector<int>::size_type i = 0;
+                            i < fielddefs[f]->m_fields.size(); i++)
                     {
                         if (!first)
                             fieldsStringStream << ",";
@@ -122,8 +166,9 @@ namespace Nektar
                 std::string shapeString;
                 {
                     std::stringstream shapeStringStream;
-                    shapeStringStream << ShapeTypeMap[fielddefs[f]->m_shapeType];
-                    if(fielddefs[f]->m_numHomogeneousDir == 1)
+                    shapeStringStream
+                            << ShapeTypeMap[fielddefs[f]->m_shapeType];
+                    if (fielddefs[f]->m_numHomogeneousDir == 1)
                     {
                         shapeStringStream << "-HomogenousExp1D";
                     }
@@ -141,12 +186,13 @@ namespace Nektar
                 {
                     std::stringstream basisStringStream;
                     bool first = true;
-                    for (std::vector<BasisType>::size_type i = 0; i < fielddefs[f]->m_basis.size(); i++)
+                    for (std::vector<BasisType>::size_type i = 0;
+                            i < fielddefs[f]->m_basis.size(); i++)
                     {
                         if (!first)
                             basisStringStream << ",";
                         basisStringStream
-                        << BasisTypeMap[fielddefs[f]->m_basis[i]];
+                                << BasisTypeMap[fielddefs[f]->m_basis[i]];
                         first = false;
                     }
                     basisString = basisStringStream.str();
@@ -154,18 +200,19 @@ namespace Nektar
                 elemTag->SetAttribute("BASIS", basisString);
 
                 // Write homogeneuous length details
-                if(fielddefs[f]->m_numHomogeneousDir)
+                if (fielddefs[f]->m_numHomogeneousDir)
                 {
                     std::string homoLenString;
                     {
                         std::stringstream homoLenStringStream;
                         bool first = true;
-                        for (int i = 0; i < fielddefs[f]->m_numHomogeneousDir; ++i)
+                        for (int i = 0; i < fielddefs[f]->m_numHomogeneousDir;
+                                ++i)
                         {
                             if (!first)
                                 homoLenStringStream << ",";
                             homoLenStringStream
-                            << fielddefs[f]->m_homogeneousLengths[i];
+                                    << fielddefs[f]->m_homogeneousLengths[i];
                             first = false;
                         }
                         homoLenString = homoLenStringStream.str();
@@ -174,42 +221,50 @@ namespace Nektar
                 }
 
                 // Write homogeneuous planes/lines details
-                if(fielddefs[f]->m_numHomogeneousDir)
+                if (fielddefs[f]->m_numHomogeneousDir)
                 {
-                    if(fielddefs[f]->m_homogeneousYIDs.size() > 0)
+                    if (fielddefs[f]->m_homogeneousYIDs.size() > 0)
                     {
                         std::string homoYIDsString;
                         {
                             std::stringstream homoYIDsStringStream;
                             bool first = true;
-                            for(int i = 0; i < fielddefs[f]->m_homogeneousYIDs.size(); i++)
+                            for (int i = 0;
+                                    i < fielddefs[f]->m_homogeneousYIDs.size();
+                                    i++)
                             {
                                 if (!first)
                                     homoYIDsStringStream << ",";
-                                homoYIDsStringStream << fielddefs[f]->m_homogeneousYIDs[i];
+                                homoYIDsStringStream
+                                        << fielddefs[f]->m_homogeneousYIDs[i];
                                 first = false;
                             }
                             homoYIDsString = homoYIDsStringStream.str();
                         }
-                        elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
+                        elemTag->SetAttribute("HOMOGENEOUSYIDS",
+                                homoYIDsString);
                     }
 
-                    if(fielddefs[f]->m_homogeneousZIDs.size() > 0)
+                    if (fielddefs[f]->m_homogeneousZIDs.size() > 0)
                     {
                         std::string homoZIDsString;
                         {
                             std::stringstream homoZIDsStringStream;
                             bool first = true;
-                            for(int i = 0; i < fielddefs[f]->m_homogeneousZIDs.size(); i++)
+                            for (int i = 0;
+                                    i < fielddefs[f]->m_homogeneousZIDs.size();
+                                    i++)
                             {
                                 if (!first)
                                     homoZIDsStringStream << ",";
-                                homoZIDsStringStream << fielddefs[f]->m_homogeneousZIDs[i];
+                                homoZIDsStringStream
+                                        << fielddefs[f]->m_homogeneousZIDs[i];
                                 first = false;
                             }
                             homoZIDsString = homoZIDsStringStream.str();
                         }
-                        elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
+                        elemTag->SetAttribute("HOMOGENEOUSZIDS",
+                                homoZIDsString);
                     }
                 }
 
@@ -223,8 +278,8 @@ namespace Nektar
                         numModesStringStream << "UNIORDER:";
                         // Just dump single definition
                         bool first = true;
-                        for (std::vector<int>::size_type i = 0; i
-                                 < fielddefs[f]->m_basis.size(); i++)
+                        for (std::vector<int>::size_type i = 0;
+                                i < fielddefs[f]->m_basis.size(); i++)
                         {
                             if (!first)
                                 numModesStringStream << ",";
@@ -236,8 +291,8 @@ namespace Nektar
                     {
                         numModesStringStream << "MIXORDER:";
                         bool first = true;
-                        for (std::vector<int>::size_type i = 0; i
-                                 < fielddefs[f]->m_numModes.size(); i++)
+                        for (std::vector<int>::size_type i = 0;
+                                i < fielddefs[f]->m_numModes.size(); i++)
                         {
                             if (!first)
                                 numModesStringStream << ",";
@@ -256,7 +311,7 @@ namespace Nektar
                 std::string idString;
                 {
                     std::stringstream idStringStream;
-                    GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
+                    GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
                 }
                 elemTag->SetAttribute("ID", idString);
 
@@ -270,17 +325,17 @@ namespace Nektar
                 // and crash.
                 switch (compressedDataString.length() % 3)
                 {
-                case 1:
-                    compressedDataString += '\0';
-                case 2:
-                    compressedDataString += '\0';
-                    break;
+                    case 1:
+                        compressedDataString += '\0';
+                    case 2:
+                        compressedDataString += '\0';
+                        break;
                 }
 
                 // Convert from binary to base64.
                 typedef boost::archive::iterators::base64_from_binary<
                         boost::archive::iterators::transform_width<
-                        std::string::const_iterator, 6, 8> > base64_t;
+                                std::string::const_iterator, 6, 8> > base64_t;
                 std::string base64string(base64_t(compressedDataString.begin()),
                         base64_t(compressedDataString.end()));
                 elemTag->LinkEndChild(new TiXmlText(base64string));
@@ -289,17 +344,15 @@ namespace Nektar
             doc.SaveFile(filename);
         }
 
-
         /**
          * Compress a vector of NekDouble values into a string using zlib.
          */
-        int FieldIOXml::Deflate(std::vector<NekDouble>& in,
-                        string& out)
+        int FieldIOXml::Deflate(std::vector<NekDouble>& in, string& out)
         {
             int ret;
             unsigned have;
             z_stream strm;
-            unsigned char* input = (unsigned char*)(&in[0]);
+            unsigned char* input = (unsigned char*) (&in[0]);
             string buffer;
             buffer.resize(CHUNK);
 
@@ -315,9 +368,10 @@ namespace Nektar
             strm.next_in = input;
 
             // Deflate input until output buffer is no longer full.
-            do {
+            do
+            {
                 strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*)(&buffer[0]);
+                strm.next_out = (unsigned char*) (&buffer[0]);
 
                 ret = deflate(&strm, Z_FINISH);
 
@@ -337,7 +391,7 @@ namespace Nektar
             ASSERTL0(ret == Z_STREAM_END, "Stream not finished");
 
             // Clean-up and return
-            (void)deflateEnd(&strm);
+            (void) deflateEnd(&strm);
             return Z_OK;
         }
 
@@ -408,158 +462,38 @@ namespace Nektar
         /**
          *
          */
-        void FieldIOXml::v_Import(const std::string& infilename,
+        void FieldIOXml::v_ImportFile(const std::string& fname,
                 std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                 std::vector<std::vector<NekDouble> > &fielddata,
-                FieldMetaDataMap &fieldmetadatamap,
-                const Array<OneD, int> ElementIDs)
+                DataSourceSharedPtr dataSource)
         {
+            if (!dataSource)
+                dataSource = XmlDataSource::create(fname);
 
-            std::string infile = infilename;
-
-            fs::path pinfilename(infilename);
-
-            if (fs::is_directory(pinfilename)) // check to see that infile is a directory
+            ImportFieldDefs(dataSource, fielddefs, false);
+            if (fielddata != NullVectorNekDoubleVector)
             {
-                fs::path infofile("Info.xml");
-                fs::path fullpath = pinfilename / infofile;
-                infile = PortablePath(fullpath);
-
-                std::vector < std::string > filenames;
-                std::vector < std::vector<unsigned int>
-                        > elementIDs_OnPartitions;
-
-                ImportMultiFldFileIDs(infile, filenames,
-                        elementIDs_OnPartitions, fieldmetadatamap);
-
-                // Load metadata
-                ImportFieldMetaData(infile, fieldmetadatamap);
-
-                if (ElementIDs == NullInt1DArray) //load all fields
-                {
-                    for (int i = 0; i < filenames.size(); ++i)
-                    {
-                        fs::path pfilename(filenames[i]);
-                        fullpath = pinfilename / pfilename;
-                        string fname = PortablePath(fullpath);
-
-                        TiXmlDocument doc1(fname);
-                        bool loadOkay1 = doc1.LoadFile();
-
-                        std::stringstream errstr;
-                        errstr << "Unable to load file: " << fname << std::endl;
-                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
-                        errstr << "Position: Line " << doc1.ErrorRow()
-                                << ", Column " << doc1.ErrorCol() << std::endl;
-                        ASSERTL0(loadOkay1, errstr.str());
-
-                        ImportFieldDefs(doc1, fielddefs, false);
-                        if (fielddata != NullVectorNekDoubleVector)
-                        {
-                            ImportFieldData(doc1, fielddefs, fielddata);
-                        }
-                    }
-
-                }
-                else // only load relevant partitions
-                {
-                    int i, j;
-                    map<int, vector<int> > FileIDs;
-                    map<int, vector<int> >::iterator it;
-                    set<int> LoadFile;
-
-                    for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
-                    {
-                        for (j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
-                        {
-                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
-                        }
-                    }
-
-                    for (i = 0; i < ElementIDs.num_elements(); ++i)
-                    {
-                        it = FileIDs.find(ElementIDs[i]);
-                        if (it != FileIDs.end())
-                        {
-                            for (j = 0; j < it->second.size(); ++j)
-                            {
-                                LoadFile.insert(it->second[j]);
-                            }
-                        }
-                    }
-
-                    set<int>::iterator iter;
-                    for (iter = LoadFile.begin(); iter != LoadFile.end();
-                            ++iter)
-                    {
-                        fs::path pfilename(filenames[*iter]);
-                        fullpath = pinfilename / pfilename;
-                        string fname = PortablePath(fullpath);
-                        TiXmlDocument doc1(fname);
-                        bool loadOkay1 = doc1.LoadFile();
-
-                        std::stringstream errstr;
-                        errstr << "Unable to load file: " << fname << std::endl;
-                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
-                        errstr << "Position: Line " << doc1.ErrorRow()
-                                << ", Column " << doc1.ErrorCol() << std::endl;
-                        ASSERTL0(loadOkay1, errstr.str());
-
-                        ImportFieldDefs(doc1, fielddefs, false);
-                        if (fielddata != NullVectorNekDoubleVector)
-                        {
-                            ImportFieldData(doc1, fielddefs, fielddata);
-                        }
-                    }
-                }
-            }
-            else // serial format case
-            {
-
-                TiXmlDocument doc(infile);
-                bool loadOkay = doc.LoadFile();
-
-                std::stringstream errstr;
-                errstr << "Unable to load file: " << infile << std::endl;
-                errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-                errstr << "Position: Line " << doc.ErrorRow() << ", Column "
-                        << doc.ErrorCol() << std::endl;
-                ASSERTL0(loadOkay, errstr.str());
-
-                v_ImportFieldMetaData(doc, fieldmetadatamap);
-                ImportFieldDefs(doc, fielddefs, false);
-                if (fielddata != NullVectorNekDoubleVector)
-                {
-                    ImportFieldData(doc, fielddefs, fielddata);
-                }
+                ImportFieldData(dataSource, fielddefs, fielddata);
             }
         }
 
-        void FieldIOXml::v_ImportFieldMetaData(std::string filename,
-                FieldMetaDataMap &fieldmetadatamap)
+        DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
+                std::string filename, FieldMetaDataMap &fieldmetadatamap)
         {
-            TiXmlDocument doc(filename);
-            bool loadOkay = doc.LoadFile();
-
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << filename << std::endl;
-            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc.ErrorRow() << ", Column "
-                    << doc.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
-
-            v_ImportFieldMetaData(doc, fieldmetadatamap);
+            DataSourceSharedPtr ans = XmlDataSource::create(filename);
+            v_ImportFieldMetaData(ans, fieldmetadatamap);
+            return ans;
         }
 
-        void FieldIOXml::v_ImportFieldMetaData(TiXmlDocument &doc,
+        void FieldIOXml::v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
                 FieldMetaDataMap &fieldmetadatamap)
         {
-
-            TiXmlHandle docHandle(&doc);
+            XmlDataSourceSharedPtr xml = boost::static_pointer_cast
+                    < XmlDataSource > (dataSource);
             TiXmlElement* master = 0; // Master tag within which all data is contained.
             TiXmlElement* metadata = 0;
 
-            master = doc.FirstChildElement("NEKTAR");
+            master = xml->Get().FirstChildElement("NEKTAR");
             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
             std::string strLoop = "NEKTAR";
 
@@ -624,14 +558,15 @@ namespace Nektar
         /**
          * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
          */
-        void FieldIOXml::ImportFieldDefs(TiXmlDocument &doc,
+        void FieldIOXml::ImportFieldDefs(DataSourceSharedPtr dataSource,
                 std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                 bool expChild)
         {
-            TiXmlHandle docHandle(&doc);
+            XmlDataSourceSharedPtr xml = boost::static_pointer_cast
+                    < XmlDataSource > (dataSource);
             TiXmlElement* master = NULL; // Master tag within which all data is contained.
 
-            master = doc.FirstChildElement("NEKTAR");
+            master = xml->Get().FirstChildElement("NEKTAR");
             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
             std::string strLoop = "NEKTAR";
             TiXmlElement* loopXml = master;
@@ -910,16 +845,17 @@ namespace Nektar
         /**
          *
          */
-        void FieldIOXml::ImportFieldData(TiXmlDocument &doc,
+        void FieldIOXml::ImportFieldData(DataSourceSharedPtr dataSource,
                 const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                 std::vector<std::vector<NekDouble> > &fielddata)
         {
             int cntdumps = 0;
+            XmlDataSourceSharedPtr xml = boost::static_pointer_cast
+                    < XmlDataSource > (dataSource);
 
-            TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL; // Master tag within which all data is contained.
 
-            master = doc.FirstChildElement("NEKTAR");
+            master = xml->Get().FirstChildElement("NEKTAR");
             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
 
             // Loop through all nektar tags, finding all of the element tags.

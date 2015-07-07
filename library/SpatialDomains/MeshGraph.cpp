@@ -991,10 +991,10 @@ namespace Nektar
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    //LibUtilities::FieldIOSharedPtr f = LibUtilities::GetFieldIOFactory().CreateInstance("Xml", m_session->GetComm());
-                    // This has to use the XML reader.
+
+                    // This has to use the XML reader since we are treating the already parsed XML as a standard FLD file.
                     boost::shared_ptr<LibUtilities::FieldIOXml> f = boost::make_shared<LibUtilities::FieldIOXml>(m_session->GetComm());
-                    f->ImportFieldDefs(doc, fielddefs, true);
+                    f->ImportFieldDefs(LibUtilities::XmlDataSource::create(doc), fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
                 }

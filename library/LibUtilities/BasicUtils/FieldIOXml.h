@@ -43,11 +43,27 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        class XmlDataSource : public DataSource
+        {
+            public:
+                XmlDataSource(TiXmlDocument& doc);
+
+                XmlDataSource(const std::string& fn);
+                ~XmlDataSource();
+                TiXmlDocument& Get();
+                const TiXmlDocument& Get() const;
+
+                static DataSourceSharedPtr create(const std::string& fn);
+                static DataSourceSharedPtr create(TiXmlDocument& fn);
+            private:
+                TiXmlDocument* m_doc;
+        };
 
         /// Class for operating on XML FLD files
         class FieldIOXml : public FieldIO
         {
             public:
+
                 /// Creates an instance of this class
                 LIB_UTILITIES_EXPORT
                 static FieldIOSharedPtr create(
@@ -64,15 +80,19 @@ namespace Nektar
 
                 /// Imports the definition of the fields.
                 LIB_UTILITIES_EXPORT
-                void ImportFieldDefs(TiXmlDocument &doc,
+                virtual void ImportFieldDefs(DataSourceSharedPtr dataSource,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         bool expChild);
 
                 /// Imports the data fields.
                 LIB_UTILITIES_EXPORT
-                void ImportFieldData(TiXmlDocument &doc,
+                void ImportFieldData(DataSourceSharedPtr dataSource,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata);
+
+                inline virtual const std::string& GetClassName() const {
+                    return className;
+                }
 
             private:
                 /// Write data in FLD format
@@ -84,28 +104,25 @@ namespace Nektar
                                 NullFieldMetaDataMap);
 
                 LIB_UTILITIES_EXPORT
-                int Deflate(std::vector<NekDouble>& in, string& out);
-                LIB_UTILITIES_EXPORT
+                int Deflate(std::vector<NekDouble>& in, string& out);LIB_UTILITIES_EXPORT
                 int Inflate(string& in, std::vector<NekDouble>& out);
 
                 LIB_UTILITIES_EXPORT
-                virtual void v_Import(const std::string& infilename,
+                virtual void v_ImportFile(const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata =
-                                NullVectorNekDoubleVector,
-                        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
-                        const Array<OneD, int> ElementiDs = NullInt1DArray);
+                        std::vector<std::vector<NekDouble> > &fielddata,
+                        DataSourceSharedPtr dataSource);
 
                 /// Imports the definition of the meta data
                 LIB_UTILITIES_EXPORT
-                virtual void v_ImportFieldMetaData(std::string filename,
+                virtual DataSourceSharedPtr v_ImportFieldMetaData(
+                        std::string filename,
                         FieldMetaDataMap &fieldmetadatamap);
 
                 /// Imports the definition of the meta data
                 LIB_UTILITIES_EXPORT
-                void v_ImportFieldMetaData(TiXmlDocument &doc,
+                void v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
                         FieldMetaDataMap &fieldmetadatamap);
-
 
         };
 

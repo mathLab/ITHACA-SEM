@@ -149,6 +149,11 @@ namespace Nektar
 
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
+        class DataSource
+        {
+        };
+        typedef boost::shared_ptr<DataSource> DataSourceSharedPtr;
+
         /// Write a field file in serial only
         LIB_UTILITIES_EXPORT void Write(const std::string &outFile,
                 std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -176,6 +181,7 @@ namespace Nektar
         class FieldIO : public boost::enable_shared_from_this<FieldIO>
         {
             public:
+
                 /// Constructor
                 LIB_UTILITIES_EXPORT
                 FieldIO(LibUtilities::CommSharedPtr pComm);
@@ -199,8 +205,15 @@ namespace Nektar
 
                 /// Imports the definition of the meta data
                 LIB_UTILITIES_EXPORT
-                void ImportFieldMetaData(std::string filename,
+                DataSourceSharedPtr ImportFieldMetaData(std::string filename,
                         FieldMetaDataMap &fieldmetadatamap);
+
+                /// Imports the definition of the fields.
+                LIB_UTILITIES_EXPORT
+                virtual void ImportFieldDefs(DataSourceSharedPtr dataSource,
+                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        bool expChild) = 0;
+
 
                 LIB_UTILITIES_EXPORT
                 void WriteMultiFldFileIDs(const std::string &outfile,
@@ -219,6 +232,7 @@ namespace Nektar
                 static const std::string GetFileType(
                         const std::string& filename, CommSharedPtr comm);
 
+                virtual const std::string& GetClassName() const = 0;
             protected:
                 /// Communicator to use when writing parallel format
                 LibUtilities::CommSharedPtr m_comm;
@@ -244,7 +258,6 @@ namespace Nektar
                 int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr &fielddefs);
 
-
                 LIB_UTILITIES_EXPORT
                 virtual void v_Write(const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -252,15 +265,14 @@ namespace Nektar
                         const FieldMetaDataMap &fieldinfomap) = 0;
 
                 LIB_UTILITIES_EXPORT
-                virtual void v_Import(const std::string& infilename,
+                virtual void v_ImportFile(const std::string& fname,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata =
-                                NullVectorNekDoubleVector,
-                        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
-                        const Array<OneD, int> ElementiDs = NullInt1DArray) = 0;
+                        std::vector<std::vector<NekDouble> > &fielddata,
+                        DataSourceSharedPtr dataSource) = 0;
 
                 LIB_UTILITIES_EXPORT
-                virtual void v_ImportFieldMetaData(std::string filename,
+                virtual DataSourceSharedPtr v_ImportFieldMetaData(
+                        std::string filename,
                         FieldMetaDataMap &fieldmetadatamap) = 0;
 
         };
@@ -290,19 +302,10 @@ namespace Nektar
             v_Write(outFile, fielddefs, fielddata, fieldinfomap);
         }
 
-        inline void FieldIO::Import(const std::string& infilename,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata,
-                FieldMetaDataMap &fieldinfomap,
-                const Array<OneD, int> ElementiDs)
+        inline DataSourceSharedPtr FieldIO::ImportFieldMetaData(
+                std::string filename, FieldMetaDataMap &fieldmetadatamap)
         {
-            v_Import(infilename, fielddefs, fielddata, fieldinfomap,
-                    ElementiDs);
-        }
-        inline void FieldIO::ImportFieldMetaData(std::string filename,
-                FieldMetaDataMap &fieldmetadatamap)
-        {
-            v_ImportFieldMetaData(filename, fieldmetadatamap);
+            return v_ImportFieldMetaData(filename, fieldmetadatamap);
         }
     }
 }

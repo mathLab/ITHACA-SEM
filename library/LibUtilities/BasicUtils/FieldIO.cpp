@@ -75,7 +75,8 @@ namespace Nektar
             return Type::Instance();
         }
 
-        const std::string FieldIO::GetFileType(const std::string& filename, CommSharedPtr comm)
+        const std::string FieldIO::GetFileType(const std::string& filename,
+                CommSharedPtr comm)
         {
             // We'll use 0 => XML
             // and 1 => HDF5
@@ -103,14 +104,15 @@ namespace Nektar
 
                 // XML is potentially a nightmare with all the different encodings
                 // so we'll just assume it's OK if it's not HDF
-                const char magic[8] = {0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
+                const char magic[8] =
+                { 0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a };
 
                 std::ifstream datafile(datafilename.c_str(), ios_base::binary);
                 char filedata[8];
                 datafile.read(filedata, 8);
 
                 code = 1;
-                for (unsigned i = 0; i<8; ++i)
+                for (unsigned i = 0; i < 8; ++i)
                 {
                     if (filedata[i] != magic[i])
                     {
@@ -129,8 +131,8 @@ namespace Nektar
             else if (code == 1)
                 iofmt = "Hdf5";
             else
-                // Error
-                ASSERTL0(false, "Unknown file format");
+            // Error
+            ASSERTL0(false, "Unknown file format");
             return iofmt;
         }
 
@@ -138,7 +140,8 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr session,
                 const std::string& filename)
         {
-            const std::string iofmt = FieldIO::GetFileType(filename, session->GetComm());
+            const std::string iofmt = FieldIO::GetFileType(filename,
+                    session->GetComm());
             return GetFieldIOFactory().CreateInstance(iofmt, session->GetComm());
         }
         /**
@@ -217,8 +220,6 @@ namespace Nektar
         {
         }
 
-
-
         /**
          *
          */
@@ -257,6 +258,100 @@ namespace Nektar
             }
 
             doc.SaveFile(outFile);
+        }
+
+        void FieldIO::Import(const std::string& infilename,
+                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                std::vector<std::vector<NekDouble> > &fielddata,
+                FieldMetaDataMap &fieldinfomap,
+                const Array<OneD, int> ElementIDs)
+        {
+            std::string infile = infilename;
+
+            fs::path pinfilename(infilename);
+
+            if (fs::is_directory(pinfilename)) // check to see that infile is a directory
+            {
+                fs::path infofile("Info.xml");
+                fs::path fullpath = pinfilename / infofile;
+                infile = PortablePath(fullpath);
+
+                std::vector < std::string > filenames;
+                std::vector < std::vector<unsigned int>
+                        > elementIDs_OnPartitions;
+
+                ImportMultiFldFileIDs(infile, filenames,
+                        elementIDs_OnPartitions, fieldinfomap);
+
+                // Load metadata
+                if (GetClassName() == "Xml")
+                {
+                    ImportFieldMetaData(infile, fieldinfomap);
+                }
+                else
+                {
+                    FieldIOSharedPtr infoReader =
+                            GetFieldIOFactory().CreateInstance("Xml", m_comm);
+                    infoReader->ImportFieldMetaData(infile, fieldinfomap);
+                }
+
+                if (ElementIDs == NullInt1DArray) //load all fields
+                {
+                    for (int i = 0; i < filenames.size(); ++i)
+                    {
+                        fs::path pfilename(filenames[i]);
+                        fullpath = pinfilename / pfilename;
+                        string fname = PortablePath(fullpath);
+                        v_ImportFile(fname, fielddefs, fielddata,
+                                DataSourceSharedPtr());
+                    }
+
+                }
+                else // only load relevant partitions
+                {
+                    int i, j;
+                    map<int, vector<int> > FileIDs;
+                    map<int, vector<int> >::iterator it;
+                    set<int> LoadFile;
+
+                    for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
+                    {
+                        for (j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
+                        {
+                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
+                        }
+                    }
+
+                    for (i = 0; i < ElementIDs.num_elements(); ++i)
+                    {
+                        it = FileIDs.find(ElementIDs[i]);
+                        if (it != FileIDs.end())
+                        {
+                            for (j = 0; j < it->second.size(); ++j)
+                            {
+                                LoadFile.insert(it->second[j]);
+                            }
+                        }
+                    }
+
+                    set<int>::iterator iter;
+                    for (iter = LoadFile.begin(); iter != LoadFile.end();
+                            ++iter)
+                    {
+                        fs::path pfilename(filenames[*iter]);
+                        fullpath = pinfilename / pfilename;
+                        string fname = PortablePath(fullpath);
+                        v_ImportFile(fname, fielddefs, fielddata,
+                                DataSourceSharedPtr());
+                    }
+                }
+            }
+            else // serial format case
+            {
+                DataSourceSharedPtr dfile = ImportFieldMetaData(infile,
+                        fieldinfomap);
+                v_ImportFile(infile, fielddefs, fielddata, dfile);
+            }
         }
 
         /** 
@@ -349,7 +444,6 @@ namespace Nektar
             m_El->LinkEndChild(child);
             return TagWriterSharedPtr(new XmlTagWriter(child));
         }
-        ;
 
         void XmlTagWriter::SetAttr(const std::string& key,
                 const std::string& val)
@@ -358,6 +452,7 @@ namespace Nektar
             child->LinkEndChild(new TiXmlText(val.c_str()));
             m_El->LinkEndChild(child);
         }
+
         void FieldIO::AddInfoTag(TagWriterSharedPtr root,
                 const FieldMetaDataMap &fieldmetadatamap)
         {
@@ -478,7 +573,9 @@ namespace Nektar
                         fs::remove_all(specPath);
                     } catch (fs::filesystem_error& e)
                     {
-                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                        ASSERTL0(
+                                e.code().value()
+                                        == berrc::no_such_file_or_directory,
                                 "Filesystem error: " + string(e.what()));
                     }
                 }
@@ -563,7 +660,6 @@ namespace Nektar
             // Return the full path to the partition for this process
             return LibUtilities::PortablePath(fulloutname);
         }
-
 
         /**
          *

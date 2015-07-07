@@ -195,19 +195,176 @@ namespace Nektar
                     DataSpaceSharedPtr space, PListSharedPtr createPL,
                     PListSharedPtr accessPL)
             {
-                DataSetSharedPtr ans(
-                        new DataSet(GetId(), name, type, space, createPL,
-                                accessPL));
+                hid_t ds;
+                H5_CONSTRUCT(ds, H5Dcreate,
+                        (m_Id, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, createPL->GetId(), accessPL->GetId()));
+
+                DataSetSharedPtr ans(new DataSet(ds));
                 return ans;
+            }
+
+            // Open an existing group.
+            // The accessPL can be omitted to use the defaults
+            GroupSharedPtr CanHaveGroupsDataSets::OpenGroup(
+                    const std::string& name, PListSharedPtr accessPL) const
+            {
+                hid_t grp;
+                H5_CONSTRUCT(grp, H5Gopen2,
+                        (m_Id, name.c_str(), accessPL->GetId()));
+                GroupSharedPtr ans(new Group(grp));
+                return ans;
+            }
+
+            // Open an existing dataset
+            // The accessPL can be omitted to use the defaults
+            DataSetSharedPtr CanHaveGroupsDataSets::OpenDataSet(
+                    const std::string& name, PListSharedPtr accessPL) const
+            {
+                hid_t ds;
+                H5_CONSTRUCT(ds, H5Dopen2,
+                        (m_Id, name.c_str(), accessPL->GetId()));
+                DataSetSharedPtr ans(new DataSet(ds));
+                return ans;
+            }
+
+            CanHaveGroupsDataSets::LinkIterator CanHaveGroupsDataSets::begin()
+            {
+                // Have to use dynamic because of virtual inheritance
+                CanHaveGroupsDataSetsSharedPtr thisSh =
+                        boost::dynamic_pointer_cast < CanHaveGroupsDataSets
+                                > (shared_from_this());
+                return CanHaveGroupsDataSets::LinkIterator(thisSh);
+            }
+
+            CanHaveGroupsDataSets::LinkIterator CanHaveGroupsDataSets::end()
+            {
+                // Have to use dynamic because of virtual inheritance
+                CanHaveGroupsDataSetsSharedPtr thisSh =
+                        boost::dynamic_pointer_cast < CanHaveGroupsDataSets
+                                > (shared_from_this());
+                return CanHaveGroupsDataSets::LinkIterator(thisSh,
+                        GetNumElements());
+            }
+
+            CanHaveGroupsDataSets::LinkIterator::LinkIterator(
+                    CanHaveGroupsDataSetsSharedPtr grp, hsize_t idx) :
+                    m_grp(grp), m_idx(-1), m_next(idx), m_size(grp->GetNumElements())
+            {
+                ++*this;
+            }
+
+            const std::string& CanHaveGroupsDataSets::LinkIterator::operator*()
+            {
+                return m_currentName;
+            }
+            CanHaveGroupsDataSets::LinkIterator& CanHaveGroupsDataSets::LinkIterator::operator++()
+            {
+                m_idx = m_next;
+                if (m_idx < m_size)
+                {
+                    H5_CALL(H5Literate,
+                            (m_grp->GetId(), H5_INDEX_NAME, H5_ITER_NATIVE, &m_next, LinkIterator::helper, this));
+                }
+                return *this;
+            }
+            bool CanHaveGroupsDataSets::LinkIterator::operator==(
+                    const CanHaveGroupsDataSets::LinkIterator& other) const
+            {
+                if (m_grp == other.m_grp)
+                {
+                    if (m_idx == other.m_idx)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            herr_t CanHaveGroupsDataSets::LinkIterator::helper(hid_t g_id,
+                    const char *name, const H5L_info_t *info, void *op_data)
+            {
+                CanHaveGroupsDataSets::LinkIterator* iter =
+                        static_cast<CanHaveGroupsDataSets::LinkIterator*>(op_data);
+                iter->m_currentName = name;
+                return 1;
             }
 
             AttributeSharedPtr CanHaveAttributes::CreateAttribute(
                     const std::string& name, DataTypeSharedPtr type,
                     DataSpaceSharedPtr space)
             {
-                AttributeSharedPtr ans(
-                        new Attribute(GetId(), name, type, space));
-                return ans;
+                return Attribute::Create(m_Id, name, type, space);
+            }
+
+            AttributeSharedPtr CanHaveAttributes::OpenAttribute(
+                    const std::string& name)
+            {
+                return Attribute::Open(m_Id, name);
+            }
+
+            int CanHaveAttributes::GetNumAttr() const
+            {
+                H5O_info_t info;
+                H5_CALL(H5Oget_info, (m_Id, &info));
+                return info.num_attrs;
+            }
+
+            CanHaveAttributes::AttrIterator CanHaveAttributes::attr_begin()
+            {
+                // Have to use dynamic because of virtual inheritance
+                CanHaveAttributesSharedPtr thisSh = boost::dynamic_pointer_cast
+                        < CanHaveAttributes > (shared_from_this());
+                return CanHaveAttributes::AttrIterator(thisSh);
+
+            }
+            CanHaveAttributes::AttrIterator CanHaveAttributes::attr_end()
+            {
+                // Have to use dynamic because of virtual inheritance
+                CanHaveAttributesSharedPtr thisSh = boost::dynamic_pointer_cast
+                        < CanHaveAttributes > (shared_from_this());
+                return CanHaveAttributes::AttrIterator(thisSh, GetNumAttr());
+            }
+
+            CanHaveAttributes::AttrIterator::AttrIterator(
+                    CanHaveAttributesSharedPtr obj, hsize_t idx) :
+                    m_obj(obj), m_idx(-1), m_next(idx), m_size(obj->GetNumAttr())
+            {
+                ++*this;
+            }
+
+            const std::string& CanHaveAttributes::AttrIterator::operator*()
+            {
+                return m_currentName;
+            }
+            CanHaveAttributes::AttrIterator& CanHaveAttributes::AttrIterator::operator++()
+            {
+                m_idx = m_next;
+                if (m_next < m_size)
+                {
+                    H5_CALL(H5Aiterate2,
+                            (m_obj->GetId(), H5_INDEX_CRT_ORDER, H5_ITER_INC, &m_next, AttrIterator::helper, this));
+                }
+                return *this;
+            }
+            bool CanHaveAttributes::AttrIterator::operator==(
+                    const CanHaveAttributes::AttrIterator& other) const
+            {
+                if (m_obj == other.m_obj)
+                {
+                    if (m_idx == other.m_idx)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            herr_t CanHaveAttributes::AttrIterator::helper(hid_t g_id,
+                    const char *name, const H5A_info_t *info, void *op_data)
+            {
+                CanHaveAttributes::AttrIterator* iter =
+                        static_cast<CanHaveAttributes::AttrIterator*>(op_data);
+                iter->m_currentName = name;
+                return 1;
             }
 
             DataSpaceSharedPtr DataSpace::Null()
@@ -232,6 +389,11 @@ namespace Nektar
 
             DataSpace::DataSpace() :
                     Object()
+            {
+            }
+
+            DataSpace::DataSpace(hid_t id) :
+                    Object(id)
             {
             }
 
@@ -328,11 +490,22 @@ namespace Nektar
             template<>
             const hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
 
-            Attribute::Attribute(hid_t parent, const std::string& name,
-                    DataTypeSharedPtr type, DataSpaceSharedPtr space)
+            AttributeSharedPtr Attribute::Create(hid_t parent,
+                    const std::string& name, DataTypeSharedPtr type,
+                    DataSpaceSharedPtr space)
             {
-                H5_CONSTRUCT(m_Id, H5Acreate,
+                hid_t id;
+                H5_CONSTRUCT(id, H5Acreate,
                         (parent, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, H5P_DEFAULT));
+                return AttributeSharedPtr(new Attribute(id));
+            }
+
+            AttributeSharedPtr Attribute::Open(hid_t parent,
+                    const std::string& name)
+            {
+                hid_t id;
+                H5_CONSTRUCT(id, H5Aopen, (parent, name.c_str(), H5P_DEFAULT));
+                return AttributeSharedPtr(new Attribute(id));
             }
 
             Attribute::~Attribute()
@@ -345,11 +518,31 @@ namespace Nektar
                 m_Id = H5I_INVALID_HID;
             }
 
-            File::File(const std::string& filename, unsigned mode,
-                    PListSharedPtr createPL, PListSharedPtr accessPL)
+            DataSpaceSharedPtr Attribute::GetSpace() const
             {
-                H5_CONSTRUCT(m_Id, H5Fcreate,
+                return DataSpaceSharedPtr(new DataSpace(H5Aget_space(m_Id)));
+            }
+
+            File::File(hid_t id) :
+                    Object(id)
+            {
+            }
+            FileSharedPtr File::Create(const std::string& filename,
+                    unsigned mode, PListSharedPtr createPL,
+                    PListSharedPtr accessPL)
+            {
+                hid_t id;
+                H5_CONSTRUCT(id, H5Fcreate,
                         (filename.c_str(), mode, createPL->GetId(), accessPL->GetId()));
+                return FileSharedPtr(new File(id));
+            }
+            FileSharedPtr File::Open(const std::string& filename, unsigned mode,
+                    PListSharedPtr accessPL)
+            {
+                hid_t id;
+                H5_CONSTRUCT(id, H5Fopen,
+                        (filename.c_str(), mode, accessPL->GetId()));
+                return FileSharedPtr(new File(id));
             }
 
             File::~File()
@@ -362,7 +555,11 @@ namespace Nektar
                 H5_CALL(H5Fclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
             }
-
+            hsize_t File::GetNumElements()
+            {
+                GroupSharedPtr root = OpenGroup("/");
+                return root->GetNumElements();
+            }
             Group::Group(hid_t id) :
                     Object(id)
             {
@@ -379,12 +576,16 @@ namespace Nektar
                 m_Id = H5I_INVALID_HID;
             }
 
-            DataSet::DataSet(hid_t parent, const std::string& name,
-                    DataTypeSharedPtr type, DataSpaceSharedPtr space,
-                    PListSharedPtr createPL, PListSharedPtr accessPL)
+            hsize_t Group::GetNumElements()
             {
-                H5_CONSTRUCT(m_Id, H5Dcreate,
-                        (parent, name.c_str(), type->GetId(), space->GetId(), H5P_DEFAULT, createPL->GetId(), accessPL->GetId()));
+                H5G_info_t info;
+                H5_CALL(H5Gget_info, (m_Id, &info));
+                return info.nlinks;
+            }
+
+            DataSet::DataSet(hid_t id) :
+                    Object(id)
+            {
             }
 
             DataSet::~DataSet()
@@ -396,6 +597,11 @@ namespace Nektar
             {
                 H5_CALL(H5Dclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
+            }
+
+            DataSpaceSharedPtr DataSet::GetSpace() const
+            {
+                return DataSpaceSharedPtr(new DataSpace(H5Dget_space(m_Id)));
             }
 
         }

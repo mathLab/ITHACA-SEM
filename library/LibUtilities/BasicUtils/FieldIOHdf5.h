@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/H5.h>
 
 namespace Nektar
 {
@@ -77,6 +78,15 @@ namespace Nektar
 
                 FieldIOHdf5(LibUtilities::CommSharedPtr pComm);
 
+                LIB_UTILITIES_EXPORT
+                virtual void ImportFieldDefs(DataSourceSharedPtr dataSource,
+                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        bool expChild);
+
+                inline virtual const std::string& GetClassName() const {
+                    return className;
+                }
+
             private:
                 /// Write data in FLD format
                 LIB_UTILITIES_EXPORT
@@ -87,16 +97,24 @@ namespace Nektar
                                 NullFieldMetaDataMap);
 
                 LIB_UTILITIES_EXPORT
-                virtual void v_Import(const std::string& infilename,
+                virtual void v_ImportFile(const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata =
-                                NullVectorNekDoubleVector,
-                        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
-                        const Array<OneD, int> ElementiDs = NullInt1DArray);
+                        std::vector<std::vector<NekDouble> > &fielddata,
+                        DataSourceSharedPtr dataSource);
 
                 LIB_UTILITIES_EXPORT
-                virtual void v_ImportFieldMetaData(std::string filename,
+                virtual DataSourceSharedPtr v_ImportFieldMetaData(std::string filename,
                         FieldMetaDataMap &fieldmetadatamap);
+                LIB_UTILITIES_EXPORT
+                void v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
+                        FieldMetaDataMap &fieldmetadatamap);
+
+
+                /// Imports the data fields.
+                LIB_UTILITIES_EXPORT
+                void ImportFieldData(DataSourceSharedPtr dataSource,
+                        const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        std::vector<std::vector<NekDouble> > &fielddata);
         };
 
     }

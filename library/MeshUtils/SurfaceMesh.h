@@ -40,6 +40,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <MeshUtils/MeshNode.hpp>
+#include <MeshUtils/MeshEdges.hpp>
 #include <LibUtilities/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/CurveMesh.h>
@@ -111,6 +112,8 @@ namespace MeshUtils {
         
         int numtri;
         Array<OneD, Array<OneD, int> > Connec;
+
+	std::vector<MeshEdgeSharedPtr> Edges;
         
         NekDouble pasr,asr;
         

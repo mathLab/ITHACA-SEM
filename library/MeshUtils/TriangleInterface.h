@@ -100,6 +100,7 @@ namespace Nektar {
                              Array<OneD, Array<OneD, int> > &Connec);
                 
                 void GetNeighbour(Array<OneD, Array<OneD, int> > &neigbourlist);
+		void GetEdges(Array<OneD, Array<OneD, int> > &edgelist);
                 
             private:
                 

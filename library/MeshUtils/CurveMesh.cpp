@@ -117,16 +117,16 @@ namespace MeshUtils {
             NekDouble t = m_cadcurve->tAtArcLength(meshsvalue[i]);
             Array<OneD, NekDouble> loc;
             m_cadcurve->P(t,loc);
-            NodeSharedPtr n = boost::shared_ptr<Node>(
-                              new Node(loc[0],loc[1],loc[2]));
+            MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
+                              new MeshNode(loc[0],loc[1],loc[2]));
             n->SetCurve(m_id,t);
             m_meshpoints.push_back(n);
         }
         NekDouble t = m_bounds[1];
         Array<OneD, NekDouble> loc;
         m_cadcurve->P(t,loc);
-        NodeSharedPtr n = boost::shared_ptr<Node>(
-                          new Node(loc[0],loc[1],loc[2]));
+        MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
+                          new MeshNode(loc[0],loc[1],loc[2]));
         n->SetCurve(m_id,t);
         m_meshpoints.push_back(n);
     }

@@ -36,7 +36,6 @@
 #include <string>
 #include <fstream>
 
-#include <MeshUtils/Node.hpp>
 #include <MeshUtils/SurfaceMesh.h>
 #include <MeshUtils/TriangleInterface.h>
 
@@ -298,8 +297,8 @@ namespace MeshUtils {
         Array<OneD, NekDouble> np = m_cadsurf->P(u,v);
         NekDouble npDelta = m_octree->Query(np);
         
-        NodeSharedPtr n = boost::shared_ptr<Node>(
-                            new Node(np[0],np[1],np[2]));
+        MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
+                            new MeshNode(np[0],np[1],np[2]));
         
         bool add = true;
         
@@ -328,7 +327,7 @@ namespace MeshUtils {
         //create integer list of bounding loop node id's. done
         //locuv nodes to get uv. done
         
-        NodeSharedPtr ce,ne;
+        MeshNodeSharedPtr ce,ne;
         vector<pair<int, NekDouble> > ceinfo,neinfo;
         for(int i = 0; i < m_edges.size(); i++)
         {
@@ -417,7 +416,7 @@ namespace MeshUtils {
             vector<int> cE;
             for(int j = 0; j < m_edges[i].size(); j++)
             {
-                vector<NodeSharedPtr> edgePoints =
+                vector<MeshNodeSharedPtr> edgePoints =
                         m_curvemeshes[m_edges[i][j].first-1]->
                             GetMeshPoints();
                 
@@ -461,7 +460,7 @@ namespace MeshUtils {
         {
             int half = int(orderedLoops[i].size()/2) - 1;
             
-            NodeSharedPtr n1,n2,nh;
+            MeshNodeSharedPtr n1,n2,nh;
             
             n1 = Nodes[orderedLoops[i][0]];
             n2 = Nodes[orderedLoops[i][1]];
@@ -492,7 +491,7 @@ namespace MeshUtils {
             NekDouble area=0.0;
             for(int j = 0; j < orderedLoops[i].size()-1; j++)
             {
-                NodeSharedPtr n1,n2;
+                MeshNodeSharedPtr n1,n2;
                 n1 = Nodes[orderedLoops[i][j]];
                 n2 = Nodes[orderedLoops[i][j+1]];
                 vector<pair<int, Array<OneD,NekDouble> > > n1info,n2info;

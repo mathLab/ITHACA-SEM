@@ -39,7 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <MeshUtils/Node.hpp>
+#include <MeshUtils/MeshNode.hpp>
 #include <LibUtilities/CADSystem/CADCurve.h>
 #include <MeshUtils/Octree.h>
 
@@ -66,9 +66,9 @@ namespace MeshUtils {
         
         void Mesh();
         
-        NodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
-        NodeSharedPtr GetLastPoint(){return m_meshpoints[Ne];}
-        std::vector<NodeSharedPtr> GetMeshPoints()
+        MeshNodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
+        MeshNodeSharedPtr GetLastPoint(){return m_meshpoints[Ne];}
+        std::vector<MeshNodeSharedPtr> GetMeshPoints()
                     {return m_meshpoints;}
         int GetNumPoints(){return Ne+1;}
         
@@ -90,7 +90,7 @@ namespace MeshUtils {
         NekDouble ds;
         int Ne;
         std::vector<NekDouble> meshsvalue;
-        std::vector<NodeSharedPtr> m_meshpoints;
+        std::vector<MeshNodeSharedPtr> m_meshpoints;
         
         bool m_verbose;
         

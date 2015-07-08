@@ -43,15 +43,15 @@
 namespace Nektar {
 namespace MeshUtils {
     
-    class Node;
-    typedef boost::shared_ptr<Node> NodeSharedPtr;
+    class MeshNode;
+    typedef boost::shared_ptr<MeshNode> MeshNodeSharedPtr;
     
-    class Node
+    class MeshNode
     {
     public:
-        friend class MemoryManager<Node>;
+        friend class MemoryManager<MeshNode>;
         
-        Node(NekDouble x, NekDouble y, NekDouble z) :
+        MeshNode(NekDouble x, NekDouble y, NekDouble z) :
                     m_x(x), m_y(y), m_z(z)
         {
         };
@@ -108,7 +108,7 @@ namespace MeshUtils {
             return out;
         }
         
-        NekDouble Distance(const NodeSharedPtr &n)
+        NekDouble Distance(const MeshNodeSharedPtr &n)
         {
             Array<OneD,NekDouble> loc = n->GetLoc();
             
@@ -125,6 +125,8 @@ namespace MeshUtils {
         std::vector<NekDouble> CurveT;
         std::vector<int> CADSurf;
         std::vector<std::vector<NekDouble> > SurfUV;
+	std::vector<int> Edges;
+	std::vector<int> Tris;
         
     };
     

@@ -39,7 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <MeshUtils/Node.hpp>
+#include <MeshUtils/MeshNode.hpp>
 #include <LibUtilities/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/CurveMesh.h>
@@ -72,7 +72,7 @@ namespace MeshUtils {
         
         void Extract(int &nt,
                      Array<OneD, Array<OneD, int> > &c,
-                     std::vector<NodeSharedPtr> &n)
+                     std::vector<MeshNodeSharedPtr> &n)
         {
             nt = numtri;
             c = Connec;
@@ -105,7 +105,7 @@ namespace MeshUtils {
         int m_order;
         
         int m_id;
-        std::vector<NodeSharedPtr> Nodes;
+        std::vector<MeshNodeSharedPtr> Nodes;
         std::vector<std::vector<int> > orderedLoops;
         std::vector<std::vector<NekDouble> > m_centers;
         

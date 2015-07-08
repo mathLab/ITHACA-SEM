@@ -53,7 +53,7 @@ extern "C"{
 #include <triangle.h>
 }
 
-#include <MeshUtils/Node.hpp>
+#include <MeshUtils/MeshNode.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -75,7 +75,7 @@ namespace Nektar {
                 void Assign(const std::vector<std::vector<int> > &boundingloops,
                             const std::vector<std::vector<NekDouble> >
                             &centers,
-                            const std::vector<NodeSharedPtr> &nodes,
+                            const std::vector<MeshNodeSharedPtr> &nodes,
                             NekDouble str = 1.0)
                 {
                     if(meshloaded)
@@ -107,7 +107,7 @@ namespace Nektar {
                 
                 std::vector<std::vector<int> > m_boundingloops;
                 std::vector<std::vector<NekDouble> > m_centers;
-                std::vector<NodeSharedPtr> m_nodes;
+                std::vector<MeshNodeSharedPtr> m_nodes;
                 
                 bool meshloaded;
                 

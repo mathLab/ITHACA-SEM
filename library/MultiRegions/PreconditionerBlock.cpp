@@ -180,7 +180,14 @@ namespace Nektar
             int meshVertId;
             int meshEdgeId;
 
-            //Determine which boundary edges and faces have dirichlet values
+            // Periodic information
+            PeriodicMap periodicVerts;
+            PeriodicMap periodicEdges;
+            PeriodicMap periodicFaces;
+            expList->GetPeriodicEntities(
+                periodicVerts, periodicEdges, periodicFaces);
+
+            // Determine which boundary edges and faces have dirichlet values
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
                 cnt = 0;
@@ -973,6 +980,151 @@ namespace Nektar
 
                 m_blkMat->SetBlock(i,i,tmp_mat);
             }
+        }
+
+        void PreconditionerBlock::BlockPreconditionerCG()
+        {
+            ExpListSharedPtr expList = m_linsys.lock()->GetLocMat().lock();
+            LocalRegions::ExpansionSharedPtr exp;
+            DNekScalBlkMatSharedPtr loc_mat;
+            DNekScalMatSharedPtr    bnd_mat;
+
+            int nel, n, cnt, gId;
+            const int nExp = GetExpSize();
+            const int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
+            // Map taking geometry ID -> pair<global ID, dofs>, where global ID
+            // is the start of the block.
+            vector<map<int, pair<int, int> > > idToOffset(3);
+
+            // Figure out mapping from each elemental contribution to offset in
+            // (vert,edge,face) triples.
+            for (cnt = n = 0; n < nExp; ++n)
+            {
+                nel = expList->GetOffset_Elmt_Id(n);
+                exp = expList->GetExp(nel);
+
+                for (i = 0; i < exp->GetNverts(); ++i)
+                {
+                    meshVertId = exp->GetGeom()->GetVid(i);
+                    gId = m_locToGloMap->GetLocalToGlobalMap(
+                        cnt + exp->GetVertexMap(i)) - nDirBnd;
+
+                    if (gId < 0)
+                    {
+                        continue;
+                    }
+
+                    if (idToOffset[0].count(meshVertId) > 0)
+                    {
+                        continue;
+                    }
+
+                    pIt = periodicVerts.find(meshVertId);
+                    if (pIt != periodicVerts.end())
+                    {
+                        for (j = 0; j < pIt->second.size(); ++j)
+                        {
+                            if (pIt->second.isLocal)
+                            {
+                                meshVertId = min(meshVertId, pIt->second.id);
+                            }
+                        }
+                    }
+
+                    idToOffset[0][meshVertId] = make_pair(gId, 1);
+                }
+
+                for (i = 0; i < exp->GetNedges(); ++i)
+                {
+                    meshEdgeId = exp->GetGeom()->GetEid(i);
+
+                    pIt = periodicEdges.find(meshEdgeId);
+                    if (pIt != periodicEdges.end())
+                    {
+                        for (j = 0; j < pIt->second.size(); ++j)
+                        {
+                            if (pIt->second.isLocal)
+                            {
+                                meshEdgeId = min(meshEdgeId, pIt->second.id);
+                            }
+                        }
+                    }
+
+                    if (idToOffset[1].count(meshEdgeId) > 0)
+                    {
+                        continue;
+                    }
+
+                    // Figure out minimum of global numbering (should be
+                    // contiguous for an edge for iterative system).
+                    Array<OneD, unsigned int> bmap;
+                    Array<OneD, int> sign;
+
+                    exp->GetEdgeInteriorMap(i, exp->GetEorient(i), bmap, sign);
+
+                    for (j = 0; j < bmap.num_elements(); ++j)
+                    {
+                        gid = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[j])
+                                                                      - nDirBnd;
+
+                        if (gid < 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    idToOffset[1][meshEdgeId] =
+                        make_pair(gId, bmap.num_elements());
+                }
+
+                for (i = 0; i < exp->GetNfaces(); ++i)
+                {
+                    meshFaceId = exp->GetGeom()->GetFid(i);
+
+                    pIt = periodicFaces.find(meshFaceId);
+                    if (pIt != periodicFaces.end())
+                    {
+                        for (j = 0; j < pIt->second.size(); ++j)
+                        {
+                            if (pIt->second.isLocal)
+                            {
+                                meshFaceId = min(meshFaceId, pIt->second.id);
+                            }
+                        }
+                    }
+
+                    if (idToOffset[2].count(meshFaceId) > 0)
+                    {
+                        continue;
+                    }
+
+                    // Figure out minimum of global numbering (should be
+                    // contiguous for an face for iterative system).
+                    Array<OneD, unsigned int> bmap;
+                    Array<OneD, int> sign;
+
+                    exp->GetFaceInteriorMap(i, exp->GetForient(i), bmap, sign);
+
+                    for (j = 0; j < bmap.num_elements(); ++j)
+                    {
+                        gid = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[j])
+                                                                      - nDirBnd;
+
+                        if (gid < 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    idToOffset[2][meshFaceId] =
+                        make_pair(gId, bmap.num_elements());
+                }
+
+                cnt += exp->GetNcoeffs();
+            }
+
+            Array<OneD, NekDouble> matStorage();
         }
 
         void PreconditionerBlock::BlockPreconditionerHDG()

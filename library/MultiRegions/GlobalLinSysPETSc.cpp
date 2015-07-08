@@ -231,7 +231,7 @@ namespace Nektar
 
             // CREATE MATRICES
             MatCreate        (PETSC_COMM_WORLD, &m_matrix);
-            MatSetType       (m_matrix, MATAIJ);
+            MatSetFromOptions(m_matrix);
             MatSetSizes      (m_matrix, m_nLocal, m_nLocal,
                               PETSC_DETERMINE, PETSC_DETERMINE);
             MatSetFromOptions(m_matrix);

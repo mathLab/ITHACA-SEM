@@ -57,6 +57,8 @@ namespace MeshUtils {
             eid=i;
             firstn = an;
             secondn = bn;
+	    firstn->SetEdge(eid);
+	    secondn->SetEdge(eid);
         };
         
     private:

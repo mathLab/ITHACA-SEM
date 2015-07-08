@@ -121,6 +121,17 @@ namespace MeshUtils {
         {
             nid = i;
         }
+
+	void SetEdge(int e)
+	{
+	    Edges.push_back(e);
+	}
+
+	void SetTri(int t)
+	{
+	    Tris.push_back(t);
+	}
+		
         
         
     private:

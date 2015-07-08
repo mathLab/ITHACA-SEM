@@ -38,34 +38,36 @@
 #define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_TRI_H
 
 #include <MeshUtils/MeshNode.hpp>
+#include <MeshUtils/MeshEdges.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar {
 namespace MeshUtils {
     
-    class MeshEdge;
-    typedef boost::shared_ptr<MeshEdge> MeshEdgeSharedPtr;
+    class MeshTri;
+    typedef boost::shared_ptr<MeshTri> MeshTriSharedPtr;
     
-    class MeshEdge
+    class MeshTri
     {
     public:
-        friend class MemoryManager<MeshEdge>;
+        friend class MemoryManager<MeshTri>;
         
-        MeshEdge(int a, int b, int c, MeshNodeSharedPtr an,
+        MeshTri(int t, MeshNodeSharedPtr an,
                  MeshNodeSharedPtr bn, MeshNodeSharedPtr cn)
         {
-            first = a;
-            second= b;
-            third = c;
+            tid = t;
             firstn = an;
             secondn = bn;
             thirdn = cn;
+	    firstn->SetTri(tid);
+	    secondn->SetTri(tid);
+	    thirdn->SetTri(tid);
         };
         
     private:
-        
-        int first,second,third;
+
+	int tid;
         MeshNodeSharedPtr firstn,secondn,thirdn;
         
     };

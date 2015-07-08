@@ -41,6 +41,7 @@
 
 #include <MeshUtils/MeshNode.hpp>
 #include <MeshUtils/MeshEdges.hpp>
+#include <MeshUtils/MeshTri.hpp>
 #include <LibUtilities/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/CurveMesh.h>
@@ -114,7 +115,8 @@ namespace MeshUtils {
         Array<OneD, Array<OneD, int> > Connec;
 
         std::vector<MeshEdgeSharedPtr> Edges;
-        
+	std::vector<MeshTriSharedPtr> Tris;
+	
         int nodesused;
         
         NekDouble pasr,asr;

@@ -89,6 +89,16 @@ namespace MeshUtils {
                                                      Nodes[edgelist[i][0]]));
             Edges.push_back(e);
         }
+
+	for(int i = 0; i < numtri; i++)
+	{
+	    MeshTriSharedPtr t = boost::shared_ptr<MeshTri>(
+		                      new MeshTri(i,
+						  Nodes[Connec[i][0]],
+						  Nodes[Connec[i][1]],
+						  Nodes[Connec[i][2]]));
+	    Tris.push_back(t);
+	}
         
         //LinearOptimise();
         

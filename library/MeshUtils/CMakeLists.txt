@@ -11,6 +11,7 @@ SET(MESHUTILS_HEADERS
     CurvaturePoint.hpp
     MeshNode.hpp
     MeshEdges.hpp
+    MeshTri.hpp
     CurveMesh.h
     Octant.h
     Octree.h

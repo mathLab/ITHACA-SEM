@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_EDGE_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_EDGE_H
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_TRI_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_TRI_H
 
 #include <MeshUtils/MeshNode.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -52,17 +52,21 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<MeshEdge>;
         
-        MeshEdge(int i, MeshNodeSharedPtr an, MeshNodeSharedPtr bn)
+        MeshEdge(int a, int b, int c, MeshNodeSharedPtr an,
+                 MeshNodeSharedPtr bn, MeshNodeSharedPtr cn)
         {
-            eid=i;
+            first = a;
+            second= b;
+            third = c;
             firstn = an;
             secondn = bn;
+            thirdn = cn;
         };
         
     private:
         
-        int eid;
-        MeshNodeSharedPtr firstn,secondn;
+        int first,second,third;
+        MeshNodeSharedPtr firstn,secondn,thirdn;
         
     };
     

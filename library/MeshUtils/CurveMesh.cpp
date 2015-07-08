@@ -118,7 +118,7 @@ namespace MeshUtils {
             Array<OneD, NekDouble> loc;
             m_cadcurve->P(t,loc);
             MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
-                              new MeshNode(loc[0],loc[1],loc[2]));
+                              new MeshNode(0,loc[0],loc[1],loc[2]));
             n->SetCurve(m_id,t);
             m_meshpoints.push_back(n);
         }
@@ -126,7 +126,7 @@ namespace MeshUtils {
         Array<OneD, NekDouble> loc;
         m_cadcurve->P(t,loc);
         MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
-                          new MeshNode(loc[0],loc[1],loc[2]));
+                          new MeshNode(0,loc[0],loc[1],loc[2]));
         n->SetCurve(m_id,t);
         m_meshpoints.push_back(n);
     }

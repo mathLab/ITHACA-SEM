@@ -51,8 +51,8 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<MeshNode>;
         
-        MeshNode(NekDouble x, NekDouble y, NekDouble z) :
-                    m_x(x), m_y(y), m_z(z)
+        MeshNode(int i, NekDouble x, NekDouble y, NekDouble z) :
+                   nid(i), m_x(x), m_y(y), m_z(z)
         {
         };
         
@@ -117,16 +117,24 @@ namespace MeshUtils {
                         (m_z-loc[2])*(m_z-loc[2]));
         }
         
+        void SetID(int i)
+        {
+            nid = i;
+        }
+        
         
     private:
         
+        int nid;
         NekDouble m_x, m_y, m_z;
+        
         std::vector<int> CADCurve;
         std::vector<NekDouble> CurveT;
         std::vector<int> CADSurf;
         std::vector<std::vector<NekDouble> > SurfUV;
-	std::vector<int> Edges;
-	std::vector<int> Tris;
+        
+        std::vector<int> Edges;
+        std::vector<int> Tris;
         
     };
     

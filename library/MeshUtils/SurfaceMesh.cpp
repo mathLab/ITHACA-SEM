@@ -50,6 +50,8 @@ namespace MeshUtils {
     {
         Stretching();
         
+        nodesused = 0;
+        
         OrientateCurves();
 
         TriangleInterfaceSharedPtr pplanemesh =
@@ -73,6 +75,19 @@ namespace MeshUtils {
             pplanemesh->Assign(orderedLoops, m_centers, Nodes,asr/pasr);
             pplanemesh->Mesh();
             pplanemesh->Extract(numtri,Connec);
+        }
+        
+        int numedges;
+        Array<OneD, Array<OneD, int> > edgelist;
+        pplanemesh->GetEdges(edgelist,numedges);
+        
+        for(int i = 0; i < numedges; i++)
+        {
+            MeshEdgeSharedPtr e = boost::shared_ptr<MeshEdge>(
+                                        new MeshEdge(i,
+                                                     Nodes[edgelist[i][0]],
+                                                     Nodes[edgelist[i][0]]));
+            Edges.push_back(e);
         }
         
         //LinearOptimise();
@@ -298,7 +313,7 @@ namespace MeshUtils {
         NekDouble npDelta = m_octree->Query(np);
         
         MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
-                            new MeshNode(np[0],np[1],np[2]));
+                            new MeshNode(nodesused,np[0],np[1],np[2]));
         
         bool add = true;
         
@@ -317,6 +332,7 @@ namespace MeshUtils {
         {
             n->SetSurf(m_id,u,v);
             Nodes.push_back(n);
+            nodesused++;
         }
     }
     
@@ -427,6 +443,8 @@ namespace MeshUtils {
                 {
                     for(int k = 0; k < numPoints-1; k++)
                     {
+                        edgePoints[k]->SetID(nodesused);
+                        nodesused++;
                         Nodes.push_back(edgePoints[k]);
                         cE.push_back(nodecounter);
                         nodecounter++;
@@ -437,6 +455,8 @@ namespace MeshUtils {
                 {
                     for(int k = numPoints-1; k >0; k--)
                     {
+                        edgePoints[k]->SetID(nodesused);
+                        nodesused++;
                         Nodes.push_back(edgePoints[k]);
                         cE.push_back(nodecounter);
                         nodecounter++;

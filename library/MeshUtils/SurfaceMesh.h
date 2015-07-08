@@ -113,7 +113,9 @@ namespace MeshUtils {
         int numtri;
         Array<OneD, Array<OneD, int> > Connec;
 
-	std::vector<MeshEdgeSharedPtr> Edges;
+        std::vector<MeshEdgeSharedPtr> Edges;
+        
+        int nodesused;
         
         NekDouble pasr,asr;
         

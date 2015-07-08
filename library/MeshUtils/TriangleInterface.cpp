@@ -151,16 +151,18 @@ namespace MeshUtils {
         }
     }
 
-    void TriangleInterface::GetEdges(Array<OneD, Array<OneD, int> > &edgelist)
+    void TriangleInterface::GetEdges(Array<OneD, Array<OneD, int> > &edgelist,
+                                     int &num)
     {
-	edgelist = Array<OneD, Array<OneD, int> >(out.numberofedges);
-	for(int i = 0; i < out.numberofedges; i++)
-	{
-	    Array<OneD, int> el(2);
-	    el[0] = out.edgelist[i*2+0];
-	    el[1] = out.edgelist[i*2+1];
-	    edgelist[i] = el;
-	}
+        edgelist = Array<OneD, Array<OneD, int> >(out.numberofedges);
+        for(int i = 0; i < out.numberofedges; i++)
+        {
+            Array<OneD, int> el(2);
+            el[0] = out.edgelist[i*2+0];
+            el[1] = out.edgelist[i*2+1];
+            edgelist[i] = el;
+        }
+        num = out.numberofedges;
     }
     void TriangleInterface::GetNeighbour(
                             Array<OneD, Array<OneD, int> > &neigbourlist)

@@ -79,7 +79,10 @@ namespace MeshUtils {
         
         int numedges;
         Array<OneD, Array<OneD, int> > edgelist;
+	Array<OneD, Array<OneD, int> > neigh;
+	
         pplanemesh->GetEdges(edgelist,numedges);
+	pplanemesh->GetNeighbour(neigh);
         
         for(int i = 0; i < numedges; i++)
         {
@@ -97,6 +100,15 @@ namespace MeshUtils {
 						  Nodes[Connec[i][0]],
 						  Nodes[Connec[i][1]],
 						  Nodes[Connec[i][2]]));
+	    vector<int> es = t->GetReqEdge();
+	    ASSERTL0(es.size()==3,"incorrect edge count");
+	    for(int j = 0; j < es.size(); j++)
+	    {
+		t->AddEdge(Edges[es[j]]);
+	    }
+
+	    t->SetNeigh(neigh[i]);
+	    
 	    Tris.push_back(t);
 	}
         

@@ -63,13 +63,71 @@ namespace MeshUtils {
 	    firstn->SetTri(tid);
 	    secondn->SetTri(tid);
 	    thirdn->SetTri(tid);
-        };
+        }
+
+	void AddEdge(MeshEdgeSharedPtr e)
+	{
+	    edges.push_back(e);
+	}
+
+	void SetNeigh(Array<OneD,int> n)
+	{
+	    neighbours = n;
+	}
+		
+
+	std::vector<int> GetReqEdge()
+	{
+	    std::vector<int> f,s,t,out;
+	    f = firstn->GetEdges();
+	    s = secondn->GetEdges();
+	    t = thirdn->GetEdges();
+
+	    for(int i = 0; i < f.size(); i++)
+	    {
+		for(int j = 0; j < s.size(); i++)
+		{
+		    if(f[i]==s[j])
+		    {
+			out.push_back(f[i]);
+			break;
+		    }
+		}
+	    }
+
+	    for(int i = 0; i < f.size(); i++)
+	    {
+		for(int j = 0; j < t.size(); i++)
+		{
+		    if(f[i]==t[j])
+		    {
+			out.push_back(f[i]);
+			break;
+		    }
+		}
+	    }
+	    
+	    for(int i = 0; i < t.size(); i++)
+	    {
+		for(int j = 0; j < s.size(); i++)
+		{
+		    if(t[i]==s[j])
+		    {
+			out.push_back(t[i]);
+			break;
+		    }
+		}
+	    }
+	    
+	    return out;
+	}
         
     private:
 
 	int tid;
         MeshNodeSharedPtr firstn,secondn,thirdn;
-        
+	std::vector<MeshEdgeSharedPtr> edges;
+	Array<OneD,int> neighbours;
     };
     
 }

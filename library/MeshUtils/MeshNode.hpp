@@ -131,6 +131,9 @@ namespace MeshUtils {
 	{
 	    Tris.push_back(t);
 	}
+
+	std::vector<int> GetEdges(){return Edges;}
+	std::vector<int> GetTtris(){return Tris;}
 		
         
         

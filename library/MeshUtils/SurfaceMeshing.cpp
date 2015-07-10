@@ -73,6 +73,20 @@ namespace MeshUtils {
             
             m_surfacemeshes.push_back(smesh);
         }
+
+	Nodes = m_surfacemeshes[0]->GetNodes();
+	Edges = m_surfacemeshes[0]->GetEdges();
+	Tris  = m_surfacemeshes[0]->GetTris();
+
+	for(int i = 1; i < m_surfacemeshes.size(); i++)
+	{
+	    vector<MeshNodeSharedPtr> nxNodes = m_surfacemeshes[i]->GetNodes();
+	    vector<MeshEdgeSharedPtr> nxEdges = m_surfacemeshes[i]->GetEdges();
+	    vector<MeshTriSharedPtr>  nxTris  = m_surfacemeshes[i]->GetTris();
+
+	    
+	}
+	
     }
     
     

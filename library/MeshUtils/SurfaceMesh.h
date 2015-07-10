@@ -72,14 +72,9 @@ namespace MeshUtils {
         
         void Mesh();
         
-        void Extract(int &nt,
-                     Array<OneD, Array<OneD, int> > &c,
-                     std::vector<MeshNodeSharedPtr> &n)
-        {
-            nt = numtri;
-            c = Connec;
-            n = Nodes;
-        }
+	std::vector<MeshNodeSharedPtr> GetNodes(){return Nodes;}
+	std::vector<MeshEdgeSharedPtr> GetEdges(){return Edges;}
+	std::vector<MeshTriSharedPtr>  GetTris(){return Tris;}
         
         
         

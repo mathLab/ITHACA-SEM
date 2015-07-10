@@ -43,6 +43,9 @@
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/SurfaceMesh.h>
 #include <MeshUtils/CurveMesh.h>
+#include <MeshUtils/MeshNode.hpp>
+#include <MeshUtils/MeshEdges.hpp>
+#include <MeshUtils/MeshTri.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -85,6 +88,10 @@ namespace MeshUtils {
         int m_order;
         
         bool m_verbose;
+
+	std::vector<MeshNodeSharedPtr> Nodes;
+	std::vector<MeshEdgeSharedPtr> Edges;
+	std::vector<MeshTriSharedPtr> Tris;
         
         
     };

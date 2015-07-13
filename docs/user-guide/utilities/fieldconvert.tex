@@ -1,4 +1,4 @@
-\section{Field Convert}
+\section{FieldConvert}
 \label{s:utilities:fieldconvert}
 FieldConvert is a utility embedded in \nekpp with the primary 
 aim of allowing the user to convert the \nekpp output binary files 
@@ -53,7 +53,7 @@ in its compressed format \inltt{test.xml.gz}.
 %
 %
 %
-\subsection{Field Convert range option \textit{-r}}
+\subsection{Range option \textit{-r}}
 The Fieldconvert range option \inltt{-r} allows the user to specify 
 a sub-range of the mesh (computational domain) by using an 
 additional flag, \inltt{-r} (which stands for \inltt{r}ange and either 
@@ -77,7 +77,7 @@ FieldConvert -r 2,3,-1,2 test.xml test.fld test.dat
 \end{lstlisting}
 %
 \end{itemize}
-where \inltt{-r} defines the range option of the field convert 
+where \inltt{-r} defines the range option of the FieldConvert
 utility, the two first numbers define the range in $x$ direction 
 and the the third and fourth number specify the $y$ range.
 A sub-range of a 3D domain can also be specified. 
@@ -86,16 +86,16 @@ to define the $z$ range.
 %
 %
 %
-\subsection{Field Convert modules \textit{-m}}
+\subsection{FieldConvert modules \textit{-m}}
 FieldConvert allows the user to manipulate the \nekpp output 
 binary files (.chk and .fld) by using the flag \inltt{-m} (which 
 stands for \inltt{m}odule).. 
 Specifically, FieldConvert has these additional functionalities
 %
 \begin{enumerate}
-\item \inltt{AddFld}: Sum two .fld files;
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{addFld}: Sum two .fld files;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
@@ -103,8 +103,13 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing; 
-\item \inltt{scaleinputfld}: Rescale input field by a constant factor.
+\item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
+\item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
+\item \inltt{scalargrad}: Computes scalar gradient field;
+\item \inltt{scaleinputfld}: Rescale input field by a constant factor;
+\item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
 \item \inltt{vorticity}: Computes the vorticity field.
+\item \inltt{wss}: Computes wall shear stress field.
 \end{enumerate}
 The module list above can be seen by running the command
 %
@@ -117,25 +122,6 @@ In the following we will detail the usage of each module.
 %
 %
 
-\subsubsection{Sum two .fld files: \textit{AddFld} module}
-To sum two .fld files one can use the \inltt{AddFld} module of FieldConvert
-%
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
-\end{lstlisting}
-%
-In this case we use it in conjunction with the command \inltt{scale} 
-which multiply the values of a given .fld file by a constant \inltt{value}. 
-\inltt{file1.fld} is the file multiplied by \inltt{value}, \inltt{file1.xml} 
-is the associated session file, \inltt{file2.fld} is the .fld file which 
-is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output 
-which contain the sum of the two .fld files.
-\inltt{file3.fld} can be processed in a similar way as described 
-in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
-it either in Tecplot or in Paraview the result.
-%
-%
-%
 \subsubsection{Smooth the data: \textit{C0Projection} module}
 To smooth the data of a given .fld file one can 
 use the \inltt{C0Projection} module of FieldConvert
@@ -159,6 +145,26 @@ FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
 where the file \inltt{test-QCrit.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+
+\subsubsection{Sum two .fld files: \textit{addFld} module}
+To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
+\end{lstlisting}
+%
+In this case we use it in conjunction with the command \inltt{scale} 
+which multiply the values of a given .fld file by a constant \inltt{value}. 
+\inltt{file1.fld} is the file multiplied by \inltt{value}, \inltt{file1.xml} 
+is the associated session file, \inltt{file2.fld} is the .fld file which 
+is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output 
+which contain the sum of the two .fld files.
+\inltt{file3.fld} can be processed in a similar way as described 
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
+it either in Tecplot or in Paraview the result.
 %
 %
 %
@@ -233,6 +239,20 @@ a Paraview output.
 %
 %
 %
+\subsubsection{Compute the gradient of a field: \textit{gradient} module}
+To compute the spatial gradients of all fields one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m gradient test.xml  test.fld  test-grad.fld
+\end{lstlisting}
+%
+where the file \inltt{file-grad.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+%
 \subsubsection{Interpolate one field to another: \textit{interpfield} module}
 To interpolate one field to another, one can use the following command:
 %
@@ -259,7 +279,6 @@ faster.
 %
 %
 \subsubsection{Interpolate scattered point data to a field: \textit{interppointdatatofld} module}
-\label{s:utilities:fieldconvert:sub:interppointdatatofld}
 To interpolate discrete point data to a field, use the interppointdatatofld module:
 %
 \begin{lstlisting}[style=BashInputStyle]
@@ -288,6 +307,8 @@ Each line defines a point, while the  first column contains its $x$-coordinate,
 the second one contains the $a$-values, the third the $b$-values and so on.
 In case of $n$-dimensional data, the $n$ coordinates are specified in the first $n$
 columns accordingly.
+Note that currently, the \textit{interppointdatatofld} module can only perform
+interpolation in one dimension.
 %
 In order to interpolate 1D data to a $n$D field, specify the matching coordinate in
 the output field using the \inltt{interpcoord} argument:
@@ -300,12 +321,9 @@ FieldConvert -m interppointdatatofld:interppointdatatofld=1 3D-file1.xml \
 This will interpolate the 1D scattered point data from \inltt{1D-file1.pts} to the
 $y$-coordinate of the 3D mesh defined in \inltt{3D-file1.xml}. The resulting field
 will have constant values along the $x$ and $z$ coordinates.
-For 1D Interpolation, the module implements a quadratic scheme and automatically 
-falls back to a linear method if only two data points are given. 
-A modified inverse distance method is used for 2D and 3D interpolation.
-Linear and quadratic interpolation require the data points in the \inlsh{.pts}-file to be 
-sorted by their location in ascending order. 
-The Inverse Distance implementation has no such requirement.
+In the \inlsh{.pts}-file, all data points must be sorted by their location in ascending order.
+The module implements a quadratic interpolation scheme and automatically falls back to a
+linear scheme if only two data points are given.
 %
 %
 %
@@ -392,22 +410,93 @@ automatically calls a \inltt{globalcondense} option which remove
 multiply defined verties from the simplex definition which arise as
 isocontour are generated element by element. 
 
+In addition to the \inltt{smooth} or \inltt{globalcondense} options
+you can specify \inltt{removesmallcontour}=100 which will remove
+separate isocontours of less than 100 triangles. This optin requires
+\inltt{smooth} or \inltt{globalcondense} to be specified.
+
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,
  tetrahedrons and prisms. 
 \end{notebox}
+%
+%
+%
+%
 
-
-\subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
+\subsubsection{Show high frequency energy of the Jacobian: \textit{jacobianenergy} module}
 
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld
+FieldConvert -m jacobianenergy file.xml file.fld jacenergy.fld
+\end{lstlisting}
+
+The option \inltt{topmodes} can be used to specify the number of top modes to
+keep.
+
+The output file \inltt{jacenergy.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+
+\subsubsection{Print L2 and LInf norms: \textit{printfldnorms} module}
+
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m printfldnorms test.xml test.fld 
+\end{lstlisting}
+
+This module does not create an output file. The L2 and LInf norms for each field variable is printed to the stdout. 
+
+%
+%
+%
+
+\subsubsection{Computes the scalar gradient: \textit{scalargrad} module}
+The scalar gradient of a field is computed by running:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m scalargrad:bnd=0 test.xml test.fld test-scalgrad.fld
+\end{lstlisting}
+The option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. To process this file you will need an xml file of the same region. 
+
+%
+%
+%
+
+\subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
+To scale a .fld file by a given scalar quantity, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m scaleinputfld:scale=value test.xml test.fld test-scal.fld
 \end{lstlisting}
 The argument \inltt{scale=value} rescales of a factor \inltt{value} 
 \inltt{test.fld} by the factor value.
 The output file \inltt{file-conc.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+\subsubsection{Time-averaged shear stress metrics: \textit{shear} module}
+Time-dependent wall shear stress derived metrics relevant to cardiovascular fluid dynamics research can be computed using this module. They are
+
+\begin{itemize}
+\item TAWSS: time-averaged wall shear stress;
+\item OSI: oscillatory shear index;
+\item transWSS: transverse wall shear stress;
+\item TACFI: time-averaged cross-flow index;
+\item TAAFI: time-averaged aneurysm formation index;
+\item |WSSG|: wall shear stress gradient.
+\end{itemize}
+
+To compute these, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m shear:N=value:fromfld=test_id_b0.fld test.xml test-multishear.fld
+\end{lstlisting}
+The argument \inltt{N} and \inltt{fromfld} are compulsory arguments that respectively define the number of \inltt{fld} files corresponding to the number of discrete equispaced time-steps, and the first \inltt{fld} file which should have the form of \inltt{test\_id\_b0.fld} where the first underscore in the name marks the starting time-step file ID. 
+
+The input \inltt{.fld} files are the outputs of the \textit{wss} module. If they do not contain the surface normals (an optional output of the \textit{wss} modle), then the \textit{shear} module will not compute the last metric, |WSSG|. 
 
 %
 %
@@ -423,7 +512,61 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}.
 %
 %
 %
-\subsection{Field Convert in parallel}
+
+\subsubsection{Computing the wall shear stress: \textit{wss} module}
+To obtain the wall shear stres vector and magnitude, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m wss:bnd=0:addnormals=1 test.xml test.fld test-wss.fld
+\end{lstlisting}
+The option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. The \inltt{addnormals} is an optional command argument which, when turned on, outputs the normal vector of the extracted boundary region as well as the shear stress vector and magnitude. This option is off by default. To process the output file(s) you will need an xml file of the same region. 
+%
+%
+%
+
+\subsubsection{Manipulating meshes with FieldConvert}
+FieldConvert has support for two modules that can be used in conjunction with
+the linear elastic solver, as shown in chapter~\ref{s:elasticity}. To do this,
+FieldConvert has an XML output module, in addition to the Tecplot and VTK
+formats.
+
+The \inltt{deform} module, which takes no options, takes a displacement field
+and applies it to the geometry, producing a deformed mesh:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m deform input.xml input.fld deformed.xml
+\end{lstlisting}
+
+The \inltt{displacement} module is designed to create a boundary condition field
+file. Its intended use is for mesh generation purposes. It can be used to
+calculate the displacement between the linear mesh and a high-order surface, and
+then produce a \inltt{fld} file, prescribing the displacement at the boundary,
+that can be used in the linear elasticity solver.
+
+Presently the process is somewhat convoluted and must be used in conjunction
+with MeshConvert to create the surface file. However the bash input below
+describes the procedure. Assume the high-order mesh is in a file called
+\inlsh{mesh.xml}, the linear mesh is \inlsh{mesh-linear.xml} that can be
+generated by removing the \inltt{CURVED} section from \inlsh{mesh.xml}, and that
+we are interested in the surface with ID 123.
+
+\begin{lstlisting}[style=BashInputStyle]
+# Extract high order surface
+MeshConvert -m extract:surf=123 mesh.xml mesh-surf-curved.xml
+
+# Use FieldConvert to calculate displacement between two surfaces
+FieldConvert -m displacement:id=123:to=mesh-surf-curved.xml \
+    mesh-linear.xml mesh-deformation.fld
+
+# mesh-deformation.fld is used as a boundary condition inside the 
+# solver to prescribe the deformation conditions.xml contains 
+# appropriate Nektar++ parameters (mu, E, other BCs, ...)
+LinearElasticSolver mesh-linear.xml conditions.xml
+
+# This produces the final field mesh-linear.fld which is the 
+# displacement field, use FieldConvert to apply it:
+FieldConvert-g -m deform mesh-linear.xml mesh-linear.fld mesh-deformed.xml
+\end{lstlisting}
+
+\subsection{FieldConvert in parallel}
 To run FieldConvert in parallel the user needs to compile 
 \nekpp with MPI support and can employ the following 
 command
@@ -477,3 +620,8 @@ Note the final \inltt{:info} extension on the last argument is necessary to
 tell FieldConvert that you wish to generate an info file but the extension 
 to this file is .xml. This syntax allows the routine not to get confused with 
 the input/output xml files.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End:

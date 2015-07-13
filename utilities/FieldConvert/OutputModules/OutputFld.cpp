@@ -146,8 +146,16 @@ void OutputFld::Process(po::variables_map &vm)
                         BndExp[j][Border]->AppendFieldData(FieldDef[k],
                                                            FieldData[k]);
 
-                        FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->
-                                                        m_fields[j]);
+                        if (m_f->m_fielddef.size() > 0)
+                        {
+                            FieldDef[k]->m_fields.push_back(
+                                m_f->m_fielddef[0]->m_fields[j]);
+                        }
+                        else
+                        {
+                            FieldDef[k]->m_fields.push_back(
+                                m_f->m_session->GetVariable(j));
+                        }
                     }
                 }
 
@@ -213,7 +221,6 @@ void OutputFld::Process(po::variables_map &vm)
 
                         for (int k = 0; k < FieldDef.size(); ++k)
                         {
-                            int st = FieldData[k].size();
                             BndExp[0][Border]->AppendFieldData(FieldDef[k],
                                                                FieldData[k]);
                             FieldDef[k]->m_fields.push_back(normstr[j]);
@@ -267,22 +274,35 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         fs::path writefile(filename);
-        bool writefld = true;
+        int writefld = 1;
         if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
         {
-            string answer;
-            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-            getline(cin,answer);
-            if(answer.compare("y") != 0)
+            LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
+            int rank = comm->GetRank();
+            writefld = 0; // set to zero for reduce all to be correct. 
+
+            if(rank == 0)
             {
-                writefld = false;
-                cout << "Not writing file " << filename << " because it already exists" << endl;
+                string answer;
+                cout << "Did you wish to overwrite " << filename << " (y/n)? ";
+                getline(cin,answer);
+                if(answer.compare("y") == 0)
+                {
+                    writefld = 1;
+                }
+                else
+                {
+                    cout << "Not writing file " << filename << " because it already exists" << endl;
+                }
             }
+            
+            comm->AllReduce(writefld,LibUtilities::ReduceSum);
+            
         }
 
-        if(writefld == true)
+        if(writefld)
         {
-                m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
         }
 
         // output error for regression checking.

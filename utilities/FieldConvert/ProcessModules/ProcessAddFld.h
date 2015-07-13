@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes C0 projection.
+//  Description: Add a field to the input field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +64,6 @@ class ProcessAddFld : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
-        FieldSharedPtr m_fromField;
 };
 
 }

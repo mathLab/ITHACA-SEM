@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Set up fields as interpolation to equispaced output.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

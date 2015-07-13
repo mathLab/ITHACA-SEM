@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Interpolate one field to another.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
+#ifndef UTILITIES_FIELDCONVERT_PROCESSFIELD
+#define UTILITIES_FIELDCONVERT_PROCESSFIELD
 
 #include "../Module.h"
 

@@ -1235,7 +1235,7 @@ namespace Nektar
                                  NekDouble tol,
                                  bool returnNearestElmt)
         {
-            NekDouble resid;
+            NekDouble nearpt = 1e6;
 
             if (GetNumElmts() == 0)
             {
@@ -1255,7 +1255,7 @@ namespace Nektar
                 {
                     if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
                                                               locCoords,
-                                                              tol, resid))
+                                                              tol, nearpt))
                     {
                         w.SetX(gloCoords[0]);
                         w.SetY(gloCoords[1]);
@@ -1291,7 +1291,7 @@ namespace Nektar
 
                     // retrieve local coordinate of point
                     (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
-                                                          locCoords);
+                                                              locCoords);
                     return min_id;
                 }
                 else
@@ -1304,56 +1304,64 @@ namespace Nektar
             {
                 static int start = 0;
                 int min_id  = 0;
-                NekDouble resid_min = 1e6;
+                NekDouble nearpt_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
                 // restart search from last found value
                 for (int i = start; i < (*m_exp).size(); ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                              tol, resid))
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
+                                                              locCoords,
+                                                              tol, nearpt))
                     {
                         start = i;
                         return i;
                     }
                     else
                     {
-                        if(resid < resid_min)
+                        if(nearpt < nearpt_min)
                         {
                             min_id    = i;
-                            resid_min = resid;
-                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                            nearpt_min = nearpt;
+                            Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
                         }
                     }
                 }
 
                 for (int i = 0; i < start; ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                              tol, resid))
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
+                                                              locCoords,
+                                                              tol, nearpt))
                     {
                         start = i;
                         return i;
                     }
                     else
                     {
-                        if(resid < resid_min)
+                        if(nearpt < nearpt_min)
                         {
                             min_id    = i;
-                            resid_min = resid;
-                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                            nearpt_min = nearpt;
+                            Vmath::Vcopy(locCoords.num_elements(),
+                                         locCoords,1,savLocCoords,1);
                         }
                     }
                 }
 
-                std::string msg = "Failed to find point in element to tolerance of "
-                                + boost::lexical_cast<std::string>(resid)
-                                + " using nearest point found";
-                WARNINGL0(true,msg.c_str());
+                std::string msg = "Failed to find point within element to tolerance of "
+                    + boost::lexical_cast<std::string>(tol)
+                    + " using local point ("
+                    + boost::lexical_cast<std::string>(locCoords[0]) +","
+                    + boost::lexical_cast<std::string>(locCoords[1]) +","
+                    + boost::lexical_cast<std::string>(locCoords[1]) 
+                    + ") in element: "
+                    + boost::lexical_cast<std::string>(min_id);
+                WARNINGL1(false,msg.c_str());
 
                 if(returnNearestElmt)
                 {
-                    Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
+                    Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                     return min_id;
                 }
                 else
@@ -1373,6 +1381,36 @@ namespace Nektar
         void ExpList::ApplyGeomInfo()
         {
 
+        }
+
+        /**
+         * @brief Reset geometry information, metrics, matrix managers and
+         * geometry information.
+         *
+         * This routine clears all matrix managers and resets all geometry
+         * information, which allows the geometry information to be dynamically
+         * updated as the solver is run.
+         */
+        void ExpList::v_Reset()
+        {
+            // Reset matrix managers.
+            LibUtilities::NekManager<LocalRegions::MatrixKey,
+                DNekScalMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+            LibUtilities::NekManager<LocalRegions::MatrixKey,
+                DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+
+            // Loop over all elements and reset geometry information.
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                (*m_exp)[i]->GetGeom()->Reset(m_graph->GetCurvedEdges(),
+                                              m_graph->GetCurvedFaces());
+            }
+
+            // Loop over all elements and rebuild geometric factors.
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                (*m_exp)[i]->Reset();
+            }
         }
 
         /**
@@ -1995,7 +2033,12 @@ namespace Nektar
                 {
                     for(int i = 0; i < NumHomoStrip; ++i)
                     {
-                        LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
+                        LibUtilities::FieldDefinitionsSharedPtr fdef  =
+                            MemoryManager<LibUtilities::FieldDefinitions>::
+                                AllocateSharedPtr(shape, elementIDs, basis,
+                                                  UniOrder, numModes,fields,
+                                                  NumHomoDir, HomoLen, HomoZIDs,
+                                                  HomoYIDs);
                         fielddef.push_back(fdef);
                     }
                 }

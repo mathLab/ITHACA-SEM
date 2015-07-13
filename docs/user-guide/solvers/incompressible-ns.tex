@@ -244,7 +244,7 @@ where $\sigma=\left\| \mathbf{u'}(\tau)\right\|$. This is no other that the sing
 \subsection{Steady-state solver}
 \label{SectionSFD}
 
-To compute linear stability analysis, the choice of the base flow, around which the system will be linearised, is crucial. If one wants to use the steady-state solution of the Navier-Stokes equations as base flow, a steady-state solver is implemented in \nekpp. The method used is the encapsulated formulation of the Selective Frequency Damping method \cite{JoCoSh14}. Unstable steady base flows can be obtained with this method. The SFD method is based on the filtering and the control of the unstable temporal frequencies within the flow. The time continuous formulation of the SFD method is
+To compute linear stability analysis, the choice of the base flow, around which the system will be linearised, is crucial. If one wants to use the steady-state solution of the Navier-Stokes equations as base flow, a steady-state solver is implemented in \nekpp. The method used is the encapsulated formulation of the Selective Frequency Damping method \cite{JoCoSh14}. Unstable steady base flows can be obtained with this method. The SFD method is based on the filtering and control of unstable temporal frequencies within the flow. The time continuous formulation of the SFD method is
 \begin{equation}
 \begin{cases}
 \dot{q}=NS(q)-\chi (q-\bar{q}), \\
@@ -357,7 +357,7 @@ Direct solver & \texttt{CoupledLinearisedNS} & 2D, Quasi-3D, 3D &CG\\
 {Driver} & {Description} &{Dimensions}&{Projections} \\
 \midrule
 \texttt{Standard} & Time integration of the equations & All & CG, DG \\
-\texttt{SteadyState} & Steady-state solver (see Sec. \ref{SectionSFD})  & All & CG \\
+\texttt{SteadyState} & Steady-state solver (see Sec. \ref{SectionSFD})  & All & CG, DG \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -580,6 +580,7 @@ forces for each computational plane are projected along the Cartesian axes and t
 
 
 \section{Stability analysis Session file configuration}
+\label{SecStabFile}
 The type of equation which is to be solved is specified through the \inltt
 {EqType} option in the session file. This can be set to any of the following:
 
@@ -692,7 +693,7 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \label{SectionSFD_XML}
 
 In this section, we detail how to use the steady-state solver (that implements the selective frequency damping method, see Sec. \ref{SectionSFD}).
-Two cases are detailed here: the execution of the classical SFD method and the adaptive SFD method, where the control coefficient $\chi$ and the filter width $\Delta$ of the SFD method will be updated all along the solver execution. For the second case, the parameters of the SFD method do not need to be defined by the user (they will be automatically calculated all along the solver execution) but several session files must be defined in a very specific way.
+Two cases are detailed here: the execution of the classical SFD method and the \textit{adaptive} SFD method, where the control coefficient $\chi$ and the filter width $\Delta$ of the SFD method are updated all along the solver execution. For the second case, the parameters of the SFD method do not need to be defined by the user (they will be automatically calculated all along the solver execution) but several session files must be defined in a very specific way.
 
 \subsection{Execution of the classical steady-state solver}
 
@@ -705,34 +706,40 @@ The definition of \inltt{Eqtype},  \inltt{TimeIntegrationMethod} and \inltt{Proj
 The following parameters can be specified in the \texttt{PARAMETERS} section of the session file:
 
 \begin{itemize}
-\item \inltt{Re}: sets the Reynolds number
-\item \inltt{Kinvis}: sets the kinematic viscosity $\nu$
-\item \inltt{ControlCoeff}: sets the control coefficient $\chi$ of the SFD method
-\item \inltt{FilterWidth}: sets the filter width $\Delta$ of the SFD method
-\item \inltt{GrowthRateEV} and \inltt{FrequencyEV}: if the growth rate and the frequency of the dominant eigenvalue are known, they can be given given as input and the code will automatically select the optimum parameters $\chi$ and $\Delta$ (and overwrite the values that may be given in the session file)
-\item \inltt{TOL}: sets the tolerance of the SFD method. The code will run until $||q-\bar{q}||_{inf}<TOL$.
+%\item \inltt{Re}: sets the Reynolds number
+\item \inltt{Kinvis}: sets the kinematic viscosity $\nu$. It is typically $1/Re$ if both the characteristic velocity and characteristic length are chosen to be 1. 
+\item \inltt{ControlCoeff}: sets the control coefficient $\chi$ of the SFD method. Default value: 1.
+\item \inltt{FilterWidth}: sets the filter width $\Delta$ of the SFD method. Default value: 2.
+\item \inltt{GrowthRateEV} and \inltt{FrequencyEV}: if the growth rate and the frequency of the dominant eigenvalue are known, they can be given given as input and the code will automatically select the optimum parameters $\chi$ and $\Delta$ (and overwrite the values of \inltt{ControlCoeff} and \inltt{GrowthRateEV} that may be given in the session file)
+\item \inltt{TOL}: sets the tolerance of the SFD method. The code will run until $||q-\bar{q}||_{inf}<TOL$.  Default value: $10^{-8}$.
 \end{itemize}
+
+Note that for the steady-state solver, the parameter \inltt{NumSteps} is not taken into account. The solver will run until a steady-state solution is found and not for a pre-defined number of time steps.
 
 \subsection{Execution of the adaptive steady-state solver}
 
-Running the adaptive selective frequency damping method requires to set up the session files in a very specific manner. First, the \inltt{Geometry} section must be in a separated archive file. If the test case studied is called "Session", the mesh file must be called \inlsh{Session.gz} (the command "gzip" can be used to obtain this file).
+Running the adaptive selective frequency damping method requires to set up the session files in a very specific manner. First, the \inltt{Geometry} section must be in a separated archive file. If the test case studied is called "Session", the mesh file must be called \inlsh{Session.xml.gz} (the linux command "gzip" can be used to obtain this file).
 
-The requirements for the file \inlsh{Session.xml} are similar as for the ones for the classical SFD method, without the \inltt{Geometry} section. This file defines the properties of the nonlinear problem solved. Also, the \inltt{SOLVERINFO} section must contain the line:
+The requirements for the file \inlsh{Session.xml} are similar as for the ones for the classical SFD method. The \inltt{Geometry} section being removed and placed in \inlsh{Session.xml.gz}. This file defines the properties of the nonlinear problem solved (\textit{i.e.} the flow for which we want a steady-state). Also, the \inltt{SOLVERINFO} section must contain the line:
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="EvolutionOperator" VALUE="AdaptiveSFD" />
 \end{lstlisting}
 
-As the adaptive SFD method used is coupled with a stability analysis method, \inltt{kdim}, \inltt{nvec}, \inltt{evtol} and \inltt{nits} must be defined into the \inltt{PARAMETERS} section of \inlsh{Session.xml}. To define the linear problem executed by the stability analysis method, another file, that must be called \inlsh{Session\_LinNS.xml}, has to be defined. This file can be a copy paste of \inlsh{Session.xml}, only three things have to be modified:
+The adaptive SFD method used is coupled with a stability analysis method. Then \inltt{kdim}, \inltt{nvec}, \inltt{evtol} and \inltt{nits} should be defined into the \inltt{PARAMETERS} section of \inlsh{Session.xml}. If not, these parameters will take the default values presented in Sec. \ref{SecStabFile}.
+
+The goal of running the stability analysis is to evaluate the dominant eigenvalue of a ``partially converged'' steady base flow. This approximation is then used by the steady-state solver to select a control coefficient $\chi$ and a filter width $\Delta$ then ensure a fast convergence towards a steady-state solution.
+
+To define the linear stability problem, another file, that must be called \inlsh{Session\_LinNS.xml}, has to be defined. This file \textbf{must be an exact copy/paste of} \inlsh{Session.xml}, only three things have to be modified:
 \begin{enumerate}
-\item The boundary conditions must be modified to be homogeneous (\textit{i.e.} equal to zero) at the inflow boundary.
-\item A random non-zero function \inltt{InitialConditions} has to be defined.
-\item A random function \inltt{BaseFlow} has to be defined (it will be overwritten all along the solver execution).
+\item The boundary conditions must be modified to be homogeneous (\textit{i.e.} equal to zero) at all inflow boundaries.
+\item A non-zero function \inltt{InitialConditions} has to be defined.
+\item A random function \inltt{BaseFlow} has to be defined (it will be overwritten all along the solver execution). We recommend it to be a copy of \inltt{InitialConditions}.
 \end{enumerate}
 
-Once these three files (the  \inltt{Geometry} in \inlsh{Session.gz}, the nonlinear problem definition in \inlsh{Session.xml} and the homogeneous linear problem in \inlsh{Session\_LinNS.xml}) are correctly defined, the adaptive SFD method must be ran using:
+Once these three files (the  \inltt{Geometry} in \inlsh{Session.xml.gz}, the nonlinear problem definition in \inlsh{Session.xml} and the homogeneous linear problem in \inlsh{Session\_LinNS.xml}) are correctly defined, the adaptive SFD method must be executed using:
 
 \begin{lstlisting}[style=BashInputStyle]
-IncNavierStokesSolver Session.gz Session.xml
+IncNavierStokesSolver Session.xml.gz Session.xml
 \end{lstlisting}
 
 
@@ -1565,6 +1572,71 @@ It is possible to visualise the wall shear stress distribution by running the Fl
 \begin{center}
 \includegraphics[width=12cm]{Figures/WSS.png}
 \caption{Non-dimensional wall shear stress distribution.}
+\end{center}
+\end{figure}
+
+\subsection{finite-strip modeling of flow past flexible cables}
+
+As a computationally efficient model, strip theory-based modeling technique has been proposed previously to predict vortex-induced vibration (VIV) for higher Reynolds number flows. In the strip theory-based model, the fluid flow solution is obtained on a series of 2D computational planes (also called as “strips”) along the riser’s axis direction. These strips then are coupled with each other through structural dynamic model of the riser, and then VIV response prediction is achieved by the strip-structure interactions.In the 2D strip theory, it is assumed that the flow is purely two-dimensional without spanwise correlation, which allows the problems to be split into various 2D planes. A consequence of 2D strip solution under this assumption is that it is unable to reflect the influence of spanwise wake turbulence on the structural dynamics. In order to overcome this shortcoming, we proposed a new module in the framework of Nektar++, in which a spanwise scale is locally allocated to each one of the strips, so that the spanwise velocity correlation is reconstructed in the flow field within each strips. In particular, this model lets the fluid domain to be divided in $N$ strips with thickness ratio of $L_{z}/D$ and evenly distributed along the spanwise ($z$) direction. The gap between the neighboring strips, represented by $L_{g}$, satisfies relation $L_{c}=N(L_{z}+L_{g})$. Since the strip in this model has finite scale in the $z$-direction, we named it as finite strip to distinguish from traditional 2D strip plane. Next, the flow dynamics within each individual strips are modeled by viscous incompressible Navier-Stokes equations, while a tensioned beam model is employed to govern the dynamics of the flexible structures. In this example, we will show how to perform a finite-strip model to predict the vortex-induced vibration responses of flexible cables. Let us consider a vortex-induced vibration of a slender cable with an aspect ratio of $L_z/D$=4$\pi$, which is immersed in uniform flows at Re=100.
+
+\subsubsection{Input File}
+
+The cable with a mass ratio (defined as the ratio of the total oscillating mass to the mass of displaced fluid) of 1 has diameter $D=1$, the 2D mesh is composed of 284 quadrilateral elements. The spanwise direction is split in 16 strips with thickness ratio of $L_c/D$=$\pi$/8 and one pair of complex Fourier modes for each one of the strips. We will use a sixth order polynomial expansion for the spectral element and the input file for this example is \inlsh{CylFlow\_HomoStrip.xml}.
+
+
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[73]" NUMMODES="6" TYPE="MODIFIED" FIELDS="u,v,w,p" />
+\end{lstlisting}
+
+To use the finite strip routines we need just to insert a flag of \inlsh{"HomoStrip"} in the solver information as below, in addition, we need to specify the types of vibration and support ends for the cables. In this case, the vibration type is specified as \inlsh{VALUE="CONSTRAINED"}, which means that the cable's vibration is constrained only in the crossflow direction. Other options include \inlsh{VALUE="FREE"} and \inlsh{"FORCED"}, respectively corresponding to the free vibrations in both streamwise and crossflow directions and forced vibration by specified functions given in input file. For the support ends of the cable, another option of \inlsh{VALUE="PINNED-PINNED"} is available for the simulations, which satisfies the condition of zero values of displacements on the support ends.
+
+\subsubsection{Solver information:~}
+\begin{lstlisting}[style=XMLStyle]
+        <SOLVERINFO>
+            <I PROPERTY="HomoStrip" VALUE="True"/>
+            <I PROPERTY="VibrationType" VALUE="CONSTRAINED"/>
+            <I PROPERTY="SupportType" VALUE="FREE-FREE"/>
+        </SOLVERINFO>
+\end{lstlisting}
+        
+\subsubsection{Parameters}
+
+All the simulation parameters are specified in the section as follows.
+
+    \begin{lstlisting}[style=XMLStyle]
+        <PARAMETERS>
+            <P> LZ            = PI/8             </P> <!--thickness ratio-->
+            <P> LC            = 4*PI             </P> <!--aspect ratio-->
+            <P> A             = 0.025            </P>
+            <P> omega         = 1.0              </P>
+            <P> PROC_Z        = 16               </P>
+            <P> Strip_Z       = 16               </P> <!--number of the strips-->
+            <P> DistStrip     = PI/4             </P> <!--distance of the strips-->
+            <P> StructStiff   = 0.02             </P>  
+            <P> StructRho     = 2.0              </P>
+            <P> CableTension  = 8.82             </P>
+            <P> BendingStiff  = 0.0              </P>
+            <P> FictDamp      = 0.0              </P>
+            <P> FictMass      = 3.0              </P>
+        </PARAMETERS>
+     \end{lstlisting}    
+
+\subsubsection{Running the solver}
+In this example we will run the solver in parallel. We can specify the number of the strips by providing an additional flag to the solver, –nsz. In this example, we will run 16 strips, therefore it would be specified as –nsz 16. The solver can now be run as follows    
+
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np 16 IncNavierStokesSolver  CylFlow_HomoStrip.xml --npz 16 --nsz 16
+\end{lstlisting}
+
+The simulation results are illustrated in spanwise vorticity contours in Figure \ref{f:incns:finite-strip-modeling}. The wake response of the cable appears as standing wave patter in the earlier stage and then it transitions into traveling wave response, as shown in this figure.  
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=7cm]{Figures/strip-16-time-100.png}
+\includegraphics[width=7cm]{Figures/strip-16-time-600.png}
+\caption{Spanwise vorticity contours in standing wave and traveling wave patterns predicted in finite strip modeling.}
+\label{f:incns:finite-strip-modeling}
 \end{center}
 \end{figure}
 

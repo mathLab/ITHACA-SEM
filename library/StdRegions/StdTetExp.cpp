@@ -1689,6 +1689,13 @@ namespace Nektar
             int i,j,k;
             int idx = 0;
 
+            int nBnd = NumBndryCoeffs();
+
+            if (outarray.num_elements() != nBnd)
+            {
+                outarray = Array<OneD, unsigned int>(nBnd);
+            }
+
             for (i = 0; i < P; ++i)
             {
             	// First two Q-R planes are entirely boundary modes
@@ -1995,7 +2002,11 @@ namespace Nektar
                     {
                         if(i + j + k >= cutoff)
                         {
-                            orthocoeffs[cnt] *= ((1.0+SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                            orthocoeffs[cnt] *= ((SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
                         }
                         cnt++;
                     }

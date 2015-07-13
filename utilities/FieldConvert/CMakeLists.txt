@@ -9,9 +9,12 @@ SET(FieldConvertHeaders
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
+    OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessConcatenateFld.h
+    ProcessModules/ProcessDeform.h
+    ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessInterpField.h
@@ -41,9 +44,12 @@ SET(FieldConvertSources
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp
     OutputModules/OutputFld.cpp
+    OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessConcatenateFld.cpp
+    ProcessModules/ProcessDeform.cpp
+    ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessInterpField.cpp
@@ -63,7 +69,7 @@ SET(FieldConvertSources
 )
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
-
+TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
 
 #ADD_NEKTAR_TEST(chan3D_tec)
 #ADD_NEKTAR_TEST(chan3D_tec_n10)

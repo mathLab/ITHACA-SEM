@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Interp point data.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +62,6 @@ class ProcessInterpPoints : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
-        FieldSharedPtr m_fromField;
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                    Array<OneD, Array<OneD, NekDouble> >   &pts,

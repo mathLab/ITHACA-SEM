@@ -105,9 +105,7 @@ namespace Nektar
 
     private:
         void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >            &physarray,
-            NekDouble                                        time);
-
+            Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
         /// Isentropic Vortex Test Case.
         void EvaluateIsentropicVortex(
             const Array<OneD, NekDouble>                    &x,

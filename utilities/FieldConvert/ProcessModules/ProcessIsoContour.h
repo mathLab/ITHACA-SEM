@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Generate isocontours from field data.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +49,8 @@ class Iso
     public:
         void  condense(void);
         void  globalcondense(vector<boost::shared_ptr<Iso> > &iso);
+        void  separate_regions(vector<boost::shared_ptr<Iso> > &iso, int minsize);
+
         void  smooth(int n_iter, NekDouble lambda, NekDouble mu);
 
         int  get_nvert(void)

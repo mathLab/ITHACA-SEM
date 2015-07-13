@@ -69,11 +69,38 @@ void ProcessC0Projection::Process(po::variables_map &vm)
              << endl;
     }
 
+    // ensure not using diagonal preconditioner since tends not to converge fo
+    // mass matrix
+    if(m_f->m_graph->GetMeshDimension() == 3)
+    {
+        if(boost::iequals(m_f->m_session->GetSolverInfo("GLOBALSYSSOLN"),
+                          "IterativeStaticCond"))
+        {
+            if(boost::iequals(m_f->m_session->GetSolverInfo("PRECONDITIONER"),
+                              "Diagonal"))
+            {
+                m_f->m_session->SetSolverInfo("PRECONDITIONER","LowEnergyBlock");
+            }
+            if(boost::iequals(m_f->m_session->GetSolverInfo("PRECONDITIONER"),
+                              "FullLinearSpaceWithDiagonal"))
+            {
+                m_f->m_session->SetSolverInfo("PRECONDITIONER","FullLinearSpaceWithLowEnergyBlock");
+            }
+            
+            if(m_f->m_verbose)
+            {
+                cout << "Resetting diagonal precondition to low energy block " << endl;;
+            }
+        }
+    }
+    
+
     // generate an C0 expansion field with no boundary conditions.
     bool savedef = m_f->m_declareExpansionAsContField;
     m_f->m_declareExpansionAsContField = true;
-    m_c0ProjectExp = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                                        "DefaultVar",true);
+    MultiRegions::ExpListSharedPtr C0ProjectExp = 
+        m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                           "DefaultVar",true);
     m_f->m_declareExpansionAsContField = savedef;
 
     int nfields = m_f->m_exp.size();
@@ -105,9 +132,9 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         {
             cout << "\t Processing field: " << processFields[i] << endl;
         }
-        m_c0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+        C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
                                  m_f->m_exp[processFields[i]]->UpdatePhys());
-        m_c0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
+        C0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
                                  m_f->m_exp[processFields[i]]->UpdateCoeffs());
     }
 

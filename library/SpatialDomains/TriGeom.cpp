@@ -61,17 +61,10 @@ namespace Nektar
         TriGeom::TriGeom(int id, const int coordim):
                                    Geometry2D(coordim), m_fid(id)
         {
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
-                    LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
-                    LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
-
             m_globalID = m_fid;
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-
 
         /**
          *
@@ -101,22 +94,7 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                     "Cannot call function with dim == 1");
 
-            int order0  = edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0)->GetNumPoints();
-            int order1  = max(order0,
-                              max(edges[1]->GetBasis(0)->GetNumModes(),
-                                  edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(edges[1]->GetBasis(0)->GetNumPoints(),
-                                  edges[2]->GetBasis(0)->GetNumPoints()));
-
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                    LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
-                    LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -155,21 +133,7 @@ namespace Nektar
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
 
-            int order0  = edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0)->GetNumPoints();
-            int order1  = max(order0,
-                              max(edges[1]->GetBasis(0)->GetNumModes(),
-                                  edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(edges[1]->GetBasis(0)->GetNumPoints(),
-                                  edges[2]->GetBasis(0)->GetNumPoints()));
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                    LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
-                    LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -177,12 +141,14 @@ namespace Nektar
         /**
          *
          */
-        TriGeom::TriGeom(const int id,
-                const SegGeomSharedPtr edges[],
-                const StdRegions::Orientation eorient[],
-                const CurveSharedPtr &curve) :
-                Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
-                m_fid(id)
+        TriGeom::TriGeom(
+            const int                      id,
+            const SegGeomSharedPtr         edges[],
+            const StdRegions::Orientation  eorient[],
+            const CurveSharedPtr          &curve)
+            : Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
+              m_fid(id),
+              m_curve(curve)
         {
             m_globalID = m_fid;
             m_shapeType =  LibUtilities::eTriangle;
@@ -210,118 +176,9 @@ namespace Nektar
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
 
-            int order0  = edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0)->GetNumPoints();
-            int order1  = max(order0,
-                              max(edges[1]->GetBasis(0)->GetNumModes(),
-                                  edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(edges[1]->GetBasis(0)->GetNumPoints(),
-                                  edges[2]->GetBasis(0)->GetNumPoints()));
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                    LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
-                    LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                int pdim = LibUtilities::PointsManager()[
-                    LibUtilities::PointsKey(2, curve->m_ptype)]->GetPointsDim();
-
-                // Deal with 2D points type separately (e.g. electrostatic or
-                // Fekete points).
-                if (pdim == 2)
-                {
-                    int N = curve->m_points.size();
-                    int nEdgePts = (-1+(int)sqrt(static_cast<NekDouble>(8*N+1)))/2;
-                    
-                    ASSERTL0(nEdgePts*(nEdgePts+1)/2 == N,
-                             "NUMPOINTS must be a triangle number for 2D basis.");
-                    
-                    for (int j = 0; j < kNedges; ++j)
-                    {
-                        ASSERTL0(edges[j]->GetXmap()->GetNcoeffs() == nEdgePts,
-                                 "Number of edge points does not correspond "
-                                 "to number of face points.");
-                    }
-                    
-                    // Create a StdNodalTriExp.
-                    const LibUtilities::PointsKey P0(
-                        nEdgePts, LibUtilities::eGaussLobattoLegendre);
-                    const LibUtilities::PointsKey P1(
-                        nEdgePts, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    const LibUtilities::BasisKey  T0(
-                        LibUtilities::eOrtho_A, nEdgePts, P0);
-                    const LibUtilities::BasisKey  T1(
-                        LibUtilities::eOrtho_B, nEdgePts, P1);
-                    
-                    StdRegions::StdNodalTriExpSharedPtr t =
-                        MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
-                            T0, T1, curve->m_ptype);
-
-                    Array<OneD, NekDouble> phys(max(t->GetTotPoints(),
-                                                    m_xmap->GetTotPoints()));
-                    for (int j = 0; j < N; ++j)
-                    {
-                        phys[j] = (curve->m_points[j]->GetPtr())[i];
-                    }
-
-                    Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
-                    t->BwdTrans(phys, tmp);
-
-                    // Interpolate points to standard region.
-                    LibUtilities::Interp2D(P0, P1, tmp,
-                                           B0.GetPointsKey(),B1.GetPointsKey(),
-                                           phys);
-
-                    // Forwards transform to get coefficient space.
-                    m_xmap->FwdTrans(phys, m_coeffs[i]);
-                }
-                else if (pdim == 1)
-                {
-                    int npts = curve->m_points.size();
-                    int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
-                    Array<OneD,NekDouble> tmp(npts);
-                    LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
-                    
-                    // Sanity checks:
-                    // - Curved faces should have square number of points;
-                    // - Each edge should have sqrt(npts) points.
-                    ASSERTL0(nEdgePts*nEdgePts == npts,
-                             "NUMPOINTS should be a square number");
-                
-                    for (int j = 0; j < kNedges; ++j)
-                    {
-                        ASSERTL0(edges[j]->GetXmap()->GetNcoeffs() == nEdgePts,
-                                 "Number of edge points does not correspond "
-                                 "to number of face points.");
-                    }
-                    
-                    for (int j = 0; j < npts; ++j)
-                    {
-                        tmp[j] = (curve->m_points[j]->GetPtr())[i];
-                    }
-                    
-                    // Interpolate curve points to standard triangle points.
-                    Array<OneD, NekDouble> phys(m_xmap->GetTotPoints());
-                    LibUtilities::Interp2D(curveKey,curveKey,tmp,
-                                           B0.GetPointsKey(),B1.GetPointsKey(),
-                                           phys);
-                    
-                    // Forwards transform to get coefficient space.
-                    m_xmap->FwdTrans(phys, m_coeffs[i]);
-                }
-                else
-                {
-                    ASSERTL0(false, "Only 1D/2D points distributions supported.");
-                }
-            }
         }
-
 
         /**
          *
@@ -599,6 +456,124 @@ namespace Nektar
                 int i,j,k;
                 int nEdgeCoeffs = m_xmap->GetEdgeNcoeffs(0);
 
+                if (m_curve)
+                {
+                    int pdim = LibUtilities::PointsManager()[
+                        LibUtilities::PointsKey(2, m_curve->m_ptype)]
+                        ->GetPointsDim();
+
+                    // Deal with 2D points type separately
+                    // (e.g. electrostatic or Fekete points) to 1D tensor
+                    // product.
+                    if (pdim == 2)
+                    {
+                        int N = m_curve->m_points.size();
+                        int nEdgePts = (
+                            -1+(int)sqrt(static_cast<NekDouble>(8*N+1)))/2;
+
+                        ASSERTL0(nEdgePts*(nEdgePts+1)/2 == N,
+                                 "NUMPOINTS should be a triangle number for"
+                                 " triangle "
+                                 + boost::lexical_cast<string>(m_globalID));
+
+                        for (i = 0; i < kNedges; ++i)
+                        {
+                            ASSERTL0(
+                                m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
+                                "Number of edge points does not correspond "
+                                "to number of face points in triangle "
+                                + boost::lexical_cast<string>(m_globalID));
+                        }
+
+                        const LibUtilities::PointsKey P0(
+                            nEdgePts, LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey P1(
+                            nEdgePts, LibUtilities::eGaussRadauMAlpha1Beta0);
+                        const LibUtilities::BasisKey  T0(
+                            LibUtilities::eOrtho_A, nEdgePts, P0);
+                        const LibUtilities::BasisKey  T1(
+                            LibUtilities::eOrtho_B, nEdgePts, P1);
+                        Array<OneD, NekDouble> phys(
+                            max(nEdgePts*nEdgePts, m_xmap->GetTotPoints()));
+                        Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
+
+                        for(i = 0; i < m_coordim; ++i)
+                        {
+                            // Create a StdNodalTriExp.
+                            StdRegions::StdNodalTriExpSharedPtr t =
+                                MemoryManager<StdRegions::StdNodalTriExp>
+                                ::AllocateSharedPtr(T0, T1, m_curve->m_ptype);
+
+                            for (j = 0; j < N; ++j)
+                            {
+                                phys[j] = (m_curve->m_points[j]->GetPtr())[i];
+                            }
+
+                            t->BwdTrans(phys, tmp);
+
+                            // Interpolate points to standard region.
+                            LibUtilities::Interp2D(
+                                P0, P1, tmp,
+                                m_xmap->GetBasis(0)->GetPointsKey(),
+                                m_xmap->GetBasis(1)->GetPointsKey(),
+                                phys);
+
+                            // Forwards transform to get coefficient space.
+                            m_xmap->FwdTrans(phys, m_coeffs[i]);
+                        }
+                    }
+                    else if (pdim == 1)
+                    {
+                        int npts = m_curve->m_points.size();
+                        int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
+                        Array<OneD, NekDouble> tmp (npts);
+                        Array<OneD, NekDouble> phys(m_xmap->GetTotPoints());
+                        LibUtilities::PointsKey curveKey(
+                            nEdgePts, m_curve->m_ptype);
+
+                        // Sanity checks:
+                        // - Curved faces should have square number of points;
+                        // - Each edge should have sqrt(npts) points.
+                        ASSERTL0(nEdgePts * nEdgePts == npts,
+                                 "NUMPOINTS should be a square number for"
+                                 " triangle "
+                                 + boost::lexical_cast<string>(m_globalID));
+
+                        for (i = 0; i < kNedges; ++i)
+                        {
+                            ASSERTL0(
+                                m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
+                                "Number of edge points does not correspond to "
+                                "number of face points in triangle "
+                                + boost::lexical_cast<string>(m_globalID));
+                        }
+
+                        for (i = 0; i < m_coordim; ++i)
+                        {
+                            for (j = 0; j < npts; ++j)
+                            {
+                                tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
+                            }
+
+                            // Interpolate curve points to standard triangle
+                            // points.
+                            LibUtilities::Interp2D(
+                                curveKey, curveKey, tmp,
+                                m_xmap->GetBasis(0)->GetPointsKey(),
+                                m_xmap->GetBasis(1)->GetPointsKey(),
+                                phys);
+
+                            // Forwards transform to get coefficient space.
+                            m_xmap->FwdTrans(phys, m_coeffs[i]);
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Only 1D/2D points distributions "
+                                        "supported.");
+                    }
+                }
+
                 Array<OneD, unsigned int> mapArray (nEdgeCoeffs);
                 Array<OneD, int>          signArray(nEdgeCoeffs);
 
@@ -848,6 +823,50 @@ namespace Nektar
                 return true;
             }
             return false;
+        }
+
+        void TriGeom::v_Reset(
+            CurveMap &curvedEdges,
+            CurveMap &curvedFaces)
+        {
+            Geometry::v_Reset(curvedEdges, curvedFaces);
+            CurveMap::iterator it = curvedFaces.find(m_globalID);
+
+            if (it != curvedFaces.end())
+            {
+                m_curve = it->second;
+            }
+
+            for (int i = 0; i < 3; ++i)
+            {
+                m_edges[i]->Reset(curvedEdges, curvedFaces);
+            }
+
+            SetUpXmap();
+            SetUpCoeffs(m_xmap->GetNcoeffs());
+        }
+
+        void TriGeom::SetUpXmap()
+        {
+            int order0  = m_edges[0]->GetBasis(0)->GetNumModes();
+            int points0 = m_edges[0]->GetBasis(0)->GetNumPoints();
+            int order1  = max(order0,
+                              max(m_edges[1]->GetBasis(0)->GetNumModes(),
+                                  m_edges[2]->GetBasis(0)->GetNumModes()));
+            int points1 = max(points0,
+                              max(m_edges[1]->GetBasis(0)->GetNumPoints(),
+                                  m_edges[2]->GetBasis(0)->GetNumPoints()));
+
+
+            const LibUtilities::BasisKey B0(
+                LibUtilities::eModified_A, order0, LibUtilities::PointsKey(
+                    points0, LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(
+                LibUtilities::eModified_B, order1, LibUtilities::PointsKey(
+                    points1, LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_xmap = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(B0,B1);
         }
     }; //end of namespace
 }; //end of namespace

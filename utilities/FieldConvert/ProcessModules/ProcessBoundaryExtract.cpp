@@ -57,7 +57,6 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule
     // set up dafault values.
     m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
     m_config["fldtoboundary"] = ConfigOption(true,"NotSet","Extract fld values to boundary");
-
     m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
 
 

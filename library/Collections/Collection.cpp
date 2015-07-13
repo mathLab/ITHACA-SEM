@@ -57,19 +57,20 @@ Collection::Collection(
         OperatorType opType = (OperatorType)i;
         ImplementationType impType;
 
-        it = impTypes.find(opType);
-        impType = it == impTypes.end() ? eIterPerExp : it->second;
+        if ((it = impTypes.find(opType)) != impTypes.end())
+        {
+            impType = it->second;
+            OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
+                              pCollExp[0]->IsNodalNonTensorialExp());
 
-        OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
-                          pCollExp[0]->IsNodalNonTensorialExp());
-
-        stringstream ss;
-        ss << opKey;
-        ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
+            stringstream ss;
+            ss << opKey;
+            ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
                  "Requested unknown operator "+ss.str());
 
-        m_ops[opType] = GetOperatorFactory().CreateInstance(
+            m_ops[opType] = GetOperatorFactory().CreateInstance(
                                                 opKey, pCollExp, m_geomData);
+        }
     }
 }
 

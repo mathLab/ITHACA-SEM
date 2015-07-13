@@ -1513,9 +1513,13 @@ namespace Nektar
                    if(j + k >= cutoff) //to filter out only the "high-modes"
                    {
                        orthocoeffs[j*nmodes_b+k] *=
-                           (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
+                           (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
                                                  ((NekDouble)((j+k-cutoff+1)*
                                                      (j+k-cutoff+1)))));
+                   }
+                   else
+                   {
+                       orthocoeffs[j*nmodes_b+k] *= 0.0;
                    }
                     cnt++;
                 }

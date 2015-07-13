@@ -187,16 +187,12 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
             if(m_f->m_exp[0]->GetExp(i)->DetShapeType() !=
                     LibUtilities::eTetrahedron)
             {
-                if(i == nel-1)
-                {
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
+                continue;
             }
         }
+
+        ppe.push_back(newpoints);
+        newtotpoints += newpoints;
 
         switch(e->DetShapeType())
         {
@@ -206,8 +202,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
                 newpoints = LibUtilities::StdSegData::
                                     getNumberOfCoefficients(npoints0);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eTriangle:
@@ -215,10 +209,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np0 = e->GetBasis(0)->GetNumPoints();
                 int np1 = e->GetBasis(1)->GetNumPoints();
                 int np = max(np0,np1);
-                newpoints     = LibUtilities::StdTriData::
+                newpoints = LibUtilities::StdTriData::
                                     getNumberOfCoefficients(np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eQuadrilateral:
@@ -227,10 +219,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np1 = e->GetBasis(1)->GetNumPoints();
                 int np = max(np0,np1);
 
-                newpoints  = LibUtilities::StdQuadData::
+                newpoints = LibUtilities::StdQuadData::
                                     getNumberOfCoefficients(np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eTetrahedron:
@@ -240,10 +230,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np2 = e->GetBasis(2)->GetNumPoints();
                 int np = max(np0,max(np1,np2));
 
-                newpoints  = LibUtilities::StdTetData::
+                newpoints = LibUtilities::StdTetData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::ePrism:
@@ -253,10 +241,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np2 = e->GetBasis(2)->GetNumPoints();
                 int np = max(np0,max(np1,np2));
 
-                newpoints  = LibUtilities::StdPrismData::
+                newpoints = LibUtilities::StdPrismData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::ePyramid:
@@ -266,10 +252,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np2 = e->GetBasis(2)->GetNumPoints();
                 int np = max(np0,max(np1,np2));
 
-                newpoints     = LibUtilities::StdPyrData::
+                newpoints = LibUtilities::StdPyrData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         case LibUtilities::eHexahedron:
@@ -279,10 +263,8 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np2 = e->GetBasis(2)->GetNumPoints();
                 int np = max(np0,max(np1,np2));
 
-                newpoints     = LibUtilities::StdPyrData::
+                newpoints = LibUtilities::StdPyrData::
                                     getNumberOfCoefficients(np,np,np);
-                ppe.push_back(newpoints);
-                newtotpoints += newpoints;
             }
             break;
         default:
@@ -390,7 +372,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
             if(m_config["modalenergy"].m_beenSet)
             {
-
                 Array<OneD, const NekDouble> phys = m_f->m_exp[n]->GetPhys();
                 for(int i = 0; i < nel; ++i)
                 {
@@ -430,16 +411,17 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 }
 
 
-    void ProcessEquiSpacedOutput::GenOrthoModes(int n,
-                                                const Array<OneD,const NekDouble> &phys,
-                                                Array<OneD, NekDouble> &coeffs)
+    void ProcessEquiSpacedOutput::GenOrthoModes(
+            int n,
+            const Array<OneD,const NekDouble> &phys,
+                  Array<OneD, NekDouble> &coeffs)
     {
         LocalRegions::ExpansionSharedPtr e;
         e = m_f->m_exp[0]->GetExp(n);
 
-                switch(e->DetShapeType())
+        switch(e->DetShapeType())
         {
-        case LibUtilities::eTriangle:
+            case LibUtilities::eTriangle:
             {
                 int np0 = e->GetBasis(0)->GetNumPoints();
                 int np1 = e->GetBasis(1)->GetNumPoints();
@@ -461,9 +443,9 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                                        phys,Ba,Bb,tophys);
 
                 OrthoExp.FwdTrans(tophys,coeffs);
+                break;
             }
-            break;
-        case LibUtilities::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
             {
                 int np0 = e->GetBasis(0)->GetNumPoints();
                 int np1 = e->GetBasis(1)->GetNumPoints();
@@ -483,12 +465,11 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                                        phys,Ba,Bb,tophys);
 
                 OrthoExp.FwdTrans(phys,coeffs);
+                break;
             }
-            break;
-        default:
-            ASSERTL0(false,"Shape needs setting up");
-            break;
-
+            default:
+                ASSERTL0(false,"Shape needs setting up");
+                break;
         }
     }
 

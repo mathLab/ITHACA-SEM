@@ -69,6 +69,9 @@ struct Field {
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_writeBndFld(false),
+              m_fldToBnd(false),
+              m_addNormals(false),
+              m_setUpEquiSpacedFields(false),
               m_fieldPts(LibUtilities::NullPtsField){}
 
     ~Field()
@@ -86,6 +89,8 @@ struct Field {
     bool                                    m_declareExpansionAsContField;
     bool                                    m_declareExpansionAsDisContField;
 
+    bool                                    m_useFFT;
+
     LibUtilities::CommSharedPtr             m_comm;
     LibUtilities::SessionReaderSharedPtr    m_session;
     SpatialDomains::MeshGraphSharedPtr      m_graph;
@@ -98,8 +103,8 @@ struct Field {
     bool                                    m_fldToBnd;
     bool                                    m_addNormals;
 
-    LibUtilities::PtsFieldSharedPtr         m_fieldPts;
     bool                                    m_setUpEquiSpacedFields;
+    LibUtilities::PtsFieldSharedPtr         m_fieldPts;
 
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
 
@@ -113,9 +118,9 @@ struct Field {
 
         // Set up expansion list
         int expdim  = m_graph->GetMeshDimension();
-
-        bool useFFT     = false;
         bool dealiasing = false;
+
+        m_session->MatchSolverInfo("USEFFT", "FFTW", m_useFFT, false);
 
         switch (expdim)
         {
@@ -167,7 +172,7 @@ struct Field {
                     Exp2DH1 = MemoryManager<MultiRegions::
                         ExpList2DHomogeneous1D>::
                         AllocateSharedPtr(m_session, Bkey, ly,
-                                          useFFT,  dealiasing,
+                                          m_useFFT,  dealiasing,
                                           m_graph);
                     exp = Exp2DH1;
                 }
@@ -213,7 +218,7 @@ struct Field {
                         Exp3DH2 = MemoryManager<MultiRegions::
                             ContField3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ,
-                                              ly, lz, useFFT, dealiasing,
+                                              ly, lz, m_useFFT, dealiasing,
                                               m_graph,
                                               m_session->GetVariable(0));
                     }
@@ -222,7 +227,7 @@ struct Field {
                         Exp3DH2 = MemoryManager<MultiRegions::
                             DisContField3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ,
-                                              ly, lz, useFFT, dealiasing,
+                                              ly, lz, m_useFFT, dealiasing,
                                               m_graph,
                                               m_session->GetVariable(0));
                     }
@@ -231,7 +236,7 @@ struct Field {
                         Exp3DH2 = MemoryManager<MultiRegions::
                             ExpList3DHomogeneous2D>::
                             AllocateSharedPtr(m_session, BkeyY, BkeyZ,
-                                              ly, lz, useFFT, dealiasing,
+                                              ly, lz, m_useFFT, dealiasing,
                                               m_graph);
                     }
 
@@ -301,7 +306,7 @@ struct Field {
                     {
                         Exp3DH1 = MemoryManager<MultiRegions::
                             ContField3DHomogeneous1D>::
-                            AllocateSharedPtr(m_session, Bkey, lz, useFFT,
+                            AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
                                               dealiasing, m_graph,
                                               m_session->GetVariable(0));
                     }
@@ -310,7 +315,7 @@ struct Field {
                         Exp3DH1 = MemoryManager<MultiRegions::
                             DisContField3DHomogeneous1D>::
                             AllocateSharedPtr(m_session,
-                                              Bkey, lz, useFFT,
+                                              Bkey, lz, m_useFFT,
                                               dealiasing, m_graph,
                                               m_session->GetVariable(0));
                     }
@@ -318,7 +323,7 @@ struct Field {
                     {
                         Exp3DH1 = MemoryManager<MultiRegions::
                             ExpList3DHomogeneous1D>::
-                            AllocateSharedPtr(m_session, Bkey, lz, useFFT,
+                            AllocateSharedPtr(m_session, Bkey, lz, m_useFFT,
                                               dealiasing, m_graph);
                     }
                     exp = Exp3DH1;
@@ -484,7 +489,6 @@ struct Field {
                     {
                         if(NewField)
                         {
-                            bool useFFT     = false;
                             bool dealiasing = false;
 
                             tmp  = MemoryManager<MultiRegions::
@@ -493,7 +497,7 @@ struct Field {
                                         m_exp[0]->GetHomogeneousBasis()
                                                     ->GetBasisKey(),
                                         m_exp[0]->GetHomoLen(),
-                                        useFFT, dealiasing, m_graph, var);
+                                        m_useFFT, dealiasing, m_graph, var);
                         }
                         else
                         {
@@ -511,7 +515,6 @@ struct Field {
                     {
                         if(NewField)
                         {
-                            bool useFFT     = false;
                             bool dealiasing = false;
 
                             tmp  = MemoryManager<MultiRegions::
@@ -520,7 +523,7 @@ struct Field {
                                         m_exp[0]->GetHomogeneousBasis()
                                                     ->GetBasisKey(),
                                         m_exp[0]->GetHomoLen(),
-                                        useFFT, dealiasing, m_graph,var);
+                                        m_useFFT, dealiasing, m_graph,var);
                         }
                         else
                         {
@@ -538,7 +541,6 @@ struct Field {
                     {
                         if(NewField)
                         {
-                            bool useFFT     = false;
                             bool dealiasing = false;
 
                             tmp  = MemoryManager<MultiRegions::
@@ -547,7 +549,7 @@ struct Field {
                                         m_exp[0]->GetHomogeneousBasis()
                                                     ->GetBasisKey(),
                                         m_exp[0]->GetHomoLen(),
-                                        useFFT, dealiasing, m_graph);
+                                        m_useFFT, dealiasing, m_graph);
                         }
                         else
                         {

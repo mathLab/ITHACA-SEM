@@ -39,9 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <MeshUtils/MeshNode.hpp>
-#include <MeshUtils/MeshEdges.hpp>
-#include <MeshUtils/MeshTri.hpp>
+#include <MeshUtils/MeshElem.hpp>
 #include <LibUtilities/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/CurveMesh.h>
@@ -61,7 +59,7 @@ namespace MeshUtils {
         SurfaceMesh(const int id,
                     const LibUtilities::CADSurfSharedPtr &cad,
                     const OctreeSharedPtr &oct,
-                    const std::vector<CurveMeshSharedPtr> &cmeshes,
+                    const std::map<int, CurveMeshSharedPtr> &cmeshes,
                     const int &order)
                         : m_cadsurf(cad), m_octree(oct),
                           m_curvemeshes(cmeshes),m_order(order),m_id(id)
@@ -70,49 +68,39 @@ namespace MeshUtils {
             m_edges = m_cadsurf->GetEdges();
         };
         
-        void Mesh();
-        
-	std::vector<MeshNodeSharedPtr> GetNodes(){return Nodes;}
-	std::vector<MeshEdgeSharedPtr> GetEdges(){return Edges;}
-	std::vector<MeshTriSharedPtr>  GetTris(){return Tris;}
-        
+        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
+                  std::map<int, MeshEdgeSharedPtr> &Edges,
+                  std::map<int, MeshTriSharedPtr> &Tris);
         
         
     private:
         
-        void HOMesh();
-        
-        void LinearOptimise();
-        
-        void EdgeSwap();
-        
         void Stretching();
         
-        bool Validate();
+        bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
         
-        void OrientateCurves();
-        void AddNewPoint(NekDouble u, NekDouble v);
+        void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
+        
+        void AddNewPoint(NekDouble u, NekDouble v,
+                         std::map<int, MeshNodeSharedPtr> &Nodes);
         
         LibUtilities::CADSurfSharedPtr m_cadsurf;
         OctreeSharedPtr m_octree;
-        std::vector<CurveMeshSharedPtr> m_curvemeshes;
+        std::map<int, CurveMeshSharedPtr> m_curvemeshes;
 
         std::vector<std::vector<std::pair<int,int> > > m_edges;
        
         int m_order;
         
         int m_id;
-        std::vector<MeshNodeSharedPtr> Nodes;
+    
         std::vector<std::vector<int> > orderedLoops;
         std::vector<std::vector<NekDouble> > m_centers;
         
+        std::vector<int> m_stienerpoints;
+        
         int numtri;
         Array<OneD, Array<OneD, int> > Connec;
-
-        std::vector<MeshEdgeSharedPtr> Edges;
-	std::vector<MeshTriSharedPtr> Tris;
-	
-        int nodesused;
         
         NekDouble pasr,asr;
         

@@ -41,7 +41,7 @@ using namespace std;
 namespace Nektar{
 namespace MeshUtils {
     
-    void CurveMesh::Mesh()
+    void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes)
     {
         m_cadcurve->Bounds(m_bounds);
         m_curvelength = m_cadcurve->Length(m_bounds[0],m_bounds[1]);
@@ -112,23 +112,79 @@ namespace MeshUtils {
                 cout << "\tPoints: " << Ne+1 << endl;
         }
         
-        for(int i = 0; i < meshsvalue.size()-1; i++)
-        {
-            NekDouble t = m_cadcurve->tAtArcLength(meshsvalue[i]);
-            Array<OneD, NekDouble> loc;
-            m_cadcurve->P(t,loc);
-            MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
-                              new MeshNode(0,loc[0],loc[1],loc[2]));
-            n->SetCurve(m_id,t);
-            m_meshpoints.push_back(n);
-        }
-        NekDouble t = m_bounds[1];
+        NekDouble t;
         Array<OneD, NekDouble> loc;
+        
+        
+        t = m_cadcurve->tAtArcLength(meshsvalue[0]);
         m_cadcurve->P(t,loc);
-        MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
+        MeshNodeSharedPtr n1 = boost::shared_ptr<MeshNode>(
+                                new MeshNode(0,loc[0],loc[1],loc[2]));
+        n1->SetEOC();
+        n1->SetCurve(m_id,t);
+        
+        bool found = false;
+        
+        for(int i = 0; i < Nodes.size(); i++)
+        {
+            if(Nodes[i]->IsEOC())
+            {
+                if(Nodes[i]->Distance(n1) < 1E-8)
+                {
+                    m_meshpoints.push_back(i);
+                    Nodes[i]->SetCurve(m_id,t);
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        if(found == false)
+        {
+            Nodes[Nodes.size()] = n1;
+            m_meshpoints.push_back(Nodes.size()-1);
+        }
+        
+        for(int i = 1; i < meshsvalue.size()-1; i++)
+        {
+            t = m_cadcurve->tAtArcLength(meshsvalue[i]);
+            m_cadcurve->P(t,loc);
+            MeshNodeSharedPtr n2 = boost::shared_ptr<MeshNode>(
+                              new MeshNode(0,loc[0],loc[1],loc[2]));
+            n2->SetCurve(m_id,t);
+            Nodes[Nodes.size()] = n2;
+            m_meshpoints.push_back(Nodes.size()-1);
+        }
+        
+        t = m_bounds[1];
+        
+        m_cadcurve->P(t,loc);
+        MeshNodeSharedPtr n3 = boost::shared_ptr<MeshNode>(
                           new MeshNode(0,loc[0],loc[1],loc[2]));
-        n->SetCurve(m_id,t);
-        m_meshpoints.push_back(n);
+        n3->SetCurve(m_id,t);
+        n3->SetEOC();
+        
+        found = false;
+        
+        for(int i = 0; i < Nodes.size(); i++)
+        {
+            if(Nodes[i]->IsEOC())
+            {
+                if(Nodes[i]->Distance(n3) < 1E-8)
+                {
+                    m_meshpoints.push_back(i);
+                    Nodes[i]->SetCurve(m_id,t);
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        if(found == false)
+        {
+            Nodes[Nodes.size()] = n3;
+            m_meshpoints.push_back(Nodes.size()-1);
+        }
     }
     
     void CurveMesh::GetPhiFunction()

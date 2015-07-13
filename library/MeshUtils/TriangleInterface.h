@@ -53,7 +53,7 @@ extern "C"{
 #include <triangle.h>
 }
 
-#include <MeshUtils/MeshNode.hpp>
+#include <MeshUtils/MeshElem.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -75,7 +75,8 @@ namespace Nektar {
                 void Assign(const std::vector<std::vector<int> > &boundingloops,
                             const std::vector<std::vector<NekDouble> >
                             &centers,
-                            const std::vector<MeshNodeSharedPtr> &nodes,
+                            const std::map<int, MeshNodeSharedPtr> &n,
+                            const std::vector<int> &stiner, int i,
                             NekDouble str = 1.0)
                 {
                     if(meshloaded)
@@ -84,8 +85,10 @@ namespace Nektar {
                     }
                     m_boundingloops = boundingloops;
                     m_centers = centers;
-                    m_nodes = nodes;
+                    Nodes = n;
+                    m_stienerpoints = stiner;
                     m_str = str;
+                    sid = i;
                 }
                 
                 ~TriangleInterface()
@@ -108,8 +111,14 @@ namespace Nektar {
                 void freetri();
                 
                 std::vector<std::vector<int> > m_boundingloops;
+                std::vector<int> m_stienerpoints;
                 std::vector<std::vector<NekDouble> > m_centers;
-                std::vector<MeshNodeSharedPtr> m_nodes;
+                std::map<int, MeshNodeSharedPtr> Nodes;
+                
+                std::map<int, int> nodemap;
+                std::map<int, int> nodemapr;
+                
+                int sid;
                 
                 bool meshloaded;
                 

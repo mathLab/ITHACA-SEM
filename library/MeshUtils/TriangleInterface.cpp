@@ -57,7 +57,7 @@ namespace MeshUtils {
         {
             numSeg+=m_boundingloops[i].size();
         }
-        numPoints = m_nodes.size();
+        numPoints = numSeg + m_stienerpoints.size();
         
         in.numberofpoints = numPoints;
         in.numberofpointattributes = 0;
@@ -66,11 +66,29 @@ namespace MeshUtils {
         
         int pointc = 0;
         
-        for(int i = 0; i < m_nodes.size(); i++)
+        for(int i = 0; i < m_boundingloops.size(); i++)
         {
-            vector<pair<int, Array<OneD,NekDouble> > > n = m_nodes[i]->GetS();
-            in.pointlist[pointc*2+0] = n[0].second[0]*m_str;
-            in.pointlist[pointc*2+1] = n[0].second[1];
+            for(int j = 0; j < m_boundingloops[i].size(); j++)
+            {
+                nodemap[pointc] = m_boundingloops[i][j];
+                nodemapr[m_boundingloops[i][j]] = pointc;
+                Array<OneD, NekDouble> uv = Nodes[m_boundingloops[i][j]]
+                                                ->GetS(sid);
+                
+                in.pointlist[pointc*2+0] = uv[0]*m_str;
+                in.pointlist[pointc*2+1] = uv[1];
+                pointc++;
+            }
+        }
+        
+        for(int i = 0; i < m_stienerpoints.size(); i++)
+        {
+            nodemap[pointc] = m_stienerpoints[i];
+            nodemapr[m_stienerpoints[i]] = pointc;
+            Array<OneD, NekDouble> uv = Nodes[m_stienerpoints[i]]
+                                                ->GetS(sid);
+            in.pointlist[pointc*2+0] = uv[0]*m_str;
+            in.pointlist[pointc*2+1] = uv[1];
             pointc++;
         }
         
@@ -81,12 +99,12 @@ namespace MeshUtils {
         {
             for(int j = 0; j < m_boundingloops[i].size()-1; j++)
             {
-                in.segmentlist[pointc*2+0] = m_boundingloops[i][j];
-                in.segmentlist[pointc*2+1] = m_boundingloops[i][j+1];
+                in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i][j]];
+                in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][j+1]];
                 pointc++;
             }
-            in.segmentlist[pointc*2+0] = m_boundingloops[i].back();
-            in.segmentlist[pointc*2+1] = m_boundingloops[i][0];
+            in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i].back()];
+            in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][0]];
             pointc++;
         }
        
@@ -144,9 +162,9 @@ namespace MeshUtils {
         for(int i = 0; i < out.numberoftriangles; i++)
         {
             Array<OneD, int> tri(3);
-            tri[0] = out.trianglelist[i*3+0];
-            tri[1] = out.trianglelist[i*3+1];
-            tri[2] = out.trianglelist[i*3+2];
+            tri[0] = nodemap[out.trianglelist[i*3+0]];
+            tri[1] = nodemap[out.trianglelist[i*3+1]];
+            tri[2] = nodemap[out.trianglelist[i*3+2]];
             Connec[i] = tri;
         }
     }
@@ -158,8 +176,8 @@ namespace MeshUtils {
         for(int i = 0; i < out.numberofedges; i++)
         {
             Array<OneD, int> el(2);
-            el[0] = out.edgelist[i*2+0];
-            el[1] = out.edgelist[i*2+1];
+            el[0] = nodemap[out.edgelist[i*2+0]];
+            el[1] = nodemap[out.edgelist[i*2+1]];
             edgelist[i] = el;
         }
         num = out.numberofedges;

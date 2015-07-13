@@ -45,47 +45,30 @@ namespace MeshUtils {
     
     void SurfaceMeshing::Mesh()
     {
-        cout << m_cad->GetNumCurve() << endl;
-        
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
         {
             if(m_verbose)
                 cout << "Meshing Curve: " << i << endl;
             
-            CurveMeshSharedPtr cmesh =
+            m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(
                     m_verbose, i, m_cad->GetCurve(i), m_octree);
             
-            cmesh->Mesh();
+            m_curvemeshes[i]->Mesh(Nodes);
             
-            m_curvemeshes.push_back(cmesh);
         }
         
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             cout << "Surface: " <<  i <<  endl;
-            SurfaceMeshSharedPtr smesh =
+            m_surfacemeshes[i] =
                 MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,
                     m_cad->GetSurf(i), m_octree,
                     m_curvemeshes,m_order);
             
-            smesh->Mesh();         
-            
-            m_surfacemeshes.push_back(smesh);
+            m_surfacemeshes[i]->Mesh(Nodes,Edges,Tris);
+
         }
-
-	Nodes = m_surfacemeshes[0]->GetNodes();
-	Edges = m_surfacemeshes[0]->GetEdges();
-	Tris  = m_surfacemeshes[0]->GetTris();
-
-	for(int i = 1; i < m_surfacemeshes.size(); i++)
-	{
-	    vector<MeshNodeSharedPtr> nxNodes = m_surfacemeshes[i]->GetNodes();
-	    vector<MeshEdgeSharedPtr> nxEdges = m_surfacemeshes[i]->GetEdges();
-	    vector<MeshTriSharedPtr>  nxTris  = m_surfacemeshes[i]->GetTris();
-
-	    
-	}
 	
     }
     

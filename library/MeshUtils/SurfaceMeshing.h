@@ -43,9 +43,7 @@
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/SurfaceMesh.h>
 #include <MeshUtils/CurveMesh.h>
-#include <MeshUtils/MeshNode.hpp>
-#include <MeshUtils/MeshEdges.hpp>
-#include <MeshUtils/MeshTri.hpp>
+#include <MeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -69,29 +67,21 @@ namespace MeshUtils {
         
         void Mesh();
         
-        void Extract(int i,
-                     int &nt,
-                     int &tnp,
-                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &p)
-        {
-            //m_surfacemeshes[i-1]->Extract(nt,tnp,p);
-        }
-        
-        
     private:
         
         LibUtilities::CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
         
-        std::vector<SurfaceMeshSharedPtr> m_surfacemeshes;
-        std::vector<CurveMeshSharedPtr> m_curvemeshes;
+        std::map<int, SurfaceMeshSharedPtr> m_surfacemeshes;
+        std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+        
         int m_order;
         
         bool m_verbose;
 
-	std::vector<MeshNodeSharedPtr> Nodes;
-	std::vector<MeshEdgeSharedPtr> Edges;
-	std::vector<MeshTriSharedPtr> Tris;
+        std::map<int, MeshNodeSharedPtr> Nodes;
+        std::map<int, MeshEdgeSharedPtr> Edges;
+        std::map<int, MeshTriSharedPtr> Tris;
         
         
     };

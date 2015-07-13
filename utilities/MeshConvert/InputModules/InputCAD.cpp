@@ -118,7 +118,7 @@ namespace Utilities
         
         m_surfacemeshing->Mesh();
         
-        int nodeCounter=0;
+        /*int nodeCounter=0;
         
         int numtris, numppt;
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > points;
@@ -133,7 +133,7 @@ namespace Utilities
         
         for(int i = 1; i <=m_cad->GetNumSurf(); i++)
         {
-            m_surfacemeshing->Extract(i,numtris,numppt,points);
+            //m_surfacemeshing->Extract(i,numtris,numppt,points);
             
             for(int j = 0; j < numtris; j++)
             {
@@ -158,7 +158,7 @@ namespace Utilities
                 m_mesh->m_element[2].push_back(E);
                 
             }
-        }
+        }*/
         
         ProcessVertices  ();
         ProcessEdges     ();

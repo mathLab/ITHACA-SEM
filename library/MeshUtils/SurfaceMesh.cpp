@@ -53,7 +53,7 @@ namespace MeshUtils {
         Stretching();
         
         OrientateCurves(Nodes);
-
+        
         TriangleInterfaceSharedPtr pplanemesh =
             MemoryManager<TriangleInterface>::AllocateSharedPtr();
         
@@ -363,10 +363,10 @@ namespace MeshUtils {
             for(int j = 0; j < m_edges[i].size(); j++)
             {
                 vector<int> edgePoints =
-                        m_curvemeshes[m_edges[i][j].first-1]->
+                        m_curvemeshes[m_edges[i][j].first]->
                             GetMeshPoints();
                 
-                int numPoints = m_curvemeshes[m_edges[i][j].first-1]->
+                int numPoints = m_curvemeshes[m_edges[i][j].first]->
                                     GetNumPoints();
                 
                 if(m_edges[i][j].second == 0)
@@ -391,10 +391,9 @@ namespace MeshUtils {
         {
             for(int j = 0; j < orderedLoops[i].size(); j++)
             {
-                vector<NekDouble> P;
-                P.resize(2);
-                m_cadsurf->locuv(P[0],P[1],Nodes[orderedLoops[i][j]]->GetLoc());
-                Nodes[orderedLoops[i][j]]->SetSurf(m_id,P[0],P[1]);
+                NekDouble u,v;
+                m_cadsurf->locuv(u,v,Nodes[orderedLoops[i][j]]->GetLoc());
+                Nodes[orderedLoops[i][j]]->SetSurf(m_id,u,v);
             }
         }
         

@@ -54,15 +54,16 @@ namespace MeshUtils {
                 MemoryManager<CurveMesh>::AllocateSharedPtr(
                     m_verbose, i, m_cad->GetCurve(i), m_octree);
             
-            m_curvemeshes[i]->Mesh(Nodes);
+            m_curvemeshes[i]->Mesh(Nodes, Edges);
             
         }
         
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
-            cout << "Surface: " <<  i <<  endl;
+            if(m_verbose)
+                cout << "Surface: " <<  i <<  endl;
             m_surfacemeshes[i] =
-                MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,
+                MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,m_verbose,
                     m_cad->GetSurf(i), m_octree,
                     m_curvemeshes,m_order);
             

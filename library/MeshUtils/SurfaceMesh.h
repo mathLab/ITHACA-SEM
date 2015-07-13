@@ -57,11 +57,12 @@ namespace MeshUtils {
         friend class MemoryManager<SurfaceMesh>;
         
         SurfaceMesh(const int id,
+                    const bool verb,
                     const LibUtilities::CADSurfSharedPtr &cad,
                     const OctreeSharedPtr &oct,
                     const std::map<int, CurveMeshSharedPtr> &cmeshes,
                     const int &order)
-                        : m_cadsurf(cad), m_octree(oct),
+                        : m_verbose(verb), m_cadsurf(cad), m_octree(oct),
                           m_curvemeshes(cmeshes),m_order(order),m_id(id)
         
         {
@@ -84,6 +85,7 @@ namespace MeshUtils {
         void AddNewPoint(NekDouble u, NekDouble v,
                          std::map<int, MeshNodeSharedPtr> &Nodes);
         
+        bool m_verbose;
         LibUtilities::CADSurfSharedPtr m_cadsurf;
         OctreeSharedPtr m_octree;
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;

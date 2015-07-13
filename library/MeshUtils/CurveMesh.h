@@ -64,7 +64,8 @@ namespace MeshUtils {
         {
         };
         
-        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes);
+        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
+                  std::map<int, MeshEdgeSharedPtr> &Edges);
         
         int GetFirstPoint(){return m_meshpoints[0];}
         int GetLastPoint(){return m_meshpoints[Ne];}

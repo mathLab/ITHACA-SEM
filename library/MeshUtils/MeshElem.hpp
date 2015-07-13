@@ -157,16 +157,23 @@ namespace MeshUtils {
         MeshEdge(int i, MeshNodeSharedPtr an, MeshNodeSharedPtr bn)
         {
             eid=i;
-            firstn = an;
-            secondn = bn;
-            firstn->SetEdge(eid);
-            secondn->SetEdge(eid);
+            nodes = Array<OneD, MeshNodeSharedPtr>(2);
+            nodes[0] =an;
+            nodes[1] =bn;
+            nodes[0]->SetEdge(eid);
+            nodes[1]->SetEdge(eid);
+        }
+        
+        void SetCurve(int i)
+        {
+            curveedge = i;
         }
         
     private:
         
         int eid;
-        MeshNodeSharedPtr firstn,secondn;
+        int curveedge;
+        Array<OneD, MeshNodeSharedPtr> nodes;
         
     };
     

@@ -41,7 +41,8 @@ using namespace std;
 namespace Nektar{
 namespace MeshUtils {
     
-    void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes)
+    void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
+                         std::map<int, MeshEdgeSharedPtr> &Edges)
     {
         m_cadcurve->Bounds(m_bounds);
         m_curvelength = m_cadcurve->Length(m_bounds[0],m_bounds[1]);
@@ -185,6 +186,17 @@ namespace MeshUtils {
             Nodes[Nodes.size()] = n3;
             m_meshpoints.push_back(Nodes.size()-1);
         }
+        
+        for(int i = 0; i < m_meshpoints.size()-1; i++)
+        {
+            Edges[Edges.size()] = MemoryManager<MeshEdge>::
+                    AllocateSharedPtr(Edges.size(),
+                                      Nodes[m_meshpoints[i]],
+                                      Nodes[m_meshpoints[i+1]]);
+            Edges[Edges.size()-1]->SetCurve(m_id);
+        }
+        
+        
     }
     
     void CurveMesh::GetPhiFunction()

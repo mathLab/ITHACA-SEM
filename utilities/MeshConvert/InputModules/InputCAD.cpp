@@ -160,11 +160,11 @@ namespace Utilities
             }
         }*/
         
-        ProcessVertices  ();
+        /*ProcessVertices  ();
         ProcessEdges     ();
         ProcessFaces     ();
         ProcessElements  ();
-        ProcessComposites();
+        ProcessComposites();*/
         
     }
     

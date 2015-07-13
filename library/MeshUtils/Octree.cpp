@@ -803,11 +803,13 @@ namespace MeshUtils {
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             Array<OneD, NekDouble> ParameterPlaneBounds;
-            m_cad->GetParameterPlaneBounds(i,ParameterPlaneBounds);
             LibUtilities::CADSurfSharedPtr surf = m_cad->GetSurf(i);
+            surf->GetBounds(ParameterPlaneBounds);
             
-            NekDouble du = (ParameterPlaneBounds[1]-ParameterPlaneBounds[0])/(40-1);
-            NekDouble dv = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])/(40-1);
+            NekDouble du = (ParameterPlaneBounds[1]-
+                            ParameterPlaneBounds[0])/(40-1);
+            NekDouble dv = (ParameterPlaneBounds[3]-
+                            ParameterPlaneBounds[2])/(40-1);
             
             NekDouble DeltaU = 0.0;
             NekDouble DeltaV = 0.0;
@@ -828,18 +830,30 @@ namespace MeshUtils {
             {
                 for(int k = 0; k < 40-1; k++)
                 {
-                    NekDouble deltau = sqrt((samplepoints[k][j][0]-samplepoints[k+1][j][0])*
-                                            (samplepoints[k][j][0]-samplepoints[k+1][j][0])+
-                                            (samplepoints[k][j][1]-samplepoints[k+1][j][1])*
-                                            (samplepoints[k][j][1]-samplepoints[k+1][j][1])+
-                                            (samplepoints[k][j][2]-samplepoints[k+1][j][2])*
-                                            (samplepoints[k][j][2]-samplepoints[k+1][j][2]));
-                    NekDouble deltav = sqrt((samplepoints[k][j][0]-samplepoints[k][j+1][0])*
-                                            (samplepoints[k][j][0]-samplepoints[k][j+1][0])+
-                                            (samplepoints[k][j][1]-samplepoints[k][j+1][1])*
-                                            (samplepoints[k][j][1]-samplepoints[k][j+1][1])+
-                                            (samplepoints[k][j][2]-samplepoints[k][j+1][2])*
-                                            (samplepoints[k][j][2]-samplepoints[k][j+1][2]));
+                    NekDouble deltau = sqrt((samplepoints[k][j][0]-
+                                             samplepoints[k+1][j][0])*
+                                            (samplepoints[k][j][0]-
+                                             samplepoints[k+1][j][0])+
+                                            (samplepoints[k][j][1]-
+                                             samplepoints[k+1][j][1])*
+                                            (samplepoints[k][j][1]-
+                                             samplepoints[k+1][j][1])+
+                                            (samplepoints[k][j][2]-
+                                             samplepoints[k+1][j][2])*
+                                            (samplepoints[k][j][2]-
+                                             samplepoints[k+1][j][2]));
+                    NekDouble deltav = sqrt((samplepoints[k][j][0]-
+                                             samplepoints[k][j+1][0])*
+                                            (samplepoints[k][j][0]-
+                                             samplepoints[k][j+1][0])+
+                                            (samplepoints[k][j][1]-
+                                             samplepoints[k][j+1][1])*
+                                            (samplepoints[k][j][1]-
+                                             samplepoints[k][j+1][1])+
+                                            (samplepoints[k][j][2]-
+                                             samplepoints[k][j+1][2])*
+                                            (samplepoints[k][j][2]-
+                                             samplepoints[k][j+1][2]));
                     
                     if(deltau > DeltaU)
                         DeltaU = deltau;
@@ -855,26 +869,26 @@ namespace MeshUtils {
             {
                 for(int k = 0; k < nv; k++)
                 {
-                    NekDouble u = (ParameterPlaneBounds[1]-ParameterPlaneBounds[0])
+                    NekDouble u = (ParameterPlaneBounds[1]-
+                                   ParameterPlaneBounds[0])
                                     /(nu-1)*j + ParameterPlaneBounds[0];
-                    NekDouble v = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])
+                    NekDouble v = (ParameterPlaneBounds[3]-
+                                   ParameterPlaneBounds[2])
                                     /(nv-1)*k + ParameterPlaneBounds[2];
                     if(j==nu-1)
                         u=ParameterPlaneBounds[1]; //These statements prevent floating point error at end of loop
                     if(k==nv-1)
                         v=ParameterPlaneBounds[3];
+
                     
-                    Array<OneD, NekDouble> N;
-                    Array<OneD, NekDouble> r;
-                    
-                    m_cad->N(i,u,v,N);
+                    Array<OneD, NekDouble> N = surf->N(u,v);
                     
                     if(N[0]==0 && N[1]==0 && N[2]==0)
                     {
                         continue;
                     }
                     
-                    m_cad->D2(i,u,v,r);
+                    Array<OneD, NekDouble> r = surf->D2(u,v);
                     
                     NekDouble E = r[3]*r[3] + r[4]*r[4] + r[5]*r[5];
                     NekDouble F = r[3]*r[6] + r[4]*r[7] + r[5]*r[8];

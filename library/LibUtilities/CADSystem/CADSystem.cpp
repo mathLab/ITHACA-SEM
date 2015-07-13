@@ -44,54 +44,16 @@
 using namespace std;
 namespace Nektar{
 namespace LibUtilities{
-    
-    void CADSystem::GetParameterPlaneBounds(int i,
-                                            Array<OneD, NekDouble>& out)
-    {
-        out = Array<OneD, NekDouble>(4);
-        out[0]=m_surfs[i-1]->minU();
-        out[1]=m_surfs[i-1]->maxU();
-        out[2]=m_surfs[i-1]->minV();
-        out[3]=m_surfs[i-1]->maxV();
-    }
 
     string CADSystem::GetName()
     {
         return m_name;
     }
     
-    void CADSystem::N(int i, NekDouble u, NekDouble v,
-                      Array<OneD, NekDouble>& out)
-    {
-        ASSERTL0(u>=m_surfs[i-1]->minU() &&
-                 u<=m_surfs[i-1]->maxU() &&
-                 v>=m_surfs[i-1]->minV() &&
-                 v<=m_surfs[i-1]->maxV(), "(u,v) out of bounds");
-        out = m_surfs[i-1]->N(u,v);
-    }
-    void CADSystem::D1(int i, NekDouble u, NekDouble v,
-                                 Array<OneD, NekDouble>& out)
-    {
-        ASSERTL0(u>=m_surfs[i-1]->minU() &&
-                 u<=m_surfs[i-1]->maxU() &&
-                 v>=m_surfs[i-1]->minV() &&
-                 v<=m_surfs[i-1]->maxV(), "(u,v) out of bounds");
-        out = m_surfs[i-1]->D1(u,v);
-    }
-    void CADSystem::D2(int i, NekDouble u, NekDouble v,
-                                 Array<OneD, NekDouble>& out)
-    {
-        ASSERTL0(u>=m_surfs[i-1]->minU() &&
-                 u<=m_surfs[i-1]->maxU() &&
-                 v>=m_surfs[i-1]->minV() &&
-                 v<=m_surfs[i-1]->maxV(), "(u,v) out of bounds");
-        out = m_surfs[i-1]->D2(u,v);
-    }
-    
     void CADSystem::Report()
     {
-        cout << "CAD has: " << m_numCurve << " curves." << endl;
-        cout << "CAD has: " << m_numSurf << " surfaces." << endl;
+        cout << "CAD has: " << m_curves.size() << " curves." << endl;
+        cout << "CAD has: " << m_surfs.size() << " surfaces." << endl;
     }
     
     void CADSystem::GetBoundingBox(Array<OneD, NekDouble>& out)
@@ -103,10 +65,11 @@ namespace LibUtilities{
         out[4]=1000000.0;
         out[5]=0.0;
         
-        for(int i = 0; i < m_curves.size(); i++)
+        for(int i = 1; i <= m_curves.size(); i++)
         {
             gp_Pnt start, end;
-            m_curves[i]->GetMinMax(start,end);
+            CADCurveSharedPtr c = GetCurve(i);
+            c->GetMinMax(start,end);
             if(start.X()<out[0])
                 out[0]=start.X();
             if(start.X()>out[1])
@@ -270,9 +233,6 @@ namespace LibUtilities{
             
         }
         
-        m_numCurve = m_curves.size();
-        m_numSurf = m_surfs.size();
-        
         return true;
     }
     
@@ -281,7 +241,7 @@ namespace LibUtilities{
         CADCurveSharedPtr newCurve =
             MemoryManager<CADCurve>::
                 AllocateSharedPtr(i,in);
-        m_curves.push_back(newCurve);
+        m_curves[i] = newCurve;
     }
     void CADSystem::AddSurf(int i, TopoDS_Shape in,
                             std::vector<std::vector<std::pair<int,int> > > ein)
@@ -289,7 +249,7 @@ namespace LibUtilities{
         CADSurfSharedPtr newSurf =
             MemoryManager<CADSurf>::
                 AllocateSharedPtr(i,in,ein);
-        m_surfs.push_back(newSurf);
+        m_surfs[i] = newSurf;
     }
 
 }

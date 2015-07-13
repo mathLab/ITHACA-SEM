@@ -228,20 +228,22 @@ namespace MeshUtils {
     void SurfaceMesh::Stretching()
     {
         asr = 0.0;
-        pasr = (m_cadsurf->maxU() - m_cadsurf->minU())/
-               (m_cadsurf->maxV() - m_cadsurf->minV());
+        Array<OneD, NekDouble> bnds;
+        m_cadsurf->GetBounds(bnds);
+        pasr = (bnds[1] - bnds[0])/
+               (bnds[3] - bnds[2]);
         
         Array<TwoD, Array<OneD,NekDouble> > stretch(40,40);
         
-        NekDouble du = (m_cadsurf->maxU()-m_cadsurf->minU())/(40-1);
-        NekDouble dv = (m_cadsurf->maxV()-m_cadsurf->minV())/(40-1);
+        NekDouble du = (bnds[1]-bnds[0])/(40-1);
+        NekDouble dv = (bnds[3]-bnds[2])/(40-1);
         
         for(int i = 0; i < 40; i++)
         {
             for(int j = 0; j < 40; j++)
             {
-                stretch[i][j]=m_cadsurf->P(m_cadsurf->minU() + i*du,
-                                           m_cadsurf->minV() + j*dv);
+                stretch[i][j]=m_cadsurf->P(bnds[0] + i*du,
+                                           bnds[2] + j*dv);
             }
         }
         

@@ -77,10 +77,7 @@ namespace Nektar {
             
             CADSurf(int i, TopoDS_Shape in,
                     std::vector<std::vector<std::pair<int,int> > > ein);
-            NekDouble minU(){return occSurface.FirstUParameter();}
-            NekDouble maxU(){return occSurface.LastUParameter();}
-            NekDouble minV(){return occSurface.FirstVParameter();}
-            NekDouble maxV(){return occSurface.LastVParameter();}
+            
             std::vector<std::vector<std::pair<int,int> > >
                             GetEdges(){return edges;}
             
@@ -90,6 +87,15 @@ namespace Nektar {
             Array<OneD, NekDouble> P(NekDouble u, NekDouble v);
             
             void locuv(NekDouble &u, NekDouble &v, Array<OneD, NekDouble> p);
+            
+            void GetBounds(Array<OneD,NekDouble> &out)
+            {
+                out = Array<OneD,NekDouble>(4);
+                out[0]=occSurface.FirstUParameter();
+                out[1]=occSurface.LastUParameter();
+                out[2]=occSurface.FirstVParameter();
+                out[3]=occSurface.LastVParameter();
+            }
             
         private:
             int ID;

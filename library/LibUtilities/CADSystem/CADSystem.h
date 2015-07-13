@@ -92,23 +92,25 @@ namespace LibUtilities {
         LIB_UTILITIES_EXPORT bool LoadCAD();
         LIB_UTILITIES_EXPORT void Report();
         LIB_UTILITIES_EXPORT void GetBoundingBox(Array<OneD, NekDouble>& out);
-        LIB_UTILITIES_EXPORT int GetNumSurf(){return m_numSurf;}
-        LIB_UTILITIES_EXPORT int GetNumCurve(){return m_numCurve;}
-        LIB_UTILITIES_EXPORT void GetParameterPlaneBounds(int i,
-                                                    Array<OneD, NekDouble>& out);
-        LIB_UTILITIES_EXPORT void N(int i, NekDouble u, NekDouble v,
-                                    Array<OneD, NekDouble>& out);
-        LIB_UTILITIES_EXPORT void D1(int i, NekDouble u, NekDouble v,
-                                    Array<OneD, NekDouble>& out);
-        LIB_UTILITIES_EXPORT void D2(int i, NekDouble u, NekDouble v,
-                                    Array<OneD, NekDouble>& out);
-        LIB_UTILITIES_EXPORT const CADCurveSharedPtr GetCurve(int i )
+        LIB_UTILITIES_EXPORT int GetNumSurf(){return m_surfs.size();}
+        LIB_UTILITIES_EXPORT int GetNumCurve(){return m_curves.size();}
+        
+        
+        LIB_UTILITIES_EXPORT const CADCurveSharedPtr GetCurve(int i)
         {
-            return m_curves[i-1];
+            std::map<int,CADCurveSharedPtr>::iterator
+                                    search = m_curves.find(i);
+            ASSERTL0(search != m_curves.end(), "curve does not exist");
+            
+            return search->second;
         }
         LIB_UTILITIES_EXPORT CADSurfSharedPtr GetSurf(int i)
         {
-            return m_surfs[i-1];
+            std::map<int,CADSurfSharedPtr>::iterator
+                            search = m_surfs.find(i);
+            ASSERTL0(search != m_surfs.end(), "surface does not exist");
+
+            return search->second;
         }
 
 	private:
@@ -118,10 +120,9 @@ namespace LibUtilities {
                      std::vector<std::vector<std::pair<int,int> > > ein);
         
 	    std::string m_name;
-        int m_numCurve;
-        int m_numSurf;
-        std::vector<CADCurveSharedPtr> m_curves;
-        std::vector<CADSurfSharedPtr> m_surfs;
+        
+        std::map<int,CADCurveSharedPtr> m_curves;
+        std::map<int,CADSurfSharedPtr> m_surfs;
 	};
 
 	typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

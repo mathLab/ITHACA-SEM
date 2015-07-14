@@ -101,7 +101,7 @@ namespace MeshUtils {
         
         std::vector<int> m_stienerpoints;
         
-        int numtri;
+        int numtri, nump;
         Array<OneD, Array<OneD, int> > Connec;
         
         NekDouble pasr,asr;

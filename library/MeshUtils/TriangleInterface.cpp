@@ -72,6 +72,7 @@ namespace MeshUtils {
             {
                 nodemap[pointc] = m_boundingloops[i][j];
                 nodemapr[m_boundingloops[i][j]] = pointc;
+                
                 Array<OneD, NekDouble> uv = Nodes[m_boundingloops[i][j]]
                                                 ->GetS(sid);
                 
@@ -154,11 +155,12 @@ namespace MeshUtils {
 
     }
     
-    void TriangleInterface::Extract(int &nt,
+    void TriangleInterface::Extract(int &np, int &nt,
                                     Array<OneD, Array<OneD, int> > &Connec)
     {
         Connec = Array<OneD, Array<OneD, int> >(out.numberoftriangles);
         nt = out.numberoftriangles;
+        np = out.numberofpoints;
         for(int i = 0; i < out.numberoftriangles; i++)
         {
             Array<OneD, int> tri(3);

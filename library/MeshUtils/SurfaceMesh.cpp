@@ -57,12 +57,24 @@ namespace MeshUtils {
         TriangleInterfaceSharedPtr pplanemesh =
             MemoryManager<TriangleInterface>::AllocateSharedPtr();
         
+        if(m_verbose)
+        {
+            int numbp = 0;
+            for(int i = 0; i < orderedLoops.size(); i++)
+            {
+                numbp+=orderedLoops[i].size();
+            }
+            cout << "\tLoops: " << orderedLoops.size() << endl;
+            cout << "\tInput boundary points: " << numbp << endl;
+            cout << "\tDeluanay meshing..." << endl;
+        }
+        
         pplanemesh->Assign(orderedLoops, m_centers, Nodes,
                            m_stienerpoints, m_id, asr/pasr);
         
         pplanemesh->Mesh();
         
-        pplanemesh->Extract(numtri, Connec);
+        pplanemesh->Extract(nump,numtri, Connec);
         
         bool repeat = true;
         
@@ -74,10 +86,14 @@ namespace MeshUtils {
                 break;
             }
             pplanemesh->Assign(orderedLoops, m_centers, Nodes,
-                               m_stienerpoints, asr/pasr);
+                               m_stienerpoints, m_id, asr/pasr);
             pplanemesh->Mesh();
-            pplanemesh->Extract(numtri,Connec);
+            pplanemesh->Extract(nump,numtri,Connec);
         }
+        
+        if(m_verbose)
+            cout << "\tPoints: " << nump << endl <<
+                    "\tTriangles: " << numtri << endl;
         
         int numedges;
         Array<OneD, Array<OneD, int> > edgelist;

@@ -99,7 +99,7 @@ namespace Nektar {
                 
                 void Mesh(bool Quiet = true, bool Quality = false);
                 
-                void Extract(int &nt,
+                void Extract(int &np, int &nt,
                              Array<OneD, Array<OneD, int> > &Connec);
                 
                 void GetNeighbour(Array<OneD, Array<OneD, int> > &neigbourlist);

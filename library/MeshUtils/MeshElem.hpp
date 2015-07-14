@@ -86,17 +86,19 @@ namespace MeshUtils {
         {
             std::map<int, NekDouble>::iterator search =
                             CADCurve.find(i);
-            ASSERTL0(search != CADCurve.end(), "node not on this surface");
+            ASSERTL0(search != CADCurve.end(), "node not on this curve");
             
             return search->second;
         }
         
         Array<OneD, NekDouble>  GetS(int i)
         {
+            //I dont know why I ahev to do this to get it to work
+            //this really needs bound checking
             std::map<int, Array<OneD, NekDouble> >::iterator search =
                         CADSurf.find(i);
-            ASSERTL0(search != CADSurf.end(), "node not on this surface");
-            
+            ASSERTL0(search->first == i,"surface not found");
+        
             return search->second;
         }
         

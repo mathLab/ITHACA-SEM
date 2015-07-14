@@ -1,4 +1,4 @@
-\chapter{ADRSolver}
+\chapter{Advection-Diffusion-Reaction Solver}
 
 %3.4/UserGuide/Tutorial/ADRSolver
 %3.4/UserGuide/Examples/ADRSolver/1DAdvection
@@ -242,8 +242,8 @@ ADRSolver Advection1D.xml
 
 To visualise the output, we can convert it into either TecPlot or VTK formats
 \begin{lstlisting}[style=BashInputStyle]
-FldToTecplot Advection1D.xml Advection1D.fld
-FldToVtk Advection1D.xml Advection1D.fld
+FieldConvert Advection1D.xml Advection1D.fld Advection1D.dat
+FieldConvert Advection1D.xml Advection1D.fld Advection1D.vtu
 \end{lstlisting}
 
 

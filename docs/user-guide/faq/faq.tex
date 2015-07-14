@@ -58,6 +58,18 @@ to the end, replacing
 \end{itemize}
 
 
+\textbf{Q. When compiling Nektar++ Thirdparty libraries I get an error ``CMake Error: Problem extracting tar''}
+
+Nektar++ tries to download the appropriate ThirdParty
+libraries. However if the download protocols are restricted on your
+computer this may fail leading to the error ```CMake Error: Problem
+extracting tar''. These libraries are available from
+
+\hspace{1cm} \inlsh{http://www.nektar.info/thirdparty/}
+
+ and can be downloaded directly into the
+\inlsh{\${NEKTAR\_HOME}/ThirdParty} directory
+
 \section{Usage}
 \textbf{Q. How do I run a solver in parallel?}
 

@@ -40,51 +40,51 @@
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
-    
+
     void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                          std::map<int, MeshEdgeSharedPtr> &Edges)
     {
         m_cadcurve->Bounds(m_bounds);
         m_curvelength = m_cadcurve->Length(m_bounds[0],m_bounds[1]);
-        
+
         m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+5;
-        
+
         ds = m_curvelength/(m_numSamplePoints-1);
-        
+
         if(m_verbose)
             cout << "\tCurve length: " << m_curvelength << endl <<
                     "\tSample Points: " << m_numSamplePoints << endl;
-        
+
         GetSampleFunction();
-        
+
         Ae = 0.0;
-        
+
         for(int i = 0; i < m_numSamplePoints-1; i++)
         {
             Ae+=ds*(1.0/m_dst[i][0]+1.0/m_dst[i+1][0])/2.0;
         }
-        
+
         Ne=round(Ae);
-        
+
         if(Ne+1<2)
         {
             meshsvalue.resize(2);
             meshsvalue[0]=0.0;
             meshsvalue[1]=m_curvelength;
             Ne=1;
-            
+
             if(m_verbose)
                 cout << "\tPoints: " << 2 << endl;
         }
         else
         {
-        
+
             GetPhiFunction();
-            
+
             meshsvalue.resize(Ne+1);
             meshsvalue[0]=0.0;
             meshsvalue[Ne]=m_curvelength;
-            
+
             for(int i = 1; i < Ne; i++)
             {
                 int iterationcounter=0;
@@ -102,35 +102,35 @@ namespace MeshUtils {
                     {
                         iterate = false;
                     }
-                    
+
                     ASSERTL0(iterationcounter<1000000, "iteration failed");
                 }
-                
+
                 meshsvalue[i]=ski;
             }
-            
+
             if(m_verbose)
                 cout << "\tPoints: " << Ne+1 << endl;
         }
-        
+
         NekDouble t;
         Array<OneD, NekDouble> loc;
-        
-        
+
+
         t = m_cadcurve->tAtArcLength(meshsvalue[0]);
         m_cadcurve->P(t,loc);
         MeshNodeSharedPtr n1 = boost::shared_ptr<MeshNode>(
                                 new MeshNode(0,loc[0],loc[1],loc[2]));
         n1->SetEOC();
         n1->SetCurve(m_id,t);
-        
+
         bool found = false;
-        
+
         for(int i = 0; i < Nodes.size(); i++)
         {
             if(Nodes[i]->IsEOC())
             {
-                if(Nodes[i]->Distance(n1) < 1E-8)
+                if(Nodes[i]->Distance(n1) < 1E-6)
                 {
                     m_meshpoints.push_back(i);
                     Nodes[i]->SetCurve(m_id,t);
@@ -139,13 +139,13 @@ namespace MeshUtils {
                 }
             }
         }
-        
+
         if(found == false)
         {
             Nodes[Nodes.size()] = n1;
             m_meshpoints.push_back(Nodes.size()-1);
         }
-        
+
         for(int i = 1; i < meshsvalue.size()-1; i++)
         {
             t = m_cadcurve->tAtArcLength(meshsvalue[i]);
@@ -156,22 +156,22 @@ namespace MeshUtils {
             Nodes[Nodes.size()] = n2;
             m_meshpoints.push_back(Nodes.size()-1);
         }
-        
+
         t = m_bounds[1];
-        
+
         m_cadcurve->P(t,loc);
         MeshNodeSharedPtr n3 = boost::shared_ptr<MeshNode>(
                           new MeshNode(0,loc[0],loc[1],loc[2]));
         n3->SetCurve(m_id,t);
         n3->SetEOC();
-        
+
         found = false;
-        
+
         for(int i = 0; i < Nodes.size(); i++)
         {
             if(Nodes[i]->IsEOC())
             {
-                if(Nodes[i]->Distance(n3) < 1E-8)
+                if(Nodes[i]->Distance(n3) < 1E-6)
                 {
                     m_meshpoints.push_back(i);
                     Nodes[i]->SetCurve(m_id,t);
@@ -180,13 +180,13 @@ namespace MeshUtils {
                 }
             }
         }
-        
+
         if(found == false)
         {
             Nodes[Nodes.size()] = n3;
             m_meshpoints.push_back(Nodes.size()-1);
         }
-        
+
         for(int i = 0; i < m_meshpoints.size()-1; i++)
         {
             Edges[Edges.size()] = MemoryManager<MeshEdge>::
@@ -195,23 +195,23 @@ namespace MeshUtils {
                                       Nodes[m_meshpoints[i+1]]);
             Edges[Edges.size()-1]->SetCurve(m_id);
         }
-        
-        
+
+
     }
-    
+
     void CurveMesh::GetPhiFunction()
     {
         m_ps.resize(m_numSamplePoints);
         vector<NekDouble> newPhi;
         newPhi.resize(2);
-        
+
         newPhi[0]=0.0;
         newPhi[1]=0.0;
-        
+
         m_ps[0]=newPhi;
-        
+
         NekDouble runningInt=0.0;
-        
+
         for(int i = 1; i < m_numSamplePoints; i++)
         {
             runningInt+=(1.0/m_dst[i-1][0]+1.0/m_dst[i][0])/2.0*ds;
@@ -219,14 +219,14 @@ namespace MeshUtils {
             newPhi[1]=m_dst[i][1];
             m_ps[i]=newPhi;
         }
-        
+
     }
-    
+
     NekDouble CurveMesh::EvaluateDS(NekDouble s)
     {
         int a=0;
         int b=0;
-        
+
         if(s==0)
         {
             return m_dst[0][0];
@@ -235,7 +235,7 @@ namespace MeshUtils {
         {
             return m_dst[m_numSamplePoints-1][0];
         }
-        
+
         for(int i = 0; i < m_numSamplePoints-1; i++)
         {
             if(m_dst[i][1]<s && m_dst[i+1][1]>=s)
@@ -245,25 +245,25 @@ namespace MeshUtils {
                 break;
             }
         }
-        
+
         NekDouble s1 = m_dst[a][1];
         NekDouble s2 = m_dst[b][1];
         NekDouble d1 = m_dst[a][0];
         NekDouble d2 = m_dst[b][0];
-        
+
         NekDouble m  = (d2-d1)/(s2-s1);
         NekDouble c = d2- m*s2;
-        
+
         ASSERTL0(m*s+c==m*s+c,"DS");
-        
+
         return m*s+c;
     }
-    
+
     NekDouble CurveMesh::EvaluatePS(NekDouble s)
     {
         int a=0;
         int b=0;
-        
+
         if(s==0)
         {
             return m_ps[0][0];
@@ -272,7 +272,7 @@ namespace MeshUtils {
         {
             return m_ps[m_numSamplePoints-1][0];
         }
-        
+
         for(int i = 0; i < m_numSamplePoints-1; i++)
         {
             if(m_ps[i][1]<s && m_ps[i+1][1]>=s)
@@ -282,7 +282,7 @@ namespace MeshUtils {
                 break;
             }
         }
-        
+
         if(a==b)
         {
             cout << endl;
@@ -290,51 +290,50 @@ namespace MeshUtils {
             cout << s << endl;
             exit(-1);
         }
-        
+
         NekDouble s1 = m_ps[a][1];
         NekDouble s2 = m_ps[b][1];
         NekDouble d1 = m_ps[a][0];
         NekDouble d2 = m_ps[b][0];
-        
+
         NekDouble m  = (d2-d1)/(s2-s1);
         NekDouble c = d2- m*s2;
-        
+
         ASSERTL0(m*s+c==m*s+c,"PS");
-        
+
         return m*s+c;
     }
-    
+
     void CurveMesh::GetSampleFunction()
     {
         m_dst.resize(m_numSamplePoints);
         Array<OneD, NekDouble> loc;
         m_cadcurve->P(m_bounds[0],loc);
-        
+
         vector<NekDouble> dsti;
         dsti.resize(3);
-        
+
         dsti[0]=m_octree->Query(loc);
         dsti[1]=0.0;
         dsti[2]=m_bounds[0];
-        
+
         m_dst[0] = dsti;
-        
+
         for(int i = 1; i < m_numSamplePoints; i++)
         {
             dsti[1]=i*ds;
             NekDouble t = m_cadcurve->tAtArcLength(dsti[1]);
-            
+
             m_cadcurve->P(t,loc);
-            
+
             dsti[0]=m_octree->Query(loc);
             dsti[2]=t;
-            
+
             m_dst[i]=dsti;
         }
     }
-    
-    
-            
-}
-}
 
+
+
+}
+}

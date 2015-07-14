@@ -42,29 +42,29 @@
 
 namespace Nektar {
 namespace MeshUtils {
-    
+
     class MeshNode;
     typedef boost::shared_ptr<MeshNode> MeshNodeSharedPtr;
-    
+
     class MeshNode
     {
     public:
         friend class MemoryManager<MeshNode>;
-        
+
         MeshNode(int i, NekDouble x, NekDouble y, NekDouble z) :
                    nid(i), m_x(x), m_y(y), m_z(z)
         {
             eoc = false;
         };
-        
+
         bool IsEOC(){return eoc;}
         void SetEOC(){eoc = true;}
-        
+
         void SetCurve(int i, NekDouble t)
         {
             CADCurve[i] = t;
         }
-        
+
         void SetSurf(int i, NekDouble u, NekDouble v)
         {
             Array<OneD, NekDouble> uv(2);
@@ -81,16 +81,16 @@ namespace MeshUtils {
             out[2]=m_z;
             return out;
         }
-        
+
         NekDouble GetC(int i)
         {
             std::map<int, NekDouble>::iterator search =
                             CADCurve.find(i);
             ASSERTL0(search != CADCurve.end(), "node not on this curve");
-            
+
             return search->second;
         }
-        
+
         Array<OneD, NekDouble>  GetS(int i)
         {
             //I dont know why I ahev to do this to get it to work
@@ -98,19 +98,37 @@ namespace MeshUtils {
             std::map<int, Array<OneD, NekDouble> >::iterator search =
                         CADSurf.find(i);
             ASSERTL0(search->first == i,"surface not found");
-        
+
             return search->second;
         }
-        
+
         NekDouble Distance(const MeshNodeSharedPtr &n)
         {
             Array<OneD,NekDouble> loc = n->GetLoc();
-            
+
             return sqrt((m_x-loc[0])*(m_x-loc[0])+
                         (m_y-loc[1])*(m_y-loc[1])+
                         (m_z-loc[2])*(m_z-loc[2]));
         }
-        
+
+        int EdgeInCommon(const MeshNodeSharedPtr &n)
+        {
+            std::vector<int> ne = n->GetEdges();
+
+            for(int i = 0; i < ne.size(); i++)
+            {
+                for(int j = 0; j < Edges.size(); j++)
+                {
+                    if(ne[i] == Edges[j])
+                    {
+                        return ne[i];
+                    }
+                }
+            }
+
+            return -1;
+        }
+
         void SetID(int i)
         {
             nid = i;
@@ -126,36 +144,38 @@ namespace MeshUtils {
             Tris.push_back(t);
         }
 
+        int GetId(){return nid;}
+
         std::vector<int> GetEdges(){return Edges;}
         std::vector<int> GetTtris(){return Tris;}
-		
-        
-        
+
+
+
     private:
-        
+
         int nid;
         NekDouble m_x, m_y, m_z;
         bool eoc;
-        
+
         std::map<int, NekDouble> CADCurve;
         std::map<int, Array<OneD, NekDouble> > CADSurf;
-        
+
         std::vector<int> Edges;
         std::vector<int> Tris;
-        
+
     };
-    
+
     ////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////
-    
+
     class MeshEdge;
     typedef boost::shared_ptr<MeshEdge> MeshEdgeSharedPtr;
-    
+
     class MeshEdge
     {
     public:
         friend class MemoryManager<MeshEdge>;
-        
+
         MeshEdge(int i, MeshNodeSharedPtr an, MeshNodeSharedPtr bn)
         {
             eid=i;
@@ -165,110 +185,78 @@ namespace MeshUtils {
             nodes[0]->SetEdge(eid);
             nodes[1]->SetEdge(eid);
         }
-        
+
         void SetCurve(int i)
         {
             curveedge = i;
         }
-        
+
+        void SetTri(int i )
+        {
+            tris.push_back(i);
+        }
+
     private:
-        
+
         int eid;
         int curveedge;
         Array<OneD, MeshNodeSharedPtr> nodes;
-        
+        std::vector<int> tris;
+
     };
-    
-    
+
+
     ////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////
-    
-    
+
+
     class MeshTri;
     typedef boost::shared_ptr<MeshTri> MeshTriSharedPtr;
-    
+
     class MeshTri
     {
     public:
         friend class MemoryManager<MeshTri>;
-        
-        MeshTri(int t, MeshNodeSharedPtr an,
-                MeshNodeSharedPtr bn, MeshNodeSharedPtr cn)
+
+        MeshTri(int t, MeshNodeSharedPtr a,
+                       MeshNodeSharedPtr b,
+                       MeshNodeSharedPtr c,
+                       MeshEdgeSharedPtr e1,
+                       MeshEdgeSharedPtr e2,
+                       MeshEdgeSharedPtr e3,
+                       int i)
         {
             tid = t;
-            firstn = an;
-            secondn = bn;
-            thirdn = cn;
-            firstn->SetTri(tid);
-            secondn->SetTri(tid);
-            thirdn->SetTri(tid);
+            nodes = Array<OneD, MeshNodeSharedPtr>(3);
+            nodes[0] = a; nodes[1] = b; nodes[2] = c;
+            nodes[0]->SetTri(tid);
+            nodes[1]->SetTri(tid);
+            nodes[2]->SetTri(tid);
+            edges = Array<OneD, MeshEdgeSharedPtr>(3);
+            edges[0] = e1; edges[1] = e2; edges[2] = e3;
+            edges[0]->SetTri(tid);
+            edges[1]->SetTri(tid);
+            edges[2]->SetTri(tid);
+            cid=i;
         }
-        
-        void AddEdge(MeshEdgeSharedPtr e)
-        {
-            edges.push_back(e);
-        }
-        
+
         void SetNeigh(Array<OneD,int> n)
         {
             neighbours = n;
         }
-        
-        
-        std::vector<int> GetReqEdge()
-        {
-            std::vector<int> f,s,t,out;
-            f = firstn->GetEdges();
-            s = secondn->GetEdges();
-            t = thirdn->GetEdges();
-            
-            for(int i = 0; i < f.size(); i++)
-            {
-                for(int j = 0; j < s.size(); i++)
-                {
-                    if(f[i]==s[j])
-                    {
-                        out.push_back(f[i]);
-                        break;
-                    }
-                }
-            }
-            
-            for(int i = 0; i < f.size(); i++)
-            {
-                for(int j = 0; j < t.size(); i++)
-                {
-                    if(f[i]==t[j])
-                    {
-                        out.push_back(f[i]);
-                        break;
-                    }
-                }
-            }
-            
-            for(int i = 0; i < t.size(); i++)
-            {
-                for(int j = 0; j < s.size(); i++)
-                {
-                    if(t[i]==s[j])
-                    {
-                        out.push_back(t[i]);
-                        break;
-                    }
-                }
-            }
-            
-            return out;
-        }
-        
+
+        int Getcid(){return cid;}
+        Array<OneD, MeshNodeSharedPtr> GetN(){return nodes;}
+
     private:
-        
+
         int tid;
-        MeshNodeSharedPtr firstn,secondn,thirdn;
-        std::vector<MeshEdgeSharedPtr> edges;
+        int cid;
+        Array<OneD, MeshNodeSharedPtr> nodes;
+        Array<OneD, MeshEdgeSharedPtr> edges;
         Array<OneD,int> neighbours;
     };
-    
+
 }
 }
 

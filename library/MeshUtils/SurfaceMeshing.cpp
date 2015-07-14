@@ -71,6 +71,13 @@ namespace MeshUtils {
 
         }
 
+        if(m_verbose)
+        {
+            cout << endl << "Surface mesh statistics" << endl;
+            cout << "\tNodes: " << Nodes.size() << endl;
+            cout << "\tTriangles " << Tris.size() << endl;
+        }
+
     }
 
 

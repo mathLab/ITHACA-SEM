@@ -103,7 +103,35 @@ namespace MeshUtils {
         Array<OneD, Array<OneD, int> > neigh;
 
         pplanemesh->GetEdges(edgelist,numedges);
+
+        for(int i = 0; i < numedges; i++)
+        {
+            int eic = Nodes[edgelist[i][0]]->EdgeInCommon(Nodes[edgelist[i][1]]);
+            if(eic != -1)
+                continue;
+
+            MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
+                Edges.size(),Nodes[edgelist[i][0]],Nodes[edgelist[i][1]]);
+            Edges[Edges.size()] = e;
+        }
+
         pplanemesh->GetNeighbour(neigh);
+
+        for(int i = 0; i < numtri; i++)
+        {
+            MeshNodeSharedPtr n1,n2,n3;
+            n1 = Nodes[Connec[i][0]];
+            n2 = Nodes[Connec[i][1]];
+            n3 = Nodes[Connec[i][2]];
+
+            MeshEdgeSharedPtr e1,e2,e3;
+            e1 = Edges[n1->EdgeInCommon(n2)];
+            e2 = Edges[n2->EdgeInCommon(n3)];
+            e3 = Edges[n3->EdgeInCommon(n1)];
+
+            Tris[Tris.size()] = MemoryManager<MeshTri>::AllocateSharedPtr(
+                Tris.size(),n1,n2,n3,e1,e2,e3,m_id);
+        }
 
         //LinearOptimise();
 

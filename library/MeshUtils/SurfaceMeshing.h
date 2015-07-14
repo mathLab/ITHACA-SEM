@@ -50,12 +50,12 @@
 
 namespace Nektar {
 namespace MeshUtils {
-            
+
     class SurfaceMeshing
     {
     public:
         friend class MemoryManager<SurfaceMeshing>;
-        
+
         SurfaceMeshing(bool verbose,
                        const LibUtilities::CADSystemSharedPtr &cad,
                        const OctreeSharedPtr &octree,
@@ -64,28 +64,35 @@ namespace MeshUtils {
                            m_order(order),m_verbose(verbose)
         {
         };
-        
+
         void Mesh();
-        
+
+        void Get(std::map<int, MeshNodeSharedPtr> &n,
+                 std::map<int, MeshTriSharedPtr> &t)
+        {
+            t = Tris;
+            n = Nodes;
+        }
+
     private:
-        
+
         LibUtilities::CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
-        
+
         std::map<int, SurfaceMeshSharedPtr> m_surfacemeshes;
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-        
+
         int m_order;
-        
+
         bool m_verbose;
 
         std::map<int, MeshNodeSharedPtr> Nodes;
         std::map<int, MeshEdgeSharedPtr> Edges;
         std::map<int, MeshTriSharedPtr> Tris;
-        
-        
+
+
     };
-    
+
     typedef boost::shared_ptr<SurfaceMeshing> SurfaceMeshingSharedPtr;
 }
 }

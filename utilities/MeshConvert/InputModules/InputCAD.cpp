@@ -40,6 +40,7 @@ using namespace std;
 #include <LibUtilities/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -50,13 +51,13 @@ namespace Nektar
 {
 namespace Utilities
 {
-    
-    
+
+
     ModuleKey InputCAD::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "CAD"), InputCAD::create,
         "Reads CAD geometry and will generate the mesh file.");
-    
+
     /**
      * @brief Set up InputCAD object.
      */
@@ -71,13 +72,13 @@ namespace Utilities
         m_config["order"] = ConfigOption(false,"-1",
                 "order of the mesh to be produced");
     }
-    
+
     InputCAD::~InputCAD()
     {
-        
+
     }
-    
-    
+
+
     void InputCAD::Process()
     {
         string CADName = m_config["infile"].as<string>();
@@ -85,56 +86,78 @@ namespace Utilities
         NekDouble m_maxDelta = m_config["max"].as<NekDouble>();
         NekDouble m_eps = m_config["eps"].as<NekDouble>();
         int m_order = m_config["order"].as<int>();
-        
+
         ASSERTL0(!(m_minDelta == -1 || m_maxDelta == -1 ||
                    m_eps == -1 || m_order == -1),
                  "User parameters required");
-        
-        
+
+
         LibUtilities::CADSystemSharedPtr m_cad =
             MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(CADName);
-        
+
         cout << m_cad->GetName() << endl;
 
         ASSERTL0(m_cad->LoadCAD(),
                  "Failed to load CAD");
-        
+
         if(m_mesh->m_verbose)
         {
             cout << "min delta: " << m_minDelta << " max delta: " << m_maxDelta
                  << " esp: " << m_eps << " order: " << m_order << endl;
             m_cad->Report();
         }
-        
-        
+
+
         MeshUtils::OctreeSharedPtr m_octree =
             MemoryManager<MeshUtils::Octree>::AllocateSharedPtr(m_cad);
-        
+
         m_octree->Build(m_minDelta, m_maxDelta, m_eps);
-        
+
         MeshUtils::SurfaceMeshingSharedPtr m_surfacemeshing =
             MemoryManager<MeshUtils::SurfaceMeshing>::
                 AllocateSharedPtr(m_mesh->m_verbose,m_cad,m_octree,m_order);
-        
+
         m_surfacemeshing->Mesh();
-        
-        /*int nodeCounter=0;
-        
-        int numtris, numppt;
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > points;
-        
+
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
-        m_mesh->m_order = m_order;
-        
+        m_mesh->m_order = 2;
+
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
         m_mesh->m_fields.push_back("p");
-        
-        for(int i = 1; i <=m_cad->GetNumSurf(); i++)
+
+        map<int, MeshUtils::MeshTriSharedPtr> Tris;
+        map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
+        m_surfacemeshing->Get(Nodes, Tris);
+
+        for(int i = 0; i < Tris.size(); i++)
+        {
+            Array<OneD, MeshUtils::MeshNodeSharedPtr> n = Tris[i]->GetN();
+            vector<NodeSharedPtr> mcnode;
+            for(int i = 0; i < 3; i++)
+            {
+                Array<OneD, NekDouble> loc = n[i]->GetLoc();
+                NodeSharedPtr nn =
+                        boost::shared_ptr<Node>(
+                                    new Node(n[i]->GetId(),loc[0],
+                                             loc[1],loc[2]));
+                mcnode.push_back(nn);
+            }
+
+            ElmtConfig conf(LibUtilities::eTriangle,1,true,false,false);
+            vector<int> tags;
+            tags.push_back(Tris[i]->Getcid());
+            ElementSharedPtr E = GetElementFactory().
+                        CreateInstance(LibUtilities::eTriangle,
+                                       conf,mcnode,tags);
+            m_mesh->m_element[2].push_back(E);
+        }
+
+        /*for(int i = 1; i <=m_cad->GetNumSurf(); i++)
         {
             //m_surfacemeshing->Extract(i,numtris,numppt,points);
-            
+
             for(int j = 0; j < numtris; j++)
             {
                 vector<NodeSharedPtr> nodes;
@@ -146,28 +169,28 @@ namespace Utilities
                                          points[j][k][1],points[j][k][2]));
                     nodes.push_back(n);
                 }
-                
-                
+
+
                 ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
-                
+
                 vector<int> tags;
                 tags.push_back(i);
                 ElementSharedPtr E = GetElementFactory().
                             CreateInstance(LibUtilities::eTriangle,
                                            conf,nodes,tags);
                 m_mesh->m_element[2].push_back(E);
-                
+
             }
         }*/
-        
-        /*ProcessVertices  ();
+
+        ProcessVertices  ();
         ProcessEdges     ();
         ProcessFaces     ();
         ProcessElements  ();
-        ProcessComposites();*/
-        
+        ProcessComposites();
+
     }
-    
-    
+
+
 }
 }

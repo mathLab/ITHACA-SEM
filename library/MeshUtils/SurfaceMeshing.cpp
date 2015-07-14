@@ -42,38 +42,37 @@
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
-    
+
     void SurfaceMeshing::Mesh()
     {
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
         {
             if(m_verbose)
-                cout << "Meshing Curve: " << i << endl;
-            
+                cout << endl << "Meshing Curve: " << i << endl;
+
             m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(
                     m_verbose, i, m_cad->GetCurve(i), m_octree);
-            
+
             m_curvemeshes[i]->Mesh(Nodes, Edges);
-            
+
         }
-        
+
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             if(m_verbose)
-                cout << "Surface: " <<  i <<  endl;
+                cout << endl << "Surface: " <<  i <<  endl;
             m_surfacemeshes[i] =
                 MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,m_verbose,
                     m_cad->GetSurf(i), m_octree,
                     m_curvemeshes,m_order);
-            
+
             m_surfacemeshes[i]->Mesh(Nodes,Edges,Tris);
 
         }
-	
-    }
-    
-    
-}
-}
 
+    }
+
+
+}
+}

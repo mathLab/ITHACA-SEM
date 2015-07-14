@@ -73,7 +73,7 @@ namespace MeshUtils {
                            m_stienerpoints, m_id, asr/pasr);
 
         pplanemesh->Mesh();
-        
+
         pplanemesh->Extract(nump,numtri, Connec);
 
         bool repeat = true;
@@ -240,6 +240,8 @@ namespace MeshUtils {
             }
         }
 
+        int ct = 0;
+
         for(int i = 0; i < 40-1; i++)
         {
             for(int j = 0; j < 40-1; j++)
@@ -256,11 +258,16 @@ namespace MeshUtils {
                                     (stretch[i][j][1]-stretch[i][j+1][1])+
                                     (stretch[i][j][2]-stretch[i][j+1][2])*
                                     (stretch[i][j][2]-stretch[i][j+1][2]));
+
+                if(rv < 1E-8)
+                    continue;
+
                 asr += ru/rv;
+                ct++;
             }
         }
 
-        asr/=(40-1)*(40-1);
+        asr/=ct;
 
     }
 

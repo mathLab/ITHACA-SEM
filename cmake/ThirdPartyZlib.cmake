@@ -56,8 +56,9 @@ IF (THIRDPARTY_BUILD_ZLIB)
         )
 
     IF (APPLE)
+        MESSAGE(STATUS ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR})
         EXTERNALPROJECT_ADD_STEP(zlib-1.2.7 patch-install-path
-            COMMAND ${CMAKE_INSTALL_NAME_TOOL} -change ${TPDIST}/lib/libz.1.2.7.dylib ${NEKTAR_LIB_DIR}/libz.1.2.7.dylib
+            COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/libz.1.2.7.dylib ${TPDIST}/lib/libz.1.2.7.dylib
             DEPENDEES install)
     ENDIF ()
 

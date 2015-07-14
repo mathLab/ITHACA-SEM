@@ -41,16 +41,17 @@
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
-    
+
     void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
-        
+        cout << m_str << endl;
+
         if(meshloaded)
         {
             freetri();
         }
         ASSERTL0(meshloaded==false,"Mesh must be cleared before meshing");
-        
+
         int numPoints = 0;
         int numSeg = 0;
         for(int i = 0; i < m_boundingloops.size(); i++)
@@ -58,30 +59,30 @@ namespace MeshUtils {
             numSeg+=m_boundingloops[i].size();
         }
         numPoints = numSeg + m_stienerpoints.size();
-        
+
         in.numberofpoints = numPoints;
         in.numberofpointattributes = 0;
         in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
         in.pointmarkerlist = (int *) malloc(in.numberofpoints * sizeof(int));
-        
+
         int pointc = 0;
-        
+
         for(int i = 0; i < m_boundingloops.size(); i++)
         {
             for(int j = 0; j < m_boundingloops[i].size(); j++)
             {
                 nodemap[pointc] = m_boundingloops[i][j];
                 nodemapr[m_boundingloops[i][j]] = pointc;
-                
+
                 Array<OneD, NekDouble> uv = Nodes[m_boundingloops[i][j]]
                                                 ->GetS(sid);
-                
+
                 in.pointlist[pointc*2+0] = uv[0]*m_str;
                 in.pointlist[pointc*2+1] = uv[1];
                 pointc++;
             }
         }
-        
+
         for(int i = 0; i < m_stienerpoints.size(); i++)
         {
             nodemap[pointc] = m_stienerpoints[i];
@@ -92,7 +93,7 @@ namespace MeshUtils {
             in.pointlist[pointc*2+1] = uv[1];
             pointc++;
         }
-        
+
         in.numberofsegments = numSeg;
         in.segmentlist = (int *) malloc(in.numberofsegments*2*sizeof(int));
         pointc=0;
@@ -108,17 +109,17 @@ namespace MeshUtils {
             in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][0]];
             pointc++;
         }
-       
+
         in.numberofregions = 0;
         in.numberofholes = m_centers.size()-1;
         in.holelist = (REAL *) malloc(in.numberofholes*2*sizeof(REAL));
-        
+
         for(int i = 1; i < m_centers.size(); i++)
         {
             in.holelist[(i-1)*2+0] = m_centers[i][0]*m_str;
             in.holelist[(i-1)*2+1] = m_centers[i][1];
         }
-        
+
         out.pointlist = (REAL *) NULL;
         out.pointattributelist = (REAL *) NULL;
         out.pointmarkerlist = (int *) NULL;
@@ -130,7 +131,7 @@ namespace MeshUtils {
         out.segmentmarkerlist = (int *) NULL;
         out.edgelist = (int *) NULL;
         out.edgemarkerlist = (int *) NULL;
-        
+
         if(Quiet && Quality)
         {
             triangulate("pzenqQYY", &in, &out,  NULL);
@@ -147,14 +148,14 @@ namespace MeshUtils {
         {
             triangulate("pzenYY", &in, &out,  NULL);
         }
-        
+
         for(int i = 0; i < out.numberofpoints; i++)
         {
             out.pointlist[i*2+0] = out.pointlist[i*2+0]/m_str;
         }
 
     }
-    
+
     void TriangleInterface::Extract(int &np, int &nt,
                                     Array<OneD, Array<OneD, int> > &Connec)
     {
@@ -197,7 +198,7 @@ namespace MeshUtils {
             neigbourlist[i]=nl;
         }
     }
-    
+
     void TriangleInterface::freetri()
     {
         if(meshloaded)
@@ -206,7 +207,7 @@ namespace MeshUtils {
             free(in.pointmarkerlist);
             free(in.segmentlist);
             free(in.holelist);
-            
+
             free(out.pointlist);
             free(out.pointattributelist);
             free(out.pointmarkerlist);
@@ -221,7 +222,6 @@ namespace MeshUtils {
         }
         meshloaded = false;
     }
-    
-}
-}
 
+}
+}

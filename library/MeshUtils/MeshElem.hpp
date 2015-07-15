@@ -86,7 +86,7 @@ namespace MeshUtils {
         {
             std::map<int, NekDouble>::iterator search =
                             CADCurve.find(i);
-            ASSERTL0(search != CADCurve.end(), "node not on this curve");
+            ASSERTL0(search->first == i, "node not on this curve");
 
             return search->second;
         }
@@ -129,6 +129,28 @@ namespace MeshUtils {
             return -1;
         }
 
+        std::vector<int> SurfsInCommon(const MeshNodeSharedPtr &n)
+        {
+            std::vector<int> out;
+
+            std::map<int, Array<OneD, NekDouble> > map = n->GetSurfMap();
+
+            std::map<int, Array<OneD, NekDouble> >::iterator it1,it2;
+
+            for(it1 = CADSurf.begin(); it1 != CADSurf.end(); it1++)
+            {
+                for(it2 = map.begin(); it2 != map.end(); it2++)
+                {
+                    if(it1->first == it2->first)
+                    {
+                        out.push_back(it1->first);
+                    }
+                }
+            }
+
+            return out;
+        }
+
         void SetID(int i)
         {
             nid = i;
@@ -145,6 +167,7 @@ namespace MeshUtils {
         }
 
         int GetId(){return nid;}
+        std::map<int, Array<OneD, NekDouble> > GetSurfMap(){return CADSurf;}
 
         std::vector<int> GetEdges(){return Edges;}
         std::vector<int> GetTtris(){return Tris;}
@@ -184,22 +207,45 @@ namespace MeshUtils {
             nodes[1] =bn;
             nodes[0]->SetEdge(eid);
             nodes[1]->SetEdge(eid);
+            oncurve = false;
         }
 
         void SetCurve(int i)
         {
             curveedge = i;
+            oncurve = true;
         }
+
+        int GetCurve()
+        {
+            if(oncurve)
+            {
+                return curveedge;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        Array<OneD, MeshNodeSharedPtr> GetN(){return nodes;}
 
         void SetTri(int i )
         {
             tris.push_back(i);
         }
 
+        void SetHONodes(Array<OneD, MeshNodeSharedPtr> n)
+        {
+            honodes = n;
+        }
+
     private:
 
         int eid;
         int curveedge;
+        bool oncurve;
+        Array<OneD, MeshNodeSharedPtr> honodes;
         Array<OneD, MeshNodeSharedPtr> nodes;
         std::vector<int> tris;
 

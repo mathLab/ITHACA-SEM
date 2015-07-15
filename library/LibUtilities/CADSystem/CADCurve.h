@@ -69,24 +69,25 @@
 
 namespace Nektar {
 namespace LibUtilities {
-        
+
         class CADCurve
         {
         public:
             friend class MemoryManager<CADCurve>;
-            
+
             CADCurve(int i, TopoDS_Shape in);
             void GetMinMax(gp_Pnt &start, gp_Pnt &end);
             void Bounds(Array<OneD, NekDouble> &out);
             NekDouble Length(NekDouble ti, NekDouble tf);
             void P(NekDouble t, Array<OneD, NekDouble> &out);
             NekDouble tAtArcLength(NekDouble s);
-            
+            int GetID(){return ID;}
+
         private:
             int ID;
             BRepAdaptor_Curve occCurve;
         };
-        
+
         typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 }
 }

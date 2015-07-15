@@ -119,6 +119,8 @@ namespace Utilities
 
         m_surfacemeshing->Mesh();
 
+        m_surfacemeshing->HOSurf();
+
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
         m_mesh->m_order = 2;

@@ -29,8 +29,8 @@ IF (THIRDPARTY_BUILD_TRIANGLE)
     EXTERNALPROJECT_ADD(
         triangle-1.6
         PREFIX ${TPSRC}
-        URL http:/ae-nektar.ae.ic.ac.uk/~mt4313/triangle.zip
-        URL_MD5 c7c8e5286f8bb02f85e03ea5c79755bc
+        URL http://ae-nektar.ae.ic.ac.uk/~mt4313/triangle.zip
+        URL_MD5 5a7668274c799fa7ca942dbc4ad35889
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/triangle-1.6
@@ -52,10 +52,10 @@ IF (THIRDPARTY_BUILD_TRIANGLE)
     LINK_DIRECTORIES(${TPDIST}/lib)
 
     IF (WIN32)
-        MESSAGE(STATUS 
+        MESSAGE(STATUS
                 "Build Triangle: ${TPDIST}/${LIB_DIR}/${TRIANGLE_LIBRARY}.dll")
     ELSE ()
-        MESSAGE(STATUS 
+        MESSAGE(STATUS
                 "Build Triangle: ${TPDIST}/${LIB_DIR}/lib${TRIANGLE_LIBRARY}.a")
     ENDIF ()
 
@@ -69,4 +69,3 @@ ENDIF (THIRDPARTY_BUILD_TRIANGLE)
 INCLUDE_DIRECTORIES(SYSTEM ${TRIANGLE_INCLUDE_DIR})
 
 ENDIF(NEKTAR_USE_MESH)
-

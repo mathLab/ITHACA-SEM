@@ -120,7 +120,7 @@ namespace MeshUtils {
         t = m_cadcurve->tAtArcLength(meshsvalue[0]);
         m_cadcurve->P(t,loc);
         MeshNodeSharedPtr n1 = boost::shared_ptr<MeshNode>(
-                                new MeshNode(0,loc[0],loc[1],loc[2]));
+                                new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
         n1->SetEOC();
         n1->SetCurve(m_id,t);
 
@@ -151,7 +151,7 @@ namespace MeshUtils {
             t = m_cadcurve->tAtArcLength(meshsvalue[i]);
             m_cadcurve->P(t,loc);
             MeshNodeSharedPtr n2 = boost::shared_ptr<MeshNode>(
-                              new MeshNode(0,loc[0],loc[1],loc[2]));
+                              new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
             n2->SetCurve(m_id,t);
             Nodes[Nodes.size()] = n2;
             m_meshpoints.push_back(Nodes.size()-1);
@@ -161,7 +161,7 @@ namespace MeshUtils {
 
         m_cadcurve->P(t,loc);
         MeshNodeSharedPtr n3 = boost::shared_ptr<MeshNode>(
-                          new MeshNode(0,loc[0],loc[1],loc[2]));
+                          new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
         n3->SetCurve(m_id,t);
         n3->SetEOC();
 

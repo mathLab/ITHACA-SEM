@@ -89,11 +89,14 @@ namespace Nektar
 
             // Copy vertices.
             map<int, NodeSharedPtr> vIdMap;
-            int nVerts = graph->GetNvertices();
-            for (int i = 0; i < nVerts; ++i)
-            {
+            const SpatialDomains::PointGeomMap vertset = graph->GetVertSet();
+            SpatialDomains::PointGeomMap::const_iterator vit; 
+            
+            for(vit=vertset.begin(); vit != vertset.end(); ++vit)
+            {            
                 SpatialDomains::PointGeomSharedPtr vert =
-                    graph->GetVertex(i);
+                    vit->second; 
+                
                 NodeSharedPtr n(new Node(vert->GetVid(),
                     (*vert)(0), (*vert)(1), (*vert)(2)));
                 m_mesh->m_vertexSet.insert(n);
@@ -263,7 +266,6 @@ namespace Nektar
             SpatialDomains::CompositeMapIter   compIt;
             SpatialDomains::GeometryVectorIter geomIt;
 
-
             // calculate the number of element of dimension
             // m_mesh->m_expDim in composite list so we can set up
             // element vector of this size to allow for
@@ -282,7 +284,8 @@ namespace Nektar
             }
             m_mesh->m_element[m_mesh->m_expDim].resize(nel);
 
-            // loop over all composites and set up elements with edges and faces from the maps above. 
+            // loop over all composites and set up elements with edges
+            // and faces from the maps above.
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
             {
                 // Get hold of dimension

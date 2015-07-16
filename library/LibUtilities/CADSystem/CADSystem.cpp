@@ -174,12 +174,11 @@ namespace LibUtilities{
 
         }
 
-        map<int, int> edgecounter;
+        map<int, vector<int> > adjsurfmap;
 
         for(int i=1; i<=mapOfEdges.Extent(); i++)
         {
             TopoDS_Shape edge = mapOfEdges.FindKey(i);
-            edgecounter[i] = 0;
             AddCurve(i, edge);
         }
 
@@ -223,7 +222,7 @@ namespace LibUtilities{
                     {
                         pair<int,int> e;
                         e.first = mapOfEdges.FindIndex(edge);
-                        edgecounter[e.first]++;
+                        adjsurfmap[e.first].push_back(i);
                         e.second = exp.Orientation();
                         edgeloop.push_back(e);
                     }
@@ -238,9 +237,11 @@ namespace LibUtilities{
 
         }
 
-        for(map<int,int>::iterator it=edgecounter.begin(); it!=edgecounter.end(); it++)
+        for(map<int,vector<int> >::iterator it=adjsurfmap.begin();
+            it!=adjsurfmap.end(); it++)
         {
-            ASSERTL0(it->second == 2, "no three curve surfaces");
+            ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+            m_curves[it->first]->SetAdjSurf(it->second);
         }
 
         return true;

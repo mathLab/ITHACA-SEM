@@ -82,10 +82,13 @@ namespace LibUtilities {
             void P(NekDouble t, Array<OneD, NekDouble> &out);
             NekDouble tAtArcLength(NekDouble s);
             int GetID(){return ID;}
+            void SetAdjSurf(std::vector<int> i){adjSurfs=i;}
+            std::vector<int> GetAdjSurf(){return adjSurfs;}
 
         private:
             int ID;
             BRepAdaptor_Curve occCurve;
+            std::vector<int> adjSurfs;
         };
 
         typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;

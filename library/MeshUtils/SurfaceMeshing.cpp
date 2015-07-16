@@ -113,24 +113,9 @@ namespace MeshUtils {
                     ti[i] = c->tAtArcLength(xi);
                 }
 
-                vector<int> Surfs = n[0]->SurfsInCommon(n[1]);
-                if(Surfs.size()==3)
-                {
-                    cout << n[0]->GetId() << " " << n[1]->GetId() << endl;
-                    map<int, Array<OneD, NekDouble> > mp1 = n[0]->GetSurfMap();
-                    map<int, Array<OneD, NekDouble> > mp2 = n[1]->GetSurfMap();
-                    map<int, Array<OneD, NekDouble> >::iterator it;
-                    for(it = mp1.begin(); it != mp1.end(); it++)
-                    {
-                        cout << it->first << endl;
-                    }
-                    cout << endl;
-                    for(it = mp2.begin(); it != mp2.end(); it++)
-                    {
-                        cout << it->first << endl;
-                    }
-                }
-                //ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
+                vector<int> Surfs = c->GetAdjSurf();
+
+                ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
 
                 Array<OneD, MeshNodeSharedPtr> honodes(m_order-1);
 

@@ -401,7 +401,12 @@ namespace Nektar
                     CompositeSharedPtr newComp(new Composite());
                     newComp->m_id  = maxId;
                     newComp->m_tag = "E"; 
-                    
+                    // set up labels if they exist
+                    if(surfLabels.count(esetit->first))
+                    {
+                        newComp->m_label = surfLabels[esetit->first];
+                    }
+
                     for(edit = esetit->second.begin(); edit != esetit->second.end(); ++edit)
                     {
                         EdgeSet::iterator locit;
@@ -430,11 +435,6 @@ namespace Nektar
                     
                     if(newComp->m_items.size())
                     {
-                        // set up labels if they exist
-                        if(surfLabels.count(esetit->first))
-                        {
-                            m_mesh->m_faceLabels[maxId] = surfLabels[esetit->first];
-                        }
                         m_mesh->m_composite[maxId++] = newComp; 
                     }
                 }

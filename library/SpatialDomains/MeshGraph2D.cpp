@@ -373,6 +373,15 @@ namespace Nektar
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
 //                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
+                // read and store label if they exist
+                string labelstr;
+                err = composite->QueryStringAttribute("LABEL", &labelstr);
+                if(err == TIXML_SUCCESS)
+                {
+                    m_compositesLabels[indx] = labelstr;
+                }
+
+
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
                 // Comments appear as nodes just like elements.

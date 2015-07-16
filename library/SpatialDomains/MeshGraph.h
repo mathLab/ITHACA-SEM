@@ -280,7 +280,8 @@ namespace Nektar
                         const std::string &compositeStr,
                         CompositeMap &compositeVector) const;
 
-                inline const CompositeMap &GetComposites() const;
+                inline const CompositeMap    &GetComposites() const;
+                inline const map<int,string> &GetCompositesLabels() const;
 
                 inline const std::vector<CompositeMap> &GetDomain(void) const;
 
@@ -419,6 +420,7 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
+                map<int,string>                         m_compositesLabels;
                 std::vector<CompositeMap>               m_domain;
                 DomainRangeShPtr                        m_domainRange;
 
@@ -468,6 +470,15 @@ namespace Nektar
         inline const CompositeMap &MeshGraph::GetComposites() const
         {
             return m_meshComposites;
+        }
+
+
+        /**
+         *
+         */
+        inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
+        {
+            return m_compositesLabels;
         }
 
 

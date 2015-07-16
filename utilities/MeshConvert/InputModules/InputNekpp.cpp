@@ -264,6 +264,8 @@ namespace Nektar
             SpatialDomains::CompositeMapIter   compIt;
             SpatialDomains::GeometryVectorIter geomIt;
 
+            m_mesh->m_faceLabels = graph->GetCompositesLabels();
+
             // loop over all composites and set up elements with edges
             // and faces from the maps above.
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)

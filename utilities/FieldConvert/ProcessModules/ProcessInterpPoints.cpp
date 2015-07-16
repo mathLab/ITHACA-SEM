@@ -213,12 +213,12 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     }
 
 
-    m_fromField =  boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
     // set up session file for from field
     files.push_back(m_config["fromxml"].as<string>());
-    m_fromField->m_session = LibUtilities::SessionReader::
+    fromField->m_session = LibUtilities::SessionReader::
         CreateInstance(0, 0, files);
 
     // Set up range based on min and max of local parallel partition
@@ -250,13 +250,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     }
 
     // setup rng parameters.
-    m_fromField->m_graph = SpatialDomains::MeshGraph::Read(m_fromField->m_session,rng);
+    fromField->m_graph = SpatialDomains::MeshGraph::Read(fromField->m_session,rng);
 
     // Read in local from field partitions
-    const SpatialDomains::ExpansionMap &expansions = m_fromField->m_graph->GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = fromField->m_graph->GetExpansions();
 
-    m_fromField->m_fld = MemoryManager<LibUtilities::FieldIO>
-        ::AllocateSharedPtr(m_fromField->m_session->GetComm());
+    fromField->m_fld = MemoryManager<LibUtilities::FieldIO>
+        ::AllocateSharedPtr(fromField->m_session->GetComm());
 
     Array<OneD,int> ElementGIDs(expansions.size());
     SpatialDomains::ExpansionMap::const_iterator expIt;
@@ -269,49 +269,49 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     }
 
     string fromfld = m_config["fromfld"].as<string>();
-    m_fromField->m_fld->Import(fromfld,m_fromField->m_fielddef,
-                  m_fromField->m_data,
+    fromField->m_fld->Import(fromfld,fromField->m_fielddef,
+                  fromField->m_data,
                   LibUtilities::NullFieldMetaDataMap,
                                ElementGIDs);
 
-    int NumHomogeneousDir = m_fromField->m_fielddef[0]->m_numHomogeneousDir;
+    int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
-    m_fromField->m_graph->SetExpansions(m_fromField->m_fielddef);
+    fromField->m_graph->SetExpansions(fromField->m_fielddef);
 
-    int nfields = m_fromField->m_fielddef[0]->m_fields.size();
+    int nfields = fromField->m_fielddef[0]->m_fields.size();
 
-    m_fromField->m_exp.resize(nfields);
-    m_fromField->m_exp[0] = m_fromField->SetUpFirstExpList(NumHomogeneousDir,true);
+    fromField->m_exp.resize(nfields);
+    fromField->m_exp[0] = fromField->SetUpFirstExpList(NumHomogeneousDir,true);
 
     m_f->m_exp.resize(nfields);
 
     // declare auxiliary fields.
     for(i = 1; i < nfields; ++i)
     {
-        m_fromField->m_exp[i] = m_fromField->AppendExpList(NumHomogeneousDir);
+        fromField->m_exp[i] = fromField->AppendExpList(NumHomogeneousDir);
     }
 
     // load field into expansion in fromfield.
     for(int j = 0; j < nfields; ++j)
     {
-        for (i = 0; i < m_fromField->m_fielddef.size(); i++)
+        for (i = 0; i < fromField->m_fielddef.size(); i++)
         {
-            m_fromField->m_exp[j]->ExtractDataToCoeffs(
-                                        m_fromField->m_fielddef[i],
-                                        m_fromField->m_data[i],
-                                        m_fromField->m_fielddef[0]->m_fields[j],
-                                        m_fromField->m_exp[j]->UpdateCoeffs());
+            fromField->m_exp[j]->ExtractDataToCoeffs(
+                                        fromField->m_fielddef[i],
+                                        fromField->m_data[i],
+                                        fromField->m_fielddef[0]->m_fields[j],
+                                        fromField->m_exp[j]->UpdateCoeffs());
         }
-        m_fromField->m_exp[j]->BwdTrans(m_fromField->m_exp[j]->GetCoeffs(),
-                                        m_fromField->m_exp[j]->UpdatePhys());
+        fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
+                                        fromField->m_exp[j]->UpdatePhys());
 
         Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
-        m_f->m_fieldPts->AddField(newPts, m_fromField->m_fielddef[0]->m_fields[j]);
+        m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
     }
 
-    if(m_fromField->m_session->GetComm()->GetRank() == 0)
+    if(fromField->m_session->GetComm()->GetRank() == 0)
     {
         cout << "Interpolating [" << flush;
     }
@@ -320,10 +320,10 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(m_fromField->m_exp, pts,
+    InterpolateFieldToPts(fromField->m_exp, pts,
                           clamp_low, clamp_up, def_value);
 
-    if(m_fromField->m_session->GetComm()->GetRank() == 0)
+    if(fromField->m_session->GetComm()->GetRank() == 0)
     {
         cout << "]" << endl;
     }
@@ -332,7 +332,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 void ProcessInterpPoints::InterpolateFieldToPts(
                          vector<MultiRegions::ExpListSharedPtr> &field0,
-                         Array<OneD, Array<OneD, NekDouble> >    &pts,
+                         Array<OneD, Array<OneD, NekDouble> >   &pts,
                          NekDouble                              clamp_low,
                          NekDouble                              clamp_up,
                          NekDouble                              def_value)
@@ -343,7 +343,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     int nq1 = pts[0].num_elements();
     int elmtid, offset;
     int r, f;
-    static int intpts = 0;
+    int intpts = 0;
 
     // resize data field
     m_f->m_data.resize(field0.size());

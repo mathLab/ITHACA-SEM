@@ -2039,7 +2039,12 @@ namespace Nektar
                 {
                     for(int i = 0; i < NumHomoStrip; ++i)
                     {
-                        LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
+                        LibUtilities::FieldDefinitionsSharedPtr fdef  =
+                            MemoryManager<LibUtilities::FieldDefinitions>::
+                                AllocateSharedPtr(shape, elementIDs, basis,
+                                                  UniOrder, numModes,fields,
+                                                  NumHomoDir, HomoLen, HomoZIDs,
+                                                  HomoYIDs);
                         fielddef.push_back(fdef);
                     }
                 }

@@ -98,8 +98,9 @@ void ProcessC0Projection::Process(po::variables_map &vm)
     // generate an C0 expansion field with no boundary conditions.
     bool savedef = m_f->m_declareExpansionAsContField;
     m_f->m_declareExpansionAsContField = true;
-    m_c0ProjectExp = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                                        "DefaultVar",true);
+    MultiRegions::ExpListSharedPtr C0ProjectExp = 
+        m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                           "DefaultVar",true);
     m_f->m_declareExpansionAsContField = savedef;
 
     int nfields = m_f->m_exp.size();
@@ -131,9 +132,9 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         {
             cout << "\t Processing field: " << processFields[i] << endl;
         }
-        m_c0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+        C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
                                  m_f->m_exp[processFields[i]]->UpdatePhys());
-        m_c0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
+        C0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
                                  m_f->m_exp[processFields[i]]->UpdateCoeffs());
     }
 

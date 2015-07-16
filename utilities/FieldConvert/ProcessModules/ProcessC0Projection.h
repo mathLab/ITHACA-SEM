@@ -64,7 +64,6 @@ class ProcessC0Projection : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
-        MultiRegions::ExpListSharedPtr m_c0ProjectExp;
 
 };
 }

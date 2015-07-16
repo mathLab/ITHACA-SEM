@@ -1575,6 +1575,71 @@ It is possible to visualise the wall shear stress distribution by running the Fl
 \end{center}
 \end{figure}
 
+\subsection{finite-strip modeling of flow past flexible cables}
+
+As a computationally efficient model, strip theory-based modeling technique has been proposed previously to predict vortex-induced vibration (VIV) for higher Reynolds number flows. In the strip theory-based model, the fluid flow solution is obtained on a series of 2D computational planes (also called as “strips”) along the riser’s axis direction. These strips then are coupled with each other through structural dynamic model of the riser, and then VIV response prediction is achieved by the strip-structure interactions.In the 2D strip theory, it is assumed that the flow is purely two-dimensional without spanwise correlation, which allows the problems to be split into various 2D planes. A consequence of 2D strip solution under this assumption is that it is unable to reflect the influence of spanwise wake turbulence on the structural dynamics. In order to overcome this shortcoming, we proposed a new module in the framework of Nektar++, in which a spanwise scale is locally allocated to each one of the strips, so that the spanwise velocity correlation is reconstructed in the flow field within each strips. In particular, this model lets the fluid domain to be divided in $N$ strips with thickness ratio of $L_{z}/D$ and evenly distributed along the spanwise ($z$) direction. The gap between the neighboring strips, represented by $L_{g}$, satisfies relation $L_{c}=N(L_{z}+L_{g})$. Since the strip in this model has finite scale in the $z$-direction, we named it as finite strip to distinguish from traditional 2D strip plane. Next, the flow dynamics within each individual strips are modeled by viscous incompressible Navier-Stokes equations, while a tensioned beam model is employed to govern the dynamics of the flexible structures. In this example, we will show how to perform a finite-strip model to predict the vortex-induced vibration responses of flexible cables. Let us consider a vortex-induced vibration of a slender cable with an aspect ratio of $L_z/D$=4$\pi$, which is immersed in uniform flows at Re=100.
+
+\subsubsection{Input File}
+
+The cable with a mass ratio (defined as the ratio of the total oscillating mass to the mass of displaced fluid) of 1 has diameter $D=1$, the 2D mesh is composed of 284 quadrilateral elements. The spanwise direction is split in 16 strips with thickness ratio of $L_c/D$=$\pi$/8 and one pair of complex Fourier modes for each one of the strips. We will use a sixth order polynomial expansion for the spectral element and the input file for this example is \inlsh{CylFlow\_HomoStrip.xml}.
+
+
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[73]" NUMMODES="6" TYPE="MODIFIED" FIELDS="u,v,w,p" />
+\end{lstlisting}
+
+To use the finite strip routines we need just to insert a flag of \inlsh{"HomoStrip"} in the solver information as below, in addition, we need to specify the types of vibration and support ends for the cables. In this case, the vibration type is specified as \inlsh{VALUE="CONSTRAINED"}, which means that the cable's vibration is constrained only in the crossflow direction. Other options include \inlsh{VALUE="FREE"} and \inlsh{"FORCED"}, respectively corresponding to the free vibrations in both streamwise and crossflow directions and forced vibration by specified functions given in input file. For the support ends of the cable, another option of \inlsh{VALUE="PINNED-PINNED"} is available for the simulations, which satisfies the condition of zero values of displacements on the support ends.
+
+\subsubsection{Solver information:~}
+\begin{lstlisting}[style=XMLStyle]
+        <SOLVERINFO>
+            <I PROPERTY="HomoStrip" VALUE="True"/>
+            <I PROPERTY="VibrationType" VALUE="CONSTRAINED"/>
+            <I PROPERTY="SupportType" VALUE="FREE-FREE"/>
+        </SOLVERINFO>
+\end{lstlisting}
+        
+\subsubsection{Parameters}
+
+All the simulation parameters are specified in the section as follows.
+
+    \begin{lstlisting}[style=XMLStyle]
+        <PARAMETERS>
+            <P> LZ            = PI/8             </P> <!--thickness ratio-->
+            <P> LC            = 4*PI             </P> <!--aspect ratio-->
+            <P> A             = 0.025            </P>
+            <P> omega         = 1.0              </P>
+            <P> PROC_Z        = 16               </P>
+            <P> Strip_Z       = 16               </P> <!--number of the strips-->
+            <P> DistStrip     = PI/4             </P> <!--distance of the strips-->
+            <P> StructStiff   = 0.02             </P>  
+            <P> StructRho     = 2.0              </P>
+            <P> CableTension  = 8.82             </P>
+            <P> BendingStiff  = 0.0              </P>
+            <P> FictDamp      = 0.0              </P>
+            <P> FictMass      = 3.0              </P>
+        </PARAMETERS>
+     \end{lstlisting}    
+
+\subsubsection{Running the solver}
+In this example we will run the solver in parallel. We can specify the number of the strips by providing an additional flag to the solver, –nsz. In this example, we will run 16 strips, therefore it would be specified as –nsz 16. The solver can now be run as follows    
+
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np 16 IncNavierStokesSolver  CylFlow_HomoStrip.xml --npz 16 --nsz 16
+\end{lstlisting}
+
+The simulation results are illustrated in spanwise vorticity contours in Figure \ref{f:incns:finite-strip-modeling}. The wake response of the cable appears as standing wave patter in the earlier stage and then it transitions into traveling wave response, as shown in this figure.  
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=7cm]{Figures/strip-16-time-100.png}
+\includegraphics[width=7cm]{Figures/strip-16-time-600.png}
+\caption{Spanwise vorticity contours in standing wave and traveling wave patterns predicted in finite strip modeling.}
+\label{f:incns:finite-strip-modeling}
+\end{center}
+\end{figure}
+
  \subsection{2D direct stability analysis of the channel flow}
 
   In this example, it will be illustrated how to perform a direct stability analysis using Nektar++. Let us consider a canonical stability problem, the flow in a channel which is confined in the wall-normal direction between two infinite plates (Poiseuille flow) at Reynolds number 7500. This problem is a particular case of the stability solver for the IncNavierStokesSolver.

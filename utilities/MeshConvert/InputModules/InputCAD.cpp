@@ -130,24 +130,25 @@ namespace Utilities
         m_mesh->m_fields.push_back("p");
 
         map<int, MeshUtils::MeshTriSharedPtr> Tris;
+        map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
         map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
-        m_surfacemeshing->Get(Nodes, Tris);
+        m_surfacemeshing->Get(Nodes, Edges, Tris);
 
         for(int i = 0; i < Tris.size(); i++)
         {
             Array<OneD, MeshUtils::MeshNodeSharedPtr> n = Tris[i]->GetN();
             vector<NodeSharedPtr> mcnode;
-            for(int i = 0; i < 3; i++)
+            for(int j = 0; j < 3; j++)
             {
-                Array<OneD, NekDouble> loc = n[i]->GetLoc();
+                Array<OneD, NekDouble> loc = n[j]->GetLoc();
                 NodeSharedPtr nn =
                         boost::shared_ptr<Node>(
-                                    new Node(n[i]->GetId(),loc[0],
+                                    new Node(n[j]->GetId(),loc[0],
                                              loc[1],loc[2]));
                 mcnode.push_back(nn);
             }
 
-            ElmtConfig conf(LibUtilities::eTriangle,1,true,false,false);
+            ElmtConfig conf(LibUtilities::eTriangle,1,false,false,false);
             vector<int> tags;
             tags.push_back(Tris[i]->Getcid());
             ElementSharedPtr E = GetElementFactory().

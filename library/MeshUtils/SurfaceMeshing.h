@@ -70,9 +70,11 @@ namespace MeshUtils {
         void HOSurf();
 
         void Get(std::map<int, MeshNodeSharedPtr> &n,
+                 std::map<int, MeshEdgeSharedPtr> &e,
                  std::map<int, MeshTriSharedPtr> &t)
         {
             t = Tris;
+            e = Edges;
             n = Nodes;
         }
 

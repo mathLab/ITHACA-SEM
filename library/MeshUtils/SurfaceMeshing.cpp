@@ -88,14 +88,13 @@ namespace MeshUtils {
         for(int i = 0; i < Edges.size(); i++)
         {
             MeshEdgeSharedPtr e = Edges[i];
+            Array<OneD, MeshNodeSharedPtr> n = e->GetN();
 
             if(e->GetCurve() != -1)
             {
-                //edge is on curve and needs hoing that way
                 LibUtilities::CADCurveSharedPtr c = m_cad->GetCurve(
                             e->GetCurve());
-                Array<OneD, MeshNodeSharedPtr> n = e->GetN();
-
+                //edge is on curve and needs hoing that way
                 NekDouble tb = n[0]->GetC(e->GetCurve());
                 NekDouble te = n[1]->GetC(e->GetCurve());
 
@@ -117,7 +116,7 @@ namespace MeshUtils {
 
                 ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
 
-                Array<OneD, MeshNodeSharedPtr> honodes(m_order-1);
+                vector<MeshNodeSharedPtr> honodes(m_order-1);
 
                 LibUtilities::CADSurfSharedPtr s1,s2;
                 s1 = m_cad->GetSurf(Surfs[0]);
@@ -146,6 +145,28 @@ namespace MeshUtils {
             else
             {
                 //edge is on surface and needs 2d optimisation
+                LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
+                Array<OneD, NekDouble> uvb,uve;
+                uvb = n[0]->GetS(e->GetSurf());
+                uve = n[1]->GetS(e->GetSurf());
+
+                vector<MeshNodeSharedPtr> honodes(m_order-1);
+                for(int i = 1; i < m_order+1 -1; i++)
+                {
+                    Array<OneD, NekDouble> loc;
+                    loc = s->P(uvb[0]+i*(uve[0]-uvb[0])/m_order,
+                               uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
+                            AllocateSharedPtr(Nodes.size(),loc[0],
+                                                loc[1],loc[2]);
+                    nn->SetSurf(e->GetSurf(),
+                                uvb[0]+i*(uve[0]-uvb[0])/m_order,
+                                uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    Nodes[Nodes.size()] = nn;
+                    honodes[i-1] = nn;
+                }
+
+                e->SetHONodes(honodes);
             }
         }
     }

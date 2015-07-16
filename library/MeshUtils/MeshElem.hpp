@@ -37,6 +37,9 @@
 #ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_ELM_H
 #define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_ELM_H
 
+#include <algorithm>
+#include <vector>
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -235,17 +238,27 @@ namespace MeshUtils {
             tris.push_back(i);
         }
 
-        void SetHONodes(Array<OneD, MeshNodeSharedPtr> n)
+        void SetHONodes(std::vector<MeshNodeSharedPtr> n)
         {
             honodes = n;
         }
+
+        std::vector<MeshNodeSharedPtr> GetHONodes()
+        {
+            return honodes;
+        }
+
+        void SetSurf(int i){surf=i;}
+        int GetSurf(){return surf;}
+        int GetId(){return eid;}
 
     private:
 
         int eid;
         int curveedge;
         bool oncurve;
-        Array<OneD, MeshNodeSharedPtr> honodes;
+        int surf;
+        std::vector<MeshNodeSharedPtr> honodes;
         Array<OneD, MeshNodeSharedPtr> nodes;
         std::vector<int> tris;
 
@@ -293,6 +306,7 @@ namespace MeshUtils {
 
         int Getcid(){return cid;}
         Array<OneD, MeshNodeSharedPtr> GetN(){return nodes;}
+        Array<OneD, MeshEdgeSharedPtr> GetE(){return edges;}
 
     private:
 

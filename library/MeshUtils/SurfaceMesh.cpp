@@ -112,6 +112,7 @@ namespace MeshUtils {
 
             MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
                 Edges.size(),Nodes[edgelist[i][0]],Nodes[edgelist[i][1]]);
+            e->SetSurf(m_id);
             Edges[Edges.size()] = e;
         }
 

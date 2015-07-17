@@ -102,21 +102,11 @@ namespace MeshUtils {
         Array<OneD, Array<OneD, int> > edgelist;
         Array<OneD, Array<OneD, int> > neigh;
 
-        pplanemesh->GetEdges(edgelist,numedges);
-
-        for(int i = 0; i < numedges; i++)
-        {
-            int eic = Nodes[edgelist[i][0]]->EdgeInCommon(Nodes[edgelist[i][1]]);
-            if(eic != -1)
-                continue;
-
-            MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
-                Edges.size(),Nodes[edgelist[i][0]],Nodes[edgelist[i][1]]);
-            e->SetSurf(m_id);
-            Edges[Edges.size()] = e;
-        }
-
         pplanemesh->GetNeighbour(neigh);
+
+        cout << neigh[0][0] << endl;
+        cout << neigh[neigh[0][0]][0]  << neigh[neigh[0][0]][1] << neigh[neigh[0][0]][2] << endl;
+        exit(-1);
 
         for(int i = 0; i < numtri; i++)
         {

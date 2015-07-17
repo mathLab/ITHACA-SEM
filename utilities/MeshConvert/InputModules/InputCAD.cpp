@@ -119,7 +119,7 @@ namespace Utilities
 
         m_surfacemeshing->Mesh();
 
-        m_surfacemeshing->HOSurf();
+        //m_surfacemeshing->HOSurf();
 
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
@@ -136,6 +136,9 @@ namespace Utilities
 
         for(int i = 0; i < Tris.size(); i++)
         {
+            if(Tris[i]->Getcid()!=9)
+                continue;
+                
             Array<OneD, MeshUtils::MeshNodeSharedPtr> n = Tris[i]->GetN();
             vector<NodeSharedPtr> mcnode;
             for(int j = 0; j < 3; j++)

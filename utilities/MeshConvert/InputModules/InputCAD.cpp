@@ -134,29 +134,38 @@ namespace Utilities
         map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
         m_surfacemeshing->Get(Nodes, Edges, Tris);
 
-        for(int i = 0; i < Tris.size(); i++)
+        map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
+        map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
+        map<int, NodeSharedPtr> allnodes;
+
+        for(nit = Nodes.begin(); nit != Nodes.end(); nit++)
         {
-            if(Tris[i]->Getcid()!=9)
+            Array<OneD, NekDouble> loc = nit->second->GetLoc();
+            NodeSharedPtr nn =
+                    boost::shared_ptr<Node>(
+                                new Node(nit->first,loc[0],
+                                         loc[1],loc[2]));
+            allnodes[nit->first] = nn;
+        }
+
+        for(trit = Tris.begin(); trit != Tris.end(); trit++)
+        {
+            if(trit->second->Getcid()!=9)
                 continue;
-                
-            Array<OneD, MeshUtils::MeshNodeSharedPtr> n = Tris[i]->GetN();
-            vector<NodeSharedPtr> mcnode;
+
+            Array<OneD, int> n = trit->second->GetN();
+            vector<NodeSharedPtr> localnode;
             for(int j = 0; j < 3; j++)
             {
-                Array<OneD, NekDouble> loc = n[j]->GetLoc();
-                NodeSharedPtr nn =
-                        boost::shared_ptr<Node>(
-                                    new Node(n[j]->GetId(),loc[0],
-                                             loc[1],loc[2]));
-                mcnode.push_back(nn);
+                localnode.push_back(allnodes[n[j]]);
             }
 
             ElmtConfig conf(LibUtilities::eTriangle,1,false,false,false);
             vector<int> tags;
-            tags.push_back(Tris[i]->Getcid());
+            tags.push_back(trit->second->Getcid());
             ElementSharedPtr E = GetElementFactory().
                         CreateInstance(LibUtilities::eTriangle,
-                                       conf,mcnode,tags);
+                                       conf,localnode,tags);
             m_mesh->m_element[2].push_back(E);
         }
 

@@ -60,7 +60,7 @@ namespace MeshUtils {
             eoc = false;
         };
 
-        bool IsEOC(){return eoc;}
+        bool IsEOC(){return eoc;} //end of curve, speeds up checking
         void SetEOC(){eoc = true;}
 
         void SetCurve(int i, NekDouble t)
@@ -132,28 +132,6 @@ namespace MeshUtils {
             return -1;
         }
 
-        std::vector<int> SurfsInCommon(const MeshNodeSharedPtr &n)
-        {
-            std::vector<int> out;
-
-            std::map<int, Array<OneD, NekDouble> > map = n->GetSurfMap();
-
-            std::map<int, Array<OneD, NekDouble> >::iterator it1,it2;
-
-            for(it1 = CADSurf.begin(); it1 != CADSurf.end(); it1++)
-            {
-                for(it2 = map.begin(); it2 != map.end(); it2++)
-                {
-                    if(it1->first == it2->first)
-                    {
-                        out.push_back(it1->first);
-                    }
-                }
-            }
-
-            return out;
-        }
-
         void SetID(int i)
         {
             nid = i;
@@ -202,14 +180,12 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<MeshEdge>;
 
-        MeshEdge(int i, MeshNodeSharedPtr an, MeshNodeSharedPtr bn)
+        MeshEdge(int i, int an, int bn)
         {
             eid=i;
-            nodes = Array<OneD, MeshNodeSharedPtr>(2);
+            nodes = Array<OneD, int>(2);
             nodes[0] =an;
             nodes[1] =bn;
-            nodes[0]->SetEdge(eid);
-            nodes[1]->SetEdge(eid);
             oncurve = false;
         }
 
@@ -231,19 +207,19 @@ namespace MeshUtils {
             }
         }
 
-        Array<OneD, MeshNodeSharedPtr> GetN(){return nodes;}
+        Array<OneD, int> GetN(){return nodes;}
 
         void SetTri(int i )
         {
             tris.push_back(i);
         }
 
-        void SetHONodes(std::vector<MeshNodeSharedPtr> n)
+        void SetHONodes(std::vector<int> n)
         {
             honodes = n;
         }
 
-        std::vector<MeshNodeSharedPtr> GetHONodes()
+        std::vector<int> GetHONodes()
         {
             return honodes;
         }
@@ -258,8 +234,8 @@ namespace MeshUtils {
         int curveedge;
         bool oncurve;
         int surf;
-        std::vector<MeshNodeSharedPtr> honodes;
-        Array<OneD, MeshNodeSharedPtr> nodes;
+        std::vector<int> honodes;
+        Array<OneD, int> nodes;
         std::vector<int> tris;
 
     };
@@ -277,25 +253,21 @@ namespace MeshUtils {
     public:
         friend class MemoryManager<MeshTri>;
 
-        MeshTri(int t, MeshNodeSharedPtr a,
-                       MeshNodeSharedPtr b,
-                       MeshNodeSharedPtr c,
-                       MeshEdgeSharedPtr e1,
-                       MeshEdgeSharedPtr e2,
-                       MeshEdgeSharedPtr e3,
+        MeshTri(int t, int a,
+                       int b,
+                       int c,
+                       int e1,
+                       int e2,
+                       int e3,
                        int i)
         {
             tid = t;
-            nodes = Array<OneD, MeshNodeSharedPtr>(3);
+            nodes = Array<OneD, int>(3);
             nodes[0] = a; nodes[1] = b; nodes[2] = c;
-            nodes[0]->SetTri(tid);
-            nodes[1]->SetTri(tid);
-            nodes[2]->SetTri(tid);
-            edges = Array<OneD, MeshEdgeSharedPtr>(3);
+
+            edges = Array<OneD, int>(3);
             edges[0] = e1; edges[1] = e2; edges[2] = e3;
-            edges[0]->SetTri(tid);
-            edges[1]->SetTri(tid);
-            edges[2]->SetTri(tid);
+
             cid=i;
         }
 
@@ -305,15 +277,15 @@ namespace MeshUtils {
         }
 
         int Getcid(){return cid;}
-        Array<OneD, MeshNodeSharedPtr> GetN(){return nodes;}
-        Array<OneD, MeshEdgeSharedPtr> GetE(){return edges;}
+        Array<OneD, int> GetN(){return nodes;}
+        Array<OneD, int> GetE(){return edges;}
 
     private:
 
         int tid;
         int cid;
-        Array<OneD, MeshNodeSharedPtr> nodes;
-        Array<OneD, MeshEdgeSharedPtr> edges;
+        Array<OneD, int> nodes;
+        Array<OneD, int> edges;
         Array<OneD,int> neighbours;
     };
 

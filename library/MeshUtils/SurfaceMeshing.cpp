@@ -88,15 +88,15 @@ namespace MeshUtils {
         for(int i = 0; i < Edges.size(); i++)
         {
             MeshEdgeSharedPtr e = Edges[i];
-            Array<OneD, MeshNodeSharedPtr> n = e->GetN();
+            Array<OneD, int> n = e->GetN();
 
             if(e->GetCurve() != -1)
             {
                 LibUtilities::CADCurveSharedPtr c = m_cad->GetCurve(
                             e->GetCurve());
                 //edge is on curve and needs hoing that way
-                NekDouble tb = n[0]->GetC(e->GetCurve());
-                NekDouble te = n[1]->GetC(e->GetCurve());
+                NekDouble tb = Nodes[n[0]]->GetC(e->GetCurve());
+                NekDouble te = Nodes[n[1]]->GetC(e->GetCurve());
 
                 NekDouble a = c->Length(0.0,tb);
                 NekDouble b = c->Length(0.0,te);
@@ -116,7 +116,7 @@ namespace MeshUtils {
 
                 ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
 
-                vector<MeshNodeSharedPtr> honodes(m_order-1);
+                vector<int> honodes(m_order-1);
 
                 LibUtilities::CADSurfSharedPtr s1,s2;
                 s1 = m_cad->GetSurf(Surfs[0]);
@@ -135,8 +135,8 @@ namespace MeshUtils {
                     nn->SetSurf(Surfs[0],u,v);
                     s2->locuv(u,v,loc);
                     nn->SetSurf(Surfs[1],u,v);
+                    honodes[i-1] = Nodes.size();
                     Nodes[Nodes.size()] = nn;
-                    honodes[i-1] = nn;
                 }
 
                 e->SetHONodes(honodes);
@@ -145,7 +145,7 @@ namespace MeshUtils {
             else
             {
                 //edge is on surface and needs 2d optimisation
-                LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
+                /*LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
                 Array<OneD, NekDouble> uvb,uve;
                 uvb = n[0]->GetS(e->GetSurf());
                 uve = n[1]->GetS(e->GetSurf());
@@ -166,7 +166,7 @@ namespace MeshUtils {
                     honodes[i-1] = nn;
                 }
 
-                e->SetHONodes(honodes);
+                e->SetHONodes(honodes);*/
             }
         }
     }

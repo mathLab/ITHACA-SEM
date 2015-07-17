@@ -191,8 +191,10 @@ namespace MeshUtils {
         {
             Edges[Edges.size()] = MemoryManager<MeshEdge>::
                     AllocateSharedPtr(Edges.size(),
-                                      Nodes[m_meshpoints[i]],
-                                      Nodes[m_meshpoints[i+1]]);
+                                      m_meshpoints[i],
+                                      m_meshpoints[i+1]);
+            Nodes[m_meshpoints[i]]->SetEdge(Edges.size()-1);
+            Nodes[m_meshpoints[i+1]]->SetEdge(Edges.size()-1);
             Edges[Edges.size()-1]->SetCurve(m_id);
         }
 

@@ -184,10 +184,15 @@ namespace Nektar
         {
             return 5;
         }
-        
+
         int PyrGeom::v_GetNumEdges() const
         {
             return 8;
+        }
+
+        int PyrGeom::v_GetNumFaces() const
+        {
+            return 5;
         }
 
         int PyrGeom::v_GetDir(const int faceidx, const int facedir) const

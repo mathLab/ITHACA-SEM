@@ -145,12 +145,12 @@ namespace MeshUtils {
             else
             {
                 //edge is on surface and needs 2d optimisation
-                /*LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
+                LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
                 Array<OneD, NekDouble> uvb,uve;
-                uvb = n[0]->GetS(e->GetSurf());
-                uve = n[1]->GetS(e->GetSurf());
+                uvb = Nodes[n[0]]->GetS(e->GetSurf());
+                uve = Nodes[n[1]]->GetS(e->GetSurf());
 
-                vector<MeshNodeSharedPtr> honodes(m_order-1);
+                vector<int> honodes(m_order-1);
                 for(int i = 1; i < m_order+1 -1; i++)
                 {
                     Array<OneD, NekDouble> loc;
@@ -162,11 +162,12 @@ namespace MeshUtils {
                     nn->SetSurf(e->GetSurf(),
                                 uvb[0]+i*(uve[0]-uvb[0])/m_order,
                                 uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    honodes[i-1] = Nodes.size();
                     Nodes[Nodes.size()] = nn;
-                    honodes[i-1] = nn;
+
                 }
 
-                e->SetHONodes(honodes);*/
+                e->SetHONodes(honodes);
             }
         }
     }

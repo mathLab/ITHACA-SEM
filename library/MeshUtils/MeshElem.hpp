@@ -219,8 +219,18 @@ namespace MeshUtils {
             honodes = n;
         }
 
-        std::vector<int> GetHONodes()
+        std::vector<int> GetHONodes(int first)
         {
+            ASSERTL0(nodes[0] == first || nodes[1] == first,
+                        "this node is not in this edge");
+            if(nodes[0] != first)
+            {
+                std::reverse(honodes.begin(),honodes.end());
+                int tmp = nodes[0];
+                nodes[0] = nodes[1];
+                nodes[1] = tmp;
+            }
+
             return honodes;
         }
 

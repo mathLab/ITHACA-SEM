@@ -1,8 +1,5 @@
 %%% DOCUMENTCLASS 
 %%%-------------------------------------------------------------------------------
-%\ifdefined\HCode
-%\documentclass{article}
-%\else
 \documentclass[
 a4paper, % Stock and paper size.
 11pt, % Type size.
@@ -13,7 +10,6 @@ onecolumn, % Only one column of text on a page.
 % openleft, % Each chapter will start on a verso page.
 openany, % A chapter may start on either a recto or verso page.
 ]{memoir}
-%\fi
 
 %%% PACKAGES 
 %%%------------------------------------------------------------------------------
@@ -394,7 +390,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \ifdefined\HCode
 \maketitle
 \begin{center}
-    \huge{Version \nekver}
+    \huge{Users Guide - Version \nekver}
 \end{center}
 \else
 \titlepage

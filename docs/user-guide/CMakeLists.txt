@@ -9,7 +9,6 @@ ADD_CUSTOM_TARGET(user-guide-html
     export TEXINPUTS=${CMAKE_SOURCE_DIR}//:${USERGUIDESRC}//: &&
     ${HTLATEX} ${USERGUIDESRC}/user-guide.tex 
     "${USERGUIDESRC}/styling.cfg,html,3,next,NoFonts"
-    #WORKING_DIRECTORY ${USERGUIDESRC}
     WORKING_DIRECTORY ${USERGUIDE}/html
 )
 

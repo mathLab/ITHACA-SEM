@@ -1,4 +1,4 @@
-SET(MeshConvertHeaders 
+SET(MeshConvertHeaders
     InputModules/InputGmsh.h
     InputModules/InputNek.h
     InputModules/InputNekpp.h
@@ -21,7 +21,7 @@ SET(MeshConvertHeaders
     ProcessModules/ProcessTetSplit.h
 )
 
-SET(MeshConvertSources 
+SET(MeshConvertSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
     InputModules/InputNekpp.cpp
@@ -56,21 +56,23 @@ IF (NEKTAR_USE_VTK)
     SET(MeshConvertSources ${MeshConvertSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
 ENDIF (NEKTAR_USE_VTK)
 
-IF (NEKTAR_USE_OCC)
+IF (NEKTAR_USE_MESH)
     SET(MeshConvertHeaders ${MeshConvertHeaders} InputModules/InputCAD.h)
     SET(MeshConvertSources ${MeshConvertSources} InputModules/InputCAD.cpp)
-ENDIF (NEKTAR_USE_OCC)
+ENDIF (NEKTAR_USE_MESH)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 
-TARGET_LINK_LIBRARIES(MeshConvert MeshUtils)
+IF(NEKTAR_USE_MESH)
+    TARGET_LINK_LIBRARIES(MeshConvert MeshUtils)
+ENDIF(NEKTAR_USE_MESH)
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)
    SET_TARGET_PROPERTIES(MeshConvert PROPERTIES
     IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
    INCLUDE_DIRECTORIES(MeshConvert ${CCMIO_INCLUDE_DIR})
-   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})        
+   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)

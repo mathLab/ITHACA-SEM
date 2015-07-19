@@ -49,13 +49,13 @@ namespace LibUtilities{
     {
         return m_name;
     }
-    
+
     void CADSystem::Report()
     {
         cout << "CAD has: " << m_curves.size() << " curves." << endl;
         cout << "CAD has: " << m_surfs.size() << " surfaces." << endl;
     }
-    
+
     void CADSystem::GetBoundingBox(Array<OneD, NekDouble>& out)
     {
         out[0]=1000000.0;
@@ -64,7 +64,7 @@ namespace LibUtilities{
         out[3]=0.0;
         out[4]=1000000.0;
         out[5]=0.0;
-        
+
         for(int i = 1; i <= m_curves.size(); i++)
         {
             gp_Pnt start, end;
@@ -82,7 +82,7 @@ namespace LibUtilities{
                 out[4]=start.Z();
             if(start.Z()>out[5])
                 out[5]=start.Z();
-            
+
             if(end.X()<out[0])
                 out[0]=end.X();
             if(end.X()>out[1])
@@ -104,13 +104,13 @@ namespace LibUtilities{
         {
             return false;
         }
-    
+
         string ext;
         size_t pos = m_name.find(".");
         ext = m_name.substr(pos);
 
         TopoDS_Shape shape;
-        
+
         if(ext.compare(".STEP") == 0 ||
            ext.compare(".step") == 0 ||
            ext.compare(".stp")  == 0 ||
@@ -147,18 +147,18 @@ namespace LibUtilities{
         {
             return false;
         }
-        
+
         TopTools_IndexedMapOfShape mapOfFaces;
         TopTools_IndexedMapOfShape mapOfEdges;
         TopExp::MapShapes(shape,TopAbs_FACE,mapOfFaces);
-        
+
         for(int i = 1; i <= mapOfFaces.Extent(); i++)
         {
             TopoDS_Shape face= mapOfFaces.FindKey(i);
-            
+
             TopTools_IndexedMapOfShape localEdges;
             TopExp::MapShapes(face,TopAbs_EDGE,localEdges);
-            
+
             for(int j = 1; j <= localEdges.Extent(); j++)
             {
                 TopoDS_Shape edge = localEdges.FindKey(j);
@@ -171,71 +171,82 @@ namespace LibUtilities{
                     }
                 }
             }
-            
+
         }
-        
+
+        map<int, vector<int> > adjsurfmap;
+
         for(int i=1; i<=mapOfEdges.Extent(); i++)
         {
             TopoDS_Shape edge = mapOfEdges.FindKey(i);
-            
             AddCurve(i, edge);
         }
-        
+
+
+
         for(int i = 1; i <= mapOfFaces.Extent(); i++)
         {
             vector<vector<pair<int,int> > > edges;
-            
+
             TopoDS_Shape face= mapOfFaces.FindKey(i);
 
             TopTools_IndexedMapOfShape mapOfWires;
             TopExp::MapShapes(face,TopAbs_WIRE,mapOfWires);
-            
+
             for(int j = 1; j <= mapOfWires.Extent(); j++)
             {
                 vector<pair<int,int> > edgeloop;
-                
+
                 TopoDS_Shape wire = mapOfWires.FindKey(j);
-                
+
                 ShapeAnalysis_Wire wiretest(TopoDS::Wire(wire),
                                             TopoDS::Face(face),
                                             1E-6);
-                
+
                 if(wiretest.CheckClosed(1E-6))
                 {
                     cout << i << " " << j << endl;
                     cout << "not closed" << endl;
                     exit(-1);
                 }
-                
+
                 BRepTools_WireExplorer exp;
-                
+
                 exp.Init(TopoDS::Wire(wire));
-                
+
                 while(exp.More())
                 {
                     TopoDS_Shape edge = exp.Current();
-                
+
                     if(mapOfEdges.Contains(edge))
                     {
                         pair<int,int> e;
                         e.first = mapOfEdges.FindIndex(edge);
+                        adjsurfmap[e.first].push_back(i);
                         e.second = exp.Orientation();
                         edgeloop.push_back(e);
                     }
-                
+
                     exp.Next();
                 }
-                
+
                 edges.push_back(edgeloop);
             }
-            
+
             AddSurf(i, face, edges);
-            
+
         }
-        
+
+        for(map<int,vector<int> >::iterator it=adjsurfmap.begin();
+            it!=adjsurfmap.end(); it++)
+        {
+            ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+            m_curves[it->first]->SetAdjSurf(it->second);
+        }
+
         return true;
     }
-    
+
     void CADSystem::AddCurve(int i, TopoDS_Shape in)
     {
         CADCurveSharedPtr newCurve =

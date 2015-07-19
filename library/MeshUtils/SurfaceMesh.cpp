@@ -111,7 +111,10 @@ namespace MeshUtils {
                 continue;
 
             MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
-                Edges.size(),Nodes[edgelist[i][0]],Nodes[edgelist[i][1]]);
+                Edges.size(),edgelist[i][0],edgelist[i][1]);
+            e->SetSurf(m_id);
+            Nodes[edgelist[i][0]]->SetEdge(Edges.size());
+            Nodes[edgelist[i][1]]->SetEdge(Edges.size());
             Edges[Edges.size()] = e;
         }
 
@@ -119,15 +122,23 @@ namespace MeshUtils {
 
         for(int i = 0; i < numtri; i++)
         {
-            MeshNodeSharedPtr n1,n2,n3;
-            n1 = Nodes[Connec[i][0]];
-            n2 = Nodes[Connec[i][1]];
-            n3 = Nodes[Connec[i][2]];
+            int n1,n2,n3;
+            n1 = Connec[i][0];
+            n2 = Connec[i][1];
+            n3 = Connec[i][2];
 
-            MeshEdgeSharedPtr e1,e2,e3;
-            e1 = Edges[n1->EdgeInCommon(n2)];
-            e2 = Edges[n2->EdgeInCommon(n3)];
-            e3 = Edges[n3->EdgeInCommon(n1)];
+            Nodes[n1]->SetTri(Tris.size());
+            Nodes[n2]->SetTri(Tris.size());
+            Nodes[n3]->SetTri(Tris.size());
+
+            int e1,e2,e3;
+            e1 = Nodes[n1]->EdgeInCommon(Nodes[n2]);
+            e2 = Nodes[n2]->EdgeInCommon(Nodes[n3]);
+            e3 = Nodes[n3]->EdgeInCommon(Nodes[n1]);
+
+            Edges[e1]->SetTri(Tris.size());
+            Edges[e2]->SetTri(Tris.size());
+            Edges[e3]->SetTri(Tris.size());
 
             Tris[Tris.size()] = MemoryManager<MeshTri>::AllocateSharedPtr(
                 Tris.size(),n1,n2,n3,e1,e2,e3,m_id);

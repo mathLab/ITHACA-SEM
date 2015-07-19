@@ -80,6 +80,98 @@ namespace MeshUtils {
 
     }
 
+    void SurfaceMeshing::HOSurf()
+    {
+        if(m_verbose)
+            cout << endl << "High-Order Surface meshing" << endl;
+
+        for(int i = 0; i < Edges.size(); i++)
+        {
+            MeshEdgeSharedPtr e = Edges[i];
+            Array<OneD, int> n = e->GetN();
+
+            if(e->GetCurve() != -1)
+            {
+                LibUtilities::CADCurveSharedPtr c = m_cad->GetCurve(
+                            e->GetCurve());
+                //edge is on curve and needs hoing that way
+                NekDouble tb = Nodes[n[0]]->GetC(e->GetCurve());
+                NekDouble te = Nodes[n[1]]->GetC(e->GetCurve());
+
+                NekDouble a = c->Length(0.0,tb);
+                NekDouble b = c->Length(0.0,te);
+
+                NekDouble dz = 2.0/m_order;
+
+                Array<OneD, NekDouble> ti(m_order+1);
+
+                for(int i = 0; i < m_order+1; i++)
+                {
+                    NekDouble xi = a*((1.0 - (-1.0 + dz*i))/2.0) +
+                                   b*((1.0 + (-1.0 + dz*i))/2.0);
+                    ti[i] = c->tAtArcLength(xi);
+                }
+
+                vector<int> Surfs = c->GetAdjSurf();
+
+                ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
+
+                vector<int> honodes(m_order-1);
+
+                LibUtilities::CADSurfSharedPtr s1,s2;
+                s1 = m_cad->GetSurf(Surfs[0]);
+                s2 = m_cad->GetSurf(Surfs[1]);
+
+                for(int i = 1; i < m_order +1 -1; i++)
+                {
+                    Array<OneD, NekDouble> loc;
+                    c->P(ti[i],loc);
+                    MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
+                            AllocateSharedPtr(Nodes.size(),loc[0],
+                                              loc[1],loc[2]);
+                    nn->SetCurve(c->GetID(),ti[i]);
+                    NekDouble u,v;
+                    s1->locuv(u,v,loc);
+                    nn->SetSurf(Surfs[0],u,v);
+                    s2->locuv(u,v,loc);
+                    nn->SetSurf(Surfs[1],u,v);
+                    honodes[i-1] = Nodes.size();
+                    Nodes[Nodes.size()] = nn;
+                }
+
+                e->SetHONodes(honodes);
+
+            }
+            else
+            {
+                //edge is on surface and needs 2d optimisation
+                LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
+                Array<OneD, NekDouble> uvb,uve;
+                uvb = Nodes[n[0]]->GetS(e->GetSurf());
+                uve = Nodes[n[1]]->GetS(e->GetSurf());
+
+                vector<int> honodes(m_order-1);
+                for(int i = 1; i < m_order+1 -1; i++)
+                {
+                    Array<OneD, NekDouble> loc;
+                    loc = s->P(uvb[0]+i*(uve[0]-uvb[0])/m_order,
+                               uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
+                            AllocateSharedPtr(Nodes.size(),loc[0],
+                                                loc[1],loc[2]);
+                    nn->SetSurf(e->GetSurf(),
+                                uvb[0]+i*(uve[0]-uvb[0])/m_order,
+                                uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    honodes[i-1] = Nodes.size();
+                    Nodes[Nodes.size()] = nn;
+
+                }
+
+                e->SetHONodes(honodes);
+            }
+        }
+    }
+
 
 }
 }

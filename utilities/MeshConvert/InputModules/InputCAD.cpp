@@ -119,39 +119,68 @@ namespace Utilities
 
         m_surfacemeshing->Mesh();
 
+        m_surfacemeshing->HOSurf();
+
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
-        m_mesh->m_order = 2;
+        m_mesh->m_order = m_order;
 
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
         m_mesh->m_fields.push_back("p");
 
         map<int, MeshUtils::MeshTriSharedPtr> Tris;
+        map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
         map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
-        m_surfacemeshing->Get(Nodes, Tris);
+        m_surfacemeshing->Get(Nodes, Edges, Tris);
 
-        for(int i = 0; i < Tris.size(); i++)
+        map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
+        map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
+        map<int, NodeSharedPtr> allnodes;
+
+        for(nit = Nodes.begin(); nit != Nodes.end(); nit++)
         {
-            Array<OneD, MeshUtils::MeshNodeSharedPtr> n = Tris[i]->GetN();
-            vector<NodeSharedPtr> mcnode;
-            for(int i = 0; i < 3; i++)
+            Array<OneD, NekDouble> loc = nit->second->GetLoc();
+            NodeSharedPtr nn =
+                    boost::shared_ptr<Node>(
+                                new Node(nit->first,loc[0],
+                                         loc[1],loc[2]));
+            allnodes[nit->first] = nn;
+        }
+
+        
+        for(trit = Tris.begin(); trit != Tris.end(); trit++)
+        {
+            if(trit->second->Getcid()!=9)
+                continue;
+
+            Array<OneD, int> n = trit->second->GetN();
+            vector<NodeSharedPtr> localnode;
+            for(int j = 0; j < 3; j++)
             {
-                Array<OneD, NekDouble> loc = n[i]->GetLoc();
-                NodeSharedPtr nn =
-                        boost::shared_ptr<Node>(
-                                    new Node(n[i]->GetId(),loc[0],
-                                             loc[1],loc[2]));
-                mcnode.push_back(nn);
+                localnode.push_back(allnodes[n[j]]);
             }
 
-            ElmtConfig conf(LibUtilities::eTriangle,1,true,false,false);
+            Array<OneD, int> eg = trit->second->GetE();
+            for(int j = 0; j < 3; j++)
+            {
+                map<int, MeshUtils::MeshEdgeSharedPtr>::iterator e;
+                e = Edges.find(eg[j]);
+                vector<int> hon = e->second->GetHONodes(n[j]);
+                for(int k = 0; k < hon.size(); k++)
+                {
+                    localnode.push_back(allnodes[hon[k]]);
+                }
+            }
+
+            ElmtConfig conf(LibUtilities::eTriangle,m_order,false,false,false);
             vector<int> tags;
-            tags.push_back(Tris[i]->Getcid());
+            tags.push_back(trit->second->Getcid());
             ElementSharedPtr E = GetElementFactory().
                         CreateInstance(LibUtilities::eTriangle,
-                                       conf,mcnode,tags);
+                                       conf,localnode,tags);
             m_mesh->m_element[2].push_back(E);
+
         }
 
         /*for(int i = 1; i <=m_cad->GetNumSurf(); i++)

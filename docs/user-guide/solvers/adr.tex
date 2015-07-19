@@ -78,10 +78,10 @@ The solver info are listed below:
 \textbf{EqType} & \textbf{Explicit} & \textbf{Diagonally Implicit} &
     \textbf{ IMEX} & \textbf{Implicit}   \\
 \midrule
-\inltt{UnstedayAdvection} &  \checkmark 	 &	 & 	&\\
-\inltt{UnstedayDifusion} &  \checkmark 	 & \checkmark 	 & 	&\\
-\inltt{UnstedayAdvectionDiffusion} &  	 &   	& \checkmark	&\\
-\inltt{UnstedayInviscidBurger} &  \checkmark 	 &	 & 	&\\
+\inltt{UnsteadyAdvection} &  \checkmark 	 &	 & 	&\\
+\inltt{UnsteadyDiffusion} &  \checkmark 	 & \checkmark 	 & 	&\\
+\inltt{UnsteadyAdvectionDiffusion} &  	 &   	& \checkmark	&\\
+\inltt{UnsteadyInviscidBurger} &  \checkmark 	 &	 & 	&\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -95,7 +95,7 @@ The solver info are listed below:
 \begin{itemize}
 	\item \inltt{Explicit} Requires the use of an explicit time integration
 	scheme.
-	\item \inltt{Implcit} Requires the use of a diagonally implicit, IMEX or
+	\item \inltt{Implicit} Requires the use of a diagonally implicit, IMEX or
 	Implicit scheme.
 \end{itemize}
 \item \textbf{AdvectionAdvancement}: This specifies how to treat the advection term. This will be restricted by the choice of time integration scheme:

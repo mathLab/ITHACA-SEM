@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     
-    if(argc != 2)
+    if(argc < 2)
     {
         fprintf(stderr,"Usage: ProjectCont2D  meshfile \n");
         exit(1);

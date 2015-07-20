@@ -2,10 +2,10 @@
 <test>
     <description>C0 Projection 2D with P=7, parallel</description>
     <executable>ProjectCont2D</executable>
-    <parameters>ProjectionCont2D_P7_par.xml</parameters>
+    <parameters>-I GlobalSysSoln=IterativeStaticCond -P IterativeSolverTolerance=1e-12 ProjectionCont2D_P7.xml</parameters>
     <processes>2</processes>
     <files>
-        <file description="Session File">ProjectionCont2D_P7_par.xml</file>
+        <file description="Session File">ProjectionCont2D_P7.xml</file>
     </files>
 
     <metrics>

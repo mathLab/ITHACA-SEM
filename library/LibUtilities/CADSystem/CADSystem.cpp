@@ -54,6 +54,7 @@ namespace LibUtilities{
     {
         cout << "CAD has: " << m_curves.size() << " curves." << endl;
         cout << "CAD has: " << m_surfs.size() << " surfaces." << endl;
+        cout << "CAD Euler-Poincaré characteristic: " << m_epc << endl;
     }
 
     void CADSystem::GetBoundingBox(Array<OneD, NekDouble>& out)
@@ -147,6 +148,13 @@ namespace LibUtilities{
         {
             return false;
         }
+
+        TopTools_IndexedMapOfShape fc, vc, ec;
+        TopExp::MapShapes(shape,TopAbs_FACE,fc);
+        TopExp::MapShapes(shape,TopAbs_EDGE,ec);
+        TopExp::MapShapes(shape,TopAbs_VERTEX,vc);
+
+        m_epc = vc.Extent()-ec.Extent()+fc.Extent();
 
         TopTools_IndexedMapOfShape mapOfFaces;
         TopTools_IndexedMapOfShape mapOfEdges;

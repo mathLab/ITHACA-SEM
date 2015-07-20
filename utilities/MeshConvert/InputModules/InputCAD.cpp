@@ -148,10 +148,10 @@ namespace Utilities
             allnodes[nit->first] = nn;
         }
 
-        
+
         for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {
-            if(trit->second->Getcid()!=9)
+            if(trit->second->Getcid()!=7)
                 continue;
 
             Array<OneD, int> n = trit->second->GetN();

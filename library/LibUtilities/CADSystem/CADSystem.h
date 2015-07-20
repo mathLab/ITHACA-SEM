@@ -76,8 +76,8 @@
 
 namespace Nektar {
 namespace LibUtilities {
-        
-    
+
+
 
 	class CADSystem
 	{
@@ -87,21 +87,21 @@ namespace LibUtilities {
 	    LIB_UTILITIES_EXPORT CADSystem(const std::string &name) : m_name(name)
 	    {
 	    };
-        
+
 	    LIB_UTILITIES_EXPORT std::string GetName();
         LIB_UTILITIES_EXPORT bool LoadCAD();
         LIB_UTILITIES_EXPORT void Report();
         LIB_UTILITIES_EXPORT void GetBoundingBox(Array<OneD, NekDouble>& out);
         LIB_UTILITIES_EXPORT int GetNumSurf(){return m_surfs.size();}
         LIB_UTILITIES_EXPORT int GetNumCurve(){return m_curves.size();}
-        
-        
+
+
         LIB_UTILITIES_EXPORT const CADCurveSharedPtr GetCurve(int i)
         {
             std::map<int,CADCurveSharedPtr>::iterator
                                     search = m_curves.find(i);
             ASSERTL0(search != m_curves.end(), "curve does not exist");
-            
+
             return search->second;
         }
         LIB_UTILITIES_EXPORT CADSurfSharedPtr GetSurf(int i)
@@ -112,15 +112,17 @@ namespace LibUtilities {
 
             return search->second;
         }
+		LIB_UTILITIES_EXPORT int GetEPC(){return m_epc;}
 
 	private:
-        
+
         void AddCurve(int i, TopoDS_Shape in);
         void AddSurf(int i, TopoDS_Shape in,
                      std::vector<std::vector<std::pair<int,int> > > ein);
-        
+
 	    std::string m_name;
-        
+        int m_epc;
+
         std::map<int,CADCurveSharedPtr> m_curves;
         std::map<int,CADSurfSharedPtr> m_surfs;
 	};

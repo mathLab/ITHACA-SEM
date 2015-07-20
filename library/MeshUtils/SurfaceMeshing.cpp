@@ -75,9 +75,52 @@ namespace MeshUtils {
         {
             cout << endl << "Surface mesh statistics" << endl;
             cout << "\tNodes: " << Nodes.size() << endl;
+            cout << "\tEdges: " << Edges.size() << endl;
             cout << "\tTriangles " << Tris.size() << endl;
+            cout << "\tEuler-Poincaré characteristic: " << Nodes.size()-
+                                                           Edges.size()+
+                                                           Tris.size() << endl;
         }
 
+        if(m_verbose)
+            cout << endl << "Verifying surface mesh" << endl;
+
+        if(m_cad->GetEPC() != Nodes.size()-Edges.size()+Tris.size())
+        {
+            if(m_verbose)
+                cout << "\tFailed" << endl;
+            ASSERTL0(false,"Euler-Poincaré characteristics do not match");
+        }
+
+        map<int,int> edgecheck;
+        map<int, MeshEdgeSharedPtr>::iterator ite;
+        for(ite=Edges.begin(); ite!=Edges.end(); ite++)
+        {
+            edgecheck[ite->first] = 0;
+        }
+
+        map<int, MeshTriSharedPtr>::iterator it;
+        for(it=Tris.begin(); it!=Tris.end(); it++)
+        {
+            Array<OneD,int> ed = it->second->GetE();
+            for(int i = 0; i < 3; i++)
+            {
+                edgecheck[ed[i]]++;
+            }
+        }
+
+        map<int,int>::iterator ch;
+        for(ch=edgecheck.begin(); ch!=edgecheck.end(); ch++)
+        {
+            if(ch->second != 2)
+            {
+                if(m_verbose)
+                    cout << "\tFailed" << endl;
+                ASSERTL0(false,"edge not listed twice");
+            }
+        }
+        if(m_verbose)
+            cout << "\tPassed" << endl;
     }
 
     void SurfaceMeshing::HOSurf()

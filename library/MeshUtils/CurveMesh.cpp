@@ -130,7 +130,7 @@ namespace MeshUtils {
         {
             if(Nodes[i]->IsEOC())
             {
-                if(Nodes[i]->Distance(n1) < 1E-6)
+                if(Nodes[i]->Distance(n1) < 1E-4)
                 {
                     m_meshpoints.push_back(i);
                     Nodes[i]->SetCurve(m_id,t);
@@ -171,7 +171,7 @@ namespace MeshUtils {
         {
             if(Nodes[i]->IsEOC())
             {
-                if(Nodes[i]->Distance(n3) < 1E-6)
+                if(Nodes[i]->Distance(n3) < 1E-4)
                 {
                     m_meshpoints.push_back(i);
                     Nodes[i]->SetCurve(m_id,t);

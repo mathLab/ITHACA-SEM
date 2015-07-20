@@ -38,7 +38,7 @@
 using namespace std;
 namespace Nektar{
     namespace LibUtilities{
-        
+
         CADSurf::CADSurf(int i, TopoDS_Shape in,
                          vector<vector<pair<int,int> > > ein) : ID(i), edges(ein)
         {
@@ -49,44 +49,49 @@ namespace Nektar{
             s = BRep_Tool::Surface(TopoDS::Face(in));
             in.Move(mv);
             occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
-            
+
         }
-        
+
         void CADSurf::locuv(NekDouble &u, NekDouble &v,
                             Array<OneD, NekDouble> p)
         {
             gp_Pnt loc(p[0]*1000.0,p[1]*1000.0,p[2]*1000.0);
-            
+
             GeomAPI_ProjectPointOnSurf projection(loc, s,
                                 occSurface.FirstUParameter(),
                                 occSurface.LastUParameter(),
                                 occSurface.FirstVParameter(),
                                 occSurface.LastVParameter(),
                                 Extrema_ExtAlgo_Tree);
-            
+
             ASSERTL0(projection.NbPoints()>0, "locuv failed");
-            
+
             Quantity_Parameter ui;
             Quantity_Parameter vi;
-            
+
             projection.Parameters(1,ui,vi);
-            
+
+            //this is always true, stupid check
             ASSERTL0(abs(ui - occSurface.FirstUParameter()) > -1E-6 &&
                      abs(occSurface.LastUParameter() - ui ) > -1E-6 &&
                      abs(vi - occSurface.FirstVParameter()) > -1E-6 &&
                      abs(occSurface.LastVParameter() - vi ) > -1E-6,
                      "locuv exceeded bounds");
-            
+
             u = ui;
             v = vi;
-            
+
             if(!(projection.Distance(1)<1E-3))
                 cout << projection.Distance(1) << endl;
-            
+
         }
-        
+
         Array<OneD, NekDouble> CADSurf::P(NekDouble u, NekDouble v)
         {
+            ASSERTL0(u-occSurface.FirstUParameter() > -1E-6 &&
+                     occSurface.LastUParameter()-u  > -1E-6 &&
+                     v-occSurface.FirstVParameter() > -1E-6 &&
+                     occSurface.LastVParameter()-v  > -1E-6, "out of bounds");
             Array<OneD, NekDouble> out(3);
             gp_Pnt loc;
             loc = occSurface.Value(u,v);
@@ -95,7 +100,7 @@ namespace Nektar{
             out[2]=loc.Z();
             return out;
         }
-        
+
         Array<OneD, NekDouble> CADSurf::N(NekDouble u, NekDouble v)
         {
             Array<OneD, NekDouble> out(3);
@@ -116,17 +121,17 @@ namespace Nektar{
                 out[1]=n.Y();
                 out[2]=n.Z();
             }
-            
+
             return out;
         }
-        
+
         Array<OneD, NekDouble> CADSurf::D1(NekDouble u, NekDouble v)
         {
             Array<OneD, NekDouble> out(9);
             gp_Pnt Loc;
             gp_Vec D1U,D1V;
             occSurface.D1(u,v,Loc,D1U,D1V);
-            
+
             out[0]=Loc.X();
             out[1]=Loc.Y();
             out[2]=Loc.Z();
@@ -136,17 +141,17 @@ namespace Nektar{
             out[6]=D1V.X();
             out[7]=D1V.Y();
             out[8]=D1V.Z();
-            
+
             return out;
         }
-        
+
         Array<OneD, NekDouble> CADSurf::D2(NekDouble u, NekDouble v)
         {
             Array<OneD, NekDouble> out(18);
             gp_Pnt Loc;
             gp_Vec D1U,D1V,D2U,D2V,D2UV;
             occSurface.D2(u,v,Loc,D1U,D1V,D2U,D2V,D2UV);
-            
+
             out[0]=Loc.X();
             out[1]=Loc.Y();
             out[2]=Loc.Z();
@@ -165,7 +170,7 @@ namespace Nektar{
             out[15]=D2UV.X();
             out[16]=D2UV.Y();
             out[17]=D2UV.Z();
-            
+
             return out;
         }
     }

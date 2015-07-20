@@ -141,18 +141,14 @@ namespace MeshUtils {
                 NekDouble tb = Nodes[n[0]]->GetC(e->GetCurve());
                 NekDouble te = Nodes[n[1]]->GetC(e->GetCurve());
 
-                NekDouble a = c->Length(0.0,tb);
-                NekDouble b = c->Length(0.0,te);
-
                 NekDouble dz = 2.0/m_order;
 
                 Array<OneD, NekDouble> ti(m_order+1);
 
                 for(int i = 0; i < m_order+1; i++)
                 {
-                    NekDouble xi = a*((1.0 - (-1.0 + dz*i))/2.0) +
-                                   b*((1.0 + (-1.0 + dz*i))/2.0);
-                    ti[i] = c->tAtArcLength(xi);
+                    ti[i] = tb*((1.0 - (-1.0 + dz*i))/2.0) +
+                                   te*((1.0 + (-1.0 + dz*i))/2.0);
                 }
 
                 vector<int> Surfs = c->GetAdjSurf();

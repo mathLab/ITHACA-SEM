@@ -38,71 +38,72 @@
 using namespace std;
 namespace Nektar{
     namespace LibUtilities{
-        
+
         NekDouble CADCurve::tAtArcLength(NekDouble s)
         {
+
             NekDouble dt = (occCurve.LastParameter()-occCurve.FirstParameter())/(5000);
             NekDouble t = occCurve.FirstParameter();
-            
+
             NekDouble len=0.0;
-            
+
             while(len<=s)
             {
                 gp_Pnt P1,P2;
                 gp_Vec drdt1,drdt2;
-                
+
                 occCurve.D1(t,P1,drdt1);
                 t+=dt;
                 occCurve.D1(t,P2,drdt2);
-                
+
                 len+=(drdt1.Magnitude()+drdt2.Magnitude())/2.0*dt;
             }
-            
+
             return t-dt;
-            
+
             //this really needs improving for accuracy
         }
-        
+
         NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
         {
-            
+
             NekDouble len = 0;
             NekDouble dt = (occCurve.LastParameter()-occCurve.FirstParameter())/(1000-1);
             NekDouble t = ti;
-            
+
             while(t+dt<=tf)
             {
                 gp_Pnt P1,P2;
                 gp_Vec drdt1,drdt2;
-                
+
                 occCurve.D1(t,P1,drdt1);
                 t+=dt;
                 occCurve.D1(t,P2,drdt2);
-                
+
                 len+=(drdt1.Magnitude()+drdt2.Magnitude())/2.0*dt;
             }
-            
+
             return len;
         }
-        
+
         void CADCurve::P(NekDouble t, Array<OneD, NekDouble> &out)
         {
-            
+
             out = Array<OneD, NekDouble>(3);
             gp_Pnt loc = occCurve.Value(t);
-            
+
             out[0] = loc.X();
             out[1] = loc.Y();
             out[2] = loc.Z();
         }
-        
+
         void CADCurve::Bounds(Array<OneD, NekDouble> &out)
         {
             out = Array<OneD, NekDouble> (2);
             out[0] = occCurve.FirstParameter();
             out[1] = occCurve.LastParameter();
         }
-        
+
         CADCurve::CADCurve(int i, TopoDS_Shape in) : ID(i)
         {
             gp_Trsf transform;
@@ -112,7 +113,7 @@ namespace Nektar{
             in.Move(mv);
             occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
         }
-        
+
         void CADCurve::GetMinMax(gp_Pnt &start, gp_Pnt &end)
         {
             start = occCurve.Value(occCurve.FirstParameter());

@@ -151,22 +151,30 @@ namespace Utilities
 
         for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {
-            if(trit->second->Getcid()!=7)
-                continue;
+            bool add = false;
 
             Array<OneD, int> n = trit->second->GetN();
+
+
+
             vector<NodeSharedPtr> localnode;
             for(int j = 0; j < 3; j++)
             {
+                if(Nodes[n[j]]->IsOnSurf(8))
+                {
+                    add = true;
+                }
                 localnode.push_back(allnodes[n[j]]);
             }
+            if(!add)
+                continue;
 
             Array<OneD, int> eg = trit->second->GetE();
             for(int j = 0; j < 3; j++)
             {
-                map<int, MeshUtils::MeshEdgeSharedPtr>::iterator e;
-                e = Edges.find(eg[j]);
-                vector<int> hon = e->second->GetHONodes(n[j]);
+                MeshUtils::MeshEdgeSharedPtr e;
+                e = Edges[eg[j]];
+                vector<int> hon = e->GetHONodes(n[j]);
                 for(int k = 0; k < hon.size(); k++)
                 {
                     localnode.push_back(allnodes[hon[k]]);

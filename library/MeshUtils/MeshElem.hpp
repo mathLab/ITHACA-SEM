@@ -105,6 +105,19 @@ namespace MeshUtils {
             return search->second;
         }
 
+        bool IsOnSurf(int i)
+        {
+            std::map<int, Array<OneD, NekDouble> >::iterator s;
+            for(s=CADSurf.begin(); s!=CADSurf.end(); s++)
+            {
+                if(s->first==i)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         NekDouble Distance(const MeshNodeSharedPtr &n)
         {
             Array<OneD,NekDouble> loc = n->GetLoc();

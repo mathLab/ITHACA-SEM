@@ -6,20 +6,13 @@
 #
 ########################################################################
 
-OPTION(NEKTAR_USE_MESH "Build meshing utilities." OFF)
+
 
 IF(NEKTAR_USE_MESH)
 
-# First search for system Triangle installs. Hint /opt/local for MacPorts.
-FIND_PATH   (TRIANGLE_INCLUDE_DIR triangle.h PATHS /opt/local/include)
-FIND_LIBRARY(TRIANGLE_LIBRARY NAMES "triangle" PATHS /opt/local/lib)
 
-# If we have our library then don't build Triangle
-IF (TRIANGLE_INCLUDE_DIR AND TRIANGLE_LIBRARY)
-    SET(BUILD_TRIANGLE OFF)
-ELSE()
-    SET(BUILD_TRIANGLE ON)
-ENDIF ()
+SET(BUILD_TRIANGLE ON)
+
 
 OPTION(THIRDPARTY_BUILD_TRIANGLE
     "Build Triangle library from ThirdParty." ${BUILD_TRIANGLE})

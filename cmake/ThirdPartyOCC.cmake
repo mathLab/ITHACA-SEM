@@ -1,4 +1,3 @@
-OPTION(NEKTAR_USE_OCC "Use opencascade for geometry interface." OFF)
 
 IF(NEKTAR_USE_OCC)
 

@@ -442,8 +442,19 @@ namespace Nektar
                                      " matrix block in Schur complement has "
                                      "unexpected rank");
 
-                            partMat[make_pair(k,k)] = BCOEntryType(
+                            NekDouble scale = loc_mat->Scale();
+                            if(fabs(scale-1.0) > NekConstants::kNekZeroTol)
+                            {
+                                Array<OneD, NekDouble>  matarray(loc_lda*loc_lda);
+                                Vmath::Smul(loc_lda*loc_lda,scale,
+                                            loc_mat->GetRawPtr(),1,&matarray[0],1);
+                                partMat[make_pair(k,k)] = BCOEntryType(matarray);
+                            }
+                            else // scale factor is 1.0
+                            {
+                                partMat[make_pair(k,k)] = BCOEntryType(
                                 loc_lda*loc_lda, loc_mat->GetRawPtr());
+                            }
 
                             GlobalLinSys::v_DropStaticCondBlock(
                                 m_expList.lock()->GetOffset_Elmt_Id(n));

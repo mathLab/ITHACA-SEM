@@ -136,11 +136,9 @@ namespace Nektar
 
             if(m_session->DefinesFunction("InitialConditions"))
             {
-            
                 out << "\tInital vector       : input file  " << endl;
                 info = 1;
                 CopyFieldToArnoldiArray(resid);
-            
             }
             else
             {

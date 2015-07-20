@@ -148,22 +148,24 @@ namespace Nektar
         std::string vConvectiveType;
         switch(m_equationType)
         {
-            case eUnsteadyStokes:
-                vConvectiveType = "NoAdvection";
-                break;
-            case eUnsteadyNavierStokes:
-            case eSteadyNavierStokes:
-                vConvectiveType = "Convective";
-                break;
-            case eUnsteadyLinearisedNS:
-                vConvectiveType = "Linearised";
-                break;
-            default:
-                break;
+        case eUnsteadyStokes:
+        case eSteadyLinearisedNS:
+            vConvectiveType = "NoAdvection";
+            break;
+        case eUnsteadyNavierStokes:
+        case eSteadyNavierStokes:
+            vConvectiveType = "Convective";
+            break;
+        case eUnsteadyLinearisedNS:
+            vConvectiveType = "Linearised";
+            break;
+        default:
+            break;
         }
 
         // Check if advection type overridden
-        if (m_session->DefinesTag("AdvectiveType") && m_equationType != eUnsteadyStokes)
+        if (m_session->DefinesTag("AdvectiveType") && m_equationType != eUnsteadyStokes &&
+            m_equationType != eSteadyLinearisedNS)
         {
             vConvectiveType = m_session->GetTag("AdvectiveType");
         }

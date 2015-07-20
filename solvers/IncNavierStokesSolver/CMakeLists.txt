@@ -20,6 +20,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./Filters/FilterEnergy.cpp
        ./Filters/FilterMovingBody.cpp
        ./Forcing/ForcingMovingBody.cpp	
+       ./Forcing/ForcingStabilityCoupledLNS.cpp	
        ./IncNavierStokesSolver.cpp 
        )
 

@@ -1331,8 +1331,8 @@ namespace Nektar
                         }
                         
                         ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-                        "Advection Velocity section must be defined in "
-                        "session file.");
+                                 "Advection Velocity section must be defined in "
+                                 "session file.");
                         
                         std::vector<std::string> fieldStr;
                         for(int i = 0; i < m_velocity.num_elements(); ++i)

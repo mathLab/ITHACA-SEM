@@ -172,8 +172,9 @@ namespace Nektar
             
             if (m_EvolutionOperator == eAdaptiveSFD)
             {
-                //This matters for the Adaptive SFD method
-                //because m_equ[1] is the nonlinear problem with non homogeneous BCs.
+                // This matters for the Adaptive SFD method because
+                // m_equ[1] is the nonlinear problem with non
+                // homogeneous BCs.
                 fields = m_equ[0]->UpdateFields(); 
             }
             else

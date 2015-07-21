@@ -136,7 +136,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                     const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray);
+                    Array<OneD, NekDouble> &outarray,
+                    bool multiplybyweights = true);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase (
                     const int dir,
@@ -162,6 +163,10 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(
                     const int mode,

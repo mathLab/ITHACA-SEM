@@ -159,6 +159,13 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+
+        void SetCommonBC(const std::string &userDefStr,
+                         const int n,
+                         const NekDouble time,
+                         int &cnt,
+                         Array<OneD, Array<OneD, NekDouble> > &inarray);
+        
         void WallBC(
             int                                                 bcRegion,
             int                                                 cnt,

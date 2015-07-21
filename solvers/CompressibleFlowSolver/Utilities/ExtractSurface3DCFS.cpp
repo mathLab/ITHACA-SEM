@@ -242,11 +242,11 @@ int main(int argc, char *argv[])
                     GetBndCondExpansions()[b]->GetExp(e)->GetTotPoints();
 
                 if (pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == SpatialDomains::eWallViscous ||
+                        GetUserDefined() == "WallViscous" ||
                     pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == SpatialDomains::eWallAdiabatic ||
+                        GetUserDefined() == "WallAdiabatic" ||
                     pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == SpatialDomains::eWall)
+                        GetUserDefined() == "Wall")
                 {
                     nSurfacePts += nBndEdgePts;
                 }
@@ -930,11 +930,11 @@ int main(int argc, char *argv[])
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
 
                 if (pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == SpatialDomains::eWallViscous ||
+                        GetUserDefined() == "WallViscous" ||
                     pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == SpatialDomains::eWallAdiabatic ||
+                        GetUserDefined() == "WallAdiabatic" ||
                     pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == SpatialDomains::eWall)
+                        GetUserDefined() == "Wall")
                 {
 
                     Vmath::Vcopy(nBndEdgePts, &traceX[id2], 1,
@@ -976,11 +976,11 @@ int main(int argc, char *argv[])
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
                     if (pFields[j]->GetBndConditions()[b]->
-                        GetUserDefined() == SpatialDomains::eWallViscous ||
-                        pFields[0]->GetBndConditions()[b]->
-                        GetUserDefined() == SpatialDomains::eWallAdiabatic ||
+                            GetUserDefined() == "WallViscous" ||
                         pFields[j]->GetBndConditions()[b]->
-                        GetUserDefined() == SpatialDomains::eWall)
+                            GetUserDefined() == "WallAdiabatic" ||
+                        pFields[j]->GetBndConditions()[b]->
+                            GetUserDefined() == "Wall")
                     {
                         Vmath::Vcopy(nBndEdgePts, &traceFields[j][id2], 1,
                                      &surfaceFields[j][id1], 1);
@@ -1015,11 +1015,11 @@ int main(int argc, char *argv[])
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
                     if (pFields[0]->GetBndConditions()[b]->
-                        GetUserDefined() == SpatialDomains::eWallViscous ||
+                            GetUserDefined() == "WallViscous" ||
                         pFields[0]->GetBndConditions()[b]->
-                        GetUserDefined() == SpatialDomains::eWallAdiabatic ||
+                            GetUserDefined() == "WallAdiabatic" ||
                         pFields[0]->GetBndConditions()[b]->
-                        GetUserDefined() == SpatialDomains::eWall)
+                            GetUserDefined() == "Wall")
                     {
                         Vmath::Vcopy(nBndEdgePts, &traceFieldsAdded[j][id2], 1,
                                      &surfaceFieldsAdded[j][id1], 1);

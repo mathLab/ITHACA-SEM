@@ -195,65 +195,67 @@ namespace Nektar
             // Set up curved information
 
             // Curved Edges
-            SpatialDomains::CurveVector cvec = graph->GetCurvedEdges();
-            
-            for(int i = 0; i < cvec.size(); ++i)
+            SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
+            SpatialDomains::CurveMap::iterator it;
+
+            for (it = curvedEdges.begin(); it != curvedEdges.end(); ++it)
             {
-                int id = cvec[i]->m_curveID;
-                ASSERTL1(eIdMap.find(id) != eIdMap.end(),"Failed to find curved edge");
+                SpatialDomains::CurveSharedPtr curve = it->second;
+                int id = curve->m_curveID;
+                ASSERTL1(eIdMap.find(id) != eIdMap.end(),
+                         "Failed to find curved edge");
                 EdgeSharedPtr edg = eIdMap[id];
-                edg->m_curveType = cvec[i]->m_ptype;
-                for(int j = 0; j < cvec[i]->m_points.size()-2; ++j)
+                edg->m_curveType = curve->m_ptype;
+                for(int j = 0; j < curve->m_points.size()-2; ++j)
                 {
-                    NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j+1])(0),
-                                             (*cvec[i]->m_points[j+1])(1),
-                                             (*cvec[i]->m_points[j+1])(2)));
+                    NodeSharedPtr n(new Node(j, (*curve->m_points[j+1])(0),
+                                             (*curve->m_points[j+1])(1),
+                                             (*curve->m_points[j+1])(2)));
                     edg->m_edgeNodes.push_back(n);
                 }
             }
 
             // Curved Faces
-            cvec = graph->GetCurvedFaces();
-            
-            for(int i = 0; i < cvec.size(); ++i)
+            SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
+            for (it = curvedFaces.begin(); it != curvedFaces.end(); ++it)
             {
-                int id = cvec[i]->m_curveID;
-                ASSERTL1(fIdMap.find(id) != fIdMap.end(),"Failed to find curved edge");
+                SpatialDomains::CurveSharedPtr curve = it->second;
+                int id = curve->m_curveID;
+                ASSERTL1(fIdMap.find(id) != fIdMap.end(),
+                         "Failed to find curved edge");
                 FaceSharedPtr fac = fIdMap[id];
-                fac->m_curveType = cvec[i]->m_ptype;
-                int Ntot = cvec[i]->m_points.size();
-                
+                fac->m_curveType = curve->m_ptype;
+                int Ntot = curve->m_points.size();
 
-                if (fac->m_curveType == LibUtilities::eNodalTriFekete       || 
+                if (fac->m_curveType == LibUtilities::eNodalTriFekete       ||
                     fac->m_curveType == LibUtilities::eNodalTriEvenlySpaced ||
                     fac->m_curveType == LibUtilities::eNodalTriElec)
                 {
                     int N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
                     for(int j = 3+3*(N-2); j < Ntot; ++j)
                     {
-                        NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j])(0),
-                                                 (*cvec[i]->m_points[j])(1),
-                                                 (*cvec[i]->m_points[j])(2)));
+                        NodeSharedPtr n(new Node(j, (*curve->m_points[j])(0),
+                                                 (*curve->m_points[j])(1),
+                                                 (*curve->m_points[j])(2)));
                         fac->m_faceNodes.push_back(n);
                     }
                 }
-                else // quad face. 
+                else // quad face.
                 {
                     int N    = (int)sqrt((double)Ntot);
                     for(int j = 1; j < N-1; ++j)
                     {
                         for(int k = 1; k < N-1; ++k)
                         {
-                            NodeSharedPtr n(new Node((j-1)*(N-2)+k-1, 
-                                                     (*cvec[i]->m_points[j*N+k])(0),
-                                                     (*cvec[i]->m_points[j*N+k])(1),
-                                                     (*cvec[i]->m_points[j*N+k])(2)));
+                            NodeSharedPtr n(new Node((j-1)*(N-2)+k-1,
+                                                     (*curve->m_points[j*N+k])(0),
+                                                     (*curve->m_points[j*N+k])(1),
+                                                     (*curve->m_points[j*N+k])(2)));
                             fac->m_faceNodes.push_back(n);
                         }
                     }
                 }
             }
-            
 
             // Get hold of mesh composites and set up m_mesh->m_elements
 

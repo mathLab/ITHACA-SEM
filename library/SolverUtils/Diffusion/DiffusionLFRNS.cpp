@@ -1342,16 +1342,13 @@ namespace Nektar
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
                         
                         // Reinforcing bcs for velocity in case of Wall bcs
-                        if ((fields[i]->GetBndConditions()[j]->
-                             GetUserDefined() ==
-                             SpatialDomains::eWallViscous) ||
-                             (fields[i]->GetBndConditions()[j]->
-                             GetUserDefined() ==
-                             SpatialDomains::eWallAdiabatic))
+                        if (boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"WallViscous") ||
+                            boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"WallAdiabatic"))
                         {
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
-                            
                         }
                         
                         // Imposing velocity bcs if not Wall
@@ -1428,9 +1425,8 @@ namespace Nektar
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
                     // Imposing Temperature Twall at the wall 
-                    if (fields[i]->GetBndConditions()[j]->
-                        GetUserDefined() == 
-                        SpatialDomains::eWallViscous)
+                    if (boost::iequals(fields[i]->GetBndConditions()[j]->
+                                       GetUserDefined(),"WallViscous"))
                     {                        
                         Vmath::Vcopy(nBndEdgePts, 
                                      &Tw[0], 1, 
@@ -1468,8 +1464,9 @@ namespace Nektar
                     if (fields[nScalars]->GetBndConditions()[j]->
                         GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet &&
-                        !((fields[nScalars]->GetBndConditions()[j])->
-                          GetUserDefined() == SpatialDomains::eWallAdiabatic))
+                        !boost::iequals(
+                            fields[nScalars]->GetBndConditions()[j]
+                            ->GetUserDefined(), "WallAdiabatic"))
                     {
                         Vmath::Vcopy(nBndEdgePts,
                                      &scalarVariables[nScalars-1][id2], 1,
@@ -1481,9 +1478,9 @@ namespace Nektar
                     else if (((fields[nScalars]->GetBndConditions()[j])->
                               GetBoundaryConditionType() ==
                               SpatialDomains::eNeumann) ||
-                             ((fields[nScalars]->GetBndConditions()[j])->
-                              GetUserDefined() ==
-                              SpatialDomains::eWallAdiabatic))
+                             boost::iequals(
+                                 fields[nScalars]->GetBndConditions()[j]
+                                 ->GetUserDefined(), "WallAdiabatic"))
                     {
                         Vmath::Vcopy(nBndEdgePts,
                                      &uplus[nScalars-1][id2], 1,
@@ -1604,8 +1601,8 @@ namespace Nektar
                     // uflux = gD
                     if(fields[var]->GetBndConditions()[i]->
                        GetBoundaryConditionType() == SpatialDomains::eDirichlet
-                       && !(fields[var]->GetBndConditions()[i]->
-                            GetUserDefined() == SpatialDomains::eWallAdiabatic))
+                       && !boost::iequals(fields[var]->GetBndConditions()[i]
+                                          ->GetUserDefined(), "WallAdiabatic"))
                     {
                         Vmath::Vmul(nBndEdgePts,
                                     &m_traceNormals[dir][id2], 1,
@@ -1620,8 +1617,8 @@ namespace Nektar
                         ASSERTL0(false,
                                  "Neumann bcs not implemented for LFRNS");
                     }
-                    else if(fields[var]->GetBndConditions()[i]->
-                            GetUserDefined() == SpatialDomains::eWallAdiabatic)
+                    else if(boost::iequals(fields[var]->GetBndConditions()[i]
+                                           ->GetUserDefined(), "WallAdiabatic"))
                     {
                         if ((var == m_spaceDim + 1))
                         {

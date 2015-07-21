@@ -35,6 +35,7 @@
 
 #include <string>
 #include <fstream>
+#include <algorithm>
 
 #include <MeshUtils/Octree.h>
 #include <LibUtilities/CADSystem/CADSurf.h>
@@ -119,15 +120,22 @@ namespace MeshUtils {
         if(m_verbose)
             cout << m_cpList.size() << endl;
 
+        NekDouble maxdim = (BoundingBox[1]-BoundingBox[0])/2 >
+                               (BoundingBox[3]-BoundingBox[2])/2 ?
+                               (BoundingBox[1]-BoundingBox[0])/2 :
+                               (BoundingBox[3]-BoundingBox[2])/2;
+        maxdim = maxdim > (BoundingBox[5]-BoundingBox[4])/2 ?
+                            maxdim : (BoundingBox[5]-BoundingBox[4])/2;
+
         vector<int> dum;
         OctantSharedPtr newOctant =
         MemoryManager<Octant>::AllocateSharedPtr
         ((BoundingBox[1]+BoundingBox[0])/2,
          (BoundingBox[3]+BoundingBox[2])/2,
          (BoundingBox[5]+BoundingBox[4])/2,
-         (BoundingBox[1]-BoundingBox[0])/2,
-         (BoundingBox[3]-BoundingBox[2])/2,
-         (BoundingBox[5]-BoundingBox[4])/2,
+         maxdim,
+         maxdim,
+         maxdim,
          -1, 0, m_cpList, dum);
 
         OctantList.push_back(newOctant);

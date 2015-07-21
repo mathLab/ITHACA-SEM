@@ -80,6 +80,9 @@ namespace MeshUtils {
 
     private:
 
+        void Validate();
+        void Optimise();
+
         LibUtilities::CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;
 

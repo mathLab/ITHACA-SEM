@@ -82,45 +82,9 @@ namespace MeshUtils {
                                                            Tris.size() << endl;
         }
 
-        if(m_verbose)
-            cout << endl << "Verifying surface mesh" << endl;
+        Validate();
 
-        if(m_cad->GetEPC() != Nodes.size()-Edges.size()+Tris.size())
-        {
-            if(m_verbose)
-                cout << "\tFailed" << endl;
-            ASSERTL0(false,"Euler-Poincaré characteristics do not match");
-        }
-
-        map<int,int> edgecheck;
-        map<int, MeshEdgeSharedPtr>::iterator ite;
-        for(ite=Edges.begin(); ite!=Edges.end(); ite++)
-        {
-            edgecheck[ite->first] = 0;
-        }
-
-        map<int, MeshTriSharedPtr>::iterator it;
-        for(it=Tris.begin(); it!=Tris.end(); it++)
-        {
-            Array<OneD,int> ed = it->second->GetE();
-            for(int i = 0; i < 3; i++)
-            {
-                edgecheck[ed[i]]++;
-            }
-        }
-
-        map<int,int>::iterator ch;
-        for(ch=edgecheck.begin(); ch!=edgecheck.end(); ch++)
-        {
-            if(ch->second != 2)
-            {
-                if(m_verbose)
-                    cout << "\tFailed" << endl;
-                ASSERTL0(false,"edge not listed twice");
-            }
-        }
-        if(m_verbose)
-            cout << "\tPassed" << endl;
+        //Optimise();
     }
 
     void SurfaceMeshing::HOSurf()
@@ -209,6 +173,77 @@ namespace MeshUtils {
                 e->SetHONodes(honodes);
             }
         }
+    }
+
+    void SurfaceMeshing::Optimise()
+    {
+        map<int, MeshNodeSharedPtr>::iterator it;
+        for(it = Nodes.begin(); it!=Nodes.end(); it++)
+        {
+            if(it->second->IsOnACurve())
+                continue;
+
+            NekDouble d = m_octree->Query(it->second->GetLoc());
+
+            vector<int> es = it->second->GetEdges();
+            vector<int> connodes;
+            for(int i = 0; i < es.size(); i++)
+            {
+                connodes.push_back(Edges[es[i]]->OtherNode(it->first));
+            }
+
+            vector<NekDouble> om;
+            for(int i = 0; i < connodes.size(); i++)
+            {
+                om.push_back(it->second->Distance(Nodes[connodes[i]]) - d);
+            }
+
+            //NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
+
+        }
+    }
+
+    void SurfaceMeshing::Validate()
+    {
+        if(m_verbose)
+            cout << endl << "Verifying surface mesh" << endl;
+
+        if(m_cad->GetEPC() != Nodes.size()-Edges.size()+Tris.size())
+        {
+            if(m_verbose)
+                cout << "\tFailed" << endl;
+            ASSERTL0(false,"Euler-Poincaré characteristics do not match");
+        }
+
+        map<int,int> edgecheck;
+        map<int, MeshEdgeSharedPtr>::iterator ite;
+        for(ite=Edges.begin(); ite!=Edges.end(); ite++)
+        {
+            edgecheck[ite->first] = 0;
+        }
+
+        map<int, MeshTriSharedPtr>::iterator it;
+        for(it=Tris.begin(); it!=Tris.end(); it++)
+        {
+            Array<OneD,int> ed = it->second->GetE();
+            for(int i = 0; i < 3; i++)
+            {
+                edgecheck[ed[i]]++;
+            }
+        }
+
+        map<int,int>::iterator ch;
+        for(ch=edgecheck.begin(); ch!=edgecheck.end(); ch++)
+        {
+            if(ch->second != 2)
+            {
+                if(m_verbose)
+                    cout << "\tFailed" << endl;
+                ASSERTL0(false,"edge not listed twice");
+            }
+        }
+        if(m_verbose)
+            cout << "\tPassed" << endl;
     }
 
 

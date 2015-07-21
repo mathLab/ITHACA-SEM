@@ -118,6 +118,18 @@ namespace MeshUtils {
             return false;
         }
 
+        bool IsOnACurve()
+        {
+            if(CADCurve.size()>0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         NekDouble Distance(const MeshNodeSharedPtr &n)
         {
             Array<OneD,NekDouble> loc = n->GetLoc();
@@ -227,6 +239,8 @@ namespace MeshUtils {
             tris.push_back(i);
         }
 
+        std::vector<int> GetTri(){return tris;}
+
         void SetHONodes(std::vector<int> n)
         {
             honodes = n;
@@ -245,6 +259,20 @@ namespace MeshUtils {
             }
 
             return honodes;
+        }
+
+        int OtherNode(int i)
+        {
+            ASSERTL0(nodes[0] == i || nodes[1] == i,
+                        "this node is not in this edge");
+            if(nodes[0]==i)
+            {
+                return nodes[1];
+            }
+            else
+            {
+                return nodes[0];
+            }
         }
 
         void SetSurf(int i){surf=i;}

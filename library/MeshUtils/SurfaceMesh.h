@@ -50,12 +50,12 @@
 
 namespace Nektar {
 namespace MeshUtils {
-            
+
     class SurfaceMesh
     {
     public:
         friend class MemoryManager<SurfaceMesh>;
-        
+
         SurfaceMesh(const int id,
                     const bool verb,
                     const LibUtilities::CADSurfSharedPtr &cad,
@@ -64,50 +64,50 @@ namespace MeshUtils {
                     const int &order)
                         : m_verbose(verb), m_cadsurf(cad), m_octree(oct),
                           m_curvemeshes(cmeshes),m_order(order),m_id(id)
-        
+
         {
             m_edges = m_cadsurf->GetEdges();
         };
-        
+
         void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                   std::map<int, MeshEdgeSharedPtr> &Edges,
                   std::map<int, MeshTriSharedPtr> &Tris);
-        
-        
+
+
     private:
-        
+
         void Stretching();
-        
+
         bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
-        
+
         void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
-        
+
         void AddNewPoint(NekDouble u, NekDouble v,
                          std::map<int, MeshNodeSharedPtr> &Nodes);
-        
+
         bool m_verbose;
         LibUtilities::CADSurfSharedPtr m_cadsurf;
         OctreeSharedPtr m_octree;
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
 
         std::vector<std::vector<std::pair<int,int> > > m_edges;
-       
+
         int m_order;
-        
+
         int m_id;
-    
+
         std::vector<std::vector<int> > orderedLoops;
         std::vector<std::vector<NekDouble> > m_centers;
-        
+
         std::vector<int> m_stienerpoints;
-        
+
         int numtri, nump;
         Array<OneD, Array<OneD, int> > Connec;
-        
+
         NekDouble pasr,asr;
-        
+
     };
-    
+
     typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
 }
 }

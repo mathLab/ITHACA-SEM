@@ -314,6 +314,24 @@ SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
 SOURCE_GROUP("FFT Headers" FILES ${FFTHeaders})
 SOURCE_GROUP("FFT Sources" FILES ${FFTSources})  
 
+IF(NEKTAR_USE_OCC)
+	SET(CADSystemSources
+		./CADSystem/CADSystem.cpp
+        ./CADSystem/CADCurve.cpp
+        ./CADSystem/CADSurf.cpp
+		)
+
+	SET(CADSystemHeaders
+		./CADSystem/CADSystem.h
+        ./CADSystem/CADCurve.h
+        ./CADSystem/CADSurf.h
+		)
+
+	SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})
+	SOURCE_GROUP("CAD System Sources" FILES ${CADSystemSources})
+
+ENDIF(NEKTAR_USE_OCC)
+
 SOURCE_GROUP("Base" FILES ${BaseHeaders})
 
 SET(LibUtilityHeaders
@@ -323,6 +341,7 @@ SET(LibUtilityHeaders
 	${PolyLibHeaders}
     ${CommunicationHeaders}
 	${FoundationHeaders}
+	${CADSystemHeaders}
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
 	${InterpreterHeaders}
@@ -342,6 +361,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
 SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
+    ${CADSystemSources}
     ${PolylibSources}
     ${CommunicationSources}
     ${LinearAlgebraSources}
@@ -456,6 +476,17 @@ IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities petsc-3.5.2)
 ENDIF( NEKTAR_USE_PETSC )
+
+IF(NEKTAR_USE_OCC)
+	SET(OCC_DEF LIN
+		    LININTEL
+		    HAVE_WOK_CONFIG_H
+		    HAVE_CONFIG_H
+		    CSFDB
+		    )
+	SET_TARGET_PROPERTIES(LibUtilities PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
+	TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OCC_LIBS})
+ENDIF(NEKTAR_USE_OCC)
 
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

@@ -331,12 +331,12 @@ namespace Nektar
 
         if(!userDefStr.empty())
         {
-            if(boost::iequals(userDefStr,"Wall") ||
-               boost::iequals(userDefStr,"WallAdiabatic"))
+            if(boost::iequals(userDefStr,"Wall"))
             {
                 WallBC(n, cnt, inarray);
             }
-            else if(boost::iequals(userDefStr,"WallViscous"))
+            else if(boost::iequals(userDefStr,"WallViscous") ||
+                    boost::iequals(userDefStr,"WallAdiabatic"))
             {
                 // Wall Boundary Condition
                 WallViscousBC(n, cnt, inarray);

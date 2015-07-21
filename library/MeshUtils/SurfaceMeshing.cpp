@@ -84,7 +84,7 @@ namespace MeshUtils {
 
         Validate();
 
-        //Optimise();
+        Optimise();
     }
 
     void SurfaceMeshing::HOSurf()
@@ -185,6 +185,12 @@ namespace MeshUtils {
 
             NekDouble d = m_octree->Query(it->second->GetLoc());
 
+            std::map<int, Array<OneD, NekDouble> > surf = it->second->GetSurfMap();
+            ASSERTL0(surf.size()==1,"node should be interior and only be on one surface");
+            std::map<int, Array<OneD, NekDouble> >::iterator sit = surf.begin();
+            int surface = sit->first;
+            Array<OneD, NekDouble> uvi = sit->second;
+
             vector<int> es = it->second->GetEdges();
             vector<int> connodes;
             for(int i = 0; i < es.size(); i++)
@@ -198,7 +204,31 @@ namespace MeshUtils {
                 om.push_back(it->second->Distance(Nodes[connodes[i]]) - d);
             }
 
-            //NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
+            NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
+            for(int i = 0; i < connodes.size(); i++)
+            {
+                Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
+                u0+=uvj[0]/connodes.size();
+                v0+=uvj[1]/connodes.size();
+            }
+            for(int i = 0; i < connodes.size();i++)
+            {
+                Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
+                NekDouble sqr = sqrt((uvj[0]-u0)*(uvj[0]-u0) +
+                                     (uvj[1]-v0)*(uvj[1]-v0));
+                fu+=om[i]*(uvj[0]-u0)/sqr;
+                fv+=om[i]*(uvj[1]-v0)/sqr;
+                dfu+=om[i]*sqr*(2*(uvj[0]-u0)*(u0-uvj[0])+
+                                    (uvj[1]-v0)*(uvj[1]-v0));
+                dfv+=om[i]*sqr*(2*(uvj[1]-v0)*(uvi[1]-v0)+
+                                    (uvj[0]-u0)*(uvj[0]-u0));
+            }
+            Array<OneD, NekDouble> l = it->second->GetLoc();
+            Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(u0-fu/dfu,v0-fv/dfv);
+            //cout << l[0] << " " << l[1] << " " << l[2] << endl;
+            //cout << l2[0] << " " << l2[1] << " " << l2[2] << endl;
+            //exit(-1);
+            Nodes[it->first]->Move(l2,u0-fu/dfu,v0-fv/dfv);
 
         }
     }

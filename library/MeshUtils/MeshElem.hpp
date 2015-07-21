@@ -178,6 +178,19 @@ namespace MeshUtils {
         std::vector<int> GetEdges(){return Edges;}
         std::vector<int> GetTtris(){return Tris;}
 
+        void Move(Array<OneD, NekDouble> l, NekDouble u, NekDouble v)
+        {
+            m_x=l[0];
+            m_y=l[1];
+            m_z=l[2];
+            std::map<int, Array<OneD, NekDouble> >::iterator s =
+                        CADSurf.begin();
+            Array<OneD, NekDouble> uv(2);
+            uv[0]=u;
+            uv[1]=v;
+            CADSurf[s->first]=uv;
+        }
+
 
 
     private:

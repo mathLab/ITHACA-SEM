@@ -42,18 +42,18 @@
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
-    
-    
+
+
     NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     {
         int n = 0;
         int quad;
-        
+
         bool found=false;
-        
+
         while(!found)
         {
-            
+
             if(loc[0]>=OctantList[n]->X() && loc[1]>OctantList[n]->Y() && loc[2]>OctantList[n]->Z())
             {
                 quad=0;
@@ -92,9 +92,9 @@ namespace MeshUtils {
             {
                 quad=7;
             }
-            
+
             n=OctantList[n]->GetChild(quad);
-            
+
             if(OctantList[n]->isLeaf())
             {
                 found=true;
@@ -102,7 +102,7 @@ namespace MeshUtils {
         }
         return OctantList[n]->GetDelta();
     }
-            
+
     void Octree::Build(const NekDouble &min,
                        const NekDouble &max,
                        const NekDouble &eps)
@@ -110,14 +110,15 @@ namespace MeshUtils {
         m_minDelta = min;
         m_maxDelta = max;
         m_eps = eps;
-        
+
         BoundingBox = Array<OneD, NekDouble> (6);
         m_cad->GetBoundingBox(BoundingBox);
-        
+
         CompileCuravturePointList();
-        
-        cout << m_cpList.size() << endl;
-        
+
+        if(m_verbose)
+            cout << m_cpList.size() << endl;
+
         vector<int> dum;
         OctantSharedPtr newOctant =
         MemoryManager<Octant>::AllocateSharedPtr
@@ -128,34 +129,34 @@ namespace MeshUtils {
          (BoundingBox[3]-BoundingBox[2])/2,
          (BoundingBox[5]-BoundingBox[4])/2,
          -1, 0, m_cpList, dum);
-        
+
         OctantList.push_back(newOctant);
         //parent created.
-        
+
         cout << endl << "Parent created. Dividing based on geometry" << endl;
         m_totNotDividing=0;
-        
+
         if(OctantList[0]->Divide())
         {
             OctantList[0]->LeafFalse();
             subdivide(0);
         }
         cout << endl << "Completed" << endl;
-        
+
         int ct=0;
         int maxLevel=0;
-        
+
         for(int i = 0; i < OctantList.size(); i++)
         {
             if(OctantList[i]->isLeaf()){ct++;}
             if(OctantList[i]->GetLevel()>maxLevel){maxLevel=OctantList[i]->GetLevel();}
         }
-        
+
         cout << endl << "No. octant leaves" << endl;
         cout << ct << " " << maxLevel << endl;
-        
+
         cout << endl << "Populating initial neighbours list" << endl;
-        
+
         for(int i = 0; i < OctantList.size(); i++)
         {
             int pos = 70*i/OctantList.size();
@@ -172,16 +173,16 @@ namespace MeshUtils {
                 OctantList[i]->CreateNeighbourList(OctantList);
             }
         }
-        
+
         cout << endl << "Completed" << endl;
-        
+
         //begin smoothing
-        
+
         //smooth levels first
         cout << endl << "Smoothing octant levels" << endl;
-        
+
         SmoothOctants();
-        
+
         ct=0;
         for(int i = 0; i < OctantList.size(); i++)
         {
@@ -190,22 +191,22 @@ namespace MeshUtils {
         cout << "New Stats" << endl;
         cout << "No. octant leaves" << endl;
         cout << ct << endl;
-        
+
         cout << endl << "Smoothing across the geometry surface" << endl;
-        
+
         SmoothSurfaceOctants();
-        
-        
+
+
         cout<< endl << "complete" << endl;
-        
+
         cout << endl << "Propagating spacing out to domain boundary" << endl;
-        
+
         PropagateDomain();
-        
+
         cout << endl << "Recersively ensuring smoothness between all nodes" << endl;
-        
+
         SmoothAllOctants();
-        
+
         for(int i = 0; i < OctantList.size(); i++)
         {
             if(OctantList[i]->isLeaf())
@@ -214,17 +215,17 @@ namespace MeshUtils {
                          "Error in initial octree construction");
             }
         }
-        
+
         int elem=CountElemt();
-        
+
         cout << endl<< "Predicted mesh: " << elem << " elements" << endl;
-        
+
     }
-    
+
     int Octree::CountElemt()
     {
         NekDouble total=0.0;
-        
+
         for(int i = 0 ; i < OctantList.size(); i++)
         {
             if(OctantList[i]->isLeaf())
@@ -235,10 +236,10 @@ namespace MeshUtils {
                     NekDouble volumeTet = OctantList[i]->GetDelta()*
                     OctantList[i]->GetDelta()*
                     OctantList[i]->GetDelta()/6.0/sqrt(2.0);
-                    
+
                     NekDouble volumeOct = OctantList[i]->DX()*OctantList[i]->DY()*
                     OctantList[i]->DZ()*8.0;
-                    
+
                     if(OctantList[i]->GetDelta()-m_minDelta<-0.00001)
                     {
                         cout << "error " << OctantList[i]->GetDelta() << endl;
@@ -253,14 +254,14 @@ namespace MeshUtils {
                 }
             }
         }
-        
+
         return int(total);
     }
-    
+
     void Octree::SmoothAllOctants()
     {
         int ct = 0;
-        
+
         do
         {
             ct=0;
@@ -270,7 +271,7 @@ namespace MeshUtils {
                 {
                     vector<int> checkID;
                     vector<int> nList = OctantList[i]->GetNeighbourList();
-                    
+
                     for(int j = 0; j < nList.size(); j++)
                     {
                         if(OctantList[nList[j]]->GetDelta() <
@@ -280,7 +281,7 @@ namespace MeshUtils {
                             checkID.push_back(nList[j]);
                         }
                     }
-                    
+
                     //for each neighbour listed in check_id, figure out the smoothed delta, and asign the miminum of these to nodes[i].GetDelta()
                     if(checkID.size() > 0)
                     {
@@ -294,7 +295,7 @@ namespace MeshUtils {
                                  (OctantList[i]->Y()-OctantList[checkID[j]]->Y())+
                                  (OctantList[i]->Z()-OctantList[checkID[j]]->Z())*
                                  (OctantList[i]->Z()-OctantList[checkID[j]]->Z()));
-                            
+
                             if(0.24*r +
                                OctantList[checkID[j]]->GetDelta() < deltaSM)
                             {
@@ -308,14 +309,14 @@ namespace MeshUtils {
                     }
                 }
             }
-            
+
         }while(ct>0);
     }
-    
+
     void Octree::PropagateDomain()
     {
         int ct=0;
-        
+
         do
         {
             ct=0;
@@ -323,10 +324,10 @@ namespace MeshUtils {
             {
                 if(OctantList[i]->isLeaf() && !OctantList[i]->isDeltaKnown())
                 { //if it is leaf, has no points and delta has not been asigned
-                    
+
                     vector<int> knownID;
                     vector<int> nList = OctantList[i]->GetNeighbourList();
-                    
+
                     for(int j = 0; j<nList.size(); j++)
                     {
                         if(OctantList[nList[j]]->isDeltaKnown())
@@ -346,7 +347,7 @@ namespace MeshUtils {
                                  (OctantList[i]->Y()-OctantList[knownID[j]]->Y())+
                                  (OctantList[i]->Z()-OctantList[knownID[j]]->Z())*
                                  (OctantList[i]->Z()-OctantList[knownID[j]]->Z()));
-                            
+
                             if(0.24*r +
                                OctantList[knownID[j]]->GetDelta() < m_maxDelta)
                             {
@@ -368,18 +369,18 @@ namespace MeshUtils {
                         OctantList[i]->SetDelta(min);
                         ASSERTL0(min>=m_minDelta,"Delta assignment less than min delta");
                         ct+=1;
-                        
+
                         deltaPrime.clear();
                     }
                     knownID.clear();
                 }
-                
-                
+
+
                 if(OctantList[i]->isLeaf() && !OctantList[i]->isOrientKnown())
                 { //if the node does not know its location
                     vector<int> knownID;
                     vector<int> nList = OctantList[i]->GetNeighbourList();
-                    
+
                     for(int j = 0; j < nList.size(); j++)
                     {
                         if(OctantList[nList[j]]->isOrientKnown())
@@ -399,7 +400,7 @@ namespace MeshUtils {
                         }
                         if(idKnowsOrient.size() > 0)
                         {
-                            
+
                             vector<int> isOrient2;
                             for(int j = 0; j < idKnowsOrient.size(); j++)
                             {
@@ -408,7 +409,7 @@ namespace MeshUtils {
                                     isOrient2.push_back(idKnowsOrient[j]);
                                 }
                             }
-                            
+
                             if(isOrient2.size() == 0)
                             {
                                 NekDouble dist=10000.0;
@@ -422,14 +423,14 @@ namespace MeshUtils {
                                          (OctantList[i]->Y()-OctantList[idKnowsOrient[j]]->Y())+
                                          (OctantList[i]->Z()-OctantList[idKnowsOrient[j]]->Z())*
                                          (OctantList[i]->Z()-OctantList[idKnowsOrient[j]]->Z()));
-                                    
+
                                     if(r < dist)
                                     {
                                         closestID=idKnowsOrient[j];
                                         dist = r;
                                     }
                                 }
-                                
+
                                 OctantList[i]->SetOrient(OctantList[closestID]->
                                                         GetOrient());
                                 ct+=1;
@@ -451,14 +452,14 @@ namespace MeshUtils {
                                          (OctantList[i]->Y()-OctantList[isOrient2[j]]->Y())+
                                          (OctantList[i]->Z()-OctantList[isOrient2[j]]->Z())*
                                          (OctantList[i]->Z()-OctantList[isOrient2[j]]->Z()));
-                                    
+
                                     if(r < dist)
                                     {
                                         closestID=isOrient2[j];
                                         dist = r;
                                     }
                                 }
-                                
+
                                 int closestPoint;
                                 dist = 10000.0;
                                 for(int j = 0; j <
@@ -472,25 +473,25 @@ namespace MeshUtils {
                                          (OctantList[i]->Y()-m_cpList[CPID]->Y())+
                                          (OctantList[i]->Z()-m_cpList[CPID]->Z())*
                                          (OctantList[i]->Z()-m_cpList[CPID]->Z()));
-                                    
+
                                     if(r < dist)
                                     {
                                         closestPoint=j;
                                         dist = r;
                                     }
                                 }
-                                
+
                                 Array<OneD, NekDouble> r(3);
                                 int CPID = OctantList[closestID]->GetCPID(closestPoint);
                                 r[0] =OctantList[i]->X() - m_cpList[CPID]->X();
                                 r[1] =OctantList[i]->Y() - m_cpList[CPID]->Y();
                                 r[2] =OctantList[i]->Z() - m_cpList[CPID]->Z();
-                                
+
                                 Array<OneD, NekDouble> N(3);
                                 m_cpList[CPID]->GetNormal(N[0],N[1],N[2]);
-                                
+
                                 NekDouble dot = r[0]*N[0]+r[1]*N[1]+r[2]*N[2];
-                                
+
                                 if(dot <= 0.0)
                                 {
                                     OctantList[i]->SetOrient(3);
@@ -498,34 +499,34 @@ namespace MeshUtils {
                                     OctantList[i]->SetOrient(1);
                                 }
                                 ct+=1;
-                                
+
                             }
                         }
-                        
+
                     }
                     knownID.clear();
                 }
             }
-            
+
         }while(ct>0);
-        
+
     }
-    
+
     void Octree::SmoothSurfaceOctants()
     {
         int ct = 0;
-        
+
         do
         {
             ct=0;
-            
+
             for(int i = 0; i < OctantList.size(); i++)
             {
                 if(OctantList[i]->isLeaf() && OctantList[i]->isDeltaKnown())
                 {
                     vector<int> checkID;
                     vector<int> nList = OctantList[i]->GetNeighbourList();
-                    
+
                     for(int j = 0; j < nList.size(); j++)
                     {
                         if(OctantList[nList[j]]->isDeltaKnown()
@@ -536,7 +537,7 @@ namespace MeshUtils {
                             checkID.push_back(nList[j]);
                         }
                     }
-                    
+
                     //for each neighbour listed in check_id, figure out the smoothed delta, and asign the miminum of these to nodes[i].GetDelta()
                     if(checkID.size() > 0)
                     {
@@ -550,7 +551,7 @@ namespace MeshUtils {
                                  (OctantList[i]->Y()-OctantList[checkID[j]]->Y())+
                                  (OctantList[i]->Z()-OctantList[checkID[j]]->Z())*
                                  (OctantList[i]->Z()-OctantList[checkID[j]]->Z()));
-                            
+
                             if(0.074*r +
                                OctantList[checkID[j]]->GetDelta() < deltaSM)
                             {
@@ -564,10 +565,10 @@ namespace MeshUtils {
                     }
                 }
             }
-            
+
         }while(ct>0);
     }
-    
+
     NekDouble Octree::ddx(int i, int j)
     {
         NekDouble r = sqrt((OctantList[i]->X()-OctantList[j]->X())*
@@ -578,12 +579,12 @@ namespace MeshUtils {
                            (OctantList[i]->Z()-OctantList[j]->Z()));
         return abs(OctantList[i]->GetDelta()-OctantList[j]->GetDelta())/r;
     }
-    
+
     void Octree::SmoothOctants()
     {
         int ct=0;
         int imax=0;
-        
+
         do
         {
             ct=0;
@@ -593,7 +594,7 @@ namespace MeshUtils {
                 if(OctantList[j]->isLeaf())
                 {
                     vector<int> nList = OctantList[j]->GetNeighbourList();
-                    
+
                     for(int k = 0; k < nList.size(); k++)
                     {
                         if(OctantList[nList[k]]->GetLevel() -
@@ -608,11 +609,11 @@ namespace MeshUtils {
                     }
                     if(ct>0)
                         break;
-                    
+
                     nList.clear();
                 }
             }
-            
+
             int pos = 70*imax/OctantList.size();
             cout << "[";
             for (int k = 0; k < 70; ++k) {
@@ -622,17 +623,17 @@ namespace MeshUtils {
             }
             cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
             cout.flush();
-            
+
         }while(ct>0);
         cout <<endl;
     }
-    
+
     void Octree::SubDivideLevel(int parent)
     {
         OctantList[parent]->LeafFalse();
-        
+
         Array<OneD, int> children(8);
-        
+
         for(int i = 0; i < 8; i++)
         {
             float pmx,pmy,pmz;
@@ -676,7 +677,7 @@ namespace MeshUtils {
                     pmy=-1.0;
                 }
             }
-            
+
             OctantSharedPtr newOctant =
             MemoryManager<Octant>::AllocateSharedPtr
             (OctantList[parent]->X()+pmx*OctantList[parent]->DX()/2,
@@ -687,18 +688,18 @@ namespace MeshUtils {
              OctantList[parent]->DZ()/2,
              parent, OctantList[parent]->GetLevel()+1,
              m_cpList, OctantList[parent]->GetCPList());
-            
+
             OctantList.push_back(newOctant);
             children[i]=OctantList.size()-1;
         }
-        
+
         OctantList[parent]->SetChildren(children);
-        
+
         for(int i = 0; i < 8; i++)
         {
             OctantList[children[i]]->CreateNeighbourList(OctantList);
         }
-        
+
         //need to revaluate the neighbour list of all the neighbours of the parent
         vector<int> nList = OctantList[parent]->GetNeighbourList();
         for(int i = 0; i < nList.size(); i++)
@@ -707,13 +708,13 @@ namespace MeshUtils {
         }
         nList.clear();
     }
-    
-    
+
+
     void Octree::subdivide(int parent)
     {
         Array<OneD, int> children(8);
         //create 8 children for parent and check in turn.
-        
+
         for(int i = 0; i < 8; i++)
         {
             float pmx,pmy,pmz;
@@ -757,7 +758,7 @@ namespace MeshUtils {
                     pmy=-1.0;
                 }
             }
-            
+
             OctantSharedPtr newOctant =
             MemoryManager<Octant>::AllocateSharedPtr
             (OctantList[parent]->X()+pmx*OctantList[parent]->DX()/2,
@@ -768,10 +769,10 @@ namespace MeshUtils {
              OctantList[parent]->DZ()/2,
              parent, OctantList[parent]->GetLevel()+1,
              m_cpList, OctantList[parent]->GetCPList());
-            
+
             OctantList.push_back(newOctant);
             children[i]=OctantList.size()-1;
-            
+
             if(OctantList[children[i]]->Divide())
             {
                 if(OctantList[children[i]]->DX() > m_minDelta &&
@@ -782,14 +783,14 @@ namespace MeshUtils {
                     subdivide(children[i]);
                 }
             }
-            
+
         }
-        
+
         OctantList[parent]->SetChildren(children);
-        
+
     }
-    
-    
+
+
     void Octree::CompileCuravturePointList()
     {
         NekDouble MaxDim = 0.0;
@@ -799,23 +800,23 @@ namespace MeshUtils {
             MaxDim = BoundingBox[3]-BoundingBox[2];
         if(BoundingBox[5]-BoundingBox[4]>MaxDim)
             MaxDim = BoundingBox[5]-BoundingBox[4];
-        
+
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             Array<OneD, NekDouble> ParameterPlaneBounds;
             LibUtilities::CADSurfSharedPtr surf = m_cad->GetSurf(i);
             surf->GetBounds(ParameterPlaneBounds);
-            
+
             NekDouble du = (ParameterPlaneBounds[1]-
                             ParameterPlaneBounds[0])/(40-1);
             NekDouble dv = (ParameterPlaneBounds[3]-
                             ParameterPlaneBounds[2])/(40-1);
-            
+
             NekDouble DeltaU = 0.0;
             NekDouble DeltaV = 0.0;
-            
+
             Array<TwoD, Array<OneD, NekDouble> > samplepoints(40,40);
-            
+
             for(int j = 0; j < 40; j++)
             {
                 for(int k = 0; k < 40; k++)
@@ -825,7 +826,7 @@ namespace MeshUtils {
                     samplepoints[k][j] = surf->P(u,v);
                 }
             }
-            
+
             for(int j = 0; j < 40-1; j++)
             {
                 for(int k = 0; k < 40-1; k++)
@@ -854,14 +855,14 @@ namespace MeshUtils {
                                              samplepoints[k][j+1][2])*
                                             (samplepoints[k][j][2]-
                                              samplepoints[k][j+1][2]));
-                    
+
                     if(deltau > DeltaU)
                         DeltaU = deltau;
                     if(deltav > DeltaV)
                         DeltaV = deltav;
                 }
             }
-            
+
             int nu = ceil(DeltaU/m_minDelta)*40*1.5;
             int nv = ceil(DeltaV/m_minDelta)*40*1.5;
 
@@ -880,37 +881,37 @@ namespace MeshUtils {
                     if(k==nv-1)
                         v=ParameterPlaneBounds[3];
 
-                    
+
                     Array<OneD, NekDouble> N = surf->N(u,v);
-                    
+
                     if(N[0]==0 && N[1]==0 && N[2]==0)
                     {
                         continue;
                     }
-                    
+
                     Array<OneD, NekDouble> r = surf->D2(u,v);
-                    
+
                     NekDouble E = r[3]*r[3] + r[4]*r[4] + r[5]*r[5];
                     NekDouble F = r[3]*r[6] + r[4]*r[7] + r[5]*r[8];
                     NekDouble G = r[6]*r[6] + r[7]*r[7] + r[8]*r[8];
                     NekDouble e = N[0]*r[9] + N[1]*r[10] + N[2]*r[11];
                     NekDouble f = N[0]*r[15] + N[1]*r[16] + N[2]*r[17];
                     NekDouble g = N[0]*r[12] + N[1]*r[13] + N[2]*r[14];
-                    
+
                     if(E*G-F*F<1E-30)
                     {
                         continue;
                     }
-                    
+
                     NekDouble K, H;
-                    
+
                     K = (e*g-f*f)/(E*G-F*F);
                     H = 0.5*(e*G-2*f*F+g*E)/(E*G-F*F);
-                    
+
                     NekDouble kv[2];
                     kv[0] = abs(H + sqrt(H*H-K));
                     kv[1] = abs(H - sqrt(H*H-K));
-                    
+
                     if(kv[0] != 0 || kv[1] != 0)
                     {
                         CurvaturePointSharedPtr newCPoint =
@@ -918,7 +919,7 @@ namespace MeshUtils {
                         (r[0],r[1],r[2],
                          1.0/(kv[0] > kv[1] ? kv[0] : kv[1]),
                          N[0],N[1],N[2]);
-                        
+
                         m_cpList.push_back(newCPoint);
                     }else
                     {
@@ -931,12 +932,12 @@ namespace MeshUtils {
                 }
             }
         }
-        
+
         for(int i = 0; i < m_cpList.size(); i++)
         {
             m_cpList[i]->Process(m_minDelta,m_maxDelta,m_eps);
         }
     }
-    
+
 }
 }

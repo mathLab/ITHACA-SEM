@@ -95,21 +95,26 @@ namespace Utilities
         LibUtilities::CADSystemSharedPtr m_cad =
             MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(CADName);
 
-        cout << m_cad->GetName() << endl;
+        if(m_mesh->m_verbose)
+            cout << "Building mesh for: " << m_cad->GetName() << endl;
 
         ASSERTL0(m_cad->LoadCAD(),
                  "Failed to load CAD");
 
         if(m_mesh->m_verbose)
         {
-            cout << "min delta: " << m_minDelta << " max delta: " << m_maxDelta
-                 << " esp: " << m_eps << " order: " << m_order << endl;
+            cout << "With parameters:" << endl;
+            cout << "\tmin delta: " << m_minDelta << endl
+                 << "\tmax delta: " << m_maxDelta << endl
+                 << "\tesp: " << m_eps << endl
+                 << "\torder: " << m_order << endl;
             m_cad->Report();
         }
 
 
         MeshUtils::OctreeSharedPtr m_octree =
-            MemoryManager<MeshUtils::Octree>::AllocateSharedPtr(m_cad);
+            MemoryManager<MeshUtils::Octree>::AllocateSharedPtr(m_cad,
+                                    m_mesh->m_verbose);
 
         m_octree->Build(m_minDelta, m_maxDelta, m_eps);
 
@@ -160,7 +165,7 @@ namespace Utilities
             vector<NodeSharedPtr> localnode;
             for(int j = 0; j < 3; j++)
             {
-                if(Nodes[n[j]]->IsOnSurf(8))
+                if(Nodes[n[j]]->IsOnSurf(8) || Nodes[n[j]]->IsOnSurf(7) || Nodes[n[j]]->IsOnSurf(9))
                 {
                     add = true;
                 }

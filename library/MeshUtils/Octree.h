@@ -57,7 +57,8 @@ class Octree
 public:
     friend class MemoryManager<Octree>;
 
-    Octree(const LibUtilities::CADSystemSharedPtr &cad) : m_cad(cad)
+    Octree(const LibUtilities::CADSystemSharedPtr &cad,
+           const bool ver) : m_cad(cad), m_verbose(ver)
     {
     };
 
@@ -85,6 +86,7 @@ private:
     NekDouble m_eps;
 
     LibUtilities::CADSystemSharedPtr m_cad;
+    bool m_verbose;
     Array<OneD, NekDouble> BoundingBox;
     std::vector<CurvaturePointSharedPtr> m_cpList;
     std::vector<OctantSharedPtr> OctantList;

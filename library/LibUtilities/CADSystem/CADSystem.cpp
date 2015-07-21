@@ -52,9 +52,10 @@ namespace LibUtilities{
 
     void CADSystem::Report()
     {
-        cout << "CAD has: " << m_curves.size() << " curves." << endl;
-        cout << "CAD has: " << m_surfs.size() << " surfaces." << endl;
-        cout << "CAD Euler-Poincaré characteristic: " << m_epc << endl;
+        cout << endl << "CAD report:" << endl;
+        cout << "\tCAD has: " << m_curves.size() << " curves." << endl;
+        cout << "\tCAD has: " << m_surfs.size() << " surfaces." << endl;
+        cout << "\tCAD Euler-Poincaré characteristic: " << m_epc << endl;
     }
 
     void CADSystem::GetBoundingBox(Array<OneD, NekDouble>& out)

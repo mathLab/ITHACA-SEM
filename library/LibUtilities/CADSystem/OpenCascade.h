@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADCurve.h
+//  File: Opencascade.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,64 +29,30 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: occ headers.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADCURVE_H
-#define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADCURVE_H
+#ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_OCC_H
+#define NEKTAR_LIB_UTILITIES_CADSYSTEM_OCC_H
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <LibUtilities/CADSystem/OpenCascade.h>
-
-namespace Nektar {
-namespace LibUtilities {
-
-    /**
-	 * @brief class for CAD curves.
-	 *
-	 * This class wraps the opencascade BRepAdaptor_Curve class for use with
-     * nektar++
-	 */
-
-    class CADCurve
-    {
-    public:
-        friend class MemoryManager<CADCurve>;
-
-        /**
-		 * @brief Defualt constructor.
-		 */
-        CADCurve(int i, TopoDS_Shape in);
-
-        void Bounds(Array<OneD, NekDouble> &out);
-        NekDouble Length(NekDouble ti, NekDouble tf);
-        void P(NekDouble t, Array<OneD, NekDouble> &out);
-        NekDouble tAtArcLength(NekDouble s);
-        int GetID(){return ID;}
-        void SetAdjSurf(std::vector<int> i){adjSurfs=i;}
-        std::vector<int> GetAdjSurf(){return adjSurfs;}
-        void GetMinMax(gp_Pnt &start, gp_Pnt &end);
-
-    private:
-
-        int ID;
-        BRepAdaptor_Curve occCurve;
-        std::vector<int> adjSurfs;
-
-
-    };
-
-    typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
-
-
-}
-}
+#include <STEPControl_Reader.hxx>
+#include <IGESControl_Reader.hxx>
+#include <TColStd_HSequenceOfTransient.hxx>
+#include <TopoDS.hxx>
+#include <TopExp.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
+#include <BRepTools.hxx>
+#include <BRep_Tool.hxx>
+#include <gp_Trsf.hxx>
+#include <TopLoc_Location.hxx>
+#include <ShapeAnalysis.hxx>
+#include <ShapeAnalysis_Wire.hxx>
+#include <BRepTools_WireExplorer.hxx>
 
 #endif

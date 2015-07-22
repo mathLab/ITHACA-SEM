@@ -42,6 +42,9 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <Standard_Macro.hxx>
+
+#include <LibUtilities/CADSystem/OpenCascade.h>
 #include <LibUtilities/CADSystem/CADCurve.h>
 #include <LibUtilities/CADSystem/CADSurf.h>
 

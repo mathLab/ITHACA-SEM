@@ -325,6 +325,7 @@ IF(NEKTAR_USE_OCC)
 		./CADSystem/CADSystem.h
         ./CADSystem/CADCurve.h
         ./CADSystem/CADSurf.h
+        ./CADSystem/OpenCascade.h
 		)
 
 	SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})

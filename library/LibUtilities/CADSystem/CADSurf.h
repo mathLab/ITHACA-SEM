@@ -43,6 +43,8 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <LibUtilities/CADSystem/OpenCascade.h>
+
 namespace Nektar {
 namespace LibUtilities {
 

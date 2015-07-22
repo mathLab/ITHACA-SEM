@@ -76,7 +76,7 @@ IF(NEKTAR_USE_SCOTCH)
 ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
-    SET(CommunicationHeaders ${CommunicationHeaders} 
+    SET(CommunicationHeaders ${CommunicationHeaders}
         ./Communication/CommMpi.h)
     SET(CommunicationSources ${CommunicationSources}
         ./Communication/CommMpi.cpp)
@@ -84,12 +84,12 @@ ENDIF(NEKTAR_USE_MPI)
 
 SET(FFTHeaders
        ./FFT/NektarFFT.h
-)	
+)
 
 SET(FFTSources
        ./FFT/NektarFFT.cpp
 )
- 
+
 IF(NEKTAR_USE_FFTW)
     SET(FFTHeaders ${FFTHeaders} ./FFT/NekFFTW.h)
     SET(FFTSources ${FFTSources} ./FFT/NekFFTW.cpp)
@@ -141,18 +141,18 @@ SET(FoundationSources
         ./Foundations/NodalTriEvenlySpaced.cpp
 	./Foundations/NodalTriFekete.cpp
 	./Foundations/NodalUtil.cpp
-        ./Foundations/PhysGalerkinProject.cpp       
+        ./Foundations/PhysGalerkinProject.cpp
 	./Foundations/Points.cpp
 	./Foundations/PolyEPoints.cpp
 )
 
 SET(InterpreterHeaders
-	  ./Interpreter/AnalyticExpressionEvaluator.hpp   
-)       
+	  ./Interpreter/AnalyticExpressionEvaluator.hpp
+)
 
 SET(InterpreterSources
         ./Interpreter/AnalyticExpressionEvaluator.cpp
-)    
+)
 
 SET(KernelHeaders
 	./Kernel/kernel.h
@@ -160,7 +160,7 @@ SET(KernelHeaders
 
 SET(KernelSources
 	./Kernel/kernel.cpp
-)   
+)
 
 SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
@@ -236,16 +236,16 @@ ENDIF(NEKTAR_USING_SMV)
 
 SET(MemoryHeaders
 	./Memory/ThreadSpecificPool.hpp
-	./Memory/NekMemoryManager.hpp	
+	./Memory/NekMemoryManager.hpp
 )
 
 SET(MemorySources
 	./Memory/ThreadSpecificPool.cpp
-)    
+)
 
 SET(PolyLibHeaders
 	./Polylib/Polylib.h
-)	
+)
 
 SET(PolylibSources
 	./Polylib/Polylib.cpp
@@ -254,7 +254,7 @@ SET(PolylibSources
 SET(TimeIntegrationHeaders
         ./TimeIntegration/TimeIntegrationScheme.h
         ./TimeIntegration/TimeIntegrationWrapper.h
-) 
+)
 
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
@@ -312,7 +312,7 @@ SOURCE_GROUP("TimeIntegration Headers" FILES ${TimeIntegrationHeaders})
 SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
 
 SOURCE_GROUP("FFT Headers" FILES ${FFTHeaders})
-SOURCE_GROUP("FFT Sources" FILES ${FFTSources})  
+SOURCE_GROUP("FFT Sources" FILES ${FFTSources})
 
 IF(NEKTAR_USE_OCC)
 	SET(CADSystemSources
@@ -377,11 +377,15 @@ ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
-ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
+IF(NEKTAR_USE_OCC)
+    ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7 opencascade-6.8)
+ELSE()
+    ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
+ENDIF()
 
 
 ### Libraries needed specifically by LibUtilities ###
-### Static libraries do not need to be linked by 
+### Static libraries do not need to be linked by
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
@@ -396,7 +400,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 IF( NEKTAR_USE_FFTW )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIBRARY})
     ADD_DEPENDENCIES(LibUtilities fftw-3.2.2)
-    SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp 
+    SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp
         PROPERTY COMPILE_FLAGS "-I${FFTW_INCLUDE_DIR}")
 ENDIF( NEKTAR_USE_FFTW )
 

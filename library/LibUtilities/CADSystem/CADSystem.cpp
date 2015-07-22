@@ -33,13 +33,32 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <fstream>
 #include <string>
 #include <sstream>
+#include <limits>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include <STEPControl_Reader.hxx>
+#include <IGESControl_Reader.hxx>
+#include <TColStd_HSequenceOfTransient.hxx>
+#include <TopoDS.hxx>
+#include <TopExp.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
+#include <BRepTools.hxx>
+#include <BRep_Tool.hxx>
+#include <gp_Trsf.hxx>
+#include <TopLoc_Location.hxx>
+#include <BRepTools_WireExplorer.hxx>
+#include <ShapeAnalysis_Wire.hxx>
+
 #include <LibUtilities/CADSystem/CADSystem.h>
+
 
 using namespace std;
 namespace Nektar{
@@ -50,6 +69,9 @@ namespace LibUtilities{
         return m_name;
     }
 
+    /**
+	 * @brief Reports basic properties to screen.
+	 */
     void CADSystem::Report()
     {
         cout << endl << "CAD report:" << endl;
@@ -58,48 +80,68 @@ namespace LibUtilities{
         cout << "\tCAD Euler-Poincaré characteristic: " << m_epc << endl;
     }
 
+    /**
+	 * @brief Returns bounding box of the domain.
+	 *
+     * Gets the bounding box of the domain by considering the start and end
+     * points of each curve in the geometry
+     */
     void CADSystem::GetBoundingBox(Array<OneD, NekDouble>& out)
     {
-        out[0]=1000000.0;
-        out[1]=0.0;
-        out[2]=1000000.0;
-        out[3]=0.0;
-        out[4]=1000000.0;
-        out[5]=0.0;
+        out[0] = numeric_limits<double>::max();
+        out[1] = 0.0;
+        out[2] = numeric_limits<double>::max();
+        out[3] = 0.0;
+        out[4] = numeric_limits<double>::max();
+        out[5] = 0.0;
 
         for(int i = 1; i <= m_curves.size(); i++)
         {
             gp_Pnt start, end;
             CADCurveSharedPtr c = GetCurve(i);
             c->GetMinMax(start,end);
-            if(start.X()<out[0])
-                out[0]=start.X();
-            if(start.X()>out[1])
-                out[1]=start.X();
-            if(start.Y()<out[2])
-                out[2]=start.Y();
-            if(start.Y()>out[3])
-                out[3]=start.Y();
-            if(start.Z()<out[4])
-                out[4]=start.Z();
-            if(start.Z()>out[5])
-                out[5]=start.Z();
 
-            if(end.X()<out[0])
-                out[0]=end.X();
-            if(end.X()>out[1])
-                out[1]=end.X();
-            if(end.Y()<out[2])
-                out[2]=end.Y();
-            if(end.Y()>out[3])
-                out[3]=end.Y();
-            if(end.Z()<out[4])
-                out[4]=end.Z();
-            if(end.Z()>out[5])
-                out[5]=end.Z();
+            if(start.X() < out[0])
+                out[0] = start.X();
+
+            if(start.X() > out[1])
+                out[1] = start.X();
+
+            if(start.Y() < out[2])
+                out[2] = start.Y();
+
+            if(start.Y() > out[3])
+                out[3] = start.Y();
+
+            if(start.Z() < out[4])
+                out[4] = start.Z();
+
+            if(start.Z() > out[5])
+                out[5] = start.Z();
+
+            if(end.X() < out[0])
+                out[0] = end.X();
+
+            if(end.X() > out[1])
+                out[1] = end.X();
+
+            if(end.Y() < out[2])
+                out[2] = end.Y();
+
+            if(end.Y() > out[3])
+                out[3] = end.Y();
+
+            if(end.Z() < out[4])
+                out[4] = end.Z();
+
+            if(end.Z() > out[5])
+                out[5] = end.Z();
         }
     }
 
+    /**
+	 * @brief Initialises CAD and makes surface and curve maps.
+	 */
     bool CADSystem::LoadCAD()
     {
         if ( !boost::filesystem::exists( m_name.c_str() ) )
@@ -113,11 +155,12 @@ namespace LibUtilities{
 
         TopoDS_Shape shape;
 
-        if(ext.compare(".STEP") == 0 ||
-           ext.compare(".step") == 0 ||
-           ext.compare(".stp")  == 0 ||
-           ext.compare(".STP")  == 0 )
+        if(boost::iequals(ext,".STEP") == 0 ||
+           boost::iequals(ext,".step") == 0 ||
+           boost::iequals(ext,".stp")  == 0 ||
+           boost::iequals(ext,".STP")  == 0 )
         {
+            //takes step file and makes opencascade shape
             STEPControl_Reader reader;
             reader = STEPControl_Reader();
             reader.ReadFile(m_name.c_str());
@@ -129,11 +172,12 @@ namespace LibUtilities{
                 return false;
             }
         }
-        else if(ext.compare(".IGES") == 0 ||
-                ext.compare(".iges") == 0 ||
-                ext.compare(".igs")  == 0 ||
-                ext.compare(".IGS")  == 0 )
+        else if(boost::iequals(ext,".IGES") == 0 ||
+                boost::iequals(ext,".iges") == 0 ||
+                boost::iequals(ext,".igs")  == 0 ||
+                boost::iequals(ext,".IGS")  == 0 )
         {
+            //takes igs file and makes opencascade shape
             IGESControl_Reader reader;
             reader = IGESControl_Reader();
             reader.ReadFile(m_name.c_str());
@@ -150,6 +194,7 @@ namespace LibUtilities{
             return false;
         }
 
+        //from opencascade maps Calculates Euler-Poincar number
         TopTools_IndexedMapOfShape fc, vc, ec;
         TopExp::MapShapes(shape,TopAbs_FACE,fc);
         TopExp::MapShapes(shape,TopAbs_EDGE,ec);
@@ -161,6 +206,9 @@ namespace LibUtilities{
         TopTools_IndexedMapOfShape mapOfEdges;
         TopExp::MapShapes(shape,TopAbs_FACE,mapOfFaces);
 
+        //for all the faces of the geometry gets the local edges which bound
+        //it and if they are valid (!=7) adds them to an edge map
+        //this filters out the dummy edges which occ uses
         for(int i = 1; i <= mapOfFaces.Extent(); i++)
         {
             TopoDS_Shape face= mapOfFaces.FindKey(i);
@@ -185,19 +233,22 @@ namespace LibUtilities{
 
         map<int, vector<int> > adjsurfmap;
 
+        //adds edges to nektar type and map
         for(int i=1; i<=mapOfEdges.Extent(); i++)
         {
             TopoDS_Shape edge = mapOfEdges.FindKey(i);
             AddCurve(i, edge);
         }
 
-
-
+        //for all the faces gets all the wires(bounding loops) and
+        //investigates the loop,
+        //using this information on connectivity is made and edges are associated
+        //with surfaces
         for(int i = 1; i <= mapOfFaces.Extent(); i++)
         {
             vector<vector<pair<int,int> > > edges;
 
-            TopoDS_Shape face= mapOfFaces.FindKey(i);
+            TopoDS_Shape face = mapOfFaces.FindKey(i);
 
             TopTools_IndexedMapOfShape mapOfWires;
             TopExp::MapShapes(face,TopAbs_WIRE,mapOfWires);
@@ -211,13 +262,6 @@ namespace LibUtilities{
                 ShapeAnalysis_Wire wiretest(TopoDS::Wire(wire),
                                             TopoDS::Face(face),
                                             1E-6);
-
-                if(wiretest.CheckClosed(1E-6))
-                {
-                    cout << i << " " << j << endl;
-                    cout << "not closed" << endl;
-                    exit(-1);
-                }
 
                 BRepTools_WireExplorer exp;
 
@@ -246,8 +290,9 @@ namespace LibUtilities{
 
         }
 
-        for(map<int,vector<int> >::iterator it=adjsurfmap.begin();
-            it!=adjsurfmap.end(); it++)
+        //this checks that all edges are bound by two surfaces, sanity check
+        for(map<int,vector<int> >::iterator it = adjsurfmap.begin();
+            it != adjsurfmap.end(); it++)
         {
             ASSERTL0(it->second.size() == 2, "no three curve surfaces");
             m_curves[it->first]->SetAdjSurf(it->second);
@@ -258,17 +303,15 @@ namespace LibUtilities{
 
     void CADSystem::AddCurve(int i, TopoDS_Shape in)
     {
-        CADCurveSharedPtr newCurve =
-            MemoryManager<CADCurve>::
-                AllocateSharedPtr(i,in);
+        CADCurveSharedPtr newCurve = MemoryManager<CADCurve>::
+                                                AllocateSharedPtr(i,in);
         m_curves[i] = newCurve;
     }
     void CADSystem::AddSurf(int i, TopoDS_Shape in,
                             std::vector<std::vector<std::pair<int,int> > > ein)
     {
-        CADSurfSharedPtr newSurf =
-            MemoryManager<CADSurf>::
-                AllocateSharedPtr(i,in,ein);
+        CADSurfSharedPtr newSurf = MemoryManager<CADSurf>::
+                                                AllocateSharedPtr(i,in,ein);
         m_surfs[i] = newSurf;
     }
 

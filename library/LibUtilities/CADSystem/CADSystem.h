@@ -37,52 +37,32 @@
 #ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSYSTEM_H
 #define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSYSTEM_H
 
-#include <string>
-
 #include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/CADSystem/CADCurve.h>
-#include <LibUtilities/CADSystem/CADSurf.h>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <STEPControl_Reader.hxx>
-#include <IGESControl_Reader.hxx>
-
-#include <TColStd_HSequenceOfTransient.hxx>
-
-#include <TopoDS.hxx>
-#include <TopExp.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepAdaptor_Surface.hxx>
-
-#include <GeomAPI_ProjectPointOnSurf.hxx>
-
-#include <BRepTools.hxx>
-#include <BRep_Tool.hxx>
-
-#include <gp_Trsf.hxx>
-
-#include <TopLoc_Location.hxx>
-
-
-#include <BRepTools_WireExplorer.hxx>
-#include <ShapeAnalysis_Wire.hxx>
+#include <LibUtilities/CADSystem/CADCurve.h>
+#include <LibUtilities/CADSystem/CADSurf.h>
 
 namespace Nektar {
 namespace LibUtilities {
 
-
+	/**
+	 * @brief Base class for CAD interface system.
+	 *
+	 * A class which can load and interact with cad for Nektar++ using opencascade
+	 * This class contains maps to subclasses surface and curves
+	 */
 
 	class CADSystem
 	{
 	public:
 	    friend class MemoryManager<CADSystem>;
+
+		/**
+		 * @brief Defualt constructor.
+		 */
 
 	    LIB_UTILITIES_EXPORT CADSystem(const std::string &name) : m_name(name)
 	    {
@@ -95,7 +75,9 @@ namespace LibUtilities {
         LIB_UTILITIES_EXPORT int GetNumSurf(){return m_surfs.size();}
         LIB_UTILITIES_EXPORT int GetNumCurve(){return m_curves.size();}
 
-
+		/**
+		 * @brief Gets curve type from map.
+		 */
         LIB_UTILITIES_EXPORT const CADCurveSharedPtr GetCurve(int i)
         {
             std::map<int,CADCurveSharedPtr>::iterator
@@ -104,6 +86,9 @@ namespace LibUtilities {
 
             return search->second;
         }
+		/**
+		 * @brief Gets suface from map.
+		 */
         LIB_UTILITIES_EXPORT CADSurfSharedPtr GetSurf(int i)
         {
             std::map<int,CADSurfSharedPtr>::iterator

@@ -31,4 +31,9 @@ SET(AliasingSources  Aliasing.cpp
        )
 
 
-ADD_SOLVER_EXECUTABLE(Aliasing solvers ${AliasingSources})
+ADD_SOLVER_EXECUTABLE(Fld2DTo2D5            solvers Fld2DTo2D5.cpp)
+ADD_SOLVER_EXECUTABLE(FldAddFalknerSkanBL   solvers FldAddFalknerSkanBL.cpp)
+ADD_SOLVER_EXECUTABLE(AddModeTo2DFld        solvers AddModeTo2DFld.cpp)
+ADD_SOLVER_EXECUTABLE(ExtractMeanModeFromHomo1DFld  
+                                    solvers ExtractMeanModeFromHomo1DFld.cpp)
+ADD_SOLVER_EXECUTABLE(Aliasing              solvers ${AliasingSources})

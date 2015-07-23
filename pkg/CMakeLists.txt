@@ -14,8 +14,9 @@ list(APPEND nektar++-adr-solver_BINS ADRSolver)
 list(APPEND nektar++-diffusion-solver_BINS DiffusionSolver 
                                            DiffusionSolverTimeInt)
 list(APPEND nektar++-shallowwater-solver_BINS ShallowWaterSolver)
-list(APPEND nektar++-utilities_BINS MeshConvert FieldConvert FldToVtk
-    FldToTecplot XmlToVtk XmlToTecplot ProbeFld)
+list(APPEND nektar++-pulsewave-solver_BINS PulseWaveSolver)
+list(APPEND nektar++-utilities_BINS MeshConvert FieldConvert
+    XmlToVtk XmlToTecplot ProbeFld)
 list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
     Helmholtz3DHomo1D Helmholtz3DHomo2D
     StdProject0D StdProject1D StdProject2D StdProject3D 
@@ -31,6 +32,7 @@ list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver 
                           DiffusionSolverTimeInt ShallowWaterSolver
+                          PulseWaveSolver
                           ${nektar++-utilities_BINS}
                           ${nektar++-demos_BINS})
 
@@ -160,6 +162,16 @@ if (NEKTAR_BUILD_LIBRARY)
             INSTALL_BINS "${nektar++-compressibleflow-solver_BINS}")
     endif (NEKTAR_SOLVER_COMPRESSIBLE_FLOW)
 
+    if (NEKTAR_SOLVER_PULSEWAVE)
+        add_deb_package(
+            NAME nektar++-pulsewave-solver
+            SUMMARY "Nektar++ pulse wave solver"
+            DESCRIPTION "
+ Models pulse wave propagation through a 1-dimensional network of arteries."
+            DEPENDS "${NEK_DEP}"
+            INSTALL_BINS "${nektar++-pulsewave-solver_BINS}")
+    endif (NEKTAR_SOLVER_PULSEWAVE)
+
     if (NEKTAR_BUILD_UTILITIES)
         add_deb_package(
             NAME nektar++-utilities
@@ -278,6 +290,15 @@ if (NEKTAR_BUILD_LIBRARY)
              equations."
             INSTALL_BINS "${nektar++-compressibleflow-solver_BINS}")
     endif (NEKTAR_SOLVER_COMPRESSIBLE_FLOW)
+
+    if (NEKTAR_SOLVER_PULSEWAVE)
+        add_rpm_package(
+            NAME nektar++-pulsewave-solver
+            SUMMARY "Nektar++ pulse wave solver"
+            DESCRIPTION
+            "Models 1-dimensional pulse wave propagation through an arterial network."
+            INSTALL_BINS "${nektar++-pulsewave-solver_BINS}")
+    endif (NEKTAR_SOLVER_PULSEWAVE)
 
     if (NEKTAR_BUILD_UTILITIES)    
         add_rpm_package(

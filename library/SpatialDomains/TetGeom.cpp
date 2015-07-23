@@ -156,6 +156,23 @@ namespace Nektar
             {
                 return true;
             }
+            
+            // If out of range clamp locCoord to be within [-1,1]^3
+            // since any larger value will be very oscillatory if
+            // called by 'returnNearestElmt' option in
+            // ExpList::GetExpIndex
+            for(int i = 0; i < 3; ++i)
+            {
+                if(locCoord[i] <-(1+tol))
+                {
+                    locCoord[i] = -(1+tol);
+                }
+
+                if(locCoord[i] > (1+tol))
+                {
+                    locCoord[i] = 1+tol;
+                }
+            }
 
             return false;
         }
@@ -166,7 +183,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
         {
-            NekDouble resid = 0.0;
+            NekDouble ptdist = 1e6;
 
             // calculate local coordinates (eta) for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
@@ -190,15 +207,21 @@ namespace Nektar
 
 
                 // Barycentric coordinates (relative volume)
-                NekDouble V = e30.dot(cp1020); // Tet Volume = {(e30)dot(e10)x(e20)}/6
-                NekDouble beta  = er0.dot(cp2030) / V; // volume1 = {(er0)dot(e20)x(e30)}/6
-                NekDouble gamma = er0.dot(cp3010) / V; // volume1 = {(er0)dot(e30)x(e10)}/6
-                NekDouble delta = er0.dot(cp1020) / V; // volume1 = {(er0)dot(e10)x(e20)}/6
+                NekDouble V = e30.dot(cp1020); //Tet Volume={(e30)dot(e10)x(e20)}/6
+                NekDouble beta  = er0.dot(cp2030)/V; //volume1={(er0)dot(e20)x(e30)}/6
+                NekDouble gamma = er0.dot(cp3010)/V; //volume1={(er0)dot(e30)x(e10)}/6
+                NekDouble delta = er0.dot(cp1020)/V; //volume1={(er0)dot(e10)x(e20)}/6
 
                 // Make tet bigger
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
+
+                // Set ptdist to distance to nearest vertex 
+                for(int i = 0; i < 4; ++i)
+                {
+                    ptdist = min(ptdist,r.dist(*m_verts[i]));
+                }
             }
             else
             {
@@ -227,6 +250,9 @@ namespace Nektar
                           
                 int min_i = Vmath::Imin(npts,tmp1,1);
                 
+                // distance from coordinate to nearest point for return value. 
+                ptdist = sqrt(tmp1[min_i]);
+
                 // Get collapsed coordinate
                 int qa = za.num_elements(), qb = zb.num_elements();
                 Lcoords[2] = zc[min_i/(qa*qb)];
@@ -239,9 +265,10 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(-Lcoords[1]-Lcoords[2])/2 -1.0;
 
                 // Perform newton iteration to find local coordinates 
+                NekDouble resid = 0.0;
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
             }
-            return resid;
+            return ptdist;
         }
         
         int TetGeom::v_GetNumVerts() const

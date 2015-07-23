@@ -612,7 +612,10 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, PlanesIDs);
+            int NumHomoStrip;
+            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
+ 
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, NumHomoStrip, HomoBasis, HomoLen, PlanesIDs);
             
             return returnval;
         }
@@ -632,8 +635,11 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
+            int NumHomoStrip;
+            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
+
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen,PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, NumHomoStrip, HomoBasis,HomoLen,PlanesIDs);
         }
 
 
@@ -1024,13 +1030,13 @@ namespace Nektar
                     //HalfMode
                     if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
                     {
-                        beta = 2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        beta = 2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
             
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
                     else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                     {
-                        beta = -2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        beta = -2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
             
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }

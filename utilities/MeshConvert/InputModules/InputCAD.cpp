@@ -127,24 +127,20 @@ namespace Utilities
 
         m_surfacemeshing->HOSurf();
 
-        map<int, MeshUtils::MeshTriSharedPtr> Tris;
-        map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
-        map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
-        m_surfacemeshing->Get(Nodes, Edges, Tris);
-
         MeshUtils::TetMeshSharedPtr m_tet =
             MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(
-                0, m_mesh->m_verbose, m_octree);
+                0, m_mesh->m_verbose, m_octree, m_surfacemeshing);
 
-        m_mesh->m_expDim = 2;
+        m_mesh->m_expDim = 3;
         m_mesh->m_spaceDim = 3;
         m_mesh->m_order = m_order;
 
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
+        m_mesh->m_fields.push_back("w");
         m_mesh->m_fields.push_back("p");
 
-        map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
+        /*map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
         map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
         map<int, NodeSharedPtr> allnodes;
 
@@ -199,7 +195,7 @@ namespace Utilities
                                        conf,localnode,tags);
             m_mesh->m_element[2].push_back(E);
 
-        }
+        }*/
 
         /*for(int i = 1; i <=m_cad->GetNumSurf(); i++)
         {

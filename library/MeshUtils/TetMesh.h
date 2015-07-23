@@ -53,8 +53,10 @@ namespace MeshUtils{
 
         TetMesh(const int id,
                 const bool verb,
-                const OctreeSharedPtr &oct)
-                    : m_id(id), m_verbose(verb), m_octree(oct)
+                const OctreeSharedPtr &oct,
+                const SurfaceMeshingSharedPtr &sm)
+                    : m_id(id), m_verbose(verb), m_octree(oct),
+                      m_surfacemesh(sm)
         {
         };
 
@@ -63,6 +65,7 @@ namespace MeshUtils{
         int m_id;
         bool m_verbose;
         OctreeSharedPtr m_octree;
+        SurfaceMeshingSharedPtr m_surfacemesh;
     };
 
     typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

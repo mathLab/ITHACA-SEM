@@ -135,6 +135,7 @@ namespace MeshUtils {
             e1 = Nodes[n1]->EdgeInCommon(Nodes[n2]);
             e2 = Nodes[n2]->EdgeInCommon(Nodes[n3]);
             e3 = Nodes[n3]->EdgeInCommon(Nodes[n1]);
+            ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
 
             Edges[e1]->SetTri(Tris.size());
             Edges[e2]->SetTri(Tris.size());

@@ -139,6 +139,32 @@ namespace MeshUtils {
                         (m_z-loc[2])*(m_z-loc[2]));
         }
 
+        NekDouble Angle(const MeshNodeSharedPtr &a, const MeshNodeSharedPtr &b)
+        {
+            Array<OneD,NekDouble> la = a->GetLoc();
+            Array<OneD,NekDouble> lb = b->GetLoc();
+            Array<OneD,NekDouble> va(3),vb(3);
+            va[0] = la[0] - m_x;
+            va[1] = la[1] - m_y;
+            va[2] = la[2] - m_z;
+            vb[0] = lb[0] - m_x;
+            vb[1] = lb[1] - m_y;
+            vb[2] = lb[2] - m_z;
+
+            NekDouble ca = va[0]*vb[0] + va[1]*vb[1] + va[2]*vb[2];
+            ca /= sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
+            ca /= sqrt(vb[0]*vb[0] + vb[1]*vb[1] + vb[2]*vb[2]);
+
+            if(ca < 0)
+            {
+                return 3.142 + acos(ca);
+            }
+            else
+            {
+                return acos(ca);
+            }
+        }
+
         int EdgeInCommon(const MeshNodeSharedPtr &n)
         {
             std::vector<int> ne = n->GetEdges();
@@ -170,12 +196,31 @@ namespace MeshUtils {
         void RemoveEdge(int e)
         {
             std::vector<int> tmp = Edges;
+            int tmps = Edges.size();
             Edges.clear();
             for(int i = 0; i < tmp.size(); i++)
             {
                 if(tmp[i] != e)
+                {
                     Edges.push_back(tmp[i]);
+                }
             }
+            ASSERTL0(tmps - Edges.size() == 1,"failed to remove edges");
+        }
+
+        void RemoveTri(int t)
+        {
+            std::vector<int> tmp = Tris;
+            int tmps = Tris.size();
+            Tris.clear();
+            for(int i = 0; i < tmp.size(); i++)
+            {
+                if(tmp[i] != t)
+                {
+                    Tris.push_back(tmp[i]);
+                }
+            }
+            ASSERTL0(tmps - Tris.size() == 1,"failed to remove tris");
         }
 
         void SetTri(int t)

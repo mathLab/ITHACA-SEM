@@ -173,7 +173,7 @@ namespace MeshUtils {
 
     void SurfaceMeshing::Optimise()
     {
-        for(int q = 0; q <1; q++)
+        for(int q = 0; q <2; q++)
         {
             map<int, MeshEdgeSharedPtr>::iterator it;
             for(it = Edges.begin(); it != Edges.end(); it++)
@@ -185,6 +185,20 @@ namespace MeshUtils {
                 ASSERTL0(t.size() == 2, "each edge should have two tri");
                 Array<OneD, int> n = it->second->GetN();
                 Array<OneD, int> nt = Tris[t[0]]->GetN();
+                int nodecheck = 0;
+                for(int i = 0; i < 3; i++)
+                {
+                    for(int j = 0; j < 2; j++)
+                    {
+                        if(n[j] == nt[i])
+                        {
+                            nodecheck++;
+                        }
+                    }
+                }
+                cout << endl << q << endl << n[0] << " " << n[1] << endl;
+                cout << nt[0] << " " << nt[1] << " " << nt[2] <<  endl;
+                ASSERTL0(nodecheck == 2, "edge and tri should have 2 n in commom");
 
                 int A,B,C,D;
                 if(nt[0] != n[0] && nt[0] != n[1])
@@ -207,6 +221,18 @@ namespace MeshUtils {
                 }
 
                 nt = Tris[t[1]]->GetN();
+                nodecheck = 0;
+                for(int i = 0; i < 3; i++)
+                {
+                    for(int j = 0; j < 2; j++)
+                    {
+                        if(n[j] == nt[i])
+                        {
+                            nodecheck++;
+                        }
+                    }
+                }
+                ASSERTL0(nodecheck == 2, "edge and tri should have 2 n in commom");
 
                 if(nt[0] != n[0] && nt[0] != n[1])
                 {
@@ -276,19 +302,137 @@ namespace MeshUtils {
                     Nodes[D]->SetEdge(it->first);
                     Nodes[A]->RemoveEdge(it->first);
                     Nodes[B]->RemoveEdge(it->first);
+                    Nodes[C]->SetTri(t[1]);
+                    Nodes[B]->RemoveTri(t[1]);
+                    Nodes[D]->SetTri(t[0]);
+                    Nodes[A]->RemoveTri(t[0]);
+
+                    int e1, e2, e3;
+                    e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
+                    e2 = Nodes[B]->EdgeInCommon(Nodes[D]);
+                    e3 = it->first;
+                    ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
                     Tris[t[0]]->Swap(C,B,D);
-                    Tris[t[0]]->ResetEdges(Nodes[C]->EdgeInCommon(Nodes[B]),
-                                           Nodes[B]->EdgeInCommon(Nodes[D]),
-                                           Nodes[D]->EdgeInCommon(Nodes[C]));
+                    Tris[t[0]]->ResetEdges(e1, e2, e3);
+
                     Tris[t[1]]->Swap(C,D,A);
-                    Tris[t[1]]->ResetEdges(Nodes[C]->EdgeInCommon(Nodes[D]),
-                                           Nodes[D]->EdgeInCommon(Nodes[A]),
-                                           Nodes[A]->EdgeInCommon(Nodes[C]));
+                    e1 = it->first;
+                    e2 = Nodes[D]->EdgeInCommon(Nodes[A]);
+                    e3 = Nodes[A]->EdgeInCommon(Nodes[C]);
+                    ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
+                    Tris[t[1]]->ResetEdges(e1, e2 ,e3);
+
 
                 }
             }
         }
 
+        /*for(int q = 0; q <1; q++)
+        {
+            map<int, MeshEdgeSharedPtr>::iterator it;
+            for(it = Edges.begin(); it != Edges.end(); it++)
+            {
+                if(it->second->GetCurve() != -1)
+                    continue;
+
+                vector<int> t = it->second->GetTri();
+                ASSERTL0(t.size() == 2, "each edge should have two tri");
+                Array<OneD, int> n = it->second->GetN();
+                Array<OneD, int> nt = Tris[t[0]]->GetN();
+
+                int A,B,C,D;
+                if(nt[0] != n[0] && nt[0] != n[1])
+                {
+                    C = nt[0];
+                    B = nt[1];
+                    A = nt[2];
+                }
+                else if(nt[1] != n[0] && nt[1] != n[1])
+                {
+                    C = nt[1];
+                    B = nt[2];
+                    A = nt[0];
+                }
+                else if(nt[2] != n[0] && nt[2] != n[1])
+                {
+                    C = nt[2];
+                    B = nt[0];
+                    A = nt[1];
+                }
+
+                nt = Tris[t[1]]->GetN();
+
+                if(nt[0] != n[0] && nt[0] != n[1])
+                {
+                    D = nt[0];
+                }
+                else if(nt[1] != n[0] && nt[1] != n[1])
+                {
+                    D = nt[1];
+                }
+                else if(nt[2] != n[0] && nt[2] != n[1])
+                {
+                    D = nt[2];
+                }
+
+                //determine signed area of alternate config
+                Array<OneD, NekDouble> ai,bi,ci,di;
+                ai = Nodes[A]->GetS(it->second->GetSurf());
+                bi = Nodes[B]->GetS(it->second->GetSurf());
+                ci = Nodes[C]->GetS(it->second->GetSurf());
+                di = Nodes[D]->GetS(it->second->GetSurf());
+
+                NekDouble CDA, CBD;
+
+                CDA = (ci[0]*di[1] + ci[1]*ai[0] + di[0]*ai[1]) -
+                      (ai[0]*di[1] + ai[1]*ci[0] + di[0]*ci[1]);
+
+                CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
+                      (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
+
+                if(CDA < 0.0 || CBD < 0.0)
+                    continue;
+
+                NekDouble minangleb = Nodes[C]->Angle(Nodes[A],Nodes[B]);
+                minangleb = min(minangleb,Nodes[B]->Angle(Nodes[C],Nodes[A]));
+                minangleb = min(minangleb,Nodes[A]->Angle(Nodes[B],Nodes[C]));
+
+                minangleb = min(minangleb,Nodes[B]->Angle(Nodes[A],Nodes[D]));
+                minangleb = min(minangleb,Nodes[D]->Angle(Nodes[B],Nodes[A]));
+                minangleb = min(minangleb,Nodes[A]->Angle(Nodes[D],Nodes[B]));
+
+                NekDouble minanglea = Nodes[C]->Angle(Nodes[D],Nodes[B]);
+                minanglea = min(minanglea,Nodes[B]->Angle(Nodes[C],Nodes[D]));
+                minanglea = min(minanglea,Nodes[D]->Angle(Nodes[B],Nodes[C]));
+
+                minanglea = min(minanglea,Nodes[C]->Angle(Nodes[A],Nodes[D]));
+                minanglea = min(minanglea,Nodes[D]->Angle(Nodes[C],Nodes[A]));
+                minanglea = min(minanglea,Nodes[A]->Angle(Nodes[D],Nodes[C]));
+
+                if(minanglea > minangleb)
+                {
+                    Edges[it->first]->Swap(C,D);
+                    Nodes[C]->SetEdge(it->first);
+                    Nodes[D]->SetEdge(it->first);
+                    Nodes[A]->RemoveEdge(it->first);
+                    Nodes[B]->RemoveEdge(it->first);
+                    int e1, e2, e3;
+                    e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
+                    e2 = Nodes[B]->EdgeInCommon(Nodes[D]);
+                    e3 = Nodes[D]->EdgeInCommon(Nodes[C]);
+                    ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
+                    Tris[t[0]]->Swap(C,B,D);
+                    Tris[t[0]]->ResetEdges(e1, e2, e3);
+                    Tris[t[1]]->Swap(C,D,A);
+                    e1 = Nodes[C]->EdgeInCommon(Nodes[D]);
+                    e2 = Nodes[D]->EdgeInCommon(Nodes[A]);
+                    e3 = Nodes[A]->EdgeInCommon(Nodes[C]);
+                    ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
+                    Tris[t[1]]->ResetEdges(e1, e2 ,e3);
+
+                }
+            }
+        }*/
 
         for(int q = 0; q < 4; q++)
         {

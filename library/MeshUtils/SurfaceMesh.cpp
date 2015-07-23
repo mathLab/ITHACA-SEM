@@ -98,28 +98,6 @@ namespace MeshUtils {
                     "\tPoints: " << nump << endl <<
                     "\tTriangles: " << numtri << endl;
 
-        int numedges;
-        Array<OneD, Array<OneD, int> > edgelist;
-        Array<OneD, Array<OneD, int> > neigh;
-
-        pplanemesh->GetEdges(edgelist,numedges);
-
-        for(int i = 0; i < numedges; i++)
-        {
-            int eic = Nodes[edgelist[i][0]]->EdgeInCommon(Nodes[edgelist[i][1]]);
-            if(eic != -1)
-                continue;
-
-            MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
-                Edges.size(),edgelist[i][0],edgelist[i][1]);
-            e->SetSurf(m_id);
-            Nodes[edgelist[i][0]]->SetEdge(Edges.size());
-            Nodes[edgelist[i][1]]->SetEdge(Edges.size());
-            Edges[Edges.size()] = e;
-        }
-
-        pplanemesh->GetNeighbour(neigh);
-
         for(int i = 0; i < numtri; i++)
         {
             int n1,n2,n3;
@@ -135,7 +113,36 @@ namespace MeshUtils {
             e1 = Nodes[n1]->EdgeInCommon(Nodes[n2]);
             e2 = Nodes[n2]->EdgeInCommon(Nodes[n3]);
             e3 = Nodes[n3]->EdgeInCommon(Nodes[n1]);
-            ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
+            if(e1 == -1)
+            {
+                MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
+                    Edges.size(),n1,n2);
+                e->SetSurf(m_id);
+                Nodes[n1]->SetEdge(Edges.size());
+                Nodes[n2]->SetEdge(Edges.size());
+                e1 = Edges.size();
+                Edges[Edges.size()] = e;
+            }
+            if(e2 == -1)
+            {
+                MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
+                    Edges.size(),n2,n3);
+                e->SetSurf(m_id);
+                Nodes[n2]->SetEdge(Edges.size());
+                Nodes[n3]->SetEdge(Edges.size());
+                e2 = Edges.size();
+                Edges[Edges.size()] = e;
+            }
+            if(e3 == -1)
+            {
+                MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
+                    Edges.size(),n3,n1);
+                e->SetSurf(m_id);
+                Nodes[n3]->SetEdge(Edges.size());
+                Nodes[n1]->SetEdge(Edges.size());
+                e3 = Edges.size();
+                Edges[Edges.size()] = e;
+            }
 
             Edges[e1]->SetTri(Tris.size());
             Edges[e2]->SetTri(Tris.size());

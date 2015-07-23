@@ -196,8 +196,6 @@ namespace MeshUtils {
                         }
                     }
                 }
-                cout << endl << q << endl << n[0] << " " << n[1] << endl;
-                cout << nt[0] << " " << nt[1] << " " << nt[2] <<  endl;
                 ASSERTL0(nodecheck == 2, "edge and tri should have 2 n in commom");
 
                 int A,B,C,D;
@@ -307,9 +305,12 @@ namespace MeshUtils {
                     Nodes[D]->SetTri(t[0]);
                     Nodes[A]->RemoveTri(t[0]);
 
+
                     int e1, e2, e3;
                     e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
                     e2 = Nodes[B]->EdgeInCommon(Nodes[D]);
+                    Edges[e2]->RemoveTri(t[1]);
+                    Edges[e2]->SetTri(t[0]);
                     e3 = it->first;
                     ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
                     Tris[t[0]]->Swap(C,B,D);
@@ -319,6 +320,8 @@ namespace MeshUtils {
                     e1 = it->first;
                     e2 = Nodes[D]->EdgeInCommon(Nodes[A]);
                     e3 = Nodes[A]->EdgeInCommon(Nodes[C]);
+                    Edges[e3]->RemoveTri(t[0]);
+                    Edges[e3]->SetTri(t[1]);
                     ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
                     Tris[t[1]]->ResetEdges(e1, e2 ,e3);
 
@@ -327,7 +330,7 @@ namespace MeshUtils {
             }
         }
 
-        /*for(int q = 0; q <1; q++)
+        for(int q = 0; q <2; q++)
         {
             map<int, MeshEdgeSharedPtr>::iterator it;
             for(it = Edges.begin(); it != Edges.end(); it++)
@@ -416,23 +419,34 @@ namespace MeshUtils {
                     Nodes[D]->SetEdge(it->first);
                     Nodes[A]->RemoveEdge(it->first);
                     Nodes[B]->RemoveEdge(it->first);
+                    Nodes[C]->SetTri(t[1]);
+                    Nodes[B]->RemoveTri(t[1]);
+                    Nodes[D]->SetTri(t[0]);
+                    Nodes[A]->RemoveTri(t[0]);
+
+
                     int e1, e2, e3;
                     e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
                     e2 = Nodes[B]->EdgeInCommon(Nodes[D]);
-                    e3 = Nodes[D]->EdgeInCommon(Nodes[C]);
+                    Edges[e2]->RemoveTri(t[1]);
+                    Edges[e2]->SetTri(t[0]);
+                    e3 = it->first;
                     ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
                     Tris[t[0]]->Swap(C,B,D);
                     Tris[t[0]]->ResetEdges(e1, e2, e3);
+
                     Tris[t[1]]->Swap(C,D,A);
-                    e1 = Nodes[C]->EdgeInCommon(Nodes[D]);
+                    e1 = it->first;
                     e2 = Nodes[D]->EdgeInCommon(Nodes[A]);
                     e3 = Nodes[A]->EdgeInCommon(Nodes[C]);
+                    Edges[e3]->RemoveTri(t[0]);
+                    Edges[e3]->SetTri(t[1]);
                     ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
                     Tris[t[1]]->ResetEdges(e1, e2 ,e3);
 
                 }
             }
-        }*/
+        }
 
         for(int q = 0; q < 4; q++)
         {

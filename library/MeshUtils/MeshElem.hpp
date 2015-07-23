@@ -314,6 +314,21 @@ namespace MeshUtils {
             tris.push_back(i);
         }
 
+        void RemoveTri(int t)
+        {
+            std::vector<int> tmp = tris;
+            int tmps = tris.size();
+            tris.clear();
+            for(int i = 0; i < tmp.size(); i++)
+            {
+                if(tmp[i] != t)
+                {
+                    tris.push_back(tmp[i]);
+                }
+            }
+            ASSERTL0(tmps - tris.size() == 1,"failed to remove tris");
+        }
+
         std::vector<int> GetTri(){return tris;}
 
         void SetHONodes(std::vector<int> n)

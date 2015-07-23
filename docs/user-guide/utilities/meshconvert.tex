@@ -496,6 +496,25 @@ To extract a surface use the command:
 
 where the integers are surface IDs to be extracted.
 
+\subsubsection{Extracting interface between tetrahedra and prismatic elements}
+
+When the mesh is three-dimensional and comprised of a prismatic boundary layer
+with tetrahedra in the interior of the domain, this module extracts the
+prismatic elements only, and constructs a boundary region for the interface
+between the tetrahedra and prisms. This is useful in, for example, the study of
+aortic flows, where the prismatic boundary layer can be extracted and refined to
+study unsteady advection-diffusion problems on a more refined grid inside the
+boundary layer.
+
+To use this module you therefore use the command:
+
+\begin{lstlisting}[style=BashInputStyle]
+  MeshConvert -m extracttetprisminterface input.xml output.xml
+\end{lstlisting}
+
+There are no configuration options for this module, as it is highly specific to
+a certain class of meshes.
+
 \subsubsection{Boundary identification}
 
 Some mesh formats lack the ability to identify boundaries of the domain they

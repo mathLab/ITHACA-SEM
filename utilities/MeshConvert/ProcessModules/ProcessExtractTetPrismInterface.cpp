@@ -29,7 +29,8 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Extract 
+//  Description: Extract the interface between prismatic and tetrahedral
+//  elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,31 +47,41 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessExtractTetPrismInterface::className = 
+        ModuleKey ProcessExtractTetPrismInterface::className =
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "extracttetprism"), ProcessExtractTetPrismInterface::create,
-                "Process elements to extract the faces between tets and prisms.");
+                ModuleKey(eProcessModule, "extracttetprism"),
+                ProcessExtractTetPrismInterface::create,
+                "Process elements to extract the faces between "
+                "tets and prisms.");
 
-        ProcessExtractTetPrismInterface::ProcessExtractTetPrismInterface(MeshSharedPtr m) : ProcessModule(m)
+        ProcessExtractTetPrismInterface::ProcessExtractTetPrismInterface(
+            MeshSharedPtr m) : ProcessModule(m)
         {
         }
-        
+
         ProcessExtractTetPrismInterface::~ProcessExtractTetPrismInterface()
         {
         }
-        
+
         void ProcessExtractTetPrismInterface::Process()
         {
             if (m_mesh->m_verbose)
             {
-                cout << "ProcessExtractTetPrismInterface: Extracting interface... " << endl;
+                cout << "ProcessExtractTetPrismInterface: Extracting tet-prism "
+                     << "interface... " << endl;
             }
 
+            ASSERTL0(m_mesh->m_expDim == 3, "The prism-tet interface module"
+                     " only works for three-dimensional meshes.");
+
+            // Copy 3D elements and 2D boundary elements and clear existing.
             vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
-            vector<ElementSharedPtr> bndEl = m_mesh->m_element[m_mesh->m_expDim-1];
+            vector<ElementSharedPtr> bndEl = m_mesh->m_element[
+                                                            m_mesh->m_expDim-1];
             m_mesh->m_element[m_mesh->m_expDim].clear();
             m_mesh->m_element[m_mesh->m_expDim-1].clear();
 
+            // Extract prismatic elements.
             for (int i = 0; i < el.size(); ++i)
             {
                 ElementSharedPtr elmt = el[i];
@@ -81,9 +92,15 @@ namespace Nektar
                 }
             }
 
+            ASSERTL0(m_mesh->m_element[m_mesh->m_expDim].size() > 0,
+                     "Mesh does not contain any prismatic elements!");
+
             FaceSet::iterator fIt;
 
-            for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
+            // Extract boundary region already associated with prisms
+            // (i.e. outer wall of the computational domain)
+            for (fIt  = m_mesh->m_faceSet.begin();
+                 fIt != m_mesh->m_faceSet.end(); fIt++)
             {
                 if ((*fIt)->m_elLink.size() == 1)
                 {
@@ -92,36 +109,41 @@ namespace Nektar
                     if (el->GetConf().m_e != LibUtilities::eTetrahedron)
                     {
                         m_mesh->m_element[m_mesh->m_expDim-1].push_back(
-                            bndEl[el->GetBoundaryLink((*fIt)->m_elLink[0].second)]);
+                            bndEl[el->GetBoundaryLink(
+                                    (*fIt)->m_elLink[0].second)]);
                     }
+
                     continue;
                 }
             }
 
-            for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
+            // Now extract prismatic faces that are not connected to any other
+            // elements, which denotes the prism/tet boundary.
+            for (fIt  = m_mesh->m_faceSet.begin();
+                 fIt != m_mesh->m_faceSet.end(); fIt++)
             {
                 if ((*fIt)->m_elLink.size() != 1)
-                {                    
+                {
                     ElementSharedPtr el1 = (*fIt)->m_elLink[0].first;
                     ElementSharedPtr el2 = (*fIt)->m_elLink[1].first;
-                    
+
                     if ((el1->GetConf().m_e == LibUtilities::ePrism &&
                          el2->GetConf().m_e == LibUtilities::eTetrahedron) ||
                         (el2->GetConf().m_e == LibUtilities::ePrism &&
                          el1->GetConf().m_e == LibUtilities::eTetrahedron))
                     {
-                        // Create a new linear triangle from face
+                        // Create a new linear triangle from face for boundary.
                         vector<NodeSharedPtr> nodeList(3);
                         vector<int> tags(1);
                         tags[0] = 123;
-                        
+
                         nodeList = (*fIt)->m_vertexList;
-                        ElmtConfig conf(LibUtilities::eTriangle, 1, true, true, false);
+                        ElmtConfig conf(
+                            LibUtilities::eTriangle, 1, true, true, false);
                         ElementSharedPtr tri = GetElementFactory().
                             CreateInstance(
                                 LibUtilities::eTriangle, conf, nodeList, tags);
-                        
-                        
+
                         m_mesh->m_element[m_mesh->m_expDim-1].push_back(tri);
                     }
                 }

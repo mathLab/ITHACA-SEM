@@ -29,7 +29,8 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: 
+//  Description: Extract the interface between prismatic and tetrahedral
+//  elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,20 +44,22 @@ namespace Nektar
     namespace Utilities
     {
         /**
-         * @brief 
+         * @brief Module to extract interface between prismatic and tetrahedral
+         * elements.
          */
         class ProcessExtractTetPrismInterface : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessExtractTetPrismInterface>::AllocateSharedPtr(m);
+                return MemoryManager<ProcessExtractTetPrismInterface>
+                    ::AllocateSharedPtr(m);
             }
             static ModuleKey className;
-            
+
             ProcessExtractTetPrismInterface(MeshSharedPtr m);
             virtual ~ProcessExtractTetPrismInterface();
-            
+
             /// Write mesh to output file.
             virtual void Process();
         };

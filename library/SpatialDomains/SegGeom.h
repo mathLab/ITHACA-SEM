@@ -32,9 +32,9 @@
 //  Description: Segment geometry information
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_SEGGEOM_H
 #define NEKTAR_SPATIALDOMAINS_SEGGEOM_H
-
 
 #include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Basis.h>
@@ -142,6 +142,10 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom ();
 
+                SPATIAL_DOMAINS_EXPORT virtual void v_Reset(
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
+
                 SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
@@ -167,9 +171,10 @@ namespace Nektar
             private:
                 /// Boolean indicating whether object owns the data
                 bool                            m_ownData;
+                CurveSharedPtr                  m_curve;
+
+                void SetUpXmap();
         };
-
-
     }; //end of namespace
 }; //end of namespace
 

@@ -41,6 +41,7 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
@@ -58,6 +59,10 @@ namespace Nektar
 
         class PointGeom;
         typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
+
+        struct Curve;
+        typedef boost::shared_ptr<Curve> CurveSharedPtr;
+        typedef boost::unordered_map<int, CurveSharedPtr> CurveMap;
 
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
@@ -106,12 +111,15 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetVid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetTid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
                 SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetEorient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetPorient(const int i) const;
+                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
+                            GetForient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
@@ -147,6 +155,9 @@ namespace Nektar
                             GetBasis(const int i);
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
                             GetPointsKeys();
+                SPATIAL_DOMAINS_EXPORT inline void Reset(
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
 
             protected:
 
@@ -195,6 +206,8 @@ namespace Nektar
                              v_GetEorient(const int i) const;
                 virtual StdRegions::Orientation
                              v_GetPorient(const int i) const;
+                virtual StdRegions::Orientation
+                             v_GetForient(const int i) const;
                 virtual int  v_GetNumEdges() const;
                 virtual int  v_GetNumFaces() const;
                 virtual int  v_GetShapeDim() const;
@@ -229,7 +242,9 @@ namespace Nektar
                 virtual void v_SetOwnData();
                 virtual const LibUtilities::BasisSharedPtr
                              v_GetBasis(const int i);
-
+                virtual void v_Reset(
+                    CurveMap &curvedEdges,
+                    CurveMap &curvedFaces);
                 inline void SetUpCoeffs(const int nCoeffs);
         }; // class Geometry
 
@@ -316,6 +331,15 @@ namespace Nektar
             return v_GetFid(i);
         }
 
+        inline int Geometry::GetTid(int i) const
+        {
+            const int nDim = GetShapeDim();
+            return
+                nDim == 1 ? v_GetVid(i) :
+                nDim == 2 ? v_GetEid(i) :
+                nDim == 3 ? v_GetFid(i) : 0;
+        }
+
         inline int Geometry::GetNumVerts() const
         {
             return v_GetNumVerts();
@@ -334,6 +358,11 @@ namespace Nektar
         inline StdRegions::Orientation Geometry::GetPorient(const int i) const
         {
             return v_GetPorient(i);
+        }
+
+        inline StdRegions::Orientation Geometry::GetForient(const int i) const
+        {
+            return v_GetForient(i);
         }
 
         inline int Geometry::GetNumEdges() const
@@ -449,6 +478,9 @@ namespace Nektar
             return v_GetBasis(i);
         }
 
+        /**
+         * @brief Initialise the m_coeffs array.
+         */
         inline void Geometry::SetUpCoeffs(const int nCoeffs)
         {
             m_coeffs = Array<OneD, Array<OneD, NekDouble> >(m_coordim);
@@ -462,6 +494,12 @@ namespace Nektar
         inline const LibUtilities::PointsKeyVector Geometry::GetPointsKeys()
         {
             return m_xmap->GetPointsKeys();
+        }
+
+        inline void Geometry::Reset(CurveMap &curvedEdges,
+                                    CurveMap &curvedFaces)
+        {
+            v_Reset(curvedEdges, curvedFaces);
         }
     }; //end of namespace
 }; // end of namespace

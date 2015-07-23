@@ -59,7 +59,7 @@ namespace Nektar
         class StdExpansion2D;
 
         typedef Array<OneD, Array<OneD, NekDouble> > NormalVector;
-		
+
         /** \brief The base class for all shapes
          *
          *  This is the lowest level basic class for all shapes and so
@@ -325,7 +325,7 @@ namespace Nektar
             {
                 return v_DetFaceBasisKey(i, k);
             }
-            /** 
+            /**
              * \brief This function returns the number of quadrature points
              * belonging to the \a i-th face.
              *
@@ -399,6 +399,17 @@ namespace Nektar
                 return v_GetEdgeBasisType(i);
             }
 
+            /** \brief This function returns the type of expansion
+             *  Nodal point type if defined 
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetNodalPointsKey()
+             *
+             */
+            const LibUtilities::PointsKey GetNodalPointsKey() const
+            {
+                return v_GetNodalPointsKey();
+            };
 
             /** \brief This function returns the number of faces of the
              *  expansion domain
@@ -411,6 +422,22 @@ namespace Nektar
             int GetNfaces() const
             {
                 return v_GetNfaces();
+            }
+
+            /**
+             * @brief Returns the number of trace elements connected to this
+             * element.
+             *
+             * For example, a quadrilateral has four edges, so this function
+             * would return 4.
+             */
+            int GetNtrace() const
+            {
+                const int nBase = m_base.num_elements();
+                return
+                    nBase == 1 ? 2 :
+                    nBase == 2 ? GetNedges() :
+                    nBase == 3 ? GetNfaces() : 0;
             }
 
             /** \brief This function returns the shape of the expansion domain
@@ -428,6 +455,12 @@ namespace Nektar
             {
                 return v_DetShapeType();
             }
+            
+            boost::shared_ptr<StdExpansion> GetStdExp(void) const
+            {
+                return v_GetStdExp();
+            }
+
 
             int GetShapeDimension() const
             {
@@ -439,6 +472,11 @@ namespace Nektar
                 return v_IsBoundaryInteriorExpansion();
             }
 
+
+            bool IsNodalNonTensorialExp()
+            {
+                return v_IsNodalNonTensorialExp();
+            }
 
             /** \brief This function performs the Backward transformation from
              *  coefficient space to physical space
@@ -459,7 +497,7 @@ namespace Nektar
              *  The resulting array
              *  \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$ containing the
              *  expansion evaluated at the quadrature points, is stored
-             *  in the \a outarray. 
+             *  in the \a outarray.
              *
              *  \param inarray contains the values of the expansion
              *  coefficients (input of the function)
@@ -690,9 +728,9 @@ namespace Nektar
                 return v_DropLocStaticCondMatrix(mkey);
             }
 
-            StdRegions::Orientation GetFaceOrient(int face)
+            StdRegions::Orientation GetForient(int face)
             {
-                return v_GetFaceOrient(face);
+                return v_GetForient(face);
             }
 
             StdRegions::Orientation GetEorient(int edge)
@@ -724,14 +762,14 @@ namespace Nektar
             {
                 v_SetCoeffsToOrientation(dir,inarray,outarray);
             }
-            
+
             int CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
             {
                 return v_CalcNumberOfCoefficients(nummodes,modes_offset);
             }
 
-            void ExtractDataToCoeffs(const NekDouble *data, 
-                                     const std::vector<unsigned int > &nummodes, 
+            void ExtractDataToCoeffs(const NekDouble *data,
+                                     const std::vector<unsigned int > &nummodes,
                                      const int nmodes_offset,
                                      NekDouble *coeffs)
             {
@@ -743,28 +781,6 @@ namespace Nektar
                                             const Array<OneD, const NekDouble> &Lcoord,
                                             const Array<OneD, const NekDouble> &physvals);
 
-
-            STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fx,
-                                                const Array<OneD, const NekDouble> &Fy,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fn,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddEdgeNormBoundaryBiInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fwd,
-                                                const Array<OneD, const NekDouble> &Bwd,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion>    &FaceExp,
-                                                const Array<OneD, const NekDouble> &Fn,
-                                                Array<OneD, NekDouble> &outarray);
 
             int GetCoordim()
             {
@@ -823,7 +839,7 @@ namespace Nektar
              * inarray into \a outarray following the local edge orientation
              * and point distribution defined by defined in \a EdgeExp.
              */
-            
+
             void GetEdgePhysVals(const int edge, const Array<OneD,
                                  const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray)
@@ -843,25 +859,25 @@ namespace Nektar
             {
                 v_GetTracePhysVals(edge,EdgeExp,inarray,outarray);
             }
-                        
+
             void GetVertexPhysVals(const int vertex,
                                    const Array<OneD, const NekDouble> &inarray,
                                          NekDouble &outarray)
             {
                 v_GetVertexPhysVals(vertex, inarray, outarray);
             }
-            
+
             void GetEdgeInterpVals(const int edge,const Array<OneD,
                                    const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgeInterpVals(edge, inarray, outarray);
             }
-            
+
             /**
-             * @brief Extract the metric factors to compute the contravariant 
+             * @brief Extract the metric factors to compute the contravariant
              * fluxes along edge \a edge and stores them into \a outarray
-             * following the local edge orientation (i.e. anticlockwise 
+             * following the local edge orientation (i.e. anticlockwise
              * convention).
              */
             void GetEdgeQFactors(
@@ -871,8 +887,8 @@ namespace Nektar
                 v_GetEdgeQFactors(edge, outarray);
             }
 
-            
-            
+
+
             void GetFacePhysVals(
                 const int                                face,
                 const boost::shared_ptr<StdExpansion>   &FaceExp,
@@ -932,7 +948,7 @@ namespace Nektar
             {
                 v_ReduceOrderCoeffs(numMin,inarray,outarray);
             }
-            
+
             void SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                     const StdMatrixKey &mkey)
             {
@@ -1054,16 +1070,6 @@ namespace Nektar
                 v_AddRobinEdgeContribution(edgeid, primCoeffs, coeffs);
             }
 
-            void DGDeriv(const int dir,
-                         const Array<OneD, const NekDouble>& inarray,
-                         Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
-                         Array<OneD, Array<OneD, NekDouble> > &coeffs,
-                         Array<OneD, NekDouble> &outarray)
-            {
-                v_DGDeriv (dir, inarray, EdgeExp, coeffs, outarray);
-            }
-
-
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
@@ -1086,7 +1092,7 @@ namespace Nektar
              *  \return returns the value of the expansion at the
              *  single point
              */
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords, 
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords,
                                    const Array<OneD, const NekDouble>& physvals)
             {
                 return v_PhysEvaluate(coords,physvals);
@@ -1113,7 +1119,7 @@ namespace Nektar
              *  \return returns the value of the expansion at the
              *  single point
              */
-            NekDouble PhysEvaluate(const Array<OneD, DNekMatSharedPtr>& I, 
+            NekDouble PhysEvaluate(const Array<OneD, DNekMatSharedPtr>& I,
                                    const Array<OneD, const NekDouble >& physvals)
             {
                 return v_PhysEvaluate(I,physvals);
@@ -1146,14 +1152,14 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
-            
+
             /**
              * @brief Unpack data from input file assuming it comes from the
              * same expansion type.
              * @see StdExpansion::ExtractDataToCoeffs
              */
-            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const NekDouble *data, 
-                                                const std::vector<unsigned int > &nummodes, 
+            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const NekDouble *data,
+                                                const std::vector<unsigned int > &nummodes,
                                                 const int nmode_offset,
                                                 NekDouble *coeffs);
 
@@ -1166,14 +1172,14 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_DropLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
 
-            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetFaceOrient(int face);
+            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetForient(int face);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetEorient(int edge);
-            
+
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetCartesianEorient(int edge);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
-			
+
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
              *    u_{exact}\f$ is given by the array \a sol.
@@ -1241,7 +1247,7 @@ namespace Nektar
             {
                 v_ComputeFaceNormal(face);
             }
-            
+
             void NegateFaceNormal(const int face)
             {
                 v_NegateFaceNormal(face);
@@ -1254,17 +1260,17 @@ namespace Nektar
 
             const NormalVector & GetFaceNormal(const int face) const
             {
-                return v_GetFaceNormal(face); 
+                return v_GetFaceNormal(face);
             }
-			
+
             const NormalVector & GetVertexNormal(const int vertex) const
             {
-                return v_GetVertexNormal(vertex); 
+                return v_GetVertexNormal(vertex);
             }
 
             const NormalVector & GetSurfaceNormal(const int id) const
             {
-                return v_GetSurfaceNormal(id); 
+                return v_GetSurfaceNormal(id);
             }
 
             const LibUtilities::PointsKeyVector GetPointsKeys() const
@@ -1277,23 +1283,53 @@ namespace Nektar
                 return p;
             }
 
-            STD_REGIONS_EXPORT Array<OneD, unsigned int> 
+            STD_REGIONS_EXPORT Array<OneD, unsigned int>
                 GetEdgeInverseBoundaryMap(int eid)
             {
                 return v_GetEdgeInverseBoundaryMap(eid);
             }
-            
+
             STD_REGIONS_EXPORT Array<OneD, unsigned int>
                 GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation)
             {
                 return v_GetFaceInverseBoundaryMap(fid,faceOrient);
             }
- 
+
             STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
                 const DNekScalMatSharedPtr & m_transformationmatrix)
             {
                 return v_BuildInverseTransformationMatrix(
                     m_transformationmatrix);
+            }
+
+
+            /** \brief This function performs an interpolation from
+             * the physical space points provided at input into an
+             * array of equispaced points which are not the collapsed
+             * coordinate. So for a tetrahedron you will only get a
+             * tetrahedral number of values.
+             *
+             * This is primarily used for output purposes to get a
+             * better distribution of points more suitable for most
+             * postprocessing
+             */
+            STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble>       &outarray);
+
+            /** \brief This function provides the connectivity of
+             *   local simplices (triangles or tets) to connect the
+             *   equispaced data points provided by
+             *   PhysInterpToSimplexEquiSpaced
+             *
+             *  This is a virtual call to the function 
+             *  \a v_GetSimplexEquiSpaceConnectivity
+             */ 
+            STD_REGIONS_EXPORT void GetSimplexEquiSpacedConnectivity(
+                Array<OneD, int> &conn,
+                bool              standard = true)
+            {
+                v_GetSimplexEquiSpacedConnectivity(conn,standard);
             }
 
             template<class T>
@@ -1309,6 +1345,13 @@ namespace Nektar
 #endif
             }
 
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &outarray,
+                                        bool multiplybyweights = true)
+            {
+                v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
+            }
+
         protected:
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int m_elmt_id;
@@ -1321,7 +1364,7 @@ namespace Nektar
             {
                 return v_CreateStdMatrix(mkey);
             }
-			
+
             /** \brief Create the static condensation of a matrix when
                 using a boundary interior decomposition
 
@@ -1336,10 +1379,10 @@ namespace Nektar
                 D^{-1} C       & D^{-1} \end{array} \right ] \f$
             **/
             STD_REGIONS_EXPORT DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
-			
+
             /** \brief Create an IndexMap which contains mapping information linking any specific
-                element shape with either its boundaries, edges, faces, verteces, etc. 
-                
+                element shape with either its boundaries, edges, faces, verteces, etc.
+
                 The index member of the IndexMapValue struct gives back an integer associated with an entity index
                 The sign member of the same struct gives back a sign to algebrically apply entities orientation
             **/
@@ -1354,11 +1397,6 @@ namespace Nektar
                 v_BwdTrans_SumFac(inarray,outarray);
             }
 
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                v_IProductWRTBase_SumFac(inarray,outarray);
-            }
 
             void IProductWRTDerivBase_SumFac(const int dir,
                                              const Array<OneD, const NekDouble>& inarray,
@@ -1442,26 +1480,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
                 Array<OneD, NekDouble> &coeffs,
                 StdRegions::Orientation dir);
-			
+
             STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                                                    const Array<OneD, const NekDouble> &Lcoord,
                                                    const Array<OneD, const NekDouble> &physvals);
-
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,
-                                                  const Array<OneD, const NekDouble> &Fy,
-                                                  Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion>    &FaceExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray);
 
         private:
             // Virtual functions
@@ -1483,8 +1505,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
-            
-			STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
+
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 
@@ -1495,14 +1517,21 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetTotalFaceIntNcoeffs() const;
 
             STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(const int i, const int j) const;
-            
+
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 
+            STD_REGIONS_EXPORT virtual const LibUtilities::PointsKey v_GetNodalPointsKey() const;
+
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
+
+            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
+                v_GetStdExp(void) const;
 
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 
             STD_REGIONS_EXPORT virtual bool  v_IsBoundaryInteriorExpansion();
+
+            STD_REGIONS_EXPORT virtual bool  v_IsNodalNonTensorialExp();
 
             STD_REGIONS_EXPORT virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray) = 0;
@@ -1573,13 +1602,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
-            STD_REGIONS_EXPORT virtual void v_DGDeriv(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, boost::shared_ptr<StdExpansion> > &EdgeExp,
-                Array<OneD, Array<OneD, NekDouble> > &coeffs,
-                Array<OneD, NekDouble> &outarray);
-
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr >& I, const Array<OneD, const NekDouble> & physvals);
@@ -1638,14 +1660,14 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
-            
+
             STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
-            
+
             STD_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(const int edge,
                 const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray);
-            
+
             STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
-                const int edge,  
+                const int edge,
                 Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(
@@ -1669,7 +1691,7 @@ namespace Nektar
                                            Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                                  Array<OneD, NekDouble> &outarray);
+                                                                     Array<OneD, NekDouble> &outarray, bool multiplybyweights = true);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,
@@ -1735,7 +1757,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetEdgeNormal(const int edge) const;
 
             STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
-            
+
             STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
 
             STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
@@ -1743,24 +1765,26 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 
             STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
-            
+
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
-            
+
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
-			
+
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
-            STD_REGIONS_EXPORT virtual const NormalVector & 
+            STD_REGIONS_EXPORT virtual const NormalVector &
                 v_GetSurfaceNormal(const int id) const;
 
-            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation);
-            
-            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
-                    const DNekScalMatSharedPtr & m_transformationmatrix);
 
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(const DNekScalMatSharedPtr & m_transformationmatrix);
+
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(
+                Array<OneD, int> &conn,
+                bool              standard = true);
         };
 
 

@@ -37,7 +37,7 @@
 #include <CardiacEPSolver/Stimuli/ProtocolS1.h>
 
 namespace Nektar
-{   
+{
     std::string ProtocolS1::className
             = GetProtocolFactory().RegisterCreatorFunction(
                                                    "ProtocolS1",
@@ -53,83 +53,81 @@ namespace Nektar
      * Stimulus, at specified frequencies determined by the derived classes of
      * Protocol.
      */
-    
+
     /**
      * Protocol base class constructor.
      */
     ProtocolS1::ProtocolS1(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const TiXmlElement* pXml)
-            : Protocol(pSession, pXml)
+        : Protocol(pSession, pXml)
     {
         m_session = pSession;
-        
+
         if (!pXml)
         {
             return;
         }
-        
+
         // Declare temporary XML element pointer
-        const TiXmlElement *pXmlparameter; 
-        
+        const TiXmlElement *pXmlparameter;
+
         // Read each variable, extract text and convert to floating-point
         pXmlparameter = pXml->FirstChildElement("START");
         m_start = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("DURATION");
         m_dur = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("S1CYCLELENGTH");
         m_s1cyclelength = atof(pXmlparameter->GetText());
 
         pXmlparameter = pXml->FirstChildElement("NUM_S1");
         m_num_s1 = atof(pXmlparameter->GetText());
     }
-    
-    
+
+
     /**
      * Initialise the protocol. Allocate workspace and variable storage.
      */
     void ProtocolS1::Initialise()
     {
-        
     }
-    
-   
+
+
     /**
      *
-     */ 
+     */
     NekDouble ProtocolS1::v_GetAmplitude(const NekDouble time)
     {
-        time1 = time - floor((time-m_start)/m_s1cyclelength)*m_s1cyclelength 
-                     - m_start;
+        // Number of complete S1 intervals
+        NekDouble a = floor((time-m_start)/m_s1cyclelength);
 
-        if( (time1 > 0) && 
-            (m_s1cyclelength * (m_num_s1) + m_start) && 
-            (time1  < m_dur) )
+        // Time since start of most recent S1 interval
+        NekDouble time1 = time - a * m_s1cyclelength - m_start;
+
+        if( (time1 > 0) && (a < m_num_s1) && (time1 < m_dur) )
         {
             return 1.0;
         }
 
         return 0.0;
     }
-    
+
 
     /**
      *
      */
     void ProtocolS1::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        
     }
-    
+
 
     /**
      *
      */
     void ProtocolS1::v_SetInitialConditions()
     {
-        
     }
-    
+
 }

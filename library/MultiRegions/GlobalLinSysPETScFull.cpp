@@ -65,11 +65,6 @@ namespace Nektar
             : GlobalLinSys     (pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysPETSc(pLinSysKey, pExp, pLocToGloMap)
         {
-            ASSERTL1(m_linSysKey.GetGlobalSysSolnType() == ePETScFullMatrix,
-                     "This routine should only be used when using a Full PETSc"
-                     " matrix solve");
-
-            const int nDofs    = pLocToGloMap->GetNumGlobalCoeffs();
             const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
 
             int i, j, n, cnt, gid1, gid2, loc_lda;

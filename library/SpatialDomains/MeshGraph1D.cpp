@@ -88,6 +88,7 @@ namespace Nektar
 
             ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
 
+            ReadCurves(doc);
             ReadElements(doc);
             ReadComposites(doc);
             ReadDomain(doc);
@@ -105,24 +106,20 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
-            int nextElementNumber = -1;
-
             /// All elements are of the form: "<S ID = n> ... </S>", with
             /// ? being the element type.
 
             TiXmlElement *segment = field->FirstChildElement("S");
+            CurveMap::iterator it;
 
             while (segment)
             {
-                nextElementNumber++;
-
                 int indx;
                 int err = segment->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-//                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 TiXmlNode* elementChild = segment->FirstChild();
-                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     elementChild = elementChild->NextSibling();
                 }
@@ -142,9 +139,20 @@ namespace Nektar
 
                     ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
 
-                    PointGeomSharedPtr v1 = GetVertex(vertex1);
-                    PointGeomSharedPtr v2 = GetVertex(vertex2);
-                    SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
+                    PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                    SegGeomSharedPtr seg;
+                    it = m_curvedEdges.find(indx);
+
+                    if (it == m_curvedEdges.end())
+                    {
+                        seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                        seg->SetGlobalID(indx); // Set global mesh id
+                    }
+                    else
+                    {
+                        seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                        seg->SetGlobalID(indx); //Set global mesh id
+                    }
                     seg->SetGlobalID(indx);
                     m_segGeoms[indx] = seg;
                 }
@@ -157,8 +165,6 @@ namespace Nektar
                 /// Keep looking for additional segments
                 segment = segment->NextSiblingElement("S");
             }
-
-            ASSERTL0(nextElementNumber >= 0, "At least one element must be specified.");
         }
 
         void MeshGraph1D::ReadComposites(TiXmlDocument &doc)
@@ -198,7 +204,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }
@@ -342,82 +348,3 @@ namespace Nektar
 
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: MeshGraph1D.cpp,v $
-// Revision 1.17  2007/12/04 03:01:18  jfrazier
-// Changed to stringstream.
-//
-// Revision 1.16  2007/09/20 22:25:06  jfrazier
-// Added expansion information to meshgraph class.
-//
-// Revision 1.15  2007/07/28 05:44:27  sherwin
-// Fixed for new MemoryManager call
-//
-// Revision 1.14  2007/07/26 01:38:32  jfrazier
-// Cleanup of some attribute reading code.
-//
-// Revision 1.13  2007/07/24 16:52:09  jfrazier
-// Added domain code.
-//
-// Revision 1.12  2007/07/23 16:54:30  jfrazier
-// Change a dynamic allocation using new to memory manager allocate.
-//
-// Revision 1.11  2007/07/05 04:21:10  jfrazier
-// Changed id format and propagated from 1d to 2d.
-//
-// Revision 1.10  2007/06/10 02:27:10  jfrazier
-// Another checkin with an incremental completion of the boundary conditions reader.
-//
-// Revision 1.9  2007/06/07 23:55:24  jfrazier
-// Intermediate revisions to add parsing for boundary conditions file.
-//
-// Revision 1.8  2007/03/14 21:24:08  sherwin
-// Update for working version of MultiRegions up to ExpList1D
-//
-// Revision 1.7  2006/10/15 06:18:58  sherwin
-// Moved NekPoint out of namespace LibUtilities
-//
-// Revision 1.6  2006/09/26 23:41:53  jfrazier
-// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
-//
-// Revision 1.5  2006/06/01 14:15:30  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.4  2006/05/23 19:56:33  jfrazier
-// These build and run, but the expansion pieces are commented out
-// because they would not run.
-//
-// Revision 1.3  2006/05/16 22:28:31  sherwin
-// Updates to add in FaceComponent call to constructors
-//
-// Revision 1.2  2006/05/16 20:12:59  jfrazier
-// Minor fixes to correct bugs.
-//
-// Revision 1.1  2006/05/04 18:59:01  kirby
-// *** empty log message ***
-//
-// Revision 1.17  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.16  2006/04/04 23:12:37  jfrazier
-// More updates to readers.  Still work to do on MeshGraph2D to store tris and quads.
-//
-// Revision 1.15  2006/03/25 00:58:29  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.14  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.13  2006/03/12 07:42:03  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.12  2006/02/26 21:19:43  bnelson
-// Fixed a variety of compiler errors caused by updates to the coding standard.
-//
-// Revision 1.11  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

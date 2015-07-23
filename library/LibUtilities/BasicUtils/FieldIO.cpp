@@ -404,6 +404,9 @@ namespace Nektar
                 ImportMultiFldFileIDs(infile,filenames, elementIDs_OnPartitions,
                                       fieldmetadatamap);
                 
+                // Load metadata
+                ImportFieldMetaData(infile,fieldmetadatamap);
+
                 if(ElementIDs == NullInt1DArray) //load all fields
                 {
                     for(int i = 0; i < filenames.size(); ++i)
@@ -967,7 +970,7 @@ namespace Nektar
                     std::string elementStr;
                     while(elementChild)
                     {
-                        if (elementChild->Type() == TiXmlNode::TEXT)
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
                             elementStr += elementChild->ToText()->ValueStr();
                         }

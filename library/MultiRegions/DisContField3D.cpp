@@ -261,9 +261,9 @@
              m_globalBndMat        (In.m_globalBndMat),
              m_trace               (In.m_trace),
              m_traceMap            (In.m_traceMap),
-             m_periodicVerts       (In.m_periodicVerts),
+             m_periodicFaces       (In.m_periodicFaces),
              m_periodicEdges       (In.m_periodicEdges),
-             m_periodicFaces       (In.m_periodicFaces)
+             m_periodicVerts       (In.m_periodicVerts)
          {
          }
 
@@ -331,7 +331,7 @@
                  m_session,graph3D,trace,*this,m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
 
-             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                  &elmtToTrace = m_traceMap->GetElmtToTrace();
 
              // Scatter trace segments to 3D elements. For each element, we find
@@ -1713,7 +1713,7 @@
             int cnt, n, e, npts, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             set<int>::iterator    it;
@@ -1830,7 +1830,7 @@
             int nexp = GetExpSize();
             int n,e,offset,phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
@@ -1875,7 +1875,7 @@
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -1923,7 +1923,7 @@
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -2008,6 +2008,20 @@
                                               m_Element->GetGlobalID()];
                     FaceID[cnt] = (*tmp)[0]->m_FaceIndx;
                 }
+            }
+        }
+
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField3D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
             }
         }
 
@@ -2238,7 +2252,7 @@
         {
             int    i,cnt,f,ncoeff_face;
             Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
-            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             int     eid,nq_elmt, nm_elmt;
@@ -2424,8 +2438,7 @@
 
             for (i = 0; i < nbnd; ++i)
             {
-                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();

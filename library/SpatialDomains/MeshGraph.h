@@ -134,20 +134,23 @@ namespace Nektar
         typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
         typedef boost::shared_ptr<ElementFaceVector> ElementFaceVectorSharedPtr;
 
-        // set restriction on domain range for post-processing. 
+        // set restriction on domain range for post-processing.
         struct DomainRange
         {
-            bool doXrange; 
-            NekDouble xmin;
-            NekDouble xmax;
-            bool doYrange; 
-            NekDouble ymin;
-            NekDouble ymax;
-            bool doZrange; 
-            NekDouble zmin;
-            NekDouble zmax;
+            bool                    m_doXrange;
+            NekDouble               m_xmin;
+            NekDouble               m_xmax;
+            bool                    m_doYrange;
+            NekDouble               m_ymin;
+            NekDouble               m_ymax;
+            bool                    m_doZrange;
+            NekDouble               m_zmin;
+            NekDouble               m_zmax;
+
+            bool                    m_checkShape;
+            LibUtilities::ShapeType m_shapeType;
         };
-        
+
         typedef boost::shared_ptr<DomainRange> DomainRangeShPtr;
         static DomainRangeShPtr NullDomainRangeShPtr;
 
@@ -238,6 +241,12 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ReadCurves(
                         std::string &infilename);
 
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(
+                        std::string &outfilename);
+
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(
+                        TiXmlDocument &doc);
+
                 /* ---- Helper functions ---- */
                 /// Dimension of the mesh (can be a 1D curve in 3D space).
                 inline int GetMeshDimension() const;
@@ -248,10 +257,10 @@ namespace Nektar
 
                 /* Range definitions for postprorcessing */
                 SPATIAL_DOMAINS_EXPORT void SetDomainRange
-                    (NekDouble xmin, NekDouble xmax, 
-                     NekDouble ymin = NekConstants::kNekUnsetDouble, 
+                    (NekDouble xmin, NekDouble xmax,
+                     NekDouble ymin = NekConstants::kNekUnsetDouble,
                      NekDouble ymax = NekConstants::kNekUnsetDouble,
-                     NekDouble zmin = NekConstants::kNekUnsetDouble, 
+                     NekDouble zmin = NekConstants::kNekUnsetDouble,
                      NekDouble zmax = NekConstants::kNekUnsetDouble);
 
                 /// Check if goemetry is in range definition if activated
@@ -299,11 +308,15 @@ namespace Nektar
                         std::vector< std::vector<LibUtilities::PointsType> >
                                                                 &pointstype );
 
-                /// Sets expansions to have equispaced points 
+                /// Sets expansions to have equispaced points
                 SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
                                                         int npoints = 0);
 
+                /// Reset expansion to have specified polynomial order \a nmodes
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToPolyOrder(int nmodes);
+
                 /// This function sets the expansion #exp in map with entry #variable
+
                 inline void SetExpansions(
                         const std::string variable,
                         ExpansionMapShPtr &exp);
@@ -349,8 +362,8 @@ namespace Nektar
                         NekDouble y,
                         NekDouble z);
 
-                /// \brief Adds an edge between two points.  If curveDefinition is 
-                /// null, then the edge is straight, otherwise it is curved according 
+                /// \brief Adds an edge between two points.  If curveDefinition is
+                /// null, then the edge is straight, otherwise it is curved according
                 /// to the curveDefinition.
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(PointGeomSharedPtr v0, PointGeomSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
@@ -365,9 +378,11 @@ namespace Nektar
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
 
-                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedEdges() const { return m_curvedEdges; }
+                SPATIAL_DOMAINS_EXPORT const PointGeomMap& GetVertSet() const { return m_vertSet; }
 
-                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedFaces() const { return m_curvedFaces; }
+                SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedEdges() { return m_curvedEdges; }
+                SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedFaces() { return m_curvedFaces; }
+
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
                 SPATIAL_DOMAINS_EXPORT const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
                 SPATIAL_DOMAINS_EXPORT const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
@@ -386,8 +401,8 @@ namespace Nektar
                 PointGeomMap                            m_vertSet;
                 InterfaceCompList                       m_iComps;
 
-                CurveVector                             m_curvedEdges;
-                CurveVector                             m_curvedFaces;
+                CurveMap                                m_curvedEdges;
+                CurveMap                                m_curvedFaces;
 
                 SegGeomMap                              m_segGeoms;
 
@@ -487,7 +502,7 @@ namespace Nektar
         /**
          *
          */
-        void  MeshGraph::SetExpansions(const std::string variable, ExpansionMapShPtr &exp) 
+        void  MeshGraph::SetExpansions(const std::string variable, ExpansionMapShPtr &exp)
         {
             if(m_expansionMapShPtrMap.count(variable) != 0)
             {
@@ -503,14 +518,14 @@ namespace Nektar
         /**
          *
          */
-        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2) 
+        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2)
         {
             ExpansionMapShPtr expVec1 = m_expansionMapShPtrMap.find(var1)->second;
             ExpansionMapShPtr expVec2 = m_expansionMapShPtrMap.find(var2)->second;
 
             if(expVec1.get() == expVec2.get())
             {
-                return true; 
+                return true;
             }
 
             return false;

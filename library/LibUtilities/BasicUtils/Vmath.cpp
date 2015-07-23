@@ -131,11 +131,14 @@ namespace Vmath
     #undef EPS
     #undef RNMX
 
+    static boost::mutex mutex;
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
     template<class T>  void FillWhiteNoise( int n, const T eps, T *x, const int incx, int outseed)
     {
+        // Protect the static vars here and in ran2
+        boost::mutex::scoped_lock l(mutex);
         while( n-- )
         {
             static int     iset = 0;
@@ -838,6 +841,7 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT int Imin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT  int Imin( int n, const int *x, const int incx);
 
     /// \brief Return the minimum element in x - called vmin to avoid
     /// conflict with min

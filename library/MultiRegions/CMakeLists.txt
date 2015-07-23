@@ -2,9 +2,6 @@ SET(MULTI_REGIONS_SOURCES
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
-./AssemblyMap/AssemblyMapCG1D.cpp
-./AssemblyMap/AssemblyMapCG2D.cpp
-./AssemblyMap/AssemblyMapCG3D.cpp
 ContField1D.cpp
 ContField2D.cpp
 ContField3D.cpp
@@ -92,9 +89,6 @@ SET(ASSEMBLY_MAP_HEADERS
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
-./AssemblyMap/AssemblyMapCG1D.h
-./AssemblyMap/AssemblyMapCG2D.h
-./AssemblyMap/AssemblyMapCG3D.h
 )
 
 IF(NEKTAR_USE_MPI)
@@ -136,7 +130,7 @@ ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS} ${ASSEMBLY_MAP_HEADERS})
 
-TARGET_LINK_LIBRARIES(MultiRegions LINK_PUBLIC LocalRegions)
+TARGET_LINK_LIBRARIES(MultiRegions LINK_PUBLIC Collections)
 
 # MultiRegions uses additional routines from Metis
 TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${METIS_LIB})
@@ -148,6 +142,7 @@ ENDIF( NEKTAR_USE_MPI )
 
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${PETSC_LIBRARIES})
+    ADD_DEPENDENCIES(MultiRegions petsc-3.5.2)
 ENDIF( NEKTAR_USE_PETSC )
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

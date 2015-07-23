@@ -97,6 +97,7 @@ namespace Nektar
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             MULTI_REGIONS_EXPORT ExpList1D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
@@ -179,7 +180,7 @@ namespace Nektar
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
 
             int m_firstIntEl;
             

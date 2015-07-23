@@ -59,104 +59,16 @@ namespace Nektar
             eNotDefined
         };
 
-        enum BndUserDefinedType
-        {
-            eI,
-            eMG,
-            eHigh,
-            eHighOutflow,
-            eWall_Forces,
-            eWall,
-            eWallViscous,
-            eArtificialViscosity,
-            eSymmetry,
-            eRinglebFlow,
-            eTimeDependent,
-            eRadiation,
-            eIsentropicVortex,
-            eCalcBC,
-            eQinflow,
-            eTerminal,
-            eRterminal,
-            eCRterminal,
-            eRCRterminal,
-            eInflowCFS,
-            eOutflowCFS,
-            eRiemannInvariant,
-            eExtrapOrder0,
-            eNoUserDefined
-        };
-
-        const char* const BndUserDefinedTypeMap[] =
-        {
-            "I",
-            "MG",
-            "High",
-            "HighOutflow",
-            "Wall_Forces",
-            "Wall",
-            "WallViscous",
-            "ArtificialVisc",
-            "Symmetry",
-            "RinglebFlow",
-            "TimeDependent",
-            "Radiation",
-            "IsentropicVortex",
-            "CalcBC",
-            "Qinflow",
-            "Terminal",
-            "Rterminal",
-            "CRterminal",
-            "RCRterminal",
-            "InflowCFS",
-            "OutflowCFS",
-            "RiemannInvariant",
-            "ExtrapOrder0",
-            "NoUserDefined"
-        };
-
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(
                 BoundaryConditionType type,
-                const std::string &userDefined = std::string("NoUserDefined")):
-                    m_boundaryConditionType(type)
+                const std::string &userDefined 
+                         = std::string("NoUserDefined")):
+                    m_boundaryConditionType(type),
+                    m_userDefined(userDefined),
+                    m_isTimeDependent(false)
             {
-                std::map<const std::string, BndUserDefinedType>  known_type;
-                known_type["H"] = eHigh;
-                known_type["HOutflow"] = eHighOutflow;
-                known_type["I"] = eI;
-                known_type["MG"] = eMG;
-                known_type["Wall"] = eWall;
-                known_type["WallViscous"] = eWallViscous;
-                known_type["ArtificialVisc"] = eArtificialViscosity;
-                known_type["Q-inflow"] = eQinflow;
-                known_type["Terminal"] = eTerminal;
-                known_type["R-terminal"] = eRterminal;
-                known_type["CR-terminal"] = eCRterminal;
-                known_type["RCR-terminal"] = eRCRterminal;
-                known_type["CalcBC"] = eCalcBC;
-                known_type["RinglebFlow"] = eRinglebFlow;
-                known_type["Symmetry"] = eSymmetry;
-                known_type["TimeDependent"] = eTimeDependent;
-                known_type["Radiation"] = eRadiation;
-                known_type["IsentropicVortex"] = eIsentropicVortex;
-                known_type["RiemannInvariant"] = eRiemannInvariant;
-                known_type["ExtrapOrder0"]     = eExtrapOrder0;
-                known_type["NoUserDefined"]    = eNoUserDefined;
-
-                std::map<const std::string, BndUserDefinedType>::
-                    const_iterator it = known_type.find(userDefined);
-                if (it != known_type.end())
-                {
-                    m_userDefined = it->second;
-                }
-                else
-                {
-                    //ASSERTL0(false, std::string("Unknown boundary condition "
-                    //"user defined type [") + userDefined + std::string("]"));
-                    m_userDefined = eNoUserDefined;
-                }
             }
 
             virtual ~BoundaryConditionBase()
@@ -172,24 +84,30 @@ namespace Nektar
                 m_boundaryConditionType = boundaryType;
             }
 
-            void SetUserDefined(BndUserDefinedType type)
+            void SetUserDefined(std::string &type)
             {
                 m_userDefined = type;
             }
 
-            BndUserDefinedType GetUserDefined() const
+            const std::string GetUserDefined() const
             {
                 return m_userDefined;
             }
 
-            const std::string GetBndTypeAsString(BndUserDefinedType type)
+            void SetIsTimeDependent(bool value)
             {
-                return BndUserDefinedTypeMap[type];
+                m_isTimeDependent = value;
+            }
+
+            bool IsTimeDependent(void)
+            {
+                return m_isTimeDependent;
             }
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
-            BndUserDefinedType    m_userDefined;
+            std::string           m_userDefined;
+            bool                  m_isTimeDependent;
         };
 
 

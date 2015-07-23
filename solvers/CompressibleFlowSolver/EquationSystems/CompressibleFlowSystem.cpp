@@ -32,6 +32,7 @@
 // Description: Auxiliary functions for the compressible flow system
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <iostream>
 #include <iomanip>
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
@@ -97,6 +98,8 @@ namespace Nektar
                  "Compressible flow sessions must define a uInf parameter.");
         m_session->LoadParameter("uInf", m_uInf, 0.1);
 
+        m_UInf = m_uInf;
+
         // Get vInf parameter from session file.
         if (m_spacedim == 2 || m_spacedim == 3)
         {
@@ -104,6 +107,7 @@ namespace Nektar
                      "Compressible flow sessions must define a vInf parameter"
                      "for 2D/3D problems.");
             m_session->LoadParameter("vInf", m_vInf, 0.0);
+            m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf);
         }
 
         // Get wInf parameter from session file.
@@ -113,6 +117,7 @@ namespace Nektar
                      "Compressible flow sessions must define a wInf parameter"
                      "for 3D problems.");
             m_session->LoadParameter("wInf", m_wInf, 0.0);
+            m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf + m_wInf*m_wInf);
         }
 
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
@@ -126,17 +131,71 @@ namespace Nektar
         m_session->LoadParameter ("FH",            m_FacH,          0.0);
         m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
         m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
-        m_session->LoadParameter ("C1",             m_C1,           3.0);
-        m_session->LoadParameter ("C2",             m_C2,           5.0);
+        m_session->LoadParameter ("C1",            m_C1,            3.0);
+        m_session->LoadParameter ("C2",            m_C2,            5.0);
         m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType,    "Off");
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
-        
+
         m_EqTypeStr = m_session->GetSolverInfo("EQTYPE");
 
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
+
+        m_session->LoadParameter("amplitude",      m_amplitude,      0.001);
+        m_session->LoadParameter("omega",          m_omega,          1.0);
+        m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
+
+        // Forcing terms for the sponge region
+        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
+                                               m_fields.num_elements());
+
+        // Loop over Boundary Regions for PressureOutflowFileBC
+        int nvariables = m_fields.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > tmpStorage(nvariables);
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            // PressureOutflowFile Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                "PressureOutflowFile")
+            {
+                int numBCPts = m_fields[0]->
+                    GetBndCondExpansions()[n]->GetNpoints();
+                m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    tmpStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
+
+                    Vmath::Vcopy(
+                        numBCPts,
+                        m_fields[i]->GetBndCondExpansions()[n]->GetPhys(), 1,
+                        tmpStorage[i], 1);
+                }
+                GetPressure(tmpStorage, m_pressureStorage);
+            }
+        }
+
+        // Loop over Boundary Regions for PressureInflowFileBC
+        m_fieldStorage = Array<OneD, Array<OneD, NekDouble> > (nvariables);
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            // PressureInflowFile Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                "PressureInflowFile")
+            {
+                int numBCPts = m_fields[0]->
+                    GetBndCondExpansions()[n]->GetNpoints();
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    m_fieldStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
+                    Vmath::Vcopy(
+                        numBCPts,
+                        m_fields[i]->GetBndCondExpansions()[n]->GetPhys(), 1,
+                        m_fieldStorage[i], 1);
+                }
+            }
+        }
 
         // Type of advection class to be used
         switch(m_projectionType)
@@ -176,12 +235,12 @@ namespace Nektar
                     m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
                                                   GetViscousFluxVector, this);
                 }
-                
+
                 if (m_shockCaptureType=="Smooth" && m_EqTypeStr=="EulerADCFE")
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVector, this);
-                    
+
                     m_diffusion->SetArtificialDiffusionVector(
                         &CompressibleFlowSystem::GetSmoothArtificialViscosity, this);
                 }
@@ -189,7 +248,7 @@ namespace Nektar
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVector, this);
-                    
+
                     m_diffusion->SetArtificialDiffusionVector(
                         &CompressibleFlowSystem::GetArtificialDynamicViscosity, this);
                 }
@@ -252,6 +311,88 @@ namespace Nektar
     }
 
     /**
+     * @brief Set boundary conditions which can be: 
+     * a) Wall and Symmerty BCs implemented at CompressibleFlowSystem level
+     *          since they are compressible solver specific;
+     * b) Time dependent BCs.
+     * 
+     * @param inarray: fields array.
+     * @param time:    time.
+     */
+    void CompressibleFlowSystem::SetCommonBC(
+                      const std::string &userDefStr,
+                      const int n,
+                      const NekDouble time,
+                      int &cnt,
+                      Array<OneD, Array<OneD, NekDouble> > &inarray)
+    {
+        std::string varName;
+        int nvariables = m_fields.num_elements();
+     
+        if(!userDefStr.empty())
+        {
+            if(boost::iequals(userDefStr,"Wall"))
+            {
+                WallBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"WallViscous"))
+            {
+                // Wall Boundary Condition
+                WallViscousBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"Symmetry"))
+            {
+                // Symmetric Boundary Condition
+                SymmetryBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"RiemannInvariant"))
+            {
+                // Riemann invariant characteristic Boundary Condition
+                RiemannInvariantBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureOutflowNonReflective"))
+            {
+                // Pressure outflow non-reflective Boundary Condition
+                PressureOutflowNonReflectiveBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureOutflow"))
+            {
+                // Pressure outflow Boundary Condition
+                PressureOutflowBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureOutflowFile"))
+            {
+                // Pressure outflow Boundary Condition from file 
+                PressureOutflowFileBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"PressureInflowFile"))
+            {
+                // Pressure inflow Boundary Condition from file
+                PressureInflowFileBC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"ExtrapOrder0"))
+            {
+                // Extrapolation of the data at the boundaries
+                ExtrapOrder0BC(n, cnt, inarray);
+            }
+            else if(boost::iequals(userDefStr,"TimeDependent"))
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
+                }
+            }
+            else
+            {
+                string errmsg = "Unrecognised boundary condition: ";
+                errmsg += userDefStr;
+                ASSERTL0(false,errmsg.c_str());
+            }
+        }
+    }
+
+    /**
      * @brief Wall boundary conditions for compressible flow problems.
      */
     void CompressibleFlowSystem::WallBC(
@@ -265,7 +406,7 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-        
+
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
         for (i = 0; i < nVariables; ++i)
@@ -293,25 +434,25 @@ namespace Nektar
             {
                 NekDouble factor  = 1.0;
                 NekDouble factor2 = 1.0;
-                
+
                 Array<OneD, NekDouble > tmp2(nBCEdgePts, 0.0);
                 Vmath::Smul(nBCEdgePts,
                             factor,
                             &Fwd[nVariables-1][id2], 1,
                             &tmp2[0], 1);
-                
+
                 Vmath::Vsub(nBCEdgePts,
                             &Fwd[nVariables-1][id2], 1,
                             &tmp2[0], 1,
                             &Fwd[nVariables-1][id2], 1);
-                
+
                 Vmath::Smul(nBCEdgePts,
                             factor2,
                             &Fwd[nVariables-1][id2], 1,
                             &Fwd[nVariables-1][id2], 1);
-                
+
             }
-            
+
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
 
@@ -362,7 +503,7 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-        
+
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
         for (i = 0; i < nVariables; ++i)
@@ -390,24 +531,24 @@ namespace Nektar
             {
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
-                
+
                 Array<OneD, NekDouble > tmp2(nBCEdgePts, 0.0);
                 Vmath::Smul(nBCEdgePts,
                             factor,
                             &Fwd[nVariables-1][id2], 1,
                             &tmp2[0], 1);
-                
+
                 Vmath::Vsub(nBCEdgePts,
                             &Fwd[nVariables-1][id2], 1,
                             &tmp2[0], 1,
                             &Fwd[nVariables-1][id2], 1);
-                
+
                 Vmath::Smul(nBCEdgePts,
                             factor2,
                             &Fwd[nVariables-1][id2], 1,
                             &Fwd[nVariables-1][id2], 1);
             }
-            
+
             for (i = 0; i < m_spacedim; i++)
             {
                 Vmath::Neg(nBCEdgePts, &Fwd[i+1][id2], 1);
@@ -437,7 +578,7 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-        
+
         // Get physical values of the forward trace (from exp to phys)
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
         for (i = 0; i < nVariables; ++i)
@@ -445,7 +586,7 @@ namespace Nektar
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
-        
+
         // Take into account that for PDE based shock capturing, eps = 0 at the
         // wall.
         int e, id1, id2, nBCEdgePts, eMax;
@@ -459,29 +600,29 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-            
+
             if (nVariables == m_spacedim+3)
             {
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
-                
+
                 Array<OneD, NekDouble > tmp2(nBCEdgePts, 0.0);
                 Vmath::Smul(nBCEdgePts,
                             factor,
                             &Fwd[nVariables-1][id2], 1,
                             &tmp2[0], 1);
-                
+
                 Vmath::Vsub(nBCEdgePts,
                             &Fwd[nVariables-1][id2], 1,
                             &tmp2[0], 1,
                             &Fwd[nVariables-1][id2], 1);
-                
+
                 Vmath::Smul(nBCEdgePts,
                             factor2,
                             &Fwd[nVariables-1][id2], 1,
                             &Fwd[nVariables-1][id2], 1);
             }
-            
+
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
 
@@ -531,10 +672,10 @@ namespace Nektar
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
-        
+
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-        
+
         NekDouble gamma            = m_gamma;
         NekDouble gammaInv         = 1.0 / gamma;
         NekDouble gammaMinusOne    = gamma - 1.0;
@@ -638,7 +779,7 @@ namespace Nektar
         for (e = 0; e < eMax; ++e)
         {
             nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetNumPoints(0);
+                GetExp(e)->GetTotPoints();
 
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
@@ -775,6 +916,655 @@ namespace Nektar
     }
 
     /**
+     * @brief Pressure outflow non-reflective
+     * boundary conditions for compressible flow
+     * problems.
+     */
+    void CompressibleFlowSystem::PressureOutflowNonReflectiveBC(
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        int i, j;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
+
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
+
+        NekDouble gamma            = m_gamma;
+        NekDouble gammaMinusOne    = gamma - 1.0;
+        NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
+
+        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
+        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
+        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        Array<OneD, NekDouble> velInf(nDimensions, 0.0);
+
+        // Computing the normal velocity for characteristics coming
+        // from outside the computational domain
+        velInf[0] = m_uInf;
+        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
+        if (nDimensions == 2 || nDimensions == 3)
+        {
+            velInf[1] = m_vInf;
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
+        }
+        if (nDimensions == 3)
+        {
+            velInf[2] = m_wInf;
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
+        }
+
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
+        // Computing the normal velocity for characteristics coming
+        // from inside the computational domain
+        Array<OneD, NekDouble > Vn (nTracePts, 0.0);
+        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
+        }
+
+        // Computing the absolute value of the velocity in order to compute the
+        // Mach number to decide whether supersonic or subsonic
+        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
+        }
+        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+
+        // Get speed of sound
+        Array<OneD, NekDouble > soundSpeed(nTracePts);
+        Array<OneD, NekDouble > pressure  (nTracePts);
+
+        for (i = 0; i < nTracePts; i++)
+        {
+            if (m_spacedim == 1)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
+                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
+            }
+            else if (m_spacedim == 2)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
+                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            }
+            else
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
+                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
+                                           Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
+            }
+
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+        }
+
+        // Get Mach
+        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
+        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
+        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
+
+        // Auxiliary variables
+        int e, id1, id2, npts, pnt;
+        NekDouble rhoeb;
+
+        // Loop on the bcRegions
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+             GetExpSize(); ++e)
+        {
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+               GetExp(e)->GetTotPoints();
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetPhys_Offset(e) ;
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+
+            // Loop on points of bcRegion 'e'
+            for (i = 0; i < npts; i++)
+            {
+                pnt = id2+i;
+
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {
+                    // Kinetic energy calculation
+                    NekDouble Ek = 0.0;
+                    for (j = 1; j < nVariables-1; ++j)
+                    {
+                        Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
+                    }
+
+                    rhoeb = m_pInf * gammaMinusOneInv + Ek;
+
+                    // Partial extrapolation for subsonic cases
+                    for (j = 0; j < nVariables-1; ++j)
+                    {
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+
+                    (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[nVariables-1][pnt];
+                }
+                // Supersonic flows
+                else
+                {
+                    for (j = 0; j < nVariables; ++j)
+                    {
+                        // Extrapolation for supersonic cases
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Pressure outflow boundary conditions for compressible flow
+     * problems.
+     */
+    void CompressibleFlowSystem::PressureOutflowBC(
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        int i, j;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
+
+        const Array<OneD, const int> &traceBndMap
+        = m_fields[0]->GetTraceBndMap();
+
+        NekDouble gamma            = m_gamma;
+        NekDouble gammaMinusOne    = gamma - 1.0;
+        NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
+
+        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
+        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
+        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        Array<OneD, NekDouble> velInf(nDimensions, 0.0);
+
+        // Computing the normal velocity for characteristics coming
+        // from outside the computational domain
+        velInf[0] = m_uInf;
+        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
+        if (nDimensions == 2 || nDimensions == 3)
+        {
+            velInf[1] = m_vInf;
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
+        }
+        if (nDimensions == 3)
+        {
+            velInf[2] = m_wInf;
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
+        }
+
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
+        // Computing the normal velocity for characteristics coming
+        // from inside the computational domain
+        Array<OneD, NekDouble > Vn (nTracePts, 0.0);
+        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
+        }
+
+        // Computing the absolute value of the velocity in order to compute the
+        // Mach number to decide whether supersonic or subsonic
+        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
+        }
+        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+
+        // Get speed of sound
+        Array<OneD, NekDouble > soundSpeed(nTracePts);
+        Array<OneD, NekDouble > pressure  (nTracePts);
+
+        for (i = 0; i < nTracePts; i++)
+        {
+            if (m_spacedim == 1)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
+            }
+            else if (m_spacedim == 2)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            }
+            else
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
+                                       Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
+            }
+
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+        }
+
+        // Get Mach
+        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
+        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
+        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
+
+        // Auxiliary variables
+        int e, id1, id2, npts, pnt;
+        NekDouble rhoeb;
+
+        // Loop on the bcRegions
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+             GetExpSize(); ++e)
+        {
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetExp(e)->GetTotPoints();
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetPhys_Offset(e) ;
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+
+            // Loop on points of bcRegion 'e'
+            for (i = 0; i < npts; i++)
+            {
+                pnt = id2+i;
+
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {
+                    // Kinetic energy calculation
+                    NekDouble Ek = 0.0;
+                    for (j = 1; j < nVariables-1; ++j)
+                    {
+                        Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
+                    }
+
+                    rhoeb = m_pInf * gammaMinusOneInv + Ek;
+
+                    // Partial extrapolation for subsonic cases
+                    for (j = 0; j < nVariables-1; ++j)
+                    {
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+
+                    (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhoeb;
+                }
+                // Supersonic flows
+                else
+                {
+                    for (j = 0; j < nVariables; ++j)
+                    {
+                        // Extrapolation for supersonic cases
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @brief Pressure outflow boundary conditions for compressible flow
+     * problems.
+     */
+    void CompressibleFlowSystem::PressureOutflowFileBC(
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        int i, j;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
+
+        const Array<OneD, const int> &traceBndMap
+        = m_fields[0]->GetTraceBndMap();
+
+        NekDouble gamma            = m_gamma;
+        NekDouble gammaMinusOne    = gamma - 1.0;
+        NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
+
+        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
+        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
+        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        Array<OneD, NekDouble> velInf(nDimensions, 0.0);
+
+        // Computing the normal velocity for characteristics coming
+        // from outside the computational domain
+        velInf[0] = m_uInf;
+        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
+        if (nDimensions == 2 || nDimensions == 3)
+        {
+            velInf[1] = m_vInf;
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
+        }
+        if (nDimensions == 3)
+        {
+            velInf[2] = m_wInf;
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
+        }
+
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+
+        for (i = 0; i < nVariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
+        // Computing the normal velocity for characteristics coming
+        // from inside the computational domain
+        Array<OneD, NekDouble > Vn (nTracePts, 0.0);
+        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
+        }
+
+        // Computing the absolute value of the velocity in order to compute the
+        // Mach number to decide whether supersonic or subsonic
+        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
+        }
+        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+
+        // Get speed of sound
+        Array<OneD, NekDouble > soundSpeed (nTracePts, 0.0);
+        Array<OneD, NekDouble > pressure   (nTracePts, 0.0);
+
+        for (i = 0; i < nTracePts; i++)
+        {
+            if (m_spacedim == 1)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
+                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
+            }
+            else if (m_spacedim == 2)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
+                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            }
+            else
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
+                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
+                           Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
+            }
+
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+        }
+
+        // Get Mach
+        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
+        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
+        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
+
+        // Auxiliary variables
+        int e, id1, id2, npts, pnt;
+        NekDouble rhoeb;
+
+        // Loop on the bcRegions
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+             GetExpSize(); ++e)
+        {
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                                                GetExp(e)->GetTotPoints();
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                                                GetPhys_Offset(e);
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+
+            // Loop on points of bcRegion 'e'
+            for (i = 0; i < npts; i++)
+            {
+                pnt = id2+i;
+
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {
+                    // Kinetic energy calculation
+                    NekDouble Ek = 0.0;
+                    for (j = 1; j < nVariables-1; ++j)
+                    {
+                        Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
+                    }
+
+                    rhoeb = m_pressureStorage[id1+i] * gammaMinusOneInv + Ek;
+
+                    // Partial extrapolation for subsonic cases
+                    for (j = 0; j < nVariables-1; ++j)
+                    {
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+
+                    (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhoeb;
+                }
+                // Supersonic flows
+                else
+                {
+                    for (j = 0; j < nVariables; ++j)
+                    {
+                        // Extrapolation for supersonic cases
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @brief Pressure inflow boundary conditions for compressible flow
+     * problems where either the density and the velocities are assigned from a
+     * file or the full state is assigned from a file (depending on the problem
+     * type, either subsonic or supersonic).
+     */
+    void CompressibleFlowSystem::PressureInflowFileBC(
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        int i, j;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
+
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
+
+        NekDouble gamma            = m_gamma;
+        NekDouble gammaMinusOne    = gamma - 1.0;
+        NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
+
+        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
+        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
+        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        Array<OneD, NekDouble> velInf(nDimensions, 0.0);
+
+        // Computing the normal velocity for characteristics coming
+        // from outside the computational domain
+        velInf[0] = m_uInf;
+        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
+        if (nDimensions == 2 || nDimensions == 3)
+        {
+            velInf[1] = m_vInf;
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
+        }
+        if (nDimensions == 3)
+        {
+            velInf[2] = m_wInf;
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
+        }
+
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+
+        for (i = 0; i < nVariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
+        // Computing the normal velocity for characteristics coming
+        // from inside the computational domain
+        Array<OneD, NekDouble > Vn (nTracePts, 0.0);
+        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
+        }
+
+        // Computing the absolute value of the velocity in order to compute the
+        // Mach number to decide whether supersonic or subsonic
+        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
+        }
+        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+
+        // Get speed of sound
+        Array<OneD, NekDouble > soundSpeed (nTracePts, 0.0);
+        Array<OneD, NekDouble > pressure   (nTracePts, 0.0);
+
+        for (i = 0; i < nTracePts; i++)
+        {
+            if (m_spacedim == 1)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
+            }
+            else if (m_spacedim == 2)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            }
+            else
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
+                                       Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
+            }
+
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+        }
+
+        // Get Mach
+        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
+        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
+        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
+
+        // Auxiliary variables
+        int e, id1, id2, npts, pnt;
+        NekDouble rhoeb;
+
+        // Loop on the bcRegions
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+             GetExpSize(); ++e)
+        {
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetExp(e)->GetTotPoints();
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetPhys_Offset(e);
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+
+            // Loop on points of bcRegion 'e'
+            for (i = 0; i < npts; i++)
+            {
+                pnt = id2+i;
+
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {
+                    // Partial extrapolation for subsonic cases
+                    for (j = 0; j < nVariables-1; ++j)
+                    {
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = m_fieldStorage[j][id1+i];
+                    }
+
+                    // Kinetic energy calculation
+                    NekDouble Ek = 0.0;
+                    for (j = 1; j < nVariables-1; ++j)
+                    {
+                        Ek += 0.5 * (m_fieldStorage[j][id1+i] *
+                                     m_fieldStorage[j][id1+i]) /
+                                        m_fieldStorage[0][id1+i];
+                    }
+                    rhoeb = gammaMinusOneInv * pressure[pnt] + Ek;
+
+                    (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhoeb;
+                }
+                // Supersonic flows
+                else
+                {
+                    for (j = 0; j < nVariables; ++j)
+                    {
+                        // Extrapolation for supersonic cases
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
      * @brief Extrapolation of order 0 for all the variables such that,
      * at the boundaries, a trivial Riemann problem is solved.
      */
@@ -792,7 +1582,7 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-    
+
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
         for (i = 0; i < nVariables; ++i)
@@ -809,7 +1599,7 @@ namespace Nektar
         for (e = 0; e < eMax; ++e)
         {
             nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetNumPoints(0);
+                GetExp(e)->GetTotPoints();
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
@@ -851,7 +1641,7 @@ namespace Nektar
         int i, j;
         int nq = physfield[0].num_elements();
         int nVariables = m_fields.num_elements();
-        
+
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
 
@@ -1326,7 +2116,7 @@ namespace Nektar
             }
         }
     }
-    
+
     /**
      * @brief Return the flux vector for the LDG diffusion problem.
      * \todo Complete the viscous flux vector
@@ -1902,19 +2692,19 @@ namespace Nektar
         Array<OneD,             NekDouble  > &mach)
     {
         const int nq = m_fields[0]->GetTotPoints();
-        
+
         Vmath::Vmul(nq, physfield[1], 1, physfield[1], 1, mach, 1);
-        
+
         for (int i = 1; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nq, physfield[1+i], 1, physfield[1+i], 1,
                              mach,           1, mach,           1);
         }
-        
+
         Vmath::Vdiv(nq, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(nq, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vsqrt(nq, mach, 1, mach, 1);
-        
+
         Vmath::Vdiv(nq, mach, 1, soundspeed,   1, mach, 1);
     }
 
@@ -1939,13 +2729,102 @@ namespace Nektar
         for (int i = 0; i < nPts; ++i)
         {
             ratio = temperature[i] / T_star;
-            mu[i] = mu_star * ratio * sqrt(ratio) * 
+            mu[i] = mu_star * ratio * sqrt(ratio) *
                     (T_star + 110.0) / (temperature[i] + 110.0);
         }
     }
 
     /**
-     * @brief Calcualte entropy.
+     * @brief Perform post-integration checks, presently just to check steady
+     * state behaviour.
+     */
+    bool CompressibleFlowSystem::v_PostIntegrate(int step)
+    {
+        if (m_steadyStateTol > 0.0)
+        {
+            bool doOutput = step % m_infosteps == 0;
+            if (CalcSteadyState(doOutput))
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << "Reached Steady State to tolerance "
+                         << m_steadyStateTol << endl;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @brief Calculate whether the system has reached a steady state by
+     * observing residuals to a user-defined tolerance.
+     */
+    bool CompressibleFlowSystem::CalcSteadyState(bool output)
+    {
+        const int nPoints = GetTotPoints();
+        const int nFields = m_fields.num_elements();
+
+        // Holds L2 errors.
+        Array<OneD, NekDouble> L2      (nFields);
+        Array<OneD, NekDouble> residual(nFields);
+
+        for (int i = 0; i < nFields; ++i)
+        {
+            Array<OneD, NekDouble> diff(nPoints);
+
+            Vmath::Vsub(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1, diff, 1);
+            Vmath::Vmul(nPoints, diff, 1, diff, 1, diff, 1);
+            residual[i] = Vmath::Vsum(nPoints, diff, 1);
+        }
+
+        m_comm->AllReduce(residual, LibUtilities::ReduceSum);
+
+        // L2 error
+        L2[0] = sqrt(residual[0]) / m_rhoInf;
+
+        for (int i = 1; i < nFields-1; ++i)
+        {
+            L2[i] = sqrt(residual[i]) / m_UInf / m_rhoInf;
+        }
+
+        NekDouble Einf = m_pInf / (m_gamma-1.0) + 0.5 * m_rhoInf * m_UInf;
+        L2[nFields-1] = sqrt(residual[nFields-1]) / Einf;
+
+        if (m_comm->GetRank() == 0 && output)
+        {
+            // Output time
+            m_errFile << setprecision(8) << setw(17) << scientific << m_time;
+
+            // Output residuals
+            for (int i = 0; i < nFields; ++i)
+            {
+                m_errFile << setprecision(11) << setw(22) << scientific
+                          << L2[i];
+            }
+
+            m_errFile << endl;
+        }
+
+        // Calculate maximum L2 error
+        NekDouble maxL2 = Vmath::Vmax(nFields, L2, 1);
+
+        if (m_session->DefinesCmdLineArgument("verbose") &&
+            m_comm->GetRank() == 0 && output)
+        {
+            cout << "-- Maximum L^2 residual: " << maxL2 << endl;
+        }
+
+        if (maxL2 <= m_steadyStateTol)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Calculate entropy.
      */
     void CompressibleFlowSystem::GetEntropy(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
@@ -1960,21 +2839,22 @@ namespace Nektar
 
         for (int i = 0; i < npts; ++i)
         {
-            entropy[i] = m_gamma/(m_gamma-1.0)*m_gasConstant*log(temperature[i]/temp_inf) -
-                m_gasConstant*log(pressure[i]/m_pInf);
+            entropy[i] = m_gamma / (m_gamma - 1.0) * m_gasConstant *
+                            log(temperature[i]/temp_inf) - m_gasConstant *
+                            log(pressure[i] / m_pInf);
         }
-        
-        Vmath::Vmul(npts,entropy,1,entropy,1,L2entropy,1);
-        
+
+        Vmath::Vmul(npts, entropy, 1, entropy, 1, L2entropy, 1);
+
         entropy_sum = Vmath::Vsum(npts, L2entropy, 1);
-        
+
         entropy_sum = sqrt(entropy_sum);
-        
+
         std::ofstream m_file( "L2entropy.txt", std::ios_base::app);
-        
+
         m_file << setprecision(16) << scientific << entropy_sum << endl;
         //m_file << Vmath::Vmax(entropy.num_elements(),entropy,1) << endl;
-        
+
         m_file.close();
     }
 
@@ -1995,9 +2875,9 @@ namespace Nektar
         GetStdVelocity(inarray, stdVelocity);
 
         // Factors to compute the time-step limit
-        NekDouble minLength;
-        NekDouble alpha   = MaxTimeStepEstimator();
-        NekDouble cLambda = 0.2; // Spencer book-317
+        NekDouble minLength = 0.0;
+        NekDouble alpha     = MaxTimeStepEstimator();
+        NekDouble cLambda   = 0.2; // Spencer book-317
 
         // Loop over elements to compute the time-step limit for each element
         for(n = 0; n < nElements; ++n)
@@ -2006,17 +2886,10 @@ namespace Nektar
             Array<OneD, NekDouble> one2D(npoints, 1.0);
             NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
 
+            minLength = sqrt(Area);
             if (m_fields[0]->GetExp(n)->as<LocalRegions::TriExp>())
             {
-                minLength = 2.0 * sqrt(Area);
-            }
-            else if (m_fields[0]->GetExp(n)->as<LocalRegions::QuadExp>())
-            {
-                minLength = sqrt(Area);
-            }
-            else if (m_fields[0]->GetExp(n)->as<LocalRegions::HexExp>())
-            {
-                minLength = sqrt(Area);
+                minLength *= 2.0;
             }
 
             tstep[n] = m_cflSafetyFactor * alpha * minLength
@@ -2029,6 +2902,49 @@ namespace Nektar
         m_comm->AllReduce(TimeStep, LibUtilities::ReduceMin);
         return TimeStep;
     }
+
+    /**
+     * @brief Set up logic for residual calculation.
+     */
+    void CompressibleFlowSystem::v_SetInitialConditions(
+        NekDouble initialtime,
+        bool      dumpInitialConditions,
+        const int domain)
+    {
+        if (m_session->DefinesParameter("SteadyStateTol"))
+        {
+            const int nPoints = m_fields[0]->GetTotPoints();
+            m_un = Array<OneD, Array<OneD, NekDouble> > (
+                m_fields.num_elements());
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                cout << Vmath::Vmax(nPoints, m_fields[i]->GetPhys(), 1) << endl;
+                m_un[i] = Array<OneD, NekDouble>(nPoints);
+                Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
+            }
+
+            if (m_comm->GetRank() == 0)
+            {
+                std::string fName = m_session->GetSessionName() +
+                    std::string(".res");
+                m_errFile.open(fName.c_str());
+                m_errFile << "# "
+                          << setw(15) << left << "Time"
+                          << setw(22) << left << "rho";
+
+                std::string velFields[3] = {"u", "v", "w"};
+
+                for (int i = 0; i < m_fields.num_elements()-2; ++i)
+                {
+                    m_errFile << setw(22) << "rho"+velFields[i];
+                }
+
+                m_errFile << setw(22) << left << "E" << endl;
+            }
+        }
+    }
+
 
     /**
      * @brief Compute the advection velocity in the standard space
@@ -2051,7 +2967,7 @@ namespace Nektar
         Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
-        
+
         // Zero output array
         Vmath::Zero(stdV.num_elements(), stdV, 1);
 
@@ -2066,13 +2982,13 @@ namespace Nektar
         GetSoundSpeed    (inarray, pressure, soundspeed);
 
         for(int el = 0; el < n_element; ++el)
-        { 
+        {
             ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
 
             // Possible bug: not multiply by jacobian??
             const SpatialDomains::GeomFactorsSharedPtr metricInfo =
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
-            const Array<TwoD, const NekDouble> &gmat = 
+            const Array<TwoD, const NekDouble> &gmat =
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
                                                   ->GetDerivFactors(ptsKeys);
 
@@ -2183,105 +3099,105 @@ namespace Nektar
         int e, NumModesElement, nQuadPointsElement;
         int nTotQuadPoints  = GetTotPoints();
         int nElements       = m_fields[0]->GetExpSize();
-        
+
         // Find solution (SolP) at p = P;
         // The input array (physarray) is the solution at p = P;
-        
+
         Array<OneD,int> ExpOrderElement = GetNumExpModesPerExp();
-        
-        Array<OneD, NekDouble> SolP(nTotQuadPoints,0.0);
-        Array<OneD, NekDouble> SolPmOne(nTotQuadPoints,0.0);
-        Array<OneD, NekDouble> SolNorm(nTotQuadPoints,0.0);
-        
-        Vmath::Vcopy(nTotQuadPoints,physarray[0],1,SolP,1);
+
+        Array<OneD, NekDouble> SolP    (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SolPmOne(nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SolNorm (nTotQuadPoints, 0.0);
+
+        Vmath::Vcopy(nTotQuadPoints, physarray[0], 1, SolP, 1);
 
         int CoeffsCount = 0;
-        
+
         for (e = 0; e < nElements; e++)
         {
-            NumModesElement         = ExpOrderElement[e];
-            
+            NumModesElement        = ExpOrderElement[e];
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            int nCoeffsElement = m_fields[0]->GetExp(e)->GetNcoeffs();
-            int numCutOff = NumModesElement - 1;
-            
-            // Set-up of the Orthogonal basis for a Quadrilateral element which is
-            // needed to obtain thesolution at P =  p - 1;
-            
-            Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
-            Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
-            
-            Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
-            Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
-            
+            int nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
+            int numCutOff          = NumModesElement - 1;
+
+            // Set-up of the Orthogonal basis for a Quadrilateral element which
+            // is needed to obtain thesolution at P =  p - 1;
+
+            Array<OneD, NekDouble> SolPElementPhys  (nQuadPointsElement, 0.0);
+            Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,     0.0);
+
+            Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement, 0.0);
+            Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement, 0.0);
+
             // create vector the save the solution points per element at P = p;
-            
+
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 SolPElementPhys[i] = SolP[CoeffsCount+i];
             }
-            
+
             m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys,
                                              SolPElementCoeffs);
-            
-            // ReduceOrderCoeffs reduces the polynomial order of the solution that
-            // is represented by the coeffs given as an inarray. This is done by
-            // projecting the higher order solution onto the orthogonal basis and
-            // padding the higher order coefficients with zeros.
-            
+
+            // ReduceOrderCoeffs reduces the polynomial order of the solution
+            // that is represented by the coeffs given as an inarray. This is
+            // done by projecting the higher order solution onto the orthogonal
+            // basis and padding the higher order coefficients with zeros.
+
             m_fields[0]->GetExp(e)->ReduceOrderCoeffs(numCutOff,
                                                       SolPElementCoeffs,
                                                       SolPmOneElementCoeffs);
-            
+
             m_fields[0]->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,
                                              SolPmOneElementPhys);
-            
+
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
             }
-            
-            NekDouble SolPmeanNumerator = 0.0;
+
+            NekDouble SolPmeanNumerator   = 0.0;
             NekDouble SolPmeanDenumerator = 0.0;
-            
+
             // Determining the norm of the numerator of the Sensor
-            
+
             Vmath::Vsub(nQuadPointsElement,
                         SolPElementPhys, 1,
                         SolPmOneElementPhys, 1,
                         SolNorm, 1);
-            
+
             Vmath::Vmul(nQuadPointsElement,
                         SolNorm, 1,
                         SolNorm, 1,
                         SolNorm, 1);
-            
+
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 SolPmeanNumerator   += SolNorm[i];
                 SolPmeanDenumerator += SolPElementPhys[i];
             }
-            
+
             for (int i = 0; i < nQuadPointsElement; ++i)
             {
-                Sensor[CoeffsCount+i] = sqrt(SolPmeanNumerator/nQuadPointsElement)
-                                    /sqrt(SolPmeanDenumerator/nQuadPointsElement);
-                
+                Sensor[CoeffsCount+i] =
+                    sqrt(SolPmeanNumerator / nQuadPointsElement) /
+                    sqrt(SolPmeanDenumerator / nQuadPointsElement);
+
                 Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
             }
             CoeffsCount += nQuadPointsElement;
         }
 
         CoeffsCount = 0.0;
-        
+
         for (e = 0; e < nElements; e++)
         {
-            NumModesElement         = ExpOrderElement[e];
-            NekDouble ThetaS        = m_mu0;
-            NekDouble Phi0          = m_Skappa;
-            NekDouble DeltaPhi      = m_Kappa;
-            nQuadPointsElement      = m_fields[0]->GetExp(e)->GetTotPoints();
-            
+            NumModesElement    = ExpOrderElement[e];
+            NekDouble ThetaS   = m_mu0;
+            NekDouble Phi0     = m_Skappa;
+            NekDouble DeltaPhi = m_Kappa;
+            nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 if (Sensor[CoeffsCount+i] <= (Phi0 - DeltaPhi))
@@ -2294,29 +3210,25 @@ namespace Nektar
                 }
                 else if(abs(Sensor[CoeffsCount+i]-Phi0) < DeltaPhi)
                 {
-                    SensorKappa[CoeffsCount+i] = ThetaS/2*(1+sin(M_PI*
-                                        (Sensor[CoeffsCount+i]-Phi0)
-                                                    /(2*DeltaPhi)));
+                    SensorKappa[CoeffsCount+i] =
+                        ThetaS / 2 * (1 + sin(M_PI * (Sensor[CoeffsCount+i] -
+                                                      Phi0) / (2 * DeltaPhi)));
                 }
             }
-            
+
             CoeffsCount += nQuadPointsElement;
         }
 
     }
-    
+
     void CompressibleFlowSystem::GetForcingTerm(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > outarrayForcing)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > outarrayForcing)
     {
         const int nPts = m_fields[0]->GetTotPoints();
         const int nvariables = m_fields.num_elements();
         const int nElements = m_fields[0]->GetExpSize();
-        
-        NekDouble hxmin = 0.0;
-        NekDouble hymin = 0.0;
-        NekDouble hmin  = 0.0;
-        
+
         Array<OneD,  NekDouble>  Sensor(nPts, 0.0);
         Array<OneD,  NekDouble>  SensorKappa(nPts, 0.0);
         Array <OneD, NekDouble > Lambda(nPts, 0.0);
@@ -2327,115 +3239,128 @@ namespace Nektar
         Array <OneD, NekDouble > absVelocity(nPts, 0.0);
         Array <OneD, NekDouble > hel(nPts, 0.0);
         Array <OneD, NekDouble > h_minmin(m_spacedim, 0.0);
-        
+
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
         Array<OneD, NekDouble> pOrder (nPts, 0.0);
+
         // Thermodynamic related quantities
         GetPressure(inarray, pressure);
         GetTemperature(inarray, pressure, temperature);
         GetSoundSpeed(inarray, pressure, soundspeed);
         GetAbsoluteVelocity(inarray, absVelocity);
         GetSensor(inarray, Sensor, SensorKappa);
-        
+
         // Determine the maximum wavespeed
         Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
-        
+
         NekDouble LambdaMax = Vmath::Vmax(nPts, Lambda, 1);
-        
+
         int PointCount = 0;
-        
+
         for (int e = 0; e < nElements; e++)
         {
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            
+
             for (int n = 0; n < nQuadPointsElement; n++)
             {
                 pOrder[n + PointCount] = pOrderElmt[e];
-                
-                Tau[n + PointCount] = 1.0/(m_C1*pOrder[n + PointCount]*LambdaMax); // order 1.0e-06
-                
-                outarrayForcing[nvariables-1][n + PointCount] = 1/Tau[n + PointCount]*(m_hFactor*LambdaMax/pOrder[n + PointCount]*SensorKappa[n + PointCount]-inarray[nvariables-1][n + PointCount]);
+
+                // order 1.0e-06
+                Tau[n + PointCount] =
+                    1.0 / (m_C1*pOrder[n + PointCount]*LambdaMax);
+
+                outarrayForcing[nvariables-1][n + PointCount] =
+                    1 / Tau[n + PointCount] * (m_hFactor * LambdaMax /
+                                        pOrder[n + PointCount] *
+                                        SensorKappa[n + PointCount] -
+                                        inarray[nvariables-1][n + PointCount]);
             }
             PointCount += nQuadPointsElement;
         }
     }
 
     void CompressibleFlowSystem::GetElementDimensions(
-                          Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                          Array<OneD,       NekDouble > &hmin)
+        Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        Array<OneD,                   NekDouble >  &hmin)
     {
         // So far, this function is only implemented for quads
         const int nElements = m_fields[0]->GetExpSize();
-        
+
         SpatialDomains::HexGeomSharedPtr    ElHexGeom;
-        
+
         NekDouble hx = 0.0;
         NekDouble hy = 0.0;
-        
+
         for (int e = 0; e < nElements; e++)
         {
             NekDouble nedges = m_fields[0]->GetExp(e)->GetNedges();
             Array <OneD, NekDouble> L1(nedges, 0.0);
-            
+
             for (int j = 0; j < nedges; ++j)
             {
-                
+
                 NekDouble x0 = 0.0;
                 NekDouble y0 = 0.0;
                 NekDouble z0 = 0.0;
-                
+
                 NekDouble x1 = 0.0;
                 NekDouble y1 = 0.0;
                 NekDouble z1 = 0.0;
-                
-                if (boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+
+                if (boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                                            m_fields[0]->GetExp(e)->GetGeom()))
                 {
-                    SpatialDomains::QuadGeomSharedPtr ElQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    ElQuadGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElQuadGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                    
+                    SpatialDomains::QuadGeomSharedPtr ElQuadGeom =
+                        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                                            m_fields[0]->GetExp(e)->GetGeom());
+
+                    ElQuadGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0, y0, z0);
+                    ElQuadGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1, y1, z1);
+
                     L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
                 }
                 else
                 {
-                    ASSERTL0(false, "GetElementDimensions() is only implemented for quadrilateral elements");
+                    ASSERTL0(false, "GetElementDimensions() is only "
+                                    "implemented for quadrilateral elements");
                 }
             }
             // determine the minimum length in x and y direction
-            // still have to find a better estimate when dealing with unstructured meshes
-            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+            // still have to find a better estimate when dealing
+            // with unstructured meshes
+            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                                            m_fields[0]->GetExp(e)->GetGeom()))
             {
                 hx = min(L1[0], L1[2]);
                 hy = min(L1[1], L1[3]);
-                    
+
                 outarray[0][e] = hx;
                 outarray[1][e] = hy;
             }
         }
-    
+
         hmin[0] = Vmath::Vmin(outarray[0].num_elements(), outarray[0], 1);
         hmin[1] = Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1);
     }
-    
+
     void CompressibleFlowSystem::GetAbsoluteVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,                   NekDouble>   &Vtot)
     {
         int nTotQuadPoints = GetTotPoints();
-        
+
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
-        
+
         Vmath::Zero(Vtot.num_elements(), Vtot, 1);
-        
+
         for (int i = 0; i < m_spacedim; ++i)
         {
             velocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
         }
-        
+
         GetVelocityVector(inarray, velocity);
-        
+
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nTotQuadPoints,
@@ -2444,55 +3369,50 @@ namespace Nektar
                          Vtot, 1,
                          Vtot, 1);
         }
-        
+
         Vmath::Vsqrt(Vtot.num_elements(),Vtot,1,Vtot,1);
     }
-    
+
     void CompressibleFlowSystem::GetSmoothArtificialViscosity(
-                        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                              Array<OneD,             NekDouble  > &eps_bar)
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD,             NekDouble  > &eps_bar)
     {
         int nvariables = physfield.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
-        
-        Array<OneD, NekDouble > pressure            (nPts, 0.0);
-        Array<OneD, NekDouble > temperature         (nPts, 0.0);
-        Array <OneD, NekDouble > sensor             (nPts, 0.0);
-        Array <OneD, NekDouble > SensorKappa        (nPts, 0.0);
-        Array <OneD, NekDouble > absVelocity        (nPts, 0.0);
-        Array <OneD, NekDouble > soundspeed         (nPts, 0.0);
-        Array <OneD, NekDouble > Lambda             (nPts, 0.0);
-        Array <OneD, NekDouble > mu_var             (nPts, 0.0);
-        Array <OneD, NekDouble > h_minmin           (m_spacedim, 0.0);
+
+        Array<OneD, NekDouble > pressure   (nPts, 0.0);
+        Array<OneD, NekDouble > temperature(nPts, 0.0);
+        Array<OneD, NekDouble > sensor     (nPts, 0.0);
+        Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
+        Array<OneD, NekDouble > absVelocity(nPts, 0.0);
+        Array<OneD, NekDouble > soundspeed (nPts, 0.0);
+        Array<OneD, NekDouble > Lambda     (nPts, 0.0);
+        Array<OneD, NekDouble > mu_var     (nPts, 0.0);
+        Array<OneD, NekDouble > h_minmin   (m_spacedim, 0.0);
         Vmath::Zero(nPts, eps_bar, 1);
-        
+
         // Thermodynamic related quantities
         GetPressure(physfield, pressure);
         GetTemperature(physfield, pressure, temperature);
         GetSoundSpeed(physfield, pressure, soundspeed);
         GetAbsoluteVelocity(physfield, absVelocity);
         GetSensor(physfield, sensor, SensorKappa);
-        
+
         // Determine the maximum wavespeed
         Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
-        NekDouble LambdaMax = Vmath::Vmax(nPts, Lambda, 1);
-        
+
         // Determine hbar = hx_i/h
-        const int nElements  = m_fields[0]->GetExpSize();
-        
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
-        
-        NekDouble order = Vmath::Vmax(pOrderElmt.num_elements(), pOrderElmt, 1);
-        
+
         NekDouble ThetaH = m_FacH;
         NekDouble ThetaL = m_FacL;
-        
+
         NekDouble Phi0     = (ThetaH+ThetaL)/2;
         NekDouble DeltaPhi = ThetaH-Phi0;
-    
+
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
 
-	    /*Vmath::Smul(eps_bar.num_elements(),
+            /*Vmath::Smul(eps_bar.num_elements(),
                     m_eps_max,
                     &physfield[nvariables-1][0], 1,
                     &eps_bar[0], 1);*/
@@ -2512,19 +3432,18 @@ namespace Nektar
                 eps_bar[e] = m_mu0/2*(1+sin(M_PI*
                 (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
             }
-        }	
-	
+        }
+
     }
-    
+
     void CompressibleFlowSystem::GetArtificialDynamicViscosity(
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD,             NekDouble  > &mu_var)
     {
-        const int nElements  = m_fields[0]->GetExpSize();
-    
-        int PointCount = 0;
+        const int nElements = m_fields[0]->GetExpSize();
+        int PointCount      = 0;
         int nTotQuadPoints  = GetTotPoints();
-        
+
         Array<OneD, NekDouble> S_e        (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> se         (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
@@ -2532,16 +3451,16 @@ namespace Nektar
         Array<OneD, NekDouble> absVelocity(nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> soundspeed (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> pressure   (nTotQuadPoints, 0.0);
-        
+
         GetAbsoluteVelocity(physfield, absVelocity);
         GetPressure        (physfield, pressure);
         GetSoundSpeed      (physfield, pressure, soundspeed);
         GetSensor          (physfield, Sensor, SensorKappa);
-        
+
         Array<OneD, int> pOrderElmt = GetNumExpModesPerExp();
         Array<OneD, NekDouble> Lambda(nTotQuadPoints, 1.0);
         Vmath::Vadd(nTotQuadPoints, absVelocity, 1, soundspeed, 1, Lambda, 1);
-        
+
         for (int e = 0; e < nElements; e++)
         {
             // Threshold value specified in C. Biottos thesis.  Based on a 1D
@@ -2555,44 +3474,46 @@ namespace Nektar
 
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             Array <OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
-            
+
             for (int n = 0; n < nQuadPointsElement; n++)
             {
                 NekDouble mu_0 = m_mu0;
-                
+
                 if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
                 {
                     mu_var[n+PointCount] = 0;
                 }
-                else if(Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
+                else if (Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
                         && Sensor[n+PointCount] <= (m_Skappa+m_Kappa))
                 {
-                    mu_var[n+PointCount] = mu_0*(0.5*(1+sin(
-                                           M_PI*(Sensor[n+PointCount]-m_Skappa-m_Kappa)/(2*m_Kappa))));
+                    mu_var[n+PointCount] = mu_0 * (0.5 * (1 + sin(
+                                           M_PI * (Sensor[n+PointCount] -
+                                                   m_Skappa - m_Kappa) /
+                                                            (2*m_Kappa))));
                 }
-                else if(Sensor[n+PointCount] > (m_Skappa+m_Kappa))
+                else if (Sensor[n+PointCount] > (m_Skappa+m_Kappa))
                 {
                     mu_var[n+PointCount] = mu_0;
                 }
             }
-            
+
             PointCount += nQuadPointsElement;
         }
     }
 
     void CompressibleFlowSystem::SetVarPOrderElmt(
-                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                      Array<OneD,                    NekDouble  > &PolyOrder)
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD,                   NekDouble  > &PolyOrder)
     {
         int e;
         NekDouble s_ds, s_sm, s_fl;
-        
-        int nElements  = m_fields[0]->GetExpSize();
-        int npts       = m_fields[0]->GetTotPoints();
-        
-        Array<OneD, NekDouble > Sensor           (npts, 0.0);
-        Array<OneD, NekDouble > SensorKappa      (npts, 0.0);
-        Array<OneD, NekDouble > se               (npts,0.0);
+
+        int nElements = m_fields[0]->GetExpSize();
+        int npts      = m_fields[0]->GetTotPoints();
+
+        Array<OneD, NekDouble > Sensor     (npts, 0.0);
+        Array<OneD, NekDouble > SensorKappa(npts, 0.0);
+        Array<OneD, NekDouble > se         (npts, 0.0);
 
         GetSensor(physfield, Sensor, SensorKappa);
 
@@ -2601,33 +3522,33 @@ namespace Nektar
         int MinOrder            = 2;
         int MaxOrder            = 12;
         int MinOrderShock       = 4;
-        
+
         std::ofstream m_file( "VariablePComposites.txt", std::ios_base::app);
         for (int e = 0; e < nElements; e++)
         {
             m_file << "<C ID=\"" << e+1 << "\"> Q[" << e << "] </C>"<< endl;
         }
         m_file.close();
-        
+
         std::ofstream m_file2( "VariablePExpansions.txt", std::ios_base::app);
-        
+
         for (e = 0; e < nElements; e++)
         {
             nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            
+
             // Define thresholds
-            // Ideally, these threshold values could be given in the Session File
-            
+            // Ideally, these threshold values could be given
+            // in the Session File
             s_ds =  -5.0;
             //s_ds = s_0*log10(PolyOrder[e]);
             s_sm = -6;
             s_fl = -7;
-            
-            
+
+
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 se[npCount + i] = (Sensor[npCount + i]);
-                
+
                 if (se[npCount + i] > s_ds)
                 {
                     if (PolyOrder[npCount + i] > MinOrderShock)
@@ -2638,20 +3559,20 @@ namespace Nektar
                     {
                         PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
                     }
-                    
+
                 }
-                else if(se[npCount + i] > s_sm && se[npCount + i] < s_ds)
+                else if (se[npCount + i] > s_sm && se[npCount + i] < s_ds)
                 {
                     if (PolyOrder[npCount + i] < MaxOrder)
                     {
                         PolyOrder[npCount + i] = PolyOrder[npCount + i] + 2;
                     }
                 }
-                else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
+                else if (se[npCount + i] > s_fl && se[npCount + i] < s_sm)
                 {
                     PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
                 }
-                else if(se[npCount + i] < s_fl)
+                else if (se[npCount + i] < s_fl)
                 {
                     if (PolyOrder[npCount + i] > MinOrder)
                     {
@@ -2665,7 +3586,7 @@ namespace Nektar
                     << endl;
             npCount += nQuadPointsElement;
         }
-        
+
         m_file2.close();
     }
 
@@ -2682,16 +3603,18 @@ namespace Nektar
             tmp[i] = m_fields[i]->GetPhys();
         }
 
-        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys), sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
-        
+        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+        Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
+
         GetPressure  (tmp, pressure);
         GetSoundSpeed(tmp, pressure, soundspeed);
         GetMach      (tmp, soundspeed, mach);
         GetSensor    (tmp, sensor, SensorKappa);
         GetSmoothArtificialViscosity    (tmp, smooth);
-	
-        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs), sensFwd(nCoeffs), smoothFwd(nCoeffs);
-        
+
+        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+        Array<OneD, NekDouble> sensFwd(nCoeffs), smoothFwd(nCoeffs);
+
         m_fields[0]->FwdTrans(pressure,   pFwd);
         m_fields[0]->FwdTrans(soundspeed, sFwd);
         m_fields[0]->FwdTrans(mach,       mFwd);
@@ -2710,4 +3633,3 @@ namespace Nektar
         fieldcoeffs.push_back(smoothFwd);
     }
 }
-

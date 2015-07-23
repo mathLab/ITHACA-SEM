@@ -48,6 +48,48 @@ example,
 The list of available solvers in Nektar++ can be found in
 Chapter~\ref{c:solvers}.
 
+\subsubsection{Drivers}
+Drivers are defined under the \inltt{CONDITIONS} section as properties of the 
+\inltt{SOLVERINFO} XML element. The role of a driver is to manage the solver 
+execution from an upper level. 
+
+\paragraph{Standard Driver}
+The default driver is called \inltt{Standard} 
+and executes the following steps:
+\begin{enumerate}
+\item Prints out on screen a summary of all the conditions defined in the input file.
+\item Sets up the initial and boundary conditions.
+\item Calls the solver defined by \inltt{SolverType}  in the \inltt{SOLVERINFO} XML element.
+\item Writes the results in the output (.fld) file.
+\end{enumerate}
+
+In the following example, the driver \inltt{Standard} is used to manage the 
+execution of the incompressible Navier-Stokes equations:
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="Projection" VALUE="Galerkin" />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+    <I PROPERTY="Driver" VALUE="Standard" />
+</SOLVERINFO>
+\end{lstlisting}
+
+If no driver is specified in the session file, the driver \inltt{Standard} is 
+called by default. Other drivers can be used and are typically focused on
+specific applications. As described in Sec.
+\ref{SectionIncNS_SolverInfo} and  \ref{SectionIncNS_SolverInfo_Stab}, 
+the other possibilities are:
+\begin{itemize}
+\item \inltt{SteadyState} - uses the Selective Frequency Damping method 
+(see Sec. \ref{SectionSFD}) to obtain a steady-state solution of the 
+Navier-Stokes equations (compressible or incompressible).
+\item \inltt{ModifiedArnoldi}  - computes of the leading eigenvalues and 
+eigenmodes using modified Arnoldi method.
+\item \inltt{Arpack} - computes of eigenvalues/eigenmodes using Implicitly 
+Restarted Arnoldi Method (ARPACK).
+\end{itemize}
+
 
 \subsection{Variables}
 
@@ -96,10 +138,16 @@ The parameters in this section override those specified in the Parameters sectio
 \subsection{Boundary Regions and Conditions}
 
 Boundary conditions are defined by two XML elements. The first defines the
-various boundary regions in the domain in terms of composite entities from the
+boundary regions in the domain in terms of composite entities from the
 \inltt{GEOMETRY} section of the file. Each boundary region has a unique ID and
-are defined as, for example,
-
+are defined as, 
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYREGIONS>
+    <B ID=[id]> [composite-list] </B>
+    ...
+</BOUNDARYREGIONS>
+\end{lstlisting}
+For example,
 \begin{lstlisting}[style=XMLStyle]
 <BOUNDARYREGIONS>
   <B ID="0"> C[2] </B>
@@ -107,84 +155,136 @@ are defined as, for example,
 </BOUNDARYREGIONS>
 \end{lstlisting}
 
-The second defines the actual boundary condition to impose on that composite
-region for each of the defined solution variables, and has the form,
-
+The second XML element defines, for each variable, the condition to impose on
+each boundary region, and has the form,
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+    <REGION REF="[regionID]">
+      <[type1] VAR="[variable1]" VALUE="[expression1]" />
+      ...
+      <[typeN] VAR="[variableN]" VALUE="[expressionN]" />
+    </REGION>
+    ...
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+There should be precisely one \inltt{REGION} entry for each \inltt{B} entry
+defined in the \inltt{BOUNDARYREGION} section above. For example, to impose a
+Dirichlet condition on both variables for a domain with a single region, 
 \begin{lstlisting}[style=XMLStyle] 
 <BOUNDARYCONDITIONS>
   <REGION REF="0">
-    <D VAR="u" VALUE="sin(PI*x)*cos(PI*y)" /> <D VAR="v"
-    VALUE="sin(PI*x)*cos(PI*y)" />
+    <D VAR="u" VALUE="sin(PI*x)*cos(PI*y)" /> 
+    <D VAR="v" VALUE="sin(PI*x)*cos(PI*y)" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+Boundary condition specifications may refer to any parameters defined in the
+session file. The \inltt{REF} attribute corresponds to a defined boundary
+region. The tag used for each variable specifies the type of boundary condition
+to enforce.
+
+\subsubsection{Dirichlet (essential) condition}
+Dirichlet conditions are specified with the \inltt{D} tag.
+
+\begin{tabular}{llll}
+Projection & Homogeneous support & Time-dependent support & Dimensions \\
+\toprule
+CG & Yes & Yes & 1D, 2D and 3D \\
+DG & Yes & Yes & 1D, 2D and 3D \\
+HDG& Yes & Yes & 1D, 2D and 3D
+\end{tabular}
+
+Example:
+\begin{lstlisting}[style=XMLStyle]
+<!-- homogeneous condition -->
+<D VAR="u" VALUE="0" />
+<!-- inhomogeneous condition -->
+<D VAR="u" VALUE="x^2+y^2+z^2" />
+<!-- time-dependent condition -->
+<D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="x+t" />
+\end{lstlisting}
+
+\subsubsection{Neumann (natural) condition}
+Neumann conditions are specified with the \inltt{N} tag.
+
+\begin{tabular}{llll}
+Projection & Homogeneous support & Time-dependent support & Dimensions \\
+\toprule
+CG & Yes & Yes & 1D, 2D and 3D \\
+DG & No  & No  & 1D, 2D and 3D \\
+HDG & ? & ? & ?
+\end{tabular}
+
+Example:
+\begin{lstlisting}[style=XMLStyle]
+<!-- homogeneous condition -->
+<N VAR="u" VALUE="0" />
+<!-- inhomogeneous condition -->
+<N VAR="u" VALUE="x^2+y^2+z^2" />
+<!-- time-dependent condition -->
+<N VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="x+t" />
+<!-- high-order pressure boundary condition (for IncNavierStokesSolver) -->
+<N VAR="u" USERDEFINEDTYPE="H" VALUE="0" />
+\end{lstlisting}
+
+\subsubsection{Periodic condition}
+Periodic conditions are specified with the \inltt{P} tag.
+
+\begin{tabular}{lll}
+Projection & Homogeneous support & Dimensions \\
+\toprule
+CG  & Yes & 1D, 2D and 3D \\
+DG  & No  & 2D and 3D
+\end{tabular}
+
+Example:
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYREGIONS>
+  <B ID="0"> C[1] </B>
+  <B ID="1"> C[2] </B>
+</BOUNDARYREGIONS>
+
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <P VAR="u" VALUE="[1]" />
+  </REGION>
+  <REGION REF="1">
+    <P VAR="u" VALUE="[0]" />
   </REGION>
 </BOUNDARYCONDITIONS>
 \end{lstlisting}
 
-Boundary condition specifications may refer to any parameters defined in the
-session file. The REF attribute corresponds to a defined boundary region. The
-tag used for each variable specifies the type of boundary condition to enforce.
-These can be either
+Periodic boundary conditions are specified in a significantly different form to
+other conditions. The \inltt{VALUE} property is used to specify which
+\inltt{BOUNDARYREGION} is periodic with the current region in square brackets.
+
+Caveats:
 \begin{itemize}
-    \item \inltt{D} Dirichlet 
-    \item \inltt{N} Neumann 
-    \item \inltt{R} Robin 
-    \item \inltt{P} Periodic
+\item A periodic condition must be set for '''both''' boundary regions; simply
+ specifying a condition for region 0 or 1 in the above example is not enough.
+\item The order of the elements inside the composites defining periodic
+boundaries is important. For example, if `C[0]` above is defined as edge IDs 
+`{0,5,4,3}` and `C[1]` as `{7,12,2,1}` then edge 0 is periodic with edge 7, 5 
+with 12, and so on.
+\item For the above reason, the composites must also therefore be of the same
+size.
+\item In three dimensions, care must be taken to correctly align triangular
+faces which are intended to be periodic. The top (degenerate) vertex should be 
+aligned so that, if the faces were connected, it would lie at the same point on 
+both triangles.
 \end{itemize}
 
-% TODO: document user defined types, etc
-
+\subsubsection{Time-dependent boundary conditions}
 Time-dependent boundary conditions may be specified through setting the
-\inltt{USERDEFINEDTYPE} attribute. For example,
-
+\inltt{USERDEFINEDTYPE} attribute and using the parameter \inltt{t} where the
+current time is required. For example,
 \begin{lstlisting}[style=XMLStyle]
 <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))" />
 \end{lstlisting}
 
-Periodic boundary conditions reference the corresponding boundary region with
-which to enforce periodicity.
-
-The following example provides an example of three boundary conditions for a
-two-dimensional flow,
-
-\begin{lstlisting}[style=XMLStyle]
-<BOUNDARYCONDITIONS>
-  <REGION REF="0">
-    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-    <P VAR="p" VALUE=[2]/>
-  </REGION>
-  <REGION REF="1">
-    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-    <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
-  </REGION>
-  <REGION REF="2">
-    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-    <P VAR="p" VALUE=[0]/>
-  </REGION>
-  <REGION REF="3">
-    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-    <D VAR="p" USERDEFINEDTYPE="TimeDependent" 
-               VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
-  </REGION>
-</BOUNDARYCONDITIONS>
-\end{lstlisting}
-
-where the boundary regions which are periodic are linked via their region
-identifier (Region 0 and Region 2).
-
-Boundary conditions can also be loaded from file, here an example from the
-Incompressible Navier-Stokes cases,
-
+\subsubsection{Boundary conditions from file}
+Boundary conditions can also be loaded from file. The following example is from
+the Incompressible Navier-Stokes solver,
 \begin{lstlisting}[style=XMLStyle]
 <REGION REF="1">
   <D VAR="u" FILE="Test_ChanFlow2D_bcsfromfiles_u_1.bc" />
@@ -214,7 +314,7 @@ the field data is specified. The expansion order used to generate the .rst file
 must be the same as that for the simulation. The filename must be specified
 relative to the location of the .xml file.
 
-Other examples of this input features can be the insertion of a forcing term,
+Other examples of this input feature can be the insertion of a forcing term,
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="BodyForce">
@@ -236,7 +336,59 @@ or of a linear advection term
 </FUNCTION>
 \end{lstlisting}
 
-[wiki:Reference/AnalyticExpressions This page] provides the list of acceptable mathematical functions and other related technical details.
+\subsubsection{Remapping variable names}
+
+Note that it is sometimes the case that the variables being used in the solver
+do not match those saved in the FLD file. For example, if one runs a
+three-dimensional incompressible Navier-Stokes simulation, this produces an FLD
+file with the variables \inltt{u}, \inltt{v}, \inltt{w} and \inltt{p}. If we
+wanted to use this velocity field as input for an advection velocity, the
+advection-diffusion-reaction solver expects the variables \inltt{Vx}, \inltt{Vy}
+and \inltt{Vz}.
+
+We can manually specify this mapping by adding a colon to the
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="AdvectionVelocity">
+  <F VAR="Vx,Vy,Vz" FILE="file.fld:u,v,w" />
+</FUNCTION>
+\end{lstlisting}
+
+There are some caveats with this syntax:
+
+\begin{itemize}
+  \item You must specify the same number of fields for both the variable, and
+  after the colon. For example, the following is not valid.
+  \begin{lstlisting}[style=XMLStyle,gobble=4]
+    <FUNCTION NAME="AdvectionVelocity">
+      <F VAR="Vx,Vy,Vz" FILE="file.fld:u" />
+    </FUNCTION>\end{lstlisting}
+  \item This syntax is not valid with the wildcard operator \inltt{*}, so one
+  cannot write for example:
+  \begin{lstlisting}[style=XMLStyle,gobble=4]
+    <FUNCTION NAME="AdvectionVelocity">
+      <F VAR="*" FILE="file.fld:u,v,w" />
+    </FUNCTION>
+  \end{lstlisting}
+\end{itemize}
+
+\subsubsection{Time-dependent file-based functions}
+
+With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
+loaded for each timestep. The filenames are defined using
+\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format
+  syntax} where the step time is used as variable. For example, the function
+\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
+\inltt{U0V0\_2.00000000E-05.fld} and so on.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Baseflow">
+  <F VAR="U0,V0" TIMEDEPENDENT="1" FILE="U0V0_%14.8R.fld" />
+</FUNCTION>
+\end{lstlisting}
+
+Section~\ref{sec:xml:analytic-expressions} provides the list of acceptable
+mathematical functions and other related technical details.
 
 \subsection{Quasi-3D approach}
 
@@ -333,3 +485,7 @@ available. In case of a 1D homogeneous extension, the homogeneous direction will
 be the z-axis. In case of a 2D homogeneous extension, the homogeneous directions
 will be the y-axis and the z-axis.
 
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End:

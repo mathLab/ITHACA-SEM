@@ -45,7 +45,7 @@
 
 namespace Nektar
 {
-    
+
     /// Protocol base class.
     class StimulusPoint: public Stimulus
     {
@@ -63,24 +63,26 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
-        StimulusPoint(const LibUtilities::SessionReaderSharedPtr& pSession,
-                     const MultiRegions::ExpListSharedPtr& pField,
-                     const TiXmlElement* pXml);
-        
+        friend class MemoryManager<StimulusPoint>;
+
         virtual ~StimulusPoint() {}
-        
+
         /// Initialise the stimulus storage and set initial conditions
         void Initialise();
-        
+
     protected:
         NekDouble m_strength;
 
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time);
-        
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        
+
+    private:
+        StimulusPoint(const LibUtilities::SessionReaderSharedPtr& pSession,
+                     const MultiRegions::ExpListSharedPtr& pField,
+                     const TiXmlElement* pXml);
     };
 }
 
-#endif 
+#endif

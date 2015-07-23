@@ -34,6 +34,7 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include <SpatialDomains/Geometry.h>
 
 namespace Nektar
@@ -172,6 +173,13 @@ namespace Nektar
                     return StdRegions::eFwd;
         }
 
+        StdRegions::Orientation Geometry::v_GetForient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is not valid for this geometry.");
+                    return StdRegions::eFwd;
+        }
+
         int Geometry::v_GetNumEdges() const
         {
             NEKERROR(ErrorUtil::efatal,
@@ -292,6 +300,20 @@ namespace Nektar
             return m_coordim;
         }
 
+        /**
+         * @brief Reset this geometry object: unset the current state and remove
+         * allocated GeomFactors.
+         */
+        void Geometry::v_Reset(CurveMap &curvedEdges,
+                               CurveMap &curvedFaces)
+        {
+            // Reset state
+            m_state            = eNotFilled;
+            m_geomFactorsState = eNotFilled;
+
+            // Junk geometric factors
+            m_geomFactors = GeomFactorsSharedPtr();
+        }
     }; //end of namespace
 }; //end of namespace
 

@@ -7,6 +7,10 @@
 \hangindent=1.5cm
 Displays extra info.
 
+\lstinline[style=BashInputStyle]{--version}\\
+\hangindent=1.5cm
+Displays software version, and source control information if applicable.
+
 \lstinline[style=BashInputStyle]{--help}\\
 \hangindent=1.5cm
 Displays help information about the available command-line options for the executable.
@@ -34,3 +38,24 @@ When using a fully-Fourier expansion, specifies the number of processes to use i
 \lstinline[style=BashInputStyle]{--npz [int]}\\
 \hangindent=1.5cm
 When using Fourier expansions, specifies the number of processes to use in the z-coordinate direction.
+
+\lstinline[style=BashInputStyle]{--part-info}\\
+\hangindent=1.5cm
+Prints detailed information about the generated partitioning, such as number of
+elements, number of local degrees of freedom and the number of boundary degrees
+of freedom.
+
+\lstinline[style=BashInputStyle]{--part-only [int]}\\
+\hangindent=1.5cm
+Partition the mesh only into the specified number of partitions, write to file
+and exit. This can be used to pre-partition a very large mesh on a single
+high-memory node, prior to being executed on a multi-node cluster.
+
+\lstinline[style=BashInputStyle]{--use-metis}\\
+\hangindent=1.5cm
+Forces the use of METIS for mesh partitioning. If \nekpp{} is compiled with
+Scotch support, the default is to use Scotch.
+
+\lstinline[style=BashInputStyle]{--use-scotch}\\
+\hangindent=1.5cm
+Forces the use of Scotch for mesh partitioning.

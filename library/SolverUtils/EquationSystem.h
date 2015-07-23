@@ -42,6 +42,9 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
@@ -63,7 +66,7 @@ namespace Nektar
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
         /// A base class for describing how to solve specific equations.
-        class EquationSystem
+        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -99,6 +102,18 @@ namespace Nektar
                 return m_sessionName;
             }
 
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
+            }
 
             /// Reset Session name
             SOLVER_UTILS_EXPORT void ResetSessionName(std::string newname)
@@ -241,7 +256,10 @@ namespace Nektar
                 MultiRegions::ExpListSharedPtr &field,
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string> &variables);
-            
+        
+            /// Write base flow file of #m_fields.
+            SOLVER_UTILS_EXPORT void Checkpoint_BaseFlow(const int n);
+
             /// Write field data to the given filename.
             SOLVER_UTILS_EXPORT void WriteFld(const std::string &outname);
             
@@ -394,6 +412,10 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
+            /// Map of the interpolation weights for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  float> > > m_interpWeights;
+            /// Map of the interpolation indices for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  unsigned int> > > m_interpInds;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -404,8 +426,6 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            /// Filename.
-            std::string                                 m_filename;
             /// Name of the session.
             std::string                                 m_sessionName;
             /// Current time of simulation.
@@ -590,6 +610,12 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble > >              &qflux);
+
+            SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
+                                                      const int goal) const
+            {
+                LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+            }
         };
         
         

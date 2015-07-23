@@ -29,6 +29,8 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
+\usepackage{import}
+
 
 %%% PAGE LAYOUT 
 %%%-----------------------------------------------------------------------------
@@ -151,6 +153,8 @@ openany, % A chapter may start on either a recto or verso page.
 %%%-----------------------------------------------------------------------------
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
+\usepackage{lstautogobble}
+\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -194,7 +198,92 @@ openany, % A chapter may start on either a recto or verso page.
   linewidth=0.9\linewidth,
   xleftmargin=0.1\linewidth
 }
+\lstdefinestyle{C++Style}{
+  language=C++,
+  basicstyle=\sffamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!05},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.1\linewidth,
+  showspaces=false,
+  showstringspaces=false
+}
 
+\usepackage{tikz}
+\newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
+rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
+\newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
+outer sep=0,fill=black!05]{\texttt{#1}};}
+\newcommand{\nekpp}{{\em Nektar++}\xspace}
+
+% Highlight box
+\usepackage{environ}
+\usepackage[tikz]{bclogo}
+\usetikzlibrary{calc}
+\NewEnviron{notebox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcinfo};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Note}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{warningbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=red!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcdanger};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Warning}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{tipbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=green!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bclampe};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Tip}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{custombox}[3]
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=#3!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{#2};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{#1}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------
@@ -285,17 +374,52 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \clearpage
 
 \chapter{Introduction}
-Welcome to the developer's guide for Nektar++\cite{nektar-website}.
+Nektar++ \cite{CaMoCoBoRo15} is a tensor product based finite element package
+designed to allow one to construct efficient classical low polynomial order
+$h$-type solvers (where $h$ is the size of the finite element) as well as higher
+$p$-order piecewise polynomial order solvers.  The framework currently has the
+following capabilities:
+
+\begin{itemize}
+\item Representation of one, two and three-dimensional fields as a collection of
+ piecewise continuous or discontinuous polynomial domains.
+\item Segment, plane and volume domains are permissible, as well as domains
+ representing curves and surfaces (dimensionally-embedded domains).
+\item Hybrid shaped elements, i.e triangles and quadrilaterals or tetrahedra,
+prisms and hexahedra.
+\item Both hierarchical and nodal expansion bases.
+\item Continuous or discontinuous Galerkin operators.
+\item Cross platform support for Linux, Mac OS X and Windows.
+\end{itemize}
+
+The framework comes with a number of solvers and also allows one to construct a
+variety of new solvers.
+
+Our current goals are to develop:
+\begin{itemize}
+\item Automatic auto-tuning of optimal operator implementations based upon not
+only $h$ and $p$ but also hardware considerations and mesh connectivity.
+\item Temporal and spatial adaption.
+\item Features enabling evaluation of high-order meshing techniques.
+\end{itemize}
+
+This document provides implementation details for the design of the libraries,
+Nektar++-specific data structures and algorithms and other development
+information.
+
+\begin{warningbox}
+This document is still under development and may be incomplete in parts.
+\end{warningbox}
 
 \mainmatter
 
-\input{core-concepts/core-concepts.tex}
+\import{core-concepts/}{core-concepts.tex}
 
-\input{library-design/library-design.tex}
+\import{library-design/}{library-design.tex}
 
-\input{data-structures-algorithms/data-structures-algorithms.tex}
+\import{data-structures-algorithms/}{data-structures-algorithms.tex}
 
-\input{coding-standard/coding-standard.tex}
+\import{coding-standard/}{coding-standard.tex}
 
 %\appendix
 
@@ -306,7 +430,7 @@ Welcome to the developer's guide for Nektar++\cite{nektar-website}.
 %%% -------------------------------------------------------------
 
 \bibliographystyle{plain}
-\bibliography{developer-guide}
+\bibliography{../refs}
 
 \printindex
 

@@ -1,0 +1,56 @@
+\section{Forcing}
+An optional section of the file allows forcing functions to be defined. These are enclosed in the
+\inltt{FORCING} tag. The forcing type is enclosed within the \inltt{FORCE} tag and expressed in the file as:
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="[NAME]">
+    ...
+</FORCE>
+\end{lstlisting}
+
+The force type can be any of the following:
+\begin{itemize}
+    \item "Absorption"
+    \item "Body" 
+    \item "Programmatic"
+    \item "Noise"
+\end{itemize}
+
+\subsection{Absorption}
+This force type allows the user to apply an absorption layer (essentially a porous region) anywhere in the domain. The user may also specify a velocity profile to be imposed at the start of this layer, and in the event of a time-dependent simulation, this profile can be modulated with a time-dependent function. These velocity functions and the function defining the region in which to apply the absorption layer are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the layer, the \inltt{REFFLOW} tag for the velocity profile, and the \inltt{REFFLOWTIME} for the time-dependent function.  
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Absorption">
+    <COEFF> [FUNCTION NAME] <COEFF/>
+    <REFFLOW> [FUNCTION NAME] <REFFLOW/>
+    <REFFLOWTIME> [FUNCTION NAME] <REFFLOWTIME/>
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Body}
+This force type specifies the name of a body forcing function expressed in the \inltt{CONDITIONS} section.
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Body">
+    <BODYFORCE> [FUNCTION NAME] <BODYFORCE/>
+</FORCE>
+\end{lstlisting}
+
+\subsection{Programmatic}
+This force type allows a forcing function to be applied directly within the code, thus it has no associated function. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Programmatic">
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Noise}
+This force type allows the user to specify the magnitude of a white noise force. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Noise">
+    <WHITENOISE> [VALUE] <WHITENOISE/>
+</FORCE>
+\end{lstlisting}

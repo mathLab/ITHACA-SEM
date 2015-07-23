@@ -112,19 +112,19 @@ namespace Nektar
 
             switch(solveType)
             {
-                case eLinearPreconXxt:
-                {
-                    linSolveType = eXxtFullMatrix;
-                    break;
-                }
                 case eLinearPreconPETSc:
                 {
-#ifdef NEKTAR_USING_PETSC
                     linSolveType = ePETScFullMatrix;
-#else
+#ifndef NEKTAR_USING_PETSC
                     ASSERTL0(false, "Nektar++ has not been compiled with "
                                     "PETSc support.");
 #endif
+                }
+                case eLinearPreconXxt:
+                default:
+                {
+                    linSolveType = eXxtFullMatrix;
+                    break;
                 }
             }
 
@@ -210,8 +210,10 @@ namespace Nektar
                     }
                     
                     // Do solve without enforcing any boundary conditions. 
-                    m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
-                                                    In,Out,m_vertLocToGloMap);
+                    m_vertLinsys->SolveLinearSystem(
+                        m_vertLocToGloMap->GetNumGlobalCoeffs(),
+                        In,Out,m_vertLocToGloMap,
+                        m_vertLocToGloMap->GetNumGlobalDirBndCoeffs());
                     
                     
                     if(pNonVertOutput != NullNekDouble1DArray)

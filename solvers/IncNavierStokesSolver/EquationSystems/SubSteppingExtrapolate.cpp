@@ -51,7 +51,7 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
         MultiRegions::ExpListSharedPtr  pPressure,
         const Array<OneD, int> pVel,
-        const AdvectionTermSharedPtr advObject)
+        const SolverUtils::AdvectionSharedPtr advObject)
         : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -154,7 +154,7 @@ namespace Nektar
 
         SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
         
-        m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        m_advObject->Advect(m_velocity.num_elements(), m_fields, Velfields, inarray, outarray, time);
         
         for(i = 0; i < nVariables; ++i)
         {
@@ -566,9 +566,9 @@ namespace Nektar
         
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
+            std::string type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == SpatialDomains::eHigh)
+            if(boost::iequals(type,"H"))
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -620,14 +620,9 @@ namespace Nektar
                                 Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
                 }
             }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
+            else  // No High order
             {
                 cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
         }        
     }
@@ -667,9 +662,9 @@ namespace Nektar
         
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
+            std::string type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == SpatialDomains::eHigh)
+            if(boost::iequals(type,"H"))
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -730,14 +725,9 @@ namespace Nektar
                         1);
                 }
             }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
+            else  // No High order
             {
                 cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
         }        
     }    

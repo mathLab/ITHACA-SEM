@@ -76,7 +76,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int nBndEdgePts, i, j, k;
+            int nBndEdgePts, i, j, k, e;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
@@ -86,8 +86,6 @@ namespace Nektar
             Array<OneD, NekDouble>  temp   (nCoeffs);
 
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDim);
-
-            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
 
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
@@ -165,7 +163,7 @@ namespace Nektar
                     num_elements();
                 int cnt = 0;
 
-                for (int i = 0; i < nBndRegions; ++i)
+                for (i = 0; i < nBndRegions; ++i)
                 {
                     // Number of boundary expansion related to that region
                     int nBndEdges = fields[0]->
@@ -173,7 +171,7 @@ namespace Nektar
 
                     // Weakly impose boundary conditions by modifying flux
                     // values
-                    for (int e = 0; e < nBndEdges ; ++e)
+                    for (e = 0; e < nBndEdges ; ++e)
                     {
                         nBndEdgePts = fields[0]->GetBndCondExpansions()[i]
                             ->GetExp(e)->GetTotPoints();
@@ -182,7 +180,7 @@ namespace Nektar
                             fields[0]->GetTraceMap()
                                 ->GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                        for (int k = 0; k < nBndEdgePts; ++k)
+                        for (k = 0; k < nBndEdgePts; ++k)
                         {
                             BwdMuVar[id2+k] = 0.0;
                         }
@@ -191,7 +189,7 @@ namespace Nektar
 
                 for(i = 0; i < numConvFields; ++i)
                 {
-                    for(int k = 0; k < nTracePts; ++k)
+                    for(k = 0; k < nTracePts; ++k)
                     {
                         flux[0][i][k] =
                             0.5 * (FwdMuVar[k] + BwdMuVar[k]) * flux[0][i][k];
@@ -199,23 +197,23 @@ namespace Nektar
                 }
             }
 
+            Array<OneD, NekDouble>  tmp = Array<OneD, NekDouble>(nCoeffs, 0.0);
+            Array<OneD, Array<OneD, NekDouble> > qdbase(nDim);
+
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-                
                 for (j = 0; j < nDim; ++j)
                 {
-                    Vmath::Vcopy(nPts, qfield[j][i], 1, fluxvector[j], 1);
-                    fields[i]->IProductWRTDerivBase(j, fluxvector[j], qcoeffs);
-                    Vmath::Vadd(nCoeffs, qcoeffs, 1, tmp[i], 1, tmp[i], 1);
+                    qdbase[j] = qfield[j][i];
                 }
+                fields[i]->IProductWRTDerivBase(qdbase,tmp);
 
                 // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
-                Vmath::Neg                      (nCoeffs, tmp[i], 1);
-                fields[i]->AddTraceIntegral     (flux[0][i], tmp[i]);
+                Vmath::Neg                      (nCoeffs, tmp, 1);
+                fields[i]->AddTraceIntegral     (flux[0][i], tmp);
                 fields[i]->SetPhysState         (false);
-                fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
-                fields[i]->BwdTrans             (tmp[i], outarray[i]);
+                fields[i]->MultiplyByElmtInvMass(tmp, tmp);
+                fields[i]->BwdTrans             (tmp, outarray[i]);
             }
         }
         

@@ -150,6 +150,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -230,6 +231,7 @@ namespace Nektar
             }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -342,6 +344,7 @@ namespace Nektar
             }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -358,13 +361,16 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                             const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
                              const bool DeclareCoeffPhysArrays,
                              const std::string variable):
-            ExpList()
+            ExpList(pSession,graph2D)
         {
             SetExpType(e1D);
+
+            m_graph = graph2D;
 
             int j, id=0;
             SpatialDomains::Composite comp;
@@ -416,6 +422,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
+
+            CreateCollections();
         }
 
         /**
@@ -443,7 +451,7 @@ namespace Nektar
             const PeriodicMap &periodicEdges,
             const bool DeclareCoeffPhysArrays,
             const std::string variable):
-            ExpList()
+            ExpList(pSession,graph2D)
         {
             int i, j, id, elmtid = 0;
             set<int> edgesDone;
@@ -660,6 +668,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
+
+            CreateCollections();
         }
 
         /**
@@ -1166,7 +1176,7 @@ namespace Nektar
          *
          * @param   outfile     Output stream to write data to.
          */
-        void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

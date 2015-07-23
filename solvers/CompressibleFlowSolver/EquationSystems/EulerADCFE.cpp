@@ -40,14 +40,14 @@
 namespace Nektar
 {
     string EulerADCFE::className =
-        SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "EulerADCFE", EulerADCFE::create,
-            "Euler equations in conservative variables with "
-            "artificial diffusion.");
+    SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+        "EulerADCFE", EulerADCFE::create,
+        "Euler equations in conservative variables with "
+        "artificial diffusion.");
 
     EulerADCFE::EulerADCFE(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : CompressibleFlowSystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+    : CompressibleFlowSystem(pSession)
     {
     }
 
@@ -87,9 +87,9 @@ namespace Nektar
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs    (&EulerADCFE::
-                                    DoOdeRhs, this);
+            DoOdeRhs, this);
             m_ode.DefineProjection(&EulerADCFE::
-                                    DoOdeProjection, this);
+            DoOdeProjection, this);
         }
         else
         {
@@ -110,11 +110,12 @@ namespace Nektar
     }
 
     void EulerADCFE::v_SetInitialConditions(
-        NekDouble initialtime, 
+        NekDouble initialtime,
         bool      dumpInitialConditions,
         const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
+        CompressibleFlowSystem::v_SetInitialConditions();
 
         if(dumpInitialConditions)
         {
@@ -124,33 +125,34 @@ namespace Nektar
     }
 
     void EulerADCFE::DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-        
+
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-        
+
         for (i = 0; i < nvariables; ++i)
         {
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-        
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
-        
+
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                                        outarrayAdv, m_time);
+
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(npoints, outarrayAdv[i], 1);
         }
-        
+
         m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff);
-        
+
         if (m_shockCaptureType == "NonSmooth")
         {
             for (i = 0; i < nvariables; ++i)
@@ -164,37 +166,37 @@ namespace Nektar
         if(m_shockCaptureType == "Smooth")
         {
             const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
-            
+
             NekDouble pOrder = Vmath::Vmax(ExpOrder.num_elements(), ExpOrder, 1);
-            
+
             Array <OneD, NekDouble > a_vel  (npoints, 0.0);
             Array <OneD, NekDouble > u_abs  (npoints, 0.0);
             Array <OneD, NekDouble > pres   (npoints, 0.0);
             Array <OneD, NekDouble > wave_sp(npoints, 0.0);
-            
+
             GetPressure(inarray, pres);
             GetSoundSpeed(inarray, pres, a_vel);
             GetAbsoluteVelocity(inarray, u_abs);
-            
+
             Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, wave_sp, 1);
-            
+
             NekDouble max_wave_sp = Vmath::Vmax(npoints, wave_sp, 1);
-            
+
             Vmath::Smul(npoints,
                         m_C2,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
-            
+
             Vmath::Smul(npoints,
                         max_wave_sp,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
-            
+
             Vmath::Smul(npoints,
                         pOrder,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
-            
+
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(npoints,
@@ -202,16 +204,16 @@ namespace Nektar
                             outarrayDiff[i], 1,
                             outarray[i], 1);
             }
-            
+
             Array<OneD, Array<OneD, NekDouble> > outarrayForcing(nvariables);
-            
+
             for (i = 0; i < nvariables; ++i)
             {
                 outarrayForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
             }
-            
+
             GetForcingTerm(inarray, outarrayForcing);
-            
+
             for (i = 0; i < nvariables; ++i)
             {
                 // Add Forcing Term
@@ -221,11 +223,18 @@ namespace Nektar
                             outarray[i], 1);
             }
         }
+
+        // Add sponge layer if defined in the session file
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray, time);
+        }
     }
 
     void EulerADCFE::DoOdeProjection(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
         int i;
@@ -256,66 +265,33 @@ namespace Nektar
                 break;
         }
     }
-    
+
     void EulerADCFE::SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble                             time)
-    {    
+    {
         std::string varName;
-        int nvariables = m_fields.num_elements();
         int cnt        = 0;
-    
+
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
+            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
             // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWall)
+            if (boost::iequals(type,"WallViscous"))
             {
-                WallBC(n, cnt, inarray);
-            }
-            
-            // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWallViscous)
-            {
+                // Wall Boundary Condition
                 ASSERTL0(false, "WallViscous is a wrong bc for the "
                          "Euler equations");
             }
-    
-            // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eSymmetry)
+            else
             {
-                SymmetryBC(n, cnt, inarray);
+                SetCommonBC(type,n,time, cnt,inarray);
             }
-            
-            // Riemann invariant characteristic Boundary Condition (CBC)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eRiemannInvariant)
-            {
-                RiemannInvariantBC(n, cnt, inarray);
-            }
-            
-            // Extrapolation of the data at the boundaries
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eExtrapOrder0)
-            {
-                ExtrapOrder0BC(n, cnt, inarray);
-            }
-    
-            // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() 
-                == SpatialDomains::eTimeDependent)
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
-                }
-            }
-    
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+
+            // no User Defined conditions provided so skip cnt 
+            // this line is left in case solver specific condition is added. 
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize(); 
         }
     }
 }

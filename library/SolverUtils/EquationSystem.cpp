@@ -49,13 +49,14 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
-#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <boost/format.hpp>
+# include <boost/function.hpp>
+
 #include <iostream>
-
 #include <string>
-
 
 using std::string;
 
@@ -80,8 +81,9 @@ namespace Nektar
         EquationSystemFactory& GetEquationSystemFactory()
         {
             typedef Loki::SingletonHolder<EquationSystemFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                                          Loki::CreateUsingNew,
+                                          Loki::NoDestroy,
+                                          Loki::ClassLevelLockable> Type;
             return Type::Instance();
         }
 
@@ -104,9 +106,6 @@ namespace Nektar
          */
         void EquationSystem::v_InitObject()
         {
-            // Filename of the session file
-            m_filename = m_session->GetFilename();
-
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
 
@@ -376,18 +375,19 @@ namespace Nektar
                                                     m_session->GetVariable(i), 
                                                     m_checkIfSystemSingular[i]);
                                     }
-	
-										m_fields[i] = MemoryManager<MultiRegions
-										::ContField3DHomogeneous1D>
-										::AllocateSharedPtr(
-															m_session, BkeyZR, m_LhomZ, 
-															m_useFFT, m_homogen_dealiasing,
-															m_graph, 
-															m_session->GetVariable(i), 
-															m_checkIfSystemSingular[i]);
-								
-
-	
+                                    else
+                                    {
+                                        m_fields[i] = MemoryManager<MultiRegions
+                                            ::ContField3DHomogeneous1D>
+                                                ::AllocateSharedPtr(
+                                                    m_session, BkeyZR, m_LhomZ, 
+                                                    m_useFFT, m_homogen_dealiasing,
+                                                    m_graph, 
+                                                    m_session->GetVariable(i), 
+                                                    m_checkIfSystemSingular[i]);
+                                    }
+                                    
+                                    
                                 }
                             }
                             // Normal homogeneous 1D
@@ -771,61 +771,147 @@ namespace Nektar
 
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
-            else if (vType == LibUtilities::eFunctionTypeFile)
+            else if (vType == LibUtilities::eFunctionTypeFile ||
+                     vType == LibUtilities::eFunctionTypeTransientFile)
             {
-                std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
+                std::string filename = m_session->GetFunctionFilename(
+                    pFunctionName, pFieldName, domain);
+                std::string fileVar = m_session->GetFunctionFilenameVariable(
+                    pFunctionName, pFieldName, domain);
+
+                if (fileVar.length() == 0)
+                {
+                    fileVar = pFieldName;
+                }
 
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
-                
 
-                int numexp = m_fields[0]->GetExpSize(); 
+                int numexp = m_fields[0]->GetExpSize();
                 Array<OneD,int> ElementGIDs(numexp);
-                // Define list of global element ids 
+
+                // Define list of global element ids
                 for(int i = 0; i < numexp; ++i)
                 {
                     ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
                 }
 
-
-                m_fld->Import(filename,FieldDef,FieldData,
-                                     LibUtilities::NullFieldMetaDataMap,
-                                     ElementGIDs);
-                
-                int idx = -1;
-                
-                // Loop over all the expansions
-                for (int i = 0; i < FieldDef.size(); ++i)
+                //  In case of eFunctionTypeTransientFile, generate filename from
+                //  format string
+                if (vType == LibUtilities::eFunctionTypeTransientFile)
                 {
-                    // Find the index of the required field in the 
-                    // expansion segment
-                    for(int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
+                    try
                     {
-                        if (FieldDef[i]->m_fields[j] == pFieldName)
-                        {
-                            idx = j;
-                        }
+#ifdef _WIN32
+                        // We need this to make sure boost::format has always
+                        // two digits in the exponents of Scientific notation.
+                        unsigned int old_exponent_format;
+                        old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+                        filename = boost::str(boost::format(filename) % m_time);
+                        _set_output_format(old_exponent_format);
+#else
+                        filename = boost::str(boost::format(filename) % m_time);
+#endif
                     }
-                    
-                    if (idx >= 0)
+                    catch (...)
                     {
-                        m_fields[0]->ExtractDataToCoeffs(
-                            FieldDef[i], FieldData[i],
-                            FieldDef[i]->m_fields[idx], vCoeffs);
-                    }
-                    else
-                    {
-                        cout << "Field " + pFieldName + " not found." << endl;
+                        ASSERTL0(false, "Invalid Filename in function \""
+                                + pFunctionName + "\", variable \"" + fileVar + "\"")
                     }
                 }
 
+                if (boost::filesystem::path(filename).extension() !=  ".pts")
+                {
+                    m_fld->Import(filename, FieldDef, FieldData,
+                                LibUtilities::NullFieldMetaDataMap,
+                                ElementGIDs);
 
-                m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
+                    int idx = -1;
+
+                    // Loop over all the expansions
+                    for (int i = 0; i < FieldDef.size(); ++i)
+                    {
+                        // Find the index of the required field in the
+                        // expansion segment
+                        for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
+                        {
+                            if (FieldDef[i]->m_fields[j] == fileVar)
+                            {
+                                idx = j;
+                            }
+                        }
+
+                        if (idx >= 0)
+                        {
+                            m_fields[0]->ExtractDataToCoeffs(
+                                FieldDef[i], FieldData[i],
+                                FieldDef[i]->m_fields[idx], vCoeffs);
+                        }
+                        else
+                        {
+                            cout << "Field " + fileVar + " not found." << endl;
+                        }
+                    }
+
+                    m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
+                }
+                else
+                {
+
+                    LibUtilities::PtsFieldSharedPtr ptsField;
+                    LibUtilities::Import(filename, ptsField);
+
+                    Array <OneD,  Array<OneD,  NekDouble> > coords(3);
+                    coords[0] = Array<OneD, NekDouble>(nq);
+                    coords[1] = Array<OneD, NekDouble>(nq);
+                    coords[2] = Array<OneD, NekDouble>(nq);
+                    m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
+
+                    //  check if we already computed this funcKey combination
+                    std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+                    map<std::string, Array<OneD, Array<OneD,  float> > >::iterator it
+                        = m_interpWeights.find(weightsKey);
+                    if (it != m_interpWeights.end())
+                    {
+                        //  found, re-use
+                        ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+                    }
+                    else
+                    {
+                        if (m_session->GetComm()->GetRank() == 0)
+                        {
+                            ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
+                            cout << "Interpolating:       ";
+                        }
+                        ptsField->CalcWeights(coords);
+                        if (m_session->GetComm()->GetRank() == 0)
+                        {
+                            cout << endl;
+                        }
+                        ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+                    }
+
+                    Array<OneD,  Array<OneD,  NekDouble> > intFields;
+                    ptsField->Interpolate(intFields);
+
+                    int fieldInd;
+                    vector<string> fieldNames = ptsField->GetFieldNames();
+                    for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
+                    {
+                        if (ptsField->GetFieldName(fieldInd) ==  pFieldName)
+                        {
+                            break;
+                        }
+                    }
+                    ASSERTL0(fieldInd != fieldNames.size(),  "field not found");
+
+                    pArray = intFields[fieldInd];
+                }
             }
         }
+
 
         /**
          * @brief Provide a description of a function for a given field name.
@@ -1343,9 +1429,9 @@ namespace Nektar
                 {
                     bool flag = FieldDef[i]->m_fields[j] ==
                                 m_session->GetVariable(j);
-                    ASSERTL1(flag, (std::string("Order of ") + pInfile
+                    ASSERTL0(flag, (std::string("Order of ") + pInfile
                                     + std::string(" data and that defined in "
-                                    "m_boundaryconditions differs")).c_str());
+                                    "the session differs")).c_str());
 
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                    FieldDef[i]->m_fields[j],
@@ -1877,6 +1963,18 @@ namespace Nektar
             std::string outname = m_sessionName + "_" + chkout + ".chk";
             WriteFld(outname, field, fieldcoeffs, variables);
         }
+        
+        /**
+         * Write the n-th base flow into a .chk file
+         * @param   n   The index of the base flow file.
+         */
+        void EquationSystem::Checkpoint_BaseFlow(const int n)
+        {
+            std::string outname =  m_sessionName +  "_BaseFlow_" + 
+                boost::lexical_cast<std::string>(n);
+
+            WriteFld(outname + ".chk");
+        }
 
         /**
          * Writes the field data to a file with the given filename.
@@ -2299,5 +2397,6 @@ namespace Nektar
             std::vector<std::string>             &variables)
         {
         }
+
     }
 }

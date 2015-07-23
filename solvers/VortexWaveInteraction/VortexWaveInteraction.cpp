@@ -400,7 +400,7 @@ namespace Nektar
                         Vmath::Smul(npoints,m_rollForceScale,m_vwiForcingObj->UpdateForces()[i],1,m_vwiForcingObj->UpdateForces()[i],1);
                     }
 
-                    IncNavierStokesSharedPtr ins = boost::dynamic_pointer_cast<IncNavierStokes>(m_solverRoll);
+                    IncNavierStokesSharedPtr ins = m_solverRoll->as<IncNavierStokes>();
                     ins->AddForcing(m_vwiForcingObj);
 
                     init = 0;
@@ -1690,7 +1690,7 @@ cout<<"cr="<<cr_str<<endl;
 
     void VortexWaveInteraction::UpdateWaveForceMag(int outeriter)
     {
-        NekDouble wavef_new;
+        NekDouble wavef_new = 0.0;
 
 
         if(outeriter == 1)
@@ -1809,7 +1809,7 @@ cout<<"cr="<<cr_str<<endl;
 
     void VortexWaveInteraction::UpdateAlpha(int outeriter)
     {
-        NekDouble alp_new;
+        NekDouble alp_new = 0.0;
 
 
         if(outeriter == 1)

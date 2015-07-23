@@ -25,8 +25,10 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{kpfonts} %Font
 
 \usepackage{amsmath,amssymb,mathtools} % Math
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 
-% \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
 \usepackage{import}
@@ -92,6 +94,8 @@ openany, % A chapter may start on either a recto or verso page.
 \changecaptionwidth          % Change the width of the caption
 \captionwidth{1\textwidth} %
 
+\usepackage{tabularx}
+
 %%% ABSTRACT
 %%%------------------------------------------------------------------------------
 
@@ -143,6 +147,9 @@ openany, % A chapter may start on either a recto or verso page.
 %%% NEW COMMANDS
 %%%-----------------------------------------------------------------------------
 
+% Nektar++ version
+\usepackage{xspace}
+\newcommand{\nekver} {\input{../../VERSION}\unskip}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -153,7 +160,6 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
 \usepackage{lstautogobble}
-\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -205,7 +211,9 @@ openany, % A chapter may start on either a recto or verso page.
   xleftmargin=0.05\linewidth,
   keepspaces=true
 }
-
+\lstset{%
+    escapeinside={(*}{*)},%
+}
 \usepackage{tikz}
 \newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
 rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
@@ -334,7 +342,7 @@ pdfauthor={I am the Author} % author
           \vspace{\drop}
           {\Huge\bfseries\raggedright\@title\par}
           \vskip2.37\baselineskip
-          {\huge\bfseries Version \input{../../VERSION}\par}
+          {\huge\bfseries Version \nekver\par}
           \vskip4\baselineskip
           {\huge\bfseries \textcolor{darkgreen}{User Guide}\par}
           \vskip1.0\baselineskip
@@ -387,15 +395,16 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 \import{formulation/}{formulation}
 
+\import{xml/}{xml}
+
 \part{Applications and Utilities}
+\label{p:applications}
 
 \import{solvers/}{solvers}
 
 \import{utilities/}{utilities}
 
 \part{Reference}
-\import{xml/}{xml}
-
 \import{optimisation/}{optimisation}
 
 \import{command-line/}{command-line}
@@ -412,7 +421,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 %%% -------------------------------------------------------------
 
 \bibliographystyle{plain}
-\bibliography{user-guide}
+\bibliography{../refs}
 
 \printindex
 

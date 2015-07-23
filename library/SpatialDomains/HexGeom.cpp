@@ -74,127 +74,7 @@ namespace Nektar
             SetUpLocalVertices();
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
-
-            /// Determine necessary order for standard region. This can almost
-            /// certainly be simplified but works for now!
-            vector<int> tmp1, tmp2;
-
-            if (m_forient[0] < 9)
-            {
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
-            }
-            else
-            {
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
-            }
-            
-            if (m_forient[5] < 9)
-            {
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(2));
-            }
-            else
-            {
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(3));
-            }
-            
-            int order0  = *max_element(tmp1.begin(), tmp1.end());
-            int points0 = *max_element(tmp2.begin(), tmp2.end());
-            
-            tmp1.clear();
-            tmp2.clear();
-            
-            if (m_forient[0] < 9)
-            {
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
-            }
-            else
-            {
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
-            }
-
-            if (m_forient[5] < 9)
-            {
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(3));
-            }
-            else
-            {
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(2));
-            }
-            
-            int order1  = *max_element(tmp1.begin(), tmp1.end());
-            int points1 = *max_element(tmp2.begin(), tmp2.end());
-            
-            tmp1.clear();
-            tmp2.clear();
-
-            if (m_forient[1] < 9)
-            {
-                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(3));
-            }
-            else
-            {
-                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(2));
-            }
-            
-            if (m_forient[3] < 9)
-            {
-                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(3));
-            }
-            else
-            {
-                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(2));
-            }
-
-            int order2  = *max_element(tmp1.begin(), tmp1.end());
-            int points2 = *max_element(tmp2.begin(), tmp2.end());
-
-            const LibUtilities::BasisKey A(
-                LibUtilities::eModified_A, order0,
-                LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B(
-                LibUtilities::eModified_A, order1,
-                LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey C(
-                LibUtilities::eModified_A, order2,
-                LibUtilities::PointsKey(points2,LibUtilities::eGaussLobattoLegendre));
-
-            m_xmap = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -267,7 +147,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            NekDouble resid = 0.0;
+            NekDouble ptdist = 1e6;
             int i;
 
             v_FillGeom();
@@ -310,6 +190,14 @@ namespace Nektar
                 Lcoords[0] =  2*xi0/len0-1.0;
                 Lcoords[1] =  2*xi1/len1-1.0;
                 Lcoords[2] =  2*xi2/len2-1.0;
+
+                // Set ptdist to distance to nearest vertex 
+                // Point inside tetrahedron
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                for(int i = 0; i < 8; ++i)
+                {
+                    ptdist = min(ptdist,r.dist(*m_verts[i]));
+                }
             }
             else
             {
@@ -336,6 +224,9 @@ namespace Nektar
                           
                 int min_i = Vmath::Imin(npts,tmp1,1);
                 
+                // distance from coordinate to nearest point for return value. 
+                ptdist = sqrt(tmp1[min_i]);
+
                 // Get Local coordinates
                 int qa = za.num_elements(), qb = zb.num_elements();
                 Lcoords[2] = zc[min_i/(qa*qb)];
@@ -344,10 +235,11 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // Perform newton iteration to find local coordinates 
+                NekDouble resid = 0.0;
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,
                                            resid);
             }
-            return resid;
+            return ptdist;
         }
 
         /**
@@ -422,6 +314,24 @@ namespace Nektar
             {
                 return true;
             }
+
+            // If out of range clamp locCoord to be within [-1,1]^3
+            // since any larger value will be very oscillatory if
+            // called by 'returnNearestElmt' option in
+            // ExpList::GetExpIndex
+            for(int i = 0; i < 3; ++i)
+            {
+                if(locCoord[i] <-(1+tol))
+                {
+                    locCoord[i] = -(1+tol);
+                }
+
+                if(locCoord[i] > (1+tol))
+                {
+                    locCoord[i] = 1+tol;
+                }
+            }
+
             return false;
         }
 
@@ -941,5 +851,151 @@ namespace Nektar
             }
         }
 
+        void HexGeom::v_Reset(
+            CurveMap &curvedEdges,
+            CurveMap &curvedFaces)
+        {
+            Geometry::v_Reset(curvedEdges, curvedFaces);
+
+            for (int i = 0; i < 6; ++i)
+            {
+                m_faces[i]->Reset(curvedEdges, curvedFaces);
+            }
+
+            SetUpXmap();
+            SetUpCoeffs(m_xmap->GetNcoeffs());
+        }
+        
+        /**
+         * @brief Set up the #m_xmap object by determining the order of each
+         * direction from derived faces.
+         */
+        void HexGeom::SetUpXmap()
+        {
+            /// Determine necessary order for standard region. This can almost
+            /// certainly be simplified but works for now!
+            vector<int> tmp1, tmp2;
+
+            if (m_forient[0] < 9)
+            {
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
+            }
+            else
+            {
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(3));
+            }
+            
+            if (m_forient[5] < 9)
+            {
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(2));
+            }
+            else
+            {
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(3));
+            }
+            
+            int order0  = *max_element(tmp1.begin(), tmp1.end());
+            int points0 = *max_element(tmp2.begin(), tmp2.end());
+            
+            tmp1.clear();
+            tmp2.clear();
+            
+            if (m_forient[0] < 9)
+            {
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(3));
+            }
+            else
+            {
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
+            }
+
+            if (m_forient[5] < 9)
+            {
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(3));
+            }
+            else
+            {
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(m_faces[5]->GetXmap()->GetEdgeNumPoints(2));
+            }
+            
+            int order1  = *max_element(tmp1.begin(), tmp1.end());
+            int points1 = *max_element(tmp2.begin(), tmp2.end());
+            
+            tmp1.clear();
+            tmp2.clear();
+
+            if (m_forient[1] < 9)
+            {
+                tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(3));
+            }
+            else
+            {
+                tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(2));
+            }
+            
+            if (m_forient[3] < 9)
+            {
+                tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(3));
+            }
+            else
+            {
+                tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(2));
+            }
+
+            int order2  = *max_element(tmp1.begin(), tmp1.end());
+            int points2 = *max_element(tmp2.begin(), tmp2.end());
+
+            const LibUtilities::BasisKey A(
+                LibUtilities::eModified_A, order0,
+                LibUtilities::PointsKey(
+                    points0, LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B(
+                LibUtilities::eModified_A, order1,
+                LibUtilities::PointsKey(
+                    points1, LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey C(
+                LibUtilities::eModified_A, order2,
+                LibUtilities::PointsKey(
+                    points2, LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(
+                A, B, C);
+        }
     }; //end of namespace
 }; //end of namespace

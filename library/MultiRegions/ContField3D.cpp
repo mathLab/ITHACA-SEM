@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3D.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG3D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 #include <LibUtilities/BasicUtils/DBUtils.hpp>
 namespace Nektar
@@ -83,10 +83,10 @@ namespace Nektar
                         boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
                         std::string("GlobalLinSys"))
         {
-            m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
+            m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                m_periodicVerts, m_periodicEdges, m_periodicFaces,
-                CheckIfSingularSystem, variable);
+                CheckIfSingularSystem, variable,
+                m_periodicVerts, m_periodicEdges, m_periodicFaces);
 
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
@@ -131,10 +131,10 @@ namespace Nektar
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-                m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
+                m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                    m_periodicVerts, m_periodicEdges, m_periodicFaces,
-                    CheckIfSingularSystem,variable);
+                    CheckIfSingularSystem, variable,
+                    m_periodicVerts, m_periodicEdges, m_periodicFaces);
 
                 if (m_session->DefinesCmdLineArgument("verbose"))
                 {

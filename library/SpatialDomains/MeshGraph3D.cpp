@@ -113,31 +113,22 @@ namespace Nektar
             TiXmlElement *edge = field->FirstChildElement("E");
 
             /// Since all edge data is one big text block, we need to accumulate
-            /// all TEXT data and then parse it.  This approach effectively skips
+            /// all TINYXML_TEXT data and then parse it.  This approach effectively skips
             /// all comments or other node types since we only care about the
             /// edge list.  We cannot handle missing edge numbers as we could
             /// with missing element numbers due to the text block format.
             std::string edgeStr;
-            int i,indx;
-            int nextEdgeNumber = -1;
-
-            // Curved Edges
-            map<int, int> edge_curved;
-            for(i = 0; i < m_curvedEdges.size(); ++i)
-            {
-                edge_curved[m_curvedEdges[i]->m_curveID] = i;
-            }
+            int indx;
+            CurveMap::iterator it;
 
             while(edge)
             {
-                nextEdgeNumber++;
-
                 int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
-                if (child->Type() == TiXmlNode::TEXT)
+                if (child->Type() == TiXmlNode::TINYXML_TEXT)
                 {
                     edgeStr += child->ToText()->ValueStr();
                 }
@@ -159,14 +150,15 @@ namespace Nektar
                         {
                             PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                             SegGeomSharedPtr edge;
+                            it = m_curvedEdges.find(indx);
 
-                            if (edge_curved.count(indx) == 0)
+                            if (it == m_curvedEdges.end())
                             {
                                 edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
                             }
                             else
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
                             }
 
                             m_segGeoms[indx] = edge;
@@ -194,17 +186,11 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find FACE tag in file.");
 
-            // Curved faces
-            map<int, int> face_curved;
-            for (int i = 0; i < m_curvedFaces.size(); ++i)
-            {
-                face_curved[m_curvedFaces[i]->m_curveID] = i;
-            }
-
             /// All faces are of the form: "<? ID="#"> ... </?>", with
             /// ? being an element type (either Q or T).
 
             TiXmlElement *element = field->FirstChildElement();
+            CurveMap::iterator it;
 
             while (element)
             {
@@ -218,12 +204,15 @@ namespace Nektar
                 int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
 
+                /// See if this face has curves.
+                it = m_curvedFaces.find(indx);
+
                 /// Read text element description.
                 TiXmlNode* elementChild = element->FirstChild();
                 std::string elementStr;
                 while(elementChild)
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elementStr += elementChild->ToText()->ValueStr();
                     }
@@ -261,18 +250,18 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
-                        
+
                         TriGeomSharedPtr trigeom;
-                        
-                        if (face_curved.count(indx) == 0)
+
+                        if (it == m_curvedFaces.end())
                         {
                             trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
                         }
                         else
                         {
-                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
                         }
-                        
+
                         trigeom->SetGlobalID(indx);
 
                         m_triGeoms[indx] = trigeom;
@@ -313,11 +302,13 @@ namespace Nektar
 
                         QuadGeomSharedPtr quadgeom;
 
-                        if (face_curved.count(indx) == 0)
+                        if (it == m_curvedEdges.end())
                         {
                             quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
-                        } else {
-                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                        }
+                        else
+                        {
+                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
                         }
                         quadgeom->SetGlobalID(indx);
 
@@ -376,7 +367,7 @@ namespace Nektar
                 std::string elementStr;
                 while(elementChild)
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elementStr += elementChild->ToText()->ValueStr();
                     }
@@ -669,7 +660,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }
@@ -993,6 +984,7 @@ namespace Nektar
             return it->second;
         }
 
+        
         /**
          * Retrieve the basis key for a given face direction.
          */
@@ -1018,6 +1010,9 @@ namespace Nektar
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,
                                                     variable);
 
+            ASSERTL0(expansion, "Could not find expansion connected to face "+
+                     boost::lexical_cast<string>(face->GetGlobalID()));
+
             // Retrieve the geometry object of the element as a Geometry3D.
             Geometry3DSharedPtr geom3d =
                     boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
@@ -1028,115 +1023,23 @@ namespace Nektar
             // coordinate direction of the given face.
             int dir = geom3d->GetDir((*elements)[0]->m_FaceIndx, facedir);
 
-            // Obtain the number of modes for the element basis key in this
-            // direction.
-            int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
-            int numpoints = (int) expansion->m_basisKeyVector[dir].GetNumPoints();
-
-            switch(expansion->m_basisKeyVector[dir].GetBasisType())
+            if(face->GetNumVerts() == 3)
             {
-            case LibUtilities::eModified_A:
-            case LibUtilities::eModified_B:
-            case LibUtilities::eModified_C:
-                {
-                    switch (facedir)
-                    {
-                    case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                        }
-                        break;
-                    case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            if (face->GetNumVerts() == 3)
-                            {
-                                // Triangle
-                                return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
-                            }
-                            else {
-                                // Quadrilateral
-                                return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            }
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"invalid value to flag");
-                        break;
-                    }
-                }
-                break;
-            case LibUtilities::eGLL_Lagrange:
-                {
-                    TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(face);
-                    QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(face);
-
-                    if(quadrilateral)
-                    {
-                        const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
-                        return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-                    }
-                    else if(triangle)
-                    {
-                        switch (facedir)
-                        {
-                        case 0:
-                            {
-                                const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                                return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                            }
-                            break;
-                        case 1:
-                            {
-                                const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                                return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
-                            }
-                            break;
-                        default:
-                            ASSERTL0(false,"invalid value to flag");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
-                    }
-                }
-                break;
-            case LibUtilities::eOrtho_A:
-                {
-                    switch (facedir)
-                    {
-                    case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                        }
-                        break;
-                    case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                            return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"invalid value to flag");
-                        break;
-                        }
-                }
-                break;
-//            case eGLL_Lagrange_SEM:
-//                {
-//                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
-//                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-//                }
-//                break;
-            default:
-                ASSERTL0(false,"expansion type unknown");
-                break;
+                return StdRegions::EvaluateTriFaceBasisKey(facedir,
+                          expansion->m_basisKeyVector[dir].GetBasisType(),
+                          expansion->m_basisKeyVector[dir].GetNumPoints(),
+                          expansion->m_basisKeyVector[dir].GetNumModes());
             }
-            return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
+            else
+            {
+                return StdRegions::EvaluateQuadFaceBasisKey(facedir,
+                          expansion->m_basisKeyVector[dir].GetBasisType(),
+                          expansion->m_basisKeyVector[dir].GetNumPoints(),
+                          expansion->m_basisKeyVector[dir].GetNumModes());
+            }
+            
+            // Keep things happy by returning a value.
+            return LibUtilities::NullBasisKey; 
         }
 
 

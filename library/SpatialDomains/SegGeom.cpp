@@ -53,14 +53,11 @@ namespace Nektar
         SegGeom::SegGeom(int id, const int coordim):
             Geometry1D(coordim)
         {
-            const LibUtilities::BasisKey B(
-                LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3, LibUtilities::eGaussLobattoLegendre));
 
             m_shapeType = LibUtilities::eSegment;
             m_eid = id;
             m_globalID = id;
-            m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -77,13 +74,7 @@ namespace Nektar
 
             if (coordim > 0)
             {
-                const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                                               LibUtilities::PointsKey(3,
-                                                  LibUtilities::eGaussLobattoLegendre
-                                               )
-                                              );
-
-                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+                SetUpXmap();
                 SetUpCoeffs(m_xmap->GetNcoeffs());
             }
 
@@ -102,59 +93,10 @@ namespace Nektar
             m_eid = id;
             m_globalID = id; 
             m_state = eNotFilled;
+            m_curve = curve;
 
-            if (coordim > 0)
-            {
-                int npts = curve->m_points.size();
-                LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
-
-                Array<OneD,NekDouble> tmp(npts);
-
-                if(vertex[0]->dist(*(curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
-                { 
-                    cout<<"edge="<<id<<endl;                    
-                    std::string err = "Vertex 0 is separated from first point by more than ";
-                    std::stringstream strstrm;
-                    strstrm << NekConstants::kVertexTheSameDouble;
-                    err += strstrm.str();
-                    NEKERROR(ErrorUtil::ewarning, err.c_str());
-                }
-
-                if(vertex[1]->dist(*(curve->m_points[npts-1])) > NekConstants::kVertexTheSameDouble)
-                {
-                    cout<<"edge="<<id<<endl;      
-                    std::string err = "Vertex 1 is separated from last point by more than ";
-                    std::stringstream strstrm;
-                    strstrm << NekConstants::kVertexTheSameDouble;
-                    err += strstrm.str();
-                    NEKERROR(ErrorUtil::ewarning, err.c_str());
-                }
-
-                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-                SetUpCoeffs(m_xmap->GetNcoeffs());
-
-                for(int i = 0; i < m_coordim; ++i)
-                {
-                    // Load up coordinate values into tmp
-                    for(int j = 0; j < npts; ++j)
-                    {
-                        tmp[j] = (curve->m_points[j]->GetPtr())[i];
-                    }
-
-                    // Interpolate to GLL points
-                    DNekMatSharedPtr I0;
-
-                    LibUtilities::PointsKey fkey(npts,curve->m_ptype);
-                    I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
-
-                    NekVector<NekDouble> in (npts, tmp, eWrapper);
-                    NekVector<NekDouble> out(npts+1);
-                    out = (*I0)*in;
-
-                    m_xmap->FwdTrans(out.GetPtr(), m_coeffs[i]);
-                }
-            }
+            SetUpXmap();
+            SetUpCoeffs(m_xmap->GetNcoeffs());
 
             m_verts[0] = vertex[0];
             m_verts[1] = vertex[1];
@@ -174,14 +116,10 @@ namespace Nektar
 
             m_state = eNotFilled;
 
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                                           LibUtilities::PointsKey(3,
-                                              LibUtilities::eGaussLobattoLegendre
-                                           )
-                                          );
             m_eid = id;
             m_globalID = id;
-            m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -210,6 +148,24 @@ namespace Nektar
             m_state = in.m_state;
         }
 
+        void SegGeom::SetUpXmap()
+        {
+            if (m_curve)
+            {
+                int npts = m_curve->m_points.size();
+                LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
+                const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
+                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            }
+            else
+            {
+                const LibUtilities::BasisKey B(
+                    LibUtilities::eModified_A, 2,
+                    LibUtilities::PointsKey(3, LibUtilities::eGaussLobattoLegendre));
+                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            }
+        }
+
 
         /** \brief Generate a one dimensional space segment geometry where
             the vert[0] has the same x value and vert[1] is set to
@@ -231,7 +187,6 @@ namespace Nektar
             NekDouble x0 = (*m_verts[0])[0];
             PointGeomSharedPtr vert0 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[0]->GetVid(),x0,0.0,0.0);
             vert0->SetGlobalID(vert0->GetVid());
-
             returnval->m_verts[0] = vert0;
             
             // Get information to calculate length. 
@@ -242,7 +197,7 @@ namespace Nektar
 
             const Array<OneD, const NekDouble> jac = m_geomFactors->GetJac(v);
             
-            NekDouble len;
+            NekDouble len = 0.0;
             if(jac.num_elements() == 1)
             {
                 len = jac[0]*2.0;
@@ -250,6 +205,7 @@ namespace Nektar
             else
             {
                 Array<OneD, const NekDouble> w0 = base[0]->GetW();
+                len = 0.0;
 
                 for(int i = 0; i < jac.num_elements(); ++i)
                 {
@@ -258,7 +214,7 @@ namespace Nektar
             }
             // Set up second vertex. 
             PointGeomSharedPtr vert1 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[1]->GetVid(),x0+len,0.0,0.0);
-            vert0->SetGlobalID(vert1->GetVid());
+            vert1->SetGlobalID(vert1->GetVid());
 
             returnval->m_verts[1] = vert1;
             
@@ -388,6 +344,53 @@ namespace Nektar
             {
                 int i;
 
+                if (m_coordim > 0 && m_curve)
+                {
+                    int npts = m_curve->m_points.size();
+                    LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
+                    Array<OneD,NekDouble> tmp(npts);
+
+                    if(m_verts[0]->dist(*(m_curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
+                    { 
+                        std::string err = "Vertex 0 is separated from first point by more than ";
+                        std::stringstream strstrm;
+                        strstrm << NekConstants::kVertexTheSameDouble
+                                << " in edge " << m_globalID;
+                        err += strstrm.str();
+                        NEKERROR(ErrorUtil::ewarning, err.c_str());
+                    }
+
+                    if(m_verts[1]->dist(*(m_curve->m_points[npts-1])) > NekConstants::kVertexTheSameDouble)
+                    {
+                        std::string err = "Vertex 1 is separated from last point by more than ";
+                        std::stringstream strstrm;
+                        strstrm << NekConstants::kVertexTheSameDouble
+                                << " in edge " << m_globalID;
+                        err += strstrm.str();
+                        NEKERROR(ErrorUtil::ewarning, err.c_str());
+                    }
+
+                    LibUtilities::PointsKey fkey(npts,m_curve->m_ptype);
+                    DNekMatSharedPtr I0 =
+                        LibUtilities::PointsManager()[fkey]->GetI(pkey);
+                    NekVector<NekDouble> out(npts+1);
+
+                    for(int i = 0; i < m_coordim; ++i)
+                    {
+                        // Load up coordinate values into tmp
+                        for(int j = 0; j < npts; ++j)
+                        {
+                            tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
+                        }
+
+                        // Interpolate to GLL points
+                        NekVector<NekDouble> in (npts, tmp, eWrapper);
+                        out = (*I0)*in;
+
+                        m_xmap->FwdTrans(out.GetPtr(), m_coeffs[i]);
+                    }
+                }
+
                 for (i = 0; i < m_coordim; ++i)
                 {
                     m_coeffs[i][0] = (*m_verts[0])[i];
@@ -396,6 +399,21 @@ namespace Nektar
 
                 m_state = ePtsFilled;
             }
+        }
+
+        void SegGeom::v_Reset(CurveMap &curvedEdges,
+                              CurveMap &curvedFaces)
+        {
+            Geometry::v_Reset(curvedEdges, curvedFaces);
+            CurveMap::iterator it = curvedEdges.find(m_globalID);
+
+            if (it != curvedEdges.end())
+            {
+                m_curve = it->second;
+            }
+
+            SetUpXmap();
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
         NekDouble SegGeom::v_GetLocCoords(

@@ -45,7 +45,7 @@ namespace Nektar
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "VelocityCorrectionScheme", 
             VelocityCorrectionScheme::create);
-    
+
     /**
      * Constructor. Creates ...
      *
@@ -53,17 +53,18 @@ namespace Nektar
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-        const LibUtilities::SessionReaderSharedPtr& pSession):
-        IncNavierStokes(pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pSession),
+          IncNavierStokes(pSession)
     {
-        
+
     }
 
     void VelocityCorrectionScheme::v_InitObject()
     {
         int n;
-        
-        UnsteadySystem::v_InitObject();
+
+        IncNavierStokes::v_InitObject();
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -75,8 +76,25 @@ namespace Nektar
         {
             ASSERTL0(false,"Need to set up pressure field definition");
         }
-        
-        IncNavierStokes::v_InitObject();
+
+        // creation of the extrapolation object
+        if(m_equationType == eUnsteadyNavierStokes)
+        {
+            std::string vExtrapolation = "Standard";
+
+            if (m_session->DefinesSolverInfo("Extrapolation"))
+            {
+                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+            }
+
+            m_extrapolation = GetExtrapolateFactory().CreateInstance(
+                vExtrapolation,
+                m_session,
+                m_fields,
+                m_pressure,
+                m_velocity,
+                m_advObject);
+        }
 
         // Integrate only the convective fields
         for (n = 0; n < m_nConvectiveFields; ++n)
@@ -88,7 +106,8 @@ namespace Nektar
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-            
+        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+
         // Needs to be set outside of next if so that it is turned off by default
         m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
 
@@ -174,7 +193,7 @@ namespace Nektar
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
-        if (m_advObject->GetSpecHPDealiasing())
+        if (m_specHP_dealiasing)
         {
             dealias += (dealias == "" ? "" : " + ") + string("spectral/hp");
         }
@@ -248,7 +267,7 @@ namespace Nektar
             m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
         }
     }
-	
+    
     /**
      * 
      */
@@ -276,10 +295,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
-        // Evaluate convection terms
-        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,
-                                 inarray, outarray, m_time);
-        
+        EvaluateAdvectionTerms(inarray, outarray);
+
         // Smooth advection
         if(m_SmoothAdvection)
         {
@@ -325,7 +342,7 @@ namespace Nektar
         
         // Substep the pressure boundary condition
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
-	
+    
         // Set up forcing term and coefficients for pressure Poisson equation
         SetUpPressureForcing(inarray, F, aii_Dt);
         factors[StdRegions::eFactorLambda] = 0.0;
@@ -372,6 +389,7 @@ namespace Nektar
             m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
             Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
         }
+
         Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
     }
     
@@ -408,5 +426,5 @@ namespace Nektar
             Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
         }
     }
-	
+    
 } //end of namespace

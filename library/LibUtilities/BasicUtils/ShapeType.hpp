@@ -342,6 +342,41 @@ namespace Nektar
 
             return returnval;
         }
+
+
+        inline int GetNumberOfCoefficients(ShapeType shape, int na, int nb, int nc)
+        {
+            int returnval = 0; 
+            switch(shape)
+            {
+            case eSegment:
+                returnval = na;
+                break;
+            case eTriangle:
+                returnval = StdTriData::getNumberOfCoefficients(na,nb);
+                break;
+            case eQuadrilateral:
+                returnval = na*nb;
+                break;
+            case eTetrahedron:
+                returnval = StdTetData::getNumberOfCoefficients(na,nb,nc);
+                break;
+            case ePyramid:
+                returnval = StdPyrData::getNumberOfCoefficients(na,nb,nc);
+                break;
+            case ePrism:
+                returnval = StdPrismData::getNumberOfCoefficients(na,nb,nc);
+                break;
+            case eHexahedron:
+                returnval = na*nb*nc;
+                break;
+            default:
+                ASSERTL0(false,"Unknown Shape Type");
+                break;
+            }
+
+            return returnval;
+        }
     }
 }
 

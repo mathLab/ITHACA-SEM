@@ -399,7 +399,6 @@ namespace Nektar
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
-            Array<OneD, const NekDouble> z =  m_base[0]->GetZ();
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
 
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
@@ -447,9 +446,26 @@ namespace Nektar
 
         void StdSegExp::v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray,
+                bool multiplybyweights)
         {
-            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+            int    nquad = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble> tmp(nquad);
+            Array<OneD, const NekDouble> w =  m_base[0]->GetW();
+            Array<OneD, const NekDouble> base =  m_base[0]->GetBdata();
+
+            if(multiplybyweights)
+            {
+                Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
+
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                                &tmp[0],1,0.0,outarray.get(),1);
+            }
+            else
+            {
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                            &inarray[0],1,0.0,outarray.get(),1);
+            }
         }
 
 
@@ -519,6 +535,18 @@ namespace Nektar
             Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
+        //up to here
+        void StdSegExp::v_MultiplyByStdQuadratureMetric(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {         
+            int nquad0 = m_base[0]->GetNumPoints();
+                
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+
+            Vmath::Vmul(nquad0, inarray.get(),1,
+                        w0.get(),1,outarray.get(),1);
+        }
 
         void StdSegExp::v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,

@@ -5,6 +5,8 @@ SET(MESHUTILS_SOURCES
     SurfaceMesh.cpp
     SurfaceMeshing.cpp
     TriangleInterface.cpp
+    TetGetInterface.cpp
+    TetMesh.cpp
     )
 
 SET(MESHUTILS_HEADERS
@@ -16,6 +18,8 @@ SET(MESHUTILS_HEADERS
     SurfaceMesh.h
     SurfaceMeshing.h
     TriangleInterface.h
+    TetGetInterface.h
+    TetMesh.h
     )
 
 ADD_NEKTAR_LIBRARY(MeshUtils lib ${NEKTAR_LIBRARY_TYPE}
@@ -25,5 +29,5 @@ TARGET_LINK_LIBRARIES(MeshUtils LINK_PRIVATE ${TRIANGLE_LIBRARY})
 
 INSTALL(DIRECTORY ./
         DESTINATION ${NEKTAR_INCLUDE_DIR}/MeshUtils
-        COMPONENT dev 
+        COMPONENT dev
         FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

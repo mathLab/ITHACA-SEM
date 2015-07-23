@@ -40,6 +40,7 @@ using namespace std;
 #include <LibUtilities/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/TetMesh.h>
 #include <MeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -126,6 +127,15 @@ namespace Utilities
 
         m_surfacemeshing->HOSurf();
 
+        map<int, MeshUtils::MeshTriSharedPtr> Tris;
+        map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
+        map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
+        m_surfacemeshing->Get(Nodes, Edges, Tris);
+
+        MeshUtils::TetMeshSharedPtr m_tet =
+            MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(
+                0, m_mesh->m_verbose, m_octree);
+
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
         m_mesh->m_order = m_order;
@@ -133,11 +143,6 @@ namespace Utilities
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
         m_mesh->m_fields.push_back("p");
-
-        map<int, MeshUtils::MeshTriSharedPtr> Tris;
-        map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
-        map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
-        m_surfacemeshing->Get(Nodes, Edges, Tris);
 
         map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
         map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;

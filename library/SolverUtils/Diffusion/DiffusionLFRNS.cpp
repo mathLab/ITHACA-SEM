@@ -1343,7 +1343,9 @@ namespace Nektar
                         
                         // Reinforcing bcs for velocity in case of Wall bcs
                         if (boost::iequals(fields[i]->GetBndConditions()[j]->
-                            GetUserDefined(),"WallViscous"))
+                            GetUserDefined(),"WallViscous") ||
+                            boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"WallAdiabatic"))
                         {
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
@@ -1460,22 +1462,30 @@ namespace Nektar
 
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[nScalars]->GetBndConditions()[j]->
-                        GetBoundaryConditionType() == 
-                        SpatialDomains::eDirichlet)
+                        GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet &&
+                        !boost::iequals(
+                            fields[nScalars]->GetBndConditions()[j]
+                            ->GetUserDefined(), "WallAdiabatic"))
                     {
-                        Vmath::Vcopy(nBndEdgePts, 
-                                     &scalarVariables[nScalars-1][id2], 1, 
+                        Vmath::Vcopy(nBndEdgePts,
+                                     &scalarVariables[nScalars-1][id2], 1,
                                      &penaltyfluxO1[nScalars-1][id2], 1);
+                        
                     }
                     
                     // For Neumann boundary condition: uflux = u_+
-                    else if ((fields[nScalars]->GetBndConditions()[j])->
-                             GetBoundaryConditionType() == 
-                             SpatialDomains::eNeumann)
+                    else if (((fields[nScalars]->GetBndConditions()[j])->
+                              GetBoundaryConditionType() ==
+                              SpatialDomains::eNeumann) ||
+                             boost::iequals(
+                                 fields[nScalars]->GetBndConditions()[j]
+                                 ->GetUserDefined(), "WallAdiabatic"))
                     {
-                        Vmath::Vcopy(nBndEdgePts, 
-                                     &uplus[nScalars-1][id2], 1, 
+                        Vmath::Vcopy(nBndEdgePts,
+                                     &uplus[nScalars-1][id2], 1,
                                      &penaltyfluxO1[nScalars-1][id2], 1);
+                        
                     }
                 }
             }
@@ -1586,31 +1596,43 @@ namespace Nektar
                     GetPhys_Offset(fields[0]->GetTraceMap()->
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
-                    // In case of Dirichlet bcs: 
-                    // uflux = g_D
-                    // qflux = q+
-                    if (fields[var]->GetBndConditions()[i]->
-                       GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                    
+                    // In case of Dirichlet bcs:
+                    // uflux = gD
+                    if(fields[var]->GetBndConditions()[i]->
+                       GetBoundaryConditionType() == SpatialDomains::eDirichlet
+                       && !boost::iequals(fields[var]->GetBndConditions()[i]
+                                          ->GetUserDefined(), "WallAdiabatic"))
                     {
-                        Vmath::Vmul(nBndEdgePts, &m_traceNormals[dir][id2], 1, 
-                                    &qtemp[id2], 1, &penaltyflux[id2], 1);
-                    }
-                    // 3.4) In case of Neumann bcs: 
-                    // uflux = u+
-                    else if ((fields[var]->GetBndConditions()[i])->
-                        GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        ASSERTL0(false, 
-                                 "Neumann bcs not implemented for LFRNS");
-                        
-                        /*
-                        Vmath::Vmul(nBndEdgePts, 
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &(fields[var]->
-                                      GetBndCondExpansions()[i]->
-                                      UpdatePhys())[id1], 1, 
+                        Vmath::Vmul(nBndEdgePts,
+                                    &m_traceNormals[dir][id2], 1,
+                                    &qtemp[id2], 1,
                                     &penaltyflux[id2], 1);
-                         */
+                    }
+                    // 3.4) In case of Neumann bcs:
+                    // uflux = u+
+                    else if((fields[var]->GetBndConditions()[i])->
+                            GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                    {
+                        ASSERTL0(false,
+                                 "Neumann bcs not implemented for LFRNS");
+                    }
+                    else if(boost::iequals(fields[var]->GetBndConditions()[i]
+                                           ->GetUserDefined(), "WallAdiabatic"))
+                    {
+                        if ((var == m_spaceDim + 1))
+                        {
+                            Vmath::Zero(nBndEdgePts, &penaltyflux[id2], 1);
+                        }
+                        else
+                        {
+                            
+                            Vmath::Vmul(nBndEdgePts,
+                                        &m_traceNormals[dir][id2], 1,
+                                        &qtemp[id2], 1,
+                                        &penaltyflux[id2], 1);
+                        }
+                        
                     }
                 }
             }

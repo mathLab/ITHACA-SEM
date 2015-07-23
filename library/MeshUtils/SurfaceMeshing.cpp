@@ -33,10 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-#include <fstream>
-#include <sstream>
-
 #include <MeshUtils/SurfaceMeshing.h>
 
 using namespace std;
@@ -177,59 +173,179 @@ namespace MeshUtils {
 
     void SurfaceMeshing::Optimise()
     {
-        map<int, MeshNodeSharedPtr>::iterator it;
-        for(it = Nodes.begin(); it!=Nodes.end(); it++)
+        for(int q = 0; q <1; q++)
         {
-            if(it->second->IsOnACurve())
-                continue;
-
-            NekDouble d = m_octree->Query(it->second->GetLoc());
-
-            std::map<int, Array<OneD, NekDouble> > surf = it->second->GetSurfMap();
-            ASSERTL0(surf.size()==1,"node should be interior and only be on one surface");
-            std::map<int, Array<OneD, NekDouble> >::iterator sit = surf.begin();
-            int surface = sit->first;
-            Array<OneD, NekDouble> uvi = sit->second;
-
-            vector<int> es = it->second->GetEdges();
-            vector<int> connodes;
-            for(int i = 0; i < es.size(); i++)
+            map<int, MeshEdgeSharedPtr>::iterator it;
+            for(it = Edges.begin(); it != Edges.end(); it++)
             {
-                connodes.push_back(Edges[es[i]]->OtherNode(it->first));
-            }
+                if(it->second->GetCurve() != -1)
+                    continue;
 
-            vector<NekDouble> om;
-            for(int i = 0; i < connodes.size(); i++)
-            {
-                om.push_back(it->second->Distance(Nodes[connodes[i]]) - d);
-            }
+                vector<int> t = it->second->GetTri();
+                ASSERTL0(t.size() == 2, "each edge should have two tri");
+                Array<OneD, int> n = it->second->GetN();
+                Array<OneD, int> nt = Tris[t[0]]->GetN();
 
-            NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
-            for(int i = 0; i < connodes.size(); i++)
-            {
-                Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
-                u0+=uvj[0]/connodes.size();
-                v0+=uvj[1]/connodes.size();
-            }
-            for(int i = 0; i < connodes.size();i++)
-            {
-                Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
-                NekDouble sqr = sqrt((uvj[0]-u0)*(uvj[0]-u0) +
-                                     (uvj[1]-v0)*(uvj[1]-v0));
-                fu+=om[i]*(uvj[0]-u0)/sqr;
-                fv+=om[i]*(uvj[1]-v0)/sqr;
-                dfu+=om[i]*sqr*(2*(uvj[0]-u0)*(u0-uvj[0])+
-                                    (uvj[1]-v0)*(uvj[1]-v0));
-                dfv+=om[i]*sqr*(2*(uvj[1]-v0)*(uvi[1]-v0)+
-                                    (uvj[0]-u0)*(uvj[0]-u0));
-            }
-            Array<OneD, NekDouble> l = it->second->GetLoc();
-            Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(u0-fu/dfu,v0-fv/dfv);
-            //cout << l[0] << " " << l[1] << " " << l[2] << endl;
-            //cout << l2[0] << " " << l2[1] << " " << l2[2] << endl;
-            //exit(-1);
-            Nodes[it->first]->Move(l2,u0-fu/dfu,v0-fv/dfv);
+                int A,B,C,D;
+                if(nt[0] != n[0] && nt[0] != n[1])
+                {
+                    C = nt[0];
+                    B = nt[1];
+                    A = nt[2];
+                }
+                else if(nt[1] != n[0] && nt[1] != n[1])
+                {
+                    C = nt[1];
+                    B = nt[2];
+                    A = nt[0];
+                }
+                else if(nt[2] != n[0] && nt[2] != n[1])
+                {
+                    C = nt[2];
+                    B = nt[0];
+                    A = nt[1];
+                }
 
+                nt = Tris[t[1]]->GetN();
+
+                if(nt[0] != n[0] && nt[0] != n[1])
+                {
+                    D = nt[0];
+                }
+                else if(nt[1] != n[0] && nt[1] != n[1])
+                {
+                    D = nt[1];
+                }
+                else if(nt[2] != n[0] && nt[2] != n[1])
+                {
+                    D = nt[2];
+                }
+
+                //determine signed area of alternate config
+                Array<OneD, NekDouble> ai,bi,ci,di;
+                ai = Nodes[A]->GetS(it->second->GetSurf());
+                bi = Nodes[B]->GetS(it->second->GetSurf());
+                ci = Nodes[C]->GetS(it->second->GetSurf());
+                di = Nodes[D]->GetS(it->second->GetSurf());
+
+                NekDouble CDA, CBD;
+
+                CDA = (ci[0]*di[1] + ci[1]*ai[0] + di[0]*ai[1]) -
+                      (ai[0]*di[1] + ai[1]*ci[0] + di[0]*ci[1]);
+
+                CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
+                      (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
+
+                if(CDA < 0.0 || CBD < 0.0)
+                    continue;
+
+                int nodedefectbefore = 0;
+                nodedefectbefore += Nodes[A]->GetEdges().size() > 6 ?
+                                    Nodes[A]->GetEdges().size() - 6 :
+                                    6 - Nodes[A]->GetEdges().size();
+                nodedefectbefore += Nodes[B]->GetEdges().size() > 6 ?
+                                    Nodes[B]->GetEdges().size() - 6 :
+                                    6 - Nodes[B]->GetEdges().size();
+                nodedefectbefore += Nodes[C]->GetEdges().size() > 6 ?
+                                    Nodes[C]->GetEdges().size() - 6 :
+                                    6 - Nodes[C]->GetEdges().size();
+                nodedefectbefore += Nodes[D]->GetEdges().size() > 6 ?
+                                    Nodes[D]->GetEdges().size() - 6 :
+                                    6 - Nodes[D]->GetEdges().size();
+
+
+
+                int nodedefectafter = 0;
+                nodedefectafter  += Nodes[A]->GetEdges().size() - 1 > 6 ?
+                                    Nodes[A]->GetEdges().size() - 1 - 6 :
+                                    6 - (Nodes[A]->GetEdges().size() - 1);
+                nodedefectafter  += Nodes[B]->GetEdges().size() - 1 > 6 ?
+                                    Nodes[B]->GetEdges().size() - 1 - 6 :
+                                    6 - (Nodes[B]->GetEdges().size() - 1);
+                nodedefectafter  += Nodes[C]->GetEdges().size() + 1 > 6 ?
+                                    Nodes[C]->GetEdges().size() + 1 - 6 :
+                                    6 - (Nodes[C]->GetEdges().size() + 1);
+                nodedefectafter  += Nodes[D]->GetEdges().size() + 1 > 6 ?
+                                    Nodes[D]->GetEdges().size() + 1 - 6 :
+                                    6 - (Nodes[D]->GetEdges().size() + 1);
+
+                if(nodedefectafter < nodedefectbefore)
+                {
+                    Edges[it->first]->Swap(C,D);
+                    Nodes[C]->SetEdge(it->first);
+                    Nodes[D]->SetEdge(it->first);
+                    Nodes[A]->RemoveEdge(it->first);
+                    Nodes[B]->RemoveEdge(it->first);
+                    Tris[t[0]]->Swap(C,B,D);
+                    Tris[t[0]]->ResetEdges(Nodes[C]->EdgeInCommon(Nodes[B]),
+                                           Nodes[B]->EdgeInCommon(Nodes[D]),
+                                           Nodes[D]->EdgeInCommon(Nodes[C]));
+                    Tris[t[1]]->Swap(C,D,A);
+                    Tris[t[1]]->ResetEdges(Nodes[C]->EdgeInCommon(Nodes[D]),
+                                           Nodes[D]->EdgeInCommon(Nodes[A]),
+                                           Nodes[A]->EdgeInCommon(Nodes[C]));
+
+                }
+            }
+        }
+
+
+        for(int q = 0; q < 4; q++)
+        {
+            map<int, MeshNodeSharedPtr>::iterator it;
+            for(it = Nodes.begin(); it!=Nodes.end(); it++)
+            {
+                if(it->second->IsOnACurve())
+                    continue;
+
+                NekDouble d = m_octree->Query(it->second->GetLoc());
+
+                std::map<int, Array<OneD, NekDouble> > surf = it->second->GetSurfMap();
+                ASSERTL0(surf.size()==1,"node should be interior and only be on one surface");
+                std::map<int, Array<OneD, NekDouble> >::iterator sit = surf.begin();
+                int surface = sit->first;
+                Array<OneD, NekDouble> uvi = sit->second;
+
+                vector<int> es = it->second->GetEdges();
+                vector<int> connodes;
+                for(int i = 0; i < es.size(); i++)
+                {
+                    connodes.push_back(Edges[es[i]]->OtherNode(it->first));
+                }
+
+                vector<NekDouble> om;
+                for(int i = 0; i < connodes.size(); i++)
+                {
+                    om.push_back(it->second->Distance(Nodes[connodes[i]]) - d);
+                }
+
+                NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
+                for(int i = 0; i < connodes.size(); i++)
+                {
+                    Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
+                    u0+=uvj[0]/connodes.size();
+                    v0+=uvj[1]/connodes.size();
+                }
+                for(int i = 0; i < connodes.size();i++)
+                {
+                    Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
+                    NekDouble sqr = sqrt((uvj[0]-u0)*(uvj[0]-u0) +
+                                         (uvj[1]-v0)*(uvj[1]-v0));
+                    fu+=om[i]*(uvj[0]-u0)/sqr;
+                    fv+=om[i]*(uvj[1]-v0)/sqr;
+                    dfu+=om[i]*sqr*(2*(uvj[0]-u0)*(u0-uvj[0])+
+                                        (uvj[1]-v0)*(uvj[1]-v0));
+                    dfv+=om[i]*sqr*(2*(uvj[1]-v0)*(uvi[1]-v0)+
+                                        (uvj[0]-u0)*(uvj[0]-u0));
+                }
+                Array<OneD, NekDouble> l = it->second->GetLoc();
+                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(u0-fu/dfu,v0-fv/dfv);
+                //cout << l[0] << " " << l[1] << " " << l[2] << endl;
+                //cout << l2[0] << " " << l2[1] << " " << l2[2] << endl;
+                //exit(-1);
+                Nodes[it->first]->Move(l2,u0-fu/dfu,v0-fv/dfv);
+
+            }
         }
     }
 

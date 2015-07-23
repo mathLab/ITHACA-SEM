@@ -167,6 +167,17 @@ namespace MeshUtils {
             Edges.push_back(e);
         }
 
+        void RemoveEdge(int e)
+        {
+            std::vector<int> tmp = Edges;
+            Edges.clear();
+            for(int i = 0; i < tmp.size(); i++)
+            {
+                if(tmp[i] != e)
+                    Edges.push_back(tmp[i]);
+            }
+        }
+
         void SetTri(int t)
         {
             Tris.push_back(t);
@@ -246,6 +257,12 @@ namespace MeshUtils {
         }
 
         Array<OneD, int> GetN(){return nodes;}
+
+        void Swap(int i, int j)
+        {
+            nodes[0] = i;
+            nodes[1] = j;
+        }
 
         void SetTri(int i )
         {
@@ -338,6 +355,20 @@ namespace MeshUtils {
         void SetNeigh(Array<OneD,int> n)
         {
             neighbours = n;
+        }
+
+        void Swap(int i, int j, int k)
+        {
+            nodes[0] = i;
+            nodes[1] = j;
+            nodes[2] = k;
+        }
+
+        void ResetEdges(int i, int j, int k)
+        {
+            edges[0] = i;
+            edges[1] = j;
+            edges[2] = k;
         }
 
         int Getcid(){return cid;}

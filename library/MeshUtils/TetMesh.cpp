@@ -32,3 +32,21 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <MeshUtils/TetMesh.h>
+#include <MeshUtils/TetGenInterface.h>
+
+using namespace std;
+namespace Nektar{
+namespace MeshUtils{
+
+    void TetMesh::Mesh()
+    {
+        if(m_verbose)
+            cout << endl << "Tetrahdral mesh generation" << endl;
+
+        TetGenInterfaceSharedPtr tet =
+            MemoryManager<TetGenInterface>::AllocateSharedPtr();
+    }
+}
+}

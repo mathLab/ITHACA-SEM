@@ -55,23 +55,22 @@ extern "C"{
 
 #include <MeshUtils/MeshElem.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
 namespace Nektar {
         namespace MeshUtils {
-            
+
             class TriangleInterface
             {
             public:
                 friend class MemoryManager<TriangleInterface>;
-                
+
                 TriangleInterface()
                 {
                     meshloaded = false;
                 };
-                
+
                 void Assign(const std::vector<std::vector<int> > &boundingloops,
                             const std::vector<std::vector<NekDouble> >
                             &centers,
@@ -90,44 +89,44 @@ namespace Nektar {
                     m_str = str;
                     sid = i;
                 }
-                
+
                 ~TriangleInterface()
                 {
                     if(meshloaded)
                         freetri();
                 }
-                
+
                 void Mesh(bool Quiet = true, bool Quality = false);
-                
+
                 void Extract(int &np, int &nt,
                              Array<OneD, Array<OneD, int> > &Connec);
-                
+
                 void GetNeighbour(Array<OneD, Array<OneD, int> > &neigbourlist);
                 void GetEdges(Array<OneD, Array<OneD, int> > &edgelist,
                               int &num);
-                
+
             private:
-                
+
                 void freetri();
-                
+
                 std::vector<std::vector<int> > m_boundingloops;
                 std::vector<int> m_stienerpoints;
                 std::vector<std::vector<NekDouble> > m_centers;
                 std::map<int, MeshNodeSharedPtr> Nodes;
-                
+
                 std::map<int, int> nodemap;
                 std::map<int, int> nodemapr;
-                
+
                 int sid;
-                
+
                 bool meshloaded;
-                
+
                 NekDouble m_str;
-                
+
                 struct triangulateio in,out;
-                
+
             };
-            
+
             typedef boost::shared_ptr<TriangleInterface>
                             TriangleInterfaceSharedPtr;
         }

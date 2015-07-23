@@ -130,6 +130,8 @@ namespace Utilities
         MeshUtils::TetMeshSharedPtr m_tet =
             MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(
                 0, m_mesh->m_verbose, m_octree, m_surfacemeshing);
+                
+        m_tet->Mesh();
 
         m_mesh->m_expDim = 3;
         m_mesh->m_spaceDim = 3;

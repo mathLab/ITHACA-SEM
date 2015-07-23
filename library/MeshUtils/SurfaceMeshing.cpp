@@ -81,6 +81,8 @@ namespace MeshUtils {
         Validate();
 
         Optimise();
+
+        nodeinlinearmesh = Nodes.size();
     }
 
     void SurfaceMeshing::HOSurf()

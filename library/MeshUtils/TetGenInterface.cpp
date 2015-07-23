@@ -32,3 +32,16 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <MeshUtils/TetGenInterface.h>
+
+using namespace std;
+namespace Nektar{
+namespace MeshUtils{
+
+    void TetGenInterface::Mesh(bool Quiet, bool Quality)
+    {
+
+    }
+}
+}

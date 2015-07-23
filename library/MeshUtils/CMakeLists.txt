@@ -5,7 +5,7 @@ SET(MESHUTILS_SOURCES
     SurfaceMesh.cpp
     SurfaceMeshing.cpp
     TriangleInterface.cpp
-    TetGetInterface.cpp
+    TetGenInterface.cpp
     TetMesh.cpp
     )
 
@@ -18,7 +18,7 @@ SET(MESHUTILS_HEADERS
     SurfaceMesh.h
     SurfaceMeshing.h
     TriangleInterface.h
-    TetGetInterface.h
+    TetGenInterface.h
     TetMesh.h
     )
 

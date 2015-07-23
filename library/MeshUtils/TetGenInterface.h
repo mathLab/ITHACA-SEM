@@ -32,3 +32,44 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_TETGENINTERFACE_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_TETGENINTERFACE_H
+
+#include <boost/shared_ptr.hpp>
+
+#define TETLIBRARY
+#include <tetgen.h>
+
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+namespace Nektar{
+namespace MeshUtils{
+
+    class TetGenInterface
+    {
+    public:
+        friend class MemoryManager<TetGenInterface>;
+
+        TetGenInterface()
+        {
+        };
+
+        void Assign()
+        {
+
+        }
+
+        void Mesh(bool Quiet = true, bool Quality = false);
+
+    private:
+
+        tetgenio surface, additional, output;
+
+    };
+
+    typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
+}
+}
+#endif

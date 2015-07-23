@@ -78,6 +78,8 @@ namespace MeshUtils {
             n = Nodes;
         }
 
+        int GetNLinear(){return nodeinlinearmesh;}
+
     private:
 
         void Validate();
@@ -92,6 +94,8 @@ namespace MeshUtils {
         int m_order;
 
         bool m_verbose;
+
+        int nodeinlinearmesh;
 
         std::map<int, MeshNodeSharedPtr> Nodes;
         std::map<int, MeshEdgeSharedPtr> Edges;

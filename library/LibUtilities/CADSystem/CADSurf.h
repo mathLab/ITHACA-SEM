@@ -48,21 +48,21 @@
 namespace Nektar {
 namespace LibUtilities {
 
-    class CADSurf
-    {
+class CADSurf
+{
     public:
         friend class MemoryManager<CADSurf>;
 
         /**
-		 * @brief Defualt constructor.
-		 */
+         * @brief Defualt constructor.
+         */
 
         CADSurf(int i, TopoDS_Shape in,
                 std::vector<std::vector<std::pair<int,int> > > ein);
 
         /**
-		 * @brief Get the ids of the edges which bound the surface.
-		 *
+         * @brief Get the ids of the edges which bound the surface.
+         *
          * The edges are organsised into two vectors which are grouped into
          * the contisous loops of the bounding edges, then the edges which are
          * a pair of ints, the first is the edge id and the second is an int
@@ -70,38 +70,52 @@ namespace LibUtilities {
          * on this surface to form the loop
          */
 
-        std::vector<std::vector<std::pair<int,int> > >
-                        GetEdges(){return edges;}
+        std::vector<std::vector<std::pair<int,int> > > GetEdges()
+        {
+            return edges;
+        }
 
-        Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> D2(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> P(NekDouble u, NekDouble v);
+        Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
 
-        void locuv(NekDouble &u, NekDouble &v, Array<OneD, NekDouble> p);
+        Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
+
+        Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
+
+        Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
+
+        Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
         /**
-		 * @brief Get the limits of the parametric space for the surface
-		 */
+         * @brief Get the limits of the parametric space for the surface
+         *
+         * @return array of 4 entries with parametric umin,umax,vmin,vmax
+         */
 
-        void GetBounds(Array<OneD,NekDouble> &out)
+        Array<OneD, NekDouble> GetBounds()
         {
-            out = Array<OneD,NekDouble>(4);
-            out[0]=occSurface.FirstUParameter();
-            out[1]=occSurface.LastUParameter();
-            out[2]=occSurface.FirstVParameter();
-            out[3]=occSurface.LastVParameter();
+            Array<OneD,NekDouble> b(4);
+            b[0]=occSurface.FirstUParameter();
+            b[1]=occSurface.LastUParameter();
+            b[2]=occSurface.FirstVParameter();
+            b[3]=occSurface.LastVParameter();
+
+            return b;
         }
 
     private:
 
+        ///id of surface
         int ID;
+        ///opencascade object for surface
         BRepAdaptor_Surface occSurface;
+        ///alternate opencascade object for surface used by reverse lookup
         Handle(Geom_Surface) s;
+        ///list of bounding edges in loops with orientation
         std::vector<std::vector<std::pair<int,int> > > edges;
-    };
+};
 
-    typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+
 }
 }
 

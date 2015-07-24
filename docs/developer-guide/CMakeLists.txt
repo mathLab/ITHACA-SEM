@@ -2,6 +2,7 @@ SET(DEVGUIDESRC ${CMAKE_CURRENT_SOURCE_DIR})
 SET(DEVGUIDE ${CMAKE_BINARY_DIR}/docs/developer-guide)
 
 FILE(MAKE_DIRECTORY ${DEVGUIDE}/html)
+FILE(GLOB_RECURSE pngfiles "*.png")
 
 FIND_PROGRAM(HTLATEX htlatex)
 ADD_CUSTOM_TARGET(developer-guide-html
@@ -10,6 +11,14 @@ ADD_CUSTOM_TARGET(developer-guide-html
     "${DEVGUIDESRC}/styling.cfg,html,3,next,NoFonts"
     WORKING_DIRECTORY ${DEVGUIDE}/html
 )
+
+# If tex4ht successful, create img dir and copy images across
+ADD_CUSTOM_COMMAND(TARGET developer-guide-html
+    POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${DEVGUIDE}/html/img)
+FOREACH(png ${pngfiles})
+    ADD_CUSTOM_COMMAND(TARGET developer-guide-html
+        POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${png} ${DEVGUIDE}/html/img)
+ENDFOREACH()
 
 FIND_PROGRAM(PDFLATEX pdflatex)
 FIND_PROGRAM(BIBTEX bibtex)

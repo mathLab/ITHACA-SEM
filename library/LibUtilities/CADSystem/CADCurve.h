@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADCURVE_H
 #define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADCURVE_H
 
@@ -51,56 +50,46 @@ namespace LibUtilities {
 /**
  * @brief class for CAD curves.
  *
- * This class wraps the opencascade BRepAdaptor_Curve class for use with
- * nektar++
+ * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
+ * Nektar++.
  */
-
 class CADCurve
 {
     public:
         friend class MemoryManager<CADCurve>;
 
-        /**
-         * @brief Defualt constructor.
-         */
         CADCurve(int i, TopoDS_Shape in);
-
         Array<OneD, NekDouble> Bounds();
-
         NekDouble Length(NekDouble ti, NekDouble tf);
-
         Array<OneD, NekDouble> P(NekDouble t);
-
         NekDouble tAtArcLength(NekDouble s);
+        Array<OneD, NekDouble> GetMinMax();
 
-        int GetID(){return ID;}
+        int GetID()
+        {
+            return m_ID;
+        }
 
         void SetAdjSurf(std::vector<int> i)
         {
-            adjSurfs=i;
+            m_adjSurfs = i;
         }
 
         std::vector<int> GetAdjSurf()
         {
-            return adjSurfs;
+            return m_adjSurfs;
         }
 
-        Array<OneD, NekDouble> GetMinMax();
-
     private:
-
-        /// ID of the curve
-        int ID;
-        /// OpenCascade object of the curve
-        BRepAdaptor_Curve occCurve;
-        /// List of surfaces which this curve belongs to
-        std::vector<int> adjSurfs;
-
-
+        /// ID of the curve.
+        int m_ID;
+        /// OpenCascade object of the curve.
+        BRepAdaptor_Curve m_occCurve;
+        /// List of surfaces which this curve belongs to.
+        std::vector<int> m_adjSurfs;
 };
 
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
-
 
 }
 }

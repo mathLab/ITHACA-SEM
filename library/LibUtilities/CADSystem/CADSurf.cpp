@@ -36,43 +36,43 @@
 #include <LibUtilities/CADSystem/CADSurf.h>
 
 using namespace std;
-namespace Nektar{
-namespace LibUtilities{
+
+namespace Nektar {
+namespace LibUtilities {
 
 CADSurf::CADSurf(int i, TopoDS_Shape in,
-                 vector<vector<pair<int,int> > > ein) : ID(i), edges(ein)
+                 vector<vector<pair<int,int> > > ein) : m_ID(i), m_edges(ein)
 {
-    //this bit of code changes the units of the cad from mm opencascade
-    //defualt to m
+    // this bit of code changes the units of the cad from mm opencascade
+    // defualt to m
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
-    s = BRep_Tool::Surface(TopoDS::Face(in));
+    m_s = BRep_Tool::Surface(TopoDS::Face(in));
     in.Move(mv);
-    occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
+    m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
 }
 
 /**
- * @brief performs a reverse look up to find u,v and x,y,z.
+ * @brief Performs a reverse look up to find u,v and x,y,z.
  *
- * @param p array of xyz location
- * @return the parametric location of xyz on this surface
+ * @param p Array of xyz location
+ * @return The parametric location of xyz on this surface
  */
-
 Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
 {
     //has to transfer back to mm
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
 
-    GeomAPI_ProjectPointOnSurf projection(loc, s,
-                        occSurface.FirstUParameter(),
-                        occSurface.LastUParameter(),
-                        occSurface.FirstVParameter(),
-                        occSurface.LastVParameter(),
+    GeomAPI_ProjectPointOnSurf projection(loc, m_s,
+                        m_occSurface.FirstUParameter(),
+                        m_occSurface.LastUParameter(),
+                        m_occSurface.FirstVParameter(),
+                        m_occSurface.LastVParameter(),
                         Extrema_ExtAlgo_Tree);
 
-    ASSERTL0(projection.NbPoints()>0, "locuv failed");
+    ASSERTL0(projection.NbPoints() > 0, "locuv failed");
 
     Quantity_Parameter ui;
     Quantity_Parameter vi;
@@ -93,16 +93,15 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
 /**
  * @brief Get the x,y,z at parametric point u,v.
  *
- * @param uv array of u and v parametric coords
- * @return array oc xyz location
+ * @param uv Array of u and v parametric coords.
+ * @return Array of xyz location.
  */
-
 Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
 {
     /// @todo create bound checking
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc;
-    loc = occSurface.Value(uv[0], uv[1]);
+    loc = m_occSurface.Value(uv[0], uv[1]);
     location[0] = loc.X();
     location[1] = loc.Y();
     location[2] = loc.Z();
@@ -112,20 +111,20 @@ Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
 /**
  * @brief Get the normal vector at parametric point u,v.
  *
- * @param uv array of u and v parametric coords
- * @return array oc xyz components of normal vector
+ * @param uv Array of u and v parametric coords.
+ * @return Array of xyz components of normal vector.
  */
-
 Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 {
     Array<OneD, NekDouble> normal(3);
     gp_Pnt Loc;
     gp_Vec D1U, D1V;
-    occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
+    m_occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
     gp_Vec n = D1U.Crossed(D1V);
-    if(n.X() == 0 && n.Y() == 0 && n.Z() == 0)
+
+    if (n.X() == 0 && n.Y() == 0 && n.Z() == 0)
     {
-        //return bad normal
+        // Return bad normal
         normal[0] = 0.0;
         normal[1] = 0.0;
         normal[2] = 0.0;
@@ -144,8 +143,8 @@ Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 /**
  * @brief Get the set of first derivatives at parametric point u,v
  *
- * @param uv array of u and v parametric coords
- * @return array of xyz copmonents of first derivatives
+ * @param uv Array of u and v parametric coords.
+ * @return Array of xyz copmonents of first derivatives.
  */
 
 Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
@@ -153,7 +152,7 @@ Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> r(9);
     gp_Pnt Loc;
     gp_Vec D1U, D1V;
-    occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
+    m_occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
 
     r[0] = Loc.X();  //x
     r[1] = Loc.Y();  //y
@@ -180,7 +179,7 @@ Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> r(18);
     gp_Pnt Loc;
     gp_Vec D1U, D1V, D2U, D2V, D2UV;
-    occSurface.D2(uv[0], uv[1], Loc, D1U, D1V, D2U, D2V, D2UV);
+    m_occSurface.D2(uv[0], uv[1], Loc, D1U, D1V, D2U, D2V, D2UV);
 
     r[0] = Loc.X();    //x
     r[1] = Loc.Y();    //y

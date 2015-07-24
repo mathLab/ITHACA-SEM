@@ -43,9 +43,13 @@
 #include <LibUtilities/CADSystem/CADSystem.h>
 
 using namespace std;
-namespace Nektar{
-namespace LibUtilities{
 
+namespace Nektar {
+namespace LibUtilities {
+
+/**
+ * @brief Return the name of the CAD system.
+ */
 string CADSystem::GetName()
 {
     return m_name;
@@ -66,9 +70,9 @@ void CADSystem::Report()
  * @brief Returns bounding box of the domain.
  *
  * Gets the bounding box of the domain by considering the start and end
- * points of each curve in the geometry
-
- * @return array with 6 entries xmin,xmax,ymin.....
+ * points of each curve in the geometry.
+ *
+ * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
  */
 Array<OneD, NekDouble> CADSystem::GetBoundingBox()
 {
@@ -102,11 +106,11 @@ Array<OneD, NekDouble> CADSystem::GetBoundingBox()
 /**
  * @brief Initialises CAD and makes surface and curve maps.
  *
- * @return true if completed sucsessfully
+ * @return true if completed successfully
  */
 bool CADSystem::LoadCAD()
 {
-    if ( !boost::filesystem::exists( m_name.c_str() ) )
+    if (!boost::filesystem::exists(m_name.c_str()))
     {
         return false;
     }
@@ -117,10 +121,9 @@ bool CADSystem::LoadCAD()
 
     TopoDS_Shape shape;
 
-    if(boost::iequals(ext,".STEP") == 0 ||
-       boost::iequals(ext,".STP")  == 0 )
+    if (boost::iequals(ext,".STEP") || boost::iequals(ext,".STP"))
     {
-        //takes step file and makes opencascade shape
+        // Takes step file and makes OpenCascade shape
         STEPControl_Reader reader;
         reader = STEPControl_Reader();
         reader.ReadFile(m_name.c_str());
@@ -132,10 +135,9 @@ bool CADSystem::LoadCAD()
             return false;
         }
     }
-    else if(boost::iequals(ext,".IGES") == 0 ||
-            boost::iequals(ext,".IGS")  == 0 )
+    else if(boost::iequals(ext,".IGES") || boost::iequals(ext,".IGS"))
     {
-        //takes igs file and makes opencascade shape
+        // Takes IGES file and makes OpenCascade shape
         IGESControl_Reader reader;
         reader = IGESControl_Reader();
         reader.ReadFile(m_name.c_str());
@@ -152,27 +154,27 @@ bool CADSystem::LoadCAD()
         return false;
     }
 
-    //from opencascade maps Calculates Euler-Poincar number
+    // From OpenCascade maps calculate Euler-Poincare number.
     TopTools_IndexedMapOfShape fc, vc, ec;
-    TopExp::MapShapes(shape,TopAbs_FACE,fc);
-    TopExp::MapShapes(shape,TopAbs_EDGE,ec);
-    TopExp::MapShapes(shape,TopAbs_VERTEX,vc);
+    TopExp::MapShapes(shape, TopAbs_FACE, fc);
+    TopExp::MapShapes(shape, TopAbs_EDGE, ec);
+    TopExp::MapShapes(shape, TopAbs_VERTEX, vc);
 
-    m_epc = vc.Extent()-ec.Extent()+fc.Extent();
+    m_epc = vc.Extent() - ec.Extent() + fc.Extent();
 
     TopTools_IndexedMapOfShape mapOfFaces;
     TopTools_IndexedMapOfShape mapOfEdges;
-    TopExp::MapShapes(shape,TopAbs_FACE,mapOfFaces);
+    TopExp::MapShapes(shape, TopAbs_FACE, mapOfFaces);
 
-    //for all the faces of the geometry gets the local edges which bound
-    //it and if they are valid (!=7) adds them to an edge map
-    //this filters out the dummy edges which occ uses
+    // For each face of the geometry, get the local edges which bound it. If
+    // they are valid (their type != 7), then add them to an edge map. This
+    // filters out the dummy edges which OCC uses.
     for(int i = 1; i <= mapOfFaces.Extent(); i++)
     {
         TopoDS_Shape face= mapOfFaces.FindKey(i);
 
         TopTools_IndexedMapOfShape localEdges;
-        TopExp::MapShapes(face,TopAbs_EDGE,localEdges);
+        TopExp::MapShapes(face, TopAbs_EDGE, localEdges);
 
         for(int j = 1; j <= localEdges.Extent(); j++)
         {
@@ -186,22 +188,20 @@ bool CADSystem::LoadCAD()
                 }
             }
         }
-
     }
 
     map<int, vector<int> > adjsurfmap;
 
-    //adds edges to nektar type and map
-    for(int i=1; i<=mapOfEdges.Extent(); i++)
+    // Adds edges to our type and map
+    for(int i = 1; i <= mapOfEdges.Extent(); i++)
     {
         TopoDS_Shape edge = mapOfEdges.FindKey(i);
         AddCurve(i, edge);
     }
 
-    //for all the faces gets all the wires(bounding loops) and
-    //investigates the loop,
-    //using this information on connectivity is made and edges are associated
-    //with surfaces
+    // For each face, examine all the wires (i.e. bounding loops) and
+    // investigates the loop. Using this information, connectivity is determined
+    // and edges are associated with surfaces.
     for(int i = 1; i <= mapOfFaces.Extent(); i++)
     {
         vector<vector<pair<int,int> > > edges;
@@ -209,7 +209,7 @@ bool CADSystem::LoadCAD()
         TopoDS_Shape face = mapOfFaces.FindKey(i);
 
         TopTools_IndexedMapOfShape mapOfWires;
-        TopExp::MapShapes(face,TopAbs_WIRE,mapOfWires);
+        TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
 
         for(int j = 1; j <= mapOfWires.Extent(); j++)
         {
@@ -245,10 +245,9 @@ bool CADSystem::LoadCAD()
         }
 
         AddSurf(i, face, edges);
-
     }
 
-    //this checks that all edges are bound by two surfaces, sanity check
+    // This checks that all edges are bound by two surfaces, sanity check.
     for(map<int,vector<int> >::iterator it = adjsurfmap.begin();
         it != adjsurfmap.end(); it++)
     {
@@ -265,6 +264,7 @@ void CADSystem::AddCurve(int i, TopoDS_Shape in)
                                             AllocateSharedPtr(i,in);
     m_curves[i] = newCurve;
 }
+
 void CADSystem::AddSurf(int i, TopoDS_Shape in,
                         std::vector<std::vector<std::pair<int,int> > > ein)
 {

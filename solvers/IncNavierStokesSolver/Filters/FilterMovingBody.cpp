@@ -63,11 +63,11 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+        ASSERTL0(!(pParams.at("OutputFile").empty()),
                  "Missing parameter 'OutputFile'.");
 
-        m_outputFile_fce = pParams.find("OutputFile")->second;
-        m_outputFile_mot = pParams.find("OutputFile")->second;
+        m_outputFile_fce = pParams.at("OutputFile");
+        m_outputFile_mot = pParams.at("OutputFile");
     }
     if (!(m_outputFile_fce.length() >= 4 &&
           m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
@@ -86,8 +86,8 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        m_outputFrequency = atoi(
-                        pParams.find("OutputFrequency")->second.c_str());
+        LibUtilities::Equation equ(m_session, pParams.at("OutputFrequency"));
+        m_outputFrequency = floor(equ.Evaluate());
     }
 
     pSession->MatchSolverInfo("Homogeneous", "1D", m_isHomogeneous1D, false);
@@ -102,9 +102,9 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        ASSERTL0(!(pParams.find("Boundary")->second.empty()),
+        ASSERTL0(!(pParams.at("Boundary").empty()),
                  "Missing parameter 'Boundary'.");
-        m_BoundaryString = pParams.find("Boundary")->second;
+        m_BoundaryString = pParams.at("Boundary");
     }
 }
 

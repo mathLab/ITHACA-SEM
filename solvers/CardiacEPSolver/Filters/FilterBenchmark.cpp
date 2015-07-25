@@ -65,18 +65,21 @@ FilterBenchmark::FilterBenchmark(
 {
     ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
              "Missing parameter 'ThresholdValue'.");
-    m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
+    LibUtilities::Equation equ1(m_session, pParams.at("ThresholdValue"));
+    m_thresholdValue = floor(equ1.Evaluate());
     ASSERTL0(pParams.find("InitialValue") != pParams.end(),
              "Missing parameter 'InitialValue'.");
-    m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
+    LibUtilities::Equation equ2(m_session, pParams.at("InitialValue"));
+    m_initialValue = floor(equ2.Evaluate());
     ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
              "Missing parameter 'OutputFile'.");
-    m_outputFile = pParams.find("OutputFile")->second;
+    m_outputFile = pParams.at("OutputFile");
 
     m_startTime = 0.0;
     if (pParams.find("StartTime") != pParams.end())
     {
-        m_startTime = atof(pParams.find("StartTime")->second.c_str());
+        LibUtilities::Equation equ(m_session, pParams.at("StartTime"));
+        m_startTime = floor(equ.Evaluate());
     }
 
     m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(

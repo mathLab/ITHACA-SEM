@@ -40,7 +40,7 @@ namespace Nektar
 namespace SolverUtils
 {
 
-std::string FilterThresholdMin::className = 
+std::string FilterThresholdMin::className =
         GetFilterFactory().RegisterCreatorFunction(
                 "ThresholdMin", FilterThresholdMin::create);
 
@@ -55,17 +55,20 @@ FilterThresholdMin::FilterThresholdMin(
 {
     ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
              "Missing parameter 'ThresholdValue'.");
-    m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
+    LibUtilities::Equation equ1(m_session, pParams.at("ThresholdValue"));
+    m_thresholdValue = equ1.Evaluate();
     ASSERTL0(pParams.find("InitialValue") != pParams.end(),
              "Missing parameter 'InitialValue'.");
-    m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
+    LibUtilities::Equation equ2(m_session, pParams.at("InitialValue"));
+    m_initialValue = equ2.Evaluate();
     ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
              "Missing parameter 'OutputFile'.");
     m_outputFile = pParams.find("OutputFile")->second;
 
     if (pParams.find("StartTime") != pParams.end())
     {
-        m_startTime = atof(pParams.find("StartTime")->second.c_str());
+        LibUtilities::Equation equ(m_session, pParams.at("StartTime"));
+        m_startTime = floor(equ.Evaluate());
     }
 
     m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
@@ -87,7 +90,7 @@ FilterThresholdMin::~FilterThresholdMin()
  *
  */
 void FilterThresholdMin::v_Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     m_threshold = Array<OneD, NekDouble> (pFields[0]->GetNpoints(),
@@ -99,7 +102,7 @@ void FilterThresholdMin::v_Initialise(
  *
  */
 void FilterThresholdMin::v_Update(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     if (time < m_startTime)
@@ -112,7 +115,7 @@ void FilterThresholdMin::v_Update(
 
     for (i = 0; i < pFields[0]->GetNpoints(); ++i)
     {
-        if (m_threshold[i]           < timestep && 
+        if (m_threshold[i]           < timestep &&
             pFields[0]->GetPhys()[i] < m_thresholdValue)
         {
             m_threshold[i] = time;
@@ -125,7 +128,7 @@ void FilterThresholdMin::v_Update(
  *
  */
 void FilterThresholdMin::v_Finalise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     std::stringstream vOutputFilename;

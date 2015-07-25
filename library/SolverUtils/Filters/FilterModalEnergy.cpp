@@ -59,9 +59,9 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                ASSERTL0(!(pParams.at("OutputFile").empty()),
                          "Missing parameter 'OutputFile'.");
-                m_outputFile = pParams.find("OutputFile")->second;
+                m_outputFile = pParams.at("OutputFile");
             }
             if (!(m_outputFile.length() >= 4
                   && m_outputFile.substr(m_outputFile.length() - 4) == ".mdl"))
@@ -75,8 +75,9 @@ namespace Nektar
             }
             else
             {
-                m_outputFrequency =
-                    atoi(pParams.find("OutputFrequency")->second.c_str());
+                LibUtilities::Equation equ(m_session,
+                                           pParams.at("OutputFrequency"));
+                m_outputFrequency = floor(equ.Evaluate());
             }
 
 
@@ -88,7 +89,7 @@ namespace Nektar
                                        m_PertEnergy, false);
             m_session->LoadParameter  ("NumQuadPointsError",
                                        m_NumQuadPointsError, 0);
-            
+
             m_EqTypeStr = m_session->GetSolverInfo("EQTYPE");
 
             if(m_isHomogeneous1D || m_isHomogeneous2D)
@@ -101,13 +102,14 @@ namespace Nektar
                 }
                 else
                 {
-                    m_outputPlane =
-                        atoi(pParams.find("OutputPlane")->second.c_str());
+                    LibUtilities::Equation equ(m_session,
+                                               pParams.at("OutputPlane"));
+                    m_outputPlane = floor(equ.Evaluate());
                 }
             }
 
             m_fld = MemoryManager<LibUtilities::FieldIO>::
-                AllocateSharedPtr(pSession->GetComm());
+                        AllocateSharedPtr(pSession->GetComm());
 
         }
 
@@ -300,7 +302,7 @@ namespace Nektar
                         NekDouble norm = L2Error(pFields, i, time);
                         energy += norm * norm;
                     }
-                    
+
                     m_outputStream << setprecision(6) << time;
                     m_outputStream.width(25);
                     m_outputStream << setprecision(8) << 0.5*energy;
@@ -418,7 +420,7 @@ namespace Nektar
             m_session->MatchSolverInfo("USEFFT","FFTW", m_useFFT, false);
             m_session->MatchSolverInfo("DEALIASING", "True",
                                        m_homogen_dealiasing, false);
-            
+
             if (m_homogen_dealiasing == false)
             {
                 m_session->MatchSolverInfo("DEALIASING", "On",
@@ -487,7 +489,7 @@ namespace Nektar
                                                 m_useFFT, m_homogen_dealiasing,
                                                 graphShrPtr,
                                                 m_session->GetVariable(i));
-                                    
+
                                     m_base[i]->SetWaveSpace(true);
                                 }
                             }
@@ -510,7 +512,7 @@ namespace Nektar
                                                 m_useFFT, m_homogen_dealiasing,
                                                 graphShrPtr,
                                                 m_session->GetVariable(i));
-                                    
+
                                     m_base[i]->SetWaveSpace(true);
                                 }
                             }
@@ -531,7 +533,7 @@ namespace Nektar
                                                 m_useFFT, m_homogen_dealiasing,
                                                 graphShrPtr,
                                                 m_session->GetVariable(i));
-                                    
+
                                     m_base[i]->SetWaveSpace(false);
                                 }
                             }
@@ -544,7 +546,7 @@ namespace Nektar
                                     AllocateSharedPtr(
                                         m_session,graphShrPtr,
                                         m_session->GetVariable(i));
-                            
+
                             m_base[0] = firstbase;
 
                             for (i = 1 ; i < m_base.num_elements(); i++)

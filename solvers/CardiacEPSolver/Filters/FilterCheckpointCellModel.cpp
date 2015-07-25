@@ -37,7 +37,9 @@
 
 namespace Nektar
 {
-    std::string FilterCheckpointCellModel::className = GetFilterFactory().RegisterCreatorFunction("CheckpointCellModel", FilterCheckpointCellModel::create);
+    std::string FilterCheckpointCellModel::className =
+            GetFilterFactory().RegisterCreatorFunction(
+                    "CheckpointCellModel", FilterCheckpointCellModel::create);
 
     FilterCheckpointCellModel::FilterCheckpointCellModel(
         const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -50,16 +52,18 @@ namespace Nektar
         }
         else
         {
-            ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+            ASSERTL0(!(pParams.at("OutputFile").empty()),
                      "Missing parameter 'OutputFile'.");
-            m_outputFile = pParams.find("OutputFile")->second;
+            m_outputFile = pParams.at("OutputFile");
         }
         ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
                  "Missing parameter 'OutputFrequency'.");
-        m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
+        LibUtilities::Equation equ(m_session, pParams.at("OutputFrequency"));
+        m_outputFrequency = floor(equ.Evaluate());
         m_outputIndex = 0;
         m_index = 0;
-        m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+        m_fld = MemoryManager<LibUtilities::FieldIO>
+                    ::AllocateSharedPtr(m_session->GetComm());
 
     }
 
@@ -68,7 +72,9 @@ namespace Nektar
 
     }
 
-    void FilterCheckpointCellModel::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    void FilterCheckpointCellModel::v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time)
     {
         ASSERTL0(m_cell.get(), "Cell model has not been set by EquationSystem "
                 "class. Use SetCellModel on this filter to achieve this.");
@@ -79,7 +85,9 @@ namespace Nektar
         v_Update(pFields, 0.0);
     }
 
-    void FilterCheckpointCellModel::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    void FilterCheckpointCellModel::v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time)
     {
         if (m_index++ % m_outputFrequency > 0)
         {
@@ -120,7 +128,9 @@ namespace Nektar
         m_outputIndex++;
     }
 
-    void FilterCheckpointCellModel::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    void FilterCheckpointCellModel::v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time)
     {
 
     }

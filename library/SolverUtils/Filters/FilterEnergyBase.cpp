@@ -58,9 +58,9 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                ASSERTL0(!(pParams.at("OutputFile").empty()),
                          "Missing parameter 'OutputFile'.");
-                outName = pParams.find("OutputFile")->second;
+                outName = pParams.at("OutputFile");
             }
 
             m_comm = pSession->GetComm();
@@ -81,8 +81,10 @@ namespace Nektar
 
             ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
                      "Missing parameter 'OutputFrequency'.");
-            m_outputFrequency = atoi(
-                pParams.find("OutputFrequency")->second.c_str());
+            LibUtilities::Equation equ(m_session,
+                                       pParams.at("OutputFrequency"));
+
+            m_outputFrequency = floor(equ.Evaluate());
         }
 
         FilterEnergyBase::~FilterEnergyBase()

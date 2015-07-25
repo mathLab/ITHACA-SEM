@@ -44,7 +44,9 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string FilterAeroForces::className = GetFilterFactory().RegisterCreatorFunction("AeroForces", FilterAeroForces::create);
+        std::string FilterAeroForces::className =
+                GetFilterFactory().RegisterCreatorFunction(
+                        "AeroForces", FilterAeroForces::create);
 
         /**
          *
@@ -60,9 +62,9 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                ASSERTL0(!(pParams.at("OutputFile").empty()),
                          "Missing parameter 'OutputFile'.");
-                m_outputFile = pParams.find("OutputFile")->second;
+                m_outputFile = pParams.at("OutputFile");
             }
             if (!(m_outputFile.length() >= 4
                   && m_outputFile.substr(m_outputFile.length() - 4) == ".fce"))
@@ -76,8 +78,9 @@ namespace Nektar
             }
             else
             {
-                m_outputFrequency =
-                    atoi(pParams.find("OutputFrequency")->second.c_str());
+                LibUtilities::Equation equ(m_session,
+                                           pParams.at("OutputFrequency"));
+                m_outputFrequency = floor(equ.Evaluate());
             }
 
 
@@ -92,8 +95,9 @@ namespace Nektar
                 }
                 else
                 {
-                    m_outputPlane =
-                        atoi(pParams.find("OutputPlane")->second.c_str());
+                    LibUtilities::Equation equ(m_session,
+                                               pParams.at("OutputPlane"));
+                    m_outputPlane = floor(equ.Evaluate());
                 }
             }
 
@@ -104,9 +108,9 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(!(pParams.find("Boundary")->second.empty()),
+                ASSERTL0(!(pParams.at("Boundary").empty()),
                          "Missing parameter 'Boundary'.");
-                m_BoundaryString = pParams.find("Boundary")->second;
+                m_BoundaryString = pParams.at("Boundary");
             }
         }
 
@@ -245,7 +249,7 @@ namespace Nektar
 
             Fxp = 0.0; // x-component of the force due to pressure difference
             Fxv = 0.0; // x-component of the force due to viscous stress
-            Fx = 0.0;  // x-component of the force (total) Fx = Fxp + Fxv (Drag) 
+            Fx = 0.0;  // x-component of the force (total) Fx = Fxp + Fxv (Drag)
 
             Fyp = 0.0; // y-component of the force due to pressure difference
             Fyv = 0.0; // y-component of the force due to viscous stress
@@ -259,7 +263,7 @@ namespace Nektar
                     ? (m_session->GetParameter("rho"))
                     : 1;
             NekDouble mu = rho*m_session->GetParameter("Kinvis");
-            
+
             for(int i = 0; i < pFields.num_elements(); ++i)
             {
                 pFields[i]->SetWaveSpace(false);
@@ -284,7 +288,7 @@ namespace Nektar
                     {
                         if(m_boundaryRegionIsInList[n] == 1)
                         {
-                            for(int i = 0; i <  BndExp[n]->GetExpSize(); 
+                            for(int i = 0; i <  BndExp[n]->GetExpSize();
                                     ++i, cnt++)
                             {
                                 // find element of this expansion.
@@ -292,7 +296,7 @@ namespace Nektar
                                 elmt   = pFields[0]->GetPlane(0)->GetExp(elmtid);
                                 nq     = elmt->GetTotPoints();
                                 offset = pFields[0]->GetPlane(0)->GetPhys_Offset(elmtid);
-                            
+
                                 // Initialise local arrays for the velocity
                                 // gradients size of total number of quadrature
                                 // points for each element (hence local).
@@ -360,7 +364,7 @@ namespace Nektar
                                 //
                                 // Compute viscous tractive forces on wall from
                                 //
-                                //  t_i  = - T_ij * n_j  (minus sign for force 
+                                //  t_i  = - T_ij * n_j  (minus sign for force
                                 //                        exerted BY fluid ON wall),
                                 //
                                 // where
@@ -425,7 +429,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 for(int i = 0; i < pFields.num_elements(); ++i)
                 {
                     pFields[i]->SetWaveSpace(true);
@@ -547,62 +551,62 @@ namespace Nektar
                             Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
                             Vmath::Neg(nbc,temp,1);
                             Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-                            
+
                             Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
                             Vmath::Neg(nbc,drag_t,1);
                             Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
-                            
+
                             Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
                             Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
                             Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
-                            
+
                             Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
                             Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
                             Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
-                            
+
                             //zero temporary storage vector
                             Vmath::Zero(nbc,temp,0);
                             Vmath::Zero(nbc,temp2,0);
-                            
-                            
+
+
                             //b) LIFT TERMS
                             //-rho*kinvis*
                             //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
                             Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
                             Vmath::Neg(nbc,temp,1);
                             Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-                            
+
                             Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
                             Vmath::Neg(nbc,lift_t,1);
                             Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-                            
+
                             Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
                             Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
                             Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
-                            
+
                             Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
                             Vmath::Vadd(nbc,temp,1,lift_t,1,lift_t,1);
                             Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
-                            
+
                             //zero temporary storage vector
                             Vmath::Zero(nbc,temp,0);
                             Vmath::Zero(nbc,temp2,0);
-                            
+
                             //b) SIDE TERMS
                             //-rho*kinvis*
                             //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
                             Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
                             Vmath::Neg(nbc,temp,1);
                             Vmath::Vmul(nbc,temp,1,normals[1],1,temp,1);
-                            
+
                             Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,side_t,1);
                             Vmath::Neg(nbc,side_t,1);
                             Vmath::Vmul(nbc,side_t,1,normals[0],1,side_t,1);
-                            
+
                             Vmath::Smul(nbc,-2.0,fgradW[2],1,fgradW[2],1);
                             Vmath::Vmul(nbc,fgradW[2],1,normals[2],1,temp2,1);
                             Vmath::Smul(nbc,-0.5,fgradW[2],1,fgradW[2],1);
-                            
+
                             Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
                             Vmath::Vadd(nbc,temp,1,side_t,1,side_t,1);
                             Vmath::Smul(nbc,mu,side_t,1,side_t,1);
@@ -744,15 +748,15 @@ namespace Nektar
             vComm->AllReduce(Fxp, LibUtilities::ReduceSum);
             vComm->AllReduce(Fxv, LibUtilities::ReduceSum);
             Fx = Fxp + Fxv;
-            
+
             vComm->AllReduce(Fyp, LibUtilities::ReduceSum);
             vComm->AllReduce(Fyv, LibUtilities::ReduceSum);
             Fy = Fyp + Fyv;
-            
+
             vComm->AllReduce(Fzp, LibUtilities::ReduceSum);
             vComm->AllReduce(Fzv, LibUtilities::ReduceSum);
             Fz = Fzp + Fzv;
-            
+
 
             if (vComm->GetRank() == 0)
             {
@@ -789,7 +793,7 @@ namespace Nektar
          *
          */
         void FilterAeroForces::v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
             if (pFields[0]->GetComm()->GetRank() == 0)

@@ -58,9 +58,9 @@ namespace Nektar
         }
         else
         {
-            ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+            ASSERTL0(!(pParams.at("OutputFile").empty()),
                      "Missing parameter 'OutputFile'.");
-            m_outputFile = pParams.find("OutputFile")->second;
+            m_outputFile = pParams.at("OutputFile");
         }
         if (!(m_outputFile.length() >= 4
               && m_outputFile.substr(m_outputFile.length() - 4) == ".ecg"))
@@ -74,13 +74,13 @@ namespace Nektar
         }
         else
         {
-            m_outputFrequency =
-                    atoi(pParams.find("OutputFrequency")->second.c_str());
+            LibUtilities::Equation equ(m_session, pParams.at("OutputFrequency"));
+            m_outputFrequency = floor(equ.Evaluate());
         }
 
         ASSERTL0(pParams.find("Points") != pParams.end(),
                  "Missing parameter 'Points'.");
-        m_electrogramStream.str(pParams.find("Points")->second);
+        m_electrogramStream.str(pParams.at("Points"));
         m_index = 0;
     }
 

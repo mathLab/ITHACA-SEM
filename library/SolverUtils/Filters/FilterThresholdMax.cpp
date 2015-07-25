@@ -39,7 +39,9 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string FilterThresholdMax::className = GetFilterFactory().RegisterCreatorFunction("ThresholdMax", FilterThresholdMax::create);
+        std::string FilterThresholdMax::className =
+                GetFilterFactory().RegisterCreatorFunction(
+                        "ThresholdMax", FilterThresholdMax::create);
 
         FilterThresholdMax::FilterThresholdMax(
             const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -48,26 +50,30 @@ namespace Nektar
         {
             ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
                      "Missing parameter 'ThresholdValue'.");
-            m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
+            LibUtilities::Equation equ1(m_session, pParams.at("ThresholdValue"));
+            m_thresholdValue = equ1.Evaluate();
+
             ASSERTL0(pParams.find("InitialValue") != pParams.end(),
                      "Missing parameter 'InitialValue'.");
-            m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
+            LibUtilities::Equation equ2(m_session, pParams.at("InitialValue"));
+            m_initialValue = equ2.Evaluate();
 
             if (pParams.find("StartTime") != pParams.end())
             {
-                m_startTime = atof(pParams.find("StartTime")->second.c_str());
+                LibUtilities::Equation equ(m_session, pParams.at("StartTime"));
+                m_startTime = equ.Evaluate();
             }
 
             m_outputFile = pSession->GetSessionName() + "_max.fld";
             if (pParams.find("OutputFile") != pParams.end())
             {
-                m_outputFile = pParams.find("OutputFile")->second;
+                m_outputFile = pParams.at("OutputFile");
             }
 
             m_thresholdVar = 0;
             if (pParams.find("ThresholdVar") != pParams.end())
             {
-                std::string var = pParams.find("ThresholdVar")->second.c_str();
+                std::string var = pParams.at("ThresholdVar").c_str();
                 std::vector<string> varlist = pSession->GetVariables();
                 std::vector<string>::const_iterator x;
                 ASSERTL0((x=std::find(varlist.begin(), varlist.end(), var)) != varlist.end(),
@@ -76,7 +82,8 @@ namespace Nektar
                 m_thresholdVar = x - varlist.begin();
             }
 
-            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+            m_fld = MemoryManager<LibUtilities::FieldIO>
+                        ::AllocateSharedPtr(pSession->GetComm());
 
         }
 
@@ -85,12 +92,17 @@ namespace Nektar
 
         }
 
-        void FilterThresholdMax::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        void FilterThresholdMax::v_Initialise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
-            m_threshold = Array<OneD, NekDouble> (pFields[m_thresholdVar]->GetNpoints(), m_initialValue);
+            m_threshold = Array<OneD, NekDouble> (
+                    pFields[m_thresholdVar]->GetNpoints(), m_initialValue);
         }
 
-        void FilterThresholdMax::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        void FilterThresholdMax::v_Update(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
             if (time < m_startTime)
             {
@@ -102,14 +114,17 @@ namespace Nektar
 
             for (i = 0; i < pFields[m_thresholdVar]->GetNpoints(); ++i)
             {
-                if (m_threshold[i] < timestep && pFields[m_thresholdVar]->GetPhys()[i] > m_thresholdValue)
+                if (m_threshold[i] < timestep &&
+                    pFields[m_thresholdVar]->GetPhys()[i] > m_thresholdValue)
                 {
                     m_threshold[i] = time;
                 }
             }
         }
 
-        void FilterThresholdMax::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        void FilterThresholdMax::v_Finalise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[m_thresholdVar]->GetFieldDefinitions();

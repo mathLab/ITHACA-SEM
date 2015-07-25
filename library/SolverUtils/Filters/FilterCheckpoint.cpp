@@ -39,7 +39,9 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string FilterCheckpoint::className = GetFilterFactory().RegisterCreatorFunction("Checkpoint", FilterCheckpoint::create);
+        std::string FilterCheckpoint::className =
+                GetFilterFactory().RegisterCreatorFunction(
+                        "Checkpoint", FilterCheckpoint::create);
 
         FilterCheckpoint::FilterCheckpoint(
             const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -52,16 +54,21 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                ASSERTL0(!(pParams.at("OutputFile").empty()),
                          "Missing parameter 'OutputFile'.");
-                m_outputFile = pParams.find("OutputFile")->second;
+                m_outputFile = pParams.at("OutputFile");
             }
+
             ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
                      "Missing parameter 'OutputFrequency'.");
-            m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
+            LibUtilities::Equation equ(m_session,
+                                       pParams.at("OutputFrequency"));
+            m_outputFrequency = floor(equ.Evaluate());
+
             m_outputIndex = 0;
-            m_index = 0;
-            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+            m_index       = 0;
+            m_fld         = MemoryManager<LibUtilities::FieldIO>
+                                ::AllocateSharedPtr(pSession->GetComm());
 
         }
 
@@ -70,13 +77,17 @@ namespace Nektar
 
         }
 
-        void FilterCheckpoint::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        void FilterCheckpoint::v_Initialise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
             m_index = 0;
             m_outputIndex = 0;
         }
 
-        void FilterCheckpoint::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        void FilterCheckpoint::v_Update(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
             m_index++;
             if (m_index % m_outputFrequency > 0)
@@ -98,14 +109,18 @@ namespace Nektar
                 {
                     // Could do a search here to find correct variable
                     FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
-                    pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], pFields[j]->UpdateCoeffs());
+                    pFields[0]->AppendFieldData(FieldDef[i],
+                                                FieldData[i],
+                                                pFields[j]->UpdateCoeffs());
                 }
             }
             m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
             m_outputIndex++;
         }
 
-        void FilterCheckpoint::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        void FilterCheckpoint::v_Finalise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble &time)
         {
 
         }

@@ -57,11 +57,11 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                ASSERTL0(!(pParams.at("OutputFile").empty()),
                          "Missing parameter 'OutputFile'.");
-                m_outputFile = pParams.find("OutputFile")->second;
+                m_outputFile = pParams.at("OutputFile");
             }
-            if (!(m_outputFile.length() >= 4 
+            if (!(m_outputFile.length() >= 4
                   && m_outputFile.substr(m_outputFile.length() - 4) == ".his"))
             {
                 m_outputFile += ".his";
@@ -73,12 +73,14 @@ namespace Nektar
             }
             else
             {
-                m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
+                LibUtilities::Equation equ(m_session,
+                                           pParams.at("OutputFrequency"));
+                m_outputFrequency = floor(equ.Evaluate());
             }
 
 
             m_session->MatchSolverInfo("Homogeneous","1D",m_isHomogeneous1D,false);
-            
+
             if(m_isHomogeneous1D)
             {
                 if (pParams.find("OutputPlane") == pParams.end())
@@ -87,13 +89,15 @@ namespace Nektar
                 }
                 else
                 {
-                    m_outputPlane = atoi(pParams.find("OutputPlane")->second.c_str());
+                    LibUtilities::Equation equ(m_session,
+                                               pParams.at("OutputPlane"));
+                    m_outputPlane = floor(equ.Evaluate());
                 }
             }
 
             ASSERTL0(pParams.find("Points") != pParams.end(),
                      "Missing parameter 'Points'.");
-            m_historyPointStream.str(pParams.find("Points")->second);
+            m_historyPointStream.str(pParams.at("Points"));
             m_index = 0;
         }
 
@@ -163,7 +167,7 @@ namespace Nektar
             Array<OneD, int>       idList  (vHP, -1   );
             Array<OneD, NekDouble> dist    (vHP,  1e16);
             Array<OneD, NekDouble> dist_loc(vHP,  1e16);
-            std::vector<Array<OneD, NekDouble> > LocCoords; 
+            std::vector<Array<OneD, NekDouble> > LocCoords;
 
             // Find the nearest element on this process to which the history
             // point could belong and note down the distance from the element
@@ -293,13 +297,13 @@ namespace Nektar
                                                     gloCoord[2]);
 
                     // Write an error if no process owns history point
-                    ASSERTL0(idList[i] != -1, 
-                             "History point " 
-                             + boost::lexical_cast<std::string>(gloCoord[0]) 
-                             + ", " 
-                             + boost::lexical_cast<std::string>(gloCoord[1]) 
-                             + ", " 
-                             + boost::lexical_cast<std::string>(gloCoord[2]) 
+                    ASSERTL0(idList[i] != -1,
+                             "History point "
+                             + boost::lexical_cast<std::string>(gloCoord[0])
+                             + ", "
+                             + boost::lexical_cast<std::string>(gloCoord[1])
+                             + ", "
+                             + boost::lexical_cast<std::string>(gloCoord[2])
                              + " cannot be found in the mesh.");
 
                     // Print a warning if a process owns it but it is not close
@@ -375,7 +379,7 @@ namespace Nektar
             Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
             Array<OneD, NekDouble> gloCoord(3, 0.0);
             std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
-            
+
             Array<OneD, NekDouble> physvals;
             Array<OneD, NekDouble> locCoord;
             int expId;
@@ -385,15 +389,15 @@ namespace Nektar
             {
                 if(m_isHomogeneous1D)
                 {
-                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); 
+                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end();
                          ++x, ++k)
                     {
                         locCoord = (*x).second;
                         expId    = (*x).first->GetVid();
 
                         physvals = pFields[j]->GetPlane(m_outputPlane)->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
-                        
-                        // transform elemental data if required. 
+
+                        // transform elemental data if required.
                         if(pFields[j]->GetPhysState() == false)
                         {
                             pFields[j]->GetPlane(m_outputPlane)->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
@@ -401,7 +405,7 @@ namespace Nektar
 
                         // interpolate point can do with zero plane methods
                         data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
-                        
+
                     }
                 }
                 else
@@ -412,8 +416,8 @@ namespace Nektar
                         expId    = (*x).first->GetVid();
 
                         physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
-                        
-                        // transform elemental data if required. 
+
+                        // transform elemental data if required.
                         if(pFields[j]->GetPhysState() == false)
                         {
                             pFields[j]->GetExp(expId)->BwdTrans(pFields[j]->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);

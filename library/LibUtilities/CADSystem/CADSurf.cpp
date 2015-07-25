@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object surfcae methods.
+//  Description: cad object surface methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,7 +85,8 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
     uvr[0] = ui;
     uvr[1] = vi;
 
-    ASSERTL1(projection.Distance(1) < 1E-3, "large locuv distance");
+    ASSERTL1(projection.Distance(1) < NekConstants::GeomTol,
+                "large locuv distance");
 
     return uvr;
 }

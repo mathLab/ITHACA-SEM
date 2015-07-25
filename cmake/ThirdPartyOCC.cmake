@@ -20,7 +20,7 @@ IF(NEKTAR_USE_OCC)
 	    EXTERNALPROJECT_ADD(
 		opencascade-6.8
 		PREFIX ${TPSRC}
-		URL http://ae-nektar.ae.ic.ac.uk/~mt4313/OCC680osx64.tgz
+		URL ${TPURL}/OCC680osx64.tgz
 		URL_MD5 626292523b0691304f0fa271989fbc44
 		STAMP_DIR ${TPBUILD}/stamp
 		BINARY_DIR ${TPBUILD}/opencascade-6.8
@@ -39,7 +39,7 @@ IF(NEKTAR_USE_OCC)
 	    EXTERNALPROJECT_ADD(
 		opencascade-6.8
 		PREFIX ${TPSRC}
-		URL http://ae-nektar.ae.ic.ac.uk/~mt4313/OCC680lin64.tgz
+		URL ${TPURL}/OCC680lin64.tgz
 		URL_MD5 d655b6f50998bb9600e081907c247793
 		STAMP_DIR ${TPBUILD}/stamp
 		DOWNLOAD_DIR ${TPSRC}
@@ -48,7 +48,7 @@ IF(NEKTAR_USE_OCC)
 		UPDATE_COMMAND ""
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ""
-		INSTALL_COMMAND cp -a ${TPSRC}/opencascade-6.8/i686/lib/. ${TPDIST}/lib/ COMMAND cp -a ${TPSRC}/opencascade-6.8/i686/inc/. ${TPDIST}/include/
+		INSTALL_COMMAND cp -a ${TPSRC}/opencascade-6.8/lib/. ${TPDIST}/lib/ COMMAND cp -a ${TPSRC}/opencascade-6.8/inc/. ${TPDIST}/include/
 		)
 	    LINK_DIRECTORIES(${TPDIST}/lib)
 	    INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)

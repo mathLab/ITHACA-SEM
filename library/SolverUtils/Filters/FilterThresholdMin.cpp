@@ -50,30 +50,57 @@ std::string FilterThresholdMin::className =
  */
 FilterThresholdMin::FilterThresholdMin(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const ParamMap &pParams)
     : Filter(pSession)
 {
-    ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
-             "Missing parameter 'ThresholdValue'.");
-    LibUtilities::Equation equ1(m_session, pParams.at("ThresholdValue"));
-    m_thresholdValue = equ1.Evaluate();
-    ASSERTL0(pParams.find("InitialValue") != pParams.end(),
-             "Missing parameter 'InitialValue'.");
-    LibUtilities::Equation equ2(m_session, pParams.at("InitialValue"));
-    m_initialValue = equ2.Evaluate();
-    ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-             "Missing parameter 'OutputFile'.");
-    m_outputFile = pParams.find("OutputFile")->second;
+    ParamMap::const_iterator it;
 
-    if (pParams.find("StartTime") != pParams.end())
+    // ThresholdValue
+    it = pParams.find("ThresholdValue");
+    ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
+    LibUtilities::Equation equ1(m_session, it->second);
+    m_thresholdValue = equ1.Evaluate();
+
+    // InitialValue
+    it = pParams.find("InitialValue");
+    ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
+    LibUtilities::Equation equ2(m_session, it->second);
+    m_initialValue = equ2.Evaluate();
+
+    // StartTime
+    it = pParams.find("StartTime");
+    m_startTime = 0.0;
+    if (it != pParams.end())
     {
-        LibUtilities::Equation equ(m_session, pParams.at("StartTime"));
-        m_startTime = floor(equ.Evaluate());
+        LibUtilities::Equation equ(m_session, it->second);
+        m_startTime = equ.Evaluate();
     }
 
-    m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                        pSession->GetComm());
+    // OutputFile
+    it = pParams.find("OutputFile");
+    m_outputFile = pSession->GetSessionName() + "_max.fld";
+    if (it != pParams.end())
+    {
+        m_outputFile = it->second;
+    }
 
+    // ThresholdVar
+    it = pParams.find("ThresholdVar");
+    m_thresholdVar = 0;
+    if (it != pParams.end())
+    {
+        std::string var = it->second.c_str();
+        std::vector<string> varlist = pSession->GetVariables();
+        std::vector<string>::const_iterator x;
+        ASSERTL0((x=std::find(varlist.begin(), varlist.end(), var))
+                        != varlist.end(),
+                 "Specified variable " + var +
+                 " in ThresholdMin filter is not available.");
+        m_thresholdVar = x - varlist.begin();
+    }
+
+    m_fld = MemoryManager<LibUtilities::FieldIO>
+                ::AllocateSharedPtr(pSession->GetComm());
 }
 
 
@@ -93,8 +120,8 @@ void FilterThresholdMin::v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
-    m_threshold = Array<OneD, NekDouble> (pFields[0]->GetNpoints(),
-                                          m_initialValue);
+    m_threshold = Array<OneD, NekDouble> (
+            pFields[m_thresholdVar]->GetNpoints(), m_initialValue);
 }
 
 
@@ -111,12 +138,12 @@ void FilterThresholdMin::v_Update(
     }
 
     int i;
-    NekDouble timestep = pFields[0]->GetSession()->GetParameter("TimeStep");
+    NekDouble timestep = pFields[m_thresholdVar]->GetSession()->GetParameter("TimeStep");
 
-    for (i = 0; i < pFields[0]->GetNpoints(); ++i)
+    for (i = 0; i < pFields[m_thresholdVar]->GetNpoints(); ++i)
     {
-        if (m_threshold[i]           < timestep &&
-            pFields[0]->GetPhys()[i] < m_thresholdValue)
+        if (m_threshold[i] < timestep &&
+            pFields[m_thresholdVar]->GetPhys()[i] > m_thresholdValue)
         {
             m_threshold[i] = time;
         }
@@ -150,7 +177,6 @@ void FilterThresholdMin::v_Finalise(
     }
 
     m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
-
 }
 
 

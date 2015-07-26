@@ -60,25 +60,34 @@ std::string FilterBenchmark::className =
  */
 FilterBenchmark::FilterBenchmark(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const ParamMap &pParams)
     : Filter(pSession)
 {
-    ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
-             "Missing parameter 'ThresholdValue'.");
-    LibUtilities::Equation equ1(m_session, pParams.at("ThresholdValue"));
-    m_thresholdValue = floor(equ1.Evaluate());
-    ASSERTL0(pParams.find("InitialValue") != pParams.end(),
-             "Missing parameter 'InitialValue'.");
-    LibUtilities::Equation equ2(m_session, pParams.at("InitialValue"));
-    m_initialValue = floor(equ2.Evaluate());
-    ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-             "Missing parameter 'OutputFile'.");
-    m_outputFile = pParams.at("OutputFile");
+    ParamMap::const_iterator it;
 
+    // ThresholdValue
+    it = pParams.find("ThresholdValue");
+    ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
+    LibUtilities::Equation equ1(m_session, it->second);
+    m_thresholdValue = floor(equ1.Evaluate());
+
+    // InitialValue
+    it = pParams.find("InitialValue");
+    ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
+    LibUtilities::Equation equ2(m_session, it->second);
+    m_initialValue = floor(equ2.Evaluate());
+
+    // OutputFile
+    it = pParams.find("OutputFile");
+    ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
+    m_outputFile = it->second;
+
+    // StartTime
     m_startTime = 0.0;
-    if (pParams.find("StartTime") != pParams.end())
+    it = pParams.find("StartTime");
+    if (it != pParams.end())
     {
-        LibUtilities::Equation equ(m_session, pParams.at("StartTime"));
+        LibUtilities::Equation equ(m_session, it->second);
         m_startTime = floor(equ.Evaluate());
     }
 

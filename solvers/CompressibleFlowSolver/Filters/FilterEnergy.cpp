@@ -44,10 +44,10 @@ namespace Nektar
 
         FilterEnergy::FilterEnergy(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
+            const ParamMap &pParams)
             : FilterEnergyBase(pSession, pParams, false)
         {
-            
+
         }
 
         FilterEnergy::~FilterEnergy()

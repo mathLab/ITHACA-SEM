@@ -42,7 +42,7 @@ namespace Nektar
 std::string ForcingStabilityCoupledLNS::className = SolverUtils::GetForcingFactory().
             RegisterCreatorFunction("StabilityCoupledLNS",
                                     ForcingStabilityCoupledLNS::create,
-                                    "Moving Body Forcing");
+                                    "RHS forcing for coupled LNS stability solver");
 
 ForcingStabilityCoupledLNS::ForcingStabilityCoupledLNS(
         const LibUtilities::SessionReaderSharedPtr& pSession)

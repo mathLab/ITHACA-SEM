@@ -84,7 +84,6 @@ namespace Nektar
             else
             {
                 m_period  = 1.0;
-                ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
                 m_nfields = m_equ[0]->UpdateFields().num_elements();
             }
 

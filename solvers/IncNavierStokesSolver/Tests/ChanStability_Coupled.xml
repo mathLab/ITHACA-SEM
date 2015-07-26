@@ -291,11 +291,7 @@
                 <P VAR="v" VALUE="[1]" />
             </REGION>
         </BOUNDARYCONDITIONS>
-        <FUNCTION NAME="BodyForce">
-            <E VAR="u" VALUE="cos(y)" />
-            <E VAR="v" VALUE="sin(y)" />
-        </FUNCTION>
-        
+
          <FUNCTION NAME="InitialConditions">
          <F VAR="u,v" FILE="ChanStability_Coupled.rst" />
         </FUNCTION>
@@ -310,5 +306,11 @@
         </FUNCTION>
 
     </CONDITIONS>
+
+    <FORCING>
+        <FORCE TYPE="StabilityCoupledLNS">
+        </FORCE>
+    </FORCING>
+
 
 </NEKTAR>

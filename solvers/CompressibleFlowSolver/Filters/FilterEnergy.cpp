@@ -38,7 +38,7 @@
 namespace Nektar
 {
 
-std::string FilterEnergy::className = GetFilterFactory().
+std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
     RegisterCreatorFunction("Energy", FilterEnergy::create);
 
 FilterEnergy::FilterEnergy(

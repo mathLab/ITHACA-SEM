@@ -1519,18 +1519,17 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
         m_CoeffMat_B[plane]
                 = MemoryManager<DNekMat>::AllocateSharedPtr(nel,nel);
 
-        unsigned int K;
-        NekDouble beta;
+        // Initialised to avoid compiler warnings.
+        unsigned int K = 0;
+        NekDouble beta = 0.0;
 
-        if(supptype == "FREE-FREE" || 
-                    supptype == "Free-Free")
+        if (boost::iequals(supptype, "FREE-FREE"))
         {
             K = plane/2;
             beta = 2.0 * M_PI/m_lhom;
         }
-        else if(supptype == "PINNED-PINNED" || 
-                        supptype == "Pinned-Pinned")
-        {   
+        else if(boost::iequals(supptype, "PINNED-PINNED"))
+        {
             K = plane+1;
             beta = M_PI/m_lhom;
         }

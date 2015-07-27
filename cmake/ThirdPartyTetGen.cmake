@@ -20,7 +20,7 @@ IF (THIRDPARTY_BUILD_TETGEN)
         tetgen-1.5
         PREFIX ${TPSRC}
         URL http://ae-nektar.ae.ic.ac.uk/~mt4313/tetgen.zip
-        URL_MD5 09218b66cdc256ffd2b3c54fc5a19e16
+        URL_MD5 d12cc04baa977380c893364bb09857ee
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tetgen-1.5
@@ -34,7 +34,7 @@ IF (THIRDPARTY_BUILD_TETGEN)
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             ${TPSRC}/tetgen-1.5
     )
-    SET(TETGEN_LIBRARY triangle CACHE FILEPATH
+    SET(TETGEN_LIBRARY tetgen CACHE FILEPATH
         "TetGen library" FORCE)
     SET(TETGEN_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
         "TetGen include" FORCE)

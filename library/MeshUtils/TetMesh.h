@@ -43,6 +43,7 @@
 
 #include <MeshUtils/Octree.h>
 #include <MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/MeshElem.hpp>
 
 namespace Nektar{
 namespace MeshUtils{
@@ -65,10 +66,21 @@ namespace MeshUtils{
 
     private:
 
+        bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
+
+        void AddNewPoint(Array<OneD, NekDouble> loc,
+                                      std::map<int, MeshNodeSharedPtr> &Nodes);
+
         int m_id;
         bool m_verbose;
         OctreeSharedPtr m_octree;
         SurfaceMeshingSharedPtr m_surfacemesh;
+
+        std::vector<int> nodesintris;
+        std::vector<int> m_stienerpoints;
+
+        int numtet;
+        Array<OneD, Array<OneD, int> > tetconnect;
     };
 
     typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

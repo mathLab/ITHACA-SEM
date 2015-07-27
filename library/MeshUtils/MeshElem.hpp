@@ -229,7 +229,7 @@ namespace MeshUtils {
         std::map<int, Array<OneD, NekDouble> > GetSurfMap(){return CADSurf;}
 
         std::vector<int> GetEdges(){return Edges;}
-        std::vector<int> GetTtris(){return Tris;}
+        std::vector<int> GetTris(){return Tris;}
 
         void Move(Array<OneD, NekDouble> l, Array<OneD, NekDouble> uv)
         {

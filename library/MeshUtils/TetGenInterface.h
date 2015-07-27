@@ -44,6 +44,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <MeshUtils/MeshElem.hpp>
+
 namespace Nektar{
 namespace MeshUtils{
 
@@ -56,16 +58,37 @@ namespace MeshUtils{
         {
         };
 
-        void Assign()
+        void Assign(const std::vector<int> &nis,
+                    const std::map<int, MeshTriSharedPtr> &t,
+                    const std::map<int, MeshNodeSharedPtr> &n,
+                    const std::vector<int> &stiner)
         {
-
+            m_nodesinsurface = nis;
+            Tris = t;
+            Nodes = n;
+            m_stienerpoints = stiner;
+            meshloaded = false;
         }
 
         void Mesh(bool Quiet = true, bool Quality = false);
 
+        void Extract(int &numtet, Array<OneD, Array<OneD, int> > &tetconnect);
+
     private:
 
+        void freetet();
+
         tetgenio surface, additional, output;
+
+        std::map<int, MeshTriSharedPtr> Tris;
+        std::map<int, MeshNodeSharedPtr> Nodes;
+        std::vector<int> m_stienerpoints;
+        std::vector<int> m_nodesinsurface;
+
+        std::map<int, int> nodemap;
+        std::map<int, int> nodemapr;
+
+        bool meshloaded;
 
     };
 

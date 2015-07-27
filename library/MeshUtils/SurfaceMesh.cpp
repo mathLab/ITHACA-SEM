@@ -337,7 +337,7 @@ namespace MeshUtils {
         NekDouble npDelta = m_octree->Query(np);
 
         MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
-                            new MeshNode(0,np[0],np[1],np[2]));
+                            new MeshNode(Nodes.size(),np[0],np[1],np[2]));
 
         bool add = true;
 

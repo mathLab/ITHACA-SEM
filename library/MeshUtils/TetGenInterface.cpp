@@ -39,9 +39,110 @@ using namespace std;
 namespace Nektar{
 namespace MeshUtils{
 
-    void TetGenInterface::Mesh(bool Quiet, bool Quality)
+void TetGenInterface::Mesh(bool Quiet, bool Quality)
+{
+    if(meshloaded)
     {
+        freetet();
+    }
+    surface.initialize();
+    additional.initialize();
+    output.initialize();
+
+    //build stiener list in additional
+    additional.firstnumber = 0;
+    additional.numberofpoints = m_stienerpoints.size();
+    additional.pointlist = new REAL[additional.numberofpoints*3];
+
+    for(int i = 0; i < m_stienerpoints.size(); i++)
+    {
+        Array<OneD, NekDouble> loc = Nodes[m_stienerpoints[i]]->GetLoc();
+        additional.pointlist[i*3+0] = loc[0];
+        additional.pointlist[i*3+1] = loc[1];
+        additional.pointlist[i*3+2] = loc[2];
+    }
+
+    //build surface input
+    tetgenio::facet *f;
+    tetgenio::polygon *p;
+    int pointc = 0;
+
+    surface.firstnumber = 0;
+    surface.numberofpoints = m_nodesinsurface.size();
+    surface.pointlist = new REAL[surface.numberofpoints*3];
+
+    for(int i = 0; i < m_nodesinsurface.size(); i++)
+    {
+        nodemap[pointc] = m_nodesinsurface[i];
+        nodemapr[m_nodesinsurface[i]] = pointc;
+
+        Array<OneD, NekDouble> loc = Nodes[m_nodesinsurface[i]]->GetLoc();
+
+        surface.pointlist[pointc*3+0] = loc[0];
+        surface.pointlist[pointc*3+1] = loc[1];
+        surface.pointlist[pointc*3+2] = loc[2];
+        pointc++;
+    }
+
+    surface.numberoffacets = Tris.size();
+    surface.facetlist = new tetgenio::facet[surface.numberoffacets];
+    surface.facetmarkerlist = new int[surface.numberoffacets];
+
+    for(int i = 0; i < Tris.size(); i++)
+    {
+        f = &surface.facetlist[i];
+        f->numberofpolygons = 1;
+        f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+        f->numberofholes = 0;
+        f->holelist = NULL;
+        p = &f->polygonlist[0];
+        p->numberofvertices = 3;
+        p->vertexlist = new int[p->numberofvertices];
+
+        Array<OneD, int> n = Tris[i]->GetN();
+        p->vertexlist[0] = nodemapr[n[0]];
+        p->vertexlist[1] = nodemapr[n[1]];
+        p->vertexlist[2] = nodemapr[n[2]];
+        surface.facetmarkerlist[i] = 0;
 
     }
+    if(Quiet)
+    {
+        tetrahedralize("pYizfennQ", &surface, &output, &additional, NULL);
+    }
+    else
+    {
+        tetrahedralize("pYizfenn", &surface, &output, &additional, NULL);
+    }
+}
+
+void TetGenInterface::Extract(int &numtet,
+                    Array<OneD, Array<OneD, int> > &tetconnect)
+{
+    numtet = output.numberoftetrahedra;
+    tetconnect = Array<OneD, Array<OneD, int> >(numtet);
+
+    for(int i = 0; i < numtet; i++)
+    {
+        Array<OneD, int> tet(4);
+        tet[0] = nodemap[output.tetrahedronlist[i*4+0]];
+        tet[1] = nodemap[output.tetrahedronlist[i*4+1]];
+        tet[2] = nodemap[output.tetrahedronlist[i*4+2]];
+        tet[3] = nodemap[output.tetrahedronlist[i*4+3]];
+        tetconnect[i] = tet;
+    }
+}
+
+
+void TetGenInterface::freetet()
+{
+    if(meshloaded)
+    {
+        surface.deinitialize();
+        additional.deinitialize();
+        output.deinitialize();
+    }
+}
+
 }
 }

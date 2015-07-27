@@ -84,6 +84,7 @@ namespace SolverUtils
 
         private:
             ForcingNoise(const LibUtilities::SessionReaderSharedPtr& pSession);
+            virtual ~ForcingNoise(void){};
 
     };
 

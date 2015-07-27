@@ -177,6 +177,7 @@ INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
+INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)
 
@@ -266,7 +267,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions)
+        MultiRegions Collections)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)

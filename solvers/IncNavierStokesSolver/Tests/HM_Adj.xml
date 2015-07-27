@@ -62,7 +62,7 @@
         <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
         <D VAR="v" VALUE="x*x*cos(2*PI*z)"/>
         <D VAR="w" VALUE="y*sin(2*PI*z)"/>
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+        <D VAR="p" VALUE="4*x*y*cos(2*PI*z)"/>
        </REGION>
     </BOUNDARYCONDITIONS>
 
@@ -70,12 +70,12 @@
         <E VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
         <E VAR="v" VALUE="x*x*cos(2*PI*z)"/>
         <E VAR="w" VALUE="y*sin(2*PI*z)"/>
-        <E VAR="p" VALUE="0" />
+        <E VAR="p" VALUE="4*x*y*cos(2*PI*z)" />
     </FUNCTION>
    <FUNCTION NAME="BodyForce">
-      <E VAR="u" VALUE="2*PI*y*cos(2*PI*z)+4*PI*x*cos(2*PI*z)-8*PI*PI*PI*x*y*cos(2*PI*z)" />
-      <E VAR="v" VALUE="-2*x*cos(2*PI*z)+4*PI*PI*x*x*cos(2*PI*z)-2*cos(2*PI*z)" />
-      <E VAR="w" VALUE="-2*sin(2*PI*z)+4*PI*PI*y*sin(2*PI*z)"/>
+      <E VAR="u" VALUE="2*PI*y*cos(2*PI*z)+4*PI*x*cos(2*PI*z)-8*PI*PI*PI*x*y*cos(2*PI*z) + 4*y*cos(2*PI*z)" />
+      <E VAR="v" VALUE="-2*x*cos(2*PI*z)+4*PI*PI*x*x*cos(2*PI*z)-2*cos(2*PI*z) + 4*x*cos(2*PI*z)" />
+      <E VAR="w" VALUE="-2*sin(2*PI*z)+4*PI*PI*y*sin(2*PI*z) - 8*PI*x*y*sin(2*PI*z)"/>
       <E VAR="p" VALUE="0" />
 
     </FUNCTION>
@@ -83,7 +83,7 @@
         <E VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
         <E VAR="v" VALUE="x*x*cos(2*PI*z)"/>
         <E VAR="w" VALUE="y*sin(2*PI*z)"/>
-        <E VAR="p" VALUE="0" />
+        <E VAR="p" VALUE="4*x*y*cos(2*PI*z)" />
     </FUNCTION>
 
       

@@ -21,11 +21,16 @@ SET(BasicUtilsHeaders
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/Progressbar.hpp
+    ./BasicUtils/PtsField.h
+    ./BasicUtils/PtsIO.h
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
+    ./BasicUtils/Thread.h
+    ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
@@ -39,7 +44,11 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/PtsField.cpp
+    ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
+    ./BasicUtils/Thread.cpp
+    ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
     ./BasicUtils/XmlUtil.cpp
@@ -384,6 +393,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
+    ${Boost_TIMER_LIBRARY}
     debug ${ZLIB_LIBRARY_DEBUG} optimized ${ZLIB_LIBRARY_RELEASE}
 )
 
@@ -429,7 +439,7 @@ IF( NEKTAR_USE_BLAS_LAPACK )
     ENDIF( NEKTAR_USE_WIN32_LAPACK )
 
     IF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${NATIVE_LAPACK} ${OPENBLAS})
+        TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OPENBLAS})
     ENDIF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
 
     IF( NEKTAR_USE_SMV AND SMV_FOUND )
@@ -441,6 +451,11 @@ IF( NEKTAR_USE_BLAS_LAPACK )
     ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
 ENDIF( NEKTAR_USE_BLAS_LAPACK )
+
+IF( NEKTAR_USE_PETSC )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
+    ADD_DEPENDENCIES(LibUtilities petsc-3.5.2)
+ENDIF( NEKTAR_USE_PETSC )
 
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

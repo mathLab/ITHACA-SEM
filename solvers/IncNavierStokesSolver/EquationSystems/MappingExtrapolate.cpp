@@ -85,7 +85,7 @@ namespace Nektar
             // Remove previous correction
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                if(m_PBndConds[n]->GetUserDefined() == "H")
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
                     Vmath::Vsub(nq, &(m_PBndExp[n]->GetCoeffs()[0]),  1,
@@ -214,7 +214,7 @@ namespace Nektar
             // Apply new correction
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                if(m_PBndConds[n]->GetUserDefined() == "H")
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
                     Vmath::Vadd(nq, &(m_PBndExp[n]->GetCoeffs()[0]),  1,
@@ -452,7 +452,7 @@ namespace Nektar
 
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                if(m_PBndConds[n]->GetUserDefined() == "H")
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
                     Vmath::Smul(nq, m_pressureRelaxation,

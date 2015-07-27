@@ -1099,8 +1099,7 @@ namespace Nektar
                             }                            
                         }
                         // Check if bc is time-dependent
-                        ASSERTL0( BndConds[n]->GetUserDefined() != 
-                                        SpatialDomains::eTimeDependent,
+                        ASSERTL0( !BndConds[n]->IsTimeDependent(),
                             "Time-dependent Dirichlet boundary conditions not supported with mapping yet.");
 
                         // Get boundary condition 
@@ -1191,7 +1190,7 @@ namespace Nektar
                                         Vmath::Vcopy(Bc->GetTotPoints(), BndVal, 1, Vals, 1);
                                         
                                         // Apply MovingBody correction
-                                        if (  (i<nvel) && BndConds[n]->GetUserDefined() == SpatialDomains::eMovingBody )
+                                        if (  (i<nvel) && BndConds[n]->GetUserDefined() == "MovingBody" )
                                         {
                                             // get coordVel in the element
                                             coordVelElmt  = coordVel[i] + m_fields[i]->GetPhys_Offset(
@@ -1277,7 +1276,7 @@ namespace Nektar
                                             Vmath::Vcopy(Bc->GetTotPoints(), BndVal, 1, Vals, 1);
                                             
                                             // Apply coordinate velocity correction
-                                            if (  (i<nvel) && BndConds[n]->GetUserDefined() == SpatialDomains::eMovingBody )
+                                            if (  (i<nvel) && BndConds[n]->GetUserDefined() == "MovingBody" )
                                             {
                                                 // Get coordinate velocity on the element
                                                 coordVelElmt  = coordVel[i] + m_fields[i]->GetPhys_Offset(

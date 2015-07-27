@@ -302,14 +302,7 @@ namespace Nektar
                     ss << cpuTime << "s";
                     cout << " CPU Time: " << setw(8) << left
                          << ss.str() << endl;
-
                     cpuTime = 0.0;
-                }
-                
-                // Perform any solver-specific post-integration steps
-                if (v_PostIntegrate(step))
-                {
-                    break;
                 }
 
                 // Transform data into coefficient space
@@ -321,7 +314,13 @@ namespace Nektar
                         m_fields[m_intVariables[i]]->UpdateCoeffs());
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-                
+
+                // Perform any solver-specific post-integration steps
+                if (v_PostIntegrate(step))
+                {
+                    break;
+                }
+
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
@@ -891,6 +890,11 @@ namespace Nektar
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
+        {
+            return false;
+        }
+
+        bool UnsteadySystem::v_SteadyStateCheck(int step)
         {
             return false;
         }

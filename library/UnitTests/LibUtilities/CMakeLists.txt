@@ -27,7 +27,7 @@ TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests LibUtilities)
 #SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
 #SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)
 
-#ADD_TEST(NAME LibUtilities COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
+ADD_TEST(NAME LibUtilities COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 SUBDIRS(LinearAlgebra)
 
 IF( NEKTAR_USE_EXPRESSION_TEMPLATES )

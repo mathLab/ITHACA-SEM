@@ -66,7 +66,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT FilterAeroForces(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterAeroForces();
+
+            SOLVER_UTILS_EXPORT virtual ~FilterAeroForces();
             
             SOLVER_UTILS_EXPORT void GetForces(
                             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

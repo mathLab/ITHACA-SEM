@@ -319,7 +319,7 @@ void FilterMovingBody::UpdateMotion(
         {
             for (int var = 0; var < nStrVars; var++)
             {
-                int xoffset = var*local_planes+plane;
+                int xoffset = plane*nStrVars+var;
                 int yoffset = nStrVars*local_planes+xoffset;
                 Motion_x[var][plane] = MotionVars[xoffset];
                 Motion_y[var][plane] = MotionVars[yoffset];

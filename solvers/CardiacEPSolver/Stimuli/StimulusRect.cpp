@@ -55,63 +55,63 @@ namespace Nektar
      * Stimulus, at specified frequencies determined by the derived classes of
      * Protocol.
      */
-    
+
     /**
      * Stimulus base class constructor.
      */
     StimulusRect::StimulusRect(
             const LibUtilities::SessionReaderSharedPtr& pSession,
-            const MultiRegions::ExpListSharedPtr& pField, 
+            const MultiRegions::ExpListSharedPtr& pField,
             const TiXmlElement* pXml)
             : Stimulus(pSession, pField, pXml)
     {
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
-        
+        m_chiCapMembrane = m_session->GetParameter("chi")
+                            * m_session->GetParameter("Cm");
+
         if (!pXml)
         {
             return;
         }
-        
 
-        const TiXmlElement *pXmlparameter; 
-        
+
+        const TiXmlElement *pXmlparameter;
+
         pXmlparameter = pXml->FirstChildElement("p_x1");
         m_px1 = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_y1");
         m_py1 = atof(pXmlparameter->GetText());
-    
+
         pXmlparameter = pXml->FirstChildElement("p_z1");
         m_pz1 = atof(pXmlparameter->GetText());
-    
+
         pXmlparameter = pXml->FirstChildElement("p_x2");
         m_px2 = atof(pXmlparameter->GetText());
 
         pXmlparameter = pXml->FirstChildElement("p_y2");
         m_py2 = atof(pXmlparameter->GetText());
-    
+
         pXmlparameter = pXml->FirstChildElement("p_z2");
         m_pz2 = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_is");
         m_pis = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_strength");
         m_strength = atof(pXmlparameter->GetText());
     }
-   
+
 
     /**
      * Initialise the stimulus. Allocate workspace and variable storage.
      */
     void StimulusRect::Initialise()
     {
-
-        
     }
-   
+
     /**
      *
      */
@@ -135,15 +135,16 @@ namespace Nektar
         m_field->GetCoords(x0,x1,x2);
 
         // Get the protocol amplitude
-        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
-        
+        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength
+                            / m_chiCapMembrane;
+
         switch (dim)
         {
         case 1:
             for(int j=0; j<nq; j++)
             {
-                outarray[0][j] += v_amp * ( ( tanh(m_pis*(x0[j] - m_px1)) 
-                                              - tanh(m_pis*(x0[j] - m_px2)) 
+                outarray[0][j] += v_amp * ( ( tanh(m_pis*(x0[j] - m_px1))
+                                              - tanh(m_pis*(x0[j] - m_px2))
                                             ) / 2.0 );
             }
             break;
@@ -159,26 +160,24 @@ namespace Nektar
             break;
         case 3:
             for(int j=0; j<nq; j++)
-            {   
-                outarray[0][j] += v_amp * ( ( (tanh(m_pis*(x0[j] - m_px1)) 
+            {
+                outarray[0][j] += v_amp * ( ( (tanh(m_pis*(x0[j] - m_px1))
                                                - tanh(m_pis*(x0[j] - m_px2)))
-                                            * (tanh(m_pis*(x1[j] - m_py1)) 
+                                            * (tanh(m_pis*(x1[j] - m_py1))
                                                - tanh(m_pis*(x1[j] - m_py2)))
-                                            * (tanh(m_pis*(x2[j] - m_pz1)) 
+                                            * (tanh(m_pis*(x2[j] - m_pz1))
                                                - tanh(m_pis*(x2[j] - m_pz2)))
                                             ) / 2.0 );
             }
             break;
         }
     }
-    
+
 
     /**
      *
      */
     void StimulusRect::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-
-
     }
 }

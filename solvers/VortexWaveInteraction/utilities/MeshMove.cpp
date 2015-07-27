@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     int nbnd= bndConditions.num_elements();
     for(int r=0; r<nbnd; r++)
     {
-        if(bndConditions[r]->GetUserDefined()==SpatialDomains::eCalcBC)
+        if(bndConditions[r]->GetUserDefined()=="CalcBC")
         {
             lastIregion=r;
             Iregions[r]=r;
@@ -424,7 +424,7 @@ int main(int argc, char *argv[])
     MultiRegions::ExpList1DSharedPtr yexp;
 
     yexp = MemoryManager<MultiRegions::ExpList1D>
-        ::AllocateSharedPtr(*(bregions.find(lastIregion)->second), graphShPt, true);
+        ::AllocateSharedPtr(vSession,*(bregions.find(lastIregion)->second), graphShPt, true);
     Cont_y = MemoryManager<MultiRegions::ContField1D>
                                 ::AllocateSharedPtr(vSession, *yexp);  
     //--------------------------------------
@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
     Computestreakpositions(nvertl, streak, xold_up, yold_up,
     	                   xold_low, yold_low, xold_c, yold_c, x_c, y_c,cr,true);    
     // if the curve is low the old layer point, it has to shift down  
-    NekDouble shift=0;  
+    NekDouble shift = 0;  
     for(int q=0; q<nvertl; q++)
     {
          if(y_c[q] < yold_c[q])

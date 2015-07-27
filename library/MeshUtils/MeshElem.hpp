@@ -241,6 +241,12 @@ namespace MeshUtils {
             CADSurf[s->first]=uv;
         }
 
+        void SetTet(int t)
+        {
+            Tets.push_back(t);
+        }
+
+        std::vector<int> GetTets(){return Tets;}
 
 
     private:
@@ -254,6 +260,7 @@ namespace MeshUtils {
 
         std::vector<int> Edges;
         std::vector<int> Tris;
+        std::vector<int> Tets;
 
     };
 
@@ -436,6 +443,38 @@ namespace MeshUtils {
         Array<OneD, int> nodes;
         Array<OneD, int> edges;
         Array<OneD,int> neighbours;
+    };
+
+    /////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////
+
+    class MeshTet;
+    typedef boost::shared_ptr<MeshTet> MeshTetSharedPtr;
+
+    class MeshTet
+    {
+    public:
+        friend class MemoryManager<MeshTet>;
+
+        MeshTet(int t, int a,
+                       int b,
+                       int c,
+                       int d)
+        {
+            tid = t;
+            nodes = Array<OneD, int>(4);
+            nodes[0] = a; nodes[1] = b; nodes[2] = c; nodes[3] = d;
+
+
+        }
+
+
+        Array<OneD, int> GetN(){return nodes;}
+
+    private:
+
+        int tid;
+        Array<OneD, int> nodes;
     };
 
 }

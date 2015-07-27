@@ -48,9 +48,6 @@ void TetMesh::Mesh()
     TetGenInterfaceSharedPtr tetgen =
         MemoryManager<TetGenInterface>::AllocateSharedPtr();
 
-    map<int, MeshNodeSharedPtr> Nodes;
-    map<int, MeshEdgeSharedPtr> Edges;
-    map<int, MeshTriSharedPtr> Tris;
     m_surfacemesh->Get(Nodes,Edges,Tris);
 
     map<int, MeshNodeSharedPtr>::iterator nit;
@@ -65,9 +62,15 @@ void TetMesh::Mesh()
 
     tetgen->Assign(nodesintris, Tris, Nodes, m_stienerpoints);
 
+    if(m_verbose)
+        cout << "\tMesh iteration : 1" << endl;
+
     tetgen->Mesh();
 
     tetgen->Extract(numtet, tetconnect);
+
+    if(m_verbose)
+        cout << "\tTets : " << numtet << endl << endl;
 
     bool repeat = true;
     int meshcounter = 1;
@@ -82,11 +85,33 @@ void TetMesh::Mesh()
 
         tetgen->Assign(nodesintris, Tris, Nodes, m_stienerpoints);
 
+        if(m_verbose)
+            cout << "\tMesh iteration : " << meshcounter+1 << endl;
+
         tetgen->Mesh();
 
         tetgen->Extract(numtet, tetconnect);
 
+        if(m_verbose)
+            cout << "\tTets : " << numtet << endl << endl;
+
         meshcounter++;
+    }
+
+    if(m_verbose)
+        cout << "\tMeshing iterations: " << meshcounter << endl <<
+                "\tTets :" << numtet << endl;
+
+    for(int i = 0; i < numtet; i++)
+    {
+        MeshTetSharedPtr t = MemoryManager<MeshTet>::AllocateSharedPtr(
+            Tets.size(),tetconnect[i][0],tetconnect[i][1],tetconnect[i][2],
+            tetconnect[i][3]);
+        Nodes[tetconnect[i][0]]->SetTet(Tets.size());
+        Nodes[tetconnect[i][1]]->SetTet(Tets.size());
+        Nodes[tetconnect[i][2]]->SetTet(Tets.size());
+        Nodes[tetconnect[i][3]]->SetTet(Tets.size());
+        Tets[Tets.size()] = t;
     }
 }
 
@@ -143,11 +168,10 @@ bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
             locn[0] = 0.0; locn[1] = 0.0; locn[2] = 0.0;
             for(int j = 0; j < 4; j++)
             {
-                Array<OneD, NekDouble> loc = Nodes[tetvert[i]]->GetLoc();
+                Array<OneD, NekDouble> loc = Nodes[tetvert[j]]->GetLoc();
                 locn[0]+=loc[0]/6.0;
                 locn[1]+=loc[1]/6.0;
                 locn[2]+=loc[2]/6.0;
-                locn[3]+=loc[3]/6.0;
             }
             AddNewPoint(locn, Nodes);
         }
@@ -160,6 +184,7 @@ bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
     {
         return true;
     }
+
 }
 
 

@@ -81,6 +81,11 @@ namespace MeshUtils{
 
         int numtet;
         Array<OneD, Array<OneD, int> > tetconnect;
+
+        std::map<int, MeshNodeSharedPtr> Nodes;
+        std::map<int, MeshEdgeSharedPtr> Edges;
+        std::map<int, MeshTriSharedPtr> Tris;
+        std::map<int, MeshTetSharedPtr> Tets;
     };
 
     typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

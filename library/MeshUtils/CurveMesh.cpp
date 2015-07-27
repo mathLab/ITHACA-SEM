@@ -44,7 +44,7 @@ namespace MeshUtils {
     void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                          std::map<int, MeshEdgeSharedPtr> &Edges)
     {
-        m_cadcurve->Bounds(m_bounds);
+        m_bounds = m_cadcurve->Bounds();
         m_curvelength = m_cadcurve->Length(m_bounds[0],m_bounds[1]);
 
         m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+5;
@@ -118,7 +118,7 @@ namespace MeshUtils {
 
 
         t = m_cadcurve->tAtArcLength(meshsvalue[0]);
-        m_cadcurve->P(t,loc);
+        loc = m_cadcurve->P(t);
         MeshNodeSharedPtr n1 = boost::shared_ptr<MeshNode>(
                                 new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
         n1->SetEOC();
@@ -149,7 +149,7 @@ namespace MeshUtils {
         for(int i = 1; i < meshsvalue.size()-1; i++)
         {
             t = m_cadcurve->tAtArcLength(meshsvalue[i]);
-            m_cadcurve->P(t,loc);
+            loc = m_cadcurve->P(t);
             MeshNodeSharedPtr n2 = boost::shared_ptr<MeshNode>(
                               new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
             n2->SetCurve(m_id,t);
@@ -159,7 +159,7 @@ namespace MeshUtils {
 
         t = m_bounds[1];
 
-        m_cadcurve->P(t,loc);
+        loc = m_cadcurve->P(t);
         MeshNodeSharedPtr n3 = boost::shared_ptr<MeshNode>(
                           new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
         n3->SetCurve(m_id,t);
@@ -309,8 +309,7 @@ namespace MeshUtils {
     void CurveMesh::GetSampleFunction()
     {
         m_dst.resize(m_numSamplePoints);
-        Array<OneD, NekDouble> loc;
-        m_cadcurve->P(m_bounds[0],loc);
+        Array<OneD, NekDouble> loc = m_cadcurve->P(m_bounds[0]);
 
         vector<NekDouble> dsti;
         dsti.resize(3);
@@ -326,7 +325,7 @@ namespace MeshUtils {
             dsti[1]=i*ds;
             NekDouble t = m_cadcurve->tAtArcLength(dsti[1]);
 
-            m_cadcurve->P(t,loc);
+            loc = m_cadcurve->P(t);
 
             dsti[0]=m_octree->Query(loc);
             dsti[2]=t;

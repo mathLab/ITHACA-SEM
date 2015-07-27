@@ -82,7 +82,7 @@ namespace MeshUtils {
 
         void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
 
-        void AddNewPoint(NekDouble u, NekDouble v,
+        void AddNewPoint(Array<OneD, NekDouble> uv,
                          std::map<int, MeshNodeSharedPtr> &Nodes);
 
         bool m_verbose;

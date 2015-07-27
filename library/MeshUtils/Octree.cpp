@@ -112,8 +112,7 @@ namespace MeshUtils {
         m_maxDelta = max;
         m_eps = eps;
 
-        BoundingBox = Array<OneD, NekDouble> (6);
-        m_cad->GetBoundingBox(BoundingBox);
+        BoundingBox = m_cad->GetBoundingBox();
 
         CompileCuravturePointList();
 
@@ -811,9 +810,8 @@ namespace MeshUtils {
 
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
-            Array<OneD, NekDouble> ParameterPlaneBounds;
             LibUtilities::CADSurfSharedPtr surf = m_cad->GetSurf(i);
-            surf->GetBounds(ParameterPlaneBounds);
+            Array<OneD, NekDouble> ParameterPlaneBounds = surf->GetBounds();
 
             NekDouble du = (ParameterPlaneBounds[1]-
                             ParameterPlaneBounds[0])/(40-1);
@@ -829,9 +827,10 @@ namespace MeshUtils {
             {
                 for(int k = 0; k < 40; k++)
                 {
-                    NekDouble u = k*du + ParameterPlaneBounds[0];
-                    NekDouble v = j*dv + ParameterPlaneBounds[2];
-                    samplepoints[k][j] = surf->P(u,v);
+                    Array<OneD, NekDouble> uv(2);
+                    uv[0] = k*du + ParameterPlaneBounds[0];
+                    uv[1] = j*dv + ParameterPlaneBounds[2];
+                    samplepoints[k][j] = surf->P(uv);
                 }
             }
 
@@ -878,26 +877,25 @@ namespace MeshUtils {
             {
                 for(int k = 0; k < nv; k++)
                 {
-                    NekDouble u = (ParameterPlaneBounds[1]-
-                                   ParameterPlaneBounds[0])
+                    Array<OneD, NekDouble> uv(2);
+                    uv[0] = (ParameterPlaneBounds[1]- ParameterPlaneBounds[0])
                                     /(nu-1)*j + ParameterPlaneBounds[0];
-                    NekDouble v = (ParameterPlaneBounds[3]-
-                                   ParameterPlaneBounds[2])
+                    uv[1] = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])
                                     /(nv-1)*k + ParameterPlaneBounds[2];
                     if(j==nu-1)
-                        u=ParameterPlaneBounds[1]; //These statements prevent floating point error at end of loop
+                        uv[0]=ParameterPlaneBounds[1]; //These statements prevent floating point error at end of loop
                     if(k==nv-1)
-                        v=ParameterPlaneBounds[3];
+                        uv[1]=ParameterPlaneBounds[3];
 
 
-                    Array<OneD, NekDouble> N = surf->N(u,v);
+                    Array<OneD, NekDouble> N = surf->N(uv);
 
                     if(N[0]==0 && N[1]==0 && N[2]==0)
                     {
                         continue;
                     }
 
-                    Array<OneD, NekDouble> r = surf->D2(u,v);
+                    Array<OneD, NekDouble> r = surf->D2(uv);
 
                     NekDouble E = r[3]*r[3] + r[4]*r[4] + r[5]*r[5];
                     NekDouble F = r[3]*r[6] + r[4]*r[7] + r[5]*r[8];

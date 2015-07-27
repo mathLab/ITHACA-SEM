@@ -125,17 +125,15 @@ namespace MeshUtils {
 
                 for(int i = 1; i < m_order +1 -1; i++)
                 {
-                    Array<OneD, NekDouble> loc;
-                    c->P(ti[i],loc);
+                    Array<OneD, NekDouble> loc = c->P(ti[i]);
                     MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
                             AllocateSharedPtr(Nodes.size(),loc[0],
                                               loc[1],loc[2]);
                     nn->SetCurve(c->GetID(),ti[i]);
-                    NekDouble u,v;
-                    s1->locuv(u,v,loc);
-                    nn->SetSurf(Surfs[0],u,v);
-                    s2->locuv(u,v,loc);
-                    nn->SetSurf(Surfs[1],u,v);
+                    Array<OneD, NekDouble> uv = s1->locuv(loc);
+                    nn->SetSurf(Surfs[0],uv);
+                    uv = s2->locuv(loc);
+                    nn->SetSurf(Surfs[1],uv);
                     honodes[i-1] = Nodes.size();
                     Nodes[Nodes.size()] = nn;
                 }
@@ -155,14 +153,14 @@ namespace MeshUtils {
                 for(int i = 1; i < m_order+1 -1; i++)
                 {
                     Array<OneD, NekDouble> loc;
-                    loc = s->P(uvb[0]+i*(uve[0]-uvb[0])/m_order,
-                               uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    Array<OneD, NekDouble> uv(2);
+                    uv[0] = uvb[0]+i*(uve[0]-uvb[0])/m_order;
+                    uv[1] = uvb[1]+i*(uve[1]-uvb[1])/m_order;
+                    loc = s->P(uv);
                     MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
                             AllocateSharedPtr(Nodes.size(),loc[0],
                                                 loc[1],loc[2]);
-                    nn->SetSurf(e->GetSurf(),
-                                uvb[0]+i*(uve[0]-uvb[0])/m_order,
-                                uvb[1]+i*(uve[1]-uvb[1])/m_order);
+                    nn->SetSurf(e->GetSurf(),uv);
                     honodes[i-1] = Nodes.size();
                     Nodes[Nodes.size()] = nn;
 
@@ -498,12 +496,10 @@ namespace MeshUtils {
                     dfv+=om[i]*sqr*(2*(uvj[1]-v0)*(uvi[1]-v0)+
                                         (uvj[0]-u0)*(uvj[0]-u0));
                 }
-                Array<OneD, NekDouble> l = it->second->GetLoc();
-                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(u0-fu/dfu,v0-fv/dfv);
-                //cout << l[0] << " " << l[1] << " " << l[2] << endl;
-                //cout << l2[0] << " " << l2[1] << " " << l2[2] << endl;
-                //exit(-1);
-                Nodes[it->first]->Move(l2,u0-fu/dfu,v0-fv/dfv);
+                Array<OneD, NekDouble> uv(2);
+                uv[0] = u0-fu/dfu; uv[1] = v0-fv/dfv;
+                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(uv);
+                Nodes[it->first]->Move(l2,uv);
 
             }
         }

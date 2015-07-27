@@ -222,8 +222,7 @@ namespace MeshUtils {
     void SurfaceMesh::Stretching()
     {
         asr = 0.0;
-        Array<OneD, NekDouble> bnds;
-        m_cadsurf->GetBounds(bnds);
+        Array<OneD, NekDouble> bnds = m_cadsurf->GetBounds();
         pasr = (bnds[1] - bnds[0])/
                (bnds[3] - bnds[2]);
 
@@ -236,8 +235,10 @@ namespace MeshUtils {
         {
             for(int j = 0; j < 40; j++)
             {
-                stretch[i][j]=m_cadsurf->P(bnds[0] + i*du,
-                                           bnds[2] + j*dv);
+                Array<OneD, NekDouble> uv(2);
+                uv[0] = bnds[0] + i*du;
+                uv[1] = bnds[2] + j*dv;
+                stretch[i][j]=m_cadsurf->P(uv);
             }
         }
 
@@ -312,13 +313,10 @@ namespace MeshUtils {
                 binfo = Nodes[triVert[1]]->GetS(m_id);
                 cinfo = Nodes[triVert[2]]->GetS(m_id);
 
-                NekDouble uc = (ainfo[0]+
-                                binfo[0]+
-                                cinfo[0])/3.0;
-                NekDouble vc = (ainfo[1]+
-                                binfo[1]+
-                                cinfo[1])/3.0;
-                AddNewPoint(uc,vc,Nodes);
+                Array<OneD, NekDouble> uvc(2);
+                uvc[0] = (ainfo[0]+binfo[0]+cinfo[0])/3.0;
+                uvc[1] = (ainfo[1]+binfo[1]+cinfo[1])/3.0;
+                AddNewPoint(uvc,Nodes);
             }
         }
 
@@ -332,10 +330,10 @@ namespace MeshUtils {
         }
     }
 
-    void SurfaceMesh::AddNewPoint(NekDouble u, NekDouble v,
+    void SurfaceMesh::AddNewPoint(Array<OneD, NekDouble> uv,
                                   std::map<int, MeshNodeSharedPtr> &Nodes)
     {
-        Array<OneD, NekDouble> np = m_cadsurf->P(u,v);
+        Array<OneD, NekDouble> np = m_cadsurf->P(uv);
         NekDouble npDelta = m_octree->Query(np);
 
         MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
@@ -373,7 +371,7 @@ namespace MeshUtils {
 
         if(add)
         {
-            n->SetSurf(m_id,u,v);
+            n->SetSurf(m_id,uv);
             Nodes[Nodes.size()] = n;
             m_stienerpoints.push_back(Nodes.size()-1);
         }
@@ -418,9 +416,9 @@ namespace MeshUtils {
         {
             for(int j = 0; j < orderedLoops[i].size(); j++)
             {
-                NekDouble u,v;
-                m_cadsurf->locuv(u,v,Nodes[orderedLoops[i][j]]->GetLoc());
-                Nodes[orderedLoops[i][j]]->SetSurf(m_id,u,v);
+                Array<OneD, NekDouble> uv = m_cadsurf->
+                                locuv(Nodes[orderedLoops[i][j]]->GetLoc());
+                Nodes[orderedLoops[i][j]]->SetSurf(m_id,uv);
             }
         }
 

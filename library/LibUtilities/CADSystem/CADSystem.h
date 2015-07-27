@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSYSTEM_H
 #define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSYSTEM_H
 
@@ -51,36 +50,48 @@
 namespace Nektar {
 namespace LibUtilities {
 
-	/**
-	 * @brief Base class for CAD interface system.
-	 *
-	 * A class which can load and interact with cad for Nektar++ using opencascade
-	 * This class contains maps to subclasses surface and curves
-	 */
+/**
+ * @brief Base class for CAD interface system.
+ *
+ * A class which can load and interact with CAD for Nektar++ using OpenCascade.
+ * This class contains maps to subclasses surface and curves.
+ */
+class CADSystem
+{
+    public:
+        friend class MemoryManager<CADSystem>;
 
-	class CADSystem
-	{
-	public:
-	    friend class MemoryManager<CADSystem>;
+        /**
+         * @brief Default constructor.
+         */
+        LIB_UTILITIES_EXPORT CADSystem(const std::string &name) : m_name(name)
+        {
+        }
 
-		/**
-		 * @brief Defualt constructor.
-		 */
-
-	    LIB_UTILITIES_EXPORT CADSystem(const std::string &name) : m_name(name)
-	    {
-	    };
-
-	    LIB_UTILITIES_EXPORT std::string GetName();
+        LIB_UTILITIES_EXPORT std::string GetName();
         LIB_UTILITIES_EXPORT bool LoadCAD();
         LIB_UTILITIES_EXPORT void Report();
-        LIB_UTILITIES_EXPORT void GetBoundingBox(Array<OneD, NekDouble>& out);
-        LIB_UTILITIES_EXPORT int GetNumSurf(){return m_surfs.size();}
-        LIB_UTILITIES_EXPORT int GetNumCurve(){return m_curves.size();}
+        LIB_UTILITIES_EXPORT Array<OneD, NekDouble> GetBoundingBox();
 
-		/**
-		 * @brief Gets curve type from map.
-		 */
+        /**
+         * @brief Return number of surfaces.
+         */
+        LIB_UTILITIES_EXPORT int GetNumSurf()
+        {
+            return m_surfs.size();
+        }
+
+        /**
+         * @brief Return number of curves.
+         */
+        LIB_UTILITIES_EXPORT int GetNumCurve()
+        {
+            return m_curves.size();
+        }
+
+        /**
+         * @brief Gets curve type from map.
+         */
         LIB_UTILITIES_EXPORT const CADCurveSharedPtr GetCurve(int i)
         {
             std::map<int,CADCurveSharedPtr>::iterator
@@ -89,9 +100,10 @@ namespace LibUtilities {
 
             return search->second;
         }
-		/**
-		 * @brief Gets suface from map.
-		 */
+
+        /**
+         * @brief Gets suface from map.
+         */
         LIB_UTILITIES_EXPORT CADSurfSharedPtr GetSurf(int i)
         {
             std::map<int,CADSurfSharedPtr>::iterator
@@ -100,22 +112,32 @@ namespace LibUtilities {
 
             return search->second;
         }
-		LIB_UTILITIES_EXPORT int GetEPC(){return m_epc;}
 
-	private:
+        /**
+         * @brief Return Euler-Poincare number.
+         */
+        LIB_UTILITIES_EXPORT int GetEPC()
+        {
+            return m_epc;
+        }
 
+    private:
+        /// Private function to add curve to CADSystem::m_curves.
         void AddCurve(int i, TopoDS_Shape in);
+        /// Private function to add surface to CADSystem::m_surfs.
         void AddSurf(int i, TopoDS_Shape in,
                      std::vector<std::vector<std::pair<int,int> > > ein);
-
-	    std::string m_name;
+        /// Name of cad file to be opened, including file extension.
+        std::string m_name;
+        /// Euler-Poincare number of the CAD.
         int m_epc;
-
+        /// map of curves
         std::map<int,CADCurveSharedPtr> m_curves;
+        /// map of surfaces
         std::map<int,CADSurfSharedPtr> m_surfs;
-	};
+};
 
-	typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
+typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
 
 }
 }

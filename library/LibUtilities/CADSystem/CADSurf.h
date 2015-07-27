@@ -29,10 +29,9 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object surface.
+//  Description: CAD object surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
 
 #ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSURF_H
 #define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSURF_H
@@ -48,60 +47,67 @@
 namespace Nektar {
 namespace LibUtilities {
 
-    class CADSurf
-    {
+class CADSurf
+{
     public:
         friend class MemoryManager<CADSurf>;
 
         /**
-		 * @brief Defualt constructor.
-		 */
-
+         * @brief Default constructor.
+         */
         CADSurf(int i, TopoDS_Shape in,
                 std::vector<std::vector<std::pair<int,int> > > ein);
 
         /**
-		 * @brief Get the ids of the edges which bound the surface.
-		 *
-         * The edges are organsised into two vectors which are grouped into
-         * the contisous loops of the bounding edges, then the edges which are
-         * a pair of ints, the first is the edge id and the second is an int
-         * which indicates whether this edge is orientated forwards or backwards
-         * on this surface to form the loop
+         * @brief Get the IDs of the edges which bound the surface.
+         *
+         * The edges are organsised into two vectors, which are grouped into the
+         * continuous loops of the bounding edges, then the edges, which are a
+         * pair of integers. The first item is the edge ID and the second is an
+         * integer that indicates whether this edge is orientated forwards or
+         * backwards on this surface to form the loop.
          */
-
-        std::vector<std::vector<std::pair<int,int> > >
-                        GetEdges(){return edges;}
-
-        Array<OneD, NekDouble> N(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> D1(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> D2(NekDouble u, NekDouble v);
-        Array<OneD, NekDouble> P(NekDouble u, NekDouble v);
-
-        void locuv(NekDouble &u, NekDouble &v, Array<OneD, NekDouble> p);
-
-        /**
-		 * @brief Get the limits of the parametric space for the surface
-		 */
-
-        void GetBounds(Array<OneD,NekDouble> &out)
+        std::vector<std::vector<std::pair<int,int> > > GetEdges()
         {
-            out = Array<OneD,NekDouble>(4);
-            out[0]=occSurface.FirstUParameter();
-            out[1]=occSurface.LastUParameter();
-            out[2]=occSurface.FirstVParameter();
-            out[3]=occSurface.LastVParameter();
+            return m_edges;
         }
 
+        /**
+         * @brief Get the limits of the parametric space for the surface.
+         *
+         * @return Array of 4 entries with parametric umin,umax,vmin,vmax.
+         */
+        Array<OneD, NekDouble> GetBounds()
+        {
+            Array<OneD,NekDouble> b(4);
+
+            b[0] = m_occSurface.FirstUParameter();
+            b[1] = m_occSurface.LastUParameter();
+            b[2] = m_occSurface.FirstVParameter();
+            b[3] = m_occSurface.LastVParameter();
+
+            return b;
+        }
+
+        Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+        Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+        Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+        Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+        Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+
     private:
+        /// ID of surface.
+        int m_ID;
+        /// OpenCascade object for surface.
+        BRepAdaptor_Surface m_occSurface;
+        /// Alternate OpenCascade object for surface. Used by reverse lookup.
+        Handle(Geom_Surface) m_s;
+        /// List of bounding edges in loops with orientation.
+        std::vector<std::vector<std::pair<int,int> > > m_edges;
+};
 
-        int ID;
-        BRepAdaptor_Surface occSurface;
-        Handle(Geom_Surface) s;
-        std::vector<std::vector<std::pair<int,int> > > edges;
-    };
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
-    typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 }
 }
 

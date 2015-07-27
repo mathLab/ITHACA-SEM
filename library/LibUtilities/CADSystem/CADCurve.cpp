@@ -36,112 +36,140 @@
 #include <LibUtilities/CADSystem/CADCurve.h>
 
 using namespace std;
-namespace Nektar{
-namespace LibUtilities{
 
-    /**
-     * @brief Calculates the parametric coordinate t and arclength location s.
-     */
+namespace Nektar {
+namespace LibUtilities {
 
-    NekDouble CADCurve::tAtArcLength(NekDouble s)
+/**
+ * @brief Default constructor.
+ */
+CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
+{
+    gp_Trsf transform;
+    gp_Pnt ori(0.0, 0.0, 0.0);
+    transform.SetScale(ori, 1.0 / 1000.0);
+    TopLoc_Location mv(transform);
+    in.Move(mv);
+    m_occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
+}
+
+/**
+ * @brief Calculates the parametric coordinate and arclength location
+ * defined by \p s.
+ *
+ * @param s Arclength location.
+ * @return Calculated parametric coordinate.
+ *
+ * @todo This really needs improving for accuracy.
+ */
+NekDouble CADCurve::tAtArcLength(NekDouble s)
+{
+    NekDouble dt = (m_occCurve.LastParameter() -
+                    m_occCurve.FirstParameter()) / (5000);
+    NekDouble t = m_occCurve.FirstParameter();
+
+    NekDouble len = 0.0;
+
+    while(len <= s)
     {
+        gp_Pnt P1,P2;
+        gp_Vec drdt1,drdt2;
 
-        NekDouble dt = (occCurve.LastParameter() -
-                        occCurve.FirstParameter()) / (5000);
-        NekDouble t = occCurve.FirstParameter();
+        m_occCurve.D1(t,P1,drdt1);
+        t += dt;
+        m_occCurve.D1(t,P2,drdt2);
 
-        NekDouble len = 0.0;
-
-        while(len <= s)
-        {
-            gp_Pnt P1,P2;
-            gp_Vec drdt1,drdt2;
-
-            occCurve.D1(t,P1,drdt1);
-            t += dt;
-            occCurve.D1(t,P2,drdt2);
-
-            len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt;
-        }
-
-        return t - dt;
-
-        //this really needs improving for accuracy
+        len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt;
     }
 
-    /**
-     * @brief Calculates the arclength between the two paremetric points ti
-     * and tf.
-     */
+    return t - dt;
+}
 
-    NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
+/**
+ * @brief Calculates the arclength between the two paremetric points \p ti
+ * and \p tf. \p ti must be less than \p tf.
+ *
+ * @param ti First parametric coordinate.
+ * @param tf Second parametric coordinate.
+ * @return Arc length between \p ti and \p tf.
+ */
+NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
+{
+    NekDouble len = 0;
+    NekDouble dt = (m_occCurve.LastParameter() -
+                    m_occCurve.FirstParameter()) / (1000 - 1);
+    NekDouble t = ti;
+
+    while(t + dt <= tf)
     {
+        gp_Pnt P1,P2;
+        gp_Vec drdt1,drdt2;
 
-        NekDouble len = 0;
-        NekDouble dt = (occCurve.LastParameter() -
-                        occCurve.FirstParameter()) / (1000 - 1);
-        NekDouble t = ti;
+        m_occCurve.D1(t,P1,drdt1);
+        t += dt;
+        m_occCurve.D1(t,P2,drdt2);
 
-        while(t + dt <= tf)
-        {
-            gp_Pnt P1,P2;
-            gp_Vec drdt1,drdt2;
-
-            occCurve.D1(t,P1,drdt1);
-            t += dt;
-            occCurve.D1(t,P2,drdt2);
-
-            len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt;
-        }
-
-        return len;
+        len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt;
     }
 
-    /**
-     * @brief Gets the location x,y,z in array out of the curve at point t.
-     */
+    return len;
+}
 
-    void CADCurve::P(NekDouble t, Array<OneD, NekDouble> &out)
-    {
+/**
+ * @brief Gets the location (x,y,z) in an array out of the curve at point \p t.
+ *
+ * @param t Parametric coordinate
+ * @return Array of x,y,z
+ */
+Array<OneD, NekDouble> CADCurve::P(NekDouble t)
+{
+    Array<OneD, NekDouble> location(3);
+    gp_Pnt loc = m_occCurve.Value(t);
 
-        out = Array<OneD, NekDouble>(3);
-        gp_Pnt loc = occCurve.Value(t);
+    location[0] = loc.X();
+    location[1] = loc.Y();
+    location[2] = loc.Z();
 
-        out[0] = loc.X();
-        out[1] = loc.Y();
-        out[2] = loc.Z();
-    }
+    return location;
+}
 
-    /**
-     * @brief returns the minimum and maximum parametric coords t of the curve.
-     */
+/**
+ * @brief Returns the minimum and maximum parametric coords t of the curve.
+ *
+ * @return Array of two entries, min and max parametric coordinate.
+ */
 
-    void CADCurve::Bounds(Array<OneD, NekDouble> &out)
-    {
-        out = Array<OneD, NekDouble>(2);
-        out[0] = occCurve.FirstParameter();
-        out[1] = occCurve.LastParameter();
-    }
+Array<OneD, NekDouble> CADCurve::Bounds()
+{
+    Array<OneD, NekDouble> t(2);
+    t[0] = m_occCurve.FirstParameter();
+    t[1] = m_occCurve.LastParameter();
 
-    CADCurve::CADCurve(int i, TopoDS_Shape in) : ID(i)
-    {
-        gp_Trsf transform;
-        gp_Pnt ori(0.0, 0.0, 0.0);
-        transform.SetScale(ori, 1.0 / 1000.0);
-        TopLoc_Location mv(transform);
-        in.Move(mv);
-        occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
-    }
+    return t;
+}
 
-    /**
-     * @brief gets opencascade point objects for the start and end of the curve.
-     */
+/**
+ * @brief Gets OpenCascade point objects for the start and end of the curve.
+ *
+ * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
+ */
 
-    //this should really be removed and something better put in its place.
-    void CADCurve::GetMinMax(gp_Pnt &start, gp_Pnt &end)
-    {
-        start = occCurve.Value(occCurve.FirstParameter());
-        end  = occCurve.Value(occCurve.LastParameter());
-    }
+Array<OneD, NekDouble> CADCurve::GetMinMax()
+{
+    Array<OneD, NekDouble> locs(6);
+
+    gp_Pnt start = m_occCurve.Value(m_occCurve.FirstParameter());
+    gp_Pnt end   = m_occCurve.Value(m_occCurve.LastParameter());
+
+    locs[0] = start.X();
+    locs[1] = start.Y();
+    locs[2] = start.Z();
+    locs[3] = end.X();
+    locs[4] = end.Y();
+    locs[5] = end.Z();
+
+    return locs;
+}
+
 }
 }

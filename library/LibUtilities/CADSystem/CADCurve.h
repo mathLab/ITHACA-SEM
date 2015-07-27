@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADCURVE_H
 #define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADCURVE_H
 
@@ -48,43 +47,49 @@
 namespace Nektar {
 namespace LibUtilities {
 
-    /**
-	 * @brief class for CAD curves.
-	 *
-	 * This class wraps the opencascade BRepAdaptor_Curve class for use with
-     * nektar++
-	 */
-
-    class CADCurve
-    {
+/**
+ * @brief class for CAD curves.
+ *
+ * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
+ * Nektar++.
+ */
+class CADCurve
+{
     public:
         friend class MemoryManager<CADCurve>;
 
-        /**
-		 * @brief Defualt constructor.
-		 */
         CADCurve(int i, TopoDS_Shape in);
-
-        void Bounds(Array<OneD, NekDouble> &out);
+        Array<OneD, NekDouble> Bounds();
         NekDouble Length(NekDouble ti, NekDouble tf);
-        void P(NekDouble t, Array<OneD, NekDouble> &out);
+        Array<OneD, NekDouble> P(NekDouble t);
         NekDouble tAtArcLength(NekDouble s);
-        int GetID(){return ID;}
-        void SetAdjSurf(std::vector<int> i){adjSurfs=i;}
-        std::vector<int> GetAdjSurf(){return adjSurfs;}
-        void GetMinMax(gp_Pnt &start, gp_Pnt &end);
+        Array<OneD, NekDouble> GetMinMax();
+
+        int GetID()
+        {
+            return m_ID;
+        }
+
+        void SetAdjSurf(std::vector<int> i)
+        {
+            m_adjSurfs = i;
+        }
+
+        std::vector<int> GetAdjSurf()
+        {
+            return m_adjSurfs;
+        }
 
     private:
+        /// ID of the curve.
+        int m_ID;
+        /// OpenCascade object of the curve.
+        BRepAdaptor_Curve m_occCurve;
+        /// List of surfaces which this curve belongs to.
+        std::vector<int> m_adjSurfs;
+};
 
-        int ID;
-        BRepAdaptor_Curve occCurve;
-        std::vector<int> adjSurfs;
-
-
-    };
-
-    typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
-
+typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 }
 }

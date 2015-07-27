@@ -193,13 +193,15 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
     SpatialDomains::PointGeomSharedPtr vert;
     int vertID;
 
+    int kNverts = T::mapped_type::element_type::kNverts;
+
     // iterate over all elements
     typename T::iterator it;
 
     for (it = geom.begin(); it != geom.end(); it++)
     {
         //  iterate over the elements vertices
-        for (int j = 0; j < it->second->kNverts; ++j)
+        for (int j = 0; j < kNverts; ++j)
         {
             vert = it->second->GetVertex(j);
             vertID = vert->GetVid();
@@ -222,7 +224,7 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
             connecPos++;
         }
 
-        m_connecIdx[conidxPos + 1] = m_connecIdx[conidxPos] + it->second->kNverts;
+        m_connecIdx[conidxPos + 1] = m_connecIdx[conidxPos] + kNverts;
         conidxPos++;
     }
 }

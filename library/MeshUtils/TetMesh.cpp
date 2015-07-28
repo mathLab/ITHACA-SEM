@@ -54,7 +54,8 @@ void TetMesh::Mesh()
     for(nit = Nodes.begin(); nit != Nodes.end(); nit++)
     {
         vector<int> t = nit->second->GetTris();
-        if(t.size() > 0)
+        vector<int> e = nit->second->GetEdges();
+        if(t.size() > 0 && e.size() > 1)
         {
             nodesintris.push_back(nit->first);
         }

@@ -64,6 +64,17 @@ namespace MeshUtils{
 
         void Mesh();
 
+        void Get(std::map<int, MeshNodeSharedPtr> &n,
+                 std::map<int, MeshEdgeSharedPtr> &e,
+                 std::map<int, MeshTriSharedPtr> &ti,
+                 std::map<int, MeshTetSharedPtr> &te)
+        {
+            n = Nodes;
+            e = Edges;
+            ti = Tris;
+            te = Tets;
+        }
+
     private:
 
         bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);

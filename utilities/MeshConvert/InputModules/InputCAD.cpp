@@ -130,20 +130,26 @@ namespace Utilities
         MeshUtils::TetMeshSharedPtr m_tet =
             MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(
                 0, m_mesh->m_verbose, m_octree, m_surfacemeshing);
-                
+
         m_tet->Mesh();
 
         m_mesh->m_expDim = 3;
         m_mesh->m_spaceDim = 3;
-        m_mesh->m_order = m_order;
+        m_mesh->m_order = 1;
 
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
         m_mesh->m_fields.push_back("w");
         m_mesh->m_fields.push_back("p");
 
-        /*map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
-        map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
+        map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
+        map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
+        map<int, MeshUtils::MeshTriSharedPtr> Tris;
+        map<int, MeshUtils::MeshTetSharedPtr> Tets;
+
+        m_tet->Get(Nodes,Edges,Tris,Tets);
+
+        map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
         map<int, NodeSharedPtr> allnodes;
 
         for(nit = Nodes.begin(); nit != Nodes.end(); nit++)
@@ -156,8 +162,28 @@ namespace Utilities
             allnodes[nit->first] = nn;
         }
 
+        map<int, MeshUtils::MeshTetSharedPtr>::iterator tetit;
 
-        for(trit = Tris.begin(); trit != Tris.end(); trit++)
+        for(tetit = Tets.begin(); tetit != Tets.end(); tetit++)
+        {
+            Array<OneD, int> n = tetit->second->GetN();
+
+            vector<NodeSharedPtr> localnode;
+            for(int j = 0; j < 4; j++)
+            {
+                localnode.push_back(allnodes[n[j]]);
+            }
+
+            ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
+            vector<int> tags;
+            tags.push_back(0);
+            ElementSharedPtr E = GetElementFactory().
+                        CreateInstance(LibUtilities::eTetrahedron,
+                                       conf,localnode,tags);
+            m_mesh->m_element[m_mesh->m_expDim].push_back(E);
+        }
+
+        /*for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {
             bool add = false;
 

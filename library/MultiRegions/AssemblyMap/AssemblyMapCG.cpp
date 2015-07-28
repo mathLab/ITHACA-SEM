@@ -1342,6 +1342,37 @@ namespace Nektar
                     }
                 }
             }
+            // Now use information from all partitions to determine
+            //    the correct size
+            map<int, int>::iterator dofIt;
+            // edges
+            Array<OneD, long> edgeId (dofs[1].size());
+            Array<OneD, NekDouble> edgeDof (dofs[1].size());          
+            for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
+            {
+                edgeId[i] = dofIt->first;
+                edgeDof[i] = (NekDouble) dofIt->second;
+            }
+            Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
+            Gs::Gather(edgeDof, Gs::gs_min, tmp);
+            for (i=0; i < dofs[1].size(); i++)
+            {
+                dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
+            }
+            // faces
+            Array<OneD, long> faceId (dofs[2].size());
+            Array<OneD, NekDouble> faceDof (dofs[2].size());
+            for(dofIt = dofs[2].begin(), i=0; dofIt != dofs[2].end(); dofIt++, i++)
+            {
+                faceId[i] = dofIt->first;
+                faceDof[i] = (NekDouble) dofIt->second;
+            }
+            Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
+            Gs::Gather(faceDof, Gs::gs_min, tmp2);
+            for (i=0; i < dofs[2].size(); i++)
+            {
+                dofs[2][faceId[i]] = (int) (faceDof[i]+0.5);
+            }          
 
             Array<OneD, const BndCond> bndCondVec(1, bndConditions);
 
@@ -1999,7 +2030,8 @@ namespace Nektar
                     dof = exp->GetEdgeNcoeffs(j)-2;
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < dof; ++k)
+                    //    run backwards because of variable P case "ghost" modes
+                    for(k = dof-1; k >= 0; --k)
                     {
                         vGlobalId = m_localToGlobalMap[cnt+edgeInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
@@ -2031,7 +2063,7 @@ namespace Nektar
                     dof = exp->GetFaceIntNcoeffs(j);
 
 
-                    for(k = 0; k < dof; ++k)
+                    for(k = dof-1; k >= 0; --k)
                     {
                         vGlobalId = m_localToGlobalMap[cnt+faceInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]

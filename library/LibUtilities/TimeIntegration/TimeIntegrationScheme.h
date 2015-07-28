@@ -72,17 +72,17 @@ namespace Nektar
             eBDFImplicitOrder1,               //!< BDF multi-step scheme of order 1 (implicit)
             eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme 4th order explicit (old name)
-			eRungeKutta4,                     //!< Classical RungeKutta4 method (new name for eClassicalRungeKutta4)
-			eRungeKutta3_SSP,                 //!< Nonlinear SSP RungeKutta3 explicit
+            eRungeKutta4,                     //!< Classical RungeKutta4 method (new name for eClassicalRungeKutta4)
+            eRungeKutta3_SSP,                 //!< Nonlinear SSP RungeKutta3 explicit
             eRungeKutta2_ImprovedEuler,       //!< Improved RungeKutta2 explicit (old name meaning Heun's method)
-			eRungeKutta2_SSP,                 //!< Nonlinear SSP RungeKutta2 explicit (surrogate for eRungeKutta2_ImprovedEuler)
+            eRungeKutta2_SSP,                 //!< Nonlinear SSP RungeKutta2 explicit (surrogate for eRungeKutta2_ImprovedEuler)
             eForwardEuler,                    //!< Forward Euler scheme
             eBackwardEuler,                   //!< Backward Euler scheme
             eIMEXOrder1,                      //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
             eIMEXOrder2,                      //!< IMEX 2nd order scheme using Backward Different Formula & Extrapolation
             eIMEXOrder3,                      //!< IMEX 3rd order scheme using Backward Different Formula & Extrapolation
             eMidpoint,                        //!< midpoint method (old name)
-			eRungeKutta2,                     //!< Classical RungeKutta2 method (new name for eMidpoint)
+            eRungeKutta2,                     //!< Classical RungeKutta2 method (new name for eMidpoint)
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eCNAB,		                      //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
@@ -110,17 +110,17 @@ namespace Nektar
             "BDFImplicitOrder1",
             "BDFImplicitOrder2",
             "ClassicalRungeKutta4",
-			"RungeKutta4",
-			"RungeKutta3_SSP",
+            "RungeKutta4",
+            "RungeKutta3_SSP",
             "RungeKutta2_ImprovedEuler",
-			"RungeKutta2_SSP",
+            "RungeKutta2_SSP",
             "ForwardEuler",
             "BackwardEuler",
             "IMEXOrder1",
             "IMEXOrder2",
             "IMEXOrder3",
             "Midpoint",
-			"RungeKutta2",
+            "RungeKutta2",
             "DIRKOrder2",
             "DIRKOrder3",
             "CNAB",
@@ -475,7 +475,7 @@ namespace Nektar
              * \return An object of the class TimeIntegrationSolution which represents the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
              *  that can be used to start the actual integration.
              */
-            LIB_UTILITIES_EXPORT TimeIntegrationSolutionSharedPtr InitializeScheme(const NekDouble                      timestep,
+            LIB_UTILITIES_EXPORT TimeIntegrationSolutionSharedPtr InitializeScheme(const NekDouble timestep,
                                                                     ConstDoubleArray               &y_0    ,
                                                               const NekDouble                      time    ,
                                                               const TimeIntegrationSchemeOperators &op     );
@@ -498,7 +498,7 @@ namespace Nektar
              * \return The actual solution \f$\boldsymbol{y}^{n}\f$ at the new time level 
              *    (which in fact is also embedded in the argument y).
              */
-            LIB_UTILITIES_EXPORT ConstDoubleArray& TimeIntegrate(const NekDouble                        timestep,          
+            LIB_UTILITIES_EXPORT ConstDoubleArray& TimeIntegrate(const NekDouble   timestep,          
                                                   TimeIntegrationSolutionSharedPtr &y      ,
                                             const TimeIntegrationSchemeOperators   &op     );
 
@@ -573,7 +573,7 @@ namespace Nektar
                                              const Array<TwoD, const NekDouble>& U,
                                              const Array<TwoD, const NekDouble>& V) const;
 
-            LIB_UTILITIES_EXPORT void TimeIntegrate(const NekDouble                      timestep,      
+            LIB_UTILITIES_EXPORT void TimeIntegrate(const NekDouble timestep,
                                      ConstTripleArray               &y_old  ,
                                      ConstSingleArray               &t_old  ,
                                      TripleArray                    &y_new  ,
@@ -591,7 +591,7 @@ namespace Nektar
                 return y[0][0].num_elements();
             }
 
-            LIB_UTILITIES_EXPORT bool CheckTimeIntegrateArguments(const NekDouble                      timestep,      
+            LIB_UTILITIES_EXPORT bool CheckTimeIntegrateArguments(const NekDouble timestep,
                                                    ConstTripleArray               &y_old  ,
                                                    ConstSingleArray               &t_old  ,
                                                    TripleArray                    &y_new  ,

@@ -584,7 +584,16 @@ namespace Nektar
                 for(j = 0; j < nEdges; ++j)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(j);
-                    EdgeSize[meshEdgeId] = exp->GetEdgeNcoeffs(j) - 2;
+                    if (EdgeSize.count(meshEdgeId) > 0)
+                    {
+                        EdgeSize[meshEdgeId] = 
+                                min(EdgeSize[meshEdgeId], 
+                                    exp->GetEdgeNcoeffs(j) - 2);
+                    }
+                    else
+                    {
+                        EdgeSize[meshEdgeId] = exp->GetEdgeNcoeffs(j) - 2;
+                    }
                 }
 
                 nFaces = exp->GetNfaces();
@@ -592,6 +601,16 @@ namespace Nektar
                 for(j = 0; j < nFaces; ++j)
                 {
                     meshFaceId = exp->GetGeom()->GetFid(j);
+                    if (FaceSize.count(meshFaceId) > 0)
+                    {
+                        FaceSize[meshFaceId] = 
+                                min(FaceSize[meshFaceId], 
+                                    exp->GetFaceIntNcoeffs(j));
+                    }
+                    else
+                    {
+                        FaceSize[meshFaceId] = exp->GetFaceIntNcoeffs(j);
+                    }
                     FaceSize[meshFaceId] = exp->GetFaceIntNcoeffs(j);
                 }
             }
@@ -1288,14 +1307,39 @@ namespace Nektar
 
                 for(j = 0; j < locExpVector[i]->GetNedges(); ++j)
                 {
-                    dofs[1][exp->GetGeom()->GetEid(j)] =
-                        exp->GetEdgeNcoeffs(j) - 2;
+                    if (dofs[1].count(exp->GetGeom()->GetEid(j)) > 0)
+                    {
+                        if (dofs[1][exp->GetGeom()->GetEid(j)] != 
+                                    locExpVector[i]->GetEdgeNcoeffs(j)-2)
+                        {
+                            ASSERTL0( (exp->GetEdgeBasisType(j) == LibUtilities::eModified_A) ||
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B),
+                                    "CG with variable order only available with modal expansion"); 
+                        }
+                        dofs[1][exp->GetGeom()->GetEid(j)] = 
+                                min(dofs[1][exp->GetGeom()->GetEid(j)], 
+                                    locExpVector[i]->GetEdgeNcoeffs(j)-2);
+                    }
+                    else
+                    {
+                        dofs[1][exp->GetGeom()->GetEid(j)] =
+                            exp->GetEdgeNcoeffs(j) - 2;
+                    }
                 }
 
                 for(j = 0; j < locExpVector[i]->GetNfaces(); ++j)
                 {
-                    dofs[2][exp->GetGeom()->GetFid(j)] =
-                        exp->GetFaceIntNcoeffs(j);
+                    if (dofs[2].count(exp->GetGeom()->GetFid(j)) > 0)
+                    {
+                        dofs[2][exp->GetGeom()->GetFid(j)] = 
+                                min(dofs[2][exp->GetGeom()->GetFid(j)], 
+                                    exp->GetFaceIntNcoeffs(j));
+                    }
+                    else
+                    {
+                        dofs[2][exp->GetGeom()->GetFid(j)] =
+                            exp->GetFaceIntNcoeffs(j);
+                    }
                 }
             }
 
@@ -1343,13 +1387,13 @@ namespace Nektar
                     nEdgeInteriorCoeffs = exp->GetEdgeNcoeffs(j) - 2;
                     meshEdgeId = exp->GetGeom()->GetEid(j);
                     graphVertOffset[graph[1][meshEdgeId]+1]
-                        = nEdgeInteriorCoeffs;
+                        = dofs[1][meshEdgeId];
 
                     bType = exp->GetEdgeBasisType(j);
 
                     // need a sign vector for modal expansions if nEdgeCoeffs
-                    // >=4
-                    if(nEdgeInteriorCoeffs >= 2 &&
+                    // >=3 (not 4 because of variable order case)
+                    if(nEdgeInteriorCoeffs &&
                        (bType == LibUtilities::eModified_A ||
                         bType == LibUtilities::eModified_B))
                     {
@@ -1361,7 +1405,7 @@ namespace Nektar
                 {
                     nFaceInteriorCoeffs = exp->GetFaceIntNcoeffs(j);
                     meshFaceId = exp->GetGeom()->GetFid(j);
-                    graphVertOffset[graph[2][meshFaceId]+1] = nFaceInteriorCoeffs;
+                    graphVertOffset[graph[2][meshFaceId]+1] = dofs[2][meshFaceId];
                 }
             }
 
@@ -1461,18 +1505,27 @@ namespace Nektar
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < nEdgeInteriorCoeffs; ++k)
+                    for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
                             graphVertOffset[graph[1][meshEdgeId]]+k;
+                    }
+                    for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                    {
+                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
+                            graphVertOffset[graph[1][meshEdgeId]];
                     }
 
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
-                        for(k = 0; k < nEdgeInteriorCoeffs; ++k)
+                        for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
                         {
                             m_localToGlobalSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
+                        }
+                        for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                        {
+                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] = 0.0;
                         }
                     }
                 }
@@ -1494,19 +1547,29 @@ namespace Nektar
                     exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
 
                     // Set the global DOF's for the interior modes of face j
-                    for(k = 0; k < nFaceInteriorCoeffs; ++k)
+                    for(k = 0; k < dofs[2][exp->GetGeom()->GetFid(j)]; ++k)
                     {
                         m_localToGlobalMap[cnt+faceInteriorMap[k]] =
                             graphVertOffset[graph[2][meshFaceId]]+k;
                     }
+                    for(k = dofs[2][exp->GetGeom()->GetFid(j)]; k < nFaceInteriorCoeffs; ++k)
+                    {
+                        m_localToGlobalMap[cnt+faceInteriorMap[k]] =
+                            graphVertOffset[graph[2][meshFaceId]];
+                    }                
 
                     if(m_signChange)
                     {
-                        for(k = 0; k < nFaceInteriorCoeffs; ++k)
+                        for(k = 0; k < dofs[2][exp->GetGeom()->GetFid(j)]; ++k)
                         {
                             m_localToGlobalSign[cnt+faceInteriorMap[k]] = (NekDouble) faceInteriorSign[k];
                         }
+                        for(k = dofs[2][exp->GetGeom()->GetFid(j)]; k < nFaceInteriorCoeffs; ++k)
+                        {
+                            m_localToGlobalSign[cnt+faceInteriorMap[k]] = 0;
+                        }
                     }
+                    
                 }
             }
 

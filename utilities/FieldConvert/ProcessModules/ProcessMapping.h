@@ -36,7 +36,7 @@
 #ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMAPPING
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMAPPING
 
-#include "Module.h"
+#include "../Module.h"
 #include <GlobalMapping/Mapping.h>
 
 namespace Nektar

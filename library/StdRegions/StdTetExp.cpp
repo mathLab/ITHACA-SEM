@@ -329,7 +329,7 @@ namespace Nektar
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> wsp(nquad2*order0*order1*(order1+1)/2+
+            Array<OneD, NekDouble> wsp(nquad2*order0*(2*order1-order0+1)/2+
                                        nquad2*nquad1*order0);
 
             BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
@@ -373,7 +373,7 @@ namespace Nektar
             int  order2 = m_base[2]->GetNumModes();
 
             Array<OneD, NekDouble > tmp  = wsp;
-            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1*(order1+1)/2;
+            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*(2*order1-order0+1)/2;
 
             int i, j, mode, mode1, cnt;
 

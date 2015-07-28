@@ -49,27 +49,17 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
     additional.initialize();
     output.initialize();
 
-    //build stiener list in additional
-    additional.firstnumber = 0;
-    additional.numberofpoints = m_stienerpoints.size();
-    additional.pointlist = new REAL[additional.numberofpoints*3];
-
-    for(int i = 0; i < m_stienerpoints.size(); i++)
-    {
-        Array<OneD, NekDouble> loc = Nodes[m_stienerpoints[i]]->GetLoc();
-        additional.pointlist[i*3+0] = loc[0];
-        additional.pointlist[i*3+1] = loc[1];
-        additional.pointlist[i*3+2] = loc[2];
-    }
+    nodemap.clear(); nodemapr.clear();
 
     //build surface input
     tetgenio::facet *f;
     tetgenio::polygon *p;
-    int pointc = 0;
 
     surface.firstnumber = 0;
     surface.numberofpoints = m_nodesinsurface.size();
     surface.pointlist = new REAL[surface.numberofpoints*3];
+
+    int pointc = 0;
 
     for(int i = 0; i < m_nodesinsurface.size(); i++)
     {
@@ -78,11 +68,31 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
 
         Array<OneD, NekDouble> loc = Nodes[m_nodesinsurface[i]]->GetLoc();
 
-        surface.pointlist[pointc*3+0] = loc[0];
-        surface.pointlist[pointc*3+1] = loc[1];
-        surface.pointlist[pointc*3+2] = loc[2];
+        surface.pointlist[i*3+0] = loc[0];
+        surface.pointlist[i*3+1] = loc[1];
+        surface.pointlist[i*3+2] = loc[2];
+
         pointc++;
     }
+
+    //build stiener list in additional
+    additional.firstnumber = 0;
+    additional.numberofpoints = m_stienerpoints.size();
+    additional.pointlist = new REAL[additional.numberofpoints*3];
+
+    for(int i = 0; i < m_stienerpoints.size(); i++)
+    {
+        nodemap[pointc] = m_stienerpoints[i];
+        nodemapr[m_stienerpoints[i]] = pointc;
+
+        Array<OneD, NekDouble> loc = Nodes[m_stienerpoints[i]]->GetLoc();
+        additional.pointlist[i*3+0] = loc[0];
+        additional.pointlist[i*3+1] = loc[1];
+        additional.pointlist[i*3+2] = loc[2];
+
+        pointc++;
+    }
+    cout << pointc << endl;
 
     surface.numberoffacets = Tris.size();
     surface.facetlist = new tetgenio::facet[surface.numberoffacets];
@@ -106,6 +116,7 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
         surface.facetmarkerlist[i] = 0;
 
     }
+
     if(Quiet)
     {
         tetrahedralize("pYizfennQ", &surface, &output, &additional, NULL);
@@ -114,6 +125,7 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
     {
         tetrahedralize("pYizfenn", &surface, &output, &additional, NULL);
     }
+
 }
 
 void TetGenInterface::Extract(int &numtet,

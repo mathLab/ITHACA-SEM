@@ -99,10 +99,6 @@ void TetMesh::Mesh()
         meshcounter++;
     }
 
-    if(m_verbose)
-        cout << "\tMeshing iterations: " << meshcounter << endl <<
-                "\tTets :" << numtet << endl;
-
     for(int i = 0; i < numtet; i++)
     {
         MeshTetSharedPtr t = MemoryManager<MeshTet>::AllocateSharedPtr(
@@ -113,7 +109,17 @@ void TetMesh::Mesh()
         Nodes[tetconnect[i][2]]->SetTet(Tets.size());
         Nodes[tetconnect[i][3]]->SetTet(Tets.size());
         Tets[Tets.size()] = t;
+        //cout << tetconnect[i][0] << " " << tetconnect[i][1] << " " << tetconnect[i][2] << " " << tetconnect[i][3] << endl;
     }
+
+    if(m_verbose)
+        cout << "\tMeshing iterations: " << meshcounter << endl <<
+                "\tTets :" << numtet << endl <<
+                "\tBoundary nodes: " << nodesintris.size() << endl <<
+                "\tInterior nodes: " << m_stienerpoints.size() << endl;
+
+
+
 }
 
 bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
@@ -170,9 +176,9 @@ bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
             for(int j = 0; j < 4; j++)
             {
                 Array<OneD, NekDouble> loc = Nodes[tetvert[j]]->GetLoc();
-                locn[0]+=loc[0]/6.0;
-                locn[1]+=loc[1]/6.0;
-                locn[2]+=loc[2]/6.0;
+                locn[0]+=loc[0]/4.0;
+                locn[1]+=loc[1]/4.0;
+                locn[2]+=loc[2]/4.0;
             }
             AddNewPoint(locn, Nodes);
         }

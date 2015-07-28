@@ -465,7 +465,6 @@ namespace MeshUtils {
             nodes = Array<OneD, int>(4);
             nodes[0] = a; nodes[1] = b; nodes[2] = c; nodes[3] = d;
 
-
         }
 
 

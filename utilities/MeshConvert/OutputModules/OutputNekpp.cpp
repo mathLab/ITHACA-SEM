@@ -53,7 +53,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputNekpp::className = 
+        ModuleKey OutputNekpp::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "xml"), OutputNekpp::create,
                 "Writes a Nektar++ xml file.");
@@ -70,7 +70,7 @@ namespace Nektar
         {
 
         }
-        
+
         void OutputNekpp::Process()
         {
             if (m_mesh->m_verbose)
@@ -100,7 +100,7 @@ namespace Nektar
             WriteXmlDomain    (geomTag);
             WriteXmlExpansions(root);
             WriteXmlConditions(root);
-            
+
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
 
@@ -153,7 +153,7 @@ namespace Nektar
             {
                 NodeSharedPtr n = *it;
                 stringstream s;
-                s << scientific << setprecision(8) 
+                s << scientific << setprecision(8)
                   << n->m_x << " " << n->m_y << " " << n->m_z;
                 TiXmlElement * v = new TiXmlElement( "V" );
                 v->SetAttribute("ID",n->m_id);
@@ -250,7 +250,7 @@ namespace Nektar
             {
                 for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); ++it)
                 {
-                    if ((*it)->m_edgeNodes.size() > 0) 
+                    if ((*it)->m_edgeNodes.size() > 0)
                     {
                         curve = true;
                         break;
@@ -280,7 +280,7 @@ namespace Nektar
                     e->SetAttribute("ID",        edgecnt++);
                     e->SetAttribute("EDGEID",    (*it)->m_id);
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
-                    e->SetAttribute("TYPE", 
+                    e->SetAttribute("TYPE",
                         LibUtilities::kPointsTypeStr[(*it)->m_curveType]);
                     TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                     e->LinkEndChild(t0);
@@ -367,17 +367,17 @@ namespace Nektar
 
             for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it, ++j)
             {
-                if (it->second->m_items.size() > 0) 
+                if (it->second->m_items.size() > 0)
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
                     bool doSort = true;
-                    
+
                     // Ensure that this composite is not used for periodic BCs!
-                    for (it2  = m_mesh->m_condition.begin(); 
+                    for (it2  = m_mesh->m_condition.begin();
                          it2 != m_mesh->m_condition.end(); ++it2)
                     {
                         ConditionSharedPtr c = it2->second;
-                        
+
                         // Ignore non-periodic boundary conditions.
                         if (find(c->type.begin(), c->type.end(), ePeriodic) ==
                             c->type.end())
@@ -420,7 +420,7 @@ namespace Nektar
             TiXmlElement * domain = new TiXmlElement ("DOMAIN" );
             std::string list;
             CompositeMap::iterator it;
-            
+
             for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it)
             {
                 if (it->second->m_items[0]->GetDim() == m_mesh->m_expDim)
@@ -441,7 +441,7 @@ namespace Nektar
             // Write a default <EXPANSIONS> section.
             TiXmlElement * expansions = new TiXmlElement ("EXPANSIONS");
             CompositeMap::iterator it;
-            
+
             for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it)
             {
                 if (it->second->m_items[0]->GetDim() == m_mesh->m_expDim)
@@ -460,7 +460,7 @@ namespace Nektar
                         exp->SetAttribute("NUMMODES",m_mesh->m_order);
                         exp->SetAttribute("TYPE","MODIFIED");
                     }
-                    
+
                     if (m_mesh->m_fields.size() == 0)
                     {
                         exp->SetAttribute("FIELDS","u");
@@ -475,53 +475,53 @@ namespace Nektar
                         fstr = fstr.substr(0,fstr.length()-1);
                         exp->SetAttribute("FIELDS", fstr);
                     }
-                    
+
                     expansions->LinkEndChild(exp);
                 }
             }
             pRoot->LinkEndChild(expansions);
         }
-        
+
         void OutputNekpp::WriteXmlConditions(TiXmlElement * pRoot)
         {
-            TiXmlElement *conditions = 
+            TiXmlElement *conditions =
                 new TiXmlElement("CONDITIONS");
-            TiXmlElement *boundaryregions = 
+            TiXmlElement *boundaryregions =
                 new TiXmlElement("BOUNDARYREGIONS");
-            TiXmlElement *boundaryconditions = 
+            TiXmlElement *boundaryconditions =
                 new TiXmlElement("BOUNDARYCONDITIONS");
-            TiXmlElement *variables = 
+            TiXmlElement *variables =
                 new TiXmlElement("VARIABLES");
             ConditionMap::iterator it;
-            
+
             for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end(); ++it)
             {
                 ConditionSharedPtr c = it->second;
                 string tmp;
-                
+
                 // First set up boundary regions.
                 TiXmlElement *b = new TiXmlElement("B");
                 b->SetAttribute("ID", boost::lexical_cast<string>(it->first));
-                
+
                 for (int i = 0; i < c->m_composite.size(); ++i)
                 {
                     tmp += boost::lexical_cast<string>(c->m_composite[i]) + ",";
                 }
-                
+
                 tmp = tmp.substr(0, tmp.length()-1);
 
                 TiXmlText *t0 = new TiXmlText("C["+tmp+"]");
                 b->LinkEndChild(t0);
                 boundaryregions->LinkEndChild(b);
-                
+
                 TiXmlElement *region = new TiXmlElement("REGION");
                 region->SetAttribute(
                     "REF", boost::lexical_cast<string>(it->first));
-                
+
                 for (int i = 0; i < c->type.size(); ++i)
                 {
                     string tagId;
-                    
+
                     switch(c->type[i])
                     {
                         case eDirichlet:    tagId = "D"; break;
@@ -530,19 +530,19 @@ namespace Nektar
                         case eHOPCondition: tagId = "N"; break;
                         default:                         break;
                     }
-                    
+
                     TiXmlElement *tag = new TiXmlElement(tagId);
                     tag->SetAttribute("VAR", c->field[i]);
                     tag->SetAttribute("VALUE", c->value[i]);
-                    
+
                     if (c->type[i] == eHOPCondition)
                     {
                         tag->SetAttribute("USERDEFINEDTYPE", "H");
                     }
-                    
+
                     region->LinkEndChild(tag);
                 }
-                
+
                 boundaryconditions->LinkEndChild(region);
             }
 
@@ -554,19 +554,19 @@ namespace Nektar
                 v->LinkEndChild(t0);
                 variables->LinkEndChild(v);
             }
-            
+
             if (m_mesh->m_fields.size() > 0)
             {
                 conditions->LinkEndChild(variables);
             }
-            
+
             if (m_mesh->m_condition.size() > 0)
             {
                 conditions->LinkEndChild(boundaryregions);
                 conditions->LinkEndChild(boundaryconditions);
             }
-            
+
             pRoot->LinkEndChild(conditions);
-        }   
+        }
     }
 }

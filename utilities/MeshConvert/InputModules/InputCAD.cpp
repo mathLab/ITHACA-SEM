@@ -135,7 +135,7 @@ namespace Utilities
 
         m_mesh->m_expDim = 3;
         m_mesh->m_spaceDim = 3;
-        m_mesh->m_order = 1;
+        m_mesh->m_order = 2;
 
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
@@ -166,13 +166,21 @@ namespace Utilities
 
         for(tetit = Tets.begin(); tetit != Tets.end(); tetit++)
         {
+
             Array<OneD, int> n = tetit->second->GetN();
 
             vector<NodeSharedPtr> localnode;
+            int nodeonsurface = 0;
             for(int j = 0; j < 4; j++)
             {
+                if(Nodes[n[j]]->IsOnSurf(8) || Nodes[n[j]]->IsOnSurf(7) || Nodes[n[j]]->IsOnSurf(9))
+                {
+                    nodeonsurface++;
+                }
                 localnode.push_back(allnodes[n[j]]);
             }
+            if(nodeonsurface !=3 )
+                continue;
 
             ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
             vector<int> tags;

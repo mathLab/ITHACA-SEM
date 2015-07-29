@@ -144,15 +144,14 @@ void ForcingMovingBody::UpdateMotion(
     // dimections, for "constrained" type, the cable only vibrates in crossflow
     // dimection, and for "forced" type, the calbe vibrates specifically along
     // a given function or file
-    std::string vibtype = m_session->GetSolverInfo("VibrationType"); 
-    if(vibtype == "Free" || vibtype == "FREE" ||
-       vibtype == "Constrained" || vibtype == "CONSTRAINED")
+    std::string vibtype = m_session->GetSolverInfo("VibrationType");
+    if(boost::iequals(vibtype, "Free") || boost::iequals(vibtype,"Constrained"))
     {
         // For free vibration case, displacements, velocities and acceleartions
         // are obtained through solving structure dynamic model
         EvaluateStructDynModel(pFields, time);
     }
-    else if(vibtype == "Forced" || vibtype == "FORCED")
+    else if(boost::iequals(vibtype, "Forced"))
     {
         // For forced vibration case, load from specified file or function
         int cnt = 0;
@@ -701,16 +700,14 @@ void ForcingMovingBody::TensionedCableModel(
     if(colrank == 0)
     {
         // Implement Fourier transformation of the motion variables
-        if(supptype == "FREE-FREE" || 
-                        supptype == "Free-Free")
+        if(boost::iequals(supptype, "Free-Free"))
         {
             for(int j = 0 ; j < 4; ++j)
             {
                 m_FFT->FFTFwdTrans(fft_i[j], fft_o[j]);
             }
         }
-        else if(supptype == "PINNED-PINNED" || 
-                            supptype == "Pinned-Pinned")
+        else if(boost::iequals(supptype, "Pinned-Pinned"))
         {
             //TODO:
             int N = fft_i[0].num_elements();
@@ -770,16 +767,14 @@ void ForcingMovingBody::TensionedCableModel(
 
         // get physical coeffients via Backward fourier transformation of wave
         // coefficients
-        if(supptype == "FREE-FREE" || 
-                        supptype == "Free-Free")
+        if(boost::iequals(supptype, "Free-Free"))
         {
             for(int var = 0; var < 3; var++)
             {
                 m_FFT->FFTBwdTrans(fft_i[var], fft_o[var]);
             }
         }
-        else if(supptype == "PINNED-PINNED" || 
-                            supptype == "Pinned-Pinned")
+        else if(boost::iequals(supptype, "Pinned-Pinned"))
         {
             //TODO:
             int N = fft_i[0].num_elements();
@@ -1135,15 +1130,15 @@ void ForcingMovingBody::InitialiseCableModel(
 
     std::string vibtype = m_session->GetSolverInfo("VibrationType");
 
-    if(vibtype == "Constrained" || vibtype == "CONSTRAINED")
+    if(boost::iequals(vibtype, "Constrained"))
     {
         m_vdim = 1;
     }
-    else if (vibtype == "Free" || vibtype == "FREE")
+    else if (boost::iequals(vibtype, "Free"))
     {
         m_vdim = 2;
     }
-    else if (vibtype == "Forced" || vibtype == "FORCED")
+    else if (boost::iequals(vibtype, "Forced"))
     {
         return;
     }
@@ -1519,18 +1514,17 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
         m_CoeffMat_B[plane]
                 = MemoryManager<DNekMat>::AllocateSharedPtr(nel,nel);
 
-        unsigned int K;
-        NekDouble beta;
+        // Initialised to avoid compiler warnings.
+        unsigned int K = 0;
+        NekDouble beta = 0.0;
 
-        if(supptype == "FREE-FREE" || 
-                    supptype == "Free-Free")
+        if (boost::iequals(supptype, "Free-Free"))
         {
             K = plane/2;
             beta = 2.0 * M_PI/m_lhom;
         }
-        else if(supptype == "PINNED-PINNED" || 
-                        supptype == "Pinned-Pinned")
-        {   
+        else if(boost::iequals(supptype, "Pinned-Pinned"))
+        {
             K = plane+1;
             beta = M_PI/m_lhom;
         }

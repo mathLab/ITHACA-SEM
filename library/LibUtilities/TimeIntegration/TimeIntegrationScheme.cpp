@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: implementation of time integration key class 
+//
+// Description: implementation of time integration key class
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
@@ -438,7 +438,7 @@ namespace Nektar
                 }
                 break;
             case eMidpoint: // RCM: old name
-                ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta2");
+             // ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta2");
             case eRungeKutta2: // RCM: new name
                 {
                     m_numsteps = 1;
@@ -463,7 +463,7 @@ namespace Nektar
                 }
                 break;
             case eRungeKutta2_ImprovedEuler: // RCM: old name meaning Heun's method
-                ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta2_SSP");
+             // ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta2_SSP");
             case eRungeKutta2_SSP: // RCM: superior scheme with new name
                 {
                     m_numsteps = 1;
@@ -518,7 +518,7 @@ namespace Nektar
                 }
                 break;
             case eClassicalRungeKutta4: // RCM: old name
-                ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta4");
+             // ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta4");
             case eRungeKutta4: // RCM: new name
                 {
                     m_numsteps = 1;

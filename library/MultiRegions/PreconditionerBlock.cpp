@@ -56,33 +56,34 @@ namespace Nektar
                     PreconditionerBlock::create,
                     "Block Diagonal Preconditioning");
        /**
-         * @class Block Preconditioner
-         *
-         * This class implements Block preconditioning for the conjugate
-         * gradient matrix solver.
-         */
+        * @class Block Preconditioner
+        *
+        * This class implements Block preconditioning for the conjugate
+        * gradient matrix solver.
+        */
 
-         PreconditionerBlock::PreconditionerBlock(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
-                         const AssemblyMapSharedPtr &pLocToGloMap)
-           : Preconditioner(plinsys, pLocToGloMap),
-             m_linsys(plinsys),
-             m_preconType(pLocToGloMap->GetPreconType()),
-             m_locToGloMap(pLocToGloMap)
-         {
-         }
+        PreconditionerBlock::PreconditionerBlock(
+            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const AssemblyMapSharedPtr &pLocToGloMap)
+            : Preconditioner(plinsys, pLocToGloMap),
+              m_linsys(plinsys),
+              m_preconType(pLocToGloMap->GetPreconType()),
+              m_locToGloMap(pLocToGloMap)
+        {
+        }
 
         void PreconditionerBlock::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,"Solver type not valid");
+            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,
+                     "Solver type not valid");
         }
-
 
         void PreconditionerBlock::v_BuildPreconditioner()
         {
-            // Different setup for HDG
             GlobalLinSysKey key = m_linsys.lock()->GetKey();
+
+            // Different setup for HDG and CG.
             if (key.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
             {
                 BlockPreconditionerHDG();
@@ -94,14 +95,19 @@ namespace Nektar
         }
 
         /**
-         * \brief Construct a block preconditioner from \f$\mathbf{S}_{1}\f$.
+         * \brief Construct a block preconditioner from \f$\mathbf{S}_{1}\f$ for
+         * the continuous Galerkin system.
+         *
+         * The preconditioner is defined as:
          *
          * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
          *  Diag[(\mathbf{S_{1}})_{vv}] & & \\ & (\mathbf{S}_{1})_{eb} & \\ & &
          *  (\mathbf{S}_{1})_{fb} \end{array}\right] \f]
          *
          * where \f$\mathbf{S}_{1}\f$ is the local Schur complement matrix for
-         * each element.
+         * each element and the subscript denotes the portion of the Schur
+         * complement associated with the vertex, edge and face blocks
+         * respectively.
          */
         void PreconditionerBlock::BlockPreconditionerCG()
         {
@@ -225,7 +231,8 @@ namespace Nektar
 
                     Array<OneD, unsigned int> bmap, bmap2;
                     Array<OneD, int> sign;
-                    StdRegions::Orientation edgeOrient = exp->GetEorient(i);
+                    StdRegions::Orientation edgeOrient =
+                        exp->GetGeom()->GetEorient(i);
 
                     // Check if this edge is periodic. We may need to flip
                     // orientation if it is.
@@ -314,7 +321,8 @@ namespace Nektar
 
                     Array<OneD, unsigned int> bmap, bmap2;
                     Array<OneD, int> sign;
-                    StdRegions::Orientation faceOrient = exp->GetForient(i);
+                    StdRegions::Orientation faceOrient =
+                        exp->GetGeom()->GetForient(i);
 
                     // Check if this face is periodic. We may need to flip
                     // orientation if it is.
@@ -468,7 +476,8 @@ namespace Nektar
             m_blkMat = MemoryManager<DNekBlkMat>
                 ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
 
-            // Allocate the vertex matrix, which is just diagonal.
+            // We deal with the vertex matrix separately since all vertices can
+            // be condensed into a single, block-diagonal matrix.
             DNekMatSharedPtr vertMat = MemoryManager<DNekMat>
                 ::AllocateSharedPtr(n_blks[0], n_blks[0], 0.0, eDIAGONAL);
 
@@ -482,12 +491,13 @@ namespace Nektar
             // Put the vertex matrix in the block matrix.
             m_blkMat->SetBlock(0,0,vertMat);
 
-            // Now grab the vertex matrices from the block storage, invert them
+            // Finally, grab the matrices from the block storage, invert them
             // and place them in the correct position inside the block matrix.
             int cnt2 = 1;
             for (i = 1; i < 3; ++i)
             {
-                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt, ++cnt2)
+                for (gIt = idMats[i].begin(); gIt != idMats[i].end();
+                     ++gIt, ++cnt2)
                 {
                     int nDofs = gidDofs[i][gIt->first];
 
@@ -510,10 +520,23 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Construct a block preconditioner for the hybridized
+         * discontinuous Galerkin system.
+         *
+         * This system is built in a similar fashion to its continuous variant
+         * found in PreconditionerBlock::BlockPreconditionerCG. In this setting
+         * however, the matrix is constructed as:
+         *
+         * \f[ M^{-1} = \diag[ (\mathbf{S_{1}})_{f}^{-1} ] \f]
+         *
+         * where each matrix is the Schur complement system restricted to a
+         * single face of the trace system.
+         */
         void PreconditionerBlock::BlockPreconditionerHDG()
         {
             boost::shared_ptr<MultiRegions::ExpList>
-                expList=((m_linsys.lock())->GetLocMat()).lock();
+                expList = ((m_linsys.lock())->GetLocMat()).lock();
             boost::shared_ptr<MultiRegions::ExpList> trace = expList->GetTrace();
             LocalRegions::ExpansionSharedPtr locExpansion;
             DNekScalBlkMatSharedPtr loc_mat;
@@ -560,9 +583,8 @@ namespace Nektar
             }
 
             // Find maximum trace size.
-            LibUtilities::CommSharedPtr comm =
-                expList->GetSession()->GetComm()->GetRowComm();
-            comm->AllReduce(maxTraceSize, LibUtilities::ReduceMax);
+            m_comm = expList->GetSession()->GetComm()->GetRowComm();
+            m_comm->AllReduce(maxTraceSize, LibUtilities::ReduceMax);
 
             // Zero matrix storage.
             Array<OneD, NekDouble> tmpStore(cnt, 0.0);
@@ -665,7 +687,8 @@ namespace Nektar
         }
 
         /**
-         *
+         * @brief Apply preconditioner to \p pInput and store the result in \p
+         * pOutput.
          */
         void PreconditionerBlock::v_DoPreconditioner(
                 const Array<OneD, NekDouble>& pInput,

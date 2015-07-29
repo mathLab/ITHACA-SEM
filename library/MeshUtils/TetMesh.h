@@ -80,7 +80,8 @@ namespace MeshUtils{
         bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
 
         void AddNewPoint(Array<OneD, NekDouble> loc,
-                                      std::map<int, MeshNodeSharedPtr> &Nodes);
+                                      std::map<int, MeshNodeSharedPtr> &Nodes,
+                                      std::vector<int> tetnodes);
 
         int m_id;
         bool m_verbose;
@@ -89,6 +90,8 @@ namespace MeshUtils{
 
         std::vector<int> nodesintris;
         std::vector<int> m_stienerpoints;
+
+        std::vector<int> nodesaddedinthisvalidate;
 
         int numtet;
         Array<OneD, Array<OneD, int> > tetconnect;

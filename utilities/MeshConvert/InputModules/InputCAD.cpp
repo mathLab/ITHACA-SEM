@@ -135,7 +135,7 @@ namespace Utilities
 
         m_mesh->m_expDim = 3;
         m_mesh->m_spaceDim = 3;
-        m_mesh->m_order = 2;
+        m_mesh->m_order = m_order+1;
 
         m_mesh->m_fields.push_back("u");
         m_mesh->m_fields.push_back("v");
@@ -170,17 +170,12 @@ namespace Utilities
             Array<OneD, int> n = tetit->second->GetN();
 
             vector<NodeSharedPtr> localnode;
-            int nodeonsurface = 0;
+
             for(int j = 0; j < 4; j++)
             {
-                if(Nodes[n[j]]->IsOnSurf(8) || Nodes[n[j]]->IsOnSurf(7) || Nodes[n[j]]->IsOnSurf(9))
-                {
-                    nodeonsurface++;
-                }
                 localnode.push_back(allnodes[n[j]]);
             }
-            if(nodeonsurface !=3 )
-                continue;
+
 
             ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
             vector<int> tags;
@@ -191,9 +186,10 @@ namespace Utilities
             m_mesh->m_element[m_mesh->m_expDim].push_back(E);
         }
 
-        /*for(trit = Tris.begin(); trit != Tris.end(); trit++)
+        map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
+
+        for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {
-            bool add = false;
 
             Array<OneD, int> n = trit->second->GetN();
 
@@ -202,14 +198,8 @@ namespace Utilities
             vector<NodeSharedPtr> localnode;
             for(int j = 0; j < 3; j++)
             {
-                if(Nodes[n[j]]->IsOnSurf(8) || Nodes[n[j]]->IsOnSurf(7) || Nodes[n[j]]->IsOnSurf(9))
-                {
-                    add = true;
-                }
                 localnode.push_back(allnodes[n[j]]);
             }
-            if(!add)
-                continue;
 
             Array<OneD, int> eg = trit->second->GetE();
             for(int j = 0; j < 3; j++)
@@ -229,44 +219,17 @@ namespace Utilities
             ElementSharedPtr E = GetElementFactory().
                         CreateInstance(LibUtilities::eTriangle,
                                        conf,localnode,tags);
-            m_mesh->m_element[2].push_back(E);
+            m_mesh->m_element[m_mesh->m_expDim-1].push_back(E);
 
-        }*/
-
-        /*for(int i = 1; i <=m_cad->GetNumSurf(); i++)
-        {
-            //m_surfacemeshing->Extract(i,numtris,numppt,points);
-
-            for(int j = 0; j < numtris; j++)
-            {
-                vector<NodeSharedPtr> nodes;
-                for(int k = 0; k < numppt; k++) //numppt
-                {
-                    NodeSharedPtr n =
-                    boost::shared_ptr<Node>(
-                                new Node(nodeCounter++,points[j][k][0],
-                                         points[j][k][1],points[j][k][2]));
-                    nodes.push_back(n);
-                }
-
-
-                ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
-
-                vector<int> tags;
-                tags.push_back(i);
-                ElementSharedPtr E = GetElementFactory().
-                            CreateInstance(LibUtilities::eTriangle,
-                                           conf,nodes,tags);
-                m_mesh->m_element[2].push_back(E);
-
-            }
-        }*/
+        }
 
         ProcessVertices  ();
         ProcessEdges     ();
         ProcessFaces     ();
         ProcessElements  ();
         ProcessComposites();
+
+
 
     }
 

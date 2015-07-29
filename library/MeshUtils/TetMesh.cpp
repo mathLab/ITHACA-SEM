@@ -124,10 +124,12 @@ void TetMesh::Mesh()
 
 bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
 {
+    nodesaddedinthisvalidate.clear();
     int pointsbefore = m_stienerpoints.size();
     for(int i = 0; i < numtet; i++)
     {
-        int tetvert[4];
+        vector<int> tetvert;
+        tetvert.resize(4);
         tetvert[0] = tetconnect[i][0];
         tetvert[1] = tetconnect[i][1];
         tetvert[2] = tetconnect[i][2];
@@ -180,7 +182,7 @@ bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
                 locn[1]+=loc[1]/4.0;
                 locn[2]+=loc[2]/4.0;
             }
-            AddNewPoint(locn, Nodes);
+            AddNewPoint(locn, Nodes, tetvert);
         }
     }
     if(m_stienerpoints.size() == pointsbefore)
@@ -196,7 +198,8 @@ bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
 
 
 void TetMesh::AddNewPoint(Array<OneD, NekDouble> loc,
-                              std::map<int, MeshNodeSharedPtr> &Nodes)
+                              map<int, MeshNodeSharedPtr> &Nodes,
+                              vector<int> tetnodes)
 {
     NekDouble npDelta = m_octree->Query(loc);
 
@@ -205,10 +208,10 @@ void TetMesh::AddNewPoint(Array<OneD, NekDouble> loc,
 
     bool add = true;
 
-    for(int i = 0; i < nodesintris.size(); i++)
+    for(int i = 0; i < tetnodes.size(); i++)
     {
 
-        NekDouble r = Nodes[nodesintris[i]]->Distance(n);
+        NekDouble r = Nodes[tetnodes[i]]->Distance(n);
 
         if(r<npDelta/1.414)
         {
@@ -220,9 +223,9 @@ void TetMesh::AddNewPoint(Array<OneD, NekDouble> loc,
 
     if(add)
     {
-        for(int i = 0; i < m_stienerpoints.size(); i++)
+        for(int i = 0; i < nodesaddedinthisvalidate.size(); i++)
         {
-            NekDouble r = Nodes[m_stienerpoints[i]]->Distance(n);
+            NekDouble r = Nodes[nodesaddedinthisvalidate[i]]->Distance(n);
 
             if(r<npDelta/1.414)
             {
@@ -235,6 +238,7 @@ void TetMesh::AddNewPoint(Array<OneD, NekDouble> loc,
     if(add)
     {
         Nodes[Nodes.size()] = n;
+        nodesaddedinthisvalidate.push_back(Nodes.size()-1);
         m_stienerpoints.push_back(Nodes.size()-1);
     }
 }

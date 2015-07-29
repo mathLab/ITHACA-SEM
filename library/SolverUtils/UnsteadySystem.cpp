@@ -321,6 +321,21 @@ namespace Nektar
                     break;
                 }
 
+                // search for NaN and quit if found
+                bool nanFound = false;
+                for (i = 0; i < nvariables; ++i)
+                {
+                    if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
+                    {
+                        cout << "NaN found in variable \"" << m_session->GetVariable(i) << "\", terminating" << endl;
+                        nanFound = true;
+                    }
+                }
+                if (nanFound)
+                {
+                    break;
+                }
+
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)

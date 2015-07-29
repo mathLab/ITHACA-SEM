@@ -93,879 +93,16 @@ namespace Nektar
             }
         }
 
-       /**
-         * \brief Construct a block preconditioner from
-         * \f$\mathbf{S}_{1}\f$
+        /**
+         * \brief Construct a block preconditioner from \f$\mathbf{S}_{1}\f$.
          *
-         *\f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
+         * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
          *  Diag[(\mathbf{S_{1}})_{vv}] & & \\ & (\mathbf{S}_{1})_{eb} & \\ & &
          *  (\mathbf{S}_{1})_{fb} \end{array}\right] \f]
          *
-         * where \f$\mathbf{S}_{1}\f$ is the local schur complement matrix for
+         * where \f$\mathbf{S}_{1}\f$ is the local Schur complement matrix for
          * each element.
          */
-        void PreconditionerBlock::BlockPreconditioner2D()
-        {
-            boost::shared_ptr<MultiRegions::ExpList>
-                expList=((m_linsys.lock())->GetLocMat()).lock();
-            LocalRegions::ExpansionSharedPtr locExpansion;
-            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
-            StdRegions::VarCoeffMap vVarCoeffMap;
-            int i, j, k, nel;
-            int nVerts, nEdges;
-            int eid, n, cnt, nedgemodes;
-            NekDouble zero = 0.0;
-
-            int vMap1, vMap2, sign1, sign2;
-            int m, v, eMap1, eMap2;
-            int offset, globalrow, globalcol;
-
-            //matrix storage
-            MatrixStorage storage = eFULL;
-            MatrixStorage vertstorage = eDIAGONAL;
-            MatrixStorage blkmatStorage = eDIAGONAL;
-
-            //local element static condensed matrices
-            DNekScalBlkMatSharedPtr loc_mat;
-            DNekScalMatSharedPtr    bnd_mat;
-
-            DNekMatSharedPtr VertBlk;
-
-            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
-
-            //Vertex and edge preconditioner matrices
-            VertBlk = MemoryManager<DNekMat>::
-                AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
-
-            Array<OneD, NekDouble> vertArray(nNonDirVerts,0.0);
-            Array<OneD, long> VertBlockToUniversalMap(nNonDirVerts,-1);
-
-            int n_exp = expList->GetNumElmts();
-            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
-
-            //set the number of blocks in the matrix
-            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs);
-            n_blks[0]=nNonDirVerts;
-
-            map<int,int> edgeDirMap;
-            map<int,int> uniqueEdgeMap;
-
-            //this should be of size total number of local edges
-            Array<OneD, int> edgemodeoffset(nNonDirEdgeIDs,0);
-            Array<OneD, int> edgeglobaloffset(nNonDirEdgeIDs,0);
-
-            const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
-            StdRegions::StdExpansion1DSharedPtr bndCondFaceExp;
-            LocalRegions::SegExpSharedPtr       bndSegExp;
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>&
-                bndConditions = expList->GetBndConditions();
-
-            int meshVertId;
-            int meshEdgeId;
-
-            // Periodic information
-            PeriodicMap periodicVerts;
-            PeriodicMap periodicEdges;
-            PeriodicMap periodicFaces;
-            expList->GetPeriodicEntities(
-                periodicVerts, periodicEdges, periodicFaces);
-
-            // Determine which boundary edges and faces have dirichlet values
-            for(i = 0; i < bndCondExp.num_elements(); i++)
-            {
-                cnt = 0;
-                for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
-                {
-                    bndSegExp = bndCondExp[i]->GetExp(j)
-                                        ->as<LocalRegions::SegExp>();
-                    if (bndConditions[i]->GetBoundaryConditionType() ==
-                        SpatialDomains::eDirichlet)
-                    {
-                        meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
-                        edgeDirMap[meshEdgeId] = 1;
-                    }
-                }
-            }
-
-            int dof=0;
-            int maxEdgeDof=0;
-            int nlocalNonDirEdges=0;
-
-            int edgematrixlocation=0;
-            int ntotaledgeentries=0;
-
-            // Loop over all the elements in the domain and compute max edge
-            // DOF. Reduce across all processes to get universal maximum.
-            for(cnt=n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                for (j = 0; j < locExpansion->GetNedges(); ++j)
-                {
-                    dof    = locExpansion->GetEdgeNcoeffs(j)-2;
-                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion2D>()
-                                    ->GetGeom2D()->GetEid(j);
-
-                    if(edgeDirMap.count(meshEdgeId)==0)
-                    {
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
-                        {
-                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
-
-                            edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
-
-                            edgemodeoffset[edgematrixlocation]=dof*dof;
-
-                            ntotaledgeentries+=dof*dof;
-
-                            n_blks[1+edgematrixlocation++]=dof;
-
-                        }
-
-                        nlocalNonDirEdges+=dof*dof;
-                    }
-                }
-            }
-
-            m_comm = expList->GetComm()->GetRowComm();
-            m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
-
-            //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> EdgeBlockToUniversalMap(ntotaledgeentries,-1);
-
-            Array<OneD, int> localEdgeToGlobalMatrixMap(nlocalNonDirEdges,-1);
-
-            //Allocate arrays to store matrices (number of expansions * p^2)
-            Array<OneD, NekDouble> EdgeBlockArray(nlocalNonDirEdges,-1);
-
-            int edgematrixoffset=0;
-            int vGlobal;
-
-            for(n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                //loop over the edges of the expansion
-                for(j = 0; j < locExpansion->GetNedges(); ++j)
-                {
-                    //get mesh edge id
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion2D>()
-                                            ->GetGeom2D()->GetEid(j);
-
-                    nedgemodes=locExpansion->GetEdgeNcoeffs(j)-2;
-
-                    if(edgeDirMap.count(meshEdgeId)==0)
-                    {
-                        for(k=0; k<nedgemodes*nedgemodes; ++k)
-                        {
-                            vGlobal=edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
-
-
-                            localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
-
-                            EdgeBlockToUniversalMap[vGlobal]
-                                = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
-                        }
-                        edgematrixoffset+=nedgemodes*nedgemodes;
-                    }
-                }
-            }
-
-            edgematrixoffset=0;
-
-            m_blkMat = MemoryManager<DNekBlkMat>
-                    ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
-
-            //Here we loop over the expansion and build the block low energy
-            //preconditioner as well as the block versions of the transformation
-            //matrices.
-            for(cnt=n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                nVerts=locExpansion->GetGeom()->GetNumVerts();
-                nEdges=locExpansion->GetGeom()->GetNumEdges();
-
-                //Get statically condensed matrix
-                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
-
-                //Extract boundary block (elemental S1)
-                bnd_mat=loc_mat->GetBlock(0,0);
-
-                //offset by number of rows
-                offset = bnd_mat->GetRows();
-
-                DNekScalMat &S=(*bnd_mat);
-
-                //loop over vertices of the element and return the vertex map
-                //for each vertex
-                for (v=0; v<nVerts; ++v)
-                {
-                    vMap1=locExpansion->GetVertexMap(v);
-
-                    //Get vertex map
-                    globalrow = m_locToGloMap->
-                        GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
-
-                    if(globalrow >= 0)
-                    {
-                        for (m=0; m<nVerts; ++m)
-                        {
-                            vMap2=locExpansion->GetVertexMap(m);
-
-                            //global matrix location (without offset due to
-                            //dirichlet values)
-                            globalcol = m_locToGloMap->
-                                GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
-
-                            //offset for dirichlet conditions
-                            if (globalcol == globalrow)
-                            {
-                                meshVertId = locExpansion->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetVid(v);
-
-                                //modal connectivity between elements
-                                sign1 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + vMap1);
-                                sign2 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + vMap2);
-
-                                vertArray[globalrow]
-                                    += sign1*sign2*S(vMap1,vMap2);
-
-                                VertBlockToUniversalMap[globalrow]
-                                = meshVertId * maxEdgeDof * maxEdgeDof + 1;
-                            }
-                        }
-                    }
-                }
-
-                //loop over edges of the element and return the edge map
-                for (eid=0; eid<nEdges; ++eid)
-                {
-                    nedgemodes=locExpansion->GetEdgeNcoeffs(eid)-2;
-
-                    DNekMatSharedPtr locMat =
-                        MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nedgemodes,nedgemodes,zero,storage);
-
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetEid(eid);
-                    Array<OneD, unsigned int> edgemodearray =
-                        locExpansion->GetEdgeInverseBoundaryMap(eid);
-
-                    if(edgeDirMap.count(meshEdgeId)==0)
-                    {
-                        for (v=0; v<nedgemodes; ++v)
-                        {
-                            eMap1=edgemodearray[v];
-
-                            for (m=0; m<nedgemodes; ++m)
-                            {
-                                eMap2=edgemodearray[m];
-
-                                //modal connectivity between elements
-                                sign1 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + eMap1);
-                                sign2 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + eMap2);
-
-                                NekDouble globalEdgeValue =
-                                    sign1*sign2*S(eMap1,eMap2);
-
-                                EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=
-                                    globalEdgeValue;
-                            }
-                        }
-                        edgematrixoffset+=nedgemodes*nedgemodes;
-                    }
-                }
-
-                //offset for the expansion
-                cnt+=offset;
-            }
-
-            //Assemble edge matrices of each process
-            Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries);
-            Vmath::Zero(ntotaledgeentries, GlobalEdgeBlock.get(), 1);
-            Vmath::Assmb(EdgeBlockArray.num_elements(),
-                         EdgeBlockArray.get(),
-                         localEdgeToGlobalMatrixMap.get(),
-                         GlobalEdgeBlock.get());
-
-            //Exchange vertex data over different processes
-            if(nNonDirVerts!=0)
-            {
-                Gs::gs_data *tmp = Gs::Init(VertBlockToUniversalMap, m_comm);
-                Gs::Gather(vertArray, Gs::gs_add, tmp);
-            }
-
-            //Exchange edge data over different processes
-            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
-            Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
-
-            // Populate vertex block
-            for (int i = 0; i < nNonDirVerts; ++i)
-            {
-                  VertBlk->SetValue(i,i,1.0/vertArray[i]);
-            }
-
-            //Set the first block to be the diagonal of the vertex space
-            m_blkMat->SetBlock(0,0, VertBlk);
-
-            offset=0;
-            //Build the edge matrices from the vector
-            for(int loc=0; loc<nNonDirEdgeIDs; ++loc)
-            {
-                DNekMatSharedPtr gmat =
-                    MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nedgemodes,nedgemodes,zero,storage);
-
-                for (v=0; v<nedgemodes; ++v)
-                {
-                    for (m=0; m<nedgemodes; ++m)
-                    {
-                        NekDouble EdgeValue = GlobalEdgeBlock[offset+v*nedgemodes+m];
-                        gmat->SetValue(v,m,EdgeValue);
-                    }
-                }
-
-                m_blkMat->SetBlock(1+loc,1+loc, gmat);
-
-                offset+=edgemodeoffset[loc];
-            }
-
-            int totblks=m_blkMat->GetNumberOfBlockRows();
-            for (i=1; i< totblks; ++i)
-            {
-                unsigned int nmodes=m_blkMat->GetNumberOfRowsInBlockRow(i);
-                DNekMatSharedPtr tmp_mat =
-                    MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nmodes,nmodes,zero,storage);
-
-                tmp_mat=m_blkMat->GetBlock(i,i);
-                tmp_mat->Invert();
-                m_blkMat->SetBlock(i,i,tmp_mat);
-            }
-        }
-
-        /**
-         *
-         */
-        void PreconditionerBlock::BlockPreconditioner3D()
-        {
-            boost::shared_ptr<MultiRegions::ExpList>
-                expList=((m_linsys.lock())->GetLocMat()).lock();
-            LocalRegions::ExpansionSharedPtr locExpansion;
-            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
-            StdRegions::VarCoeffMap vVarCoeffMap;
-            int i, j, k, nel;
-            int nVerts, nEdges,nFaces;
-            int eid, fid, n, cnt, nedgemodes, nfacemodes;
-            NekDouble zero = 0.0;
-
-            int vMap1, vMap2, sign1, sign2;
-            int m, v, eMap1, eMap2, fMap1, fMap2;
-            int offset, globalrow, globalcol;
-
-            //matrix storage
-            MatrixStorage storage = eFULL;
-            MatrixStorage vertstorage = eDIAGONAL;
-            MatrixStorage blkmatStorage = eDIAGONAL;
-
-            //local element static condensed matrices
-            DNekScalBlkMatSharedPtr loc_mat;
-            DNekScalMatSharedPtr    bnd_mat;
-
-            DNekMatSharedPtr VertBlk;
-
-            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
-
-            //Vertex, edge and face preconditioner matrices
-            VertBlk = MemoryManager<DNekMat>::
-                AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
-
-            Array<OneD, NekDouble> vertArray(nNonDirVerts,0.0);
-            Array<OneD, long> VertBlockToUniversalMap(nNonDirVerts,-1);
-
-            int n_exp = expList->GetNumElmts();
-            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
-            int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
-
-            //set the number of blocks in the matrix
-            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
-            n_blks[0]=nNonDirVerts;
-
-            map<int,int> edgeDirMap;
-            map<int,int> faceDirMap;
-            map<int,int> uniqueEdgeMap;
-            map<int,int> uniqueFaceMap;
-
-            //this should be of size total number of local edges
-            Array<OneD, int> edgemodeoffset(nNonDirEdgeIDs,0);
-            Array<OneD, int> facemodeoffset(nNonDirFaceIDs,0);
-
-            Array<OneD, int> edgeglobaloffset(nNonDirEdgeIDs,0);
-            Array<OneD, int> faceglobaloffset(nNonDirFaceIDs,0);
-
-            const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
-            StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& bndConditions = expList->GetBndConditions();
-
-            int meshVertId;
-            int meshEdgeId;
-            int meshFaceId;
-
-            const Array<OneD, const int> &extradiredges
-                = m_locToGloMap->GetExtraDirEdges();
-            for(i=0; i<extradiredges.num_elements(); ++i)
-            {
-                meshEdgeId=extradiredges[i];
-                edgeDirMap[meshEdgeId] = 1;
-            }
-
-            //Determine which boundary edges and faces have dirichlet values
-            for(i = 0; i < bndCondExp.num_elements(); i++)
-            {
-                cnt = 0;
-                for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
-                {
-                    bndCondFaceExp = bndCondExp[i]->GetExp(j)->as<StdRegions::StdExpansion2D>();
-                    if (bndConditions[i]->GetBoundaryConditionType() ==
-                        SpatialDomains::eDirichlet)
-                    {
-                        for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
-                        {
-                            meshEdgeId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetEid(k);
-                            if(edgeDirMap.count(meshEdgeId) == 0)
-                            {
-                                edgeDirMap[meshEdgeId] = 1;
-                            }
-                        }
-                        meshFaceId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetFid();
-                        faceDirMap[meshFaceId] = 1;
-                    }
-                }
-            }
-
-            int dof=0;
-            int maxFaceDof=0;
-            int maxEdgeDof=0;
-            int nlocalNonDirEdges=0;
-            int nlocalNonDirFaces=0;
-
-            int edgematrixlocation=0;
-            int ntotaledgeentries=0;
-
-            // Loop over all the elements in the domain and compute max edge
-            // DOF. Reduce across all processes to get universal maximum.
-            for(cnt=n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                for (j = 0; j < locExpansion->GetNedges(); ++j)
-                {
-                    dof    = locExpansion->GetEdgeNcoeffs(j)-2;
-                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(j);
-
-                    if(edgeDirMap.count(meshEdgeId)==0)
-                    {
-                        if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
-                        {
-                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
-
-                            edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
-
-                            edgemodeoffset[edgematrixlocation]=dof*dof;
-
-                            ntotaledgeentries+=dof*dof;
-
-                            n_blks[1+edgematrixlocation++]=dof;
-                        }
-
-                        nlocalNonDirEdges+=dof*dof;
-                    }
-                }
-            }
-
-            int facematrixlocation=0;
-            int ntotalfaceentries=0;
-
-            // Loop over all the elements in the domain and compute max face
-            // DOF. Reduce across all processes to get universal maximum.
-            for(cnt=n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                for (j = 0; j < locExpansion->GetNfaces(); ++j)
-                {
-                    dof    = locExpansion->GetFaceIntNcoeffs(j);
-                    maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
-
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(j);
-
-                    if(faceDirMap.count(meshFaceId)==0)
-                    {
-                        if(uniqueFaceMap.count(meshFaceId)==0 && dof > 0)
-                        {
-                            uniqueFaceMap[meshFaceId]=facematrixlocation;
-
-                            facemodeoffset[facematrixlocation]=dof*dof;
-
-                            faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
-
-                            ntotalfaceentries+=dof*dof;
-
-                            n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
-                        }
-                        nlocalNonDirFaces+=dof*dof;
-                    }
-
-                }
-            }
-
-            m_comm = expList->GetComm();
-            m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
-            m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
-
-            //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> EdgeBlockToUniversalMap(ntotaledgeentries,-1);
-            Array<OneD, long> FaceBlockToUniversalMap(ntotalfaceentries,-1);
-
-            Array<OneD, int> localEdgeToGlobalMatrixMap(nlocalNonDirEdges,-1);
-            Array<OneD, int> localFaceToGlobalMatrixMap(nlocalNonDirFaces,-1);
-
-            //Allocate arrays to store matrices (number of expansions * p^2)
-            Array<OneD, NekDouble> EdgeBlockArray(nlocalNonDirEdges,-1);
-            Array<OneD, NekDouble> FaceBlockArray(nlocalNonDirFaces,-1);
-
-            int edgematrixoffset=0;
-            int facematrixoffset=0;
-            int vGlobal;
-
-            for(n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                //loop over the edges of the expansion
-                for(j = 0; j < locExpansion->GetNedges(); ++j)
-                {
-                    //get mesh edge id
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(j);
-
-                    nedgemodes=locExpansion->GetEdgeNcoeffs(j)-2;
-
-                    if(edgeDirMap.count(meshEdgeId)==0)
-                    {
-                        for(k=0; k<nedgemodes*nedgemodes; ++k)
-                        {
-                            vGlobal=edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
-
-
-                            localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
-
-                            EdgeBlockToUniversalMap[vGlobal]
-                                = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
-                        }
-                        edgematrixoffset+=nedgemodes*nedgemodes;
-                    }
-                }
-
-                //loop over the faces of the expansion
-                for(j = 0; j < locExpansion->GetNfaces(); ++j)
-                {
-                    //get mesh face id
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(j);
-
-                    nfacemodes = locExpansion->GetFaceIntNcoeffs(j);
-
-                    //Check if face is has dirichlet values
-                    if(faceDirMap.count(meshFaceId)==0)
-                    {
-                        for(k=0; k<nfacemodes*nfacemodes; ++k)
-                        {
-                            vGlobal=faceglobaloffset[uniqueFaceMap[meshFaceId]]+k;
-
-                            localFaceToGlobalMatrixMap[facematrixoffset+k]
-                                = vGlobal;
-
-                            FaceBlockToUniversalMap[vGlobal]
-                                = meshFaceId * maxFaceDof * maxFaceDof + k + 1;
-                        }
-                        facematrixoffset+=nfacemodes*nfacemodes;
-                    }
-                }
-            }
-
-            edgematrixoffset=0;
-            facematrixoffset=0;
-
-            m_blkMat = MemoryManager<DNekBlkMat>
-                    ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
-
-            //Here we loop over the expansion and build the block low energy
-            //preconditioner as well as the block versions of the transformation
-            //matrices.
-            for(cnt=n=0; n < n_exp; ++n)
-            {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
-                nVerts=locExpansion->GetGeom()->GetNumVerts();
-                nEdges=locExpansion->GetGeom()->GetNumEdges();
-                nFaces=locExpansion->GetGeom()->GetNumFaces();
-
-                //Get statically condensed matrix
-                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
-
-                //Extract boundary block (elemental S1)
-                bnd_mat=loc_mat->GetBlock(0,0);
-
-                //offset by number of rows
-                offset = bnd_mat->GetRows();
-
-                DNekScalMat &S=(*bnd_mat);
-
-                //loop over vertices of the element and return the vertex map
-                //for each vertex
-                for (v=0; v<nVerts; ++v)
-                {
-                    vMap1=locExpansion->GetVertexMap(v);
-
-                    //Get vertex map
-                    globalrow = m_locToGloMap->
-                        GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
-
-                    if(globalrow >= 0)
-                    {
-                        for (m=0; m<nVerts; ++m)
-                        {
-                            vMap2=locExpansion->GetVertexMap(m);
-
-                            //global matrix location (without offset due to
-                            //dirichlet values)
-                            globalcol = m_locToGloMap->
-                                GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
-
-                            //offset for dirichlet conditions
-                            if (globalcol == globalrow)
-                            {
-                                meshVertId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetVid(v);
-
-                                //modal connectivity between elements
-                                sign1 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + vMap1);
-                                sign2 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + vMap2);
-
-                                vertArray[globalrow]
-                                    += sign1*sign2*S(vMap1,vMap2);
-
-                                VertBlockToUniversalMap[globalrow]
-                                = meshVertId * maxEdgeDof * maxEdgeDof + 1;
-                            }
-                        }
-                    }
-                }
-
-                //loop over edges of the element and return the edge map
-                for (eid=0; eid<nEdges; ++eid)
-                {
-                    nedgemodes=locExpansion->GetEdgeNcoeffs(eid)-2;
-
-                    DNekMatSharedPtr locMat =
-                        MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nedgemodes,nedgemodes,zero,storage);
-
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(eid);
-                    Array<OneD, unsigned int> edgemodearray = locExpansion->GetEdgeInverseBoundaryMap(eid);
-
-                    if(edgeDirMap.count(meshEdgeId)==0)
-                    {
-                        for (v=0; v<nedgemodes; ++v)
-                        {
-                            eMap1=edgemodearray[v];
-
-                            for (m=0; m<nedgemodes; ++m)
-                            {
-                                eMap2=edgemodearray[m];
-
-                                //modal connectivity between elements
-                                sign1 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + eMap1);
-                                sign2 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + eMap2);
-
-                                NekDouble globalEdgeValue = sign1*sign2*S(eMap1,eMap2);
-
-                                EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
-                            }
-                        }
-                        edgematrixoffset+=nedgemodes*nedgemodes;
-                    }
-                }
-
-                //loop over faces of the element and return the face map
-                for (fid=0; fid<nFaces; ++fid)
-                {
-                    nfacemodes = locExpansion->GetFaceIntNcoeffs(fid);
-
-                    DNekMatSharedPtr locMat =
-                        MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nfacemodes,nfacemodes,zero,storage);
-
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(fid);
-
-                    Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid);
-
-                    if(faceDirMap.count(meshFaceId)==0)
-                    {
-                        for (v=0; v<nfacemodes; ++v)
-                        {
-                            fMap1=facemodearray[v];
-
-                            for (m=0; m<nfacemodes; ++m)
-                            {
-                                fMap2=facemodearray[m];
-
-                                //modal connectivity between elements
-                                sign1 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + fMap1);
-                                sign2 = m_locToGloMap->
-                                    GetLocalToGlobalBndSign(cnt + fMap2);
-
-                                // Get the face-face value from the low energy matrix (S2)
-                                NekDouble globalFaceValue = sign1*sign2*S(fMap1,fMap2);
-
-                                //local face value to global face value
-                                FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
-                            }
-                        }
-                        facematrixoffset+=nfacemodes*nfacemodes;
-                    }
-                }
-
-                //offset for the expansion
-                cnt+=offset;
-            }
-
-            //Assemble edge matrices of each process
-            Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries);
-            Vmath::Zero(ntotaledgeentries, GlobalEdgeBlock.get(), 1);
-            Vmath::Assmb(EdgeBlockArray.num_elements(),
-                         EdgeBlockArray.get(),
-                         localEdgeToGlobalMatrixMap.get(),
-                         GlobalEdgeBlock.get());
-
-            //Assemble face matrices of each process
-            Array<OneD, NekDouble> GlobalFaceBlock(ntotalfaceentries);
-            Vmath::Zero(ntotalfaceentries, GlobalFaceBlock.get(), 1);
-            Vmath::Assmb(FaceBlockArray.num_elements(),
-                         FaceBlockArray.get(),
-                         localFaceToGlobalMatrixMap.get(),
-                         GlobalFaceBlock.get());
-
-            //Exchange vertex data over different processes
-            if(nNonDirVerts!=0)
-            {
-                Gs::gs_data *tmp = Gs::Init(VertBlockToUniversalMap, m_comm);
-                Gs::Gather(vertArray, Gs::gs_add, tmp);
-            }
-
-            //Exchange edge data over different processes
-            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
-            Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
-
-            //Exchange face data over different processes
-            Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
-            Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
-
-            // Populate vertex block
-            for (int i = 0; i < nNonDirVerts; ++i)
-            {
-                  VertBlk->SetValue(i,i,1.0/vertArray[i]);
-            }
-
-            //Set the first block to be the diagonal of the vertex space
-            m_blkMat->SetBlock(0,0, VertBlk);
-
-            offset=0;
-            //Build the edge matrices from the vector
-            for(int loc=0; loc<nNonDirEdgeIDs; ++loc)
-            {
-                DNekMatSharedPtr gmat =
-                    MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nedgemodes,nedgemodes,zero,storage);
-
-                for (v=0; v<nedgemodes; ++v)
-                {
-                    for (m=0; m<nedgemodes; ++m)
-                    {
-                        NekDouble EdgeValue = GlobalEdgeBlock[offset+v*nedgemodes+m];
-                        gmat->SetValue(v,m,EdgeValue);
-                    }
-                }
-
-                m_blkMat->SetBlock(1+loc,1+loc, gmat);
-
-                offset+=edgemodeoffset[loc];
-            }
-
-            offset=0;
-            //Build the face matrices from the vector
-            for(int loc=0; loc<nNonDirFaceIDs; ++loc)
-            {
-                nfacemodes=n_blks[1+nNonDirEdgeIDs+loc];
-
-                DNekMatSharedPtr gmat =
-                    MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nfacemodes,nfacemodes,zero,storage);
-
-                for (v=0; v<nfacemodes; ++v)
-                {
-                    for (m=0; m<nfacemodes; ++m)
-                    {
-                        NekDouble FaceValue = GlobalFaceBlock[offset+v*nfacemodes+m];
-                        gmat->SetValue(v,m,FaceValue);
-                    }
-                }
-
-                m_blkMat->SetBlock(1+nNonDirEdgeIDs+loc,1+nNonDirEdgeIDs+loc, gmat);
-
-                offset+=facemodeoffset[loc];
-            }
-
-
-            int totblks=m_blkMat->GetNumberOfBlockRows();
-            for (i=1; i< totblks; ++i)
-            {
-                unsigned int nmodes=m_blkMat->GetNumberOfRowsInBlockRow(i);
-                DNekMatSharedPtr tmp_mat =
-                    MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nmodes,nmodes,zero,storage);
-
-                tmp_mat=m_blkMat->GetBlock(i,i);
-                tmp_mat->Invert();
-
-                m_blkMat->SetBlock(i,i,tmp_mat);
-            }
-        }
-
         void PreconditionerBlock::BlockPreconditionerCG()
         {
             ExpListSharedPtr expList = m_linsys.lock()->GetLocMat().lock();
@@ -985,11 +122,30 @@ namespace Nektar
             expList->GetPeriodicEntities(
                 periodicVerts, periodicEdges, periodicFaces);
 
+            // The vectors below are of size 3 to have separate storage for
+            // vertices, edges and faces.
+
+            // Maps from geometry ID to the matrix representing the extracted
+            // portion of S_1. For example idMats[2] folds the S_1 face blocks.
             vector<map<int, vector<NekDouble> > > idMats(3);
+
+            // Maps from the global ID, as obtained from AssemblyMapCG's
+            // localToGlobalMap, to the geometry ID.
             vector<map<int, int> > gidMeshIds(3);
+
+            // Maps from the global ID to the number of degrees of freedom for
+            // this geometry object.
             vector<map<int, int> > gidDofs(3);
+
+            // Array containing maximum information needed for the universal
+            // numbering later. For i = 0,1,2 for each geometry dimension:
+            //
+            // maxVertIds[2*i] = maximum geometry ID at dimension i
+            // maxVertIds[2*i] = maximum number of degrees of freedom for all
+            //                   elements of dimension i.
             Array<OneD, int> maxVertIds(6, -1);
 
+            // Iterator for idMats members.
             map<int, vector<NekDouble> >::iterator gIt;
 
             // Figure out mapping from each elemental contribution to offset in
@@ -1003,12 +159,18 @@ namespace Nektar
                 DNekScalMatSharedPtr schurMat =
                     m_linsys.lock()->GetStaticCondBlock(n)->GetBlock(0,0);
 
+                // Process vertices to extract relevant portion of the Schur
+                // complement matrix.
                 for (i = 0; i < exp->GetNverts(); ++i)
                 {
                     meshVertId = exp->GetGeom()->GetVid(i);
-                    gId = m_locToGloMap->GetLocalToGlobalMap(
-                        cnt + exp->GetVertexMap(i)) - nDirBnd;
+                    int locId = exp->GetVertexMap(i);
 
+                    // Get the global ID of this vertex.
+                    gId = m_locToGloMap->GetLocalToGlobalMap(
+                        cnt + locId) - nDirBnd;
+
+                    // Ignore all Dirichlet vertices.
                     if (gId < 0)
                     {
                         continue;
@@ -1016,20 +178,29 @@ namespace Nektar
 
                     gidDofs[0][gId] = 1;
 
-                    int locId = exp->GetVertexMap(i);
+                    // Extract vertex value from Schur complement matrix.
                     NekDouble vertVal = (*schurMat)(locId,locId);
 
+                    // See if we have processed this vertex from another
+                    // element.
                     gIt = idMats[0].find(gId);
 
                     if (gIt == idMats[0].end())
                     {
+                        // If not then put our 'matrix' inside idMats.
                         idMats[0][gId] = vector<NekDouble>(1, vertVal);
                     }
                     else
                     {
+                        // Otherwise combine with the value that is already
+                        // there (i.e. do assembly on this degree of freedom).
                         gIt->second[0] += vertVal;
                     }
 
+                    // Now check to see if the vertex is periodic. If it is,
+                    // then we change meshVertId to be the minimum of all the
+                    // other periodic vertices, so that we don't end up
+                    // duplicating the matrix in our final block matrix.
                     pIt = periodicVerts.find(meshVertId);
                     if (pIt != periodicVerts.end())
                     {
@@ -1039,20 +210,25 @@ namespace Nektar
                         }
                     }
 
+                    // Finally record the other information we need into the
+                    // other matrices.
                     gidMeshIds[0][gId] = meshVertId;
                     maxVertIds[0] = max(maxVertIds[0], meshVertId);
                     maxVertIds[1] = 1;
                 }
 
+                // Process edges. This logic is mostly the same as the previous
+                // block.
                 for (i = 0; i < exp->GetNedges(); ++i)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(i);
 
-                    // Extract edge from array.
                     Array<OneD, unsigned int> bmap, bmap2;
                     Array<OneD, int> sign;
                     StdRegions::Orientation edgeOrient = exp->GetEorient(i);
 
+                    // Check if this edge is periodic. We may need to flip
+                    // orientation if it is.
                     pIt = periodicEdges.find(meshEdgeId);
                     if (pIt != periodicEdges.end())
                     {
@@ -1060,23 +236,34 @@ namespace Nektar
                             DeterminePeriodicEdgeOrientId(
                                 meshEdgeId, edgeOrient, pIt->second);
                         meshEdgeId = idOrient.first;
+                        edgeOrient = idOrient.second;
                     }
 
+                    // Grab edge interior map, and the edge inverse boundary
+                    // map, so that we can extract this edge from the Schur
+                    // complement matrix.
                     exp->GetEdgeInteriorMap(i, edgeOrient, bmap, sign);
                     bmap2 = exp->GetEdgeInverseBoundaryMap(i);
 
+                    // Allocate temporary storage for the extracted edge matrix.
                     const int nEdgeCoeffs = bmap.num_elements();
-
                     vector<NekDouble> tmpStore(nEdgeCoeffs*nEdgeCoeffs);
 
                     gId = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[0]);
 
                     for (j = 0; j < nEdgeCoeffs; ++j)
                     {
-                        gId = min(
-                            gId, m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[j])
-                            - nDirBnd);
+                        // We record the minimum ID from the edge for our
+                        // maps. This follows the logic that the assembly map
+                        // ordering will always give us a contiguous ordering of
+                        // global degrees of freedom for edge interior
+                        // coefficients.
+                        gId = min(gId,
+                                  m_locToGloMap->GetLocalToGlobalMap(
+                                      cnt + bmap[j])
+                                  - nDirBnd);
 
+                        // Ignore Dirichlet edges.
                         if (gId < 0)
                         {
                             continue;
@@ -1084,6 +271,8 @@ namespace Nektar
 
                         const NekDouble sign1 = sign[j];
 
+                        // Extract this edge, along with sign array for assembly
+                        // later.
                         for (k = 0; k < nEdgeCoeffs; ++k)
                         {
                             tmpStore[k+j*nEdgeCoeffs] =
@@ -1098,8 +287,8 @@ namespace Nektar
 
                     gidDofs[1][gId] = nEdgeCoeffs;
 
+                    // Assemble this edge matrix with another one, if it exists.
                     gIt = idMats[1].find(gId);
-
                     if (gIt == idMats[1].end())
                     {
                         idMats[1][gId] = tmpStore;
@@ -1115,6 +304,85 @@ namespace Nektar
                     gidMeshIds[1][gId] = meshEdgeId;
                     maxVertIds[2] = max(maxVertIds[2], meshEdgeId);
                     maxVertIds[3] = max(maxVertIds[3], nEdgeCoeffs);
+                }
+
+                // Process faces. This logic is mostly the same as the previous
+                // block.
+                for (i = 0; i < exp->GetNfaces(); ++i)
+                {
+                    meshFaceId = exp->GetGeom()->GetFid(i);
+
+                    Array<OneD, unsigned int> bmap, bmap2;
+                    Array<OneD, int> sign;
+                    StdRegions::Orientation faceOrient = exp->GetForient(i);
+
+                    // Check if this face is periodic. We may need to flip
+                    // orientation if it is.
+                    pIt = periodicFaces.find(meshFaceId);
+                    if (pIt != periodicFaces.end())
+                    {
+                        meshFaceId = min(meshFaceId, pIt->second[0].id);
+                        faceOrient = DeterminePeriodicFaceOrient(
+                            faceOrient, pIt->second[0].orient);
+                    }
+
+                    exp->GetFaceInteriorMap(i, faceOrient, bmap, sign);
+                    bmap2 = exp->GetFaceInverseBoundaryMap(i);
+
+                    // Allocate temporary storage for the extracted face matrix.
+                    const int nFaceCoeffs = bmap.num_elements();
+                    vector<NekDouble> tmpStore(nFaceCoeffs*nFaceCoeffs);
+
+                    gId = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[0]);
+
+                    for (j = 0; j < nFaceCoeffs; ++j)
+                    {
+                        gId = min(gId,
+                                  m_locToGloMap->GetLocalToGlobalMap(
+                                      cnt + bmap[j])
+                                  - nDirBnd);
+
+                        // Ignore Dirichlet faces.
+                        if (gId < 0)
+                        {
+                            continue;
+                        }
+
+                        const NekDouble sign1 = sign[j];
+
+                        // Extract this face, along with sign array for assembly
+                        // later.
+                        for (k = 0; k < nFaceCoeffs; ++k)
+                        {
+                            tmpStore[k+j*nFaceCoeffs] =
+                                sign1*sign[k]*(*schurMat)(bmap2[j], bmap2[k]);
+                        }
+                    }
+
+                    if (gId < 0)
+                    {
+                        continue;
+                    }
+
+                    gidDofs[2][gId] = nFaceCoeffs;
+
+                    // Assemble this face matrix with another one, if it exists.
+                    gIt = idMats[2].find(gId);
+                    if (gIt == idMats[2].end())
+                    {
+                        idMats[2][gId] = tmpStore;
+                    }
+                    else
+                    {
+                        ASSERTL1(tmpStore.size() == gIt->second.size(),
+                                 "Number of modes mismatch");
+                        Vmath::Vadd(nFaceCoeffs*nFaceCoeffs, &gIt->second[0], 1,
+                                    &tmpStore[0], 1, &gIt->second[0], 1);
+                    }
+
+                    gidMeshIds[2][gId] = meshFaceId;
+                    maxVertIds[4] = max(maxVertIds[4], meshFaceId);
+                    maxVertIds[5] = max(maxVertIds[5], nFaceCoeffs);
                 }
 
                 cnt += exp->GetNcoeffs();

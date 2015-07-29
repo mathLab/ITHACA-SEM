@@ -410,6 +410,9 @@ namespace Nektar
             {
                 const int maxDofs = maxVertIds[2*i+1];
 
+                // Note that iterating over the map uses the property that keys
+                // are accessed in order of ascending order, putting everything
+                // in the right order for the global system.
                 for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt)
                 {
                     // Copy matrix into storage.
@@ -653,7 +656,7 @@ namespace Nektar
             }
 
             // Assemble matrices across partitions.
-            Gs::gs_data *gsh = Gs::Init(uniIds, comm);
+            Gs::gs_data *gsh = Gs::Init(uniIds, m_comm);
             Gs::Gather(tmpStore, Gs::gs_add, gsh);
 
             // Set up diagonal block matrix

@@ -1331,6 +1331,12 @@ namespace Nektar
                 {
                     if (dofs[2].count(exp->GetGeom()->GetFid(j)) > 0)
                     {
+                        if (dofs[2][exp->GetGeom()->GetFid(j)] != 
+                                     exp->GetFaceIntNcoeffs(j))
+                        {
+                            ASSERTL0( false,
+                                    "CG with variable order not available in 3D"); 
+                        }
                         dofs[2][exp->GetGeom()->GetFid(j)] = 
                                 min(dofs[2][exp->GetGeom()->GetFid(j)], 
                                     exp->GetFaceIntNcoeffs(j));

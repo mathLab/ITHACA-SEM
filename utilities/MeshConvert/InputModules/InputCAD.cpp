@@ -229,7 +229,34 @@ namespace Utilities
         ProcessElements  ();
         ProcessComposites();
 
+        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim-1].size(); i++)
+        {
+            FaceSharedPtr f =
+                    m_mesh->m_element[m_mesh->m_expDim-1][i]->GetFaceLink();
+            vector<EdgeSharedPtr> egs = f->m_edgeList;
+            for(int j = 0; j < egs.size(); j++)
+            {
+                if(egs[j]->m_edgeNodes.size()>0)
+                    continue;
+                    
+                NodeSharedPtr n1 = egs[j]->m_n1;
+                NodeSharedPtr n2 = egs[j]->m_n2;
+                int n1ID = n1->m_id;
+                int n2ID = n2->m_id;
 
+                int edgekey = Nodes[n1ID]->EdgeInCommon(Nodes[n2ID]);
+
+                vector<int> honode = Edges[edgekey]->GetHONodes(n1ID);
+
+                vector<NodeSharedPtr> localhonode;
+                for(int k = 0; k < honode.size(); k++)
+                {
+                    localhonode.push_back(allnodes[honode[k]]);
+                }
+
+                egs[j]->m_edgeNodes = localhonode;
+            }
+        }
 
     }
 

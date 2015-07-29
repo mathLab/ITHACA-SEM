@@ -86,26 +86,10 @@ namespace Nektar
             if (key.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
             {
                 BlockPreconditionerHDG();
-                return;
             }
-
-            boost::shared_ptr<MultiRegions::ExpList>
-                expList=((m_linsys.lock())->GetLocMat()).lock();
-            StdRegions::StdExpansionSharedPtr locExpansion;
-            locExpansion = expList->GetExp(0);
-            int nDim = locExpansion->GetShapeDimension();
-
-            if (nDim == 1)
+            else
             {
-                ASSERTL0(0,"Unknown preconditioner");
-            }
-            else if (nDim == 2)
-            {
-                BlockPreconditioner2D();
-            }
-            else if (nDim == 3)
-            {
-                BlockPreconditioner3D();
+                BlockPreconditionerCG();
             }
         }
 
@@ -989,13 +973,21 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            int nel, n, cnt, gId;
-            const int nExp = GetExpSize();
+            int nel, i, j, k, n, cnt, gId;
+            int meshVertId, meshEdgeId, meshFaceId;
+
+            const int nExp = expList->GetExpSize();
             const int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
-            // Map taking geometry ID -> pair<global ID, dofs>, where global ID
-            // is the start of the block.
-            vector<map<int, pair<int, int> > > idToOffset(3);
+            // Map taking geometry ID -> pair<global ID, number of dofs>, where
+            // global ID is the start of the block. This might actually be
+            // better placed inside the CG assembly map if it's used for more
+            // than 1 preconditioner.
+            vector<map<int, int> > idToGid(3);
+            vector<map<int, vector<NekDouble> > > idMats(3);
+            vector<map<int, int> > gidDofs(3);
+
+            map<int, vector<NekDouble> >::iterator gIt;
 
             // Figure out mapping from each elemental contribution to offset in
             // (vert,edge,face) triples.
@@ -1003,6 +995,10 @@ namespace Nektar
             {
                 nel = expList->GetOffset_Elmt_Id(n);
                 exp = expList->GetExp(nel);
+
+                // Grab reference to local Schur complement matrix.
+                DNekScalMatSharedPtr schurMat =
+                    m_linsys.lock()->GetStaticCondBlock(n)->GetBlock(0,0);
 
                 for (i = 0; i < exp->GetNverts(); ++i)
                 {
@@ -1015,116 +1011,139 @@ namespace Nektar
                         continue;
                     }
 
-                    if (idToOffset[0].count(meshVertId) > 0)
-                    {
-                        continue;
-                    }
+                    idToGid[0][meshVertId] = gId;
+                    gidDofs[0][gId] = 1;
 
-                    pIt = periodicVerts.find(meshVertId);
-                    if (pIt != periodicVerts.end())
-                    {
-                        for (j = 0; j < pIt->second.size(); ++j)
-                        {
-                            if (pIt->second.isLocal)
-                            {
-                                meshVertId = min(meshVertId, pIt->second.id);
-                            }
-                        }
-                    }
+                    int locId = exp->GetVertexMap(i);
+                    NekDouble vertVal = (*schurMat)(locId,locId);
 
-                    idToOffset[0][meshVertId] = make_pair(gId, 1);
+                    gIt = idMats[0].find(gId);
+
+                    if (gIt == idMats[0].end())
+                    {
+                        idMats[0][gId] = vector<NekDouble>(1, vertVal);
+                    }
+                    else
+                    {
+                        gIt->second[0] += vertVal;
+                    }
                 }
 
                 for (i = 0; i < exp->GetNedges(); ++i)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(i);
 
-                    pIt = periodicEdges.find(meshEdgeId);
-                    if (pIt != periodicEdges.end())
-                    {
-                        for (j = 0; j < pIt->second.size(); ++j)
-                        {
-                            if (pIt->second.isLocal)
-                            {
-                                meshEdgeId = min(meshEdgeId, pIt->second.id);
-                            }
-                        }
-                    }
-
-                    if (idToOffset[1].count(meshEdgeId) > 0)
-                    {
-                        continue;
-                    }
-
-                    // Figure out minimum of global numbering (should be
-                    // contiguous for an edge for iterative system).
+                    // Extract edge from array.
                     Array<OneD, unsigned int> bmap;
+                    Array<OneD, unsigned int> bmap2;
                     Array<OneD, int> sign;
-
                     exp->GetEdgeInteriorMap(i, exp->GetEorient(i), bmap, sign);
+                    bmap2 = exp->GetEdgeInverseBoundaryMap(i);
 
-                    for (j = 0; j < bmap.num_elements(); ++j)
+                    const int nEdgeCoeffs = bmap.num_elements();
+
+                    vector<NekDouble> tmpStore(nEdgeCoeffs*nEdgeCoeffs);
+
+                    gId = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[0]);
+
+                    for (j = 0; j < nEdgeCoeffs; ++j)
                     {
-                        gid = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[j])
-                                                                      - nDirBnd;
+                        gId = min(
+                            gId, m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[j])
+                            - nDirBnd);
 
-                        if (gid < 0)
+                        if (gId < 0)
                         {
                             continue;
                         }
-                    }
 
-                    idToOffset[1][meshEdgeId] =
-                        make_pair(gId, bmap.num_elements());
-                }
+                        const NekDouble sign1 = sign[j];
 
-                for (i = 0; i < exp->GetNfaces(); ++i)
-                {
-                    meshFaceId = exp->GetGeom()->GetFid(i);
-
-                    pIt = periodicFaces.find(meshFaceId);
-                    if (pIt != periodicFaces.end())
-                    {
-                        for (j = 0; j < pIt->second.size(); ++j)
+                        for (k = 0; k < nEdgeCoeffs; ++k)
                         {
-                            if (pIt->second.isLocal)
-                            {
-                                meshFaceId = min(meshFaceId, pIt->second.id);
-                            }
+                            tmpStore[k+j*nEdgeCoeffs] =
+                                sign1*sign[k]*(*schurMat)(bmap2[j], bmap2[k]);
                         }
                     }
 
-                    if (idToOffset[2].count(meshFaceId) > 0)
+                    if (gId < 0)
                     {
                         continue;
                     }
 
-                    // Figure out minimum of global numbering (should be
-                    // contiguous for an face for iterative system).
-                    Array<OneD, unsigned int> bmap;
-                    Array<OneD, int> sign;
+                    idToGid[1][meshEdgeId] = gId;
+                    gidDofs[1][gId] = nEdgeCoeffs;
 
-                    exp->GetFaceInteriorMap(i, exp->GetForient(i), bmap, sign);
+                    gIt = idMats[1].find(gId);
 
-                    for (j = 0; j < bmap.num_elements(); ++j)
+                    if (gIt == idMats[1].end())
                     {
-                        gid = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[j])
-                                                                      - nDirBnd;
-
-                        if (gid < 0)
-                        {
-                            continue;
-                        }
+                        idMats[1][gId] = tmpStore;
                     }
-
-                    idToOffset[2][meshFaceId] =
-                        make_pair(gId, bmap.num_elements());
+                    else
+                    {
+                        ASSERTL1(tmpStore.size() == gIt->second.size(),
+                                 "Number of modes mismatch");
+                        Vmath::Vadd(nEdgeCoeffs*nEdgeCoeffs, &gIt->second[0], 1,
+                                    &tmpStore[0], 1, &gIt->second[0], 1);
+                    }
                 }
 
                 cnt += exp->GetNcoeffs();
             }
 
-            Array<OneD, NekDouble> matStorage();
+            // Figure out what storage we need and the various offsets.
+            Array<OneD, unsigned int> n_blks(
+                1 + idMats[1].size() + idMats[2].size());
+
+            n_blks[0] = idMats[0].size();
+
+            cnt = 1;
+            for (i = 1; i < 3; ++i)
+            {
+                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt)
+                {
+                    n_blks[cnt++] = gidDofs[i][gIt->first];
+                }
+            }
+
+            m_blkMat = MemoryManager<DNekBlkMat>
+                ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
+
+            DNekMatSharedPtr vertMat = MemoryManager<DNekMat>
+                ::AllocateSharedPtr(n_blks[0], n_blks[0], 0.0, eDIAGONAL);
+
+            cnt = 0;
+            for (gIt = idMats[0].begin(); gIt != idMats[0].end(); ++gIt, ++cnt)
+            {
+                (*vertMat)(cnt, cnt) = 1.0/gIt->second[0];
+            }
+
+            m_blkMat->SetBlock(0,0,vertMat);
+
+            cnt = 1;
+            for (i = 1; i < 3; ++i)
+            {
+                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt, ++cnt)
+                {
+                    int nDofs = gidDofs[i][gIt->first];
+
+                    DNekMatSharedPtr tmp = MemoryManager<DNekMat>
+                        ::AllocateSharedPtr(nDofs, nDofs);
+
+                    for (j = 0; j < nDofs; ++j)
+                    {
+                        for (k = 0; k < nDofs; ++k)
+                        {
+                            (*tmp)(j,k) = gIt->second[k+j*nDofs];
+                        }
+                    }
+
+                    tmp->Invert();
+
+                    m_blkMat->SetBlock(cnt,cnt,tmp);
+                }
+            }
         }
 
         void PreconditionerBlock::BlockPreconditionerHDG()

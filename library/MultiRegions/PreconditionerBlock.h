@@ -90,6 +90,7 @@ namespace Nektar
 
 	    void BlockPreconditioner3D(void);
 
+            void BlockPreconditionerCG(void);
             void BlockPreconditionerHDG(void);
 
             virtual void v_InitObject();

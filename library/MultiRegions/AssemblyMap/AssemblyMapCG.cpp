@@ -1435,27 +1435,10 @@ namespace Nektar
                     // coefficients to this edge orientation.
                     if (pIt != periodicEdges.end())
                     {
-                        int minId  = pIt->second[0].id;
-                        int minIdK = 0;
-                        for (k = 1; k < pIt->second.size(); ++k)
-                        {
-                            if (pIt->second[k].id < minId)
-                            {
-                                minId  = min(minId, pIt->second[k].id);
-                                minIdK = k;
-                            }
-                        }
-
-                        if( meshEdgeId != min(minId, meshEdgeId))
-                        {
-                            if (pIt->second[minIdK].orient == StdRegions::eBackwards)
-                            {
-                                // Swap edge orientation
-                                edgeOrient = (edgeOrient == StdRegions::eForwards) ?
-                                    StdRegions::eBackwards : StdRegions::eForwards;
-                            }
-                        }
-
+                        pair<int, StdRegions::Orientation> idOrient =
+                            DeterminePeriodicEdgeOrientId(
+                                meshEdgeId, edgeOrient, pIt->second);
+                        edgeOrient = idOrient.second;
                     }
 
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
@@ -1558,22 +1541,10 @@ namespace Nektar
                         // coefficients to this edge orientation.
                         if (pIt != periodicEdges.end())
                         {
-                            int minId  = pIt->second[0].id;
-                            int minIdL = 0;
-                            for (l = 1; l < pIt->second.size(); ++l)
-                            {
-                                if (pIt->second[l].id < minId)
-                                {
-                                    minId  = min(minId, pIt->second[l].id);
-                                    minIdL = l;
-                                }
-                            }
-
-                            if (pIt->second[minIdL].orient == StdRegions::eBackwards &&
-                                meshEdgeId != min(minId, meshEdgeId))
-                            {
-                                edgeOrient = (edgeOrient == StdRegions::eForwards) ?  StdRegions::eBackwards : StdRegions::eForwards;
-                            }
+                            pair<int, StdRegions::Orientation> idOrient =
+                                DeterminePeriodicEdgeOrientId(
+                                    meshEdgeId, edgeOrient, pIt->second);
+                            edgeOrient = idOrient.second;
                         }
 
                         bndExp->GetEdgeInteriorMap(
@@ -1771,6 +1742,39 @@ namespace Nektar
         {
         }
 
+        pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
+            int                           meshEdgeId,
+            StdRegions::Orientation       edgeOrient,
+            const vector<PeriodicEntity> &periodicEdges)
+        {
+            int minId  = periodicEdges[0].id;
+            int minIdK = 0;
+            int k;
+
+            for (k = 1; k < periodicEdges.size(); ++k)
+            {
+                if (periodicEdges[k].id < minId)
+                {
+                    minId  = min(minId, periodicEdges[k].id);
+                    minIdK = k;
+                }
+            }
+
+            minId = min(minId, meshEdgeId);
+
+            if (meshEdgeId != minId)
+            {
+                if (periodicEdges[minIdK].orient == StdRegions::eBackwards)
+                {
+                    // Swap edge orientation
+                    edgeOrient = (edgeOrient == StdRegions::eForwards) ?
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+            }
+
+            return make_pair(minId, edgeOrient);
+        }
+
         /**
          * @brief Determine relative orientation between two faces.
          *
@@ -1923,15 +1927,17 @@ namespace Nektar
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(j);
                     pIt = perEdges.find(meshEdgeId);
+                    edgeOrient = exp->GetGeom()->GetEorient(j);
+
                     if (pIt != perEdges.end())
                     {
-                        for (k = 0; k < pIt->second.size(); ++k)
-                        {
-                            meshEdgeId = min(meshEdgeId, pIt->second[k].id);
-                        }
+                        pair<int, StdRegions::Orientation> idOrient =
+                            DeterminePeriodicEdgeOrientId(
+                                meshEdgeId, edgeOrient, pIt->second);
+                        meshEdgeId = idOrient.first;
+                        edgeOrient = idOrient.second;
                     }
 
-                    edgeOrient = exp->GetGeom()->GetEorient(j);
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
                     dof = exp->GetEdgeNcoeffs(j)-2;
 

@@ -979,13 +979,16 @@ namespace Nektar
             const int nExp = expList->GetExpSize();
             const int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
-            // Map taking geometry ID -> pair<global ID, number of dofs>, where
-            // global ID is the start of the block. This might actually be
-            // better placed inside the CG assembly map if it's used for more
-            // than 1 preconditioner.
-            vector<map<int, int> > idToGid(3);
+            // Grab periodic geometry information.
+            PeriodicMap::iterator pIt;
+            PeriodicMap periodicVerts, periodicEdges, periodicFaces;
+            expList->GetPeriodicEntities(
+                periodicVerts, periodicEdges, periodicFaces);
+
             vector<map<int, vector<NekDouble> > > idMats(3);
+            vector<map<int, int> > gidMeshIds(3);
             vector<map<int, int> > gidDofs(3);
+            Array<OneD, int> maxVertIds(6, -1);
 
             map<int, vector<NekDouble> >::iterator gIt;
 
@@ -1011,7 +1014,6 @@ namespace Nektar
                         continue;
                     }
 
-                    idToGid[0][meshVertId] = gId;
                     gidDofs[0][gId] = 1;
 
                     int locId = exp->GetVertexMap(i);
@@ -1027,6 +1029,19 @@ namespace Nektar
                     {
                         gIt->second[0] += vertVal;
                     }
+
+                    pIt = periodicVerts.find(meshVertId);
+                    if (pIt != periodicVerts.end())
+                    {
+                        for (j = 0; j < pIt->second.size(); ++j)
+                        {
+                            meshVertId = min(meshVertId, pIt->second[j].id);
+                        }
+                    }
+
+                    gidMeshIds[0][gId] = meshVertId;
+                    maxVertIds[0] = max(maxVertIds[0], meshVertId);
+                    maxVertIds[1] = 1;
                 }
 
                 for (i = 0; i < exp->GetNedges(); ++i)
@@ -1034,10 +1049,20 @@ namespace Nektar
                     meshEdgeId = exp->GetGeom()->GetEid(i);
 
                     // Extract edge from array.
-                    Array<OneD, unsigned int> bmap;
-                    Array<OneD, unsigned int> bmap2;
+                    Array<OneD, unsigned int> bmap, bmap2;
                     Array<OneD, int> sign;
-                    exp->GetEdgeInteriorMap(i, exp->GetEorient(i), bmap, sign);
+                    StdRegions::Orientation edgeOrient = exp->GetEorient(i);
+
+                    pIt = periodicEdges.find(meshEdgeId);
+                    if (pIt != periodicEdges.end())
+                    {
+                        pair<int, StdRegions::Orientation> idOrient =
+                            DeterminePeriodicEdgeOrientId(
+                                meshEdgeId, edgeOrient, pIt->second);
+                        meshEdgeId = idOrient.first;
+                    }
+
+                    exp->GetEdgeInteriorMap(i, edgeOrient, bmap, sign);
                     bmap2 = exp->GetEdgeInverseBoundaryMap(i);
 
                     const int nEdgeCoeffs = bmap.num_elements();
@@ -1071,7 +1096,6 @@ namespace Nektar
                         continue;
                     }
 
-                    idToGid[1][meshEdgeId] = gId;
                     gidDofs[1][gId] = nEdgeCoeffs;
 
                     gIt = idMats[1].find(gId);
@@ -1087,44 +1111,115 @@ namespace Nektar
                         Vmath::Vadd(nEdgeCoeffs*nEdgeCoeffs, &gIt->second[0], 1,
                                     &tmpStore[0], 1, &gIt->second[0], 1);
                     }
+
+                    gidMeshIds[1][gId] = meshEdgeId;
+                    maxVertIds[2] = max(maxVertIds[2], meshEdgeId);
+                    maxVertIds[3] = max(maxVertIds[3], nEdgeCoeffs);
                 }
 
                 cnt += exp->GetNcoeffs();
             }
 
-            // Figure out what storage we need and the various offsets.
+            // Perform a reduction to find maximum vertex, edge and face
+            // geometry IDs.
+            m_comm = expList->GetSession()->GetComm()->GetRowComm();
+            m_comm->AllReduce(maxVertIds, LibUtilities::ReduceMax);
+
+            // Concatenate all matrices into contiguous storage and figure out
+            // universal ID numbering.
+            vector<NekDouble> storageBuf;
+            vector<long> globalToUniversal;
+
+            for (i = 0, cnt = 1; i < 3; ++i)
+            {
+                const int maxDofs = maxVertIds[2*i+1];
+
+                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt)
+                {
+                    // Copy matrix into storage.
+                    storageBuf.insert(storageBuf.end(),
+                                      gIt->second.begin(), gIt->second.end());
+
+                    // Get mesh ID from global ID number.
+                    ASSERTL1(gidMeshIds[i].count(gIt->first) > 0,
+                             "Unable to find global ID " +
+                             boost::lexical_cast<string>(gIt->first) +
+                             " inside map");
+                    meshVertId = gidMeshIds[i][gIt->first];
+
+                    for (j = 0; j < gIt->second.size(); ++j)
+                    {
+                        globalToUniversal.push_back(
+                            cnt + meshVertId*maxDofs*maxDofs + j);
+                    }
+
+                    // Free up the temporary storage.
+                    gIt->second.clear();
+                }
+
+                cnt += (maxVertIds[2*i]+1)*maxDofs*maxDofs;
+            }
+
+            ASSERTL1(storageBuf.size() == globalToUniversal.size(),
+                     "Storage buffer and global to universal map size does "
+                     "not match");
+
+            Array<OneD, NekDouble> storageData(
+                storageBuf.size(), &storageBuf[0]);
+            Array<OneD, long> globalToUniversalMap(
+                globalToUniversal.size(), &globalToUniversal[0]);
+
+            // Use GS to assemble data between processors.
+            Gs::gs_data *tmpGs = Gs::Init(globalToUniversalMap, m_comm);
+            Gs::Gather(storageData, Gs::gs_add, tmpGs);
+
+            // Figure out what storage we need in the block matrix.
             Array<OneD, unsigned int> n_blks(
                 1 + idMats[1].size() + idMats[2].size());
 
+            // Vertex block is a diagonal matrix.
             n_blks[0] = idMats[0].size();
 
+            // Now extract number of rows in each edge and face block from the
+            // gidDofs map.
             cnt = 1;
             for (i = 1; i < 3; ++i)
             {
                 for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt)
                 {
+                    ASSERTL1(gidDofs[i].count(gIt->first) > 0,
+                             "Unable to find number of degrees of freedom for "
+                             "global ID " + boost::lexical_cast<string>(
+                                 gIt->first));
+
                     n_blks[cnt++] = gidDofs[i][gIt->first];
                 }
             }
 
+            // Allocate storage for the block matrix.
             m_blkMat = MemoryManager<DNekBlkMat>
                 ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
 
+            // Allocate the vertex matrix, which is just diagonal.
             DNekMatSharedPtr vertMat = MemoryManager<DNekMat>
                 ::AllocateSharedPtr(n_blks[0], n_blks[0], 0.0, eDIAGONAL);
 
+            // Fill the vertex matrix with the inverse of each vertex value.
             cnt = 0;
             for (gIt = idMats[0].begin(); gIt != idMats[0].end(); ++gIt, ++cnt)
             {
-                (*vertMat)(cnt, cnt) = 1.0/gIt->second[0];
+                (*vertMat)(cnt, cnt) = 1.0/storageData[cnt];
             }
 
+            // Put the vertex matrix in the block matrix.
             m_blkMat->SetBlock(0,0,vertMat);
 
-            cnt = 1;
+            // Now grab the vertex matrices from the block storage, invert them
+            // and place them in the correct position inside the block matrix.
+            int cnt2 = 1;
             for (i = 1; i < 3; ++i)
             {
-                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt, ++cnt)
+                for (gIt = idMats[i].begin(); gIt != idMats[i].end(); ++gIt, ++cnt2)
                 {
                     int nDofs = gidDofs[i][gIt->first];
 
@@ -1135,13 +1230,14 @@ namespace Nektar
                     {
                         for (k = 0; k < nDofs; ++k)
                         {
-                            (*tmp)(j,k) = gIt->second[k+j*nDofs];
+                            (*tmp)(j,k) = storageData[k+j*nDofs + cnt];
                         }
                     }
 
-                    tmp->Invert();
+                    cnt += nDofs*nDofs;
 
-                    m_blkMat->SetBlock(cnt,cnt,tmp);
+                    tmp->Invert();
+                    m_blkMat->SetBlock(cnt2, cnt2, tmp);
                 }
             }
         }

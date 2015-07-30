@@ -37,12 +37,15 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <execinfo.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace ErrorUtil
 {
+    typedef boost::error_info<struct tag_errno,int> errno_info;
+
     static boost::optional<std::ostream&> outStream;
 
     inline static void SetErrorStream(std::ostream& o)
@@ -82,27 +85,48 @@ namespace ErrorUtil
 #endif
             msg;
 
+        std::string btMessage("");
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+        void *btArray[40];
+        int btSize;
+        char **btStrings;
+
+        btSize = backtrace(btArray, 40);
+        btStrings = backtrace_symbols(btArray, btSize);
+
+        for (int i = 0 ; i < btSize ; ++i)
+        {
+            btMessage +=  std::string(btStrings[i]) + "\n";
+        }
+        free(btStrings);
+#endif
+
         switch(type)
         {
             case efatal:
                 if( outStream )
                 {
+                    (*outStream) << btMessage;
                     (*outStream) << "Fatal   : " << baseMsg << std::endl;
                 }
                 else
                 {
+                    std::cerr << btMessage;
                     std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
                 }
+
                 throw NekError(baseMsg);
                 break;
 
             case ewarning:
                 if( outStream )
                 {
+                    (*outStream) << btMessage;
                     (*outStream) << "Warning: " << baseMsg << std::endl;
                 }
                 else
                 {
+                    std::cerr << btMessage;
                     std::cerr << "Warning: " << baseMsg << std::endl;
                 }
                 break;

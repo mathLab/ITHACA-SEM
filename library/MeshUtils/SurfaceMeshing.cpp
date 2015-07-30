@@ -140,6 +140,8 @@ namespace MeshUtils {
 
                 e->SetHONodes(honodes);
 
+                //this needs a 1d optimisation step
+
             }
             else
             {
@@ -163,6 +165,21 @@ namespace MeshUtils {
                     nn->SetSurf(e->GetSurf(),uv);
                     honodes[i-1] = Nodes.size();
                     Nodes[Nodes.size()] = nn;
+
+                }
+
+                NekDouble dz = 2.0/m_order;
+
+                for(int i = 1; i < m_order+1 -1; i++)
+                {
+                    NekDouble zi = -1.0 + dz;
+                    NekDouble zi1 = -1.0 + dz +dz;
+                    Array<OneD, NekDouble> uvi = Nodes[honodes[i-1]]->GetS(e->GetSurf());
+                    Array<OneD, NekDouble> uvi1 = Nodes[honodes[i]]->GetS(e->GetSurf());
+                    Array<OneD, NekDouble> li = Nodes[honodes[i-1]]->GetLoc();
+                    Array<OneD, NekDouble> li1 = Nodes[honodes[i]]->GetLoc();
+                    Array<OneD, NekDouble> ri = s->D2(uvi);
+                    Array<OneD, NekDouble> ri1 = s->D2(uvi1);
 
                 }
 

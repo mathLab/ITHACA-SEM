@@ -261,29 +261,6 @@ namespace Utilities
             }
         }
 
-        m_mesh->m_element[m_mesh->m_expDim-1].clear();
-
-        vector<ElementSharedPtr> elements = m_mesh->m_element[m_mesh->m_expDim];
-
-        m_mesh->m_element[m_mesh->m_expDim].clear();
-
-        for(int i = 0; i < elements.size(); i++)
-        {
-            int nodeonsurf = 0;
-            vector<NodeSharedPtr> n = elements[i]->GetVertexList();
-            for(int j = 0; j < n.size(); j++)
-            {
-                if(Nodes[n[j]->m_mid]->IsOnSurf(9))
-                {
-                    nodeonsurf++;
-                }
-            }
-            if(nodeonsurf == 3)
-            {
-                m_mesh->m_element[m_mesh->m_expDim].push_back(elements[i]);
-            }
-        }
-
     }
 
 

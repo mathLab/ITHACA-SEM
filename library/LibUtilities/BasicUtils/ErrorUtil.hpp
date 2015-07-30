@@ -37,10 +37,13 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <execinfo.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+
+#ifndef _WIN32
+#include <execinfo.h>
+#endif
 
 namespace ErrorUtil
 {
@@ -87,6 +90,7 @@ namespace ErrorUtil
 
         std::string btMessage("");
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+#ifndef _WIN32
         void *btArray[40];
         int btSize;
         char **btStrings;
@@ -100,7 +104,7 @@ namespace ErrorUtil
         }
         free(btStrings);
 #endif
-
+#endif
         switch(type)
         {
             case efatal:

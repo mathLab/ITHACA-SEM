@@ -157,9 +157,9 @@ namespace Utilities
             Array<OneD, NekDouble> loc = nit->second->GetLoc();
             NodeSharedPtr nn =
                     boost::shared_ptr<Node>(
-                                new Node(nit->first,loc[0],
+                                new Node(nit->second->GetId(),loc[0],
                                          loc[1],loc[2]));
-            allnodes[nit->first] = nn;
+            allnodes[nit->second->GetId()] = nn;
         }
 
         map<int, MeshUtils::MeshTetSharedPtr>::iterator tetit;
@@ -238,13 +238,17 @@ namespace Utilities
             {
                 if(egs[j]->m_edgeNodes.size()>0)
                     continue;
-                    
+
                 NodeSharedPtr n1 = egs[j]->m_n1;
                 NodeSharedPtr n2 = egs[j]->m_n2;
                 int n1ID = n1->m_id;
                 int n2ID = n2->m_id;
 
                 int edgekey = Nodes[n1ID]->EdgeInCommon(Nodes[n2ID]);
+
+                cout << n1ID << " " << n2ID << endl;
+
+                ASSERTL0(edgekey != -1, "no edge found");
 
                 vector<int> honode = Edges[edgekey]->GetHONodes(n1ID);
 
@@ -257,6 +261,8 @@ namespace Utilities
                 egs[j]->m_edgeNodes = localhonode;
             }
         }
+
+        m_mesh->m_element[m_mesh->m_expDim-1].clear();
 
     }
 

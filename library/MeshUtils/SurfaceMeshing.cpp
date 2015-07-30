@@ -168,18 +168,34 @@ namespace MeshUtils {
 
                 }
 
+
                 NekDouble dz = 2.0/m_order;
 
                 for(int i = 1; i < m_order+1 -1; i++)
                 {
-                    NekDouble zi = -1.0 + dz;
-                    NekDouble zi1 = -1.0 + dz +dz;
+                    NekDouble zim = -1.0 + (i-1)*dz;
+                    NekDouble zi = -1.0 + i*dz;
+                    NekDouble zip = -1.0 + (i+1)*dz;
+                    Array<OneD, NekDouble> uvim = Nodes[honodes[i-2]]->GetS(e->GetSurf());
                     Array<OneD, NekDouble> uvi = Nodes[honodes[i-1]]->GetS(e->GetSurf());
-                    Array<OneD, NekDouble> uvi1 = Nodes[honodes[i]]->GetS(e->GetSurf());
-                    Array<OneD, NekDouble> li = Nodes[honodes[i-1]]->GetLoc();
-                    Array<OneD, NekDouble> li1 = Nodes[honodes[i]]->GetLoc();
+                    Array<OneD, NekDouble> uvip = Nodes[honodes[i]]->GetS(e->GetSurf());
+                    Array<OneD, NekDouble> rim = s->D2(uvim);
                     Array<OneD, NekDouble> ri = s->D2(uvi);
-                    Array<OneD, NekDouble> ri1 = s->D2(uvi1);
+                    Array<OneD, NekDouble> rip = s->D2(uvip);
+
+                    NekDouble fu = 1.0/(zi-zim)*(2.0*(ri[0]-rim[0])*(ri[3]-rim[3])
+                            +2.0*(ri[1]-rim[1])*(ri[4]-rim[4])
+                            +2.0*(ri[2]-rim[2])*(ri[5]-rim[5])) +
+                            1.0/(zip-zi)*(2.0*(rip[0]-ri[0])*(rip[3]-ri[3])
+                            +2.0*(rip[1]-ri[1])*(rip[4]-ri[4])
+                            +2.0*(rip[2]-ri[2])*(rip[5]-ri[5]));
+
+                    NekDouble fv = 1.0/(zi-zim)*(2.0*(ri[0]-rim[0])*(ri[6]-rim[6])
+                            +2.0*(ri[1]-rim[1])*(ri[7]-rim[7])
+                            +2.0*(ri[2]-rim[2])*(ri[8]-rim[8])) +
+                            1.0/(zip-zi)*(2.0*(rip[0]-ri[0])*(rip[6]-ri[6])
+                            +2.0*(rip[1]-ri[1])*(rip[7]-ri[7])
+                            +2.0*(rip[2]-ri[2])*(rip[8]-ri[8]));
 
                 }
 

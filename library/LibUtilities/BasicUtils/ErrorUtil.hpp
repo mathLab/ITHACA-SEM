@@ -47,8 +47,6 @@
 
 namespace ErrorUtil
 {
-    typedef boost::error_info<struct tag_errno,int> errno_info;
-
     static boost::optional<std::ostream&> outStream;
 
     inline static void SetErrorStream(std::ostream& o)

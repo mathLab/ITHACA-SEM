@@ -1942,12 +1942,23 @@ namespace Nektar
             GetFacePhysMap(face,faceids);
             Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
             
+            if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+            {
+                to_id0 = 0; 
+                to_id1 = 1;
+            }
+            else // transpose points key evaluation 
+            {
+                to_id0 = 1;
+                to_id1 = 0;
+            }
+
             // interpolate to points distrbution given in FaceExp
             LibUtilities::Interp2D(m_base[dir0]->GetPointsKey(), 
                                    m_base[dir1]->GetPointsKey(), 
                                    o_tmp.get(),
-                                   FaceExp->GetBasis(0)->GetPointsKey(),
-                                   FaceExp->GetBasis(1)->GetPointsKey(),
+                                   FaceExp->GetBasis(to_id0)->GetPointsKey(),
+                                   FaceExp->GetBasis(to_id1)->GetPointsKey(),
                                    o_tmp2.get());
             
             // Reshuffule points as required and put into outarray. 

@@ -873,7 +873,7 @@ namespace Vmath
 
         while (n--)
         {
-            if (isnan(*x))
+            if (*x != *x)
             {
                 nNan++;
             }

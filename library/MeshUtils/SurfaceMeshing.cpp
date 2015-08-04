@@ -34,11 +34,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <MeshUtils/SurfaceMeshing.h>
+extern "C"{
 #include <levmar.h>
+}
 
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
+
+map<int, MeshNodeSharedPtr> GlobalNodes;
+LibUtilities::CADSurfSharedPtr GlobalCad;
+int sn, en; //start node end node
 
     void SurfaceMeshing::Mesh()
     {
@@ -88,7 +94,42 @@ namespace MeshUtils {
 
     void EnergyEval(double *p, double *x, int m, int n, void *data)
     {
+        NekDouble dz = 2.0/(m/2);
 
+        Array<OneD, NekDouble> loca,locb;
+        Array<OneD, NekDouble> uv(2);
+
+        x[0] = 0.0;
+
+        loca = GlobalNodes[sn]->GetLoc();
+        uv[0] = p[0]; uv[1] = p[1];
+        locb = GlobalCad->P(uv);
+        x[0] += 1.0/dz*sqrt((loca[0]-locb[0])*(loca[0]-locb[0]) +
+                            (loca[1]-locb[1])*(loca[1]-locb[1]) +
+                            (loca[2]-locb[2])*(loca[2]-locb[2]) );
+        int i;
+        for(i = 0; i < m/2 - 1; i++)
+        {
+            uv[0] = p[i*2+0]; uv[1] = p[i*2+1];
+            loca = GlobalCad->P(uv);
+            uv[0] = p[(i+1)*2+0]; uv[1] = p[(i+1)*2+1];
+            locb = GlobalCad->P(uv);
+            x[0] += 1.0/dz*sqrt((loca[0]-locb[0])*(loca[0]-locb[0]) +
+                                (loca[1]-locb[1])*(loca[1]-locb[1]) +
+                                (loca[2]-locb[2])*(loca[2]-locb[2]) );
+        }
+        uv[0] = p[i*2+0]; uv[1] = p[i*2+1];
+        loca = GlobalCad->P(uv);
+        locb = GlobalNodes[en]->GetLoc();
+        x[0] += 1.0/dz*sqrt((loca[0]-locb[0])*(loca[0]-locb[0]) +
+                            (loca[1]-locb[1])*(loca[1]-locb[1]) +
+                            (loca[2]-locb[2])*(loca[2]-locb[2]) );
+
+        for(i = 1; i < m/2; i++)
+        {
+            x[i] = 0.0;
+        }
+        //cout << x[0] << " " << p[0] << " " << p[1] << endl;
     }
 
     void SurfaceMeshing::HOSurf()
@@ -174,10 +215,28 @@ namespace MeshUtils {
 
                 }
 
+                GlobalNodes = Nodes; sn = n[0]; en = n[1]; GlobalCad = m_cad->GetSurf(e->GetSurf());
 
                 double opts[LM_OPTS_SZ], info[LM_INFO_SZ];
                 opts[0]=LM_INIT_MU; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;
                 opts[4]= LM_DIFF_DELTA;
+
+                double p[honodes.size()*2];
+                double x[1];
+
+                for(int i = 0; i < honodes.size(); i++)
+                {
+                    Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
+                    p[i*2+0] = uv[0];
+                    p[i*2+1] = uv[1];
+                }
+
+                //cout << "starting" << endl;
+                EnergyEval(p,x,honodes.size()*2,honodes.size()*2,NULL);
+
+                int ret = dlevmar_dif(&EnergyEval,p,x,honodes.size()*2,honodes.size()*2,1000,opts,info,NULL,NULL,NULL);
+
+                cout << e->GetId() << " " << ret << endl;
 
                 e->SetHONodes(honodes);
             }

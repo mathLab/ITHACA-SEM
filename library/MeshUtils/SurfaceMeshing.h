@@ -84,6 +84,7 @@ namespace MeshUtils {
 
         void Validate();
         void Optimise();
+        //void EnergyEval(double *p, double *x, int m, int n, void *data);
 
         LibUtilities::CADSystemSharedPtr m_cad;
         OctreeSharedPtr m_octree;

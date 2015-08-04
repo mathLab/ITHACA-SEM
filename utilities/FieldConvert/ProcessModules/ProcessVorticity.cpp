@@ -195,7 +195,7 @@ void ProcessVorticity::Process(po::variables_map &vm)
                     Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
                 }
             }
-            std::cout << "Get grad ok" <<std::endl;
+
             // W_x = Wy - Vz
             Vmath::Vsub(npoints, grad[2*spacedim+1], 1, grad[1*spacedim+2], 1,
                         outfield[0],1);

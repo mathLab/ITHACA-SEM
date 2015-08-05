@@ -44,6 +44,8 @@
 
 #include <tinyxml.h>
 
+#include <LibUtilities/Communication/Comm.h>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -65,16 +67,25 @@ class PtsIO
 {
     public:
 
-        LIB_UTILITIES_EXPORT PtsIO()
+        LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm):
+            m_comm(pComm)
         {
+
         };
+
 
         LIB_UTILITIES_EXPORT void Import(const string &inFile,
                                          LibUtilities::PtsFieldSharedPtr &ptsField);
 
-        LIB_UTILITIES_EXPORT void Write(
-            const string &outFile,
-            const LibUtilities::PtsFieldSharedPtr &ptsField);
+        LIB_UTILITIES_EXPORT void Write(const string &outFile,
+                                        const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField);
+
+    private:
+
+        LibUtilities::CommSharedPtr    m_comm;
+
+        LIB_UTILITIES_EXPORT std::string SetUpOutput(const string outname);
+
 };
 
 typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;

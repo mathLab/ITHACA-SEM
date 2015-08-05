@@ -36,6 +36,19 @@
 
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
+#include <LibUtilities/BasicUtils/FileSystem.h>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/format.hpp>
+
+#include <sstream>
+
+#ifdef NEKTAR_USE_MPI
+#include <mpi.h>
+#endif
+
+namespace berrc = boost::system::errc;
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -43,16 +56,55 @@ namespace LibUtilities
 
 void Import(const string &inFile, PtsFieldSharedPtr &ptsField)
 {
-    PtsIO p;
+#ifdef NEKTAR_USE_MPI
+    int size;
+    int init;
+    MPI_Initialized(&init);
+
+    // If MPI has been initialised we can check the number of processes
+    // and, if > 1, tell the user he should not be running this
+    // function in parallel. If it is not initialised, we do not
+    // initialise it here, and assume the user knows what they are
+    // doing.
+    if (init)
+    {
+        MPI_Comm_size( MPI_COMM_WORLD, &size );
+        ASSERTL0(size == 1,
+                "This static function is not available in parallel. Please"
+                "instantiate a FieldIO object for parallel use.");
+    }
+#endif
+    CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
+    PtsIO p(c);
     p.Import(inFile, ptsField);
 }
 
 
 void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
 {
-    PtsIO p;
+#ifdef NEKTAR_USE_MPI
+    int size;
+    int init;
+    MPI_Initialized(&init);
+
+    // If MPI has been initialised we can check the number of processes
+    // and, if > 1, tell the user he should not be running this
+    // function in parallel. If it is not initialised, we do not
+    // initialise it here, and assume the user knows what they are
+    // doing.
+    if (init)
+    {
+        MPI_Comm_size( MPI_COMM_WORLD, &size );
+        ASSERTL0(size == 1,
+                "This static function is not available in parallel. Please"
+                "instantiate a FieldIO object for parallel use.");
+    }
+#endif
+    CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
+    PtsIO p(c);
     p.Write(outFile, ptsField);
 }
+
 
 
 /**
@@ -131,13 +183,104 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
 /**
  * @brief Save a pts field to a file
  *
- * @param inFile    filename of the file
+ * @param outFile    filename of the file
  * @param ptsField  the pts field
  */
-void PtsIO::Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
+void PtsIO::Write(const string &outFile,
+                  const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField)
 {
+    int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
+    int np = ptsField->GetNpoints();
 
-    ASSERTL0(false, "Not implemented yet");
+    std::string filename = SetUpOutput(outFile);
+
+    // Create the file (partition)
+    TiXmlDocument doc;
+    TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
+    doc.LinkEndChild(decl);
+
+    TiXmlElement *root = new TiXmlElement("NEKTAR");
+    doc.LinkEndChild(root);
+
+    TiXmlElement *pointsTag = new TiXmlElement("ELEMENTS");
+    root->LinkEndChild(pointsTag);
+
+    pointsTag->SetAttribute("DIM", ptsField->GetDim());
+
+    string fn = boost::algorithm::join(ptsField->GetFieldNames(), ",");
+    pointsTag->SetAttribute("FIELDS", fn);
+
+    Array <OneD, Array <OneD, NekDouble > > pts;
+    ptsField->GetPts(pts);
+    ostringstream os;
+    for (int i = 0; i < np; ++i)
+    {
+        os << boost::format("%1%") % pts[0][i];
+        for (int j = 1; j < nTotvars; ++j)
+        {
+            os << " ";
+            os << boost::format("%1%") % pts[j][i];
+        }
+        os << endl;
+    }
+
+    pointsTag->LinkEndChild(new TiXmlText(os.str()));
+
+    doc.SaveFile(filename);
+}
+
+
+std::string PtsIO::SetUpOutput(const std::string outname)
+{
+    ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
+
+    int nprocs = m_comm->GetSize();
+    int rank   = m_comm->GetRank();
+
+    // Directory name if in parallel, regular filename if in serial
+    fs::path specPath(outname);
+
+    // Remove any existing file which is in the way
+    if (m_comm->RemoveExistingFiles())
+    {
+        try
+        {
+            fs::remove_all(specPath);
+        }
+        catch (fs::filesystem_error &e)
+        {
+            ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                     "Filesystem error: " + string(e.what()));
+        }
+    }
+
+    // serial processing just add ending.
+    if (nprocs == 1)
+    {
+        cout << "Writing: " << specPath << endl;
+        return LibUtilities::PortablePath(specPath);
+    }
+
+    // Create the destination directory
+    try
+    {
+        fs::create_directory(specPath);
+    }
+    catch (fs::filesystem_error &e)
+    {
+        ASSERTL0(false, "Filesystem error: " + string(e.what()));
+    }
+
+    // Pad rank to 8char filenames, e.g. P0000000.fld
+    boost::format pad("P%1$07d.fld");
+    pad % m_comm->GetRank();
+
+    // Generate full path name
+    fs::path poutfile(pad.str());
+    fs::path fulloutname = specPath / poutfile;
+
+    // Return the full path to the partition for this process
+    return LibUtilities::PortablePath(fulloutname);
 }
 
 

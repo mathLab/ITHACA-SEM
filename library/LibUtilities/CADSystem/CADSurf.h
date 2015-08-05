@@ -95,6 +95,8 @@ class CADSurf
         Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
         Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
+        bool IsPlane();
+
     private:
         /// ID of surface.
         int m_ID;

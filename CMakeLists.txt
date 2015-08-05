@@ -183,7 +183,7 @@ INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyTriangle)
-INCLUDE (ThirdPartyLevmar)
+INCLUDE (ThirdPartyASA047)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 

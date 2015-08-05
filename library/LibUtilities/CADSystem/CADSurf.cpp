@@ -91,6 +91,18 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
     return uvr;
 }
 
+bool CADSurf::IsPlane()
+{
+    if(m_occSurface.GetType() == GeomAbs_Plane)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 /**
  * @brief Get the x,y,z at parametric point u,v.
  *

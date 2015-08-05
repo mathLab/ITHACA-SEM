@@ -42,6 +42,8 @@
 #include <boost/format.hpp>
 
 #include <sstream>
+#include <iostream>
+#include <fstream>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
@@ -194,6 +196,36 @@ void PtsIO::Write(const string &outFile,
 
     std::string filename = SetUpOutput(outFile);
 
+    // until tinyxml gains support for line break, write the xml manually
+    std::ofstream ptsFile;
+    ptsFile.open(filename.c_str());
+
+    ptsFile << "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" << endl;
+    ptsFile << "<NEKTAR>" << endl;
+    ptsFile << "  <POINTS ";
+    ptsFile << "DIM=\"" << ptsField->GetDim() << "\" ";
+    string fn = boost::algorithm::join(ptsField->GetFieldNames(), ",");
+    ptsFile << "FIELDS=\"" << fn << "\" ";
+    ptsFile << ">" << endl;
+
+    Array <OneD, Array <OneD, NekDouble > > pts;
+    ptsField->GetPts(pts);
+    for (int i = 0; i < np; ++i)
+    {
+        ptsFile << "    ";
+        ptsFile << pts[0][i];
+        for (int j = 1; j < nTotvars; ++j)
+        {
+            ptsFile << " " << pts[j][i];
+        }
+        ptsFile << endl;
+    }
+    ptsFile << "  </POINTS>" << endl;
+    ptsFile << "</NEKTAR>" << endl;
+
+    ptsFile.close();
+
+    /*
     // Create the file (partition)
     TiXmlDocument doc;
     TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
@@ -202,7 +234,7 @@ void PtsIO::Write(const string &outFile,
     TiXmlElement *root = new TiXmlElement("NEKTAR");
     doc.LinkEndChild(root);
 
-    TiXmlElement *pointsTag = new TiXmlElement("ELEMENTS");
+    TiXmlElement *pointsTag = new TiXmlElement("POINTS");
     root->LinkEndChild(pointsTag);
 
     pointsTag->SetAttribute("DIM", ptsField->GetDim());
@@ -215,27 +247,25 @@ void PtsIO::Write(const string &outFile,
     ostringstream os;
     for (int i = 0; i < np; ++i)
     {
-        os << boost::format("%1%") % pts[0][i];
+        os << pts[0][i];
         for (int j = 1; j < nTotvars; ++j)
         {
-            os << " ";
-            os << boost::format("%1%") % pts[j][i];
+            os << " " << pts[j][i];
         }
-        os << endl;
+        os << " ";
     }
 
     pointsTag->LinkEndChild(new TiXmlText(os.str()));
 
     doc.SaveFile(filename);
+    */
 }
-
 
 std::string PtsIO::SetUpOutput(const std::string outname)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
     int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
 
     // Directory name if in parallel, regular filename if in serial
     fs::path specPath(outname);

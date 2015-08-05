@@ -108,7 +108,7 @@ int sn, en, m; //start node end node
         loca = GlobalNodes[sn]->GetLoc();
         uv[0] = x[0]; uv[1] = x[1];
         locb = GlobalCad->P(uv);
-        p += 1.0/dz*sqrt((loca[0]-locb[0])*(loca[0]-locb[0]) +
+        p += 1.0/dz*((loca[0]-locb[0])*(loca[0]-locb[0]) +
                             (loca[1]-locb[1])*(loca[1]-locb[1]) +
                             (loca[2]-locb[2])*(loca[2]-locb[2]) );
         int i;
@@ -118,14 +118,14 @@ int sn, en, m; //start node end node
             loca = GlobalCad->P(uv);
             uv[0] = x[(i+1)*2+0]; uv[1] = x[(i+1)*2+1];
             locb = GlobalCad->P(uv);
-            p += 1.0/dz*sqrt((loca[0]-locb[0])*(loca[0]-locb[0]) +
+            p += 1.0/dz*((loca[0]-locb[0])*(loca[0]-locb[0]) +
                                 (loca[1]-locb[1])*(loca[1]-locb[1]) +
                                 (loca[2]-locb[2])*(loca[2]-locb[2]) );
         }
         uv[0] = x[i*2+0]; uv[1] = x[i*2+1];
         loca = GlobalCad->P(uv);
         locb = GlobalNodes[en]->GetLoc();
-        p += 1.0/dz*sqrt((loca[0]-locb[0])*(loca[0]-locb[0]) +
+        p += 1.0/dz*((loca[0]-locb[0])*(loca[0]-locb[0]) +
                             (loca[1]-locb[1])*(loca[1]-locb[1]) +
                             (loca[2]-locb[2])*(loca[2]-locb[2]) );
 
@@ -238,14 +238,14 @@ int sn, en, m; //start node end node
                     Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
                     start[i*2+0] = uv[0];
                     start[i*2+1] = uv[1];
-                    step[i*2+0] = (bound[1]-bound[0])/50.0;
-                    step[i*2+1] = (bound[3]-bound[2])/50.0;
+                    step[i*2+0] = (bound[1]-bound[0])/10.0;
+                    step[i*2+1] = (bound[3]-bound[2])/10.0;
                 }
                 double ynew = EnergyEval(start);
                 //cout << ynew << endl;
                 int icount, ifault, numres;
-                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-8, step,
-                       10, 10000, &icount, &numres, &ifault);
+                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-10, step,
+                       10, 100000, &icount, &numres, &ifault);
                 cout << ifault << " " << icount << endl;
                 if(ifault == 0)
                 {

@@ -1942,6 +1942,9 @@ namespace Nektar
             GetFacePhysMap(face,faceids);
             Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
             
+
+            int to_id0,to_id1;
+
             if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
             {
                 to_id0 = 0; 

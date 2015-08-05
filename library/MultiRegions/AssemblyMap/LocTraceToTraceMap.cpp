@@ -549,7 +549,7 @@ namespace Nektar
             int bwdcnt = 0;
             
             // Generate a map of similar traces with the same
-            // interpolation requirements
+            // interpolation or projection requirements
             for (cnt = n = 0; n < nexp; ++n)
             {
                 exp3d = (*exp)[n]->as<LocalRegions::Expansion3D>();
@@ -595,7 +595,9 @@ namespace Nektar
                     // flux to elements
                     Array<OneD, unsigned int> map;
                     Array<OneD, int> sign;
-                    exp3d->GetFaceToElementMap(e, orient, map, sign);
+                    exp3d->GetFaceToElementMap(e, orient, map, sign,
+                                               face->GetBasisNumModes(0),
+                                               face->GetBasisNumModes(1));
                     
                     int order_f = face->GetNcoeffs();
                     int foffset = trace->GetCoeff_Offset(face->GetElmtId());

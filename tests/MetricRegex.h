@@ -48,7 +48,10 @@ namespace Nektar
     struct MetricRegexFieldValue
     {
         MetricRegexFieldValue()
-            : m_value(""), m_useTolerance(false), m_tolerance(0.0) {}
+            : m_value(""), m_useTolerance(false), m_tolerance(0.0),
+              m_useIntTolerance(false), m_intTolerance(0)
+        {
+        }
 
         std::string m_value;
         bool m_useTolerance;

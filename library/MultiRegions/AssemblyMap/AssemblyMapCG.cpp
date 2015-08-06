@@ -1742,6 +1742,25 @@ namespace Nektar
         {
         }
 
+        /**
+         * @brief Determine orientation of an edge to its periodic equivalents,
+         * as well as the ID of the representative edge.
+         *
+         * Since an edge may be periodic with more than one other edge (e.g. a
+         * periodic cube has sets of four periodic edges in each coordinate
+         * direction), we have to define a 'representative' edge. In this
+         * assembly map we define it to be the one with the minimum ID. This
+         * routine is set up to calculate the orientation of a given edge with
+         * ID @p meshEdgeId with respect to the edge ID.
+         *
+         * @param meshEdgeId     ID of a periodic edge.
+         * @param edgeOrient     Edge orientation of meshEdgeId with respect to
+         *                       its parent element.
+         * @param periodicEdges  The map of all periodic edges.
+         *
+         * @return Pair containing the ID of the periodic edge and the
+         *         orientation of @p meshEdgeID with respect to this edge.
+         */
         pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
             int                           meshEdgeId,
             StdRegions::Orientation       edgeOrient,
@@ -1778,10 +1797,17 @@ namespace Nektar
         /**
          * @brief Determine relative orientation between two faces.
          *
-         * Given faceOrient of a local element to its local face and
-         * perFaceOrient which states the alignment of one periodic face to the
-         * other global face determine a new faceOrient that takes this local
-         * element face to the global/unique face.
+         * Given the orientation of a local element to its local face, defined
+         * as @p faceOrient, and @p perFaceOrient which states the alignment of
+         * one periodic face to the other global face, this routine determines
+         * the orientation that takes this local element face to the
+         * global/unique face.
+         *
+         * @param faceOrient     Orientation of the face with respect to its
+         *                       parent element.
+         * @param perFaceOrient  Orientation of the representative/global face.
+         *
+         * @return Orientation between the two faces.
          */
         StdRegions::Orientation DeterminePeriodicFaceOrient(
             StdRegions::Orientation faceOrient,

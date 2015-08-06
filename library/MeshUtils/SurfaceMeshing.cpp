@@ -225,42 +225,51 @@ int sn, en, m; //start node end node
                 GlobalNodes = Nodes; sn = n[0]; en = n[1]; GlobalCad = m_cad->GetSurf(e->GetSurf());
                 m = honodes.size()*2;
 
-                cout << "starting" << endl;
+
                 double *start;
                 start = new double[honodes.size()*2];
                 double *xmin;
                 xmin = new double[honodes.size()*2];
                 double *step;
                 step = new double[honodes.size()*2];
-                Array<OneD, NekDouble> bound = m_cad->GetSurf(e->GetSurf())->GetBounds();
+
                 for(int i = 0; i < honodes.size(); i++)
                 {
                     Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
                     start[i*2+0] = uv[0];
                     start[i*2+1] = uv[1];
-                    step[i*2+0] = (bound[1]-bound[0])/10.0;
-                    step[i*2+1] = (bound[3]-bound[2])/10.0;
+                    step[i*2+0] = (max(uve[0],uvb[0]) - min(uve[0],uvb[0]))*10;
+                    step[i*2+1] = (max(uve[1],uvb[1]) - min(uve[1],uvb[1]))*10;
                 }
                 double ynew = EnergyEval(start);
                 //cout << ynew << endl;
                 int icount, ifault, numres;
-                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-10, step,
+                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-8, step,
                        10, 100000, &icount, &numres, &ifault);
-                cout << ifault << " " << icount << endl;
+
                 if(ifault == 0)
                 {
                     for(int i = 0; i < honodes.size(); i++)
                     {
-                        Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
-                        //cout << uv[0] << " " << uv[1] << endl;
-                        //cout << xmin[i*2+0] << " " << xmin[i*2+1] << endl << endl;
+                        Array<OneD, NekDouble> uv(2);
+                        uv[0] = xmin[i*2+0]; uv[1] = xmin[i*2+1];
+                        Array<OneD, NekDouble> l = m_cad->GetSurf(e->GetSurf())->P(uv);
+                        Nodes[honodes[i]]->Move(l,uv);
                     }
-                    //cout << ynew << endl;
+                }
+                else
+                {
+                    double *xmin2;
+                    xmin2 = new double[honodes.size()*2];
+                    nelmin(EnergyEval, honodes.size()*2, xmin, xmin2, &ynew, 1E-8, step,
+                           10, 100000, &icount, &numres, &ifault);
+                    if(ifault == 2)
+                        cout << ifault << " " << icount << endl;
 
                     for(int i = 0; i < honodes.size(); i++)
                     {
                         Array<OneD, NekDouble> uv(2);
-                        uv[0] = xmin[i*2+0]; uv[1] = xmin[i*2+1];
+                        uv[0] = xmin2[i*2+0]; uv[1] = xmin2[i*2+1];
                         Array<OneD, NekDouble> l = m_cad->GetSurf(e->GetSurf())->P(uv);
                         Nodes[honodes[i]]->Move(l,uv);
                     }

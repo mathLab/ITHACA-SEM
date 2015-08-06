@@ -92,7 +92,6 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
 
         pointc++;
     }
-    cout << pointc << endl;
 
     surface.numberoffacets = Tris.size();
     surface.facetlist = new tetgenio::facet[surface.numberoffacets];

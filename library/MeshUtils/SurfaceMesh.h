@@ -73,6 +73,8 @@ namespace MeshUtils {
                   std::map<int, MeshEdgeSharedPtr> &Edges,
                   std::map<int, MeshTriSharedPtr> &Tris);
 
+        void Report();
+
 
     private:
 

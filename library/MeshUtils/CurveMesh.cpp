@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
+#include <iomanip>
 
 #include <MeshUtils/CurveMesh.h>
 
@@ -50,10 +51,6 @@ namespace MeshUtils {
         m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+5;
 
         ds = m_curvelength/(m_numSamplePoints-1);
-
-        if(m_verbose)
-            cout << "\tCurve length: " << m_curvelength << endl <<
-                    "\tSample Points: " << m_numSamplePoints << endl;
 
         GetSampleFunction();
 
@@ -72,9 +69,6 @@ namespace MeshUtils {
             meshsvalue[0]=0.0;
             meshsvalue[1]=m_curvelength;
             Ne=1;
-
-            if(m_verbose)
-                cout << "\tPoints: " << 2 << endl;
         }
         else
         {
@@ -108,9 +102,6 @@ namespace MeshUtils {
 
                 meshsvalue[i]=ski;
             }
-
-            if(m_verbose)
-                cout << "\tPoints: " << Ne+1 << endl;
         }
 
         NekDouble t;
@@ -199,6 +190,11 @@ namespace MeshUtils {
         }
 
 
+    }
+
+    void CurveMesh::Report()
+    {
+        cout << scientific << "\tLength: " << m_curvelength << "\tPoints: " << Ne+1 << endl;
     }
 
     void CurveMesh::GetPhiFunction()

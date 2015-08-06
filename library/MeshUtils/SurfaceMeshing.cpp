@@ -46,10 +46,24 @@ int sn, en, m; //start node end node
 
     void SurfaceMeshing::Mesh()
     {
+        if(m_verbose)
+            cout << endl << "Surface meshing" << endl;
+        if(m_verbose)
+            cout << "\tCurve meshing..." << endl;
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
         {
             if(m_verbose)
-                cout << endl << "Meshing Curve: " << i << endl;
+            {
+                int pos = 70*i/m_cad->GetNumCurve();
+                cout << "\t[";
+                for (int j = 0; j < 70; ++j) {
+                    if (j < pos) cout << "=";
+                    else if (j == pos) cout << ">";
+                    else cout << " ";
+                }
+                cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
+                cout.flush();
+            }
 
             m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(
@@ -59,10 +73,33 @@ int sn, en, m; //start node end node
 
         }
 
+        if(m_verbose)
+        {
+            cout << endl << "\tCurve mesh stats:" << endl;
+            for(int i = 1; i <= m_cad->GetNumCurve(); i++)
+            {
+                cout << "\t\tCurve: " << i;
+                m_curvemeshes[i]->Report();
+            }
+        }
+
+        if(m_verbose)
+            cout <<endl << "\tSurface meshing..." << endl;
+
         for(int i = 1; i <= m_cad->GetNumSurf(); i++)
         {
             if(m_verbose)
-                cout << endl << "Surface: " <<  i <<  endl;
+            {
+                int pos = 70*i/m_cad->GetNumSurf();
+                cout << "\t[";
+                for (int j = 0; j < 70; ++j) {
+                    if (j < pos) cout << "=";
+                    else if (j == pos) cout << ">";
+                    else cout << " ";
+                }
+                cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
+                cout.flush();
+            }
             m_surfacemeshes[i] =
                 MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,m_verbose,
                     m_cad->GetSurf(i), m_octree,
@@ -74,13 +111,23 @@ int sn, en, m; //start node end node
 
         if(m_verbose)
         {
-            cout << endl << "Surface mesh statistics" << endl;
-            cout << "\tNodes: " << Nodes.size() << endl;
-            cout << "\tEdges: " << Edges.size() << endl;
-            cout << "\tTriangles " << Tris.size() << endl;
-            cout << "\tEuler-Poincaré characteristic: " << Nodes.size()-
-                                                           Edges.size()+
-                                                           Tris.size() << endl;
+            cout << endl << "\tSurface mesh stats:" << endl;
+            for(int i = 1; i <= m_cad->GetNumSurf(); i++)
+            {
+                cout << "\t\tSurface: " << i;
+                m_surfacemeshes[i]->Report();
+            }
+        }
+
+        if(m_verbose)
+        {
+            cout << endl << "\tSurface mesh statistics" << endl;
+            cout << "\t\tNodes: " << Nodes.size() << endl;
+            cout << "\t\tEdges: " << Edges.size() << endl;
+            cout << "\t\tTriangles " << Tris.size() << endl;
+            cout << "\t\tEuler-Poincaré characteristic: " << Nodes.size()-
+                                                             Edges.size()+
+                                                              Tris.size() << endl;
         }
 
         Validate();
@@ -136,10 +183,25 @@ int sn, en, m; //start node end node
     void SurfaceMeshing::HOSurf()
     {
         if(m_verbose)
-            cout << endl << "High-Order Surface meshing" << endl;
+            cout << endl << "\tHigh-Order Surface meshing" << endl;
+
+        if(m_verbose)
+            cout << "\t\tEdges..." << endl;
 
         for(int i = 0; i < Edges.size(); i++)
         {
+            if(m_verbose)
+            {
+                int pos = 70*i/Edges.size();
+                cout << "\t\t[";
+                for (int j = 0; j < 70; ++j) {
+                    if (j < pos) cout << "=";
+                    else if (j == pos) cout << ">";
+                    else cout << " ";
+                }
+                cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
+                cout.flush();
+            }
             MeshEdgeSharedPtr e = Edges[i];
             Array<OneD, int> n = e->GetN();
 
@@ -238,43 +300,31 @@ int sn, en, m; //start node end node
                     Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
                     start[i*2+0] = uv[0];
                     start[i*2+1] = uv[1];
-                    step[i*2+0] = (max(uve[0],uvb[0]) - min(uve[0],uvb[0]))*10;
-                    step[i*2+1] = (max(uve[1],uvb[1]) - min(uve[1],uvb[1]))*10;
+                    step[i*2+0] = (max(uve[0],uvb[0]) - min(uve[0],uvb[0]));
+                    step[i*2+1] = (max(uve[1],uvb[1]) - min(uve[1],uvb[1]));
                 }
                 double ynew = EnergyEval(start);
                 //cout << ynew << endl;
                 int icount, ifault, numres;
-                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-8, step,
-                       10, 100000, &icount, &numres, &ifault);
+                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-5, step,
+                       10, 500, &icount, &numres, &ifault);
 
-                if(ifault == 0)
+                int repeats = 0;
+                while(ifault == 2)
                 {
-                    for(int i = 0; i < honodes.size(); i++)
-                    {
-                        Array<OneD, NekDouble> uv(2);
-                        uv[0] = xmin[i*2+0]; uv[1] = xmin[i*2+1];
-                        Array<OneD, NekDouble> l = m_cad->GetSurf(e->GetSurf())->P(uv);
-                        Nodes[honodes[i]]->Move(l,uv);
-                    }
-                }
-                else
-                {
-                    double *xmin2;
-                    xmin2 = new double[honodes.size()*2];
-                    nelmin(EnergyEval, honodes.size()*2, xmin, xmin2, &ynew, 1E-8, step,
-                           10, 100000, &icount, &numres, &ifault);
-                    if(ifault == 2)
-                        cout << ifault << " " << icount << endl;
-
-                    for(int i = 0; i < honodes.size(); i++)
-                    {
-                        Array<OneD, NekDouble> uv(2);
-                        uv[0] = xmin2[i*2+0]; uv[1] = xmin2[i*2+1];
-                        Array<OneD, NekDouble> l = m_cad->GetSurf(e->GetSurf())->P(uv);
-                        Nodes[honodes[i]]->Move(l,uv);
-                    }
+                    start = xmin;
+                    nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-5, step,
+                           10, 100, &icount, &numres, &ifault);
+                    repeats+=1;
                 }
 
+                for(int i = 0; i < honodes.size(); i++)
+                {
+                    Array<OneD, NekDouble> uv(2);
+                    uv[0] = xmin[i*2+0]; uv[1] = xmin[i*2+1];
+                    Array<OneD, NekDouble> l = m_cad->GetSurf(e->GetSurf())->P(uv);
+                    Nodes[honodes[i]]->Move(l,uv);
+                }
 
                 e->SetHONodes(honodes);
             }
@@ -283,8 +333,14 @@ int sn, en, m; //start node end node
 
     void SurfaceMeshing::Optimise()
     {
+        if(m_verbose)
+            cout << endl << "\tOptimising linear mesh" << endl;
+
         for(int q = 0; q <2; q++)
         {
+            if(m_verbose)
+                cout << "\t\t Edge swap run: " << q+1 << endl;
+
             map<int, MeshEdgeSharedPtr>::iterator it;
             for(it = Edges.begin(); it != Edges.end(); it++)
             {
@@ -442,6 +498,9 @@ int sn, en, m; //start node end node
 
         for(int q = 0; q <2; q++)
         {
+            if(m_verbose)
+                cout << "\t\t Elastic relaxation run: " << q+1 << endl;
+
             map<int, MeshEdgeSharedPtr>::iterator it;
             for(it = Edges.begin(); it != Edges.end(); it++)
             {
@@ -618,12 +677,12 @@ int sn, en, m; //start node end node
     void SurfaceMeshing::Validate()
     {
         if(m_verbose)
-            cout << endl << "Verifying surface mesh" << endl;
+            cout << endl << "\tVerifying surface mesh" << endl;
 
         if(m_cad->GetEPC() != Nodes.size()-Edges.size()+Tris.size())
         {
             if(m_verbose)
-                cout << "\tFailed" << endl;
+                cout << "\t\tFailed" << endl;
             ASSERTL0(false,"Euler-Poincaré characteristics do not match");
         }
 
@@ -650,12 +709,12 @@ int sn, en, m; //start node end node
             if(ch->second != 2)
             {
                 if(m_verbose)
-                    cout << "\tFailed" << endl;
+                    cout << "\t\tFailed" << endl;
                 ASSERTL0(false,"edge not listed twice");
             }
         }
         if(m_verbose)
-            cout << "\tPassed" << endl;
+            cout << "\t\tPassed" << endl;
     }
 
 

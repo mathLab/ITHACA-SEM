@@ -114,10 +114,14 @@ namespace MeshUtils {
 
         BoundingBox = m_cad->GetBoundingBox();
 
+        if(m_verbose)
+            cout << endl << "Octree system" << endl;
+
         CompileCuravturePointList();
 
         if(m_verbose)
-            cout << m_cpList.size() << endl;
+            cout << "\tCurvature samples: " << m_cpList.size() << endl
+            << "\tInitial subdivision" << endl;
 
         NekDouble maxdim = (BoundingBox[1]-BoundingBox[0])/2 >
                                (BoundingBox[3]-BoundingBox[2])/2 ?
@@ -140,7 +144,6 @@ namespace MeshUtils {
         OctantList.push_back(newOctant);
         //parent created.
 
-        cout << endl << "Parent created. Dividing based on geometry" << endl;
         m_totNotDividing=0;
 
         if(OctantList[0]->Divide())
@@ -148,7 +151,6 @@ namespace MeshUtils {
             OctantList[0]->LeafFalse();
             subdivide(0);
         }
-        cout << endl << "Completed" << endl;
 
         int ct=0;
         int maxLevel=0;
@@ -159,34 +161,38 @@ namespace MeshUtils {
             if(OctantList[i]->GetLevel()>maxLevel){maxLevel=OctantList[i]->GetLevel();}
         }
 
-        cout << endl << "No. octant leaves" << endl;
-        cout << ct << " " << maxLevel << endl;
+        if(m_verbose)
+            cout << "\tNo. octant leaves: " << ct << endl <<
+            "\tMax octree level: " << maxLevel << endl;
 
-        cout << endl << "Populating initial neighbours list" << endl;
+        if(m_verbose)
+            cout << "\tPopulating initial neighbours list..." << endl;
 
         for(int i = 0; i < OctantList.size(); i++)
         {
-            int pos = 70*i/OctantList.size();
-            cout << "[";
-            for (int j = 0; j < 70; ++j) {
-                if (j < pos) cout << "=";
-                else if (j == pos) cout << ">";
-                else cout << " ";
+            if(m_verbose)
+            {
+                int pos = 70*i/OctantList.size();
+                cout << "\t[";
+                for (int j = 0; j < 70; ++j) {
+                    if (j < pos) cout << "=";
+                    else if (j == pos) cout << ">";
+                    else cout << " ";
+                }
+                cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
+                cout.flush();
             }
-            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-            cout.flush();
             if(OctantList[i]->isLeaf())
             {
                 OctantList[i]->CreateNeighbourList(OctantList);
             }
         }
 
-        cout << endl << "Completed" << endl;
-
         //begin smoothing
 
         //smooth levels first
-        cout << endl << "Smoothing octant levels" << endl;
+        if(m_verbose)
+            cout << endl << "\tSmoothing octant levels" << endl;
 
         SmoothOctants();
 
@@ -195,22 +201,18 @@ namespace MeshUtils {
         {
             if(OctantList[i]->isLeaf()){ct++;}
         }
-        cout << "New Stats" << endl;
-        cout << "No. octant leaves" << endl;
-        cout << ct << endl;
+        cout << "\tNew Stats" << endl;
+        cout << "\tNo. octant leaves: " << ct << endl;
 
-        cout << endl << "Smoothing across the geometry surface" << endl;
+        cout << "\tSmoothing across the geometry surface" << endl;
 
         SmoothSurfaceOctants();
 
-
-        cout<< endl << "complete" << endl;
-
-        cout << endl << "Propagating spacing out to domain boundary" << endl;
+        cout << "\tPropagating spacing out to domain boundary" << endl;
 
         PropagateDomain();
 
-        cout << endl << "Recersively ensuring smoothness between all nodes" << endl;
+        cout << "\tRecersively ensuring smoothness between all nodes" << endl;
 
         SmoothAllOctants();
 
@@ -225,7 +227,7 @@ namespace MeshUtils {
 
         int elem=CountElemt();
 
-        cout << endl<< "Predicted mesh: " << elem << " elements" << endl;
+        cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
 
     }
 
@@ -622,7 +624,7 @@ namespace MeshUtils {
             }
 
             int pos = 70*imax/OctantList.size();
-            cout << "[";
+            cout << "\t[";
             for (int k = 0; k < 70; ++k) {
                 if (k < pos) cout << "=";
                 else if (k == pos) cout << ">";

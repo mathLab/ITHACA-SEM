@@ -43,7 +43,7 @@ namespace MeshUtils{
 void TetMesh::Mesh()
 {
     if(m_verbose)
-        cout << endl << "Tetrahdral mesh generation" << endl;
+        cout << endl << endl << "Tetrahdral mesh generation" << endl;
 
     TetGenInterfaceSharedPtr tetgen =
         MemoryManager<TetGenInterface>::AllocateSharedPtr();
@@ -63,15 +63,12 @@ void TetMesh::Mesh()
 
     tetgen->Assign(nodesintris, Tris, Nodes, m_stienerpoints);
 
-    if(m_verbose)
-        cout << "\tMesh iteration : 1" << endl;
-
     tetgen->Mesh();
 
     tetgen->Extract(numtet, tetconnect);
 
     if(m_verbose)
-        cout << "\tTets : " << numtet << endl << endl;
+        cout << "\tMesh iteration: 1 \tTets : " << numtet << endl;
 
     bool repeat = true;
     int meshcounter = 1;
@@ -86,15 +83,12 @@ void TetMesh::Mesh()
 
         tetgen->Assign(nodesintris, Tris, Nodes, m_stienerpoints);
 
-        if(m_verbose)
-            cout << "\tMesh iteration : " << meshcounter+1 << endl;
-
         tetgen->Mesh();
 
         tetgen->Extract(numtet, tetconnect);
 
         if(m_verbose)
-            cout << "\tTets : " << numtet << endl << endl;
+            cout << "\tMesh iteration : " << meshcounter+1 << "\tTets : " << numtet << endl;
 
         meshcounter++;
     }
@@ -113,7 +107,7 @@ void TetMesh::Mesh()
     }
 
     if(m_verbose)
-        cout << "\tMeshing iterations: " << meshcounter << endl <<
+        cout << endl << "\tMeshing iterations: " << meshcounter << endl <<
                 "\tTets :" << numtet << endl <<
                 "\tBoundary nodes: " << nodesintris.size() << endl <<
                 "\tInterior nodes: " << m_stienerpoints.size() << endl;

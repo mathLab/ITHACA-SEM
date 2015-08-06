@@ -57,18 +57,6 @@ namespace MeshUtils {
         TriangleInterfaceSharedPtr pplanemesh =
             MemoryManager<TriangleInterface>::AllocateSharedPtr();
 
-        if(m_verbose)
-        {
-            int numbp = 0;
-            for(int i = 0; i < orderedLoops.size(); i++)
-            {
-                numbp+=orderedLoops[i].size();
-            }
-            cout << "\tLoops: " << orderedLoops.size() << endl;
-            cout << "\tInput boundary points: " << numbp << endl;
-            cout << "\tDeluanay meshing..." << endl;
-        }
-
         pplanemesh->Assign(orderedLoops, m_centers, Nodes,
                            m_stienerpoints, m_id, asr/pasr);
 
@@ -92,11 +80,6 @@ namespace MeshUtils {
             pplanemesh->Extract(nump,numtri,Connec);
             meshcounter++;
         }
-
-        if(m_verbose)
-            cout << "\tMeshing iterations: " <<  meshcounter << endl <<
-                    "\tPoints: " << nump << endl <<
-                    "\tTriangles: " << numtri << endl;
 
         for(int i = 0; i < numtri; i++)
         {
@@ -154,6 +137,11 @@ namespace MeshUtils {
 
         //HOMesh();
 
+    }
+
+    void SurfaceMesh::Report()
+    {
+        cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tLoops: " << orderedLoops.size() << endl;
     }
 
     /*void SurfaceMesh::HOMesh()

@@ -261,6 +261,9 @@ namespace Utilities
             }
         }
 
+        if(m_mesh->m_verbose)
+            cout << endl;
+
     }
 
 

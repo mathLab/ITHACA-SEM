@@ -49,12 +49,12 @@
 
 namespace Nektar {
 namespace MeshUtils {
-            
+
     class CurveMesh
     {
     public:
         friend class MemoryManager<CurveMesh>;
-        
+
         CurveMesh(bool verbose,
                   int id,
                   const LibUtilities::CADCurveSharedPtr &cad,
@@ -63,23 +63,25 @@ namespace MeshUtils {
                   m_id(id)
         {
         };
-        
+
         void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                   std::map<int, MeshEdgeSharedPtr> &Edges);
-        
+
         int GetFirstPoint(){return m_meshpoints[0];}
         int GetLastPoint(){return m_meshpoints[Ne];}
         std::vector<int> GetMeshPoints()
                     {return m_meshpoints;}
         int GetNumPoints(){return Ne+1;}
-        
+
+        void Report();
+
     private:
-        
+
         void GetSampleFunction();
         void GetPhiFunction();
         NekDouble EvaluateDS(NekDouble s);
         NekDouble EvaluatePS(NekDouble s);
-        
+
         LibUtilities::CADCurveSharedPtr m_cadcurve;
         OctreeSharedPtr m_octree;
         NekDouble m_curvelength;
@@ -92,13 +94,13 @@ namespace MeshUtils {
         int Ne;
         std::vector<NekDouble> meshsvalue;
         std::vector<int> m_meshpoints;
-        
+
         bool m_verbose;
-        
+
         int m_id;
-        
+
     };
-    
+
     typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }

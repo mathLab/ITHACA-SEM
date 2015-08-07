@@ -708,6 +708,7 @@ namespace Nektar
             std::vector<std::string> pFieldNames,
             Array<OneD, Array<OneD, NekDouble> > &pFields,
             const std::string& pFunctionName,
+            const NekDouble& pTime,
             const int domain)
         {
             ASSERTL1(pFieldNames.size() == pFields.num_elements(),
@@ -718,7 +719,7 @@ namespace Nektar
 
             for(int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName,0.0,domain);
+                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName, pTime, domain);
             }
         }
 
@@ -731,6 +732,7 @@ namespace Nektar
             std::vector<std::string> pFieldNames,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const std::string& pFunctionName,
+            const NekDouble& pTime,
             const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
@@ -741,7 +743,7 @@ namespace Nektar
             for(int i = 0; i < pFieldNames.size(); i++)
             {
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(),
-                                 pFunctionName, 0.0, domain);
+                                 pFunctionName, pTime, domain);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(),
                                                 pFields[i]->UpdateCoeffs());
             }

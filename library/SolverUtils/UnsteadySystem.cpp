@@ -327,10 +327,13 @@ namespace Nektar
                 {
                     if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
                     {
-                        cout << "NaN found in variable \"" << m_session->GetVariable(i) << "\", terminating" << endl;
+                        cout << "NaN found in variable \""
+                             << m_session->GetVariable(i)
+                             << "\", terminating" << endl;
                         nanFound = true;
                     }
                 }
+
                 if (nanFound)
                 {
                     break;

@@ -36,6 +36,9 @@
 #include <MeshUtils/SurfaceMeshing.h>
 #include <asa047.hpp>
 
+#include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
@@ -188,11 +191,14 @@ int sn, en, m; //start node end node
         if(m_verbose)
             cout << "\t\tEdges..." << endl;
 
-        for(int i = 0; i < Edges.size(); i++)
+        map<int, MeshEdgeSharedPtr>::iterator eit;\
+        int counter = 0;
+
+        for(eit = Edges.begin(); eit != Edges.end(); eit++)
         {
             if(m_verbose)
             {
-                int pos = 70*i/Edges.size();
+                int pos = 70*counter/Edges.size();
                 cout << "\t\t[";
                 for (int j = 0; j < 70; ++j) {
                     if (j < pos) cout << "=";
@@ -202,7 +208,9 @@ int sn, en, m; //start node end node
                 cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
                 cout.flush();
             }
-            MeshEdgeSharedPtr e = Edges[i];
+            counter++;
+
+            MeshEdgeSharedPtr e = eit->second;
             Array<OneD, int> n = e->GetN();
 
             if(e->GetCurve() != -1)
@@ -329,6 +337,84 @@ int sn, en, m; //start node end node
                 e->SetHONodes(honodes);
             }
         }
+
+        if(m_verbose)
+            cout << "\t\tFaces..." << endl;
+
+        map<int, MeshTriSharedPtr>::iterator trit;
+
+        LibUtilities::PointsKey pkey(m_order+1,
+                                     LibUtilities::eNodalTriFekete);
+        Array<OneD, NekDouble> u,v;
+
+        int TotNumPoints = LibUtilities::PointsManager()[pkey]->
+                                                        GetTotNumPoints();
+        LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
+
+        DNekMat c (3,3,1.0);
+        c(0,0) = u[0];
+        c(1,0) = v[0];
+        c(2,0) = 1.0;
+        c(0,1) = u[1];
+        c(1,1) = v[1];
+        c(2,1) = 1.0;
+        c(0,2) = u[2];
+        c(1,2) = v[2];
+        c(2,2) = 1.0;
+        c.Invert();
+
+        DNekMat p (3,TotNumPoints,1.0);
+        for(int j = 0; j < TotNumPoints; j++)
+        {
+            p(0,j) = u[j];
+            p(1,j) = v[j];
+        }
+
+        for(trit = Tris.begin(); trit != Tris.end(); trit++)
+        {
+            MeshTriSharedPtr t = trit->second;
+
+            Array<OneD, int> n = t->GetN();
+
+            Array<OneD, NekDouble> uv1,uv2,uv3;
+            uv1 = Nodes[n[0]]->GetS(t->Getcid());
+            uv2 = Nodes[n[1]]->GetS(t->Getcid());
+            uv3 = Nodes[n[2]]->GetS(t->Getcid());
+
+            DNekMat a (3,3,1.0);
+            a(0,0) = uv1[0];
+            a(1,0) = uv1[1];
+            a(2,0) = 1.0;
+            a(0,1) = uv2[0];
+            a(1,1) = uv2[1];
+            a(2,1) = 1.0;
+            a(0,2) = uv3[0];
+            a(1,2) = uv3[1];
+            a(2,2) = 1.0;
+
+            DNekMat M = a*c;
+            DNekMat result = M*p;
+
+            vector<int> honodes(m_order-1);
+            for(int i = 1; i < m_order+1 -1; i++)
+            {
+                Array<OneD, NekDouble> loc;
+                Array<OneD, NekDouble> uv(2);
+                uv[0] = uvb[0]+i*(uve[0]-uvb[0])/m_order;
+                uv[1] = uvb[1]+i*(uve[1]-uvb[1])/m_order;
+                loc = s->P(uv);
+                MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
+                        AllocateSharedPtr(Nodes.size(),loc[0],
+                                            loc[1],loc[2]);
+                nn->SetSurf(t->Getcid(),uv);
+                honodes[i-1] = Nodes.size();
+                Nodes[Nodes.size()] = nn;
+
+            }
+
+
+        }
+
     }
 
     void SurfaceMeshing::Optimise()

@@ -51,11 +51,15 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 
+
 using namespace std;
 namespace Nektar
 {
 namespace LibUtilities
 {
+
+typedef std::map<std::string, std::string>  PtsMetaDataMap;
+static  PtsMetaDataMap  NullPtsMetaDataMap;
 
 LIB_UTILITIES_EXPORT void Import(const string &inFile,
                                  PtsFieldSharedPtr &ptsField);
@@ -80,11 +84,20 @@ class PtsIO
         LIB_UTILITIES_EXPORT void Write(const string &outFile,
                                         const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField);
 
+        LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(
+            const std::string &outfile,
+            const std::vector<std::string> fileNames,
+            const PtsMetaDataMap &fieldinfomap  = NullPtsMetaDataMap);
+
     private:
 
         LibUtilities::CommSharedPtr    m_comm;
 
         LIB_UTILITIES_EXPORT std::string SetUpOutput(const string outname);
+
+        LIB_UTILITIES_EXPORT void AddInfoTag(
+            TiXmlElement *root,
+            const PtsMetaDataMap &fieldmetadatamap);
 
 };
 

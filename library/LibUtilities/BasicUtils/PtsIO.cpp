@@ -37,9 +37,13 @@
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicConst/GitRevision.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/asio/ip/host_name.hpp>
 
 #include <sstream>
 #include <iostream>
@@ -49,7 +53,14 @@
 #include <mpi.h>
 #endif
 
+#ifndef NEKTAR_VERSION
+#define NEKTAR_VERSION "Unknown"
+#endif
+
+namespace ptime = boost::posix_time;
+namespace ip = boost::asio::ip;
 namespace berrc = boost::system::errc;
+
 
 namespace Nektar
 {
@@ -266,6 +277,7 @@ std::string PtsIO::SetUpOutput(const std::string outname)
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
     int nprocs = m_comm->GetSize();
+    int rank   = m_comm->GetRank();
 
     // Directory name if in parallel, regular filename if in serial
     fs::path specPath(outname);
@@ -301,6 +313,27 @@ std::string PtsIO::SetUpOutput(const std::string outname)
         ASSERTL0(false, "Filesystem error: " + string(e.what()));
     }
 
+    // Collate per-process element lists on root process to generate
+    // the info file.
+    if (rank == 0)
+    {
+        // Set up output names
+        std::vector<std::string> filenames;
+        for (int i = 0; i < nprocs; ++i)
+        {
+            boost::format pad("P%1$07d.pts");
+            pad % i;
+            filenames.push_back(pad.str());
+        }
+
+        // Write the Info.xml file
+        string infofile = LibUtilities::PortablePath(
+                              specPath / fs::path("Info.xml"));
+
+        cout << "Writing: " << specPath << endl;
+        WriteMultiFldFileIDs(infofile, filenames);
+    }
+
     // Pad rank to 8char filenames, e.g. P0000000.fld
     boost::format pad("P%1$07d.fld");
     pad % m_comm->GetRank();
@@ -313,6 +346,89 @@ std::string PtsIO::SetUpOutput(const std::string outname)
     return LibUtilities::PortablePath(fulloutname);
 }
 
+// TODO: copied from FieldIO, unify
+void PtsIO::WriteMultiFldFileIDs(const std::string &outFile,
+                                 const std::vector<std::string> fileNames,
+                                 const PtsMetaDataMap &fieldmetadatamap)
+{
+    TiXmlDocument doc;
+    TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
+    doc.LinkEndChild(decl);
+
+    TiXmlElement *root = new TiXmlElement("NEKTAR");
+    doc.LinkEndChild(root);
+
+    AddInfoTag(root, fieldmetadatamap);
+
+    for (int t = 0; t < fileNames.size(); ++t)
+    {
+        TiXmlElement *elemIDs = new TiXmlElement("Partition");
+        root->LinkEndChild(elemIDs);
+        elemIDs->SetAttribute("FileName", fileNames[t]);
+    }
+
+    doc.SaveFile(outFile);
+}
+
+
+// TODO: copied from FieldIO, unify
+/**
+ * \brief add information about provenance and fieldmetadata
+ */
+void PtsIO::AddInfoTag(TiXmlElement *root,
+                         const PtsMetaDataMap &fieldmetadatamap)
+{
+    PtsMetaDataMap ProvenanceMap;
+
+    // Nektar++ release version from VERSION file
+    ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+
+    // Date/time stamp
+    ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
+    std::stringstream wss;
+    wss.imbue(locale(wss.getloc(), facet));
+    wss << ptime::second_clock::local_time();
+    ProvenanceMap["Timestamp"] = wss.str();
+
+    // Hostname
+    boost::system::error_code ec;
+    ProvenanceMap["Hostname"] = ip::host_name(ec);
+
+    // Git information
+    // If built from a distributed package, do not include this
+    if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+    {
+        ProvenanceMap["GitSHA1"]   = NekConstants::kGitSha1;
+        ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
+    }
+
+    TiXmlElement *infoTag = new TiXmlElement("Metadata");
+    root->LinkEndChild(infoTag);
+
+    TiXmlElement *v;
+    PtsMetaDataMap::const_iterator infoit;
+
+    TiXmlElement *provTag = new TiXmlElement("Provenance");
+    infoTag->LinkEndChild(provTag);
+    for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end(); ++infoit)
+    {
+        v = new TiXmlElement((infoit->first).c_str());
+        v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+        provTag->LinkEndChild(v);
+    }
+
+    //---------------------------------------------
+    // write field info section
+    if (fieldmetadatamap != NullPtsMetaDataMap)
+    {
+        for (infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
+        {
+            v = new TiXmlElement((infoit->first).c_str());
+            v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+            infoTag->LinkEndChild(v);
+        }
+    }
+}
 
 }
 }

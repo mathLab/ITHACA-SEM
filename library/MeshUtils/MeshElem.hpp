@@ -432,6 +432,16 @@ namespace MeshUtils {
             edges[2] = k;
         }
 
+        void SetHONodes(std::vector<int> n)
+        {
+            honodes = n;
+        }
+
+        std::vector<int> GetHONodes()
+        {
+            return honodes;
+        }
+
         int Getcid(){return cid;}
         Array<OneD, int> GetN(){return nodes;}
         Array<OneD, int> GetE(){return edges;}
@@ -442,6 +452,7 @@ namespace MeshUtils {
         int cid;
         Array<OneD, int> nodes;
         Array<OneD, int> edges;
+        std::vector<int> honodes;
         Array<OneD,int> neighbours;
     };
 

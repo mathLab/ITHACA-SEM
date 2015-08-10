@@ -339,16 +339,18 @@ int sn, en, m; //start node end node
         }
 
         if(m_verbose)
-            cout << "\t\tFaces..." << endl;
+            cout << endl << "\t\tFaces..." << endl;
 
         map<int, MeshTriSharedPtr>::iterator trit;
 
         LibUtilities::PointsKey pkey(m_order+1,
-                                     LibUtilities::eNodalTriFekete);
+                                     LibUtilities::eNodalTriEvenlySpaced);
         Array<OneD, NekDouble> u,v;
 
         int TotNumPoints = LibUtilities::PointsManager()[pkey]->
                                                         GetTotNumPoints();
+        int numInteriorPoints = (m_order-2)*(m_order-1)/2;
+
         LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
 
         DNekMat c (3,3,1.0);
@@ -363,11 +365,12 @@ int sn, en, m; //start node end node
         c(2,2) = 1.0;
         c.Invert();
 
-        DNekMat p (3,TotNumPoints,1.0);
-        for(int j = 0; j < TotNumPoints; j++)
+        DNekMat p (3,numInteriorPoints,1.0);
+        for(int j = 0; j < numInteriorPoints; j++)
         {
-            p(0,j) = u[j];
-            p(1,j) = v[j];
+            p(0,j) = u[TotNumPoints-numInteriorPoints+j];
+            p(1,j) = v[TotNumPoints-numInteriorPoints+j];
+            p(2,j) = 1.0;
         }
 
         for(trit = Tris.begin(); trit != Tris.end(); trit++)
@@ -395,22 +398,24 @@ int sn, en, m; //start node end node
             DNekMat M = a*c;
             DNekMat result = M*p;
 
-            vector<int> honodes(m_order-1);
-            for(int i = 1; i < m_order+1 -1; i++)
+            vector<int> honodes(numInteriorPoints);
+            for(int i = 0; i < numInteriorPoints; i++)
             {
                 Array<OneD, NekDouble> loc;
                 Array<OneD, NekDouble> uv(2);
-                uv[0] = uvb[0]+i*(uve[0]-uvb[0])/m_order;
-                uv[1] = uvb[1]+i*(uve[1]-uvb[1])/m_order;
-                loc = s->P(uv);
+                uv[0] = result(0,i);
+                uv[1] = result(1,i);
+                loc = m_cad->GetSurf(t->Getcid())->P(uv);
                 MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
                         AllocateSharedPtr(Nodes.size(),loc[0],
                                             loc[1],loc[2]);
                 nn->SetSurf(t->Getcid(),uv);
-                honodes[i-1] = Nodes.size();
+                honodes[i] = Nodes.size();
                 Nodes[Nodes.size()] = nn;
 
             }
+
+            t->SetHONodes(honodes);
 
 
         }

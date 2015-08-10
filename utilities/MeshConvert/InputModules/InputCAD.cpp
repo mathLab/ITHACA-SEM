@@ -133,7 +133,7 @@ namespace Utilities
 
         m_tet->Mesh();
 
-        m_mesh->m_expDim = 3;
+        m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 3;
         m_mesh->m_order = m_order+1;
 
@@ -163,7 +163,7 @@ namespace Utilities
             allnodes[nit->second->GetId()] = nn;
         }
 
-        map<int, MeshUtils::MeshTetSharedPtr>::iterator tetit;
+        /*map<int, MeshUtils::MeshTetSharedPtr>::iterator tetit;
 
         for(tetit = Tets.begin(); tetit != Tets.end(); tetit++)
         {
@@ -185,7 +185,7 @@ namespace Utilities
                         CreateInstance(LibUtilities::eTetrahedron,
                                        conf,localnode,tags);
             m_mesh->m_element[m_mesh->m_expDim].push_back(E);
-        }
+        }*/
 
         map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
 
@@ -193,8 +193,6 @@ namespace Utilities
         {
 
             Array<OneD, int> n = trit->second->GetN();
-
-
 
             vector<NodeSharedPtr> localnode;
             for(int j = 0; j < 3; j++)
@@ -214,13 +212,19 @@ namespace Utilities
                 }
             }
 
-            ElmtConfig conf(LibUtilities::eTriangle,m_order,false,false,false);
+            vector<int> hon = trit->second->GetHONodes();
+            for(int k = 0; k < hon.size(); k++)
+            {
+                localnode.push_back(allnodes[hon[k]]);
+            }
+
+            ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
             vector<int> tags;
             tags.push_back(trit->second->Getcid());
             ElementSharedPtr E = GetElementFactory().
                         CreateInstance(LibUtilities::eTriangle,
                                        conf,localnode,tags);
-            m_mesh->m_element[m_mesh->m_expDim-1].push_back(E);
+            m_mesh->m_element[m_mesh->m_expDim].push_back(E); //needs to be set to -1
 
         }
 
@@ -230,7 +234,7 @@ namespace Utilities
         ProcessElements  ();
         ProcessComposites();
 
-        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim-1].size(); i++)
+        /*for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim-1].size(); i++)
         {
             FaceSharedPtr f =
                     m_mesh->m_element[m_mesh->m_expDim-1][i]->GetFaceLink();
@@ -259,7 +263,7 @@ namespace Utilities
 
                 egs[j]->m_edgeNodes = localhonode;
             }
-        }
+        }*/
 
         if(m_mesh->m_verbose)
             cout << endl;

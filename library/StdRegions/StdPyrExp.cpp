@@ -1071,8 +1071,8 @@ namespace Nektar
             const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
-            int                        nummodesA, 
-            int                        nummodesB)
+            int                        P, 
+            int                        Q)
         {
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
@@ -1083,40 +1083,46 @@ namespace Nektar
                      "(x and y direction) and Modified_C BasisType (z "
                      "direction)");
 
-            int i, j, p, q, r, nFaceCoeffs;
-
+            int i, j, k, p, q, r, nFaceCoeffs;
+            int nummodesA, nummodesB;
+            
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
             int order2 = m_base[2]->GetNumModes();
 
-            if (nummodesA == -1)
+            switch (fid)
             {
-                switch (fid)
-                {
-                    case 0:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[1]->GetNumModes();
-                        break;
-                    case 1:
-                    case 3:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                    case 2:
-                    case 4:
-                        nummodesA = m_base[1]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                }
+            case 0:
+                nummodesA = order0;
+                nummodesB = order1;
+                break;
+            case 1:
+            case 3:
+                nummodesA = order0;
+                nummodesB = order2;
+                break;
+            case 2:
+            case 4:
+                nummodesA = order1;
+                nummodesB = order2;
+                break;
+            }
+            
+            bool CheckForZeroedModes = false;
+
+            if (P == -1)
+            {
                 nFaceCoeffs = GetFaceNcoeffs(fid);
             }
             else if (fid > 0)
             {
-                nFaceCoeffs = nummodesB + (nummodesA-1)*(1+2*(nummodesB-1)-(nummodesA-1))/2;
+                nFaceCoeffs = P*(2*Q-P+1)/2;
+                CheckForZeroedModes = true;
             }
             else
             {
-                nFaceCoeffs = nummodesA*nummodesB;
+                nFaceCoeffs = P*Q;
+                CheckForZeroedModes = true;
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
@@ -1206,6 +1212,8 @@ namespace Nektar
                             maparray[arrayindx[q*nummodesA+p]] = cnt + (q-2)*nummodesA+(p-2);
                         }
                     }
+
+
                     break;
 
                 case 1: // Left triangle
@@ -1383,7 +1391,7 @@ namespace Nektar
                     }
                     break;
 
-                case 4: // Rear quad
+                case 4: // Rear tri
                     // Vertices
                     maparray[0]         = 0;
                     maparray[1]         = 4;
@@ -1448,6 +1456,32 @@ namespace Nektar
 
             if (fid > 0)
             {
+
+               if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    int idx = 0; 
+                    for (j = 0; j < nummodesA; ++j)
+                    {
+                        idx += nummodesB-j;
+                        for (k = nummodesB-j; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                    
+                    for (j = nummodesA; j < P; ++j)
+                    {
+                        for (k = 0; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                }
+                
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 7)
@@ -1461,6 +1495,29 @@ namespace Nektar
             }
             else
             {
+                if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    for (j = 0; j < nummodesA; ++j)
+                    {
+                        for (k = nummodesB; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }
+
+                    for (j = nummodesA; j < P; ++j)
+                    {
+                        for (k = 0; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }                    
+                }
+
                 // The code below is exactly the same as that taken from
                 // StdHexExp and reverses the 'b' and 'a' directions as
                 // appropriate (1st and 2nd if statements respectively) in

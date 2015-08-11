@@ -68,7 +68,7 @@ namespace Nektar
             MetricRegexFieldValue val;
             val.m_value = value->GetText();
             val.m_useIntTolerance = true;
-            val.m_intTolerance = atof(value->Attribute("tolerance"));
+            val.m_intTolerance = atoi(value->Attribute("tolerance"));
 
             if (!m_generate)
             {

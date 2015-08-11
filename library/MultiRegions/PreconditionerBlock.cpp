@@ -146,9 +146,9 @@ namespace Nektar
             // Array containing maximum information needed for the universal
             // numbering later. For i = 0,1,2 for each geometry dimension:
             //
-            // maxVertIds[2*i] = maximum geometry ID at dimension i
-            // maxVertIds[2*i] = maximum number of degrees of freedom for all
-            //                   elements of dimension i.
+            // maxVertIds[2*i]   = maximum geometry ID at dimension i
+            // maxVertIds[2*i+1] = maximum number of degrees of freedom for all
+            //                     elements of dimension i.
             Array<OneD, int> maxVertIds(6, -1);
 
             // Iterator for idMats members.

@@ -43,10 +43,6 @@ using namespace std;
 namespace Nektar{
 namespace MeshUtils {
 
-map<int, MeshNodeSharedPtr> GlobalNodes;
-LibUtilities::CADSurfSharedPtr GlobalCad;
-int sn, en, m; //start node end node
-
     void SurfaceMeshing::Mesh()
     {
         if(m_verbose)
@@ -140,47 +136,42 @@ int sn, en, m; //start node end node
         nodeinlinearmesh = Nodes.size();
     }
 
-    double EnergyEval(double x[])
+    NekDouble SurfaceMeshing::EdgeEnergyEval(int a, int b, Array<OneD, NekDouble> uv, int surf)
     {
-        NekDouble dz = 2.0/(m/2);
+        NekDouble dz = 2.0/m_order;
 
-        Array<OneD, NekDouble> loca,locb;
-        Array<OneD, NekDouble> uv(2);
+        Array<OneD, NekDouble> loca = Nodes[a]->GetLoc();
+        Array<OneD, NekDouble> locb = Nodes[b]->GetLoc();
 
-        for(int i = 0; i < m; i++)
-        {
-            //cout << x[i] << " ";
-        }
+        Array<OneD, NekDouble> locm = m_cad->GetSurf(surf)->P(uv);
 
+        NekDouble F = 0;
 
-        double p = 0.0;
+        F+= (locb[0]-locm[0])*(locb[0]-locm[0]) +
+            (locb[1]-locm[1])*(locb[1]-locm[1]) +
+            (locb[2]-locm[2])*(locb[2]-locm[2]);
 
-        loca = GlobalNodes[sn]->GetLoc();
-        uv[0] = x[0]; uv[1] = x[1];
-        locb = GlobalCad->P(uv);
-        p += 1.0/dz*((loca[0]-locb[0])*(loca[0]-locb[0]) +
-                            (loca[1]-locb[1])*(loca[1]-locb[1]) +
-                            (loca[2]-locb[2])*(loca[2]-locb[2]) );
-        int i;
-        for(i = 0; i < m/2 - 1; i++)
-        {
-            uv[0] = x[i*2+0]; uv[1] = x[i*2+1];
-            loca = GlobalCad->P(uv);
-            uv[0] = x[(i+1)*2+0]; uv[1] = x[(i+1)*2+1];
-            locb = GlobalCad->P(uv);
-            p += 1.0/dz*((loca[0]-locb[0])*(loca[0]-locb[0]) +
-                                (loca[1]-locb[1])*(loca[1]-locb[1]) +
-                                (loca[2]-locb[2])*(loca[2]-locb[2]) );
-        }
-        uv[0] = x[i*2+0]; uv[1] = x[i*2+1];
-        loca = GlobalCad->P(uv);
-        locb = GlobalNodes[en]->GetLoc();
-        p += 1.0/dz*((loca[0]-locb[0])*(loca[0]-locb[0]) +
-                            (loca[1]-locb[1])*(loca[1]-locb[1]) +
-                            (loca[2]-locb[2])*(loca[2]-locb[2]) );
+        F+= (locm[0]-loca[0])*(locm[0]-loca[0]) +
+            (locm[1]-loca[1])*(locm[1]-loca[1]) +
+            (locm[2]-loca[2])*(locm[2]-loca[2]);
 
-        //cout << "\t\t" << p << endl;
-        return p;
+        F*=1.0/dz;
+
+        return F;
+    }
+
+    Array<OneD, NekDouble> SurfaceMeshing::EdgeEnergyDer(int a, int b, Array<OneD, NekDouble> uv, int surf)
+    {
+        NekDouble dz = 2.0/m_order;
+
+        Array<OneD, NekDouble> DF(2);
+
+        Array<OneD, NekDouble> uva = Nodes[a]->GetS(surf);
+        Array<OneD, NekDouble> uvb = Nodes[b]->GetS(surf);
+
+        Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->D1(uva);
+        Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->D1(uvb);
+        Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D1(uv);
     }
 
     void SurfaceMeshing::HOSurf()
@@ -292,47 +283,88 @@ int sn, en, m; //start node end node
                     continue; //optimimum points on plane are linear
                 }
 
-                GlobalNodes = Nodes; sn = n[0]; en = n[1]; GlobalCad = m_cad->GetSurf(e->GetSurf());
-                m = honodes.size()*2;
+                NekDouble tol = 1E-6;
 
+                bool RepeatOverPoints = true;
 
-                double *start;
-                start = new double[honodes.size()*2];
-                double *xmin;
-                xmin = new double[honodes.size()*2];
-                double *step;
-                step = new double[honodes.size()*2];
-
-                for(int i = 0; i < honodes.size(); i++)
+                while(RepeatOverPoints)
                 {
-                    Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
-                    start[i*2+0] = uv[0];
-                    start[i*2+1] = uv[1];
-                    step[i*2+0] = (max(uve[0],uvb[0]) - min(uve[0],uvb[0]));
-                    step[i*2+1] = (max(uve[1],uvb[1]) - min(uve[1],uvb[1]));
-                }
-                double ynew = EnergyEval(start);
-                //cout << ynew << endl;
-                int icount, ifault, numres;
-                nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-5, step,
-                       10, 500, &icount, &numres, &ifault);
+                    int convergepoints = 0;
+                    for(int i = 0; i < honodes.size(); i++)
+                    {
+                        int firstnode, lastnode;
+                        if(i==0)
+                        {
+                            firstnode = n[0];
+                        }
+                        else
+                        {
+                            firstnode = honodes[i-1];
+                        }
+                        if(i==honodes.size()-1)
+                        {
+                            lastnode = n[1];
+                        }
+                        else
+                        {
+                            firstnode = honodes[i+1];
+                        }
 
-                int repeats = 0;
-                while(ifault == 2)
-                {
-                    start = xmin;
-                    nelmin(EnergyEval, honodes.size()*2, start, xmin, &ynew, 1E-5, step,
-                           10, 100, &icount, &numres, &ifault);
-                    repeats+=1;
+                        bool iterate = true;
+
+                        Array<OneD, NekDouble> x = Nodes[honodes[i]]->GetS(e->GetSurf());
+                        Array<OneD, NekDouble> g = EdgeEnergyDer(firstnode,lastnode,x,e->GetSurf());
+                        NekDouble FX = EdgeEnergyEval(firstnode,lastnode,x,e->GetSurf());
+                        NekDouble gmag = sqrt(g[0]*g[0] + g[1]*g[1]);
+                        NekDouble lam = 1.0;
+                        Array<OneD, NekDouble> G(2);
+                        int convcounter = 0;
+                        int funeval = 0;
+
+                        while(iterate)
+                        {
+                            G[0] = x[0] - lam*g[0]/gmag;
+                            G[1] = x[1] - lam*g[1]/gmag;
+
+                            NekDouble FG = EdgeEnergyEval(firstnode,lastnode,G,e->GetSurf());
+
+                            if(FG < FX)
+                            {
+                                x = G;
+                                g = EdgeEnergyDer(firstnode,lastnode,x,e->GetSurf());
+                                FX = FG;
+                                lam = lam * 1.2;
+                            }
+                            else
+                            {
+                                lam = lam * 0.5;
+                            }
+                            funeval++;
+                            if(abs(FG - FX) < tol)
+                            {
+                                convcounter++;
+                            }
+                            if(convcounter > 10)
+                            {
+                                iterate = false;
+                            }
+                        }
+
+                        Array<OneD, NekDouble> loc = s->P(x);
+                        Nodes[honodes[i]]->Move(loc,x);
+
+                        if(funeval == convcounter)
+                        {
+                            convergepoints++;
+                        }
+                    }
+
+                    if(convergepoints == honodes.size())
+                    {
+                        RepeatOverPoints = false;
+                    }
                 }
 
-                for(int i = 0; i < honodes.size(); i++)
-                {
-                    Array<OneD, NekDouble> uv(2);
-                    uv[0] = xmin[i*2+0]; uv[1] = xmin[i*2+1];
-                    Array<OneD, NekDouble> l = m_cad->GetSurf(e->GetSurf())->P(uv);
-                    Nodes[honodes[i]]->Move(l,uv);
-                }
 
                 e->SetHONodes(honodes);
             }

@@ -82,6 +82,9 @@ namespace MeshUtils {
 
     private:
 
+        NekDouble EdgeEnergyEval(int a, int b, Array<OneD, NekDouble> uv, int surf);
+        Array<OneD, NekDouble> EdgeEnergyDer(int a, int b, Array<OneD, NekDouble> uv, int surf);
+
         void Validate();
         void Optimise();
         //void EnergyEval(double *p, double *x, int m, int n, void *data);

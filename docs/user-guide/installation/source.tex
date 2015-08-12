@@ -22,7 +22,7 @@ There are two ways to obtain the source code for \nekpp:
 	\item Using anonymous access. This does not require
 	credentials but any changes to the code cannot be pushed to the
 	public repository. Use this initially if you would like to try using 
-	Nektar++.
+	Nektar++ or make local changes to the code.
     \begin{lstlisting}[style=BashInputStyle]
         git clone http://gitlab.nektar.info/clone/nektar/nektar.git nektar++
     \end{lstlisting}
@@ -521,6 +521,10 @@ A number of ThirdParty libraries are required by \nekpp. There are
 also optional libraries which provide additional functionality. These
 can be selected using the following options:
 \begin{itemize}
+    \item \inlsh{NEKTAR\_USE\_ACML}
+
+    Use the optimised BLAS library for AMD processors.
+
     \item \inlsh{NEKTAR\_USE\_ACCELERATE\_FRAMEWORK}
       
     Use the Mac Osx accelerate framework for BLAS and LAPACK
@@ -576,6 +580,21 @@ can be selected using the following options:
     implementation and generally offers better performance than a non-optimised
     system BLAS. However, the library must be installed on the system.
     
+    \item \inlsh{NEKTAR\_USE\_PETSC}
+
+    Build \nekpp with support for the PETSc package for solving linear systems.
+
+    \item \inlsh{NEKTAR\_USE\_SCOTCH}
+
+    Build \nekpp with support for the SCOTCH graph partitioning library. This
+    provides an alternative mesh partitioning algorithm to METIS. However, METIS
+    is still required as it is used by the multi-level static condensation
+    algorithm.
+
+    \item \inlsh{NEKTAR\_USE\_SMV}
+
+    Build \nekpp with support for optimised sparse matrix-vector operations.
+
     \item \inlsh{NEKTAR\_USE\_VTK}
     
     Build \nekpp with support for VTK libraries. This is only needed for

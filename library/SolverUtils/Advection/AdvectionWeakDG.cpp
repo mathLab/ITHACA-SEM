@@ -81,7 +81,6 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
             const NekDouble                                   &time)
         {
-            int nDim            = fields[0]->GetCoordim(0);
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();

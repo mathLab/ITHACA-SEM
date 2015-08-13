@@ -1,26 +1,62 @@
 \chapter{XML Session File}
 \label{s:xml}
 
-The Nektar++ native file format is compliant with XML version 1.0. The root element is NEKTAR and has the overall structure as follows
+The Nektar++ native file format is compliant with XML version 1.0. The root
+element is NEKTAR which contains a number of other elements which describe
+configuration for different aspects of the simulation. The required elements are
+shown below:
 \begin{lstlisting}[style=XMLStyle]
 <NEKTAR>
   <GEOMETRY>
-  ...
+    ...
   </GEOMETRY>
   <EXPANSIONS>
-  ...
+    ...
   </EXPANSIONS>
   <CONDITIONS>
-  ...
+    ...
   </CONDITIONS>
-  <FILTERS>
   ...
-  </FILTERS>
-  <GLOBALOPTIMIZATIONPARAMETERS>
-  ...
-  </GLOBALOPTIMIZATIONPARAMETERS>
 </NEKTAR>
 \end{lstlisting}
+The different sub-elements can be split across multiple files, however each
+file must have a top-level NEKTAR tag. For example, one might store the
+geometry information separate from the remaining configuration in two separate
+files as illustrated below:
+
+\inlsh{geometry.xml}
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <GEOMETRY>
+    ...
+  </GEOMETRY>
+</NEKTAR>
+\end{lstlisting}
+
+\inlsh{conditions.xml}
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <CONDITIONS>
+    ...
+  </CONDITIONS>
+  <EXPANSIONS>
+    ...
+  </EXPANSIONS>
+  ...
+</NEKTAR>
+\end{lstlisting}
+
+\begin{notebox}
+    When specifying multiple files, repeated XML sub-elements are not merged.
+    The sub-elements from files appearing later in the list will override those
+    elements from earlier files.
+    \medskip
+
+    For example, the \inlsh{MeshConvert} utility will produce a default
+    \inltt{EXPANSIONS} element and blank \inltt{CONDITIONS} element. Specifying
+    a custom-written XML file containing these sections \emph{after} the
+    file produced by \inlsh{MeshConvert} will override these defaults.
+\end{notebox}
 
 \input{xml/xml-geometry.tex}
 

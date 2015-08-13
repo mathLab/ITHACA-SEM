@@ -353,7 +353,7 @@ Finally we can specify the boundary conditions on the regions specified under \i
 In the following some examples for a 2D problem:
 \begin{itemize}
 \item Slip wall boundary conditions:
-\begin{lstlisting}[style=XmlStyle]                
+\begin{lstlisting}[style=XmlStyle]
 <BOUNDARYCONDITIONS>
   <REGION REF="0">
     <D VAR="rho"  USERDEFINEDTYPE="Wall" VALUE="0" />
@@ -365,13 +365,25 @@ In the following some examples for a 2D problem:
 \end{lstlisting}
 
 \item No-slip wall boundary conditions:
-\begin{lstlisting}[style=XmlStyle]                
+\begin{lstlisting}[style=XmlStyle]
 <BOUNDARYCONDITIONS>
   <REGION REF="0">
     <D VAR="rho"  USERDEFINEDTYPE="WallViscous" VALUE="0" />
     <D VAR="rhou" USERDEFINEDTYPE="WallViscous" VALUE="0" />
     <D VAR="rhov" USERDEFINEDTYPE="WallViscous" VALUE="0" />
     <D VAR="E"    USERDEFINEDTYPE="WallViscous" VALUE="0" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+\item Adiabatic wall boundary conditions:
+\begin{lstlisting}[style=XmlStyle]
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <D VAR="rho"  USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+    <D VAR="rhou" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+    <D VAR="rhov" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+    <D VAR="E"    USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
   </REGION>
 </BOUNDARYCONDITIONS>
 \end{lstlisting}
@@ -442,8 +454,8 @@ For the non-smooth artificial viscosity model the added artificial viscosity is 
 \end{equation}
 \begin{figure}[!htbp]
 \begin{center}
-\includegraphics[width = 0.47 \textwidth]{Figures/Mach_P4.pdf}
-\includegraphics[width = 0.47 \textwidth]{Figures/ArtVisc_P4.pdf}
+\includegraphics[width = 0.47 \textwidth]{img/Mach_P4.pdf}
+\includegraphics[width = 0.47 \textwidth]{img/ArtVisc_P4.pdf}
 \caption{(a) Steady state solution for $M=0.8$ flow at $\alpha = 1.25^\circ$ past a NACA 0012 profile, (b) Artificial viscosity ($\epsilon$) distribution}
 \label{fig:}
 \end{center}

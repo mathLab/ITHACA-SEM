@@ -282,6 +282,8 @@ namespace MeshUtils {
                     e->SetHONodes(honodes);
                     continue; //optimimum points on plane are linear
                 }
+                e->SetHONodes(honodes);
+                continue;
 
                 NekDouble tol = 1E-6;
 
@@ -407,14 +409,13 @@ namespace MeshUtils {
 
         for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {
-            MeshTriSharedPtr t = trit->second;
 
-            Array<OneD, int> n = t->GetN();
+            Array<OneD, int> n = trit->second->GetN();
 
             Array<OneD, NekDouble> uv1,uv2,uv3;
-            uv1 = Nodes[n[0]]->GetS(t->Getcid());
-            uv2 = Nodes[n[1]]->GetS(t->Getcid());
-            uv3 = Nodes[n[2]]->GetS(t->Getcid());
+            uv1 = Nodes[n[0]]->GetS(trit->second->Getcid());
+            uv2 = Nodes[n[1]]->GetS(trit->second->Getcid());
+            uv3 = Nodes[n[2]]->GetS(trit->second->Getcid());
 
             DNekMat a (3,3,1.0);
             a(0,0) = uv1[0];
@@ -437,18 +438,17 @@ namespace MeshUtils {
                 Array<OneD, NekDouble> uv(2);
                 uv[0] = result(0,i);
                 uv[1] = result(1,i);
-                loc = m_cad->GetSurf(t->Getcid())->P(uv);
+                loc = m_cad->GetSurf(trit->second->Getcid())->P(uv);
                 MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
                         AllocateSharedPtr(Nodes.size(),loc[0],
                                             loc[1],loc[2]);
-                nn->SetSurf(t->Getcid(),uv);
+                nn->SetSurf(trit->second->Getcid(),uv);
                 honodes[i] = Nodes.size();
                 Nodes[Nodes.size()] = nn;
 
             }
 
-            t->SetHONodes(honodes);
-
+            trit->second->SetHONodes(honodes);
 
         }
 

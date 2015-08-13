@@ -107,11 +107,7 @@ ENDIF( NEKTAR_USE_VTK )
 INCLUDE(${NEKTAR++_LIBRARY_DIRS}/cmake/Nektar++Libraries.cmake)
 
 # platform dependent options
-if(${CMAKE_SYSTEM} MATCHES "Linux.*")
+IF(${CMAKE_SYSTEM} MATCHES "Linux.*")
     set(NEKTAR++_TP_LIBRARIES ${NEKTAR++_TP_LIBRARIES} rt)
     SET(NEKTAR++_DEFINITIONS "${NEKTAR++_DEFINITIONS} -pthread")
-endif(${CMAKE_SYSTEM} MATCHES "Linux.*")
-
-if(${CMAKE_SYSTEM} MATCHES "Darwin-*")
-    SET(NEKTAR++_DEFINITIONS "${NEKTAR++_DEFINITIONS} -Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
-endif(${CMAKE_SYSTEM} MATCHES "Darwin-*")
+ENDIF(${CMAKE_SYSTEM} MATCHES "Linux.*")

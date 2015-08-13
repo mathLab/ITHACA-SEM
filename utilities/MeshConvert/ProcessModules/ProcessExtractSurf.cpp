@@ -46,7 +46,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessExtractSurf::className = 
+        ModuleKey ProcessExtractSurf::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "extract"), ProcessExtractSurf::create,
                 "Process elements to extract a specified surface(s) or composites(s).");
@@ -60,7 +60,7 @@ namespace Nektar
         ProcessExtractSurf::~ProcessExtractSurf()
         {
         }
-        
+
         void ProcessExtractSurf::Process()
         {
             int i, j;
@@ -122,7 +122,7 @@ namespace Nektar
                 set_intersection(surfs.begin(), surfs.end(),
                                  tags .begin(), tags .end(),
                                  back_inserter(inter));
-                
+
                 // It doesn't continue to next element.
                 if (inter.size() != 1)
                 {
@@ -159,6 +159,7 @@ namespace Nektar
                         f->m_edgeList[j]->m_elLink.push_back(
                             std::make_pair(elmt, j));
                     }
+                    elmt->SetVolumeNodes(f->m_faceNodes);
                     elmt->SetId(f->m_id);
                 }
                 else
@@ -186,7 +187,7 @@ namespace Nektar
             // up.
             CompositeMap tmp = m_mesh->m_composite;
             CompositeMap::iterator it;
-            
+
             m_mesh->m_composite.clear();
             int maxId = -1;
 

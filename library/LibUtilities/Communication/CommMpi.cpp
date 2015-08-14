@@ -638,7 +638,36 @@ namespace Nektar
                     "MPI error performing Bcast-v.");
         }
 
+        void CommMpi::v_Bcast(Array<OneD, unsigned long long>& data, int rootProc)
+        {
+            int retval = MPI_Bcast(data.get(), data.num_elements(), MPI_UNSIGNED_LONG_LONG, rootProc, m_comm);
+            ASSERTL0(retval == MPI_SUCCESS,
+                    "MPI error performing Bcast-v.");
+        }
 
+        void CommMpi::v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
+        {
+            int n = pData.num_elements();
+            ASSERTL0(n == ans.num_elements(),
+                    "Array sizes differ in Exscan");
+
+            MPI_Op vOp;
+            switch (pOp)
+            {
+                case ReduceMax:
+                    vOp = MPI_MAX; break;
+                case ReduceMin:
+                    vOp = MPI_MIN; break;
+                case ReduceSum:
+                default:
+                    vOp = MPI_SUM; break;
+            }
+
+            int retval = MPI_Exscan(pData.get(), ans.get(), n,
+                                    MPI_UNSIGNED_LONG_LONG, vOp, m_comm);
+            ASSERTL0(retval == MPI_SUCCESS,
+                    "MPI error performing Exscan-v.");
+        }
         /**
          * Processes are considered as a grid of size pRows*pColumns. Comm
          * objects are created corresponding to the rows and columns of this

@@ -41,10 +41,10 @@
 #include <vector>
 #include <hdf5.h>
 #include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Communication/Comm.h>
 
 namespace Nektar
 {
@@ -109,11 +109,8 @@ namespace Nektar
             class PList : public Object
             {
                 public:
-                    PList();
-                    ~PList();
-                    void Close();
-                    void SetChunk(const std::vector<hsize_t>& dims);
-                    void SetDeflate(const unsigned level = 1);
+                    /// Default options
+                    static PListSharedPtr Default();
                     ///Properties for object creation
                     static PListSharedPtr ObjectCreate();
                     ///Properties for file creation
@@ -147,6 +144,14 @@ namespace Nektar
                     ///Properties governing link traversal when accessing objects
                     static PListSharedPtr LinkAccess();
 
+                    PList();
+                    ~PList();
+                    void Close();
+                    void SetChunk(const std::vector<hsize_t>& dims);
+                    void SetDeflate(const unsigned level = 1);
+                    void SetMpio(CommSharedPtr comm);
+                    void SetDxMpioCollective();
+                    void SetDxMpioIndependent();
                 private:
                     PList(hid_t cls);
             };
@@ -185,41 +190,33 @@ namespace Nektar
                     // Create a group with the given name. The createPL can be
                     // omitted to use the default properties.
                     GroupSharedPtr CreateGroup(const std::string& name,
-                            PListSharedPtr createPL =
-                                    boost::make_shared<PList>(),
-                            PListSharedPtr accessPL =
-                                    boost::make_shared<PList>());
+                            PListSharedPtr createPL = PList::Default(),
+                            PListSharedPtr accessPL = PList::Default());
 
                     // Create a dataset with the name, type and space.
                     // The createPL can be omitted to use the defaults.
                     DataSetSharedPtr CreateDataSet(const std::string& name,
                             DataTypeSharedPtr type, DataSpaceSharedPtr space,
-                            PListSharedPtr createPL =
-                                    boost::make_shared<PList>(),
-                            PListSharedPtr accessPL =
-                                    boost::make_shared<PList>());
+                            PListSharedPtr createPL = PList::Default(),
+                            PListSharedPtr accessPL = PList::Default());
 
                     // Create a dataset containing the data supplied
                     // The createPL can be omitted to use the defaults
                     template<class T>
                     DataSetSharedPtr CreateWriteDataSet(const std::string& name,
                             const std::vector<T>& data,
-                            PListSharedPtr createPL =
-                                    boost::make_shared<PList>(),
-                            PListSharedPtr accessPL =
-                                    boost::make_shared<PList>());
+                            PListSharedPtr createPL = PList::Default(),
+                            PListSharedPtr accessPL = PList::Default());
 
                     // Open an existing group.
                     // The accessPL can be omitted to use the defaults
                     GroupSharedPtr OpenGroup(const std::string& name,
-                            PListSharedPtr accessPL =
-                                    boost::make_shared<PList>()) const;
+                            PListSharedPtr accessPL = PList::Default()) const;
 
                     // Open an existing dataset
                     // The accessPL can be omitted to use the defaults
                     DataSetSharedPtr OpenDataSet(const std::string& name,
-                            PListSharedPtr accessPL =
-                                    boost::make_shared<PList>()) const;
+                            PListSharedPtr accessPL = PList::Default()) const;
                     virtual hsize_t GetNumElements() = 0;
                     LinkIterator begin();
                     LinkIterator end();
@@ -297,6 +294,8 @@ namespace Nektar
                     ~DataSpace();
 
                     void Close();
+                    void SelectRange(const hsize_t start, const hsize_t count);
+
                 private:
                     DataSpace(hid_t id);
                     friend class Attribute;
@@ -345,6 +344,7 @@ namespace Nektar
                      * Default implementation just calls PredefinedDataType::Native<T>()
                      */
                     static DataTypeSharedPtr GetType();
+                    static DataTypeSharedPtr GetType(const T& obj);
             };
 
             /// Wrap and HDF5 data type object. Technically this can have attributes, but not really bothered.
@@ -352,6 +352,11 @@ namespace Nektar
             {
                 public:
                     static DataTypeSharedPtr String(size_t len = 0);
+                    template<class T>
+                    static DataTypeSharedPtr OfObject(const T& obj)
+                    {
+                        return DataTypeTraits<T>::GetType();
+                    }
                     virtual void Close();
                     DataTypeSharedPtr Copy() const;
                 protected:
@@ -399,12 +404,11 @@ namespace Nektar
                 public:
                     static FileSharedPtr Create(const std::string& filename,
                             unsigned mode, PListSharedPtr createPL =
-                                    boost::make_shared<PList>(),
-                            PListSharedPtr accessPL =
-                                    boost::make_shared<PList>());
+                                    PList::Default(), PListSharedPtr accessPL =
+                                    PList::Default());
                     static FileSharedPtr Open(const std::string& filename,
                             unsigned mode, PListSharedPtr accessPL =
-                                    boost::make_shared<PList>());
+                                    PList::Default());
                     ~File();
                     void Close();
                     virtual hsize_t GetNumElements();
@@ -440,6 +444,17 @@ namespace Nektar
                         DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
                         H5_CALL(H5Dwrite,
                                 (m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL, H5P_DEFAULT, &data[0]));
+                    }
+                    template<class T>
+                    void Write(const std::vector<T>& data,
+                            DataSpaceSharedPtr filespace, PListSharedPtr dxpl = PList::Default())
+                    {
+                        DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
+                        DataSpaceSharedPtr memspace = DataSpace::OneD(data.size());
+
+                        H5Dwrite(m_Id, mem_t->GetId(), memspace->GetId(),
+                                filespace->GetId(), dxpl->GetId(),
+                                &data[0]);
                     }
                     template<class T>
                     void Read(std::vector<T>& data)

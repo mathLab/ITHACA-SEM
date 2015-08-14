@@ -34,11 +34,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/FieldIOHdf5.h>
-#include <LibUtilities/BasicUtils/H5.h>
 
 #ifdef NEKTAR_USE_MPI
-#include <mpi.h>
+#include <LibUtilities/Communication/CommMpi.h>
 #endif
+
+namespace berrc = boost::system::errc;
 
 namespace Nektar
 {
@@ -102,6 +103,14 @@ namespace Nektar
                 FieldIO(pComm)
         {
         }
+
+        std::string GetElemGroupName(const int i)
+        {
+            std::stringstream nameSS;
+            nameSS << "ELEMENTS" << i;
+            return nameSS.str();
+        }
+
         /**
          *
          */
@@ -124,139 +133,233 @@ namespace Nektar
                         "Invalid size of fielddata vector.");
             }
 
-            // Prepare to write out data. In parallel, we must create directory
-            // and determine the full pathname to the file to write out.
-            // Any existing file/directory which is in the way is removed.
-            std::string filename = SetUpOutput(outFile, fielddefs,
-                    fieldmetadatamap);
+            // If the file exists already, rmtree it
+            if (m_comm->RemoveExistingFiles())
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    try
+                    {
+                        fs::path specPath(outFile);
+                        fs::remove_all(specPath);
+                    } catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(
+                                e.code().value()
+                                        == berrc::no_such_file_or_directory,
+                                "Filesystem error: " + string(e.what()));
+                    }
+                }
+            }
 
-            // Create the file (partition)
-            H5::FileSharedPtr outfile = H5::File::Create(filename,
-                    H5F_ACC_TRUNC);
+            // So first we're going to create the file structure on rank 0
+            // because this involves a lot of metadata operations which are
+            // collective and hence slow in parallel.
 
-            H5::GroupSharedPtr root = outfile->CreateGroup("NEKTAR");
-            TagWriterSharedPtr info_writer(new H5TagWriter(root));
-            AddInfoTag(info_writer, fieldmetadatamap);
+            // This does involve the other ranks because everyone needs to know
+            // where in the global list they're writing their subset
+            typedef Array<OneD, unsigned long long> SizeArray;
+            SizeArray local_n_elem(fielddefs.size());
+            SizeArray global_n_elem(fielddefs.size());
+            SizeArray global_idx(fielddefs.size());
+            SizeArray vals_per_elem(fielddefs.size());
+            for (int f = 0; f < fielddefs.size(); ++f)
+            {
+                // Get the global index at which we're writing our local data
+                // and the global number of elements
+                local_n_elem[f] = fielddefs[f]->m_elementIDs.size();
+                vals_per_elem[f] = fielddata[f].size() / local_n_elem[f];
+                // Init to zero cos on rank zero (or serial case) there are no
+                // ranks with smaller ID so it will get a garbage value.
+                global_idx[f] = 0;
+            }
+
+            // Compute global_idx = sum(local_n_elem[rank i] for i in range(0, my rank))
+            m_comm->Exscan(local_n_elem, ReduceSum, global_idx);
+
+            // If this is the last rank
+            if (m_comm->GetRank() == m_comm->GetSize() - 1)
+            {
+                for (int f = 0; f < fielddefs.size(); ++f)
+                    global_n_elem[f] = global_idx[f] + local_n_elem[f];
+            }
+            // Broadcast from the last rank to all the others
+            m_comm->Bcast(global_n_elem, m_comm->GetSize() - 1);
+
+            // Only one rank touches the file to create the layout.
+            bool amRoot = (m_comm->GetRank() == 0);
+            if (amRoot)
+            {
+                H5::FileSharedPtr outfile = H5::File::Create(outFile,
+                        H5F_ACC_TRUNC);
+                H5::GroupSharedPtr root = outfile->CreateGroup("NEKTAR");
+                TagWriterSharedPtr info_writer(new H5TagWriter(root));
+                AddInfoTag(info_writer, fieldmetadatamap);
+
+                for (int f = 0; f < fielddefs.size(); ++f)
+                {
+                    //---------------------------------------------
+                    // Write ELEMENTS
+
+                    // first, give it a name that will be unique in the group
+                    std::string elemGroupName = GetElemGroupName(f);
+
+                    H5::GroupSharedPtr elemTag = root->CreateGroup(
+                            elemGroupName);
+                    // Write FIELDS
+                    // i.e. m_fields is a vector<string> (variable length)
+                    elemTag->SetAttribute("FIELDS", fielddefs[f]->m_fields);
+
+                    // Write SHAPE
+                    // because this isn't just a vector of data, serialise it ourselves for now
+                    std::string shapeString;
+                    {
+                        std::stringstream shapeStringStream;
+                        shapeStringStream
+                                << ShapeTypeMap[fielddefs[f]->m_shapeType];
+                        if (fielddefs[f]->m_numHomogeneousDir == 1)
+                        {
+                            shapeStringStream << "-HomogenousExp1D";
+                        }
+                        else if (fielddefs[f]->m_numHomogeneousDir == 2)
+                        {
+                            shapeStringStream << "-HomogenousExp2D";
+                        }
+
+                        shapeString = shapeStringStream.str();
+                    }
+                    elemTag->SetAttribute("SHAPE", shapeString);
+
+                    // Write BASIS
+                    elemTag->SetAttribute("BASIS", fielddefs[f]->m_basis);
+
+                    // Write homogeneuous length details
+                    if (fielddefs[f]->m_numHomogeneousDir)
+                    {
+                        elemTag->SetAttribute("HOMOGENEOUSLENGTHS",
+                                fielddefs[f]->m_homogeneousLengths);
+                    }
+
+                    // Write homogeneuous planes/lines details
+                    if (fielddefs[f]->m_numHomogeneousDir)
+                    {
+                        if (fielddefs[f]->m_homogeneousYIDs.size() > 0)
+                        {
+                            elemTag->SetAttribute("HOMOGENEOUSYIDS",
+                                    fielddefs[f]->m_homogeneousYIDs);
+                        }
+
+                        if (fielddefs[f]->m_homogeneousZIDs.size() > 0)
+                        {
+                            elemTag->SetAttribute("HOMOGENEOUSZIDS",
+                                    fielddefs[f]->m_homogeneousZIDs);
+                        }
+                    }
+
+                    // Write NUMMODESPERDIR
+                    // because this isn't just a vector of data, serialise it by hand for now
+                    std::string numModesString;
+                    {
+                        std::stringstream numModesStringStream;
+
+                        if (fielddefs[f]->m_uniOrder)
+                        {
+                            numModesStringStream << "UNIORDER:";
+                            // Just dump single definition
+                            bool first = true;
+                            for (std::vector<int>::size_type i = 0;
+                                    i < fielddefs[f]->m_basis.size(); i++)
+                            {
+                                if (!first)
+                                    numModesStringStream << ",";
+                                numModesStringStream
+                                        << fielddefs[f]->m_numModes[i];
+                                first = false;
+                            }
+                        }
+                        else
+                        {
+                            numModesStringStream << "MIXORDER:";
+                            bool first = true;
+                            for (std::vector<int>::size_type i = 0;
+                                    i < fielddefs[f]->m_numModes.size(); i++)
+                            {
+                                if (!first)
+                                    numModesStringStream << ",";
+                                numModesStringStream
+                                        << fielddefs[f]->m_numModes[i];
+                                first = false;
+                            }
+                        }
+
+                        numModesString = numModesStringStream.str();
+                    }
+                    elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
+
+                    // Create empty datasets
+                    // ID
+                    H5::DataSpaceSharedPtr idSpace = H5::DataSpace::OneD(
+                            global_n_elem[f]);
+                    H5::DataTypeSharedPtr idType = H5::DataType::OfObject(
+                            fielddefs[f]->m_elementIDs[0]);
+                    H5::DataSetSharedPtr idDS = elemTag->CreateDataSet("ID",
+                            idType, idSpace);
+
+                    // DATA
+                    H5::DataSpaceSharedPtr dataSpace = H5::DataSpace::OneD(
+                            global_n_elem[f] * vals_per_elem[f]);
+                    H5::DataTypeSharedPtr dataType = H5::DataType::OfObject(
+                            fielddata[f][0]);
+                    H5::DataSetSharedPtr dataDS = elemTag->CreateDataSet("DATA",
+                            dataType, dataSpace);
+                }
+            }
+            // RAII => file gets closed automatically
+
+            // Set properties for parallel (if we're in parallel)
+            H5::PListSharedPtr parallelProps = H5::PList::Default();
+            H5::PListSharedPtr writePL = H5::PList::Default();
+            if (m_comm->GetSize() > 1)
+            {
+                // Use MPI/O to access the file
+                parallelProps = H5::PList::FileAccess();
+                parallelProps->SetMpio(m_comm);
+                // Use collective IO
+                writePL = H5::PList::DatasetXfer();
+                writePL->SetDxMpioCollective();
+            }
+
+            // Reopen the file
+            H5::FileSharedPtr outfile = H5::File::Open(outFile, H5F_ACC_RDWR,
+                    parallelProps);
+            H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
 
             for (int f = 0; f < fielddefs.size(); ++f)
             {
-                //---------------------------------------------
-                // Write ELEMENTS
+                std::string elemGroupName = GetElemGroupName(f);
+                H5::GroupSharedPtr elemTag = root->OpenGroup(elemGroupName);
 
-                // first, give it a name that will be unique in the group
-                std::string elemGroupName;
-                {
-                    std::stringstream nameSS;
-                    nameSS << "ELEMENTS" << f;
-                    elemGroupName = nameSS.str();
-                }
+                H5::DataSetSharedPtr dset;
+                H5::DataSpaceSharedPtr filespace;
 
-                H5::GroupSharedPtr elemTag = root->CreateGroup(elemGroupName);
-                // Write FIELDS
-                // i.e. m_fields is a vector<string> (variable length)
-                elemTag->SetAttribute("FIELDS", fielddefs[f]->m_fields);
-
-                // Write SHAPE
-                // because this isn't just a vector of data, serialise it ourselves for now
-                std::string shapeString;
-                {
-                    std::stringstream shapeStringStream;
-                    shapeStringStream
-                            << ShapeTypeMap[fielddefs[f]->m_shapeType];
-                    if (fielddefs[f]->m_numHomogeneousDir == 1)
-                    {
-                        shapeStringStream << "-HomogenousExp1D";
-                    }
-                    else if (fielddefs[f]->m_numHomogeneousDir == 2)
-                    {
-                        shapeStringStream << "-HomogenousExp2D";
-                    }
-
-                    shapeString = shapeStringStream.str();
-                }
-                elemTag->SetAttribute("SHAPE", shapeString);
-
-                // Write BASIS
-                elemTag->SetAttribute("BASIS", fielddefs[f]->m_basis);
-
-                // Write homogeneuous length details
-                if (fielddefs[f]->m_numHomogeneousDir)
-                {
-                    elemTag->SetAttribute("HOMOGENEOUSLENGTHS",
-                            fielddefs[f]->m_homogeneousLengths);
-                }
-
-                // Write homogeneuous planes/lines details
-                if (fielddefs[f]->m_numHomogeneousDir)
-                {
-                    if (fielddefs[f]->m_homogeneousYIDs.size() > 0)
-                    {
-                        elemTag->SetAttribute("HOMOGENEOUSYIDS",
-                                fielddefs[f]->m_homogeneousYIDs);
-                    }
-
-                    if (fielddefs[f]->m_homogeneousZIDs.size() > 0)
-                    {
-                        elemTag->SetAttribute("HOMOGENEOUSZIDS",
-                                fielddefs[f]->m_homogeneousZIDs);
-                    }
-                }
-
-                // Write NUMMODESPERDIR
-                // because this isn't just a vector of data, serialise it by hand for now
-                std::string numModesString;
-                {
-                    std::stringstream numModesStringStream;
-
-                    if (fielddefs[f]->m_uniOrder)
-                    {
-                        numModesStringStream << "UNIORDER:";
-                        // Just dump single definition
-                        bool first = true;
-                        for (std::vector<int>::size_type i = 0;
-                                i < fielddefs[f]->m_basis.size(); i++)
-                        {
-                            if (!first)
-                                numModesStringStream << ",";
-                            numModesStringStream << fielddefs[f]->m_numModes[i];
-                            first = false;
-                        }
-                    }
-                    else
-                    {
-                        numModesStringStream << "MIXORDER:";
-                        bool first = true;
-                        for (std::vector<int>::size_type i = 0;
-                                i < fielddefs[f]->m_numModes.size(); i++)
-                        {
-                            if (!first)
-                                numModesStringStream << ",";
-                            numModesStringStream << fielddefs[f]->m_numModes[i];
-                            first = false;
-                        }
-                    }
-
-                    numModesString = numModesStringStream.str();
-                }
-                elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
-
-//                // Configure for compression.
-//                // This requires chunking - arbitrarily pick 1024 elements
-//                H5::PListSharedPtr zip = H5::PList::DatasetCreate();
-//                std::vector < hsize_t > chunk;
-//                chunk.push_back(std::min(size_t(1024), fielddata[f].size()));
-//                zip->SetChunk(chunk);
-//                // Higher compression levels will reduce filesize at the cost
-//                // increasing time.
-//                zip->SetDeflate(1);
+                // Write the ID dataset to the file
+                dset = elemTag->OpenDataSet("ID");
+                // Select the section in the file
+                filespace = dset->GetSpace();
+                filespace->SelectRange(global_idx[f], local_n_elem[f]);
+                dset->Write(fielddefs[f]->m_elementIDs, filespace, writePL);
 
                 // Write the actual field data
-                elemTag->CreateWriteDataSet("DATA", fielddata[f]);
+                dset = elemTag->OpenDataSet("DATA");
 
-                // Write ID
-                elemTag->CreateWriteDataSet("ID", fielddefs[f]->m_elementIDs);
+                // Select the section in the file
+                filespace = dset->GetSpace();
+                filespace->SelectRange(global_idx[f] * vals_per_elem[f],
+                        local_n_elem[f] * vals_per_elem[f]);
+
+                dset->Write(fielddata[f], filespace, writePL);
             }
-            // Destruction of the H5::File and Group objects closes them. Yay RAII
+            // RAII => file gets closed automatically
         }
 
         void FieldIOHdf5::v_ImportFile(const std::string& infilename,
@@ -281,12 +384,12 @@ namespace Nektar
                     > (dataSource);
             ASSERTL0(expChild == false,
                     "FieldDefs in <EXPANSIONS> tag not implemented");
-            // Master tag within which all data is contained.
+// Master tag within which all data is contained.
             H5::GroupSharedPtr master = h5->Get()->OpenGroup("NEKTAR");
 
-            // The XML reader says here "Loop through all nektar tags, finding all of the element tags."
-            // I believe that there is only allowed to be one NEKTAR tag?
-            // If multiple are allowed, reinstate the loop.
+// The XML reader says here "Loop through all nektar tags, finding all of the element tags."
+// I believe that there is only allowed to be one NEKTAR tag?
+// If multiple are allowed, reinstate the loop.
             H5::Group::LinkIterator keyIt = master->begin(), keyEnd =
                     master->end();
             for (; keyIt != keyEnd; ++keyIt)
@@ -489,12 +592,12 @@ namespace Nektar
             int cntdumps = 0;
             H5DataSourceSharedPtr h5 = boost::static_pointer_cast < H5DataSource
                     > (dataSource);
-            // Master tag within which all data is contained.
+// Master tag within which all data is contained.
             H5::GroupSharedPtr master = h5->Get()->OpenGroup("NEKTAR");
 
-            // The XML reader says here "Loop through all nektar tags, finding all of the element tags."
-            // I believe that there is only allowed to be one NEKTAR tag?
-            // If multiple are allowed, reinstate the loop.
+// The XML reader says here "Loop through all nektar tags, finding all of the element tags."
+// I believe that there is only allowed to be one NEKTAR tag?
+// If multiple are allowed, reinstate the loop.
             H5::Group::LinkIterator keyIt = master->begin(), keyEnd =
                     master->end();
             for (; keyIt != keyEnd; ++keyIt)
@@ -537,7 +640,7 @@ namespace Nektar
                     < H5DataSource > (dataSource);
 
             H5::GroupSharedPtr master = hdf->Get()->OpenGroup("NEKTAR");
-            // New metadata format only in HDF
+// New metadata format only in HDF
             H5::GroupSharedPtr metadata = master->OpenGroup("Metadata");
 
             if (metadata)

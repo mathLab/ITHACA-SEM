@@ -280,6 +280,15 @@ namespace Nektar
         {
 
         }
+        void CommSerial::v_Bcast(Array<OneD, unsigned long long>& data, int rootProc)
+        {
+
+        }
+
+        void CommSerial::v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
+        {
+
+        }
 
         /**
          *

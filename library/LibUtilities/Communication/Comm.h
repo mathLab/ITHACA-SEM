@@ -132,6 +132,9 @@ namespace Nektar
                 
                 LIB_UTILITIES_EXPORT inline void Bcast(int& data, int rootProc);
                 LIB_UTILITIES_EXPORT inline void Bcast(Array<OneD, int>& data, int rootProc);
+                LIB_UTILITIES_EXPORT inline void Bcast(Array<OneD, unsigned long long>& data, int rootProc);
+
+                LIB_UTILITIES_EXPORT inline void Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
 
                 LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -202,6 +205,9 @@ namespace Nektar
 										Array<OneD, int>& pRecvDataOffsetMap) = 0;
 				virtual void v_Bcast(int& data, int rootProc) = 0;
                 virtual void v_Bcast(Array<OneD, int>& data, int rootProc) = 0;
+                virtual void v_Bcast(Array<OneD, unsigned long long>& data, int rootProc) = 0;
+                virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans) = 0;
+
                 virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
                 virtual bool v_TreatAsRankZero(void) = 0;
@@ -440,6 +446,16 @@ namespace Nektar
         inline void Comm::Bcast(Array<OneD, int>& data, int rootProc)
         {
             v_Bcast(data, rootProc);
+        }
+
+        inline void Comm::Bcast(Array<OneD, unsigned long long>& data, int rootProc)
+        {
+            v_Bcast(data, rootProc);
+        }
+
+        inline void Comm::Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
+        {
+            v_Exscan(pData, pOp, ans);
         }
 
 		/**

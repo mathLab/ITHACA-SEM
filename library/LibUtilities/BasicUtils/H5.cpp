@@ -35,6 +35,10 @@
 #include <LibUtilities/BasicUtils/H5.h>
 #include <boost/make_shared.hpp>
 
+#ifdef NEKTAR_USE_MPI
+#include <LibUtilities/Communication/CommMpi.h>
+#endif
+
 namespace Nektar
 {
     namespace LibUtilities
@@ -73,6 +77,12 @@ namespace Nektar
             {
                 H5_CALL(H5Pclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
+            }
+
+            /// Default options
+            PListSharedPtr PList::Default()
+            {
+                return PListSharedPtr(new PList());
             }
 
             /// Properties for object creation
@@ -176,8 +186,40 @@ namespace Nektar
             }
             void PList::SetDeflate(const unsigned level)
             {
-                H5_CALL(H5Pset_deflate, (m_Id, level))
+                H5_CALL(H5Pset_deflate, (m_Id, level));
             }
+#ifdef NEKTAR_USE_MPI
+            void PList::SetDxMpioCollective()
+            {
+                H5_CALL(H5Pset_dxpl_mpio, (m_Id, H5FD_MPIO_COLLECTIVE));
+            }
+            void PList::SetDxMpioIndependent()
+            {
+                H5_CALL(H5Pset_dxpl_mpio, (m_Id, H5FD_MPIO_INDEPENDENT));
+            }
+            void PList::SetMpio(CommSharedPtr comm)
+            {
+                CommMpiSharedPtr mpi_comm = boost::dynamic_pointer_cast<CommMpi>(comm);
+                ASSERTL0(mpi_comm, "Can't convert communicator to MPI communicator.")
+                // TODO: accept hints
+                MPI_Info info = MPI_INFO_NULL;
+                H5_CALL(H5Pset_fapl_mpio,
+                        (m_Id, mpi_comm->GetComm(), info));
+            }
+#else
+            void PList::SetDxMpioCollective()
+            {
+                ASSERTL0(false, "Trying to use parallel HDF5 without MPI!");
+            }
+            void PList::SetDxMpioIndependent()
+            {
+                ASSERTL0(false, "Trying to use parallel HDF5 without MPI!");
+            }
+            void PList::SetMpio(CommSharedPtr comm)
+            {
+                ASSERTL0(false, "Trying to use parallel HDF5 without MPI!");
+            }
+#endif
 
             GroupSharedPtr CanHaveGroupsDataSets::CreateGroup(
                     const std::string& name, PListSharedPtr createPL,
@@ -431,6 +473,11 @@ namespace Nektar
             {
                 H5_CALL(H5Sclose, (m_Id));
                 m_Id = H5I_INVALID_HID;
+            }
+            void DataSpace::SelectRange(const hsize_t start, const hsize_t count)
+            {
+                H5_CALL(H5Sselect_hyperslab,
+                        (m_Id, H5S_SELECT_SET, &start, NULL, &count, NULL));
             }
 
             DataType::DataType(hid_t id) :

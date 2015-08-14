@@ -128,6 +128,8 @@ namespace Nektar
 									Array<OneD, int>& pRecvDataOffsetMap);
 			virtual void v_Bcast(int& data, int rootProc);
 			virtual void v_Bcast(Array<OneD, int>& pData, int rootProc);
+            virtual void v_Bcast(Array<OneD, unsigned long long>& pData, int rootProc);
+			virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
             virtual void v_SplitComm(int pRows, int pColumns);
             virtual CommSharedPtr v_CommCreateIf(int flag);
 

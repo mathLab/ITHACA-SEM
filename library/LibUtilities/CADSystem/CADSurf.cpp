@@ -111,7 +111,12 @@ bool CADSurf::IsPlane()
  */
 Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
 {
-    /// @todo create bound checking
+    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
+               uv[0] > m_occSurface.LastUParameter() ||
+               uv[1] < m_occSurface.FirstVParameter() ||
+               uv[1] > m_occSurface.LastVParameter()),
+                "Point not within parameter plane");
+
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc;
     loc = m_occSurface.Value(uv[0], uv[1]);
@@ -129,6 +134,12 @@ Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
  */
 Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 {
+    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
+               uv[0] > m_occSurface.LastUParameter() ||
+               uv[1] < m_occSurface.FirstVParameter() ||
+               uv[1] > m_occSurface.LastVParameter()),
+                "Point not within parameter plane");
+
     Array<OneD, NekDouble> normal(3);
     gp_Pnt Loc;
     gp_Vec D1U, D1V;
@@ -162,6 +173,12 @@ Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
 {
+    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
+               uv[0] > m_occSurface.LastUParameter() ||
+               uv[1] < m_occSurface.FirstVParameter() ||
+               uv[1] > m_occSurface.LastVParameter()),
+                "Point not within parameter plane");
+
     Array<OneD, NekDouble> r(9);
     gp_Pnt Loc;
     gp_Vec D1U, D1V;
@@ -189,6 +206,12 @@ Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
 {
+    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
+               uv[0] > m_occSurface.LastUParameter() ||
+               uv[1] < m_occSurface.FirstVParameter() ||
+               uv[1] > m_occSurface.LastVParameter()),
+                "Point not within parameter plane");
+
     Array<OneD, NekDouble> r(18);
     gp_Pnt Loc;
     gp_Vec D1U, D1V, D2U, D2V, D2UV;

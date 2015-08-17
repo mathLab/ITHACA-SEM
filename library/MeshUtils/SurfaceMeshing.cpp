@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <MeshUtils/SurfaceMeshing.h>
-#include <asa047.hpp>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -136,42 +135,77 @@ namespace MeshUtils {
         nodeinlinearmesh = Nodes.size();
     }
 
-    NekDouble SurfaceMeshing::EdgeEnergyEval(int a, int b, Array<OneD, NekDouble> uv, int surf)
+    Array<OneD, NekDouble> SurfaceMeshing::EdgeOptiUpdate(int a, int b, Array<OneD, NekDouble> uv, int surf)
     {
-        NekDouble dz = 2.0/m_order;
+        NekDouble sig = m_order/2.0;
 
-        Array<OneD, NekDouble> loca = Nodes[a]->GetLoc();
-        Array<OneD, NekDouble> locb = Nodes[b]->GetLoc();
-
-        Array<OneD, NekDouble> locm = m_cad->GetSurf(surf)->P(uv);
-
-        NekDouble F = 0;
-
-        F+= (locb[0]-locm[0])*(locb[0]-locm[0]) +
-            (locb[1]-locm[1])*(locb[1]-locm[1]) +
-            (locb[2]-locm[2])*(locb[2]-locm[2]);
-
-        F+= (locm[0]-loca[0])*(locm[0]-loca[0]) +
-            (locm[1]-loca[1])*(locm[1]-loca[1]) +
-            (locm[2]-loca[2])*(locm[2]-loca[2]);
-
-        F*=1.0/dz;
-
-        return F;
-    }
-
-    Array<OneD, NekDouble> SurfaceMeshing::EdgeEnergyDer(int a, int b, Array<OneD, NekDouble> uv, int surf)
-    {
-        NekDouble dz = 2.0/m_order;
-
-        Array<OneD, NekDouble> DF(2);
+        Array<OneD, NekDouble> UPD(2);
 
         Array<OneD, NekDouble> uva = Nodes[a]->GetS(surf);
         Array<OneD, NekDouble> uvb = Nodes[b]->GetS(surf);
 
-        Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->D1(uva);
-        Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->D1(uvb);
-        Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D1(uv);
+        Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->D2(uva);
+        Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->D2(uvb);
+        Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D2(uv);
+
+        NekDouble dfdu,dfdv,d2fdu,d2fdv,d2fdudv;
+
+        dfdu     = ((rb[0] - rm[0])*(rb[3] - rm[3]) +
+                    (rb[1] - rm[1])*(rb[4] - rm[4]) +
+                    (rb[2] - rm[2])*(rb[5] - rm[5])
+                    +
+                    (rm[0] - ra[0])*(rm[3] - ra[3]) +
+                    (rm[1] - ra[1])*(rm[4] - ra[4]) +
+                    (rm[2] - ra[2])*(rm[5] - ra[5])) * 2.0*sig;
+
+        dfdv     = ((rb[0] - rm[0])*(rb[6] - rm[6]) +
+                    (rb[1] - rm[1])*(rb[7] - rm[7]) +
+                    (rb[2] - rm[2])*(rb[8] - rm[8])
+                    +
+                    (rm[0] - ra[0])*(rm[6] - ra[6]) +
+                    (rm[1] - ra[1])*(rm[7] - ra[7]) +
+                    (rm[2] - ra[2])*(rm[8] - ra[8])) * 2.0*sig;
+
+        d2fdu   = ((rb[0 ] - rm[0 ])*(rb[9 ] - rm[9 ]) + (rb[3 ] - rm[3 ])*(rb[3 ] - rm[3 ]) +
+                   (rb[1 ] - rm[1 ])*(rb[10] - rm[10]) + (rb[4 ] - rm[4 ])*(rb[4 ] - rm[4 ]) +
+                   (rb[2 ] - rm[2 ])*(rb[11] - rm[11]) + (rb[5 ] - rm[5 ])*(rb[5 ] - rm[5 ])
+                   +
+                   (rm[0 ] - ra[0 ])*(rm[9 ] - ra[9 ]) + (rm[3 ] - ra[3 ])*(rm[3 ] - ra[3 ]) +
+                   (rm[1 ] - ra[1 ])*(rm[10] - ra[10]) + (rm[4 ] - ra[4 ])*(rm[4 ] - ra[4 ]) +
+                   (rm[2 ] - ra[2 ])*(rm[11] - ra[11]) + (rm[5 ] - ra[5 ])*(rm[5 ] - ra[5 ])) * 2.0*sig;
+
+        d2fdv   = ((rb[0 ] - rm[0 ])*(rb[12] - rm[12]) + (rb[6 ] - rm[6 ])*(rb[6 ] - rm[6 ]) +
+                   (rb[1 ] - rm[1 ])*(rb[13] - rm[13]) + (rb[7 ] - rm[7 ])*(rb[7 ] - rm[7 ]) +
+                   (rb[2 ] - rm[2 ])*(rb[14] - rm[14]) + (rb[8 ] - rm[8 ])*(rb[8 ] - rm[8 ])
+                   +
+                   (rm[0 ] - ra[0 ])*(rm[12] - ra[12]) + (rm[6 ] - ra[6 ])*(rm[6 ] - ra[6 ]) +
+                   (rm[1 ] - ra[1 ])*(rm[13] - ra[13]) + (rm[7 ] - ra[7 ])*(rm[7 ] - ra[7 ]) +
+                   (rm[2 ] - ra[2 ])*(rm[14] - ra[14]) + (rm[8 ] - ra[8 ])*(rm[8 ] - ra[8 ])) * 2.0*sig;
+
+        d2fdudv = ((rb[0 ] - rm[0 ])*(rb[15] - rm[15]) + (rb[3 ] - rm [3 ])*(rb[6 ] - rm[6 ]) +
+                   (rb[1 ] - rm[1 ])*(rb[16] - rm[16]) + (rb[4 ] - rm [4 ])*(rb[7 ] - rm[7 ]) +
+                   (rb[2 ] - rm[2 ])*(rb[17] - rm[17]) + (rb[5 ] - rm [5 ])*(rb[8 ] - rm[8 ])
+                   +
+                   (rm[0 ] - ra[0 ])*(rm[15] - ra[15]) + (rm[3 ] - ra [3 ])*(rm[6 ] - ra[6 ]) +
+                   (rm[1 ] - ra[1 ])*(rm[16] - ra[16]) + (rm[4 ] - ra [4 ])*(rm[7 ] - ra[7 ]) +
+                   (rm[2 ] - ra[2 ])*(rm[17] - ra[17]) + (rm[5 ] - ra [5 ])*(rm[8 ] - ra[8 ])) * 2.0*sig;
+
+        cout << d2fdu << " " << d2fdv << " " << d2fdudv << endl;
+        NekDouble d = (d2fdu * d2fdv - d2fdudv * d2fdudv);
+        cout <<  d << endl;
+        if(fabs(d) < 1E-20) //uninveratble matrix
+        {
+            UPD[0] = 0.0; UPD[1] =0.0;
+            return UPD;
+        }
+        else{
+            cout << "did an update" << endl;
+            UPD[0] = (d2fdv * dfdu - d2fdudv * dfdv) / d;
+            UPD[1] = (d2fdu * dfdv - d2fdudv * dfdu) / d;
+            cout << UPD[0] << " " << UPD[1] << endl;
+        }
+
+        return UPD;
     }
 
     void SurfaceMeshing::HOSurf()
@@ -282,16 +316,17 @@ namespace MeshUtils {
                     e->SetHONodes(honodes);
                     continue; //optimimum points on plane are linear
                 }
-                e->SetHONodes(honodes);
-                continue;
 
                 NekDouble tol = 1E-6;
 
                 bool RepeatOverPoints = true;
+                int inter = 0;
 
                 while(RepeatOverPoints)
                 {
+                    inter++;
                     int convergepoints = 0;
+
                     for(int i = 0; i < honodes.size(); i++)
                     {
                         int firstnode, lastnode;
@@ -309,65 +344,30 @@ namespace MeshUtils {
                         }
                         else
                         {
-                            firstnode = honodes[i+1];
+                            lastnode = honodes[i+1];
                         }
 
-                        bool iterate = true;
+                        Array<OneD, NekDouble> update = EdgeOptiUpdate(firstnode,lastnode,
+                                    Nodes[honodes[i]]->GetS(e->GetSurf()), e->GetSurf());
 
-                        Array<OneD, NekDouble> x = Nodes[honodes[i]]->GetS(e->GetSurf());
-                        Array<OneD, NekDouble> g = EdgeEnergyDer(firstnode,lastnode,x,e->GetSurf());
-                        NekDouble FX = EdgeEnergyEval(firstnode,lastnode,x,e->GetSurf());
-                        NekDouble gmag = sqrt(g[0]*g[0] + g[1]*g[1]);
-                        NekDouble lam = 1.0;
-                        Array<OneD, NekDouble> G(2);
-                        int convcounter = 0;
-                        int funeval = 0;
 
-                        while(iterate)
-                        {
-                            G[0] = x[0] - lam*g[0]/gmag;
-                            G[1] = x[1] - lam*g[1]/gmag;
-
-                            NekDouble FG = EdgeEnergyEval(firstnode,lastnode,G,e->GetSurf());
-
-                            if(FG < FX)
-                            {
-                                x = G;
-                                g = EdgeEnergyDer(firstnode,lastnode,x,e->GetSurf());
-                                FX = FG;
-                                lam = lam * 1.2;
-                            }
-                            else
-                            {
-                                lam = lam * 0.5;
-                            }
-                            funeval++;
-                            if(abs(FG - FX) < tol)
-                            {
-                                convcounter++;
-                            }
-                            if(convcounter > 10)
-                            {
-                                iterate = false;
-                            }
-                        }
-
-                        Array<OneD, NekDouble> loc = s->P(x);
-                        Nodes[honodes[i]]->Move(loc,x);
-
-                        if(funeval == convcounter)
+                        if(update[0] < tol && update[1] < tol)
                         {
                             convergepoints++;
                         }
+                        else
+                        {
+                            Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
+                            uv[0] -= 1.0*update[0]; uv[1] -= 1.0*update[1];
+                            Array<OneD, NekDouble> loc = s->P(uv);
+                            Nodes[honodes[i]]->Move(loc,uv);
+                        }
                     }
-
-                    if(convergepoints == honodes.size())
+                    if(convergepoints == honodes.size() || inter > 1000)
                     {
                         RepeatOverPoints = false;
                     }
                 }
-
-
                 e->SetHONodes(honodes);
             }
         }

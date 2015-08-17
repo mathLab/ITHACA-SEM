@@ -215,10 +215,10 @@ namespace Utilities
             vector<int> hon = trit->second->GetHONodes();
             for(int j = 0; j < hon.size(); j++)
             {
-                localnode.push_back(allnodes[hon[j]]);
+                //localnode.push_back(allnodes[hon[j]]);
             }
 
-            ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
+            ElmtConfig conf(LibUtilities::eTriangle,m_order,false,false,false);
             vector<int> tags;
             tags.push_back(trit->second->Getcid());
             ElementSharedPtr E = GetElementFactory().
@@ -265,7 +265,7 @@ namespace Utilities
                 egs[j]->m_edgeNodes = localhonode;
             }
 
-            int t = m_mesh->m_element[m_mesh->m_expDim-1][i]->GetTriID();
+            /*int t = m_mesh->m_element[m_mesh->m_expDim-1][i]->GetTriID();
 
             Array<OneD, int> n = Tris[t]->GetN();
             vector<int> trivert(3);
@@ -278,9 +278,9 @@ namespace Utilities
 
             vector<NodeSharedPtr> hon = f->m_faceNodes;
             HOTriangle<NodeSharedPtr> hoTri(facevert,hon);
-            hoTri.Align(trivert);
+            hoTri.Align(trivert);*/
 
-            f->m_faceNodes = hoTri.surfVerts;
+            //f->m_faceNodes = hoTri.surfVerts;
         }
 
         if(m_mesh->m_verbose)

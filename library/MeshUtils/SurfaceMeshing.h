@@ -82,7 +82,11 @@ namespace MeshUtils {
 
     private:
 
-        Array<OneD, NekDouble> EdgeOptiUpdate(int a, int b, Array<OneD, NekDouble> uv, int surf);
+        Array<OneD, NekDouble> EdgeGrad(Array<OneD, NekDouble> uv1,
+                                        Array<OneD, NekDouble> uv2,
+                                        Array<OneD, NekDouble> uvx, int surf);
+        NekDouble EdgeF(Array<OneD, NekDouble> uv1,
+                                        Array<OneD, NekDouble> uv2, NekDouble ux, NekDouble vx, int surf);
 
         void Validate();
         void Optimise();

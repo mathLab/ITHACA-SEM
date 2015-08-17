@@ -135,20 +135,19 @@ namespace MeshUtils {
         nodeinlinearmesh = Nodes.size();
     }
 
-    Array<OneD, NekDouble> SurfaceMeshing::EdgeOptiUpdate(int a, int b, Array<OneD, NekDouble> uv, int surf)
+    Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(Array<OneD, NekDouble> uv1,
+                                                    Array<OneD, NekDouble> uv2,
+                                                    Array<OneD, NekDouble> uvx, int surf)
     {
         NekDouble sig = m_order/2.0;
 
-        Array<OneD, NekDouble> UPD(2);
+        Array<OneD, NekDouble> df(2);
 
-        Array<OneD, NekDouble> uva = Nodes[a]->GetS(surf);
-        Array<OneD, NekDouble> uvb = Nodes[b]->GetS(surf);
+        Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->D1(uv1);
+        Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->D1(uv2);
+        Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D1(uvx);
 
-        Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->D2(uva);
-        Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->D2(uvb);
-        Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D2(uv);
-
-        NekDouble dfdu,dfdv,d2fdu,d2fdv,d2fdudv;
+        NekDouble dfdu,dfdv;
 
         dfdu     = ((rb[0] - rm[0])*(rb[3] - rm[3]) +
                     (rb[1] - rm[1])*(rb[4] - rm[4]) +
@@ -166,46 +165,33 @@ namespace MeshUtils {
                     (rm[1] - ra[1])*(rm[7] - ra[7]) +
                     (rm[2] - ra[2])*(rm[8] - ra[8])) * 2.0*sig;
 
-        d2fdu   = ((rb[0 ] - rm[0 ])*(rb[9 ] - rm[9 ]) + (rb[3 ] - rm[3 ])*(rb[3 ] - rm[3 ]) +
-                   (rb[1 ] - rm[1 ])*(rb[10] - rm[10]) + (rb[4 ] - rm[4 ])*(rb[4 ] - rm[4 ]) +
-                   (rb[2 ] - rm[2 ])*(rb[11] - rm[11]) + (rb[5 ] - rm[5 ])*(rb[5 ] - rm[5 ])
-                   +
-                   (rm[0 ] - ra[0 ])*(rm[9 ] - ra[9 ]) + (rm[3 ] - ra[3 ])*(rm[3 ] - ra[3 ]) +
-                   (rm[1 ] - ra[1 ])*(rm[10] - ra[10]) + (rm[4 ] - ra[4 ])*(rm[4 ] - ra[4 ]) +
-                   (rm[2 ] - ra[2 ])*(rm[11] - ra[11]) + (rm[5 ] - ra[5 ])*(rm[5 ] - ra[5 ])) * 2.0*sig;
+        df[0] = dfdu; df[1] = dfdv;
+        return df;
+    }
 
-        d2fdv   = ((rb[0 ] - rm[0 ])*(rb[12] - rm[12]) + (rb[6 ] - rm[6 ])*(rb[6 ] - rm[6 ]) +
-                   (rb[1 ] - rm[1 ])*(rb[13] - rm[13]) + (rb[7 ] - rm[7 ])*(rb[7 ] - rm[7 ]) +
-                   (rb[2 ] - rm[2 ])*(rb[14] - rm[14]) + (rb[8 ] - rm[8 ])*(rb[8 ] - rm[8 ])
-                   +
-                   (rm[0 ] - ra[0 ])*(rm[12] - ra[12]) + (rm[6 ] - ra[6 ])*(rm[6 ] - ra[6 ]) +
-                   (rm[1 ] - ra[1 ])*(rm[13] - ra[13]) + (rm[7 ] - ra[7 ])*(rm[7 ] - ra[7 ]) +
-                   (rm[2 ] - ra[2 ])*(rm[14] - ra[14]) + (rm[8 ] - ra[8 ])*(rm[8 ] - ra[8 ])) * 2.0*sig;
+    NekDouble SurfaceMeshing::EdgeF(Array<OneD, NekDouble> uv1,
+                                    Array<OneD, NekDouble> uv2, NekDouble ux, NekDouble vx, int surf)
+    {
+        NekDouble sig = m_order/2.0;
 
-        d2fdudv = ((rb[0 ] - rm[0 ])*(rb[15] - rm[15]) + (rb[3 ] - rm [3 ])*(rb[6 ] - rm[6 ]) +
-                   (rb[1 ] - rm[1 ])*(rb[16] - rm[16]) + (rb[4 ] - rm [4 ])*(rb[7 ] - rm[7 ]) +
-                   (rb[2 ] - rm[2 ])*(rb[17] - rm[17]) + (rb[5 ] - rm [5 ])*(rb[8 ] - rm[8 ])
-                   +
-                   (rm[0 ] - ra[0 ])*(rm[15] - ra[15]) + (rm[3 ] - ra [3 ])*(rm[6 ] - ra[6 ]) +
-                   (rm[1 ] - ra[1 ])*(rm[16] - ra[16]) + (rm[4 ] - ra [4 ])*(rm[7 ] - ra[7 ]) +
-                   (rm[2 ] - ra[2 ])*(rm[17] - ra[17]) + (rm[5 ] - ra [5 ])*(rm[8 ] - ra[8 ])) * 2.0*sig;
+        NekDouble F;
 
-        cout << d2fdu << " " << d2fdv << " " << d2fdudv << endl;
-        NekDouble d = (d2fdu * d2fdv - d2fdudv * d2fdudv);
-        cout <<  d << endl;
-        if(fabs(d) < 1E-20) //uninveratble matrix
-        {
-            UPD[0] = 0.0; UPD[1] =0.0;
-            return UPD;
-        }
-        else{
-            cout << "did an update" << endl;
-            UPD[0] = (d2fdv * dfdu - d2fdudv * dfdv) / d;
-            UPD[1] = (d2fdu * dfdv - d2fdudv * dfdu) / d;
-            cout << UPD[0] << " " << UPD[1] << endl;
-        }
+        Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
 
-        return UPD;
+        Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(uv1);
+        Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(uv2);
+        Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->P(uvx);
+
+        F        = ((rb[0] - rm[0])*(rb[0] - rm[0]) +
+                    (rb[1] - rm[1])*(rb[1] - rm[1]) +
+                    (rb[2] - rm[2])*(rb[2] - rm[2])
+                    +
+                    (rm[0] - ra[0])*(rm[0] - ra[0]) +
+                    (rm[1] - ra[1])*(rm[1] - ra[1]) +
+                    (rm[2] - ra[2])*(rm[2] - ra[2])) * sig;
+
+        return F;
+
     }
 
     void SurfaceMeshing::HOSurf()
@@ -317,55 +303,148 @@ namespace MeshUtils {
                     continue; //optimimum points on plane are linear
                 }
 
-                NekDouble tol = 1E-6;
+                bool repeatoverallnodes = true;
 
-                bool RepeatOverPoints = true;
-                int inter = 0;
+                NekDouble tol = 1E-4;
 
-                while(RepeatOverPoints)
+                while(repeatoverallnodes)
                 {
-                    inter++;
-                    int convergepoints = 0;
+                    int converged = 0;
+
+                    Array<OneD, NekDouble> uv1, uv2, uvx, uvi;
+
+                    Array<OneD, NekDouble> bounds = s->GetBounds();
 
                     for(int i = 0; i < honodes.size(); i++)
                     {
-                        int firstnode, lastnode;
                         if(i==0)
                         {
-                            firstnode = n[0];
+                            uv1 = uvb;
                         }
                         else
                         {
-                            firstnode = honodes[i-1];
+                            uv1 = Nodes[honodes[i-1]]->GetS(e->GetSurf());
                         }
                         if(i==honodes.size()-1)
                         {
-                            lastnode = n[1];
+                            uv2 = uve;
                         }
                         else
                         {
-                            lastnode = honodes[i+1];
+                            uv2 = Nodes[honodes[i+1]]->GetS(e->GetSurf());
                         }
 
-                        Array<OneD, NekDouble> update = EdgeOptiUpdate(firstnode,lastnode,
-                                    Nodes[honodes[i]]->GetS(e->GetSurf()), e->GetSurf());
+                        uvi = Nodes[honodes[i]]->GetS(e->GetSurf());
 
+                        Array<OneD, NekDouble> df = EdgeGrad(uv1,uv2,uvi,e->GetSurf());
 
-                        if(update[0] < tol && update[1] < tol)
+                        NekDouble a,b;
+
+                        a = (bounds[1] - uvi[0]) / df[0];
+                        if(uvi[1] + a*df[1] > bounds[3])
+                            a = (bounds[3] - uvi[1]) / df[1];
+
+                        b = (bounds[0] - uvi[0]) / df[0];
+                        if(uvi[1] + b*df[1] < bounds[2])
+                            b = (bounds[2] - uvi[1]) / df[1];
+
+                        //initial conditions
+
+                        NekDouble fxi = EdgeF(uv1,uv2,uvi[0],uvi[1],e->GetSurf());
+                        NekDouble fx= fxi;
+
+                        NekDouble ax = a; NekDouble bx = 0; NekDouble cx = b;
+
+                        //enter brent algoithm from book
+                        NekDouble e1 = 0.0;
+                        NekDouble xmin=0.0;
+                        a = ax < cx ? ax : cx; b = ax > cx ? ax : cx;
+                        NekDouble x,w,v;
+                        x = w = v = bx;
+                        NekDouble fw,fv;
+                        fw = fv = fx;
+
+                        NekDouble xm,tol2,tol1,r,q,p,etemp,d,fu,u;
+                        NekDouble zeps = 1E-10;
+                        for(int it = 0; it < 100; it++)
                         {
-                            convergepoints++;
+                            xm = 0.5*(a+b);
+                            tol2 = 2.0*(tol1=tol*fabs(x)+zeps);
+                            if(fabs(x-xm) <= (tol2-0.5*(b-a)))
+                            {
+                                break;
+                            }
+                            if(fabs(e1) > tol1)
+                            {
+                                r = (x-w)*(fx-fv);
+                                q = (x-v)*(fx-fw);
+                                p = (x-v)*q-(x-w)*r;
+                                q = 2.0*(q-r);
+                                if(q>0.0) p = -p;
+                                q = fabs(q);
+                                etemp = e1;
+                                e1 = d;
+                                if(fabs(p) > fabs(0.5*q*etemp) ||
+                                   p <= q*(a-x) || p >= q*(b-x))
+                                        d=0.3819660*(e1=(x>= xm ? a-x : b-x));
+                                else
+                                {
+                                    d=p/q;
+                                    u=x+d;
+                                    if(u-a < tol2 || b-u < tol2)
+                                        d = tol1*(xm-x)/fabs(xm-x);
+                                }
+                            }
+                            else
+                            {
+                                d=0.3819660*(e1=(x>= xm ? a-x : b-x));
+                            }
+                            u = fabs(d) >= tol1 ? x+d : x+tol1*d/fabs(d);
+                            fu = EdgeF(uv1,uv2,uvi[0]+df[0]*u,uvi[1]+df[1]*u,e->GetSurf());
+                            if(fu <= fx)
+                            {
+                                if(u>=x) a=x; else b=x;
+                                v=w;
+                                w=x;
+                                x=u;
+                                fv=fw;
+                                fw=fx;
+                                fx=fu;
+                            }
+                            else
+                            {
+                                if(u < x) a=u; else b=u;
+                                if(fu<=fw || w ==x)
+                                {
+                                    v=w;
+                                    w=u;
+                                    fv=fw;
+                                    fw=fu;
+                                }
+                                else if(fu <= fv || v==x || v==w)
+                                {
+                                    v=u;
+                                    fv=fu;
+                                }
+                            }
+                        }
+                        xmin = x;
+
+                        if(fabs(fx - fxi) < tol)
+                        {
+                            converged++;
                         }
                         else
                         {
-                            Array<OneD, NekDouble> uv = Nodes[honodes[i]]->GetS(e->GetSurf());
-                            uv[0] -= 1.0*update[0]; uv[1] -= 1.0*update[1];
-                            Array<OneD, NekDouble> loc = s->P(uv);
-                            Nodes[honodes[i]]->Move(loc,uv);
+                            uvi[0]+=xmin*df[0]; uvi[1]+=xmin*df[1];
+                            Array<OneD, NekDouble> loc = s->P(uvi);
+                            Nodes[honodes[i]]->Move(loc,uvi);
                         }
                     }
-                    if(convergepoints == honodes.size() || inter > 1000)
+                    if(converged == honodes.size())
                     {
-                        RepeatOverPoints = false;
+                        repeatoverallnodes = false;
+                        cout << "done " << endl;
                     }
                 }
                 e->SetHONodes(honodes);

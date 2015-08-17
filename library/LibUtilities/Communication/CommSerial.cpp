@@ -290,6 +290,14 @@ namespace Nektar
 
         }
 
+        Array<OneD, unsigned long long> CommSerial::v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val)
+        {
+            return val;
+        }
+        Array<OneD, unsigned long long> CommSerial::v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData)
+        {
+            return pData;
+        }
         /**
          *
          */

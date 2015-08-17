@@ -535,6 +535,10 @@ namespace Nektar
                     H5T_NATIVE_UINT;
 
             template<>
+            const hid_t DataTypeTraits<unsigned long long>::NativeType =
+                    H5T_NATIVE_ULLONG;
+
+            template<>
             const hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
 
             AttributeSharedPtr Attribute::Create(hid_t parent,

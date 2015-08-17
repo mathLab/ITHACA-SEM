@@ -668,6 +668,42 @@ namespace Nektar
             ASSERTL0(retval == MPI_SUCCESS,
                     "MPI error performing Exscan-v.");
         }
+
+        Array<OneD, unsigned long long> CommMpi::v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val)
+        {
+            bool amRoot = (GetRank() == rootProc);
+            unsigned nEl = val.num_elements();
+
+            unsigned nOut = amRoot ? GetSize() * nEl : 0;
+            Array<OneD, unsigned long long> ans(nOut);
+            void* recvbuf = amRoot ? ans.get() : NULL;
+
+            int retval = MPI_Gather(val.get(), nEl, MPI_UNSIGNED_LONG_LONG,
+                    recvbuf, nEl, MPI_UNSIGNED_LONG_LONG,
+                    rootProc, m_comm);
+
+            ASSERTL0(retval == MPI_SUCCESS,
+                                "MPI error performing Gather.");
+            return ans;
+        }
+
+        Array<OneD, unsigned long long> CommMpi::v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData)
+        {
+            bool amRoot = (GetRank() == rootProc);
+            unsigned nEl = pData.num_elements() / GetSize();
+
+            const void* sendbuf = amRoot ? pData.get() : NULL;
+            Array<OneD, unsigned long long> ans(nEl);
+
+            int retval = MPI_Scatter(sendbuf, nEl, MPI_UNSIGNED_LONG_LONG,
+                        ans.get(), nEl, MPI_UNSIGNED_LONG_LONG,
+                        rootProc, m_comm);
+            ASSERTL0(retval == MPI_SUCCESS,
+                                "MPI error performing Scatter.");
+
+            return ans;
+        }
+
         /**
          * Processes are considered as a grid of size pRows*pColumns. Comm
          * objects are created corresponding to the rows and columns of this

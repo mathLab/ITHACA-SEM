@@ -35,10 +35,6 @@
 
 #include <LibUtilities/BasicUtils/FieldIOHdf5.h>
 
-#ifdef NEKTAR_USE_MPI
-#include <LibUtilities/Communication/CommMpi.h>
-#endif
-
 namespace berrc = boost::system::errc;
 
 namespace Nektar
@@ -119,10 +115,11 @@ namespace Nektar
                 std::vector<std::vector<NekDouble> > &fielddata,
                 const FieldMetaDataMap &fieldmetadatamap)
         {
+            size_t nFields = fielddefs.size();
             // Check everything seems sensible
             ASSERTL1(fielddefs.size() == fielddata.size(),
                     "Length of fielddefs and fielddata incompatible");
-            for (int f = 0; f < fielddefs.size(); ++f)
+            for (int f = 0; f < nFields; ++f)
             {
                 ASSERTL1(fielddata[f].size() > 0,
                         "Fielddata vector must contain at least one value.");
@@ -159,35 +156,49 @@ namespace Nektar
             // This does involve the other ranks because everyone needs to know
             // where in the global list they're writing their subset
             typedef Array<OneD, unsigned long long> SizeArray;
-            SizeArray local_n_elem(fielddefs.size());
-            SizeArray global_n_elem(fielddefs.size());
-            SizeArray global_idx(fielddefs.size());
-            SizeArray vals_per_elem(fielddefs.size());
-            for (int f = 0; f < fielddefs.size(); ++f)
+            SizeArray local_n_elem(nFields);
+            SizeArray global_n_elem(nFields);
+            SizeArray vals_per_elem(nFields);
+            for (int f = 0; f < nFields; ++f)
             {
                 // Get the global index at which we're writing our local data
                 // and the global number of elements
                 local_n_elem[f] = fielddefs[f]->m_elementIDs.size();
                 vals_per_elem[f] = fielddata[f].size() / local_n_elem[f];
-                // Init to zero cos on rank zero (or serial case) there are no
-                // ranks with smaller ID so it will get a garbage value.
-                global_idx[f] = 0;
             }
 
-            // Compute global_idx = sum(local_n_elem[rank i] for i in range(0, my rank))
-            m_comm->Exscan(local_n_elem, ReduceSum, global_idx);
+            bool amRoot = (m_comm->GetRank() == 0);
 
-            // If this is the last rank
-            if (m_comm->GetRank() == m_comm->GetSize() - 1)
+            SizeArray all_n_elem = m_comm->Gather(0, local_n_elem);
+            SizeArray all_idx(all_n_elem.num_elements());
+
+            if (amRoot)
             {
-                for (int f = 0; f < fielddefs.size(); ++f)
-                    global_n_elem[f] = global_idx[f] + local_n_elem[f];
+                // Compute global_idx = sum(local_n_elem[rank i] for i in range(0, my rank))
+                for (int f = 0; f < nFields; ++f)
+                    all_idx[f] = 0;
+
+                for (int p = 1; p < m_comm->GetSize(); ++p)
+                {
+                    for (int f = 0; f < nFields; ++f)
+                    {
+                        all_idx[p * nFields + f] =
+                                all_idx[(p - 1) * nFields + f]
+                                        + all_n_elem[(p - 1) * nFields + f];
+                    }
+                }
+                for (int f = 0; f < nFields; ++f)
+                {
+                    int i = (m_comm->GetSize() - 1) + f;
+                    global_n_elem[f] = all_idx[i] + all_n_elem[i];
+                }
             }
-            // Broadcast from the last rank to all the others
-            m_comm->Bcast(global_n_elem, m_comm->GetSize() - 1);
+
+            SizeArray global_idx = m_comm->Scatter(0, all_idx);
+            ASSERTL0(global_idx.num_elements() == nFields,
+                    "Didn't get the right number of field indices")
 
             // Only one rank touches the file to create the layout.
-            bool amRoot = (m_comm->GetRank() == 0);
             if (amRoot)
             {
                 H5::FileSharedPtr outfile = H5::File::Create(outFile,
@@ -196,7 +207,18 @@ namespace Nektar
                 TagWriterSharedPtr info_writer(new H5TagWriter(root));
                 AddInfoTag(info_writer, fieldmetadatamap);
 
-                for (int f = 0; f < fielddefs.size(); ++f)
+                std::vector < std::vector<unsigned long long> > decompositions(nFields);
+                for (int f = 0; f < nFields; ++f)
+                    decompositions[f].resize(m_comm->GetSize());
+                for (int p = 0; p < m_comm->GetSize(); ++p)
+                {
+                    for (int f = 0; f < nFields; ++f)
+                    {
+                        decompositions[f][p] = all_n_elem[p * nFields + f];
+                    }
+                }
+
+                for (int f = 0; f < nFields; ++f)
                 {
                     //---------------------------------------------
                     // Write ELEMENTS
@@ -296,6 +318,9 @@ namespace Nektar
                     }
                     elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
 
+                    // DECOMPOSITION
+                    elemTag->SetAttribute("DECOMPOSITION", decompositions[f]);
+
                     // Create empty datasets
                     // ID
                     H5::DataSpaceSharedPtr idSpace = H5::DataSpace::OneD(
@@ -312,6 +337,7 @@ namespace Nektar
                             fielddata[f][0]);
                     H5::DataSetSharedPtr dataDS = elemTag->CreateDataSet("DATA",
                             dataType, dataSpace);
+
                 }
             }
             // RAII => file gets closed automatically
@@ -334,10 +360,11 @@ namespace Nektar
                     parallelProps);
             H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
 
-            for (int f = 0; f < fielddefs.size(); ++f)
+            for (int f = 0; f < nFields; ++f)
             {
                 std::string elemGroupName = GetElemGroupName(f);
                 H5::GroupSharedPtr elemTag = root->OpenGroup(elemGroupName);
+                // TODO: should probably add a check that the attributes are right to make sure we're OK to write
 
                 H5::DataSetSharedPtr dset;
                 H5::DataSpaceSharedPtr filespace;

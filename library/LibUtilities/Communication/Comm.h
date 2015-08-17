@@ -42,8 +42,8 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-namespace Nektar { template <typename Dim, typename DataType> class Array; }
-
+//namespace Nektar { template <typename Dim, typename DataType> class Array; }
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -136,6 +136,9 @@ namespace Nektar
 
                 LIB_UTILITIES_EXPORT inline void Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
 
+                LIB_UTILITIES_EXPORT inline Array<OneD, unsigned long long> Gather(const int rootProc, const Array<OneD, unsigned long long>& val);
+                LIB_UTILITIES_EXPORT inline Array<OneD, unsigned long long> Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData);
+
                 LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
                 LIB_UTILITIES_EXPORT inline void SplitComm(int pRows, int pColumns);
@@ -207,6 +210,9 @@ namespace Nektar
                 virtual void v_Bcast(Array<OneD, int>& data, int rootProc) = 0;
                 virtual void v_Bcast(Array<OneD, unsigned long long>& data, int rootProc) = 0;
                 virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans) = 0;
+
+                virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val) = 0;
+                virtual Array<OneD, unsigned long long> v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData) = 0;
 
                 virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
@@ -456,6 +462,20 @@ namespace Nektar
         inline void Comm::Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {
             v_Exscan(pData, pOp, ans);
+        }
+        /**
+         * Concatenate all the input arrays, in rank order, onto the process with rank == rootProc
+         */
+        inline Array<OneD, unsigned long long> Comm::Gather(const int rootProc, const Array<OneD, unsigned long long>& val)
+        {
+            return v_Gather(rootProc, val);
+        }
+        /**
+         * Scatter pData across ranks in chunks of len(pData)/num_ranks
+         */
+        inline Array<OneD, unsigned long long> Comm::Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData)
+        {
+            return v_Scatter(rootProc, pData);
         }
 
 		/**

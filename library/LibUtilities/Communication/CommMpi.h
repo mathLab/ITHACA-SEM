@@ -130,6 +130,10 @@ namespace Nektar
 			virtual void v_Bcast(Array<OneD, int>& pData, int rootProc);
             virtual void v_Bcast(Array<OneD, unsigned long long>& pData, int rootProc);
 			virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
+
+            virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val);
+            virtual Array<OneD, unsigned long long> v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData);
+
             virtual void v_SplitComm(int pRows, int pColumns);
             virtual CommSharedPtr v_CommCreateIf(int flag);
 

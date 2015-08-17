@@ -123,6 +123,9 @@ namespace Nektar
             LIB_UTILITIES_EXPORT virtual void v_Bcast(Array<OneD, int>& data, int rootProc);
             LIB_UTILITIES_EXPORT virtual void v_Bcast(Array<OneD, unsigned long long>& data, int rootProc);
             LIB_UTILITIES_EXPORT virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
+            LIB_UTILITIES_EXPORT virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val);
+            LIB_UTILITIES_EXPORT virtual Array<OneD, unsigned long long> v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData);
+
             LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
             LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
 

@@ -586,7 +586,6 @@ namespace MeshUtils {
                             uvi[0]+=xmin*df[0]; uvi[1]+=xmin*df[1];
                             Array<OneD, NekDouble> loc = s->P(uvi);
                             Nodes[honodes[i]]->Move(loc,uvi);
-                            cout << "moved" << endl;
                         }
                     }
                     if(converged == honodes.size())

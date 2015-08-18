@@ -487,6 +487,10 @@ namespace Nektar
                         element->GetAttribute(attrName, numPointsString);
                         numPointDef = true;
                     }
+                    else if (attrName == "DECOMPOSITION")
+                    {
+                        // Ignore this attribute
+                    }
                     else
                     {
                         std::string errstr("Unknown attribute: ");

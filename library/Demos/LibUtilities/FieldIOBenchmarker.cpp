@@ -326,12 +326,18 @@ void ReadWholeFilesForThisRank(Experiment& exp, DefVec& outFieldDefs,
     std::string ft = FieldIO::GetFileType(exp.dataSource, exp.comm);
     FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm);
 
-    Array<OneD, int> ElementIDs = ReadIDsForThisRank(exp, fio);
-    FieldMetaDataMap fieldmetadatamap;
+    if (fs::is_directory(exp.dataSource))  {
+        Array<OneD, int> ElementIDs = ReadIDsForThisRank(exp, fio);
+        FieldMetaDataMap fieldmetadatamap;
 
-    // Load all the data from files that contain any of the IDs we want.
-    fio->Import(exp.dataSource, outFieldDefs, outFieldData, fieldmetadatamap,
-            ElementIDs);
+        // Load all the data from files that contain any of the IDs we want.
+        fio->Import(exp.dataSource, outFieldDefs, outFieldData, fieldmetadatamap,
+                ElementIDs);
+    }
+    else
+    {
+        fio->Import(exp.dataSource, outFieldDefs, outFieldData);
+    }
 }
 /**
  * Read only the data that this rank wants. Returns it in outFieldDefs and

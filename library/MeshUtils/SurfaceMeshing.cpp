@@ -166,6 +166,8 @@ namespace MeshUtils {
                     (rm[2] - ra[2])*(rm[8] - ra[8])) * 2.0*sig;
 
         df[0] = dfdu; df[1] = dfdv;
+        NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
+        df[0] = df[0]/dfmag; df[1] = df[1]/dfmag;
         return df;
     }
 
@@ -305,7 +307,7 @@ namespace MeshUtils {
 
                 bool repeatoverallnodes = true;
 
-                NekDouble tol = 1E-4;
+                NekDouble tol = 1E-10;
 
                 while(repeatoverallnodes)
                 {
@@ -339,14 +341,151 @@ namespace MeshUtils {
                         Array<OneD, NekDouble> df = EdgeGrad(uv1,uv2,uvi,e->GetSurf());
 
                         NekDouble a,b;
+                        bool aset = false; bool bset = false;
+                        NekDouble K, L, inter;
+                        //want a to be negative, against the gradient, but properly bounded!!
 
-                        a = (bounds[1] - uvi[0]) / df[0];
-                        if(uvi[1] + a*df[1] > bounds[3])
-                            a = (bounds[3] - uvi[1]) / df[1];
-
-                        b = (bounds[0] - uvi[0]) / df[0];
-                        if(uvi[1] + b*df[1] < bounds[2])
-                            b = (bounds[2] - uvi[1]) / df[1];
+                        //check edges of bounding box one by one for intersect, because paralell lines some cases can be ingnored
+                        //line 1 left edge;
+                        if(!(fabs(df[0]) < 1E-10)) //wouldnt exist on this edge
+                        {
+                            K = (bounds[0] - uvi[0]) / df[0];
+                            L = df[1] * K + uvi[1] - bounds[2];
+                            inter = bounds[2] + L;
+                            if(!(inter < bounds[2] || inter > bounds[3]))
+                            {
+                                //hit
+                                if(K < 0)
+                                {
+                                    if(aset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        a = K;
+                                        aset = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if(bset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        b = K;
+                                        bset = true;
+                                    }
+                                }
+                            }
+                        }
+                        //line 2 right edge;
+                        if(!(fabs(df[0]) < 1E-10)) //wouldnt exist on this edge
+                        {
+                            K = (bounds[1] - uvi[0]) / df[0];
+                            L = df[1] * K + uvi[1] - bounds[2];
+                            inter = bounds[2] + L;
+                            if(!(inter < bounds[2] || inter > bounds[3]))
+                            {
+                                //hit
+                                if(K < 0)
+                                {
+                                    if(aset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        a = K;
+                                        aset = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if(bset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        b = K;
+                                        bset = true;
+                                    }
+                                }
+                            }
+                        }
+                        //line 3 bottom edge;
+                        if(!(fabs(df[1]) < 1E-10)) //wouldnt exist on this edge
+                        {
+                            K = (bounds[2] - uvi[1]) / df[1];
+                            L = df[0] * K + uvi[0] - bounds[0];
+                            inter = bounds[0] + L;
+                            if(!(inter < bounds[0] || inter > bounds[1]))
+                            {
+                                //hit
+                                if(K < 0)
+                                {
+                                    if(aset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        a = K;
+                                        aset = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if(bset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        b = K;
+                                        bset = true;
+                                    }
+                                }
+                            }
+                        }
+                        //line 4 top edge;
+                        if(!(fabs(df[1]) < 1E-10)) //wouldnt exist on this edge
+                        {
+                            K = (bounds[3] - uvi[1]) / df[1];
+                            L = df[0] * K + uvi[0] - bounds[0];
+                            inter = bounds[0] + L;
+                            if(!(inter < bounds[0] || inter > bounds[1]))
+                            {
+                                //hit
+                                if(K < 0)
+                                {
+                                    if(aset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        a = K;
+                                        aset = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if(bset)
+                                    {
+                                        cout << "error, should not be set" << endl;
+                                    }
+                                    else
+                                    {
+                                        b = K;
+                                        bset = true;
+                                    }
+                                }
+                            }
+                        }
 
                         //initial conditions
 
@@ -399,7 +538,15 @@ namespace MeshUtils {
                             {
                                 d=0.3819660*(e1=(x>= xm ? a-x : b-x));
                             }
+
                             u = fabs(d) >= tol1 ? x+d : x+tol1*d/fabs(d);
+                            if(uvi[0]+df[0]*u < bounds[0] ||
+                               uvi[0]+df[0]*u > bounds[1] ||
+                               uvi[1]+df[1]*u < bounds[2] ||
+                               uvi[1]+df[1]*u > bounds[3])
+                            {
+                                break;
+                            }
                             fu = EdgeF(uv1,uv2,uvi[0]+df[0]*u,uvi[1]+df[1]*u,e->GetSurf());
                             if(fu <= fx)
                             {
@@ -439,12 +586,12 @@ namespace MeshUtils {
                             uvi[0]+=xmin*df[0]; uvi[1]+=xmin*df[1];
                             Array<OneD, NekDouble> loc = s->P(uvi);
                             Nodes[honodes[i]]->Move(loc,uvi);
+                            cout << "moved" << endl;
                         }
                     }
                     if(converged == honodes.size())
                     {
                         repeatoverallnodes = false;
-                        cout << "done " << endl;
                     }
                 }
                 e->SetHONodes(honodes);

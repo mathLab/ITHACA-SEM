@@ -65,6 +65,7 @@ ENDIF( NEKTAR_USE_HDF5 )
 SET(CommunicationHeaders
     ./Communication/Comm.h
     ./Communication/CommSerial.h
+    ./Communication/CommDataType.h
     ./Communication/GsLib.hpp
     ./Communication/Transposition.h
     ./Communication/Xxt.hpp
@@ -72,6 +73,7 @@ SET(CommunicationHeaders
 
 SET(CommunicationSources
     ./Communication/Comm.cpp
+    ./Communication/CommDataType.cpp
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )

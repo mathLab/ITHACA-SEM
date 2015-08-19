@@ -94,7 +94,7 @@ namespace Nektar
         /**
          *
          */
-        void CommSerial::v_Send(int pProc, Array<OneD, NekDouble>& pData)
+        void CommSerial::v_Send(const void* buf, int count, CommDataType dt, int dest)
         {
         }
 
@@ -102,129 +102,34 @@ namespace Nektar
         /**
          *
          */
-        void CommSerial::v_Recv(int pProc, Array<OneD, NekDouble>& pData)
+        void CommSerial::v_Recv(void* buf, int count, CommDataType dt, int source)
         {
         }
-
 
         /**
          *
          */
-        void CommSerial::v_Send(int pProc, Array<OneD, int>& pData)
+        void CommSerial::v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+                void *recvbuf, int recvcount, CommDataType recvtype, int source)
         {
         }
 
-
-        /**
-         *
-         */
-        void CommSerial::v_Recv(int pProc, Array<OneD, int>& pData)
-        {
-        }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_Send(int pProc, std::vector<unsigned int>& pData)
-        {
-        }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_Recv(int pProc, std::vector<unsigned int>& pData)
-        {
-        }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_SendRecv(int pSendProc,
-                                Array<OneD, NekDouble>& pSendData,
-                                int pRecvProc,
-                                Array<OneD, NekDouble>& pRecvData)
-        {
-        }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_SendRecv(int pSendProc,
-                                Array<OneD, int>& pSendData,
-                                int pRecvProc,
-                                Array<OneD, int>& pRecvData)
-        {
-        }
-		
-		
 		/**
          *
          */
-        void CommSerial::v_SendRecvReplace(int pSendProc,
-										   int pRecvProc,
-										   Array<OneD, NekDouble>& pSendData)
+        void CommSerial::v_SendRecvReplace(void* buf, int count, CommDataType dt,
+                int pSendProc, int pRecvProc)
 		{
 		}
 		
 		
-		/**
-         *
-         */
-        void CommSerial::v_SendRecvReplace(int pSendProc,
-										   int pRecvProc,
-										   Array<OneD, int>& pSendData)
-		{
-		}
-
-
         /**
          *
          */
-        void CommSerial::v_AllReduce(NekDouble& pData, enum ReduceOperator pOp)
+        void CommSerial::v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp)
         {
 
         }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_AllReduce(int& pData, enum ReduceOperator pOp)
-        {
-
-        }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_AllReduce(Array<OneD, NekDouble>& pData, enum ReduceOperator pOp)
-        {
-
-        }
-
-
-        /**
-         *
-         */
-        void CommSerial::v_AllReduce(Array<OneD, int      >& pData, enum ReduceOperator pOp)
-        {
-
-        }
-		
-		
-        /**
-         *
-         */
-        void CommSerial::v_AllReduce(std::vector<unsigned int>& pData, enum ReduceOperator pOp)
-        {
-
-        }
-
 
 		/**
          *
@@ -271,19 +176,10 @@ namespace Nektar
 			
         }
 
-		void CommSerial::v_Bcast(int& data, int rootProc)
+		void CommSerial::v_Bcast(void* buffer, int count, CommDataType dt, int root)
 		{
 
 		}
-
-        void CommSerial::v_Bcast(Array<OneD, int>& data, int rootProc)
-        {
-
-        }
-        void CommSerial::v_Bcast(Array<OneD, unsigned long long>& data, int rootProc)
-        {
-
-        }
 
         void CommSerial::v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {

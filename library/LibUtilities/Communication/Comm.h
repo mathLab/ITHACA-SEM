@@ -44,6 +44,7 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 //namespace Nektar { template <typename Dim, typename DataType> class Array; }
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Communication/CommDataType.h>
 
 namespace Nektar
 {
@@ -85,34 +86,20 @@ namespace Nektar
 
                 /// Block execution until all processes reach this point
                 LIB_UTILITIES_EXPORT inline void Block();
-                LIB_UTILITIES_EXPORT inline void Send(int pProc, Array<OneD, NekDouble>& pData);
-                LIB_UTILITIES_EXPORT inline void Send(int pProc, Array<OneD, int>& pData);
-                LIB_UTILITIES_EXPORT inline void Send(int pProc, std::vector<unsigned int>& pData);
-                LIB_UTILITIES_EXPORT inline void Recv(int pProc, Array<OneD, NekDouble>& pData);
-                LIB_UTILITIES_EXPORT inline void Recv(int pProc, Array<OneD, int>& pData);
-                LIB_UTILITIES_EXPORT inline void Recv(int pProc, std::vector<unsigned int>& pData);
-                LIB_UTILITIES_EXPORT inline void SendRecv(int pSendProc,
-                                     Array<OneD, NekDouble>& pSendData,
-                                     int pRecvProc,
-                                     Array<OneD, NekDouble>& pRecvData);
-                LIB_UTILITIES_EXPORT inline void SendRecv(int pSendProc,
-                                     Array<OneD, int>& pSendData,
-                                     int pRecvProc,
-                                     Array<OneD, int>& pRecvData);
-                LIB_UTILITIES_EXPORT inline void SendRecvReplace(int pSendProc,
-                                                                 int pRecvProc,
-                                                                 Array<OneD, NekDouble>& pSendData);
-                LIB_UTILITIES_EXPORT inline void SendRecvReplace(int pSendProc,
-                                                                 int pRecvProc,
-                                                                 Array<OneD, int>& pSendData);
-                LIB_UTILITIES_EXPORT inline void AllReduce(NekDouble& pData, enum ReduceOperator pOp);
-                LIB_UTILITIES_EXPORT inline void AllReduce(int& pData, enum ReduceOperator pOp);
-                LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, NekDouble>& pData,
-                                         enum ReduceOperator pOp);
-                LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, int      >& pData,
-                                         enum ReduceOperator pOp);
-                LIB_UTILITIES_EXPORT inline void AllReduce(std::vector<unsigned int>& pData,
-                                                           enum ReduceOperator pOp);
+
+                template<class T>
+                void Send(int pProc, const T& pData);
+                template<class T>
+                void Recv(int pProc, T& pData);
+                template<class T>
+                void SendRecv(int pSendProc, const T& pSendData,
+                        int pRecvProc, T& pRecvData);
+                template<class T>
+                void SendRecvReplace(int pSendProc, int pRecvProc, T& pData);
+
+                template<class T>
+                void AllReduce(T& pData, enum ReduceOperator pOp);
+
                 LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, NekDouble>& pSendData,
                                                           Array<OneD, NekDouble>& pRecvData);
                 LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, int>& pSendData,
@@ -130,9 +117,8 @@ namespace Nektar
                                                            Array<OneD, int>& pRecvDataSizeMap,
                                                            Array<OneD, int>& pRecvDataOffsetMap);
                 
-                LIB_UTILITIES_EXPORT inline void Bcast(int& data, int rootProc);
-                LIB_UTILITIES_EXPORT inline void Bcast(Array<OneD, int>& data, int rootProc);
-                LIB_UTILITIES_EXPORT inline void Bcast(Array<OneD, unsigned long long>& data, int rootProc);
+                template<class T>
+                void Bcast(T& data, int rootProc);
 
                 LIB_UTILITIES_EXPORT inline void Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
 
@@ -160,37 +146,15 @@ namespace Nektar
                 virtual void v_Finalise() = 0;
                 virtual int  v_GetRank() = 0;
                 virtual void v_Block() = 0;
-                virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData) = 0;
-                virtual void v_Send(int pProc, Array<OneD, int>& pData) = 0;
-                virtual void v_Send(int pProc, std::vector<unsigned int>& pData) = 0;
-                virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData) = 0;
-                virtual void v_Recv(int pProc, Array<OneD, int>& pData) = 0;
-                virtual void v_Recv(int pProc, std::vector<unsigned int>& pData) = 0;
-                virtual void v_SendRecv(int pSendProc,
-                                        Array<OneD, NekDouble>& pSendData,
-                                        int pRecvProc,
-                                        Array<OneD, NekDouble>& pRecvData) = 0;
-                virtual void v_SendRecv(int pSendProc,
-                                        Array<OneD, int>& pSendData,
-                                        int pRecvProc,
-                                        Array<OneD, int>& pRecvData) = 0;
-				virtual void v_SendRecvReplace(int pSendProc,
-									          int pRecvProc,
-									          Array<OneD, NekDouble>& pSendData) = 0;
-				virtual void v_SendRecvReplace(int pSendProc,
-											  int pRecvProc,
-									          Array<OneD, int>& pSendData) = 0;
-                virtual void v_AllReduce(NekDouble& pData,
-                                         enum ReduceOperator pOp) = 0;
-                virtual void v_AllReduce(int& pData,
-                                         enum ReduceOperator pOp) = 0;
-                virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
-                                         enum ReduceOperator pOp) = 0;
-                virtual void v_AllReduce(Array<OneD, int      >& pData,
-                                         enum ReduceOperator pOp) = 0;
-                virtual void v_AllReduce(std::vector<unsigned int>& pData,
-                                         enum ReduceOperator pOp) = 0;
-			    virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
+                virtual void v_Send(const void* buf, int count, CommDataType dt, int dest) = 0;
+                virtual void v_Recv(void* buf, int count, CommDataType dt, int source) = 0;
+                virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+                        void *recvbuf, int recvcount, CommDataType recvtype, int source) = 0;
+				virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
+				        int pSendProc, int pRecvProc) = 0;
+				virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp) = 0;
+
+				virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
 										Array<OneD, NekDouble>& pRecvData) = 0;
                 virtual void v_AlltoAll(Array<OneD, int>& pSendData,
 										Array<OneD, int>& pRecvData) = 0;
@@ -206,9 +170,7 @@ namespace Nektar
 										Array<OneD, int>& pRecvData,
 										Array<OneD, int>& pRecvDataSizeMap,
 										Array<OneD, int>& pRecvDataOffsetMap) = 0;
-				virtual void v_Bcast(int& data, int rootProc) = 0;
-                virtual void v_Bcast(Array<OneD, int>& data, int rootProc) = 0;
-                virtual void v_Bcast(Array<OneD, unsigned long long>& data, int rootProc) = 0;
+				virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root) = 0;
                 virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans) = 0;
 
                 virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val) = 0;
@@ -261,144 +223,68 @@ namespace Nektar
             v_Block();
         }
 
-        /**
-         *
-         */
-        inline void Comm::Send(int pProc, Array<OneD, NekDouble>& pData)
+        template<class T>
+        void Comm::Send(int pProc, const T& pData)
         {
-            v_Send(pProc, pData);
+                v_Send(CommDataTypeTraits<T>::GetPointer(pData),
+                        CommDataTypeTraits<T>::GetCount(pData),
+                        CommDataTypeTraits<T>::GetDataType(),
+                        pProc);
+        }
+
+        template<class T>
+        void Comm::Recv(int pProc, T& pData)
+        {
+                v_Recv(CommDataTypeTraits<T>::GetPointer(pData),
+                        CommDataTypeTraits<T>::GetCount(pData),
+                        CommDataTypeTraits<T>::GetDataType(),
+                        pProc);
         }
 
         /**
          *
          */
-        inline void Comm::Recv(int pProc, Array<OneD, NekDouble>& pData)
-        {
-            v_Recv(pProc, pData);
-        }
-
-
-        /**
-         *
-         */
-        inline void Comm::Send(int pProc, Array<OneD, int>& pData)
-        {
-            v_Send(pProc, pData);
-        }
-
-        /**
-         *
-         */
-        inline void Comm::Recv(int pProc, Array<OneD, int>& pData)
-        {
-            v_Recv(pProc, pData);
-        }
-
-        /**
-         *
-         */
-        inline void Comm::Send(int pProc, std::vector<unsigned int>& pData)
-        {
-            v_Send(pProc, pData);
-        }
-
-        /**
-         *
-         */
-        inline void Comm::Recv(int pProc, std::vector<unsigned int>& pData)
-        {
-            v_Recv(pProc, pData);
-        }
-
-        /**
-         *
-         */
-        inline void Comm::SendRecv(int pSendProc,
-                             Array<OneD, NekDouble>& pSendData,
+        template<class T>
+        void Comm::SendRecv(int pSendProc,
+                             const T& pSendData,
                              int pRecvProc,
-                             Array<OneD, NekDouble>& pRecvData)
+                             T& pRecvData)
         {
-            v_SendRecv(pSendProc, pSendData, pRecvProc, pRecvData);
-        }
-
-
-        /**
-         *
-         */
-        inline void Comm::SendRecv(int pSendProc,
-                             Array<OneD, int>& pSendData,
-                             int pRecvProc,
-                             Array<OneD, int>& pRecvData)
-        {
-            v_SendRecv(pSendProc, pSendData, pRecvProc, pRecvData);
+            v_SendRecv(CommDataTypeTraits<T>::GetPointer(pSendData),
+                    CommDataTypeTraits<T>::GetCount(pSendData).
+                    CommDataTypeTraits<T>::GetDataType(),
+                    pSendProc,
+                    CommDataTypeTraits<T>::GetPointer(pRecvData),
+                    CommDataTypeTraits<T>::GetCount(pRecvData),
+                    CommDataTypeTraits<T>::GetDataType(),
+                    pRecvProc);
         }
 		
 		/**
          *
          */
-        inline void Comm::SendRecvReplace(int pSendProc,
-										 int pRecvProc,
-								         Array<OneD, NekDouble>& pSendData)
+        template <class T>
+        void Comm::SendRecvReplace(int pSendProc,
+                int pRecvProc,
+                T& pData)
         {
-            v_SendRecvReplace(pSendProc,pRecvProc,pSendData);
+            v_SendRecvReplace(CommDataTypeTraits<T>::GetPointer(pData),
+                    CommDataTypeTraits<T>::GetCount(pData),
+                    CommDataTypeTraits<T>::GetDataType(),
+                    pSendProc, pRecvProc);
         }
 		
-		
         /**
          *
          */
-        inline void Comm::SendRecvReplace(int pSendProc,
-										 int pRecvProc,
-								         Array<OneD, int>& pSendData)
+        template <class T>
+        void Comm::AllReduce(T& pData, enum ReduceOperator pOp)
         {
-            v_SendRecvReplace(pSendProc,pRecvProc,pSendData);
+            v_AllReduce(CommDataTypeTraits<T>::GetPointer(pData),
+                    CommDataTypeTraits<T>::GetCount(pData),
+                    CommDataTypeTraits<T>::GetDataType(),
+                    pOp);
         }
-
-
-        /**
-         *
-         */
-        inline void Comm::AllReduce(NekDouble& pData, enum ReduceOperator pOp)
-        {
-            v_AllReduce(pData, pOp);
-        }
-
-
-        /**
-         *
-         */
-        inline void Comm::AllReduce(int& pData, enum ReduceOperator pOp)
-        {
-            v_AllReduce(pData, pOp);
-        }
-
-
-        /**
-         *
-         */
-        inline void Comm::AllReduce(Array<OneD, NekDouble>& pData, enum ReduceOperator pOp)
-        {
-            v_AllReduce(pData, pOp);
-        }
-
-
-        /**
-         *
-         */
-        inline void Comm::AllReduce(Array<OneD, int>& pData, enum ReduceOperator pOp)
-        {
-            v_AllReduce(pData, pOp);
-        }
-		
-		
-        /**
-         *
-         */
-        inline void Comm::AllReduce(std::vector<unsigned int>& pData, enum ReduceOperator pOp)
-        {
-            v_AllReduce(pData, pOp);
-        }
-
 
         /**
          *
@@ -444,20 +330,14 @@ namespace Nektar
 			v_AlltoAllv(pSendData,pSendDataSizeMap,pSendDataOffsetMap,pRecvData,pRecvDataSizeMap,pRecvDataOffsetMap);
 		}
 
-		inline void Comm::Bcast(int& data, int rootProc)
+		template<class T>
+		void Comm::Bcast(T& pData, int pRoot)
 		{
-		    v_Bcast(data, rootProc);
+		        v_Bcast(CommDataTypeTraits<T>::GetPointer(pData),
+		                CommDataTypeTraits<T>::GetCount(pData),
+		                CommDataTypeTraits<T>::GetDataType(),
+		                pRoot);
 		}
-
-        inline void Comm::Bcast(Array<OneD, int>& data, int rootProc)
-        {
-            v_Bcast(data, rootProc);
-        }
-
-        inline void Comm::Bcast(Array<OneD, unsigned long long>& data, int rootProc)
-        {
-            v_Bcast(data, rootProc);
-        }
 
         inline void Comm::Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {

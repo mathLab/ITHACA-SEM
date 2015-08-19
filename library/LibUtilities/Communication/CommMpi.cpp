@@ -158,25 +158,15 @@ namespace Nektar
         /**
          *
          */
-        void CommMpi::v_Send(int pProc, Array<OneD, NekDouble>& pData)
+        void CommMpi::v_Send(const void* buf, int count, CommDataType dt, int dest)
         {
             if (MPISYNC)
             {
-                MPI_Ssend( pData.get(),
-                          (int) pData.num_elements(),
-                          MPI_DOUBLE,
-                          pProc,
-                          0,
-                          m_comm);
+                MPI_Ssend(buf, count, dt, dest, 0, m_comm);
             }
             else
             {
-                MPI_Send( pData.get(),
-                          (int) pData.num_elements(),
-                          MPI_DOUBLE,
-                          pProc,
-                          0,
-                          m_comm);
+                MPI_Send(buf, count, dt, dest, 0, m_comm);
             }
         }
 
@@ -184,176 +174,38 @@ namespace Nektar
         /**
          *
          */
-        void CommMpi::v_Recv(int pProc, Array<OneD, NekDouble>& pData)
+        void CommMpi::v_Recv(void* buf, int count, CommDataType dt, int source)
         {
-            MPI_Status status;
-            MPI_Recv( pData.get(),
-                      (int) pData.num_elements(),
-                      MPI_DOUBLE,
-                      pProc,
-                      0,
-                      m_comm,
-                      &status);
-
+            MPI_Recv(buf, count, dt, source, 0, m_comm, MPI_STATUS_IGNORE);
             //ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
             //         "MPI error receiving data.");
         }
 
-
         /**
          *
          */
-        void CommMpi::v_Send(int pProc, Array<OneD, int>& pData)
-        {
-            if (MPISYNC)
-            {
-                MPI_Ssend( pData.get(),
-                          (int) pData.num_elements(),
-                          MPI_INT,
-                          pProc,
-                          0,
-                          m_comm);
-            }
-            else
-            {
-                MPI_Send( pData.get(),
-                          (int) pData.num_elements(),
-                          MPI_INT,
-                          pProc,
-                          0,
-                          m_comm);
-            }
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_Recv(int pProc, Array<OneD, int>& pData)
+        void CommMpi::v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+                void *recvbuf, int recvcount, CommDataType recvtype, int source)
         {
             MPI_Status status;
-            MPI_Recv( pData.get(),
-                      (int) pData.num_elements(),
-                      MPI_INT,
-                      pProc,
-                      0,
-                      m_comm,
-                      &status);
-
-            //ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
-            //         "MPI error receiving data.");
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_Send(int pProc, std::vector<unsigned int>& pData)
-        {
-            if (MPISYNC)
-            {
-                MPI_Ssend( &pData[0],
-                          (int) pData.size(),
-                          MPI_UNSIGNED,
-                          pProc,
-                          0,
-                          m_comm);
-            }
-            else
-            {
-                MPI_Send( &pData[0],
-                          (int) pData.size(),
-                          MPI_UNSIGNED,
-                          pProc,
-                          0,
-                          m_comm);
-            }
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_Recv(int pProc, std::vector<unsigned int>& pData)
-        {
-            MPI_Status status;
-            MPI_Recv( &pData[0],
-                      (int) pData.size(),
-                      MPI_UNSIGNED,
-                      pProc,
-                      0,
-                      m_comm,
-                      &status);
-
-            //ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
-            //         "MPI error receiving data.");
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_SendRecv(int pSendProc,
-                                Array<OneD, NekDouble>& pSendData,
-                                int pRecvProc,
-                                Array<OneD, NekDouble>& pRecvData)
-        {
-            MPI_Status status;
-            int retval = MPI_Sendrecv(pSendData.get(),
-                         (int) pSendData.num_elements(),
-                         MPI_DOUBLE,
-                         pRecvProc,
-                         0,
-                         pRecvData.get(),
-                         (int) pRecvData.num_elements(),
-                         MPI_DOUBLE,
-                         pSendProc,
-                         0,
-                         m_comm,
-                         &status);
+            int retval = MPI_Sendrecv(sendbuf, sendcount, sendtype, dest, 0,
+                         recvbuf, recvcount, recvtype, source, 0,
+                         m_comm, &status);
 
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing send-receive of data.");
         }
 
-
-        /**
-         *
-         */
-        void CommMpi::v_SendRecv(int pSendProc,
-                                Array<OneD, int>& pSendData,
-                                int pRecvProc,
-                                Array<OneD, int>& pRecvData)
-        {
-            MPI_Status status;
-            int retval = MPI_Sendrecv(pSendData.get(),
-                         (int) pSendData.num_elements(),
-                         MPI_INT,
-                         pRecvProc,
-                         0,
-                         pRecvData.get(),
-                         (int) pRecvData.num_elements(),
-                         MPI_INT,
-                         pSendProc,
-                         0,
-                         m_comm,
-                         &status);
-
-            ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing send-receive of data.");
-        }
-		
 		/**
          *
          */
-        void CommMpi::v_SendRecvReplace(int pSendProc,
-								        int pRecvProc,
-										Array<OneD, NekDouble>& pSendData)
+        void CommMpi::v_SendRecvReplace(void* buf, int count, CommDataType dt,
+                int pSendProc, int pRecvProc)
         {
             MPI_Status status;
-            int retval = MPI_Sendrecv_replace(pSendData.get(),
-									         (int) pSendData.num_elements(),
-									          MPI_DOUBLE,
+            int retval = MPI_Sendrecv_replace(buf,
+									          count,
+									          dt,
 									          pRecvProc,
 									          0,
 									          pSendProc,
@@ -365,35 +217,10 @@ namespace Nektar
                      "MPI error performing Send-Receive-Replace of data.");
         }
 		
-		
         /**
          *
          */
-        void CommMpi::v_SendRecvReplace(int pSendProc,
-										int pRecvProc,
-								         Array<OneD, int>& pSendData)
-							
-        {
-            MPI_Status status;
-            int retval = MPI_Sendrecv_replace(pSendData.get(),
-											  (int) pSendData.num_elements(),
-									          MPI_INT,
-									          pRecvProc,
-									          0,
-									          pSendProc,
-									          0,
-									          m_comm,
-									          &status);
-			
-            ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing Send-Receive-Replace of data.");
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_AllReduce(NekDouble& pData, enum ReduceOperator pOp)
+        void CommMpi::v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp)
         {
             if (GetSize() == 1)
             {
@@ -409,136 +236,15 @@ namespace Nektar
             default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
-                                        &pData,
-                                        1,
-                                        MPI_DOUBLE,
+                                        buf,
+                                        count,
+                                        dt,
                                         vOp,
                                         m_comm);
 
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
         }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_AllReduce(int& pData, enum ReduceOperator pOp)
-        {
-            if (GetSize() == 1)
-            {
-                return;
-            }
-
-            MPI_Op vOp;
-            switch (pOp)
-            {
-            case ReduceMax: vOp = MPI_MAX; break;
-            case ReduceMin: vOp = MPI_MIN; break;
-            case ReduceSum:
-            default:        vOp = MPI_SUM; break;
-            }
-            int retval = MPI_Allreduce( MPI_IN_PLACE,
-                                        &pData,
-                                        1,
-                                        MPI_INT,
-                                        vOp,
-                                        m_comm);
-
-            ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing All-reduce.");
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_AllReduce(Array<OneD, NekDouble>& pData, enum ReduceOperator pOp)
-        {
-            if (GetSize() == 1)
-            {
-                return;
-            }
-
-            MPI_Op vOp;
-            switch (pOp)
-            {
-            case ReduceMax: vOp = MPI_MAX; break;
-            case ReduceMin: vOp = MPI_MIN; break;
-            case ReduceSum:
-            default:        vOp = MPI_SUM; break;
-            }
-            int retval = MPI_Allreduce( MPI_IN_PLACE,
-                                        pData.get(),
-                                        (int) pData.num_elements(),
-                                        MPI_DOUBLE,
-                                        vOp,
-                                        m_comm);
-
-            ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing All-reduce.");
-        }
-
-
-        /**
-         *
-         */
-        void CommMpi::v_AllReduce(Array<OneD, int>& pData, enum ReduceOperator pOp)
-        {
-            if (GetSize() == 1)
-            {
-                return;
-            }
-
-            MPI_Op vOp;
-            switch (pOp)
-            {
-            case ReduceMax: vOp = MPI_MAX; break;
-            case ReduceMin: vOp = MPI_MIN; break;
-            case ReduceSum:
-            default:        vOp = MPI_SUM; break;
-            }
-            int retval = MPI_Allreduce( MPI_IN_PLACE,
-                                        pData.get(),
-                                        (int) pData.num_elements(),
-                                        MPI_INT,
-                                        vOp,
-                                        m_comm);
-
-            ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing All-reduce.");
-        }
-		
-		
-        /**
-         *
-         */
-        void CommMpi::v_AllReduce(std::vector<unsigned int>& pData, enum ReduceOperator pOp)
-        {
-            if (GetSize() == 1)
-            {
-                return;
-            }
-
-            MPI_Op vOp;
-            switch (pOp)
-            {
-            case ReduceMax: vOp = MPI_MAX; break;
-            case ReduceMin: vOp = MPI_MIN; break;
-            case ReduceSum:
-            default:        vOp = MPI_SUM; break;
-            }
-            int retval = MPI_Allreduce( MPI_IN_PLACE,
-                                        &pData[0],
-                                        (int) pData.size(),
-                                        MPI_INT,
-                                        vOp,
-                                        m_comm);
-
-            ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing All-reduce.");
-        }
-
 
         /**
          *
@@ -624,26 +330,12 @@ namespace Nektar
 					 "MPI error performing All-to-All-v.");
 		}
 
-		void CommMpi::v_Bcast(int& data, int rootProc)
+		void CommMpi::v_Bcast(void* buffer, int count, CommDataType dt, int root)
 		{
-		    int retval = MPI_Bcast(&data, 1, MPI_INT, rootProc, m_comm);
+		    int retval = MPI_Bcast(buffer, count, dt, root, m_comm);
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing Bcast-v.");
 		}
-
-        void CommMpi::v_Bcast(Array<OneD, int>& data, int rootProc)
-        {
-            int retval = MPI_Bcast(data.get(), data.num_elements(), MPI_INT, rootProc, m_comm);
-            ASSERTL0(retval == MPI_SUCCESS,
-                    "MPI error performing Bcast-v.");
-        }
-
-        void CommMpi::v_Bcast(Array<OneD, unsigned long long>& data, int rootProc)
-        {
-            int retval = MPI_Bcast(data.get(), data.num_elements(), MPI_UNSIGNED_LONG_LONG, rootProc, m_comm);
-            ASSERTL0(retval == MPI_SUCCESS,
-                    "MPI error performing Bcast-v.");
-        }
 
         void CommMpi::v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {

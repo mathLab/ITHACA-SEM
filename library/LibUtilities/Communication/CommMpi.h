@@ -80,36 +80,13 @@ namespace Nektar
             virtual int  v_GetRank();
             virtual void v_Block();
             virtual bool v_TreatAsRankZero(void);
-            virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
-            virtual void v_Send(int pProc, Array<OneD, int>& pData);
-            virtual void v_Send(int pProc, std::vector<unsigned int>& pData);
-            virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData);
-            virtual void v_Recv(int pProc, Array<OneD, int>& pData);
-            virtual void v_Recv(int pProc, std::vector<unsigned int>& pData);
-            virtual void v_SendRecv(int pSendProc,
-                                    Array<OneD, NekDouble>& pSendData,
-                                    int pRecvProc,
-                                    Array<OneD, NekDouble>& pRecvData);
-            virtual void v_SendRecv(int pSendProc,
-                                    Array<OneD, int>& pSendData,
-                                    int pRecvProc,
-                                    Array<OneD, int>& pRecvData);
-			virtual void v_SendRecvReplace(int pSendProc,
-										   int pRecvProc,
-										   Array<OneD, NekDouble>& pSendData);
-			virtual void v_SendRecvReplace(int pSendProc,
-										   int pRecvProc,
-										   Array<OneD, int>& pSendData);
-            virtual void v_AllReduce(NekDouble& pData,
-                                     enum ReduceOperator pOp);
-            virtual void v_AllReduce(int& pData,
-                                     enum ReduceOperator pOp);
-            virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
-                                     enum ReduceOperator pOp);
-            virtual void v_AllReduce(Array<OneD, int      >& pData,
-                                     enum ReduceOperator pOp);
-            virtual void v_AllReduce(std::vector<unsigned int>& pData,
-                                     enum ReduceOperator pOp);
+            virtual void v_Send(const void* buf, int count, CommDataType dt, int dest);
+            virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
+            virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+                                   void *recvbuf, int recvcount, CommDataType recvtype, int source);
+            virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
+                    int pSendProc, int pRecvProc);
+            virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp);
 			virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
 									Array<OneD, NekDouble>& pRecvData);
             virtual void v_AlltoAll(Array<OneD, int>& pSendData,
@@ -126,9 +103,7 @@ namespace Nektar
 									Array<OneD, int>& pRecvData,
 									Array<OneD, int>& pRecvDataSizeMap,
 									Array<OneD, int>& pRecvDataOffsetMap);
-			virtual void v_Bcast(int& data, int rootProc);
-			virtual void v_Bcast(Array<OneD, int>& pData, int rootProc);
-            virtual void v_Bcast(Array<OneD, unsigned long long>& pData, int rootProc);
+			virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root);
 			virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
 
             virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val);

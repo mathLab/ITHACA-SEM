@@ -437,9 +437,8 @@ namespace Nektar
                     m_timeLevelOffset[1] = 1;
                 }
                 break;
-            case eMidpoint: // RCM: old name
-             // ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta2");
-            case eRungeKutta2: // RCM: new name
+            case eMidpoint:
+            case eRungeKutta2:
                 {
                     m_numsteps = 1;
                     m_numstages = 2;
@@ -462,9 +461,8 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-            case eRungeKutta2_ImprovedEuler: // RCM: old name meaning Heun's method
-             // ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta2_SSP");
-            case eRungeKutta2_SSP: // RCM: superior scheme with new name
+            case eRungeKutta2_ImprovedEuler:
+            case eRungeKutta2_SSP:
                 {
                     m_numsteps = 1;
                     m_numstages = 2;
@@ -489,7 +487,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-            case eRungeKutta3_SSP: // RCM: new scheme implemented
+            case eRungeKutta3_SSP:
                 {
                     m_numsteps = 1;
                     m_numstages = 3;
@@ -517,9 +515,8 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-            case eClassicalRungeKutta4: // RCM: old name
-             // ASSERTL1(false,"Note the new name of the chosen time scheme: RungeKutta4");
-            case eRungeKutta4: // RCM: new name
+            case eClassicalRungeKutta4:
+            case eRungeKutta4:
                 {
                     m_numsteps = 1;
                     m_numstages = 4;
@@ -1866,4 +1863,3 @@ namespace Nektar
         }
 	}
 }
-

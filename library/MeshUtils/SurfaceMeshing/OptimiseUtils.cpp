@@ -104,7 +104,7 @@ NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
         {
             break;
         }
-        fu = GetF(uvi[0]+df[0]*u,uvi[1]+df[1]*u,bcs,surf);
+        fu = (this->*GetF)(uvi[0]+df[0]*u,uvi[1]+df[1]*u,bcs,surf);
         if(fu <= fx)
         {
             if(u>=x) a=x; else b=x;
@@ -133,6 +133,7 @@ NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
         }
     }
     xmin = x;
+    return xmin;
 }
 
 void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
@@ -159,6 +160,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(aset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -171,6 +174,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(bset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -194,6 +199,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(aset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -206,6 +213,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(bset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -229,6 +238,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(aset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -241,6 +252,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(bset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -264,6 +277,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(aset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {
@@ -276,6 +291,8 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
                 if(bset)
                 {
                     cout << "error, should not be set" << endl;
+                    cout << a << " " << b << endl;
+                    exit(-1);
                 }
                 else
                 {

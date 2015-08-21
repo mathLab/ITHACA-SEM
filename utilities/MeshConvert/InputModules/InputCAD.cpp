@@ -270,11 +270,6 @@ namespace Utilities
 
             vector<int> honode = Tris[t]->GetHONodes();
             vector<NodeSharedPtr> localhonode;
-            for(int j = 0; j < honode.size(); j++)
-            {
-                localhonode.push_back(allnodes[honode[j]]);
-            }
-            f->m_faceNodes = localhonode;
 
             Array<OneD, int> n = Tris[t]->GetN();
             vector<int> trivert(3);
@@ -285,11 +280,14 @@ namespace Utilities
                 facevert[j] = f->m_vertexList[j]->m_mid;
             }
 
-            vector<NodeSharedPtr> hon = f->m_faceNodes;
-            HOTriangle<NodeSharedPtr> hoTri(facevert,hon);
+            HOTriangle<int> hoTri(facevert,honode);
             hoTri.Align(trivert);
 
-            f->m_faceNodes = hoTri.surfVerts;
+            for(int j = 0; j < hoTri.surfVerts.size(); j++)
+            {
+                localhonode.push_back(allnodes[hoTri.surfVerts[j]]);
+            }
+            f->m_faceNodes = localhonode;
             f->m_curveType = LibUtilities::eNodalTriEvenlySpaced;
         }
 

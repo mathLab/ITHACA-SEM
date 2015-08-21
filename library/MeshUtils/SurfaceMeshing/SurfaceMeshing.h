@@ -89,15 +89,8 @@ namespace MeshUtils {
         NekDouble EdgeF(NekDouble ux, NekDouble vx,
                         std::vector<Array<OneD,NekDouble> > bcs, int surf);
 
-        NekDouble FaceF(NekDouble ux,
-                        NekDouble vx,
-                        Array<OneD, NekDouble> uva,
-                        Array<OneD, NekDouble> uvb,
-                        Array<OneD, NekDouble> uvc,
-                        Array<OneD, NekDouble> uvd,
-                        Array<OneD, NekDouble> uve,
-                        Array<OneD, NekDouble> uvf, int surf,
-                        Array<OneD, NekDouble> K);
+        NekDouble FaceF(NekDouble ux, NekDouble vx,
+                        std::vector<Array<OneD,NekDouble> > bcs, int surf);
 
         Array<OneD, NekDouble> FaceGrad(Array<OneD, NekDouble> uvx,
                                         Array<OneD, NekDouble> uva,
@@ -105,8 +98,7 @@ namespace MeshUtils {
                                         Array<OneD, NekDouble> uvc,
                                         Array<OneD, NekDouble> uvd,
                                         Array<OneD, NekDouble> uve,
-                                        Array<OneD, NekDouble> uvf, int surf,
-                                        Array<OneD, NekDouble> K);
+                                        Array<OneD, NekDouble> uvf, int surf);
 
         void Find1DBounds(NekDouble &a, NekDouble &b,
                           Array<OneD, NekDouble> uvi,
@@ -120,7 +112,7 @@ namespace MeshUtils {
                             Array<OneD, NekDouble> df,
                             Array<OneD, NekDouble> bounds,
                             std::vector<Array<OneD,NekDouble> > bcs,
-                            NekDouble (SurfaceMeshing::*func)(
+                            NekDouble (SurfaceMeshing::*GetF)(
                             NekDouble, NekDouble,
                             std::vector<Array<OneD,NekDouble> >, int));
 
@@ -135,6 +127,8 @@ namespace MeshUtils {
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
 
         int m_order;
+
+        Array<OneD, NekDouble> W; //a way to pass the node weights to face evaluation
 
         bool m_verbose;
 

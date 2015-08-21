@@ -331,7 +331,7 @@ namespace Nektar
                         if (m_HomogeneousType == eHomogeneous1D)
                         {
                             // Fourier single mode stability analysis
-							if (m_SingleMode)
+                            if (m_SingleMode)
                             {	
                                 const LibUtilities::PointsKey PkeyZ(
                                     m_npointsZ,
@@ -1457,7 +1457,16 @@ namespace Nektar
         {
 
         }
-	
+        
+        /** Virtual function to define if operator in DoSolve is
+         * negated with regard to the strong form. This is currently
+         * only used in Arnoldi solves. Default is false. 
+         */
+        bool EquationSystem::v_NegatedOp(void)
+        {
+            return false; 
+        }
+
         /**
          * 
          */
@@ -1480,6 +1489,7 @@ namespace Nektar
         {
             SessionSummary(l);
         }
+        
 
         /**
          * Write the field data to file. The file is named according to the session

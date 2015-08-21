@@ -269,7 +269,7 @@ namespace Nektar
 	    EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi,
 		    converged);
 	    
-	    // store eigenvalues so they can be access from driver class
+	    // store eigenvalues so they can be accessed from driver class
 	    m_real_evl = wr;
 	    m_imag_evl = wi;
 	    

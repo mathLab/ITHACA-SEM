@@ -209,6 +209,8 @@ namespace Nektar
         
         virtual void v_DoSolve(void);
         
+        virtual bool v_NegatedOp(void);
+        
         virtual void v_TransCoeffToPhys(void);
         
         virtual void v_TransPhysToCoeff(void);

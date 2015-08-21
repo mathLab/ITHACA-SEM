@@ -63,6 +63,7 @@ namespace Nektar
             int       m_nfields;
             NekDouble m_realShift;
             NekDouble m_imagShift;
+            int       m_negatedOp;   /// Operator in solve call is negated
 
             Array<OneD, NekDouble> m_real_evl;
             Array<OneD, NekDouble> m_imag_evl;
@@ -90,7 +91,8 @@ namespace Nektar
 
             void WriteEvs(ostream &evlout, const int k, 
                           const NekDouble real, const NekDouble imag, 
-                          NekDouble resid = NekConstants::kNekUnsetDouble);
+                          NekDouble resid = NekConstants::kNekUnsetDouble,
+                          bool DumpInverse = true);
 
             virtual void v_InitObject(ostream &out = cout);
 

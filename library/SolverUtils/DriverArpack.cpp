@@ -146,22 +146,30 @@ namespace Nektar
                 info = 0;
             }
         
-	
+            char B;
+
             iparam[0] = 1;      // strategy for shift-invert
             iparam[1] = 0;      // (deprecated)
             iparam[2] = m_nits; // maximum number of iterations allowed/taken
             iparam[3] = 1;      // blocksize to be used for recurrence
             iparam[4] = 0;      // number of converged ritz eigenvalues
             iparam[5] = 0;      // (deprecated)
+
+            iparam[6] = 3;      // This is shift and invert but fine for zero shift 
+            B = 'G';            // used generalised weight
+#if 0 
             if((fabs(m_realShift) > NekConstants::kNekZeroTol)|| // use shift if m_realShift > 1e-12
                (fabs(m_imagShift) > NekConstants::kNekZeroTol))        
             {
-                iparam[6] = 3;
+                iparam[6] = 3; // This was 3 need to know what to set it to
+                B = 'G';
             }
             else
             {
                 iparam[6] = 1;      // computation mode 1=> matrix-vector prod
+                B = 'I';
             }
+#endif
             iparam[7] = 0;      // (for shift-invert)
             iparam[8] = 0;      // number of MV operations
             iparam[9] = 0;      // number of BV operations
@@ -171,23 +179,24 @@ namespace Nektar
             const char* problem = ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")].c_str();
        
             std::string name = m_session->GetSessionName() + ".evl"; 
-            ofstream pFile(name.c_str());
+            ofstream    pFile(name.c_str());
         
             ido     = 0;    //At the first call must be initialisedat 0
         
             while(ido != 99)//ido==-1 || ido==1 || ido==0)
             {
                 //Routine for eigenvalue evaluation for non-symmetric operators
-                Arpack::Dnaupd( ido, "I",       // B='I' for std eval problem
+                Arpack::Dnaupd( ido, &B,       // B='I' for std eval problem
                                 n, problem,  m_nvec,
                                 m_evtol, &resid[0], m_kdim, 
                                 &v[0], n, iparam, ipntr, &workd[0],
                                 &workl[0], lworkl, info);
             
-                //Plotting of real and imaginary part of the eigenvalues from workl
+                //Plotting of real and imaginary part of the
+                //eigenvalues from workl
                 out << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush;
 
-                if(!((cycle-1)%m_kdim)&&(cycle> m_kdim))
+                if(!((cycle-1)%m_kdim)&&(cycle> m_kdim)&&(ido!=2))
                 {
                     pFile << "Krylov spectrum at iteration: " <<  cycle << endl;
 
@@ -203,47 +212,72 @@ namespace Nektar
                     out << endl;
                     for(int k=0; k<=m_kdim-1; ++k)
                     {                    
-                        // write m_nvec eigs to screen
-                        if(m_kdim-1-k < m_nvec)
-                        {
-                            WriteEvs(out,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
-                        }
+                        // write m_kdim eigs to screen
+                        WriteEvs(out,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                         // write m_kdim eigs to screen
                         WriteEvs(pFile,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                     }
                 }
-            
-                cycle++;
-            
+                        
                 if (ido == 99) break;
                         
-                ASSERTL0(ido == 1, "Unexpected reverse communication request.");
-   
-                //workd[inptr[0]-1] copied into operator fields
-                CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
-
-	        m_equ[0]->TransCoeffToPhys();
-
-                m_equ[0]->DoSolve();
-
-                if(!(cycle%m_infosteps))
+                switch(ido)
                 {
-                    out << endl;
-                    m_equ[0]->Output();
-                }
+                case -1:
+                case 1:  // Note that ido=1 we are using input x
+                         // (workd[inptr[0]-1]) rather than Mx as
+                         // recommended in manual since it is not
+                         // possible to impose forcing directly.
 
-                if(m_EvolutionOperator == eTransientGrowth)
-                {
-                    //start Adjoint with latest fields of direct 
-                    CopyFwdToAdj();
-		
-                    m_equ[1]->TransCoeffToPhys();
-                    m_equ[1]->DoSolve();
+                    //workd[inptr[0]-1] copied into operator fields
+                    CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
+                    
+                    m_equ[0]->TransCoeffToPhys();
+                    
+                    m_equ[0]->DoSolve();
+                    if(m_EvolutionOperator == eTransientGrowth)
+                    {
+                        //start Adjoint with latest fields of direct 
+                        CopyFwdToAdj();
+                        
+                        m_equ[1]->TransCoeffToPhys();
+                        m_equ[1]->DoSolve();
+                    }
+                    
+                    if(!(cycle%m_infosteps))
+                    {
+                        out << endl;
+                        m_equ[0]->Output();
+                    }
+                    
+                    
+                    // operated fields are copied into workd[inptr[1]-1] 
+                    CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
+
+                    cycle++;
+                    break;
+                case 2: // provide y = M x (bwd trans and iproduct);
+                    {
+                        //workd[inptr[0]-1] copied into operator fields
+                        CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
+                        
+                        m_equ[0]->TransCoeffToPhys();
+                        
+                        Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
+                        for (int i = 0; i < fields.num_elements(); ++i)
+                        {
+                            fields[i]->IProductWRTBase(fields[i]->GetPhys(),
+                                                       fields[i]->UpdateCoeffs());
+                        }
+                        
+                        // operated fields are copied into workd[inptr[1]-1] 
+                        CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "Unexpected reverse communication request.");
                 }
-            
-                // operated fields are copied into workd[inptr[1]-1] 
-                CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
-            
+                
             }
         
             out<< endl << "Converged in " << iparam[8] << " iterations" << endl;
@@ -256,37 +290,60 @@ namespace Nektar
             workev     = Array<OneD, NekDouble> (3*m_kdim);
             z          = Array<OneD, NekDouble> (n*(m_nvec+1));
         
-            sigmar     = m_realShift; 
-            sigmai     = m_imagShift;
+            if(m_negatedOp)
+            {
+                sigmar     = -m_realShift; 
+                sigmai     = -m_imagShift;
+            }
+            else
+            {
+                sigmar     = m_realShift; 
+                sigmai     = m_imagShift;
+            }
 	
             //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
-            Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+            Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), 
+                           z.get(), n, sigmar, sigmai, workev.get(), &B, 
+                           n, problem, m_nvec, m_evtol, resid.get(), m_kdim, 
+                           v.get(), n, iparam, ipntr, workd.get(), 
+                           workl.get(),lworkl,info);
 		
             ASSERTL0(info == 0, " Error with Dneupd");
             int nconv=iparam[4];
             Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
-            out << "Converged Eigenvalues: " << nconv << endl;
+            out   << "Converged Eigenvalues: " << nconv << endl;
             pFile << "Converged Eigenvalues:"<< nconv << endl;
 
             if(m_timeSteppingAlgorithm)
             {
                 pFile << "EV  Magnitude   Angle       Growth      Frequency" << endl;
+                for(int i= 0; i< nconv; ++i)
+                {
+                    WriteEvs(out,i,dr[i],di[i]);
+                    WriteEvs(pFile,i,dr[i],di[i]);
+                    
+                    std::string file = m_session->GetSessionName() + "_eig_"
+                        + boost::lexical_cast<std::string>(i)
+                        + ".fld";
+                    WriteFld(file,z + i*n);
+                }
             }
             else
             {
-                pFile << "EV  Real        Imaginary   inverse real  inverse imag" << endl;
-            }
-
-		
-            for(int i= 0; i< nconv; ++i)
-            {
-                WriteEvs(out,i,dr[i],di[i]);
-                WriteEvs(pFile,i,dr[i],di[i]);
-		
-                std::string file = m_session->GetSessionName() + "_eig_"
-                                        + boost::lexical_cast<std::string>(i);
-                WriteFld(file,z + i*nq);
+                pFile << "EV  Real        Imaginary " << endl;
+                for(int i= 0; i< nconv; ++i)
+                {
+                    WriteEvs(out,i,dr[i],di[i],
+                             NekConstants::kNekUnsetDouble, false);
+                    WriteEvs(pFile,i,dr[i],di[i],
+                             NekConstants::kNekUnsetDouble, false);
+                    
+                    std::string file = m_session->GetSessionName() + "_eig_"
+                        + boost::lexical_cast<std::string>(i)
+                        + ".fld";
+                    WriteFld(file,z + i*n);
+                }
             }
         
             m_real_evl = dr;

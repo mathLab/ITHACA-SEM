@@ -405,6 +405,9 @@ namespace Nektar
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
                 const string & s1, const string& s2) ;
                 
+            /// Virtual function to identify if operator is negated in DoSolve
+            SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
+
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
@@ -525,6 +528,7 @@ namespace Nektar
             
             /// Virtual function for solve implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
+            
             
             /// Virtual function for the L_inf error computation between fields and a given exact solution.
             SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(

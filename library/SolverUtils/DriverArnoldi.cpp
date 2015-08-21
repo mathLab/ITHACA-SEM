@@ -70,16 +70,7 @@ namespace Nektar
             {
                 m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
                 m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
-			
-				if(m_session->DefinesSolverInfo("ModeType") && 
-				   (m_session->GetSolverInfo("ModeType")=="SingleMode"|| m_session->GetSolverInfo("ModeType")=="HalfMode") )
-                {
-                    for(int i = 0; i < m_nfields; ++i)
-                    {
-                        m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
-                    }
-                }
-			
+                
             }
             else
             {
@@ -87,6 +78,19 @@ namespace Nektar
                 m_nfields = m_equ[0]->UpdateFields().num_elements();
             }
 
+            if(m_session->DefinesSolverInfo("ModeType") && 
+               (boost::iequals(m_session->GetSolverInfo("ModeType"),
+                               "SingleMode")|| 
+                boost::iequals(m_session->GetSolverInfo("ModeType"),
+                               "HalfMode")))
+            {
+                for(int i = 0; i < m_nfields; ++i)
+                {
+                    m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
+                }
+            }
+            m_negatedOp = m_equ[0]->v_NegatedOp();
+                        
             m_session->LoadParameter("kdim",  m_kdim,  16);
             m_session->LoadParameter("nvec",  m_nvec,  2);
             m_session->LoadParameter("nits",  m_nits,  500);
@@ -96,13 +100,16 @@ namespace Nektar
             m_equ[0]->SetLambda(m_realShift);
 
             m_session->LoadParameter("imagShift", m_imagShift, 0.0);
+            
         }
 
         void DriverArnoldi::ArnoldiSummary(std::ostream &out)
         {
             if (m_comm->GetRank() == 0)
             {
-                if(m_session->DefinesSolverInfo("SingleMode"))
+                if(m_session->DefinesSolverInfo("ModeType") && 
+                   boost::iequals(m_session->GetSolverInfo("ModeType"),
+                                  "SingleMode"))
                 {
                     out << "\tSingle Fourier mode    : true " << endl;
                     ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),
@@ -250,7 +257,7 @@ namespace Nektar
             m_equ[0]->WriteFld(file,m_equ[0]->UpdateFields()[0], fieldcoeffs, variables);
         }
 
-        void DriverArnoldi::WriteEvs(ostream &evlout, const int i,  const NekDouble re_ev, const NekDouble im_ev, NekDouble resid)
+        void DriverArnoldi::WriteEvs(ostream &evlout, const int i,  const NekDouble re_ev, const NekDouble im_ev, NekDouble resid, bool DumpInverse)
         {
             if(m_timeSteppingAlgorithm)
             {
@@ -272,12 +279,25 @@ namespace Nektar
             else
             {
                 NekDouble invmag = 1.0/(re_ev*re_ev + im_ev*im_ev);
-            
+                NekDouble sign;
+                if(m_negatedOp)
+                {
+                    sign = -1.0;
+                }
+                else
+                {
+                    sign = 1.0;
+                }
+
                 evlout << setw(2)  <<  i
-                       << setw(14) <<  re_ev
-                       << setw(14) <<  im_ev
-                       << setw(14) <<  -re_ev*invmag + m_realShift
-                       << setw(14) <<   im_ev*invmag;
+                       << setw(14) <<  sign*re_ev
+                       << setw(14) <<  sign*im_ev;
+
+                if(DumpInverse)
+                {
+                    evlout << setw(14) <<  sign*re_ev*invmag + m_realShift
+                           << setw(14) <<  sign*im_ev*invmag + m_imagShift;
+                }
             
                 if(resid != NekConstants::kNekUnsetDouble)
                 {

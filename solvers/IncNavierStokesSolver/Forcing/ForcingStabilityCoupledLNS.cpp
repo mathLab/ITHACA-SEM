@@ -69,7 +69,7 @@ void ForcingStabilityCoupledLNS::v_Apply(
              "Fields and outarray are of different size");
         
     // Apply m_forcing terms
-    for (int i = 0; i < fields.num_elements() ; i++)
+    for (int i = 0; i < fields.num_elements(); i++)
     {
         Vmath::Vadd(npts, fields[i]->GetPhys(), 1, outarray[i], 1, 
                     outarray[i], 1);

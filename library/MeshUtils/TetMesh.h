@@ -42,7 +42,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <MeshUtils/Octree.h>
-#include <MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 #include <MeshUtils/MeshElem.hpp>
 
 namespace Nektar{

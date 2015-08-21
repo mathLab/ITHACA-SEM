@@ -85,8 +85,44 @@ namespace MeshUtils {
         Array<OneD, NekDouble> EdgeGrad(Array<OneD, NekDouble> uv1,
                                         Array<OneD, NekDouble> uv2,
                                         Array<OneD, NekDouble> uvx, int surf);
-        NekDouble EdgeF(Array<OneD, NekDouble> uv1,
-                                        Array<OneD, NekDouble> uv2, NekDouble ux, NekDouble vx, int surf);
+
+        NekDouble EdgeF(NekDouble ux, NekDouble vx,
+                        std::vector<Array<OneD,NekDouble> > bcs, int surf);
+
+        NekDouble FaceF(NekDouble ux,
+                        NekDouble vx,
+                        Array<OneD, NekDouble> uva,
+                        Array<OneD, NekDouble> uvb,
+                        Array<OneD, NekDouble> uvc,
+                        Array<OneD, NekDouble> uvd,
+                        Array<OneD, NekDouble> uve,
+                        Array<OneD, NekDouble> uvf, int surf,
+                        Array<OneD, NekDouble> K);
+
+        Array<OneD, NekDouble> FaceGrad(Array<OneD, NekDouble> uvx,
+                                        Array<OneD, NekDouble> uva,
+                                        Array<OneD, NekDouble> uvb,
+                                        Array<OneD, NekDouble> uvc,
+                                        Array<OneD, NekDouble> uvd,
+                                        Array<OneD, NekDouble> uve,
+                                        Array<OneD, NekDouble> uvf, int surf,
+                                        Array<OneD, NekDouble> K);
+
+        void Find1DBounds(NekDouble &a, NekDouble &b,
+                          Array<OneD, NekDouble> uvi,
+                          Array<OneD, NekDouble> df,
+                          Array<OneD, NekDouble> bounds);
+
+        NekDouble BrentOpti(NekDouble ax, NekDouble bx,
+                            NekDouble cx, NekDouble &fx,
+                            NekDouble tol, int surf,
+                            Array<OneD, NekDouble> uvi,
+                            Array<OneD, NekDouble> df,
+                            Array<OneD, NekDouble> bounds,
+                            std::vector<Array<OneD,NekDouble> > bcs,
+                            NekDouble (SurfaceMeshing::*func)(
+                            NekDouble, NekDouble,
+                            std::vector<Array<OneD,NekDouble> >, int));
 
         void Validate();
         void Optimise();

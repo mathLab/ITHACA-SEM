@@ -39,7 +39,7 @@ using namespace std;
 
 #include <LibUtilities/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree.h>
-#include <MeshUtils/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 #include <MeshUtils/TetMesh.h>
 #include <MeshUtils/MeshElem.hpp>
 
@@ -219,6 +219,7 @@ namespace Utilities
             }
 
             ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
+
             vector<int> tags;
             tags.push_back(trit->second->Getcid());
             ElementSharedPtr E = GetElementFactory().
@@ -289,6 +290,7 @@ namespace Utilities
             hoTri.Align(trivert);
 
             f->m_faceNodes = hoTri.surfVerts;
+            f->m_curveType = LibUtilities::eNodalTriEvenlySpaced;
         }
 
         if(m_mesh->m_verbose)

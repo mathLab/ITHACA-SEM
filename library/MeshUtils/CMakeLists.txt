@@ -3,7 +3,9 @@ SET(MESHUTILS_SOURCES
     Octant.cpp
     Octree.cpp
     SurfaceMesh.cpp
-    SurfaceMeshing.cpp
+    SurfaceMeshing/SurfaceMeshing.cpp
+    SurfaceMeshing/OptimiseFunctions.cpp
+    SurfaceMeshing/OptimiseUtils.cpp
     TriangleInterface.cpp
     TetGenInterface.cpp
     TetMesh.cpp
@@ -16,7 +18,7 @@ SET(MESHUTILS_HEADERS
     Octant.h
     Octree.h
     SurfaceMesh.h
-    SurfaceMeshing.h
+    SurfaceMeshing/SurfaceMeshing.h
     TriangleInterface.h
     TetGenInterface.h
     TetMesh.h

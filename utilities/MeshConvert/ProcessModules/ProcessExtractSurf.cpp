@@ -161,6 +161,7 @@ namespace Nektar
                     }
                     elmt->SetVolumeNodes(f->m_faceNodes);
                     elmt->SetId(f->m_id);
+                    elmt->SetCurveType(f->m_curveType);
                 }
                 else
                 {

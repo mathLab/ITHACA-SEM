@@ -1487,20 +1487,53 @@ namespace Nektar
                     switch(fielddefs->m_shapeType)
                     {
                     case eSegment:
-                        datasize += fielddefs->m_numModes[cnt++];
+                        {   
+                            int l = fielddefs->m_numModes[cnt++];
+                            if(fielddefs->m_numHomogeneousDir == 1)
+                            {
+                                datasize += l*fielddefs->m_numModes[cnt++];
+                            }
+                            else if(fielddefs->m_numHomogeneousDir == 2)
+                            {
+                                int m = fielddefs->m_numModes[cnt++];
+                                datasize += l*m*fielddefs->m_numModes[cnt++];
+                            }
+                            else
+                            {
+                                datasize += l;
+                            }
+                        }   
                         break;
                     case eTriangle:
                         {
                             int l = fielddefs->m_numModes[cnt++];
                             int m = fielddefs->m_numModes[cnt++];
-                            datasize += StdTriData::getNumberOfCoefficients(l,m);
+                            if(fielddefs->m_numHomogeneousDir == 1)
+                            {
+                                datasize += StdTriData::getNumberOfCoefficients(l,m)*
+                                            fielddefs->m_homogeneousZIDs.size();
+                                cnt++;
+                            }
+                            else
+                            {
+                                datasize += StdTriData::getNumberOfCoefficients(l,m);
+                            }
                         }
                         break;
                     case eQuadrilateral:
                         {
                             int l = fielddefs->m_numModes[cnt++];
                             int m = fielddefs->m_numModes[cnt++];
-                            datasize += l*m;
+                            if(fielddefs->m_numHomogeneousDir == 1)
+                            {
+                                datasize += l*m*fielddefs->
+                                                    m_homogeneousZIDs.size();
+                                cnt++;
+                            }
+                            else
+                            {
+                                datasize += l*m;
+                            }
                         }
                         break;
                     case eTetrahedron:

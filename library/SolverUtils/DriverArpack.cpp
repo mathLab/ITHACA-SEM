@@ -293,14 +293,15 @@ namespace Nektar
             if(m_negatedOp)
             {
                 sigmar     = -m_realShift; 
-                sigmai     = -m_imagShift;
             }
             else
             {
                 sigmar     = m_realShift; 
-                sigmai     = m_imagShift;
             }
 	
+            // Do not pass imaginary shift to Arpack since we have not
+            // used a Fortran complex number format and so processing
+            // is mucked up. Need to do some processing afterwards.
             sigmai = 0;
 
             //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
@@ -311,11 +312,29 @@ namespace Nektar
                            workl.get(),lworkl,info);
 		
             ASSERTL0(info == 0, " Error with Dneupd");
+
             int nconv=iparam[4];
-            Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
+        
+            // Subtract off complex shift if it exists
+            if(m_negatedOp)
+            {
+                Vmath::Sadd(nconv,m_imagShift,di,1,di,1);
+            }
+            else
+            {
+                Vmath::Sadd(nconv,-m_imagShift,di,1,di,1);
+            }
+            
+            WARNINGL0(m_imagShift == 0,"Complex Shift applied. "
+                      "Need to implement Ritz re-evaluation of"
+                      "eigenvalue. Only one half of complex "
+                      "value will be correct");
+
+
+             Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
             out   << "Converged Eigenvalues: " << nconv << endl;
-            pFile << "Converged Eigenvalues:"<< nconv << endl;
+            pFile << "Converged Eigenvalues: " << nconv << endl;
 
             if(m_timeSteppingAlgorithm)
             {
@@ -350,7 +369,8 @@ namespace Nektar
         
             m_real_evl = dr;
             m_imag_evl = di;
-       
+            
+
             pFile.close();
         
             for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)

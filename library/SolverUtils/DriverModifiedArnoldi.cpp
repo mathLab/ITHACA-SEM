@@ -268,6 +268,11 @@ namespace Nektar
 	    // Process eigenvectors and write out.
 	    EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi,
 		    converged);
+
+            WARNINGL0(m_imagShift == 0,"Complex Shift applied. "
+                      "Need to implement Ritz re-evaluation of"
+                      "eigenvalue. Only one half of complex "
+                      "value will be correct");
 	    
 	    // store eigenvalues so they can be accessed from driver class
 	    m_real_evl = wr;

@@ -188,7 +188,6 @@ namespace Nektar
             // Probably should be called from DriverArpack but not yet
             // clear how to do this
             m_session->LoadParameter("imagShift",lambda_imag,NekConstants::kNekUnsetDouble);
-            cout << lambda_imag << endl;
             nz = 1;
             m_mat  = Array<OneD, CoupledSolverMatrices> (nz);
             

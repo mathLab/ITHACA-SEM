@@ -88,7 +88,7 @@ namespace Nektar
                 {
                     m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
                 }
-            }
+            }            
             m_negatedOp = m_equ[0]->v_NegatedOp();
                         
             m_session->LoadParameter("kdim",  m_kdim,  16);

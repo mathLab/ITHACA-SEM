@@ -301,6 +301,8 @@ namespace Nektar
                 sigmai     = m_imagShift;
             }
 	
+            sigmai = 0;
+
             //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
             Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), 
                            z.get(), n, sigmar, sigmai, workev.get(), &B, 

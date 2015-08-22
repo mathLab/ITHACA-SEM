@@ -166,8 +166,6 @@ namespace Nektar
         virtual void v_InitObject();
         
     private:
-        ///  Identify if a single mode is required for stability analysis. 
-        bool m_singleMode; 
         /// Id to identify when single mode is mean mode (i.e. beta=0);
         bool m_zeroMode;
         

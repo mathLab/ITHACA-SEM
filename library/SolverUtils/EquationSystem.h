@@ -450,11 +450,11 @@ namespace Nektar
             /// Expansion dimension.
             int                                         m_expdim;
             /// Flag to determine if single homogeneous mode is used.
-            bool                                        m_SingleMode;
+            bool                                        m_singleMode;
             /// Flag to determine if half homogeneous mode is used.
-            bool                                        m_HalfMode;
+            bool                                        m_halfMode;
             /// Flag to determine if use multiple homogenenous modes are used.
-            bool                                        m_MultipleModes;
+            bool                                        m_multipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
             /**

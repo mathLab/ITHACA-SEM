@@ -329,7 +329,7 @@ namespace Nektar
 
         for(i = 0; i < VelDim; ++i)
         {
-            if(m_fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            if(m_fields[i]->GetWaveSpace() && !m_singleMode && !m_halfMode)
             {
                 velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
                 m_fields[i]->HomogeneousBwdTrans(inarray[m_velocity[i]],velocity[i]);

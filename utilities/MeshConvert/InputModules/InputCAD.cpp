@@ -35,6 +35,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 #include <LibUtilities/CADSystem/CADSystem.h>
@@ -212,13 +213,7 @@ namespace Utilities
                 }
             }
 
-            vector<int> hon = trit->second->GetHONodes();
-            for(int j = 0; j < hon.size(); j++)
-            {
-                localnode.push_back(allnodes[hon[j]]);
-            }
-
-            ElmtConfig conf(LibUtilities::eTriangle,m_order,true,false,false);
+            ElmtConfig conf(LibUtilities::eTriangle,m_order,false,false,false);
 
             vector<int> tags;
             tags.push_back(trit->second->Getcid());
@@ -264,6 +259,7 @@ namespace Utilities
                 }
 
                 egs[j]->m_edgeNodes = localhonode;
+                egs[j]->m_curveType = LibUtilities::ePolyEvenlySpaced;
             }
 
             int t = m_mesh->m_element[m_mesh->m_expDim-1][i]->GetTriID();
@@ -271,35 +267,34 @@ namespace Utilities
             vector<int> honode = Tris[t]->GetHONodes();
             vector<NodeSharedPtr> localhonode;
 
+            for(int j = 0; j < honode.size(); j++)
+            {
+                localhonode.push_back(allnodes[honode[j]]);
+            }
+
+            f->m_faceNodes = localhonode;
+
             Array<OneD, int> n = Tris[t]->GetN();
             vector<int> trivert(3);
             vector<int> facevert(3);
+            int aligned = 0;
             for(int j = 0; j < 3; j++)
             {
                 trivert[j] = n[j];
                 facevert[j] = f->m_vertexList[j]->m_mid;
+                if(trivert[j] == facevert[j]) aligned++;
             }
 
-            HOTriangle<int> hoTri(facevert,honode);
-            hoTri.Align(trivert);
 
-            /*if(honode[0] != hoTri.surfVerts[0])
-            {
-                for(int j = 0; j < 3; j++)
-                    cout << trivert[j] << " " << facevert[j] << endl;
-                for(int j = 0; j < honode.size(); j++)
-                    cout << honode[j] << " ";
-                cout << endl;
-                for(int j = 0; j < hoTri.surfVerts.size(); j++)
-                    cout << hoTri.surfVerts[j] << " ";
-                cout << endl << endl;
-            }*/
 
-            for(int j = 0; j < hoTri.surfVerts.size(); j++)
+            if(aligned != 3)
             {
-                localhonode.push_back(allnodes[hoTri.surfVerts[j]]);
+                HOTriangle<NodeSharedPtr> hoTri(trivert,localhonode);
+                hoTri.Align(facevert);
+
+                f->m_faceNodes = hoTri.surfVerts;
             }
-            //f->m_faceNodes = localhonode;
+
             f->m_curveType = LibUtilities::eNodalTriEvenlySpaced;
         }
 

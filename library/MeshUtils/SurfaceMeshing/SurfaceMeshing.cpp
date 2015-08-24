@@ -33,6 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <fstream>
+
 #include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 
 #include <LocalRegions/MatrixKey.h>
@@ -354,11 +356,11 @@ namespace MeshUtils {
         id.first = 1;
         id.second  = 1;
         nodeorder[id] = 0;
-        id.first = 5;
+        id.first = m_order + 1;
         id.second  = 1;
         nodeorder[id] = 1;
         id.first = 1;
-        id.second  = 5;
+        id.second  = m_order + 1;
         nodeorder[id] = 2;
 
         for(int i = 1; i < m_order+1 -1; i++)
@@ -435,6 +437,8 @@ namespace MeshUtils {
         }
 
         counter = 0;
+
+
 
         for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {

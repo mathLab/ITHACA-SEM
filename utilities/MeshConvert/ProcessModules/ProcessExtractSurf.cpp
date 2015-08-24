@@ -152,6 +152,10 @@ namespace Nektar
                 }
                 else if (f)
                 {
+                    for (j = 0; j < f->m_vertexList.size(); j++)
+                    {
+                        elmt->SetVertex(j, f->m_vertexList[j]);
+                    }
                     for (j = 0; j < edges.size(); ++j)
                     {
                         m_mesh->m_edgeSet.insert(f->m_edgeList[j]);

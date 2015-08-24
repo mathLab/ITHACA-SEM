@@ -113,23 +113,18 @@ NekDouble SurfaceMeshing::EdgeF(NekDouble ux, NekDouble vx,
 }
 
 Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(Array<OneD, NekDouble> uvx,
-                                                Array<OneD, NekDouble> uva,
-                                                Array<OneD, NekDouble> uvb,
-                                                Array<OneD, NekDouble> uvc,
-                                                Array<OneD, NekDouble> uvd,
-                                                Array<OneD, NekDouble> uve,
-                                                Array<OneD, NekDouble> uvf,
-                                                int surf)
+                                                vector<Array<OneD, NekDouble> > bcs,
+                                                int surf, bool &valid)
 {
     Array<OneD, NekDouble> df(2);
 
     Array<OneD, NekDouble> rx = m_cad->GetSurf(surf)->D1(uvx);
-    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->D1(uva);
-    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->D1(uvb);
-    Array<OneD, NekDouble> rc = m_cad->GetSurf(surf)->D1(uvc);
-    Array<OneD, NekDouble> rd = m_cad->GetSurf(surf)->D1(uvd);
-    Array<OneD, NekDouble> re = m_cad->GetSurf(surf)->D1(uve);
-    Array<OneD, NekDouble> rf = m_cad->GetSurf(surf)->D1(uvf);
+    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(bcs[0]);
+    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(bcs[1]);
+    Array<OneD, NekDouble> rc = m_cad->GetSurf(surf)->P(bcs[2]);
+    Array<OneD, NekDouble> rd = m_cad->GetSurf(surf)->P(bcs[3]);
+    Array<OneD, NekDouble> re = m_cad->GetSurf(surf)->P(bcs[4]);
+    Array<OneD, NekDouble> rf = m_cad->GetSurf(surf)->P(bcs[5]);
 
 
     NekDouble dfdu,dfdv;
@@ -161,6 +156,14 @@ Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(Array<OneD, NekDouble> uvx,
     df[0] = dfdu; df[1] = dfdv;
     NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
     df[0] = df[0]/dfmag; df[1] = df[1]/dfmag;
+    if(dfmag < 1E-30)
+    {
+        valid = false;
+    }
+    else
+    {
+        valid = true;
+    }
     return df;
 }
 

@@ -515,22 +515,13 @@ namespace MeshUtils {
 
             bool repeatoverallnodes = true;
 
-            NekDouble tol = 1E-10;
-
-            if(s->IsPlane())
-            {
-                trit->second->SetHONodes(honodes);
-                continue;
-            }
-
-            trit->second->SetHONodes(honodes);
-            continue;
+            NekDouble tol = 1E-8;
 
             while(repeatoverallnodes)
             {
                 int converged = 0;
 
-                Array<OneD, NekDouble> uva, uvb, uvc, uvd, uve, uvf, uvi;
+                Array<OneD, NekDouble> uvi;
 
                 Array<OneD, NekDouble> bounds = s->GetBounds();
                 int node;
@@ -540,35 +531,36 @@ namespace MeshUtils {
                 {
                     for(int i = 2; i <= m_order + 1 -j; i++)
                     {
+                        vector<Array<OneD, NekDouble> > bcs;
                         id.first = i-1;
                         id.second = j;
                         node = nodeorder[id];
-                        uva = uvList[node];
+                        bcs.push_back(uvList[node]);
 
                         id.first = i;
                         id.second = j-1;
                         node = nodeorder[id];
-                        uvb = uvList[node];
+                        bcs.push_back(uvList[node]);
 
                         id.first = i+1;
                         id.second = j-1;
                         node = nodeorder[id];
-                        uvc = uvList[node];
+                        bcs.push_back(uvList[node]);
 
                         id.first = i+1;
                         id.second = j;
                         node = nodeorder[id];
-                        uvd = uvList[node];
+                        bcs.push_back(uvList[node]);
 
                         id.first = i;
                         id.second = j+1;
                         node = nodeorder[id];
-                        uve = uvList[node];
+                        bcs.push_back(uvList[node]);
 
                         id.first = i-1;
                         id.second = j+1;
                         node = nodeorder[id];
-                        uvf = uvList[node];
+                        bcs.push_back(uvList[node]);
 
                         id.first = i;
                         id.second = j;
@@ -576,17 +568,16 @@ namespace MeshUtils {
                         uvi = uvList[node];
                         W = nodeweight[id];
 
-                        Array<OneD, NekDouble> df = FaceGrad(uvi,uva,uvb,uvc,uvd,uve,uvf,trit->second->Getcid());
+                        bool valid;
+                        Array<OneD, NekDouble> df = FaceGrad(uvi,bcs,trit->second->Getcid(),valid);
+                        if(!valid)
+                        {
+                            converged++;
+                            continue;
+                        }
 
                         NekDouble a,b;
                         Find1DBounds(a,b,uvi,df,bounds);
-
-                        //initial conditions
-                        vector<Array<OneD, NekDouble> > bcs;
-                        bcs.push_back(uva); bcs.push_back(uvb);
-                        bcs.push_back(uvc); bcs.push_back(uvd);
-                        bcs.push_back(uve); bcs.push_back(uvf);
-
 
                         NekDouble fxi = FaceF(uvi[0],uvi[1],bcs,trit->second->Getcid());
                         NekDouble fx= fxi;

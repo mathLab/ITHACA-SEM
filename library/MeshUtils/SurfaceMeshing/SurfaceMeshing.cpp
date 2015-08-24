@@ -438,8 +438,6 @@ namespace MeshUtils {
 
         counter = 0;
 
-
-
         for(trit = Tris.begin(); trit != Tris.end(); trit++)
         {
             if(m_verbose)

@@ -93,12 +93,8 @@ namespace MeshUtils {
                         std::vector<Array<OneD,NekDouble> > bcs, int surf);
 
         Array<OneD, NekDouble> FaceGrad(Array<OneD, NekDouble> uvx,
-                                        Array<OneD, NekDouble> uva,
-                                        Array<OneD, NekDouble> uvb,
-                                        Array<OneD, NekDouble> uvc,
-                                        Array<OneD, NekDouble> uvd,
-                                        Array<OneD, NekDouble> uve,
-                                        Array<OneD, NekDouble> uvf, int surf);
+                                        std::vector<Array<OneD, NekDouble> > bcs,
+                                        int surf, bool &valid);
 
         void Find1DBounds(NekDouble &a, NekDouble &b,
                           Array<OneD, NekDouble> uvi,

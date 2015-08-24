@@ -1034,7 +1034,8 @@ namespace Nektar
             // degrees of freedom along the boundary.
             set<int> partVerts;
 
-            if (m_solnType == eIterativeMultiLevelStaticCond)
+            if (m_solnType == eIterativeMultiLevelStaticCond ||
+                m_solnType == eXxtMultiLevelStaticCond)
             {
                 vector<long> procVerts,  procEdges,  procFaces;
                 set   <int>  foundVerts, foundEdges, foundFaces;
@@ -1197,7 +1198,8 @@ namespace Nektar
 
             // For parallel multi-level static condensation determine the lowest
             // static condensation level amongst processors.
-            if (m_solnType == eIterativeMultiLevelStaticCond)
+            if (m_solnType == eIterativeMultiLevelStaticCond ||
+                m_solnType == eXxtMultiLevelStaticCond)
             {
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
                 vComm->AllReduce(m_lowestStaticCondLevel,

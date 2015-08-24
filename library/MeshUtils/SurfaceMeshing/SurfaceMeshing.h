@@ -84,7 +84,7 @@ namespace MeshUtils {
 
         Array<OneD, NekDouble> EdgeGrad(Array<OneD, NekDouble> uv1,
                                         Array<OneD, NekDouble> uv2,
-                                        Array<OneD, NekDouble> uvx, int surf);
+                                        Array<OneD, NekDouble> uvx, int surf, bool &valid);
 
         NekDouble EdgeF(NekDouble ux, NekDouble vx,
                         std::vector<Array<OneD,NekDouble> > bcs, int surf);

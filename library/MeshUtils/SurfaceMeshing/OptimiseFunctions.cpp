@@ -42,7 +42,7 @@ namespace MeshUtils{
 Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(Array<OneD, NekDouble> uv1,
                                                 Array<OneD, NekDouble> uv2,
                                                 Array<OneD, NekDouble> uvx,
-                                                int surf)
+                                                int surf, bool &valid)
 {
     NekDouble sig = m_order/2.0;
 
@@ -71,9 +71,18 @@ Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(Array<OneD, NekDouble> uv1,
                 (rm[2] - ra[2])*rm[8]) * 2.0*sig;
 
     df[0] = dfdu; df[1] = dfdv;
+
     NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
     df[0] = df[0]/dfmag; df[1] = df[1]/dfmag;
-    
+
+    if(dfmag < 1E-30)
+    {
+        valid = false;
+    }
+    else
+    {
+        valid = true;
+    }
     return df;
 }
 

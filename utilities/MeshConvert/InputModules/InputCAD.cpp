@@ -283,11 +283,23 @@ namespace Utilities
             HOTriangle<int> hoTri(facevert,honode);
             hoTri.Align(trivert);
 
+            /*if(honode[0] != hoTri.surfVerts[0])
+            {
+                for(int j = 0; j < 3; j++)
+                    cout << trivert[j] << " " << facevert[j] << endl;
+                for(int j = 0; j < honode.size(); j++)
+                    cout << honode[j] << " ";
+                cout << endl;
+                for(int j = 0; j < hoTri.surfVerts.size(); j++)
+                    cout << hoTri.surfVerts[j] << " ";
+                cout << endl << endl;
+            }*/
+
             for(int j = 0; j < hoTri.surfVerts.size(); j++)
             {
                 localhonode.push_back(allnodes[hoTri.surfVerts[j]]);
             }
-            f->m_faceNodes = localhonode;
+            //f->m_faceNodes = localhonode;
             f->m_curveType = LibUtilities::eNodalTriEvenlySpaced;
         }
 

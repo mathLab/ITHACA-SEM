@@ -271,9 +271,16 @@ namespace MeshUtils {
 
                         uvi = Nodes[honodes[i]]->GetS(e->GetSurf());
 
-                        Array<OneD, NekDouble> df = EdgeGrad(uv1,uv2,uvi,e->GetSurf());
+                        bool valid;
+                        Array<OneD, NekDouble> df = EdgeGrad(uv1,uv2,uvi,e->GetSurf(),valid);
+                        if(!valid)
+                        {
+                            converged++;
+                            continue;
+                        }
 
                         NekDouble a,b;
+
                         Find1DBounds(a,b,uvi,df,bounds);
 
                         //initial conditions
@@ -319,9 +326,6 @@ namespace MeshUtils {
         int TotNumPoints = LibUtilities::PointsManager()[pkey]->
                                                         GetTotNumPoints();
         int numInteriorPoints = (m_order-2)*(m_order-1)/2;
-
-        cout << numInteriorPoints << endl;
-        exit(-1);
 
         LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
 
@@ -514,6 +518,9 @@ namespace MeshUtils {
                 trit->second->SetHONodes(honodes);
                 continue;
             }
+
+            trit->second->SetHONodes(honodes);
+            continue;
 
             while(repeatoverallnodes)
             {

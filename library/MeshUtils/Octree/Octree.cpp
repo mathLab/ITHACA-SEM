@@ -464,9 +464,9 @@ void Octree::PropagateDomain()
 
                             if(dot <= 0.0)
                             {
-                                OctantList[i]->SetOrient(1);
-                            }else{
                                 OctantList[i]->SetOrient(3);
+                            }else{
+                                OctantList[i]->SetOrient(1);
                             }
                             ct+=1;
 
@@ -872,9 +872,9 @@ void Octree::CompileCuravturePointList()
                 {
                     CurvaturePointSharedPtr newCPoint =
                     MemoryManager<CurvaturePoint>::AllocateSharedPtr
-                    (r[0],r[1],r[2],
+                    (surf->P(uv),
                      1.0/(kv[0] > kv[1] ? kv[0] : kv[1]),
-                     N[0],N[1],N[2]);
+                     N);
 
                     m_cpList.push_back(newCPoint);
                 }else

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Octree.h
+//  File: Octant.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: class of individal octree octants
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,22 +49,54 @@ namespace MeshUtils {
 class Octant; //have to forward declare the class for the sharedptr
 typedef boost::shared_ptr<Octant> OctantSharedPtr;
 
+/**
+ * @brief this class contains the infomration and methods for individal octants
+ * in the Octree
+ */
 class Octant
 {
     public:
         friend class MemoryManager<Octant>;
 
+        /**
+         * @brief Defualt constructor
+         */
         Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                int p, int l,
                const std::vector<CurvaturePointSharedPtr> &CurvaturePointList);
 
+        /**
+         * @brief scans over all octants in the octantlist and finds neighouring
+         * octants
+         */
         void CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList);
 
-        bool Divide(){return m_needToDivide;}
+        /**
+         * @brief get boolean on whether the octant needs to divide based on
+         * geometry
+         */
+        bool GetDivide(){return m_needToDivide;}
+
+        /**
+         * @brief returns the id of the ith child of 8 for a non leaf octant
+         */
         int GetChild(int i){return m_children[i];}
+
+        /**
+         * @brief get boolean on whether the octant is a leaf or not
+         */
         bool GetLeaf(){return m_leaf;}
+
+        /**
+         * @brief alter leaf status
+         */
         void SetLeaf(bool l){m_leaf = l;}
-        bool hasPoints()
+
+        /**
+         * @brief get boolean on whether the octant has curvature sample points
+         * within its volume
+         */
+        bool HasPoints()
         {
             if(m_localCPIDList.size()>0)
             {
@@ -75,34 +107,118 @@ class Octant
                 return false;
             }
         }
+
+        /**
+         * @brief return mesh sizing specifcaion of the octant
+         */
         NekDouble GetDelta(){return m_delta;}
+
+        /**
+         * @brief alter mesh sizing specification
+         */
         void SetDelta(NekDouble d)
         {
             m_delta = d;
             m_deltaSet=true;
         }
+
+        /**
+         * @brief get boolean on whether the octant has had a mesh spacing
+         * assigned
+         */
         bool GetDeltaKnown(){return m_deltaSet;}
+
+        /**
+         * @brief get oreitnation of the octant with respect to the domain,
+         * 1 is interior, 2 is on the boundary, 3 is exterior
+         */
         int GetOrient(){return m_orientation;}
+
+        /**
+         * @brief alter orientation
+         */
         void SetOrient(int i)
         {
             m_orientation = i;
             m_orientSet = true;
         }
+
+        /**
+         * @brief get boolean on whether the octant knows its orientation
+         */
         bool GetOrientKnown(){return m_orientSet;}
+
+        /**
+         * @brief get the neigbour list of the octant
+         */
         std::vector<int> GetNeighbourList(){return m_neighbourList;}
+
+        /**
+         * @brief get the location of the octant
+         */
         Array<OneD, NekDouble> GetLoc(){return m_loc;}
+
+        /**
+         * @brief get the half dimension of the octant
+         */
         NekDouble DX(){return m_hd;}
+
+        /**
+         * @brief get the far x coordiate of the octant volume
+         * backwards or forards depending on dir (should be -1 or 1)
+         */
         NekDouble FX(NekDouble dir){return m_loc[0]+dir*m_hd;}
+
+        /**
+         * @brief get the far y coordiate of the octant volume
+         * backwards or forards depending on dir (should be -1 or 1)
+         */
         NekDouble FY(NekDouble dir){return m_loc[1]+dir*m_hd;}
+
+        /**
+         * @brief get the far z coordiate of the octant volume
+         * backwards or forards depending on dir (should be -1 or 1)
+         */
         NekDouble FZ(NekDouble dir){return m_loc[2]+dir*m_hd;}
+
+        /**
+         * @brief get the number of curvature sampling points within the octant
+         */
         int NumCurvePoint(){return m_localCPIDList.size();}
+
+        /**
+         * @brief get the list of curvature sampling points within the octant
+         */
         std::vector<CurvaturePointSharedPtr> GetCPList(){return m_localCPIDList;}
+
+        /**
+         * @brief get the number of valid curvature sampling points
+         */
         int NumValidCurvePoint(){return m_numValidPoints;}
+
+        /**
+         * @brief level of the octant within the octree
+         */
         int GetLevel(){return m_level;}
+
+        /**
+         * @brief set the list of child octants
+         */
         void SetChildren(Array<OneD, int> i){m_children = i;}
+
+        /**
+         * @brief clear neigbour list
+         */
         void DeleteNeighbourList(){m_neighbourList.clear();}
+
+        /**
+         * @brief get the parent of this octant
+         */
         int GetParent(){return m_parent;}
 
+        /**
+         * @brief get the distance between this octant and another
+         */
         NekDouble Distance(const OctantSharedPtr &oct)
         {
             Array<OneD, NekDouble> octloc = oct->GetLoc();
@@ -112,6 +228,10 @@ class Octant
             return r;
         }
 
+        /**
+         * @brief get the distance between this octant and a curavture sampling
+         * point
+         */
         NekDouble CPDistance(const CurvaturePointSharedPtr &cu)
         {
             NekDouble r = sqrt((m_loc[0]-cu->X())*(m_loc[0]-cu->X())+
@@ -120,6 +240,9 @@ class Octant
             return r;
         }
 
+        /**
+         * @brief get the diagnal length of the octant (from corner to center)
+         */
         NekDouble DiagonalDim()
         {
             return sqrt(3.0*m_hd*m_hd);
@@ -129,20 +252,33 @@ class Octant
 
     private:
 
-        bool m_leaf; //assume leaf
+        /// leaf identifer
+        bool m_leaf;
+        /// parent id
         int m_parent;
+        /// list of child ids
         Array<OneD, int> m_children;
+        /// level of the octant
         int m_level;
+        /// x,y,z location of the octant
         Array<OneD, NekDouble> m_loc;
+        /// half dimension of the octant
         NekDouble m_hd;
-
+        /// curvature sampling point list
         std::vector<CurvaturePointSharedPtr> m_localCPIDList;
+        /// mesh sizing parameter
         NekDouble m_delta;
+        /// list of ids of neigbours
         std::vector<int> m_neighbourList;
+        /// idenify if division is needed
         bool m_needToDivide; //asume no need to divide
+        /// idenify if delta has ben set
         bool m_deltaSet; //will not know delta
+        /// idenify if orientation has been set
         bool m_orientSet; //does not know orient
+        /// orienation of the octant
         int m_orientation; //1 is in 2 is partial (haspoints) 3 is out
+        /// number of valid sampling points within the octant
         int m_numValidPoints;
 
 };

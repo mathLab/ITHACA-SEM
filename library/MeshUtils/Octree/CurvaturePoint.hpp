@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: curavturepoint.h
+//  File: Curavturepoint.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: class and methods of curvature sampling point
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,88 +39,103 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar {
-        namespace MeshUtils {
+namespace MeshUtils {
 
-            class CurvaturePoint {
+/**
+ * @brief class for a curvature samlping Point
+ */
+class CurvaturePoint {
 
-                public:
-                friend class MemoryManager<CurvaturePoint>;
+    public:
+        friend class MemoryManager<CurvaturePoint>;
 
-                CurvaturePoint(const NekDouble &x,const NekDouble &y,
-                               const NekDouble &z,const NekDouble &R,
-                               const NekDouble &Nx,const NekDouble &Ny,
-                               const NekDouble &Nz) :
-                                                    m_x(x),m_y(y),m_z(z),
-                                                    m_nx(Nx),m_ny(Ny),m_nz(Nz),
-                                                    m_radius(R)
-                {
-                    m_valid = true;
-                }
-
-                CurvaturePoint(const NekDouble &x,const NekDouble &y,
-                               const NekDouble &z,const NekDouble &Nx,
-                               const NekDouble &Ny,const NekDouble &Nz) :
-                                                    m_x(x),m_y(y),m_z(z),
-                                                    m_nx(Nx),m_ny(Ny),m_nz(Nz)
-                {
-                    m_delta = -1;
-                    m_valid = false;
-                }
-
-                void Process(const NekDouble &min,
-                                                  const NekDouble &max,
-                                                  const NekDouble &eps)
-                {
-                    if(m_valid)
-                    {
-                        m_delta = 2.0*m_radius*sqrt(eps*(2.0-eps));
-
-                        if(m_delta>max)
-                        {
-                            m_delta = max;
-                        }
-                        if(m_delta<min)
-                        {
-                            m_delta = min;
-                        }
-                    }
-                }
-
-                bool IsValid(){return m_valid;}
-                NekDouble GetDelta()
-                {
-                    if(m_valid)
-                    {
-                        return m_delta;
-                    }
-                    else
-                    {
-                        return -1;
-                    }
-                }
-                NekDouble X(){return m_x;}
-                NekDouble Y(){return m_y;}
-                NekDouble Z(){return m_z;}
-                void GetNormal(NekDouble &x, NekDouble &y, NekDouble &z)
-                {
-                    x = m_nx;
-                    y = m_ny;
-                    z = m_nz;
-                }
-
-                private:
-
-
-                NekDouble m_x,m_y,m_z;
-                NekDouble m_nx, m_ny, m_nz;
-                NekDouble m_radius;
-                NekDouble m_delta;
-                bool m_valid;
-            };
-
-            typedef boost::shared_ptr<CurvaturePoint> CurvaturePointSharedPtr;
-
+        /**
+         * @brief constructor for a valid point (has radius of curvature)
+         */
+        CurvaturePoint(Array<OneD, NekDouble> l, NekDouble R,
+                       Array<OneD, NekDouble> n) : m_loc(l), m_norm(n),
+                                                   m_radius(R)
+        {
+            m_valid = true;
         }
+
+        /**
+         * @brief constructor for a invalid point
+         */
+        CurvaturePoint(Array<OneD, NekDouble> l,
+                       Array<OneD, NekDouble> n) : m_loc(l), m_norm(n)
+        {
+            m_delta = -1;
+            m_valid = false;
+        }
+
+        /**
+         * @brief calculate mesh spacing delta from radius of curvature
+         */
+        void Process(NekDouble min, NekDouble max, NekDouble eps)
+        {
+            if(m_valid)
+            {
+                m_delta = 2.0*m_radius*sqrt(eps*(2.0-eps));
+
+                if(m_delta>max)
+                {
+                    m_delta = max;
+                }
+                if(m_delta<min)
+                {
+                    m_delta = min;
+                }
+            }
+        }
+
+        /**
+         * @brief return bool on whether point is valid
+         */
+        bool IsValid(){return m_valid;}
+
+        /**
+         * @brief get mesh spacing paramter
+         */
+        NekDouble GetDelta()
+        {
+            if(m_valid)
+            {
+                return m_delta;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        /**
+         * @brief get location of point
+         */
+        NekDouble GetLoc(){return m_loc;}
+
+        /**
+         * @brief get normal vector
+         */
+        void GetNormal(){return m_norm;}
+
+    private:
+
+        /// x,y,z location
+        Array<OneD, NekDouble> m_loc;
+        ///normal vector of surface at point
+        Array<OneD, NekDouble> m_norm;
+        /// radius of curvature at point
+        NekDouble m_radius;
+        /// mesh spacing parameter at point
+        NekDouble m_delta;
+        /// valid point or not
+        bool m_valid;
+};
+
+typedef boost::shared_ptr<CurvaturePoint> CurvaturePointSharedPtr;
+
+}
 }
 
 #endif

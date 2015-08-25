@@ -133,13 +133,17 @@ namespace Nektar
             {
                 case LibUtilities::eForwardEuler:
                 case LibUtilities::eClassicalRungeKutta4:
+                case LibUtilities::eRungeKutta4:
                 {
                     TimeStability = 2.784;
                     break;
                 }
                 case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eRungeKutta2_ModifiedEuler:
+                case LibUtilities::eMidpoint:
+                case LibUtilities::eRungeKutta2:
                 case LibUtilities::eRungeKutta2_ImprovedEuler:
+                case LibUtilities::eRungeKutta2_SSP:
+                case LibUtilities::eRungeKutta3_SSP:
                 {
                     TimeStability = 2.0;
                     break;

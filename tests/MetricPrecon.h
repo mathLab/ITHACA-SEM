@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MetricRegex.h
+// File: MetricPrecon.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,57 +29,34 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of the regular-expression metric.
+// Description: Definition of the preconditioner metric.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_TESTS_METRICREGEX_H
-#define NEKTAR_TESTS_METRICREGEX_H
+#ifndef NEKTAR_TESTS_METRICPRECON_H
+#define NEKTAR_TESTS_METRICPRECON_H
 
-#include <Metric.h>
-#include <boost/regex.hpp>
-#include <vector>
+#include <map>
+#include <MetricRegex.h>
 
 namespace Nektar
 {
-    /**
-     * @brief Data structure for a Regex value to match.
-     */
-    struct MetricRegexFieldValue
-    {
-        MetricRegexFieldValue()
-            : m_value(""), m_useTolerance(false), m_tolerance(0.0),
-              m_useIntTolerance(false), m_intTolerance(0)
-        {
-        }
-
-        std::string m_value;
-        bool m_useTolerance;
-        double m_tolerance;
-
-        bool m_useIntTolerance;
-        int m_intTolerance;
-    };
-
-    class MetricRegex : public Metric
+    class MetricPrecon : public MetricRegex
     {
     public:
         static MetricSharedPtr create(TiXmlElement *metric, bool generate)
         {
-            return MetricSharedPtr(new MetricRegex(metric, generate));
+            return MetricSharedPtr(new MetricPrecon(metric, generate));
         }
 
         static std::string type;
-    
+        static std::string defaultTolerance;
+
     protected:
-        /// Storage for the boost regex.
-        boost::regex                                     m_regex;
-        /// Stores the multiple matches defined in each <MATCH> tag.
-        std::vector<std::vector<MetricRegexFieldValue> > m_matches;
+        MetricPrecon(TiXmlElement *metric, bool generate);
 
-        MetricRegex(TiXmlElement *metric, bool generate);
+        std::string m_varTolerance;
 
-        virtual bool v_Test    (std::istream& pStdout, std::istream& pStderr);
         virtual void v_Generate(std::istream& pStdout, std::istream& pStderr);
     };
 }

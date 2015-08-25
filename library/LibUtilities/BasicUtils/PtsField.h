@@ -44,6 +44,7 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 using namespace std;
 

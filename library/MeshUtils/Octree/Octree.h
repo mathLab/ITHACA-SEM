@@ -109,13 +109,13 @@ class Octree
          * @brief Recursive alorithm which divides and creates new octants based
          * on the geometry
          */
-        void subdivide(int parent);
+        void InitialSubDivide(int parent);
 
         /**
          * @brief Recursive alorithm which subdivides octants so that the
          * neighbours differ by no more that one level
          */
-        void SmoothOctants();
+        void SubDivideByLevel();
 
         /**
          * @brief Subdivision step for smoothoctants()

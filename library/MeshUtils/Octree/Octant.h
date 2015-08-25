@@ -44,97 +44,110 @@
 
 
 namespace Nektar {
-        namespace MeshUtils {
+namespace MeshUtils {
 
-            class Octant; //have to forward declare the class for the sharedptr
-            typedef boost::shared_ptr<Octant> OctantSharedPtr;
+class Octant; //have to forward declare the class for the sharedptr
+typedef boost::shared_ptr<Octant> OctantSharedPtr;
 
-            class Octant
+class Octant
+{
+    public:
+        friend class MemoryManager<Octant>;
+
+        Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
+               int p, int l,
+               const std::vector<CurvaturePointSharedPtr> &CurvaturePointList);
+
+        void CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList);
+
+        bool Divide(){return m_needToDivide;}
+        int GetChild(int i){return m_children[i];}
+        bool GetLeaf(){return m_leaf;}
+        void SetLeaf(bool l){m_leaf = l;}
+        bool hasPoints()
+        {
+            if(m_localCPIDList.size()>0)
             {
-            public:
-                friend class MemoryManager<Octant>;
-
-                Octant(NekDouble x, NekDouble y, NekDouble z,
-                       NekDouble dx, NekDouble dy, NekDouble dz,
-                       int p, int l,
-                       const std::vector<CurvaturePointSharedPtr> &CurvaturePointList,
-                       const std::vector<int> &CPList);
-
-                void CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList);
-
-                bool Divide(){return m_needToDivide;}
-                int GetChild(int i){return m_children[i];}
-                bool isLeaf(){return m_leaf;}
-                bool hasPoints()
-                {
-                    if(m_localCPIDList.size()>0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                NekDouble GetDelta(){return m_delta;}
-                void SetDelta(NekDouble d)
-                {
-                    m_delta = d;
-                    m_deltaSet=true;
-                }
-                bool isDeltaKnown(){return m_deltaSet;}
-                int GetOrient(){return m_orientation;}
-                void SetOrient(int i)
-                {
-                    m_orientation = i;
-                    m_orientSet = true;
-                }
-                bool isOrientKnown(){return m_orientSet;}
-                std::vector<int> GetNeighbourList(){return m_neighbourList;}
-                NekDouble X(){return m_x;}
-                NekDouble Y(){return m_y;}
-                NekDouble Z(){return m_z;}
-                NekDouble DX(){return m_dx;}
-                NekDouble DY(){return m_dy;}
-                NekDouble DZ(){return m_dz;}
-                NekDouble FX(NekDouble dir){return m_x+dir*m_dx;}
-                NekDouble FY(NekDouble dir){return m_y+dir*m_dy;}
-                NekDouble FZ(NekDouble dir){return m_z+dir*m_dz;}
-                int NumCurvePoint(){return m_localCPIDList.size();}
-                std::vector<int> GetCPList(){return m_localCPIDList;}
-                int NumValidCurvePoint(){return m_numValidPoints;}
-                int GetLevel(){return m_level;}
-                void SetChildren(Array<OneD, int> i){m_children = i;}
-                void LeafFalse(){m_leaf = false;}
-                void DeleteNeighbourList(){m_neighbourList.clear();}
-                int GetCPID(int i){return m_localCPIDList[i];}
-                int GetParent(){return m_parent;}
-
-
-
-            private:
-
-                bool m_leaf; //assume leaf
-                int m_parent;
-                Array<OneD, int> m_children;
-                int m_level;
-                NekDouble m_x;
-                NekDouble m_y;
-                NekDouble m_z;
-                NekDouble m_dx;
-                NekDouble m_dy;
-                NekDouble m_dz;
-                std::vector<int> m_localCPIDList;
-                NekDouble m_delta;
-                std::vector<int> m_neighbourList;
-                bool m_needToDivide; //asume no need to divide
-                bool m_deltaSet; //will not know delta
-                bool m_orientSet; //does not know orient
-                int m_orientation; //1 is in 2 is partial (haspoints) 3 is out
-                int m_numValidPoints;
-
-            };
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
+        NekDouble GetDelta(){return m_delta;}
+        void SetDelta(NekDouble d)
+        {
+            m_delta = d;
+            m_deltaSet=true;
+        }
+        bool GetDeltaKnown(){return m_deltaSet;}
+        int GetOrient(){return m_orientation;}
+        void SetOrient(int i)
+        {
+            m_orientation = i;
+            m_orientSet = true;
+        }
+        bool GetOrientKnown(){return m_orientSet;}
+        std::vector<int> GetNeighbourList(){return m_neighbourList;}
+        Array<OneD, NekDouble> GetLoc(){return m_loc;}
+        NekDouble DX(){return m_hd;}
+        NekDouble FX(NekDouble dir){return m_loc[0]+dir*m_hd;}
+        NekDouble FY(NekDouble dir){return m_loc[1]+dir*m_hd;}
+        NekDouble FZ(NekDouble dir){return m_loc[2]+dir*m_hd;}
+        int NumCurvePoint(){return m_localCPIDList.size();}
+        std::vector<CurvaturePointSharedPtr> GetCPList(){return m_localCPIDList;}
+        int NumValidCurvePoint(){return m_numValidPoints;}
+        int GetLevel(){return m_level;}
+        void SetChildren(Array<OneD, int> i){m_children = i;}
+        void DeleteNeighbourList(){m_neighbourList.clear();}
+        int GetParent(){return m_parent;}
+
+        NekDouble Distance(const OctantSharedPtr &oct)
+        {
+            Array<OneD, NekDouble> octloc = oct->GetLoc();
+            NekDouble r = sqrt((m_loc[0]-octloc[0])*(m_loc[0]-octloc[0])+
+                               (m_loc[1]-octloc[1])*(m_loc[1]-octloc[1])+
+                               (m_loc[2]-octloc[2])*(m_loc[2]-octloc[2]));
+            return r;
+        }
+
+        NekDouble CPDistance(const CurvaturePointSharedPtr &cu)
+        {
+            NekDouble r = sqrt((m_loc[0]-cu->X())*(m_loc[0]-cu->X())+
+                               (m_loc[1]-cu->Y())*(m_loc[1]-cu->Y())+
+                               (m_loc[2]-cu->Z())*(m_loc[2]-cu->Z()));
+            return r;
+        }
+
+        NekDouble DiagonalDim()
+        {
+            return sqrt(3.0*m_hd*m_hd);
+        }
+
+
+
+    private:
+
+        bool m_leaf; //assume leaf
+        int m_parent;
+        Array<OneD, int> m_children;
+        int m_level;
+        Array<OneD, NekDouble> m_loc;
+        NekDouble m_hd;
+
+        std::vector<CurvaturePointSharedPtr> m_localCPIDList;
+        NekDouble m_delta;
+        std::vector<int> m_neighbourList;
+        bool m_needToDivide; //asume no need to divide
+        bool m_deltaSet; //will not know delta
+        bool m_orientSet; //does not know orient
+        int m_orientation; //1 is in 2 is partial (haspoints) 3 is out
+        int m_numValidPoints;
+
+};
+
+}
 }
 
 

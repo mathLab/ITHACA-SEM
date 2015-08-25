@@ -38,6 +38,7 @@
 #include <vector>
 
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/static_assert.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -100,30 +101,26 @@ namespace Nektar
                 template<class T>
                 void AllReduce(T& pData, enum ReduceOperator pOp);
 
-                LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, NekDouble>& pSendData,
-                                                          Array<OneD, NekDouble>& pRecvData);
-                LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, int>& pSendData,
-                                                          Array<OneD, int>& pRecvData);
-                LIB_UTILITIES_EXPORT inline void AlltoAllv(Array<OneD, NekDouble>& pSendData,
-                                                           Array<OneD, int>& pSendDataSizeMap,
-                                                           Array<OneD, int>& pSendDataOffsetMap,
-                                                           Array<OneD, NekDouble>& pRecvData,
-                                                           Array<OneD, int>& pRecvDataSizeMap,
-                                                           Array<OneD, int>& pRecvDataOffsetMap);
-                LIB_UTILITIES_EXPORT inline void AlltoAllv(Array<OneD, int>& pSendData,
-                                                           Array<OneD, int>& pSendDataSizeMap,
-                                                           Array<OneD, int>& pSendDataOffsetMap,
-                                                           Array<OneD, int>& pRecvData,
-                                                           Array<OneD, int>& pRecvDataSizeMap,
-                                                           Array<OneD, int>& pRecvDataOffsetMap);
+                template<class T>
+                void AlltoAll(const T& pSendData, T& pRecvData);
+                template<class T>
+                void AlltoAllv(const Array<OneD, T>& pSendData,
+                        const Array<OneD, int>& pSendDataSizeMap,
+                        const Array<OneD, int>& pSendDataOffsetMap,
+                        Array<OneD, T>& pRecvData,
+                        const Array<OneD, int>& pRecvDataSizeMap,
+                        const Array<OneD, int>& pRecvDataOffsetMap);
                 
                 template<class T>
                 void Bcast(T& data, int rootProc);
 
-                LIB_UTILITIES_EXPORT inline void Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
+                template<class T>
+                void Exscan(const T& pData, const enum ReduceOperator pOp, T& ans);
 
-                LIB_UTILITIES_EXPORT inline Array<OneD, unsigned long long> Gather(const int rootProc, const Array<OneD, unsigned long long>& val);
-                LIB_UTILITIES_EXPORT inline Array<OneD, unsigned long long> Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData);
+                template<class T>
+                T Gather(const int rootProc, const T& val);
+                template<class T>
+                T Scatter(const int rootProc, const T& pData);
 
                 LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -153,28 +150,18 @@ namespace Nektar
 				virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
 				        int pSendProc, int pRecvProc) = 0;
 				virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp) = 0;
-
-				virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
-										Array<OneD, NekDouble>& pRecvData) = 0;
-                virtual void v_AlltoAll(Array<OneD, int>& pSendData,
-										Array<OneD, int>& pRecvData) = 0;
-			    virtual void v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
-										Array<OneD, int>& pSendDataSizeMap,
-										Array<OneD, int>& pSendDataOffsetMap,
-										Array<OneD, NekDouble>& pRecvData,
-										Array<OneD, int>& pRecvDataSizeMap,
-										Array<OneD, int>& pRecvDataOffsetMap) = 0;
-				virtual void v_AlltoAllv(Array<OneD, int>& pSendData,
-										Array<OneD, int>& pSendDataSizeMap,
-										Array<OneD, int>& pSendDataOffsetMap,
-										Array<OneD, int>& pRecvData,
-										Array<OneD, int>& pRecvDataSizeMap,
-										Array<OneD, int>& pRecvDataOffsetMap) = 0;
+				virtual void v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+				        void* recvbuf, int recvcount, CommDataType recvtype) = 0;
+			    virtual void v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sensdispls[], CommDataType sendtype,
+			            void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype) = 0;
 				virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root) = 0;
+
                 virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans) = 0;
 
-                virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val) = 0;
-                virtual Array<OneD, unsigned long long> v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData) = 0;
+                virtual void v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+                        void *recvbuf, int recvcount, CommDataType recvtype, int root) = 0;
+                virtual void v_Scatter(const void *sendbuf, int sendcount, CommDataType sendtype,
+                        void *recvbuf, int recvcount, CommDataType recvtype, int root) = 0;
 
                 virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
@@ -226,19 +213,19 @@ namespace Nektar
         template<class T>
         void Comm::Send(int pProc, const T& pData)
         {
-                v_Send(CommDataTypeTraits<T>::GetPointer(pData),
-                        CommDataTypeTraits<T>::GetCount(pData),
-                        CommDataTypeTraits<T>::GetDataType(),
-                        pProc);
+            v_Send(CommDataTypeTraits<T>::GetPointer(pData),
+                   CommDataTypeTraits<T>::GetCount(pData),
+                   CommDataTypeTraits<T>::GetDataType(),
+                   pProc);
         }
 
         template<class T>
         void Comm::Recv(int pProc, T& pData)
         {
-                v_Recv(CommDataTypeTraits<T>::GetPointer(pData),
-                        CommDataTypeTraits<T>::GetCount(pData),
-                        CommDataTypeTraits<T>::GetDataType(),
-                        pProc);
+            v_Recv(CommDataTypeTraits<T>::GetPointer(pData),
+                   CommDataTypeTraits<T>::GetCount(pData),
+                   CommDataTypeTraits<T>::GetDataType(),
+                   pProc);
         }
 
         /**
@@ -251,13 +238,13 @@ namespace Nektar
                              T& pRecvData)
         {
             v_SendRecv(CommDataTypeTraits<T>::GetPointer(pSendData),
-                    CommDataTypeTraits<T>::GetCount(pSendData).
-                    CommDataTypeTraits<T>::GetDataType(),
-                    pSendProc,
-                    CommDataTypeTraits<T>::GetPointer(pRecvData),
-                    CommDataTypeTraits<T>::GetCount(pRecvData),
-                    CommDataTypeTraits<T>::GetDataType(),
-                    pRecvProc);
+                       CommDataTypeTraits<T>::GetCount(pSendData).
+                       CommDataTypeTraits<T>::GetDataType(),
+                       pSendProc,
+                       CommDataTypeTraits<T>::GetPointer(pRecvData),
+                       CommDataTypeTraits<T>::GetCount(pRecvData),
+                       CommDataTypeTraits<T>::GetDataType(),
+                       pRecvProc);
         }
 		
 		/**
@@ -286,76 +273,111 @@ namespace Nektar
                     pOp);
         }
 
+        template <class T>
+        void Comm::AlltoAll(const T& pSendData, T& pRecvData)
+        {
+            BOOST_STATIC_ASSERT_MSG(CommDataTypeTraits<T>::IsVector,
+                    "AlltoAll only valid with Array or vector arguments.");
+            int sendSize = CommDataTypeTraits<T>::GetCount(pSendData);
+            int recvSize = CommDataTypeTraits<T>::GetCount(pRecvData);
+            ASSERTL0(sendSize == recvSize,
+                    "Send and Recv arrays have incompatible sizes in AlltoAll");
+
+            int count = sendSize / GetSize();
+            ASSERTL0(count * GetSize() == sendSize,
+                    "Array size incompatible with size of communicator");
+
+            v_AlltoAll(CommDataTypeTraits<T>::GetPointer(pSendData),
+                       count,
+                       CommDataTypeTraits<T>::GetDataType(),
+                       CommDataTypeTraits<T>::GetPointer(pRecvData),
+                       count,
+                       CommDataTypeTraits<T>::GetDataType());
+        }
+		
+		/**
+         *
+         */
+        template<class T>
+        void Comm::AlltoAllv(const Array<OneD, T>& pSendData,
+                const Array<OneD, int>& pSendDataSizeMap,
+                const Array<OneD, int>& pSendDataOffsetMap,
+                Array<OneD, T>& pRecvData,
+                const Array<OneD, int>& pRecvDataSizeMap,
+                const Array<OneD, int>& pRecvDataOffsetMap)
+        {
+            v_AlltoAllv(pSendData.get(),
+                        pSendDataSizeMap.get(),
+                        pSendDataOffsetMap.get(),
+                        CommDataTypeTraits<T>::GetDataType(),
+                        pRecvData.get(),
+                        pRecvDataSizeMap.get(),
+                        pRecvDataOffsetMap.get(),
+                        CommDataTypeTraits<T>::GetDataType());
+        }
         /**
          *
          */
-		inline void Comm::AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)
-		{
-			v_AlltoAll(pSendData,pRecvData);
-		}
-		
-		
-		/**
-         *
-         */
-		inline void Comm::AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
-		{
-			v_AlltoAll(pSendData,pRecvData);
-		}
-		
-		
-		/**
-         *
-         */
-		inline void Comm::AlltoAllv(Array<OneD, NekDouble>& pSendData,
-								 Array<OneD, int>& pSendDataSizeMap,
-								 Array<OneD, int>& pSendDataOffsetMap,
-								 Array<OneD, NekDouble>& pRecvData,
-								 Array<OneD, int>& pRecvDataSizeMap,
-								 Array<OneD, int>& pRecvDataOffsetMap)
-		{
-			v_AlltoAllv(pSendData,pSendDataSizeMap,pSendDataOffsetMap,pRecvData,pRecvDataSizeMap,pRecvDataOffsetMap);
-		}
-		
-		/**
-         *
-         */
-		inline void Comm::AlltoAllv(Array<OneD, int>& pSendData,
-								 Array<OneD, int>& pSendDataSizeMap,
-								 Array<OneD, int>& pSendDataOffsetMap,
-								 Array<OneD, int>& pRecvData,
-								 Array<OneD, int>& pRecvDataSizeMap,
-								 Array<OneD, int>& pRecvDataOffsetMap)
-		{
-			v_AlltoAllv(pSendData,pSendDataSizeMap,pSendDataOffsetMap,pRecvData,pRecvDataSizeMap,pRecvDataOffsetMap);
-		}
-
 		template<class T>
 		void Comm::Bcast(T& pData, int pRoot)
 		{
-		        v_Bcast(CommDataTypeTraits<T>::GetPointer(pData),
-		                CommDataTypeTraits<T>::GetCount(pData),
-		                CommDataTypeTraits<T>::GetDataType(),
-		                pRoot);
+		    v_Bcast(CommDataTypeTraits<T>::GetPointer(pData),
+		            CommDataTypeTraits<T>::GetCount(pData),
+		            CommDataTypeTraits<T>::GetDataType(),
+		            pRoot);
 		}
 
-        inline void Comm::Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
+        template<class T>
+        void Comm::Exscan(const T& pData, const enum ReduceOperator pOp, T& ans)
         {
-            v_Exscan(pData, pOp, ans);
+            ASSERTL0(CommDataTypeTraits<T>::GetCount(pData) == CommDataTypeTraits<T>::GetCount(ans),
+                    "Input and output array sizes don't match");
+            v_Exscan(CommDataTypeTraits<T>::GetPointer(pData),
+                     CommDataTypeTraits<T>::GetPointer(ans),
+                     CommDataTypeTraits<T>::GetCount(pData),
+                     CommDataTypeTraits<T>::GetDataType(),
+                     pOp);
         }
+
         /**
          * Concatenate all the input arrays, in rank order, onto the process with rank == rootProc
          */
-        inline Array<OneD, unsigned long long> Comm::Gather(const int rootProc, const Array<OneD, unsigned long long>& val)
+        template<class T>
+        T Comm::Gather(const int rootProc, const T& val)
         {
-            return v_Gather(rootProc, val);
+            BOOST_STATIC_ASSERT_MSG(CommDataTypeTraits<T>::IsVector,
+                    "Gather only valid with Array or vector arguments.");
+            bool amRoot = (GetRank() == rootProc);
+            unsigned nEl = CommDataTypeTraits<T>::GetCount(val);
+
+            unsigned nOut = amRoot ? GetSize() * nEl : 0;
+            T ans(nOut);
+            void* recvbuf = amRoot ? CommDataTypeTraits<T>::GetPointer(ans) : NULL;
+
+            v_Gather(CommDataTypeTraits<T>::GetPointer(val), nEl, CommDataTypeTraits<T>::GetDataType(),
+                    recvbuf, nEl, CommDataTypeTraits<T>::GetDataType(),
+                    rootProc);
+            return ans;
         }
         /**
          * Scatter pData across ranks in chunks of len(pData)/num_ranks
          */
-        inline Array<OneD, unsigned long long> Comm::Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData)
+        template<class T>
+        T Comm::Scatter(const int rootProc, const T& pData)
         {
-            return v_Scatter(rootProc, pData);
+            BOOST_STATIC_ASSERT_MSG(CommDataTypeTraits<T>::IsVector,
+                    "Scatter only valid with Array or vector arguments.");
+
+            bool amRoot = (GetRank() == rootProc);
+            unsigned nEl = CommDataTypeTraits<T>::GetCount(pData) / GetSize();
+
+            const void* sendbuf = amRoot ? CommDataTypeTraits<T>::GetPointer(pData) : NULL;
+            T ans(nEl);
+
+            v_Scatter(sendbuf, nEl, CommDataTypeTraits<T>::GetDataType(),
+                    CommDataTypeTraits<T>::GetPointer(ans), nEl, CommDataTypeTraits<T>::GetDataType(),
+                        rootProc);
+            return ans;
         }
 
 		/**

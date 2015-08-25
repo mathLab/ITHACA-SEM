@@ -131,49 +131,22 @@ namespace Nektar
 
         }
 
-		/**
+        /**
          *
          */
-		void CommSerial::v_AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)
-		{
-			
+        void CommSerial::v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+                                    void* recvbuf, int recvcount, CommDataType recvtype)
+        {
+
         }
 		
-		
 		/**
          *
          */
-		void CommSerial::v_AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
-		{
-			
-        }
-		
-		
-		/**
-         *
-         */
-		void CommSerial::v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
-									 Array<OneD, int>& pSendDataSizeMap,
-									 Array<OneD, int>& pSendDataOffsetMap,
-									 Array<OneD, NekDouble>& pRecvData,
-									 Array<OneD, int>& pRecvDataSizeMap,
-									 Array<OneD, int>& pRecvDataOffsetMap)
-		{
-			
-        }
-		
-		
-		/**
-         *
-         */
-		void CommSerial::v_AlltoAllv(Array<OneD, int>& pSendData,
-									 Array<OneD, int>& pSendDataSizeMap,
-									 Array<OneD, int>& pSendDataOffsetMap,
-									 Array<OneD, int>& pRecvData,
-									 Array<OneD, int>& pRecvDataSizeMap,
-									 Array<OneD, int>& pRecvDataOffsetMap)
-		{
-			
+        void CommSerial::v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sensdispls[], CommDataType sendtype,
+                void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype)
+        {
+
         }
 
 		void CommSerial::v_Bcast(void* buffer, int count, CommDataType dt, int root)
@@ -186,13 +159,16 @@ namespace Nektar
 
         }
 
-        Array<OneD, unsigned long long> CommSerial::v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val)
+        void CommSerial::v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+                void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
-            return val;
+            std::memcpy(recvbuf, sendbuf, sendcount*CommDataTypeGetSize(sendtype));
         }
-        Array<OneD, unsigned long long> CommSerial::v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData)
+
+        void CommSerial::v_Scatter(const void *sendbuf, int sendcount, CommDataType sendtype,
+                void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
-            return pData;
+            std::memcpy(recvbuf, sendbuf, sendcount*CommDataTypeGetSize(sendtype));
         }
         /**
          *

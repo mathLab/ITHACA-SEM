@@ -75,32 +75,21 @@ namespace Nektar
             LIB_UTILITIES_EXPORT virtual void v_Block();
             LIB_UTILITIES_EXPORT virtual void v_Send(const void* buf, int count, CommDataType dt, int dest);
             LIB_UTILITIES_EXPORT virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
-            virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+            LIB_UTILITIES_EXPORT virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                     void *recvbuf, int recvcount, CommDataType recvtype, int source);
-            virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
+            LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
                     int pSendProc, int pRecvProc);
-            virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp);
-
-            LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
-                                                         Array<OneD, NekDouble>& pRecvData);
-            LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, int>& pSendData,
-                                                         Array<OneD, int>& pRecvData);
-            LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
-                                                          Array<OneD, int>& pSendDataSizeMap,
-                                                          Array<OneD, int>& pSendDataOffsetMap,
-                                                          Array<OneD, NekDouble>& pRecvData,
-                                                          Array<OneD, int>& pRecvDataSizeMap,
-                                                          Array<OneD, int>& pRecvDataOffsetMap);
-            LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(Array<OneD, int>& pSendData,
-                                                          Array<OneD, int>& pSendDataSizeMap,
-                                                          Array<OneD, int>& pSendDataOffsetMap,
-                                                          Array<OneD, int>& pRecvData,
-                                                          Array<OneD, int>& pRecvDataSizeMap,
-                                                          Array<OneD, int>& pRecvDataOffsetMap);
+            LIB_UTILITIES_EXPORT virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp);
+            LIB_UTILITIES_EXPORT virtual void v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+                    void* recvbuf, int recvcount, CommDataType recvtype);
+            LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sensdispls[], CommDataType sendtype,
+                    void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype);
             LIB_UTILITIES_EXPORT virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root);
             LIB_UTILITIES_EXPORT virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
-            LIB_UTILITIES_EXPORT virtual Array<OneD, unsigned long long> v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val);
-            LIB_UTILITIES_EXPORT virtual Array<OneD, unsigned long long> v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData);
+            LIB_UTILITIES_EXPORT virtual void v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+                    void *recvbuf, int recvcount, CommDataType recvtype, int root);
+            LIB_UTILITIES_EXPORT virtual void v_Scatter(const void* sendbuf, int sendcount, CommDataType sendtype,
+                    void *recvbuf, int recvcount, CommDataType recvtype, int root);
 
             LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
             LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);

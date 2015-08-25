@@ -56,7 +56,10 @@ namespace Nektar
     {
         enum CommDataType
         {
-            MPI_INT, MPI_DOUBLE,
+            MPI_INT, MPI_UNSIGNED,
+            MPI_LONG, MPI_UNSIGNED_LONG,
+            MPI_LONG_LONG, MPI_UNSIGNED_LONG_LONG,
+            MPI_FLOAT, MPI_DOUBLE, MPI_LONG_DOUBLE
         };
     }
 }
@@ -68,6 +71,8 @@ namespace Nektar
 
     namespace LibUtilities
     {
+        int CommDataTypeGetSize(CommDataType);
+
         template<class T>
         class CommDataTypeTraits
         {
@@ -89,6 +94,8 @@ namespace Nektar
                 {
                     return 1;
                 }
+
+                const static bool IsVector = false;
         };
 
         /**
@@ -114,6 +121,7 @@ namespace Nektar
                 {
                     return val.size();
                 }
+                const static bool IsVector = true;
         };
 
         /**
@@ -139,6 +147,7 @@ namespace Nektar
                 {
                     return val.num_elements();
                 }
+                const static bool IsVector = true;
         };
     }
 }

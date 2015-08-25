@@ -245,85 +245,28 @@ namespace Nektar
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
         }
+        /**
+         *
+         */
+        void CommMpi::v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+                                    void* recvbuf, int recvcount, CommDataType recvtype)
+        {
+            int retval = MPI_Alltoall(sendbuf, sendcount, sendtype,
+                                      recvbuf, recvcount, recvtype,
+                                      m_comm);
+
+            ASSERTL0(retval == MPI_SUCCESS,
+                    "MPI error performing All-to-All.");
+        }
 
         /**
          *
          */
-		void CommMpi::v_AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)
+		void CommMpi::v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sdispls[], CommDataType sendtype,
+		                          void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype)
 		{
-			int retval = MPI_Alltoall(pSendData.get(),
-									  (int) pSendData.num_elements()/GetSize(),
-									  MPI_DOUBLE,
-									  pRecvData.get(),
-									  (int) pRecvData.num_elements()/GetSize(),
-									  MPI_DOUBLE,
-									  m_comm);
-									  
-			ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing All-to-All.");
-		}
-		
-		
-		/**
-         *
-         */
-		void CommMpi::v_AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
-		{
-			int retval = MPI_Alltoall(pSendData.get(),
-									  (int) pSendData.num_elements()/GetSize(),
-									  MPI_INT,
-									  pRecvData.get(),
-									  (int) pRecvData.num_elements()/GetSize(),
-									  MPI_INT,
-									  m_comm);
-			
-			ASSERTL0(retval == MPI_SUCCESS,
-                     "MPI error performing All-to-All.");
-		}
-		
-		
-		/**
-         *
-         */
-		void CommMpi::v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
-								 Array<OneD, int>& pSendDataSizeMap,
-								 Array<OneD, int>& pSendDataOffsetMap,
-								 Array<OneD, NekDouble>& pRecvData,
-								 Array<OneD, int>& pRecvDataSizeMap,
-								 Array<OneD, int>& pRecvDataOffsetMap)
-		{
-			int retval = MPI_Alltoallv(pSendData.get(),
-									   pSendDataSizeMap.get(),
-									   pSendDataOffsetMap.get(),
-									   MPI_DOUBLE,
-									   pRecvData.get(),
-									   pRecvDataSizeMap.get(),
-									   pRecvDataOffsetMap.get(),
-									   MPI_DOUBLE,
-									   m_comm);
-									   
-		    ASSERTL0(retval == MPI_SUCCESS,
-					 "MPI error performing All-to-All-v.");
-		}
-		
-		/**
-         *
-         */
-		void CommMpi::v_AlltoAllv(Array<OneD, int>& pSendData,
-								  Array<OneD, int>& pSendDataSizeMap,
-								  Array<OneD, int>& pSendDataOffsetMap,
-								  Array<OneD, int>& pRecvData,
-								  Array<OneD, int>& pRecvDataSizeMap,
-								  Array<OneD, int>& pRecvDataOffsetMap)
-		{
-			int retval = MPI_Alltoallv(pSendData.get(),
-									   pSendDataSizeMap.get(),
-									   pSendDataOffsetMap.get(),
-									   MPI_INT,
-									   pRecvData.get(),
-									   pRecvDataSizeMap.get(),
-									   pRecvDataOffsetMap.get(),
-									   MPI_INT,
+			int retval = MPI_Alltoallv(sendbuf, sendcounts, sdispls, sendtype,
+			                           recvbuf, recvcounts, rdispls, recvtype,
 									   m_comm);
 									   
 			ASSERTL0(retval == MPI_SUCCESS,
@@ -361,39 +304,25 @@ namespace Nektar
                     "MPI error performing Exscan-v.");
         }
 
-        Array<OneD, unsigned long long> CommMpi::v_Gather(const int rootProc, const Array<OneD, unsigned long long>& val)
+        void CommMpi::v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+                void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
-            bool amRoot = (GetRank() == rootProc);
-            unsigned nEl = val.num_elements();
-
-            unsigned nOut = amRoot ? GetSize() * nEl : 0;
-            Array<OneD, unsigned long long> ans(nOut);
-            void* recvbuf = amRoot ? ans.get() : NULL;
-
-            int retval = MPI_Gather(val.get(), nEl, MPI_UNSIGNED_LONG_LONG,
-                    recvbuf, nEl, MPI_UNSIGNED_LONG_LONG,
-                    rootProc, m_comm);
+            int retval = MPI_Gather(sendbuf, sendcount, sendtype,
+                    recvbuf, recvcount, recvtype,
+                    root, m_comm);
 
             ASSERTL0(retval == MPI_SUCCESS,
                                 "MPI error performing Gather.");
-            return ans;
         }
 
-        Array<OneD, unsigned long long> CommMpi::v_Scatter(const int rootProc, const Array<OneD, unsigned long long>& pData)
+        void CommMpi::v_Scatter(const void* sendbuf, int sendcount, CommDataType sendtype,
+                void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
-            bool amRoot = (GetRank() == rootProc);
-            unsigned nEl = pData.num_elements() / GetSize();
-
-            const void* sendbuf = amRoot ? pData.get() : NULL;
-            Array<OneD, unsigned long long> ans(nEl);
-
-            int retval = MPI_Scatter(sendbuf, nEl, MPI_UNSIGNED_LONG_LONG,
-                        ans.get(), nEl, MPI_UNSIGNED_LONG_LONG,
-                        rootProc, m_comm);
+            int retval = MPI_Scatter(sendbuf, sendcount, sendtype,
+                        recvbuf, recvcount, recvtype,
+                        root, m_comm);
             ASSERTL0(retval == MPI_SUCCESS,
                                 "MPI error performing Scatter.");
-
-            return ans;
         }
 
         /**

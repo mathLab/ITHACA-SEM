@@ -40,3 +40,9 @@ TARGET_LINK_LIBRARIES(SteadyLinearAdvectionReaction2D ${LinkLibraries})
 SET(PostProcessingSource  PostProcessing.cpp)
 ADD_NEKTAR_EXECUTABLE(PostProcessing extra-demos PostProcessingSource)
 TARGET_LINK_LIBRARIES(PostProcessing ${LinkLibraries})
+
+ADD_NEKTAR_TEST(ProjectionCont2D_P7)
+
+IF (NEKTAR_USE_MPI)
+    ADD_NEKTAR_TEST(ProjectionCont2D_P7_par)
+ENDIF (NEKTAR_USE_MPI)

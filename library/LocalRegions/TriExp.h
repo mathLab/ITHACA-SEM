@@ -267,6 +267,10 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
+            
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
 
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;

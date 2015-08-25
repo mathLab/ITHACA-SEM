@@ -197,7 +197,7 @@ namespace Nektar
             }
         }
 
-	/**
+        /**
          *
          */
         ExpansionType ExpList::GetExpType(void)
@@ -560,7 +560,7 @@ namespace Nektar
          *                          array of size \f$N_{\mathrm{eof}}\f$.
          */
         void ExpList::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
-											Array<OneD, NekDouble> &outarray)
+                                            Array<OneD, NekDouble> &outarray)
         {
             Array<OneD,NekDouble> f(m_ncoeffs);
 
@@ -1187,7 +1187,7 @@ namespace Nektar
          *                          \f$Q_{\mathrm{tot}}\f$.
          */
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
-											Array<OneD, NekDouble> &outarray)
+                                            Array<OneD, NekDouble> &outarray)
         {
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
@@ -1235,7 +1235,7 @@ namespace Nektar
                                  NekDouble tol,
                                  bool returnNearestElmt)
         {
-            NekDouble resid;
+            NekDouble nearpt = 1e6;
 
             if (GetNumElmts() == 0)
             {
@@ -1255,7 +1255,7 @@ namespace Nektar
                 {
                     if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
                                                               locCoords,
-                                                              tol, resid))
+                                                              tol, nearpt))
                     {
                         w.SetX(gloCoords[0]);
                         w.SetY(gloCoords[1]);
@@ -1291,7 +1291,7 @@ namespace Nektar
 
                     // retrieve local coordinate of point
                     (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
-                                                          locCoords);
+                                                              locCoords);
                     return min_id;
                 }
                 else
@@ -1304,56 +1304,64 @@ namespace Nektar
             {
                 static int start = 0;
                 int min_id  = 0;
-                NekDouble resid_min = 1e6;
+                NekDouble nearpt_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
 
                 // restart search from last found value
                 for (int i = start; i < (*m_exp).size(); ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                              tol, resid))
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
+                                                              locCoords,
+                                                              tol, nearpt))
                     {
                         start = i;
                         return i;
                     }
                     else
                     {
-                        if(resid < resid_min)
+                        if(nearpt < nearpt_min)
                         {
                             min_id    = i;
-                            resid_min = resid;
-                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                            nearpt_min = nearpt;
+                            Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
                         }
                     }
                 }
 
                 for (int i = 0; i < start; ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                              tol, resid))
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, 
+                                                              locCoords,
+                                                              tol, nearpt))
                     {
                         start = i;
                         return i;
                     }
                     else
                     {
-                        if(resid < resid_min)
+                        if(nearpt < nearpt_min)
                         {
                             min_id    = i;
-                            resid_min = resid;
-                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                            nearpt_min = nearpt;
+                            Vmath::Vcopy(locCoords.num_elements(),
+                                         locCoords,1,savLocCoords,1);
                         }
                     }
                 }
 
-                std::string msg = "Failed to find point in element to tolerance of "
-                                + boost::lexical_cast<std::string>(resid)
-                                + " using nearest point found";
-                WARNINGL0(true,msg.c_str());
+                std::string msg = "Failed to find point within element to tolerance of "
+                    + boost::lexical_cast<std::string>(tol)
+                    + " using local point ("
+                    + boost::lexical_cast<std::string>(locCoords[0]) +","
+                    + boost::lexical_cast<std::string>(locCoords[1]) +","
+                    + boost::lexical_cast<std::string>(locCoords[1]) 
+                    + ") in element: "
+                    + boost::lexical_cast<std::string>(min_id);
+                WARNINGL1(false,msg.c_str());
 
                 if(returnNearestElmt)
                 {
-                    Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
+                    Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                     return min_id;
                 }
                 else
@@ -1668,11 +1676,6 @@ namespace Nektar
             outfile << "</VTKFile>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
-        {
-            ASSERTL0(false, "Routine not implemented for this expansion.");
-        }
-
         void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
             ASSERTL0(false, "Routine not implemented for this expansion.");
@@ -1817,7 +1820,6 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             LibUtilities::TranspositionSharedPtr trans;
-
             return trans;
         }
 
@@ -1834,7 +1836,6 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
-
             return NoModes;
         }
 
@@ -1843,7 +1844,6 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
-
             return NoModes;
         }
 
@@ -1936,6 +1936,7 @@ namespace Nektar
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                                                   int NumHomoDir,
+                                                  int NumHomoStrip,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
                                                   std::vector<unsigned int> &HomoZIDs,
@@ -2025,8 +2026,16 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
-                    fielddef.push_back(fdef);
+                    for(int i = 0; i < NumHomoStrip; ++i)
+                    {
+                        LibUtilities::FieldDefinitionsSharedPtr fdef  =
+                            MemoryManager<LibUtilities::FieldDefinitions>::
+                                AllocateSharedPtr(shape, elementIDs, basis,
+                                                  UniOrder, numModes,fields,
+                                                  NumHomoDir, HomoLen, HomoZIDs,
+                                                  HomoYIDs);
+                        fielddef.push_back(fdef);
+                    }
                 }
             }
         }
@@ -2394,7 +2403,6 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
 
         void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals,
                                     const Array<OneD, NekDouble> &TotField,

@@ -875,6 +875,10 @@ namespace Nektar
 	    }
 	}
 
+        /** \brief  Get the normals along specficied face 
+         * Get the face normals interplated to a points0 x points 0
+         * type distribution
+         **/ 
         void PrismExp::v_ComputeFaceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
@@ -1199,6 +1203,35 @@ namespace Nektar
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
                             m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
             }
+        }
+        
+        void PrismExp::v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey)
+        {
+            int nq = GetTotPoints();
+            
+            // Calculate sqrt of the Jacobian
+            Array<OneD, const NekDouble> jac = 
+                                    m_metricinfo->GetJac(GetPointsKeys());
+            Array<OneD, NekDouble> sqrt_jac(nq);
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vsqrt(nq,jac,1,sqrt_jac,1);
+            }
+            else
+            {
+                Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
+            }
+            
+            // Multiply array by sqrt(Jac)
+            Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
+            
+            // Apply std region filter
+            StdPrismExp::v_SVVLaplacianFilter( array, mkey);
+            
+            // Divide by sqrt(Jac)
+            Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
         }
 
 

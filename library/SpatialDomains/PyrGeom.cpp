@@ -125,7 +125,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords,
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            NekDouble resid = 0.0;
+            NekDouble ptdist = 1e6;
 
             v_FillGeom();
 
@@ -160,18 +160,24 @@ namespace Nektar
                 NekDouble gamma = v2 * scaleFactor;
                 NekDouble delta = er0.dot(cp1030) / V; // volume3 = {(er0)dot(e10)x(e30)}/4
 
-
                 // Make Pyramid bigger
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
+
+                // Set ptdist to distance to nearest vertex 
+                for(int i = 0; i < 5; ++i)
+                {
+                    ptdist = min(ptdist,r.dist(*m_verts[i]));
+                }
+
             }
             else
             {
                 NEKERROR(ErrorUtil::efatal,
                          "inverse mapping must be set up to use this call");
             }
-            return resid;
+            return ptdist;
         }
 
         int PyrGeom::v_GetNumVerts() const

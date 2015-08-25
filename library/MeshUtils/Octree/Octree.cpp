@@ -104,9 +104,8 @@ namespace MeshUtils {
         return OctantList[n]->GetDelta();
     }
 
-    void Octree::Build(const NekDouble &min,
-                       const NekDouble &max,
-                       const NekDouble &eps)
+    void Octree::Build(const NekDouble min, const NekDouble max,
+                       const NekDouble eps)
     {
         m_minDelta = min;
         m_maxDelta = max;

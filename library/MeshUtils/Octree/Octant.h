@@ -69,7 +69,7 @@ class Octant
          * @brief scans over all octants in the octantlist and finds neighouring
          * octants
          */
-        void CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList);
+        void CreateNeighbourList(std::vector<OctantSharedPtr> OctantList);
 
         /**
          * @brief get boolean on whether the octant needs to divide based on
@@ -234,9 +234,10 @@ class Octant
          */
         NekDouble CPDistance(const CurvaturePointSharedPtr &cu)
         {
-            NekDouble r = sqrt((m_loc[0]-cu->X())*(m_loc[0]-cu->X())+
-                               (m_loc[1]-cu->Y())*(m_loc[1]-cu->Y())+
-                               (m_loc[2]-cu->Z())*(m_loc[2]-cu->Z()));
+            Array<OneD, NekDouble> cploc = cu->GetLoc();
+            NekDouble r = sqrt((m_loc[0]-cploc[0])*(m_loc[0]-cploc[0])+
+                               (m_loc[1]-cploc[0])*(m_loc[1]-cploc[0])+
+                               (m_loc[2]-cploc[0])*(m_loc[2]-cploc[0]));
             return r;
         }
 

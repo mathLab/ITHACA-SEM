@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Curavturepoint.h
+//  File: Curavturepoint.hpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,9 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_CURAVTUREPOINT_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_CURAVTUREPOINT_H
+#ifndef NEKTAR_MESHUTILS_OCTREE_CURAVTUREPOINT_H
+#define NEKTAR_MESHUTILS_OCTREE_CURAVTUREPOINT_H
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar {
@@ -112,12 +113,12 @@ class CurvaturePoint {
         /**
          * @brief get location of point
          */
-        NekDouble GetLoc(){return m_loc;}
+        Array<OneD, NekDouble> GetLoc(){return m_loc;}
 
         /**
          * @brief get normal vector
          */
-        void GetNormal(){return m_norm;}
+        Array<OneD, NekDouble> GetNormal(){return m_norm;}
 
     private:
 

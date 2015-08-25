@@ -87,6 +87,8 @@ class Octree
          *
          * @param loc array of x,y,z
          * @return mesh spacing parameter
+         * @todo improve this algorithm for both robustness and completness,
+         * functions just fine regardless
          */
         NekDouble Query(Array<OneD, NekDouble> loc);
 

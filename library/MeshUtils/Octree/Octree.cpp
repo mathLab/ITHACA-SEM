@@ -33,8 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-#include <fstream>
 #include <algorithm>
 #include <limits>
 
@@ -47,6 +45,8 @@ namespace MeshUtils {
 
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
+    //starting at master octant 0 move through succsesive octants which contain
+    //the point loc until a leaf is found
     int n = 0;
     int quad;
 
@@ -111,6 +111,7 @@ void Octree::Build(const NekDouble min, const NekDouble max,
     if(m_verbose)
         cout << endl << "Octree system" << endl;
 
+    //build curvature samples
     CompileCuravturePointList();
 
     if(m_verbose)
@@ -124,6 +125,7 @@ void Octree::Build(const NekDouble min, const NekDouble max,
     maxdim = maxdim > (BoundingBox[5]-BoundingBox[4])/2 ?
                         maxdim : (BoundingBox[5]-BoundingBox[4])/2;
 
+    //make master octant based on the bounding box of the domain
     OctantSharedPtr newOctant =
     MemoryManager<Octant>::AllocateSharedPtr
     ((BoundingBox[1]+BoundingBox[0])/2,
@@ -131,11 +133,10 @@ void Octree::Build(const NekDouble min, const NekDouble max,
      (BoundingBox[5]+BoundingBox[4])/2, maxdim, -1, 0, m_cpList);
 
     OctantList.push_back(newOctant);
-    //parent created.
 
     m_totNotDividing=0;
 
-    if(OctantList[0]->Divide())
+    if(OctantList[0]->GetDivide())
     {
         OctantList[0]->SetLeaf(false);
         InitialSubDivide(0);
@@ -452,13 +453,14 @@ void Octree::PropagateDomain()
                             Array<OneD, NekDouble> r(3);
                             Array<OneD, NekDouble> ocloc =
                                                 OctantList[i]->GetLoc();
+                            Array<OneD, NekDouble> cploc =
+                                                closestPoint->GetLoc();
+                            r[0] =ocloc[0] - cploc[0];
+                            r[1] =ocloc[1] - cploc[1];
+                            r[2] =ocloc[2] - cploc[2];
 
-                            r[0] =ocloc[0] - closestPoint->X();
-                            r[1] =ocloc[1] - closestPoint->Y();
-                            r[2] =ocloc[2] - closestPoint->Z();
-
-                            Array<OneD, NekDouble> N(3);
-                            closestPoint->GetNormal(N[0],N[1],N[2]);
+                            Array<OneD, NekDouble> N =
+                                                    closestPoint->GetNormal();
 
                             NekDouble dot = r[0]*N[0]+r[1]*N[1]+r[2]*N[2];
 
@@ -732,7 +734,7 @@ void Octree::InitialSubDivide(int parent)
         OctantList.push_back(newOctant);
         children[i]=OctantList.size()-1;
 
-        if(OctantList[children[i]]->Divide())
+        if(OctantList[children[i]]->GetDivide())
         {
             if(OctantList[children[i]]->DX()/2.0 > m_minDelta)
             {
@@ -881,8 +883,7 @@ void Octree::CompileCuravturePointList()
                 {
                     CurvaturePointSharedPtr newCPoint =
                     MemoryManager<CurvaturePoint>::AllocateSharedPtr
-                    (r[0],r[1],r[2],
-                     N[0],N[1],N[2]);
+                    (surf->P(uv), N);
                     m_cpList.push_back(newCPoint);
                 }
             }

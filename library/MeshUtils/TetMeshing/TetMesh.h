@@ -33,84 +33,77 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_TETMESH_TETMESH_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_TETMESH_TETMESH_H
 
 #include <boost/shared_ptr.hpp>
-
-#include <MeshUtils/MeshElem.hpp>
-#include <LibUtilities/CADSystem/CADSurf.h>
-#include <MeshUtils/Octree.h>
-#include <MeshUtils/CurveMesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <MeshUtils/Octree/Octree.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
+#include <MeshUtils/MeshElem.hpp>
 
-namespace Nektar {
-namespace MeshUtils {
+namespace Nektar{
+namespace MeshUtils{
 
-    class SurfaceMesh
+    class TetMesh
     {
     public:
-        friend class MemoryManager<SurfaceMesh>;
+        friend class MemoryManager<TetMesh>;
 
-        SurfaceMesh(const int id,
-                    const bool verb,
-                    const LibUtilities::CADSurfSharedPtr &cad,
-                    const OctreeSharedPtr &oct,
-                    const std::map<int, CurveMeshSharedPtr> &cmeshes,
-                    const int &order)
-                        : m_verbose(verb), m_cadsurf(cad), m_octree(oct),
-                          m_curvemeshes(cmeshes),m_order(order),m_id(id)
-
+        TetMesh(const int id,
+                const bool verb,
+                const OctreeSharedPtr &oct,
+                const SurfaceMeshingSharedPtr &sm)
+                    : m_id(id), m_verbose(verb), m_octree(oct),
+                      m_surfacemesh(sm)
         {
-            m_edges = m_cadsurf->GetEdges();
         };
 
-        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
-                  std::map<int, MeshEdgeSharedPtr> &Edges,
-                  std::map<int, MeshTriSharedPtr> &Tris);
+        void Mesh();
 
-        void Report();
-
+        void Get(std::map<int, MeshNodeSharedPtr> &n,
+                 std::map<int, MeshEdgeSharedPtr> &e,
+                 std::map<int, MeshTriSharedPtr> &ti,
+                 std::map<int, MeshTetSharedPtr> &te)
+        {
+            n = Nodes;
+            e = Edges;
+            ti = Tris;
+            te = Tets;
+        }
 
     private:
 
-        void Stretching();
-
         bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
 
-        void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
-
-        void AddNewPoint(Array<OneD, NekDouble> uv,
-                         std::map<int, MeshNodeSharedPtr> &Nodes);
-
-        bool m_verbose;
-        LibUtilities::CADSurfSharedPtr m_cadsurf;
-        OctreeSharedPtr m_octree;
-        std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-
-        std::vector<std::vector<std::pair<int,int> > > m_edges;
-
-        int m_order;
+        void AddNewPoint(Array<OneD, NekDouble> loc,
+                                      std::map<int, MeshNodeSharedPtr> &Nodes,
+                                      std::vector<int> tetnodes);
 
         int m_id;
+        bool m_verbose;
+        OctreeSharedPtr m_octree;
+        SurfaceMeshingSharedPtr m_surfacemesh;
 
-        std::vector<std::vector<int> > orderedLoops;
-        std::vector<std::vector<NekDouble> > m_centers;
-
+        std::vector<int> nodesintris;
         std::vector<int> m_stienerpoints;
 
-        int numtri, nump;
-        Array<OneD, Array<OneD, int> > Connec;
+        std::vector<int> nodesaddedinthisvalidate;
 
-        NekDouble pasr,asr;
+        int numtet;
+        Array<OneD, Array<OneD, int> > tetconnect;
 
+        std::map<int, MeshNodeSharedPtr> Nodes;
+        std::map<int, MeshEdgeSharedPtr> Edges;
+        std::map<int, MeshTriSharedPtr> Tris;
+        std::map<int, MeshTetSharedPtr> Tets;
     };
 
-    typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
+    typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
+
 }
 }
 

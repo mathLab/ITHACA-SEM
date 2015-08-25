@@ -37,32 +37,31 @@
 #ifndef NEKTAR_MESHUTILS_OCTREE_OCTANT_H
 #define NEKTAR_MESHUTILS_OCTREE_OCTANT_H
 
-#include <MeshUtils/CurvaturePoint.hpp>
+#include <MeshUtils/Octree/CurvaturePoint.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
 namespace Nektar {
         namespace MeshUtils {
-            
+
             class Octant; //have to forward declare the class for the sharedptr
             typedef boost::shared_ptr<Octant> OctantSharedPtr;
-            
+
             class Octant
             {
             public:
                 friend class MemoryManager<Octant>;
-                
+
                 Octant(NekDouble x, NekDouble y, NekDouble z,
                        NekDouble dx, NekDouble dy, NekDouble dz,
                        int p, int l,
                        const std::vector<CurvaturePointSharedPtr> &CurvaturePointList,
                        const std::vector<int> &CPList);
-                
+
                 void CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList);
-                
+
                 bool Divide(){return m_needToDivide;}
                 int GetChild(int i){return m_children[i];}
                 bool isLeaf(){return m_leaf;}
@@ -110,11 +109,11 @@ namespace Nektar {
                 void DeleteNeighbourList(){m_neighbourList.clear();}
                 int GetCPID(int i){return m_localCPIDList[i];}
                 int GetParent(){return m_parent;}
-                
-                
-                
+
+
+
             private:
-                
+
                 bool m_leaf; //assume leaf
                 int m_parent;
                 Array<OneD, int> m_children;
@@ -133,7 +132,7 @@ namespace Nektar {
                 bool m_orientSet; //does not know orient
                 int m_orientation; //1 is in 2 is partial (haspoints) 3 is out
                 int m_numValidPoints;
-                
+
             };
         }
 }

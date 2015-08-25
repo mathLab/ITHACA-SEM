@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <MeshUtils/TetMesh.h>
-#include <MeshUtils/TetGenInterface.h>
+#include <MeshUtils/TetMeshing/TetMesh.h>
+#include <MeshUtils/ExtLibInterface/TetGenInterface.h>
 
 using namespace std;
 namespace Nektar{

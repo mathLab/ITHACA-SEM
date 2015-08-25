@@ -36,8 +36,8 @@
 #include <string>
 #include <fstream>
 
-#include <MeshUtils/SurfaceMesh.h>
-#include <MeshUtils/TriangleInterface.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <MeshUtils/ExtLibInterface/TriangleInterface.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>

@@ -1,27 +1,27 @@
 SET(MESHUTILS_SOURCES
-    CurveMesh.cpp
-    Octant.cpp
-    Octree.cpp
-    SurfaceMesh.cpp
+    SurfaceMeshing/CurveMesh.cpp
+    Octree/Octant.cpp
+    Octree/Octree.cpp
+    SurfaceMeshing/SurfaceMesh.cpp
     SurfaceMeshing/SurfaceMeshing.cpp
     SurfaceMeshing/OptimiseFunctions.cpp
     SurfaceMeshing/OptimiseUtils.cpp
-    TriangleInterface.cpp
-    TetGenInterface.cpp
-    TetMesh.cpp
+    ExtLibInterface/TriangleInterface.cpp
+    ExtLibInterface/TetGenInterface.cpp
+    TetMeshing/TetMesh.cpp
     )
 
 SET(MESHUTILS_HEADERS
-    CurvaturePoint.hpp
+    Octree/CurvaturePoint.hpp
     MeshElem.hpp
-    CurveMesh.h
-    Octant.h
-    Octree.h
-    SurfaceMesh.h
+    SurfaceMeshing/CurveMesh.h
+    Octree/Octant.h
+    Octree/Octree.h
+    SurfaceMeshing/SurfaceMesh.h
     SurfaceMeshing/SurfaceMeshing.h
-    TriangleInterface.h
-    TetGenInterface.h
-    TetMesh.h
+    ExtLibInterface/TriangleInterface.h
+    ExtLibInterface/TetGenInterface.h
+    TetMeshing/TetMesh.h
     )
 
 ADD_NEKTAR_LIBRARY(MeshUtils lib ${NEKTAR_LIBRARY_TYPE}

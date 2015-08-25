@@ -37,7 +37,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include <MeshUtils/Octree.h>
+#include <MeshUtils/Octree/Octree.h>
 #include <LibUtilities/CADSystem/CADSurf.h>
 
 using namespace std;

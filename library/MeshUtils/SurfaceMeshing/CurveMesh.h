@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Octree.h
+//  File: SurfaceMeshing.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -34,68 +34,74 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE_H
-#define NEKTAR_MESHUTILS_OCTREE_OCTREE_H
+#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_CURVEMESH_CURVEMESH_H
+#define NEKTAR_LIB_UTILITIES_MESHUTILS_CURVEMESH_CURVEMESH_H
 
 #include <boost/shared_ptr.hpp>
 
-#include <LibUtilities/CADSystem/CADSystem.h>
-#include <MeshUtils/CurvaturePoint.hpp>
-#include <MeshUtils/Octant.h>
+#include <MeshUtils/MeshElem.hpp>
+#include <LibUtilities/CADSystem/CADCurve.h>
+#include <MeshUtils/Octree/Octree.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <MeshUtils/MeshUtilsDeclspec.h>
 
 
 namespace Nektar {
 namespace MeshUtils {
 
-class Octree
-{
-public:
-    friend class MemoryManager<Octree>;
-
-    Octree(const LibUtilities::CADSystemSharedPtr &cad,
-           const bool ver) : m_cad(cad), m_verbose(ver)
+    class CurveMesh
     {
+    public:
+        friend class MemoryManager<CurveMesh>;
+
+        CurveMesh(bool verbose,
+                  int id,
+                  const LibUtilities::CADCurveSharedPtr &cad,
+                  const OctreeSharedPtr &oct) :
+                  m_cadcurve(cad),m_octree(oct),m_verbose(verbose),
+                  m_id(id)
+        {
+        };
+
+        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
+                  std::map<int, MeshEdgeSharedPtr> &Edges);
+
+        int GetFirstPoint(){return m_meshpoints[0];}
+        int GetLastPoint(){return m_meshpoints[Ne];}
+        std::vector<int> GetMeshPoints()
+                    {return m_meshpoints;}
+        int GetNumPoints(){return Ne+1;}
+
+        void Report();
+
+    private:
+
+        void GetSampleFunction();
+        void GetPhiFunction();
+        NekDouble EvaluateDS(NekDouble s);
+        NekDouble EvaluatePS(NekDouble s);
+
+        LibUtilities::CADCurveSharedPtr m_cadcurve;
+        OctreeSharedPtr m_octree;
+        NekDouble m_curvelength;
+        int m_numSamplePoints;
+        Array<OneD, NekDouble> m_bounds;
+        std::vector<std::vector<NekDouble> > m_dst;
+        std::vector<std::vector<NekDouble> > m_ps;
+        NekDouble Ae;
+        NekDouble ds;
+        int Ne;
+        std::vector<NekDouble> meshsvalue;
+        std::vector<int> m_meshpoints;
+
+        bool m_verbose;
+
+        int m_id;
+
     };
 
-    void Build(const NekDouble &min,
-                                    const NekDouble &max,
-                                    const NekDouble &eps);
-    NekDouble Query(Array<OneD, NekDouble> loc);
-
-    NekDouble GetMinDelta(){return m_minDelta;}
-
-private:
-
-    void CompileCuravturePointList();
-    void subdivide(int parent);
-    void SmoothOctants();
-    void SubDivideLevel(int parent);
-    void SmoothSurfaceOctants();
-    void PropagateDomain();
-    void SmoothAllOctants();
-    int CountElemt();
-    NekDouble ddx(int i, int j);
-
-    NekDouble m_minDelta;
-    NekDouble m_maxDelta;
-    NekDouble m_eps;
-
-    LibUtilities::CADSystemSharedPtr m_cad;
-    bool m_verbose;
-    Array<OneD, NekDouble> BoundingBox;
-    std::vector<CurvaturePointSharedPtr> m_cpList;
-    std::vector<OctantSharedPtr> OctantList;
-    int m_totNotDividing;
-
-};
-
-typedef boost::shared_ptr<Octree> OctreeSharedPtr;
-
+    typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

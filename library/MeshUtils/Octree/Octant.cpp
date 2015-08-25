@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <MeshUtils/Octant.h>
+#include <MeshUtils/Octree/Octant.h>
 
 using namespace std;
 namespace Nektar {
 namespace MeshUtils {
-    
+
     Octant::Octant(NekDouble x, NekDouble y, NekDouble z,
                    NekDouble dx, NekDouble dy, NekDouble dz,
                    int p, int l,
@@ -57,7 +57,7 @@ namespace MeshUtils {
         NekDouble av=0;
         NekDouble maxDif=0;
         NekDouble minDif=10000.0;
-        
+
         if(m_parent!=-1)
         {
             for(int i = 0; i<CPList.size(); i++)
@@ -75,7 +75,7 @@ namespace MeshUtils {
                         {
                             maxDif = CurvaturePointList[CPList[i]]->GetDelta();
                         }
-                        
+
                         if(CurvaturePointList[CPList[i]]->GetDelta()<minDif)
                         {
                             minDif = CurvaturePointList[CPList[i]]->GetDelta();
@@ -100,7 +100,7 @@ namespace MeshUtils {
                     {
                         maxDif = CurvaturePointList[i]->GetDelta();
                     }
-                    
+
                     if(CurvaturePointList[i]->GetDelta()<minDif)
                     {
                         minDif = CurvaturePointList[i]->GetDelta();
@@ -115,7 +115,7 @@ namespace MeshUtils {
                 }
             }
         }
-        
+
         if(NumCurvePoint()>0)
         {
             SetOrient(2);
@@ -126,18 +126,18 @@ namespace MeshUtils {
             {
                 m_needToDivide=true;
             }
-            
+
             SetDelta(av/NumValidCurvePoint());
-            
+
             ASSERTL0(GetDelta()>0, "negative delta assignment");
-            
+
         }
     }
-    
+
     void Octant::CreateNeighbourList(const std::vector<OctantSharedPtr> &OctantList)
     {
         DeleteNeighbourList();
-        
+
         for(int i = 0; i<OctantList.size(); i++)
         {
             if(OctantList[i]->isLeaf())
@@ -146,19 +146,19 @@ namespace MeshUtils {
                 sqrt(OctantList[i]->DX()*OctantList[i]->DX() +
                      OctantList[i]->DY()*OctantList[i]->DY() +
                      OctantList[i]->DZ()*OctantList[i]->DZ());
-                
+
                 NekDouble ractual = sqrt((X()-OctantList[i]->X())*
                                          (X()-OctantList[i]->X())+
                                          (Y()-OctantList[i]->Y())*
                                          (Y()-OctantList[i]->Y())+
                                          (Z()-OctantList[i]->Z())*
                                          (Z()-OctantList[i]->Z()));
-                
+
                 if(ractual > 1.1*rmax)
                 {
                     continue;
                 }
-                
+
                 if(abs(FX(-1) - OctantList[i]->FX(+1)) < 1E-6 ||
                    abs(FX(+1) - OctantList[i]->FX(-1)) < 1E-6 )
                 {
@@ -225,6 +225,6 @@ namespace MeshUtils {
             }
         }
     }
-    
+
 }
 }

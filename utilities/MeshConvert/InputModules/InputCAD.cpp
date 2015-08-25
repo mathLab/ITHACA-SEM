@@ -39,9 +39,9 @@
 using namespace std;
 
 #include <LibUtilities/CADSystem/CADSystem.h>
-#include <MeshUtils/Octree.h>
+#include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
-#include <MeshUtils/TetMesh.h>
+#include <MeshUtils/TetMeshing/TetMesh.h>
 #include <MeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>

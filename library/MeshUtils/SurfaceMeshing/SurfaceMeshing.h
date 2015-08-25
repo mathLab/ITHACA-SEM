@@ -40,9 +40,9 @@
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/CADSystem/CADSystem.h>
-#include <MeshUtils/Octree.h>
-#include <MeshUtils/SurfaceMesh.h>
-#include <MeshUtils/CurveMesh.h>
+#include <MeshUtils/Octree/Octree.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <MeshUtils/SurfaceMeshing/CurveMesh.h>
 #include <MeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>

@@ -36,7 +36,7 @@
 #include <string>
 #include <iomanip>
 
-#include <MeshUtils/CurveMesh.h>
+#include <MeshUtils/SurfaceMeshing/CurveMesh.h>
 
 using namespace std;
 namespace Nektar{

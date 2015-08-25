@@ -36,17 +36,16 @@
 #ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_CURAVTUREPOINT_H
 #define NEKTAR_LIB_UTILITIES_MESHUTILS_CURAVTUREPOINT_H
 
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar {
         namespace MeshUtils {
-            
+
             class CurvaturePoint {
-                
+
                 public:
                 friend class MemoryManager<CurvaturePoint>;
-                
+
                 CurvaturePoint(const NekDouble &x,const NekDouble &y,
                                const NekDouble &z,const NekDouble &R,
                                const NekDouble &Nx,const NekDouble &Ny,
@@ -57,7 +56,7 @@ namespace Nektar {
                 {
                     m_valid = true;
                 }
-                
+
                 CurvaturePoint(const NekDouble &x,const NekDouble &y,
                                const NekDouble &z,const NekDouble &Nx,
                                const NekDouble &Ny,const NekDouble &Nz) :
@@ -67,7 +66,7 @@ namespace Nektar {
                     m_delta = -1;
                     m_valid = false;
                 }
-                
+
                 void Process(const NekDouble &min,
                                                   const NekDouble &max,
                                                   const NekDouble &eps)
@@ -75,7 +74,7 @@ namespace Nektar {
                     if(m_valid)
                     {
                         m_delta = 2.0*m_radius*sqrt(eps*(2.0-eps));
-                        
+
                         if(m_delta>max)
                         {
                             m_delta = max;
@@ -86,7 +85,7 @@ namespace Nektar {
                         }
                     }
                 }
-                
+
                 bool IsValid(){return m_valid;}
                 NekDouble GetDelta()
                 {
@@ -108,19 +107,19 @@ namespace Nektar {
                     y = m_ny;
                     z = m_nz;
                 }
-                
+
                 private:
-                
-                
+
+
                 NekDouble m_x,m_y,m_z;
                 NekDouble m_nx, m_ny, m_nz;
                 NekDouble m_radius;
                 NekDouble m_delta;
                 bool m_valid;
             };
-            
+
             typedef boost::shared_ptr<CurvaturePoint> CurvaturePointSharedPtr;
-            
+
         }
 }
 

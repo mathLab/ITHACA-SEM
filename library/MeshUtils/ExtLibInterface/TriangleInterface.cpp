@@ -36,7 +36,7 @@
 #include <string>
 #include <fstream>
 
-#include <MeshUtils/TriangleInterface.h>
+#include <MeshUtils/ExtLibInterface/TriangleInterface.h>
 
 using namespace std;
 namespace Nektar{

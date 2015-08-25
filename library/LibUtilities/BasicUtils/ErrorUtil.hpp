@@ -87,7 +87,7 @@ namespace ErrorUtil
             msg;
 
         std::string btMessage("");
-#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+#if defined(NEKTAR_FULLDEBUG)
 #ifndef _WIN32
         void *btArray[40];
         int btSize;

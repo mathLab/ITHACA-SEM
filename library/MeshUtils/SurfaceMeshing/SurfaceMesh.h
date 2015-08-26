@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: SurfaceMesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,13 +29,13 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: class for indivdual surface meshes
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_SURFACEMESH_SURFACEMESH_H
+#ifndef NEKTAR_MESHUTILS_SURFACEMESHING_SURFACEMESH_H
+#define NEKTAR_MESHUTILS_SURFACEMESHING_SURFACEMESH_H
 
 #include <boost/shared_ptr.hpp>
 
@@ -51,66 +51,92 @@
 namespace Nektar {
 namespace MeshUtils {
 
-    class SurfaceMesh
-    {
+class SurfaceMesh
+{
     public:
         friend class MemoryManager<SurfaceMesh>;
 
+        /**
+         * @brief Default constructor
+         */
         SurfaceMesh(const int id,
                     const bool verb,
                     const LibUtilities::CADSurfSharedPtr &cad,
                     const OctreeSharedPtr &oct,
-                    const std::map<int, CurveMeshSharedPtr> &cmeshes,
-                    const int &order)
+                    const std::map<int, CurveMeshSharedPtr> &cmeshes)
                         : m_verbose(verb), m_cadsurf(cad), m_octree(oct),
-                          m_curvemeshes(cmeshes),m_order(order),m_id(id)
+                          m_curvemeshes(cmeshes),m_id(id)
 
         {
             m_edges = m_cadsurf->GetEdges();
         };
 
+        /**
+         * @brief mesh exectuation command
+         */
         void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                   std::map<int, MeshEdgeSharedPtr> &Edges,
                   std::map<int, MeshTriSharedPtr> &Tris);
 
+        /**
+         * @brief Print report of the surface mesh to screen
+         */
         void Report();
 
 
     private:
 
+        /**
+         * @brief Calculate the paramter plane streching factor
+         */
         void Stretching();
 
+        /**
+         * @brief Validate the surface mesh base on the octree and real
+         * dimensions of the edges
+         */
         bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
 
+        /**
+         * @brief Get the boundries of the surface and extracts the nodes from
+         * the curve meshes in the correct order
+         */
         void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
 
+        /**
+         * @brief addes a new stiener point to the triangulation for meshing
+         */
         void AddNewPoint(Array<OneD, NekDouble> uv,
                          std::map<int, MeshNodeSharedPtr> &Nodes);
 
+        ///verbosity
         bool m_verbose;
+        /// CAD surface
         LibUtilities::CADSurfSharedPtr m_cadsurf;
+        /// Octree object
         OctreeSharedPtr m_octree;
+        /// Map of the curve meshes which bound the surfaces
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-
+        /// data structure containing the edges, their order and oreientation for the surface
         std::vector<std::vector<std::pair<int,int> > > m_edges;
-
-        int m_order;
-
+        /// id of the surface mesh
         int m_id;
-
+        /// list of boundary nodes in their order loops
         std::vector<std::vector<int> > orderedLoops;
+        /// center coords of the loops
         std::vector<std::vector<NekDouble> > m_centers;
-
+        /// list of stiener points in the triangulation
         std::vector<int> m_stienerpoints;
-
+        /// number of triangles and points
         int numtri, nump;
+        /// list of node connectivities forming triangles
         Array<OneD, Array<OneD, int> > Connec;
-
+        /// paramter plane and real space aspect ratios
         NekDouble pasr,asr;
+};
 
-    };
+typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
 
-    typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
 }
 }
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: Curvemesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,13 +29,13 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: object for individual curve meshes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_CURVEMESH_CURVEMESH_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_CURVEMESH_CURVEMESH_H
+#ifndef NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
+#define NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 
 #include <boost/shared_ptr.hpp>
 
@@ -50,11 +50,14 @@
 namespace Nektar {
 namespace MeshUtils {
 
-    class CurveMesh
-    {
+class CurveMesh
+{
     public:
         friend class MemoryManager<CurveMesh>;
 
+        /**
+         * @brief default constructor
+         */
         CurveMesh(bool verbose,
                   int id,
                   const LibUtilities::CADCurveSharedPtr &cad,
@@ -64,44 +67,91 @@ namespace MeshUtils {
         {
         };
 
+        /**
+         * @brief execute meshing
+         */
         void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                   std::map<int, MeshEdgeSharedPtr> &Edges);
 
+        /**
+         * @brief get id of first node
+         */
         int GetFirstPoint(){return m_meshpoints[0];}
+
+        /**
+         * @brief get id of last node
+         */
         int GetLastPoint(){return m_meshpoints[Ne];}
-        std::vector<int> GetMeshPoints()
-                    {return m_meshpoints;}
+
+        /**
+         * @brief get list of mesh nodes
+         */
+        std::vector<int> GetMeshPoints(){return m_meshpoints;}
+
+        /**
+         * @brief get the number of points in the curve
+         */
         int GetNumPoints(){return Ne+1;}
 
+        /**
+         * @brief print report to screen
+         */
         void Report();
 
     private:
 
+        /**
+         * @brief get node spacing sampling function
+         */
         void GetSampleFunction();
+
+        /**
+         * @brief get node spacing phi function
+         */
         void GetPhiFunction();
+
+        /**
+         * @brief evaluate paramter ds at curve location s
+         */
         NekDouble EvaluateDS(NekDouble s);
+
+        /**
+         * @brief evaluate paramter ps at curve location s
+         */
         NekDouble EvaluatePS(NekDouble s);
 
+        /// CAD curve
         LibUtilities::CADCurveSharedPtr m_cadcurve;
+        /// Octree object
         OctreeSharedPtr m_octree;
+        /// length of the curve in real space
         NekDouble m_curvelength;
+        /// number of sampling points used in algorithm
         int m_numSamplePoints;
+        /// coords of the ends of the parametric curve
         Array<OneD, NekDouble> m_bounds;
+        /// array of function ds evaluations
         std::vector<std::vector<NekDouble> > m_dst;
+        /// array of function ps evaluations
         std::vector<std::vector<NekDouble> > m_ps;
+        /// spacing function evaluation
         NekDouble Ae;
+        /// ds
         NekDouble ds;
+        /// number of edges to be made in the curve as defined by the spacing funtion
         int Ne;
+        /// paramteric coordiates of the mesh nodes
         std::vector<NekDouble> meshsvalue;
+        /// ids of the mesh nodes
         std::vector<int> m_meshpoints;
-
+        /// verbosity
         bool m_verbose;
-
+        /// id of the curvemesh
         int m_id;
+};
 
-    };
+typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 
-    typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

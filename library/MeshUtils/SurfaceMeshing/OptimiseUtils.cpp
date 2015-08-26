@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: octree.h
+//  File: OptimiseUtils.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: methods for brent optimsation
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -145,9 +145,10 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
     NekDouble K, L, inter;
     //want a to be negative, against the gradient, but properly bounded!!
 
-    //check edges of bounding box one by one for intersect, because paralell lines some cases can be ingnored
+    //check edges of bounding box one by one for intersect, because paralell
+    //lines some cases can be ingnored
     //line 1 left edge;
-    if(!(fabs(df[0]) < 1E-10)) //wouldnt exist on this edge
+    if(!(fabs(df[0]) < 1E-30)) //wouldnt exist on this edge
     {
         K = (bounds[0] - uvi[0]) / df[0];
         L = df[1] * K + uvi[1] - bounds[2];
@@ -157,36 +158,20 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
             //hit
             if(K < 0)
             {
-                if(aset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    a = K;
-                    aset = true;
-                }
+                ASSERTL0(!aset, "parameter previously set");
+                a = K;
+                aset = true;
             }
             else
             {
-                if(bset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    b = K;
-                    bset = true;
-                }
+                ASSERTL0(!bset, "parameter previously set")
+                b = K;
+                bset = true;
             }
         }
     }
     //line 2 right edge;
-    if(!(fabs(df[0]) < 1E-10)) //wouldnt exist on this edge
+    if(!(fabs(df[0]) < 1E-30)) //wouldnt exist on this edge
     {
         K = (bounds[1] - uvi[0]) / df[0];
         L = df[1] * K + uvi[1] - bounds[2];
@@ -196,36 +181,20 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
             //hit
             if(K < 0)
             {
-                if(aset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    a = K;
-                    aset = true;
-                }
+                ASSERTL0(!aset, "parameter previously set");
+                a = K;
+                aset = true;
             }
             else
             {
-                if(bset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    b = K;
-                    bset = true;
-                }
+                ASSERTL0(!bset, "parameter previously set")
+                b = K;
+                bset = true;
             }
         }
     }
     //line 3 bottom edge;
-    if(!(fabs(df[1]) < 1E-10)) //wouldnt exist on this edge
+    if(!(fabs(df[1]) < 1E-30)) //wouldnt exist on this edge
     {
         K = (bounds[2] - uvi[1]) / df[1];
         L = df[0] * K + uvi[0] - bounds[0];
@@ -235,36 +204,20 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
             //hit
             if(K < 0)
             {
-                if(aset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    a = K;
-                    aset = true;
-                }
+                ASSERTL0(!aset, "parameter previously set");
+                a = K;
+                aset = true;
             }
             else
             {
-                if(bset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    b = K;
-                    bset = true;
-                }
+                ASSERTL0(!bset, "parameter previously set")
+                b = K;
+                bset = true;
             }
         }
     }
     //line 4 top edge;
-    if(!(fabs(df[1]) < 1E-10)) //wouldnt exist on this edge
+    if(!(fabs(df[1]) < 1E-30)) //wouldnt exist on this edge
     {
         K = (bounds[3] - uvi[1]) / df[1];
         L = df[0] * K + uvi[0] - bounds[0];
@@ -274,31 +227,15 @@ void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
             //hit
             if(K < 0)
             {
-                if(aset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    a = K;
-                    aset = true;
-                }
+                ASSERTL0(!aset, "parameter previously set");
+                a = K;
+                aset = true;
             }
             else
             {
-                if(bset)
-                {
-                    cout << "error, should not be set" << endl;
-                    cout << a << " " << b << " " << df[0] << " " << df[1] << endl;
-                    exit(-1);
-                }
-                else
-                {
-                    b = K;
-                    bset = true;
-                }
+                ASSERTL0(!bset, "parameter previously set")
+                b = K;
+                bset = true;
             }
         }
     }

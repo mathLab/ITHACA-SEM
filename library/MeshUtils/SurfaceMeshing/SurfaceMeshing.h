@@ -51,6 +51,9 @@
 namespace Nektar {
 namespace MeshUtils {
 
+/**
+ * @brief class containing all surface meshing routines methods and classes
+ */
 class SurfaceMeshing
 {
     public:

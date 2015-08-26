@@ -48,6 +48,8 @@ void SurfaceMeshing::Mesh()
         cout << endl << "Surface meshing" << endl;
     if(m_verbose)
         cout << "\tCurve meshing..." << endl;
+
+    //linear mesh all curves
     for(int i = 1; i <= m_cad->GetNumCurve(); i++)
     {
         if(m_verbose)
@@ -84,6 +86,7 @@ void SurfaceMeshing::Mesh()
     if(m_verbose)
         cout <<endl << "\tSurface meshing..." << endl;
 
+    //linear mesh all surfaces
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
         if(m_verbose)
@@ -100,8 +103,7 @@ void SurfaceMeshing::Mesh()
         }
         m_surfacemeshes[i] =
             MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,m_verbose,
-                m_cad->GetSurf(i), m_octree,
-                m_curvemeshes,m_order);
+                m_cad->GetSurf(i), m_octree, m_curvemeshes);
 
         m_surfacemeshes[i]->Mesh(Nodes,Edges,Tris);
 
@@ -134,6 +136,11 @@ void SurfaceMeshing::Mesh()
 
 }
 
+/**
+ * @todo write a optimistaion algorithm for edges on curves, not stricly
+ * needed because OCC curves are not distorted, but should be included for
+ * completness
+ */
 void SurfaceMeshing::HOSurf()
 {
     if(m_verbose)
@@ -142,9 +149,10 @@ void SurfaceMeshing::HOSurf()
     if(m_verbose)
         cout << "\t\tEdges..." << endl;
 
-    map<int, MeshEdgeSharedPtr>::iterator eit;\
+    map<int, MeshEdgeSharedPtr>::iterator eit;
     int counter = 0;
 
+    //loop over all edges in the surface
     for(eit = Edges.begin(); eit != Edges.end(); eit++)
     {
         if(m_verbose)
@@ -164,6 +172,7 @@ void SurfaceMeshing::HOSurf()
         MeshEdgeSharedPtr e = eit->second;
         Array<OneD, int> n = e->GetN();
 
+        //check if edge in on a surface or curve
         if(e->GetCurve() != -1)
         {
             LibUtilities::CADCurveSharedPtr c = m_cad->GetCurve(
@@ -208,9 +217,6 @@ void SurfaceMeshing::HOSurf()
             }
 
             e->SetHONodes(honodes);
-
-            //this needs a 1d optimisation step
-
         }
         else
         {
@@ -237,6 +243,7 @@ void SurfaceMeshing::HOSurf()
 
             }
 
+            //begin optimisation
             bool repeatoverallnodes = true;
 
             NekDouble tol = 1E-8;
@@ -318,6 +325,8 @@ void SurfaceMeshing::HOSurf()
 
     map<int, MeshTriSharedPtr>::iterator trit;
 
+    //this section of code sets up the standard ho triangle and sorts out
+    //node numbering for the optimsation scheme
     LibUtilities::PointsKey pkey(m_order+1,
                                  LibUtilities::eNodalTriEvenlySpaced);
     Array<OneD, NekDouble> u,v;
@@ -397,6 +406,7 @@ void SurfaceMeshing::HOSurf()
 
     map<pair<int,int>, Array<OneD, NekDouble> > nodeweight;
 
+    //calculates spring weights from the standard triangle
     for(j = 2; j <= m_order-1; j++)
     {
         for(i = 2; i <= m_order + 1 -j; i++)
@@ -437,6 +447,8 @@ void SurfaceMeshing::HOSurf()
 
     for(trit = Tris.begin(); trit != Tris.end(); trit++)
     {
+        MeshTriSharedPtr t = trit->second;
+
         if(m_verbose)
         {
             int pos = 70*counter/Tris.size();
@@ -451,12 +463,12 @@ void SurfaceMeshing::HOSurf()
         }
         counter++;
 
-        Array<OneD, int> n = trit->second->GetN();
+        Array<OneD, int> n = t->GetN();
 
         Array<OneD, NekDouble> uv1,uv2,uv3;
-        uv1 = Nodes[n[0]]->GetS(trit->second->Getcid());
-        uv2 = Nodes[n[1]]->GetS(trit->second->Getcid());
-        uv3 = Nodes[n[2]]->GetS(trit->second->Getcid());
+        uv1 = Nodes[n[0]]->GetS(t->Getcid());
+        uv2 = Nodes[n[1]]->GetS(t->Getcid());
+        uv3 = Nodes[n[2]]->GetS(t->Getcid());
 
         DNekMat a (3,3,1.0);
         a(0,0) = uv1[0];
@@ -479,11 +491,10 @@ void SurfaceMeshing::HOSurf()
             Array<OneD, NekDouble> uv(2);
             uv[0] = result(0,i);
             uv[1] = result(1,i);
-            loc = m_cad->GetSurf(trit->second->Getcid())->P(uv);
+            loc = m_cad->GetSurf(t->Getcid())->P(uv);
             MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
-                    AllocateSharedPtr(Nodes.size(),loc[0],
-                                        loc[1],loc[2]);
-            nn->SetSurf(trit->second->Getcid(),uv);
+                    AllocateSharedPtr(Nodes.size(),loc[0],loc[1],loc[2]);
+            nn->SetSurf(t->Getcid(),uv);
             honodes[i] = Nodes.size();
             Nodes[Nodes.size()] = nn;
 
@@ -492,21 +503,21 @@ void SurfaceMeshing::HOSurf()
         //construct a vector of all the uv coords of the triangle in nektar order to form boundary conditions
         vector<Array<OneD, NekDouble> > uvList;
         uvList.push_back(uv1); uvList.push_back(uv2); uvList.push_back(uv3);
-        Array<OneD, int> e = trit->second->GetE();
+        Array<OneD, int> e = t->GetE();
         for(int i = 0; i < 3; i++)
         {
             vector<int> hon = Edges[e[i]]->GetHONodes(n[i]);
             for(int j = 0; j < hon.size(); j++)
             {
-                uvList.push_back(Nodes[hon[j]]->GetS(trit->second->Getcid()));
+                uvList.push_back(Nodes[hon[j]]->GetS(t->Getcid()));
             }
         }
         for(int j = 0; j < honodes.size(); j++)
         {
-            uvList.push_back(Nodes[honodes[j]]->GetS(trit->second->Getcid()));
+            uvList.push_back(Nodes[honodes[j]]->GetS(t->Getcid()));
         }
 
-        LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(trit->second->Getcid());
+        LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(t->Getcid());
 
         bool repeatoverallnodes = true;
 
@@ -564,7 +575,8 @@ void SurfaceMeshing::HOSurf()
                     W = nodeweight[id];
 
                     bool valid;
-                    Array<OneD, NekDouble> df = FaceGrad(uvi,bcs,trit->second->Getcid(),valid);
+                    Array<OneD, NekDouble> df = FaceGrad(uvi,bcs,t->Getcid(),
+                                                         valid);
                     if(!valid)
                     {
                         converged++;
@@ -574,10 +586,10 @@ void SurfaceMeshing::HOSurf()
                     NekDouble a,b;
                     Find1DBounds(a,b,uvi,df,bounds);
 
-                    NekDouble fxi = FaceF(uvi[0],uvi[1],bcs,trit->second->Getcid());
+                    NekDouble fxi = FaceF(uvi[0],uvi[1],bcs,t->Getcid());
                     NekDouble fx= fxi;
 
-                    NekDouble xmin = BrentOpti(a,0,b,fx,tol,trit->second->Getcid(),
+                    NekDouble xmin = BrentOpti(a,0,b,fx,tol,t->Getcid(),
                                                uvi,df,bounds,bcs,
                                                &SurfaceMeshing::FaceF);
 
@@ -601,7 +613,7 @@ void SurfaceMeshing::HOSurf()
                 repeatoverallnodes = false;
             }
         }
-        trit->second->SetHONodes(honodes);
+        t->SetHONodes(honodes);
     }
 }
 
@@ -610,10 +622,11 @@ void SurfaceMeshing::Optimise()
     if(m_verbose)
         cout << endl << "\tOptimising linear mesh" << endl;
 
+    //perform two runs of edge swapping based on node connection defect
     for(int q = 0; q <2; q++)
     {
         if(m_verbose)
-            cout << "\t\t Edge swap run: " << q+1 << endl;
+            cout << "\t\t Edge swap defect run: " << q+1 << endl;
 
         map<int, MeshEdgeSharedPtr>::iterator it;
         for(it = Edges.begin(); it != Edges.end(); it++)
@@ -638,6 +651,7 @@ void SurfaceMeshing::Optimise()
             }
             ASSERTL0(nodecheck == 2, "edge and tri should have 2 n in commom");
 
+            //identify node a,b,c,d of the swapping
             int A,B,C,D;
             if(nt[0] != n[0] && nt[0] != n[1])
             {
@@ -700,6 +714,8 @@ void SurfaceMeshing::Optimise()
             CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
                   (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
 
+            //if signed area of the swapping triangles is less than zero
+            //that configuration is invalid and swap cannot be performed
             if(CDA < 0.0 || CBD < 0.0)
                 continue;
 
@@ -733,6 +749,8 @@ void SurfaceMeshing::Optimise()
                                 Nodes[D]->GetEdges().size() + 1 - 6 :
                                 6 - (Nodes[D]->GetEdges().size() + 1);
 
+            //if the node defect of the two triangles will be imrpoved by the
+            //swap perfrom the swap
             if(nodedefectafter < nodedefectbefore)
             {
                 Edges[it->first]->Swap(C,D);
@@ -744,7 +762,6 @@ void SurfaceMeshing::Optimise()
                 Nodes[B]->RemoveTri(t[1]);
                 Nodes[D]->SetTri(t[0]);
                 Nodes[A]->RemoveTri(t[0]);
-
 
                 int e1, e2, e3;
                 e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
@@ -764,16 +781,15 @@ void SurfaceMeshing::Optimise()
                 Edges[e3]->SetTri(t[1]);
                 ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
                 Tris[t[1]]->ResetEdges(e1, e2 ,e3);
-
-
             }
         }
     }
 
+    //perform 2 runs of edge swapping based on maximising smallest angle
     for(int q = 0; q <2; q++)
     {
         if(m_verbose)
-            cout << "\t\t Elastic relaxation run: " << q+1 << endl;
+            cout << "\t\t Edge swap angle run: " << q+1 << endl;
 
         map<int, MeshEdgeSharedPtr>::iterator it;
         for(it = Edges.begin(); it != Edges.end(); it++)
@@ -891,8 +907,12 @@ void SurfaceMeshing::Optimise()
         }
     }
 
+    //perform 4 runs of elastic relaxation based on the octree
     for(int q = 0; q < 4; q++)
     {
+        if(m_verbose)
+            cout << "\t\t Elastic relaxation run: " << q+1 << endl;
+
         map<int, MeshNodeSharedPtr>::iterator it;
         for(it = Nodes.begin(); it!=Nodes.end(); it++)
         {
@@ -901,9 +921,11 @@ void SurfaceMeshing::Optimise()
 
             NekDouble d = m_octree->Query(it->second->GetLoc());
 
-            std::map<int, Array<OneD, NekDouble> > surf = it->second->GetSurfMap();
-            ASSERTL0(surf.size()==1,"node should be interior and only be on one surface");
-            std::map<int, Array<OneD, NekDouble> >::iterator sit = surf.begin();
+            map<int, Array<OneD, NekDouble> > surf = it->second->GetSurfMap();
+            ASSERTL0(surf.size()==1,
+                        "node should be interior and only be on one surface");
+
+            map<int, Array<OneD, NekDouble> >::iterator sit = surf.begin();
             int surface = sit->first;
             Array<OneD, NekDouble> uvi = sit->second;
 
@@ -943,11 +965,13 @@ void SurfaceMeshing::Optimise()
             uv[0] = u0-fu/dfu; uv[1] = v0-fv/dfv;
             Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(uv);
             Nodes[it->first]->Move(l2,uv);
-
         }
     }
 }
 
+//validate the linear mesh from the EPC number caluclated from the CAD
+//these should be the same as it is a geomtrical constant for each geometry
+//this mesh is also valided that each egde is listed twice in the triangles
 void SurfaceMeshing::Validate()
 {
     if(m_verbose)

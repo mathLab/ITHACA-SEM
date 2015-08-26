@@ -760,6 +760,7 @@ INPUT                  = @CMAKE_SOURCE_DIR@/docs/doxygen/ \
                          @CMAKE_SOURCE_DIR@/library/LocalRegions/ \
                          @CMAKE_SOURCE_DIR@/library/MultiRegions/ \
                          @CMAKE_SOURCE_DIR@/library/SolverUtils/ \
+                         @CMAKE_SOURCE_DIR@/library/MeshUtils/ \
                          @CMAKE_SOURCE_DIR@/solvers/ \
                          @CMAKE_SOURCE_DIR@/utilities/
 

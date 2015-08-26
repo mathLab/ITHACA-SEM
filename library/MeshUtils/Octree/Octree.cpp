@@ -180,9 +180,6 @@ void Octree::Build(const NekDouble min, const NekDouble max,
         }
     }
 
-    //begin smoothing
-
-    //smooth levels first
     if(m_verbose)
         cout << endl << "\tSmoothing octant levels" << endl;
 
@@ -193,18 +190,23 @@ void Octree::Build(const NekDouble min, const NekDouble max,
     {
         if(OctantList[i]->GetLeaf()){ct++;}
     }
-    cout << "\tNew Stats" << endl;
-    cout << "\tNo. octant leaves: " << ct << endl;
+    if(m_verbose)
+    {
+        cout << "\tNew Stats" << endl;
+        cout << "\tNo. octant leaves: " << ct << endl;
 
-    cout << "\tSmoothing across the geometry surface" << endl;
+        cout << "\tSmoothing across the geometry surface" << endl;
+    }
 
     SmoothSurfaceOctants();
 
-    cout << "\tPropagating spacing out to domain boundary" << endl;
+    if(m_verbose)
+        cout << "\tPropagating spacing out to domain boundary" << endl;
 
     PropagateDomain();
 
-    cout << "\tRecersively ensuring smoothness between all nodes" << endl;
+    if(m_verbose)
+        cout << "\tRecersively ensuring smoothness between all nodes" << endl;
 
     SmoothAllOctants();
 
@@ -219,12 +221,19 @@ void Octree::Build(const NekDouble min, const NekDouble max,
 
     int elem=CountElemt();
 
-    cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
-
+    if(m_verbose)
+        cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
 }
 
+/**
+ * @todo for boundary encompasing octants perform evaluation of overlapping
+ * volume, may improve accuracy.
+ */
 int Octree::CountElemt()
 {
+    //by considering the volume of a tet evaluate the number of elements in the
+    //mesh
+
     NekDouble total=0.0;
 
     for(int i = 0 ; i < OctantList.size(); i++)
@@ -251,6 +260,8 @@ int Octree::CountElemt()
 
 void Octree::SmoothAllOctants()
 {
+    //until no more changes occur smooth the mesh specification between all
+    //octants
     int ct = 0;
 
     do
@@ -302,6 +313,9 @@ void Octree::SmoothAllOctants()
 
 void Octree::PropagateDomain()
 {
+    //until all octants know their delta specifcation and orientaion
+    //look over all octants and if their neighours know either their orientation
+    //or specifcation calculate one for this octant
     int ct=0;
 
     do
@@ -486,6 +500,9 @@ void Octree::PropagateDomain()
 
 void Octree::SmoothSurfaceOctants()
 {
+    //for all the octants which are surface containing and know their delta
+    //specification, look over all neighbours and ensure the specification
+    //between them is smooth
     int ct = 0;
 
     do
@@ -510,7 +527,8 @@ void Octree::SmoothSurfaceOctants()
                     }
                 }
 
-                //for each neighbour listed in check_id, figure out the smoothed delta, and asign the miminum of these to nodes[i].GetDelta()
+                //for each neighbour listed in check_id, figure out the smoothed
+                // delta, and asign the miminum of these to nodes[i].GetDelta()
                 if(checkID.size() > 0)
                 {
                     NekDouble deltaSM = numeric_limits<double>::max();
@@ -527,7 +545,8 @@ void Octree::SmoothSurfaceOctants()
                         }
                     }
                     OctantList[i]->SetDelta(deltaSM);
-                    ASSERTL0(!(deltaSM<m_minDelta),"Delta assignment less than min delta");
+                    ASSERTL0(!(deltaSM<m_minDelta),
+                                    "Delta assignment less than min delta");
                     ct+=1;
                 }
             }
@@ -544,6 +563,8 @@ NekDouble Octree::ddx(int i, int j)
 
 void Octree::SubDivideByLevel()
 {
+    //until all subdivision ceases, evaluate each octant and subdivide if
+    //the neigbour levels are not smooth.
     int ct=0;
     int imax=0;
 
@@ -592,6 +613,9 @@ void Octree::SubDivideByLevel()
 
 void Octree::SubDivideLevel(int parent)
 {
+    //create 8 child octants in turn for octant parent
+    //after creation, re-evaluate all nessercary neighbour lists
+
     OctantList[parent]->SetLeaf(false);
 
     Array<OneD, int> children(8);
@@ -673,8 +697,9 @@ void Octree::SubDivideLevel(int parent)
 
 void Octree::InitialSubDivide(int parent)
 {
+    //in turn, create 8 child octants for octant parent
+    //if that child also needs sub dividing, call this function recursively
     Array<OneD, int> children(8);
-    //create 8 children for parent and check in turn.
 
     Array<OneD, NekDouble> parentloc = OctantList[parent]->GetLoc();
 
@@ -752,23 +777,24 @@ void Octree::InitialSubDivide(int parent)
 
 void Octree::CompileCuravturePointList()
 {
-    NekDouble MaxDim = 0.0;
-    if(BoundingBox[1]-BoundingBox[0]>MaxDim)
-        MaxDim = BoundingBox[1]-BoundingBox[0];
-    if(BoundingBox[3]-BoundingBox[2]>MaxDim)
-        MaxDim = BoundingBox[3]-BoundingBox[2];
-    if(BoundingBox[5]-BoundingBox[4]>MaxDim)
-        MaxDim = BoundingBox[5]-BoundingBox[4];
 
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
         LibUtilities::CADSurfSharedPtr surf = m_cad->GetSurf(i);
-        Array<OneD, NekDouble> ParameterPlaneBounds = surf->GetBounds();
+        Array<OneD, NekDouble> bounds = surf->GetBounds();
 
-        NekDouble du = (ParameterPlaneBounds[1]-
-                        ParameterPlaneBounds[0])/(40-1);
-        NekDouble dv = (ParameterPlaneBounds[3]-
-                        ParameterPlaneBounds[2])/(40-1);
+        //to figure out the amount of curvature sampling to be conducted on
+        //each parameter plane the surface is first sampled with a 40x40 grid
+        //the real space lengths of this grid are analysed to find the largest
+        //strecthing in the u and v directions
+        //this stretching this then cosnidered with the mindelta user input
+        //to find a number of sampling points in each direction which
+        //enures that in the final octree each surface octant will have at least
+        //one sample point within its volume.
+        //the 40x40 grid is used to ensure each surface has a minimum of 40x40
+        //samples.
+        NekDouble du = (bounds[1]-bounds[0])/(40-1);
+        NekDouble dv = (bounds[3]-bounds[2])/(40-1);
 
         NekDouble DeltaU = 0.0;
         NekDouble DeltaV = 0.0;
@@ -780,8 +806,8 @@ void Octree::CompileCuravturePointList()
             for(int k = 0; k < 40; k++)
             {
                 Array<OneD, NekDouble> uv(2);
-                uv[0] = k*du + ParameterPlaneBounds[0];
-                uv[1] = j*dv + ParameterPlaneBounds[2];
+                uv[0] = k*du + bounds[0];
+                uv[1] = j*dv + bounds[2];
                 samplepoints[k][j] = surf->P(uv);
             }
         }
@@ -822,26 +848,28 @@ void Octree::CompileCuravturePointList()
             }
         }
 
-        int nu = ceil(DeltaU/m_minDelta)*40*1.5;
-        int nv = ceil(DeltaV/m_minDelta)*40*1.5;
+        //these are the acutal number of sample points in each parametric
+        //direction
+        int nu = ceil(DeltaU/m_minDelta)*40*1.2;
+        int nv = ceil(DeltaV/m_minDelta)*40*1.2;
 
         for(int j = 0; j < nu; j++)
         {
             for(int k = 0; k < nv; k++)
             {
                 Array<OneD, NekDouble> uv(2);
-                uv[0] = (ParameterPlaneBounds[1]- ParameterPlaneBounds[0])
-                                /(nu-1)*j + ParameterPlaneBounds[0];
-                uv[1] = (ParameterPlaneBounds[3]-ParameterPlaneBounds[2])
-                                /(nv-1)*k + ParameterPlaneBounds[2];
-                if(j==nu-1)
-                    uv[0]=ParameterPlaneBounds[1]; //These statements prevent floating point error at end of loop
-                if(k==nv-1)
-                    uv[1]=ParameterPlaneBounds[3];
+                uv[0] = (bounds[1]- bounds[0])/(nu-1)*j + bounds[0];
+                uv[1] = (bounds[3]-bounds[2])/(nv-1)*k + bounds[2];
 
+                //this prevents round off error at the end of the surface
+                //may not be neseercary but works
+                if(j==nu-1) uv[0]=bounds[1];
+                if(k==nv-1) uv[1]=bounds[3];
 
                 Array<OneD, NekDouble> N = surf->N(uv);
 
+                //a zero normal occurs at a signularity, CurvaturePoint
+                //cannot be sampled here
                 if(N[0]==0 && N[1]==0 && N[2]==0)
                 {
                     continue;
@@ -849,6 +877,7 @@ void Octree::CompileCuravturePointList()
 
                 Array<OneD, NekDouble> r = surf->D2(uv);
 
+                //metric and curvature tensors
                 NekDouble E = r[3]*r[3] + r[4]*r[4] + r[5]*r[5];
                 NekDouble F = r[3]*r[6] + r[4]*r[7] + r[5]*r[8];
                 NekDouble G = r[6]*r[6] + r[7]*r[7] + r[8]*r[8];
@@ -856,6 +885,7 @@ void Octree::CompileCuravturePointList()
                 NekDouble f = N[0]*r[15] + N[1]*r[16] + N[2]*r[17];
                 NekDouble g = N[0]*r[12] + N[1]*r[13] + N[2]*r[14];
 
+                //if det is zero cannot invert matrix, R=0 so must skip
                 if(E*G-F*F<1E-30)
                 {
                     continue;
@@ -870,6 +900,8 @@ void Octree::CompileCuravturePointList()
                 kv[0] = abs(H + sqrt(H*H-K));
                 kv[1] = abs(H - sqrt(H*H-K));
 
+                //create new point based on smallest R, flat surfaces have k=0
+                //but still need a point for element estimation
                 if(kv[0] != 0 || kv[1] != 0)
                 {
                     CurvaturePointSharedPtr newCPoint =

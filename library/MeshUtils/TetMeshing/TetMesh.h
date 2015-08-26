@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: TetMesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: class for tet meshing
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_TETMESH_TETMESH_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_TETMESH_TETMESH_H
+#ifndef NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
+#define NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
 
 #include <boost/shared_ptr.hpp>
 
@@ -48,22 +48,30 @@
 namespace Nektar{
 namespace MeshUtils{
 
-    class TetMesh
-    {
+class TetMesh
+{
     public:
         friend class MemoryManager<TetMesh>;
 
-        TetMesh(const int id,
-                const bool verb,
+        /**
+         *@brief default constructor
+         */
+        TetMesh(const bool verb,
                 const OctreeSharedPtr &oct,
                 const SurfaceMeshingSharedPtr &sm)
-                    : m_id(id), m_verbose(verb), m_octree(oct),
+                    : m_verbose(verb), m_octree(oct),
                       m_surfacemesh(sm)
         {
         };
 
+        /**
+         *@brief execute tet meshing
+         */
         void Mesh();
 
+        /**
+         *@brief extract finished mesh
+         */
         void Get(std::map<int, MeshNodeSharedPtr> &n,
                  std::map<int, MeshEdgeSharedPtr> &e,
                  std::map<int, MeshTriSharedPtr> &ti,
@@ -77,32 +85,45 @@ namespace MeshUtils{
 
     private:
 
+        /**
+         *@brief validate the tetrahdral mesh against the octree specification
+         */
         bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
 
+        /**
+         *@brief add a new stiener point to the tet mesh
+         */
         void AddNewPoint(Array<OneD, NekDouble> loc,
                                       std::map<int, MeshNodeSharedPtr> &Nodes,
                                       std::vector<int> tetnodes);
 
-        int m_id;
+        /// print stuff to screen?
         bool m_verbose;
+        /// octree object
         OctreeSharedPtr m_octree;
+        /// surfacemeshing object
         SurfaceMeshingSharedPtr m_surfacemesh;
-
+        /// nodes which are surface mesh verticies
         std::vector<int> nodesintris;
+        /// interior domain nodes
         std::vector<int> m_stienerpoints;
-
+        /// nodes added last time around
         std::vector<int> nodesaddedinthisvalidate;
-
+        /// number of tetrahedra
         int numtet;
+        /// conncetivity of the tets from the interface
         Array<OneD, Array<OneD, int> > tetconnect;
-
+        /// list of all nodes
         std::map<int, MeshNodeSharedPtr> Nodes;
+        /// list of all surface edges
         std::map<int, MeshEdgeSharedPtr> Edges;
+        /// list of all surface triangles
         std::map<int, MeshTriSharedPtr> Tris;
+        /// list of all tets
         std::map<int, MeshTetSharedPtr> Tets;
-    };
+};
 
-    typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
+typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
 
 }
 }

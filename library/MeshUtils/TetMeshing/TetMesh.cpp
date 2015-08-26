@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: TetMesh.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: tet meshing methods
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +48,7 @@ void TetMesh::Mesh()
     TetGenInterfaceSharedPtr tetgen =
         MemoryManager<TetGenInterface>::AllocateSharedPtr();
 
+    //extract the surface mesh
     m_surfacemesh->Get(Nodes,Edges,Tris);
 
     map<int, MeshNodeSharedPtr>::iterator nit;
@@ -93,6 +94,7 @@ void TetMesh::Mesh()
         meshcounter++;
     }
 
+    //create tets
     for(int i = 0; i < numtet; i++)
     {
         MeshTetSharedPtr t = MemoryManager<MeshTet>::AllocateSharedPtr(
@@ -103,7 +105,6 @@ void TetMesh::Mesh()
         Nodes[tetconnect[i][2]]->SetTet(Tets.size());
         Nodes[tetconnect[i][3]]->SetTet(Tets.size());
         Tets[Tets.size()] = t;
-        //cout << tetconnect[i][0] << " " << tetconnect[i][1] << " " << tetconnect[i][2] << " " << tetconnect[i][3] << endl;
     }
 
     if(m_verbose)
@@ -111,9 +112,6 @@ void TetMesh::Mesh()
                 "\tTets :" << numtet << endl <<
                 "\tBoundary nodes: " << nodesintris.size() << endl <<
                 "\tInterior nodes: " << m_stienerpoints.size() << endl;
-
-
-
 }
 
 bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
@@ -189,7 +187,6 @@ bool TetMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
     }
 
 }
-
 
 void TetMesh::AddNewPoint(Array<OneD, NekDouble> loc,
                               map<int, MeshNodeSharedPtr> &Nodes,

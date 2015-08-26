@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: TetGenInterface.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: tetgen interface methods
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -116,6 +116,7 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
 
     }
 
+    //quiet suppresses the output of tetegen to the consol
     if(Quiet)
     {
         tetrahedralize("pYizfennQ", &surface, &output, &additional, NULL);

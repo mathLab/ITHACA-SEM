@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTCAD
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTCAD
+#ifndef UTILITIES_MESHCONVERT_INPUTCAD
+#define UTILITIES_MESHCONVERT_INPUTCAD
 
 #include "../Module.h"
 
@@ -48,7 +48,7 @@ namespace Nektar
             InputCAD(MeshSharedPtr m);
             virtual ~InputCAD();
             virtual void Process();
-            
+
             /// Creates an instance of this class
             static ModuleSharedPtr create(MeshSharedPtr m) {
                 return MemoryManager<InputCAD>::AllocateSharedPtr(m);

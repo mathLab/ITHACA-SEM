@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: TetGenInterface.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: class for interacting with tetgen
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_MESHUTILS_TETGENINTERFACE_H
-#define NEKTAR_LIB_UTILITIES_MESHUTILS_TETGENINTERFACE_H
+#ifndef NEKTAR_MESHUTILS_EXTLIBINTERFACE_TETGENINTERFACE_H
+#define NEKTAR_MESHUTILS_EXTLIBINTERFACE_TETGENINTERFACE_H
 
 #include <boost/shared_ptr.hpp>
 
@@ -49,15 +49,21 @@
 namespace Nektar{
 namespace MeshUtils{
 
-    class TetGenInterface
-    {
+class TetGenInterface
+{
     public:
         friend class MemoryManager<TetGenInterface>;
 
+        /**
+         * @brief default constructor
+         */
         TetGenInterface()
         {
         };
 
+        /**
+         * @brief assign parameters for meshing
+         */
         void Assign(const std::vector<int> &nis,
                     const std::map<int, MeshTriSharedPtr> &t,
                     const std::map<int, MeshNodeSharedPtr> &n,
@@ -70,29 +76,43 @@ namespace MeshUtils{
             meshloaded = false;
         }
 
+        /**
+         * @brief execture meshing
+         */
         void Mesh(bool Quiet = true, bool Quality = false);
 
+        /**
+         * @brief extract mesh information
+         */
         void Extract(int &numtet, Array<OneD, Array<OneD, int> > &tetconnect);
 
     private:
 
+        /**
+         * @brief clear previous mesh
+         */
         void freetet();
 
+        ///tetgen objects
         tetgenio surface, additional, output;
-
+        /// list of all triangles in surface mesh
         std::map<int, MeshTriSharedPtr> Tris;
+        /// list of all nodes
         std::map<int, MeshNodeSharedPtr> Nodes;
+        /// list of stiener points
         std::vector<int> m_stienerpoints;
+        /// list of nodes which are surface verticies
         std::vector<int> m_nodesinsurface;
-
+        /// map from meshconvert id to tetgen id
         std::map<int, int> nodemap;
+        /// map in reverse
         std::map<int, int> nodemapr;
-
+        /// has a mesh been peviously loaded
         bool meshloaded;
+};
 
-    };
+typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
 
-    typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
 }
 }
 #endif

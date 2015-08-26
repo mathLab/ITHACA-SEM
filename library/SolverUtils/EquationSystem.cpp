@@ -881,9 +881,9 @@ namespace Nektar
                 }
                 else
                 {
-
                     LibUtilities::PtsFieldSharedPtr ptsField;
-                    LibUtilities::Import(filename, ptsField);
+                    LibUtilities::PtsIO ptsIO(m_session->GetComm());
+                    ptsIO.Import(filename, ptsField);
 
                     Array <OneD,  Array<OneD,  NekDouble> > coords(3);
                     coords[0] = Array<OneD, NekDouble>(nq);

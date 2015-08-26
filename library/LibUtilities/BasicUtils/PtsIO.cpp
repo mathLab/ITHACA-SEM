@@ -83,7 +83,7 @@ void Import(const string &inFile, PtsFieldSharedPtr &ptsField)
     {
         MPI_Comm_size( MPI_COMM_WORLD, &size );
         ASSERTL0(size == 1,
-                "This static function is not available in parallel. Please"
+                "This static function is not available in parallel. Please "
                 "instantiate a FieldIO object for parallel use.");
     }
 #endif
@@ -109,7 +109,7 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
     {
         MPI_Comm_size( MPI_COMM_WORLD, &size );
         ASSERTL0(size == 1,
-                "This static function is not available in parallel. Please"
+                "This static function is not available in parallel. Please "
                 "instantiate a FieldIO object for parallel use.");
     }
 #endif

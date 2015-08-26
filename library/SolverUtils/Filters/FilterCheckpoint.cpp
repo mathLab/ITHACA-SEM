@@ -37,82 +37,99 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+std::string FilterCheckpoint::className =
+        GetFilterFactory().RegisterCreatorFunction(
+                "Checkpoint", FilterCheckpoint::create);
+
+FilterCheckpoint::FilterCheckpoint(
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const ParamMap &pParams) :
+    Filter(pSession)
+{
+    ParamMap::const_iterator it;
+
+    // OutputFile
+    it = pParams.find("OutputFile");
+    if (it == pParams.end())
     {
-        std::string FilterCheckpoint::className = GetFilterFactory().RegisterCreatorFunction("Checkpoint", FilterCheckpoint::create);
+        m_outputFile = m_session->GetSessionName();
+    }
+    else
+    {
+        ASSERTL0(it->second.length() > 0, "Empty parameter 'OutputFile'.");
+        m_outputFile = it->second;
+    }
 
-        FilterCheckpoint::FilterCheckpoint(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) :
-            Filter(pSession)
+    // OutputFrequency
+    ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
+    LibUtilities::Equation equ(m_session, it->second);
+    m_outputFrequency = floor(equ.Evaluate());
+
+    m_outputIndex = 0;
+    m_index       = 0;
+    m_fld         = MemoryManager<LibUtilities::FieldIO>
+                        ::AllocateSharedPtr(pSession->GetComm());
+
+}
+
+FilterCheckpoint::~FilterCheckpoint()
+{
+
+}
+
+void FilterCheckpoint::v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)
+{
+    m_index = 0;
+    m_outputIndex = 0;
+}
+
+void FilterCheckpoint::v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)
+{
+    m_index++;
+    if (m_index % m_outputFrequency > 0)
+    {
+        return;
+    }
+
+    std::stringstream vOutputFilename;
+    vOutputFilename << m_outputFile << "_" << m_outputIndex << ".chk";
+
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+        = pFields[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    // copy Data into FieldData and set variable
+    for(int j = 0; j < pFields.num_elements(); ++j)
+    {
+        for(int i = 0; i < FieldDef.size(); ++i)
         {
-            if (pParams.find("OutputFile") == pParams.end())
-            {
-                m_outputFile = m_session->GetSessionName();
-            }
-            else
-            {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                         "Missing parameter 'OutputFile'.");
-                m_outputFile = pParams.find("OutputFile")->second;
-            }
-            ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
-                     "Missing parameter 'OutputFrequency'.");
-            m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
-            m_outputIndex = 0;
-            m_index = 0;
-            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
-
-        }
-
-        FilterCheckpoint::~FilterCheckpoint()
-        {
-
-        }
-
-        void FilterCheckpoint::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-        {
-            m_index = 0;
-            m_outputIndex = 0;
-        }
-
-        void FilterCheckpoint::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-        {
-            m_index++;
-            if (m_index % m_outputFrequency > 0)
-            {
-                return;
-            }
-
-            std::stringstream vOutputFilename;
-            vOutputFilename << m_outputFile << "_" << m_outputIndex << ".chk";
-
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = pFields[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-            // copy Data into FieldData and set variable
-            for(int j = 0; j < pFields.num_elements(); ++j)
-            {
-                for(int i = 0; i < FieldDef.size(); ++i)
-                {
-                    // Could do a search here to find correct variable
-                    FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
-                    pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], pFields[j]->UpdateCoeffs());
-                }
-            }
-            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
-            m_outputIndex++;
-        }
-
-        void FilterCheckpoint::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-        {
-
-        }
-
-        bool FilterCheckpoint::v_IsTimeDependent()
-        {
-            return true;
+            // Could do a search here to find correct variable
+            FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
+            pFields[0]->AppendFieldData(FieldDef[i],
+                                        FieldData[i],
+                                        pFields[j]->UpdateCoeffs());
         }
     }
+    m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
+    m_outputIndex++;
+}
+
+void FilterCheckpoint::v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)
+{
+
+}
+
+bool FilterCheckpoint::v_IsTimeDependent()
+{
+    return true;
+}
+}
 }

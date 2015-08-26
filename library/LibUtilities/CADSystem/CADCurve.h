@@ -85,6 +85,7 @@ class CADCurve
         int m_ID;
         /// OpenCascade object of the curve.
         BRepAdaptor_Curve m_occCurve;
+        /// OpenCascade edge
         /// List of surfaces which this curve belongs to.
         std::vector<int> m_adjSurfs;
 };

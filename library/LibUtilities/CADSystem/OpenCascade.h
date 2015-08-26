@@ -55,5 +55,7 @@
 #include <ShapeAnalysis.hxx>
 #include <ShapeAnalysis_Wire.hxx>
 #include <BRepTools_WireExplorer.hxx>
+#include <GProp_GProps.hxx>
+#include <BRepGProp.hxx>
 
 #endif

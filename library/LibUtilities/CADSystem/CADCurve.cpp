@@ -51,6 +51,10 @@ CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
     TopLoc_Location mv(transform);
     in.Move(mv);
     m_occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
+
+    GProp_GProps System;
+    BRepGProp::LinearProperties( TopoDS::Edge(in), System);
+
 }
 
 /**

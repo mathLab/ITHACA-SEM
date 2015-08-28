@@ -62,6 +62,76 @@ void TetMesh::Mesh()
         }
     }
 
+    //first level of high-order awarness, placing stienner points in specific
+    //locations above triangles, in this iteration points are place by linear
+    //interpoliation of the center of the triangle, taking the normal of the linear triangle
+    map<int,int> nototri; //map the new node id to the tiangle it was created from
+
+    map<int, MeshTriSharedPtr>::iterator trit;
+    for(trit = Tris.begin(); trit != Tris.end(); trit++)
+    {
+        Array<OneD, int> node = trit->second->GetN();
+        Array<OneD, NekDouble> l1,l2,l3;
+        l1 = Nodes[node[0]]->GetLoc();
+        l2 = Nodes[node[1]]->GetLoc();
+        l3 = Nodes[node[2]]->GetLoc();
+
+        Array<OneD, NekDouble> v1(3), v2(3);
+        v1[0] = l2[0] - l1[0]; v1[1] = l2[1] - l1[1]; v1[2] = l2[2] - l1[2];
+        v2[0] = l3[0] - l1[0]; v2[1] = l3[1] - l1[1]; v2[2] = l3[2] - l1[2];
+        Array<OneD, NekDouble> N(3);
+        N[0] = v1[1]*v2[2] - v1[2]*v2[1];
+        N[1] = v1[0]*v2[2] - v1[2]*v2[0];
+        N[2] = v1[0]*v2[1] - v1[1]*v2[0];
+        Array<OneD, NekDouble> loc(3);
+        loc[0] = (l1[0]+l2[0]+l3[0])/3.0;
+        loc[1] = (l1[1]+l2[1]+l3[1])/3.0;
+        loc[2] = (l1[2]+l2[2]+l3[2])/3.0;
+        NekDouble d = m_octree->Query(loc);
+
+        NekDouble a,b,c;
+        a = N[0]*N[0] +  N[1]*N[1] + N[2]*N[2];
+        b = 2.0*(N[0]*(loc[0]-l1[0]) + N[1]*(loc[1]-l1[1]) + N[2]*(loc[2]-l1[2]));
+        c = (loc[0]-l1[0])*(loc[0]-l1[0]) + (loc[1]-l1[1])*(loc[1]-l1[1]) + (loc[2]-l1[2])*(loc[2]-l1[2]) + d*d;
+        NekDouble t1,t2;
+        cout << b*b-4.0*a*c << endl;
+        t1 = (-b+sqrt(b*b-4.0*a*c))/2.0/a; t2 = (-b-sqrt(b*b-4.0*a*c))/2.0/a;
+        if(t1 > 0)
+        {
+            loc[0] = loc[0] + N[0]*t1;
+            loc[1] = loc[1] + N[1]*t1;
+            loc[2] = loc[2] + N[2]*t1;
+        }
+        else
+        {
+            loc[0] = loc[0] + N[0]*t2;
+            loc[1] = loc[1] + N[1]*t2;
+            loc[2] = loc[2] + N[2]*t2;
+        }
+        cout << loc[0] << " " << loc[1] << " " << endl;
+
+        //should look over the neigbouring tris through edge links,
+        //if the associated stiener point is too close, they should be merged.. not ignored
+        MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
+                            new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
+        d = m_octree->Query(loc);
+        bool add = true;
+        for(int i = 0; i < m_stienerpoints.size(); i++)
+        {
+            NekDouble dist = Nodes[m_stienerpoints[i]]->Distance(n);
+            if(dist < d/1.141)
+            {
+                add = false;
+            }
+        }
+        if(true)
+        {
+            m_stienerpoints.push_back(Nodes.size());
+            Nodes[Nodes.size()] = n;
+        }
+
+    }
+
     tetgen->Assign(nodesintris, Tris, Nodes, m_stienerpoints);
 
     tetgen->Mesh();
@@ -74,7 +144,7 @@ void TetMesh::Mesh()
     bool repeat = true;
     int meshcounter = 1;
 
-    while(repeat)
+    /*while(repeat)
     {
         repeat = Validate(Nodes);
         if(!repeat)
@@ -92,7 +162,7 @@ void TetMesh::Mesh()
             cout << "\tMesh iteration : " << meshcounter+1 << "\tTets : " << numtet << endl;
 
         meshcounter++;
-    }
+    }*/
 
     //create tets
     for(int i = 0; i < numtet; i++)

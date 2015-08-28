@@ -88,6 +88,10 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
         {
             quad=7;
         }
+        else
+        {
+            ASSERTL0(false,"Cannot locate quadrant");
+        }
 
         n=OctantList[n]->GetChild(quad);
 

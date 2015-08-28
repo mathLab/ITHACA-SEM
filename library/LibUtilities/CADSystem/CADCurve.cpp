@@ -50,11 +50,12 @@ CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
     in.Move(mv);
-    m_occCurve = BRepAdaptor_Curve(TopoDS::Edge(in));
+    m_occEdge = TopoDS::Edge(in);
+    m_occCurve = BRepAdaptor_Curve(m_occEdge);
 
     GProp_GProps System;
-    BRepGProp::LinearProperties( TopoDS::Edge(in), System);
-
+    BRepGProp::LinearProperties( m_occEdge, System);
+    m_length = System.Mass();
 }
 
 /**
@@ -87,6 +88,12 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
     }
 
     return t - dt;
+
+    /*Array<OneD, NekDouble> b = Bounds();
+    Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
+    GeomAdaptor_Curve ad( m_c );
+    GCPnts_AbscissaPoint anAP (ad, s*1000.0, b[0]);
+    return anAP.Parameter();*/
 }
 
 /**
@@ -99,24 +106,13 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
  */
 NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
 {
-    NekDouble len = 0;
-    NekDouble dt = (m_occCurve.LastParameter() -
-                    m_occCurve.FirstParameter()) / (1000 - 1);
-    NekDouble t = ti;
-
-    while(t + dt <= tf)
-    {
-        gp_Pnt P1,P2;
-        gp_Vec drdt1,drdt2;
-
-        m_occCurve.D1(t,P1,drdt1);
-        t += dt;
-        m_occCurve.D1(t,P2,drdt2);
-
-        len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt;
-    }
-
-    return len;
+    Array<OneD, NekDouble> b = Bounds();
+    Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
+    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve( m_c, ti, tf );
+    TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge( NewCurve );
+    GProp_GProps System;
+    BRepGProp::LinearProperties( NewEdge, System);
+    return System.Mass()/1000.0;
 }
 
 /**

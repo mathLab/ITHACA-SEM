@@ -43,7 +43,7 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
                      std::map<int, MeshEdgeSharedPtr> &Edges)
 {
     m_bounds = m_cadcurve->Bounds();
-    m_curvelength = m_cadcurve->Length(m_bounds[0],m_bounds[1]);
+    m_curvelength = m_cadcurve->GetTotLength();
 
     m_numSamplePoints = int(m_curvelength/m_octree->GetMinDelta())+5;
 

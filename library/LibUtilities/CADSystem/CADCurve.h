@@ -80,12 +80,17 @@ class CADCurve
             return m_adjSurfs;
         }
 
+        NekDouble GetTotLength(){return m_length;}
+
     private:
         /// ID of the curve.
         int m_ID;
         /// OpenCascade object of the curve.
         BRepAdaptor_Curve m_occCurve;
         /// OpenCascade edge
+        TopoDS_Edge m_occEdge;
+        /// Length of edge
+        NekDouble m_length;
         /// List of surfaces which this curve belongs to.
         std::vector<int> m_adjSurfs;
 };

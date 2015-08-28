@@ -57,5 +57,8 @@
 #include <BRepTools_WireExplorer.hxx>
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
+#include <Geom_TrimmedCurve.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
 
 #endif

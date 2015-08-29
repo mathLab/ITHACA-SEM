@@ -200,7 +200,7 @@ if (NEKTAR_BUILD_LIBRARY)
         SUMMARY "Nektar++ complete meta package"
         DESCRIPTION "
  This meta-package depends on the entire Nektar++ suite."
-        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${NEKTAR_VERSION}), nektar++-adr-solver (=${NEKTAR_VERSION}), nektar++-cardiacep-solver (=${NEKTAR_VERSION}), nektar++-shallowwater-solver (=${NEKTAR_VERSION}), nektar++-compressibleflow-solver (=${NEKTAR_VERSION}), nektar++-utilities (=${NEKTAR_VERSION})")
+        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${NEKTAR_VERSION}), nektar++-adr-solver (=${NEKTAR_VERSION}), nektar++-cardiacep-solver (=${NEKTAR_VERSION}), nektar++-shallowwater-solver (=${NEKTAR_VERSION}), nektar++-compressibleflow-solver (=${NEKTAR_VERSION}), nektar++-pulsewave-solver (=${NEKTAR_VERSION}),  nektar++-utilities (=${NEKTAR_VERSION})")
 
     ### RPM PACKAGES ###############################################
     add_rpm_package(
@@ -333,7 +333,7 @@ if (NEKTAR_BUILD_LIBRARY)
         SUMMARY "Nektar++ complete meta package"
         DESCRIPTION "
  This meta-package depends on the entire Nektar++ suite."
-        DEPENDS "nektar++-incnavierstokes-solver = ${NEKTAR_VERSION}, nektar++-adr-solver = ${NEKTAR_VERSION}, nektar++-cardiacep-solver = ${NEKTAR_VERSION}, nektar++-shallowwater-solver = ${NEKTAR_VERSION}, nektar++-compressibleflow-solver = ${NEKTAR_VERSION}, nektar++-utilities = ${NEKTAR_VERSION}")
+        DEPENDS "nektar++-incnavierstokes-solver = ${NEKTAR_VERSION}, nektar++-adr-solver = ${NEKTAR_VERSION}, nektar++-cardiacep-solver = ${NEKTAR_VERSION}, nektar++-shallowwater-solver = ${NEKTAR_VERSION}, nektar++-compressibleflow-solver = ${NEKTAR_VERSION}, nektar++-pulsewave-solver = ${NEKTAR_VERSION}, nektar++-utilities = ${NEKTAR_VERSION}")
 
     add_tgz_package(
         NAME nektar++

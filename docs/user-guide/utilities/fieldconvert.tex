@@ -108,6 +108,7 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
 \item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
+\item \inltt{surfdistance}: Computes height of a prismatic boundary layer mesh and projects onto the surface (for e.g. $y^+$ calculation).
 \item \inltt{vorticity}: Computes the vorticity field.
 \item \inltt{wss}: Computes wall shear stress field.
 \end{enumerate}
@@ -499,6 +500,29 @@ FieldConvert -m shear:N=value:fromfld=test_id_b0.fld test.xml test-multishear.fl
 The argument \inltt{N} and \inltt{fromfld} are compulsory arguments that respectively define the number of \inltt{fld} files corresponding to the number of discrete equispaced time-steps, and the first \inltt{fld} file which should have the form of \inltt{test\_id\_b0.fld} where the first underscore in the name marks the starting time-step file ID. 
 
 The input \inltt{.fld} files are the outputs of the \textit{wss} module. If they do not contain the surface normals (an optional output of the \textit{wss} modle), then the \textit{shear} module will not compute the last metric, |WSSG|. 
+
+
+%
+%
+%
+\subsection{Boundary layer height calculation: \textit{surfdistance} module}
+
+The surface distance module computes the height of a prismatic boundary layer
+and projects this value onto the surface of the boundary, in a similar fashion
+to the \inltt{extract} module. In conjunction with a mesh of the surface, which
+can be obtained with \inltt{MeshConvert}, and a value of the average wall shear
+stress, one potential application of this module is to determine the
+distribution of $y^+$ grid spacings for turbulence calculations.
+
+To compute the height of the prismatic layer connected to boundary region 3, the
+user can issue the command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m surfdistance:bnd=3 input.xml output.fld
+\end{lstlisting}
+Note that no \inltt{.fld} file is required, since the mesh is the only input
+required in order to calculate the element height. This produces a file
+\inltt{output\_b3.fld}, which can be visualised with the appropriate surface
+mesh from \inltt{MeshConvert}.
 
 %
 %

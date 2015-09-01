@@ -105,8 +105,8 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 
         for (j = 0; j < BndExp[i]->GetExpSize(); ++j, ++cnt)
         {
-            int elmtNum  = BoundarytoElmtID [j];
-            int facetNum = BoundarytoTraceID[j];
+            int elmtNum  = BoundarytoElmtID [cnt];
+            int facetNum = BoundarytoTraceID[cnt];
 
             // Get boundary and element expansions.
             LocalRegions::ExpansionSharedPtr bndElmt = BndExp[i]->GetExp(j);

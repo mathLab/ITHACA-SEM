@@ -51,7 +51,7 @@ public:
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const ParamMap &pParams)
     {
         FilterSharedPtr p =
             MemoryManager<FilterThresholdMin>::AllocateSharedPtr(
@@ -64,7 +64,7 @@ public:
 
     SOLVER_UTILS_EXPORT FilterThresholdMin(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string>   &pParams);
+        const ParamMap &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterThresholdMin();
 
 protected:
@@ -90,6 +90,8 @@ private:
     NekDouble                       m_startTime;
     /// Value of threshold.
     NekDouble                       m_thresholdValue;
+    /// Variable on which to detect threshold
+    int                             m_thresholdVar;
     /// Initial value of storage.
     NekDouble                       m_initialValue;
     /// File into which to write output data.

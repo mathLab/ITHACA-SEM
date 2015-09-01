@@ -43,7 +43,7 @@ namespace Nektar
 {
     std::string MetricRegex::type = GetMetricFactory().
         RegisterCreatorFunction("REGEX", MetricRegex::create);
-    
+
     /**
      * @brief Constructor.
      */
@@ -80,6 +80,7 @@ namespace Nektar
                 MetricRegexFieldValue v;
                 v.m_value = field->GetText();
                 v.m_useTolerance = false;
+                v.m_useIntTolerance = false;
 
                 const char * tol = field->Attribute("tolerance");
                 if (tol)
@@ -87,6 +88,17 @@ namespace Nektar
                     v.m_useTolerance = true;
                     v.m_tolerance = atof(tol);
                 }
+
+                const char * intTol = field->Attribute("inttolerance");
+                if (intTol)
+                {
+                    v.m_useIntTolerance = true;
+                    v.m_intTolerance = atoi(intTol);
+                }
+
+                ASSERTL0(!(intTol && tol),
+                         "Cannot use both integer and double tolerances.");
+
                 tmp.push_back(v);
                 field = field->NextSiblingElement("field");
             }
@@ -130,7 +142,7 @@ namespace Nektar
                     if (okValues[i-1].m_useTolerance)
                     {
                         double val;
-                        try 
+                        try
                         {
                             val = fabs(fabs(boost::lexical_cast<double>(
                                            okValues[i-1].m_value))
@@ -139,13 +151,13 @@ namespace Nektar
                         }
                         catch(boost::bad_lexical_cast &e)
                         {
-                            cerr << "Could not convert one of " << match 
+                            cerr << "Could not convert one of " << match
                                  << " (match) or " << okValues[i-1].m_value
                                  << " (comparison value) to double" << endl;
                             success = false;
                             continue;
                         }
-                        
+
                         // If the okValues are not within tolerance, failed the
                         // test.
                         if (val > okValues[i-1].m_tolerance)
@@ -153,6 +165,36 @@ namespace Nektar
                             cerr << "Failed tolerance match." << endl;
                             cerr << "  Expected: " << okValues[i-1].m_value
                                  << " +/- " << okValues[i-1].m_tolerance
+                                 << endl;
+                            cerr << "  Result:   " << match << endl;
+                            success = false;
+                        }
+                    }
+                    else if (okValues[i-1].m_useIntTolerance)
+                    {
+                        int val;
+                        try
+                        {
+                            val = abs(
+                                boost::lexical_cast<int>(okValues[i-1].m_value)-
+                                boost::lexical_cast<int>(match));
+                        }
+                        catch(boost::bad_lexical_cast &e)
+                        {
+                            cerr << "Could not convert one of " << match
+                                 << " (match) or " << okValues[i-1].m_value
+                                 << " (comparison value) to an integer" << endl;
+                            success = false;
+                            continue;
+                        }
+
+                        // If the okValues are not within tolerance, failed the
+                        // test.
+                        if (val > okValues[i-1].m_intTolerance)
+                        {
+                            cerr << "Failed tolerance match." << endl;
+                            cerr << "  Expected: " << okValues[i-1].m_value
+                                 << " +/- " << okValues[i-1].m_intTolerance
                                  << endl;
                             cerr << "  Result:   " << match << endl;
                             success = false;

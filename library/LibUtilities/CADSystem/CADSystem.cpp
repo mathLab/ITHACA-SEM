@@ -255,14 +255,41 @@ bool CADSystem::LoadCAD()
         m_curves[it->first]->SetAdjSurf(it->second);
     }
 
+    map<int,CADCurveSharedPtr>::iterator cit;
+    for(cit = m_curves.begin(); cit != m_curves.end(); cit++)
+    {
+        ASSERTL0(cit->second->FindEndVertex(edgeEndPoints),"faild to find two end points");
+    }
+
     return true;
 }
 
 void CADSystem::AddCurve(int i, TopoDS_Shape in)
 {
+    gp_Trsf transform;
+    gp_Pnt ori(0.0, 0.0, 0.0);
+    transform.SetScale(ori, 1.0 / 1000.0);
+    TopLoc_Location mv(transform);
+    in.Move(mv);
+
     CADCurveSharedPtr newCurve = MemoryManager<CADCurve>::
                                             AllocateSharedPtr(i,in);
     m_curves[i] = newCurve;
+
+    gp_Pnt sp = BRep_Tool::Pnt(TopExp::FirstVertex(TopoDS::Edge(in), Standard_True));
+    gp_Pnt ep = BRep_Tool::Pnt(TopExp::LastVertex (TopoDS::Edge(in), Standard_True));
+    bool start = true; bool end = true;
+    for(int k =0; k < edgeEndPoints.size(); k++)
+    {
+        if(sp.Distance(edgeEndPoints[k]) < 1e-8)
+            start = false;
+        if(ep.Distance(edgeEndPoints[k])< 1e-8)
+            end = false;
+    }
+    if(start)
+        edgeEndPoints.push_back(sp);
+    if(end)
+        edgeEndPoints.push_back(ep);
 }
 
 void CADSystem::AddSurf(int i, TopoDS_Shape in,

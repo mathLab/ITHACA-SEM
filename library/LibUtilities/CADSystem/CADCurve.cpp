@@ -45,11 +45,6 @@ namespace LibUtilities {
  */
 CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
 {
-    gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    in.Move(mv);
     m_occEdge = TopoDS::Edge(in);
     m_occCurve = BRepAdaptor_Curve(m_occEdge);
 
@@ -158,8 +153,8 @@ Array<OneD, NekDouble> CADCurve::GetMinMax()
 {
     Array<OneD, NekDouble> locs(6);
 
-    gp_Pnt start = m_occCurve.Value(m_occCurve.FirstParameter());
-    gp_Pnt end   = m_occCurve.Value(m_occCurve.LastParameter());
+    gp_Pnt start = BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
+    gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
 
     locs[0] = start.X();
     locs[1] = start.Y();

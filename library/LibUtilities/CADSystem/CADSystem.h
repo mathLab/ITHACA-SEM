@@ -135,6 +135,8 @@ class CADSystem
         std::map<int,CADCurveSharedPtr> m_curves;
         /// map of surfaces
         std::map<int,CADSurfSharedPtr> m_surfs;
+        /// list of edge end vertices
+        std::vector<gp_Pnt> edgeEndPoints;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

@@ -80,36 +80,22 @@ void TetMesh::Mesh()
         v1[0] = l2[0] - l1[0]; v1[1] = l2[1] - l1[1]; v1[2] = l2[2] - l1[2];
         v2[0] = l3[0] - l1[0]; v2[1] = l3[1] - l1[1]; v2[2] = l3[2] - l1[2];
         Array<OneD, NekDouble> N(3);
-        N[0] = v1[1]*v2[2] - v1[2]*v2[1];
-        N[1] = v1[0]*v2[2] - v1[2]*v2[0];
-        N[2] = v1[0]*v2[1] - v1[1]*v2[0];
+        N[0] = -v1[1]*v2[2] + v1[2]*v2[1];
+        N[1] = -v1[0]*v2[2] + v1[2]*v2[0];
+        N[2] = -v1[0]*v2[1] + v1[1]*v2[0];
         Array<OneD, NekDouble> loc(3);
         loc[0] = (l1[0]+l2[0]+l3[0])/3.0;
         loc[1] = (l1[1]+l2[1]+l3[1])/3.0;
         loc[2] = (l1[2]+l2[2]+l3[2])/3.0;
         NekDouble d = m_octree->Query(loc);
 
-        NekDouble a,b,c;
-        a = N[0]*N[0] +  N[1]*N[1] + N[2]*N[2];
-        b = 2.0*(N[0]*(loc[0]-l1[0]) + N[1]*(loc[1]-l1[1]) + N[2]*(loc[2]-l1[2]));
-        c = (loc[0]-l1[0])*(loc[0]-l1[0]) + (loc[1]-l1[1])*(loc[1]-l1[1]) + (loc[2]-l1[2])*(loc[2]-l1[2]) + d*d;
-        NekDouble t1,t2;
-        cout << b*b-4.0*a*c << endl;
-        t1 = (-b+sqrt(b*b-4.0*a*c))/2.0/a; t2 = (-b-sqrt(b*b-4.0*a*c))/2.0/a;
-        if(t1 > 0)
-        {
-            loc[0] = loc[0] + N[0]*t1;
-            loc[1] = loc[1] + N[1]*t1;
-            loc[2] = loc[2] + N[2]*t1;
-        }
-        else
-        {
-            loc[0] = loc[0] + N[0]*t2;
-            loc[1] = loc[1] + N[1]*t2;
-            loc[2] = loc[2] + N[2]*t2;
-        }
-        cout << loc[0] << " " << loc[1] << " " << endl;
+        NekDouble t = 0.0;
 
+        /*while((loc[0]+t*N[0]-l1[0])*(loc[0]+t*N[0]-l1[0])+(loc[1]+t*N[1]-l1[1])*(loc[1]+t*N[1]-l1[1])+(loc[2]+t*N[2]-l1[2])*(loc[2]+t*N[2]-l1[2]) < d)
+        {
+            t-=1e-2;
+        }
+        loc[0]+=N[0]*t; loc[1]+=N[1]*t; loc[2]+=N[2]*t;
         //should look over the neigbouring tris through edge links,
         //if the associated stiener point is too close, they should be merged.. not ignored
         MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
@@ -128,7 +114,7 @@ void TetMesh::Mesh()
         {
             m_stienerpoints.push_back(Nodes.size());
             Nodes[Nodes.size()] = n;
-        }
+        }*/
 
     }
 

@@ -82,6 +82,35 @@ class CADCurve
 
         NekDouble GetTotLength(){return m_length;}
 
+        bool FindEndVertex(std::vector<gp_Pnt> &edgeEndPoints)
+        {
+            int ct = 0;
+            endsInMainCAD.resize(2);
+            gp_Pnt start = BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
+            gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
+            for(int i = 0; i < edgeEndPoints.size(); i++)
+            {
+                if(start.Distance(edgeEndPoints[i]) < 1e-8)
+                {
+                    endsInMainCAD[0] = i;
+                    ct++;
+                }
+                if(end.Distance(edgeEndPoints[i]) < 1e-8)
+                {
+                    endsInMainCAD[1] = i;
+                    ct++;
+                }
+            }
+            if(ct == 2)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
     private:
         /// ID of the curve.
         int m_ID;
@@ -93,6 +122,8 @@ class CADCurve
         NekDouble m_length;
         /// List of surfaces which this curve belongs to.
         std::vector<int> m_adjSurfs;
+        /// list of end vertices
+        std::vector<int> endsInMainCAD;
 };
 
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;

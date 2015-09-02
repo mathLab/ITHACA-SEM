@@ -121,6 +121,20 @@ class CADSystem
             return m_epc;
         }
 
+        LIB_UTILITIES_EXPORT std::vector<Array<OneD, NekDouble> > GetVertices()
+        {
+            std::vector<Array<OneD, NekDouble> > out;
+            for(int i = 0; i < cadVerts.size(); i++)
+            {
+                Array<OneD, NekDouble> p(3);
+                p[0] = cadVerts[i].X();
+                p[1] = cadVerts[i].Y();
+                p[2] = cadVerts[i].Z();
+                out.push_back(p);
+            }
+            return out;
+        }
+
     private:
         /// Private function to add curve to CADSystem::m_curves.
         void AddCurve(int i, TopoDS_Shape in);
@@ -136,7 +150,7 @@ class CADSystem
         /// map of surfaces
         std::map<int,CADSurfSharedPtr> m_surfs;
         /// list of edge end vertices
-        std::vector<gp_Pnt> edgeEndPoints;
+        std::vector<gp_Pnt> cadVerts;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

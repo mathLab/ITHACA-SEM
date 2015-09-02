@@ -57,11 +57,7 @@ namespace MeshUtils {
         MeshNode(int i, NekDouble x, NekDouble y, NekDouble z) :
                    nid(i), m_x(x), m_y(y), m_z(z)
         {
-            eoc = false;
         };
-
-        bool IsEOC(){return eoc;} //end of curve, speeds up checking
-        void SetEOC(){eoc = true;}
 
         void SetCurve(int i, NekDouble t)
         {
@@ -227,6 +223,7 @@ namespace MeshUtils {
 
         int GetId(){return nid;}
         std::map<int, Array<OneD, NekDouble> > GetSurfMap(){return CADSurf;}
+        std::map<int, NekDouble> GetCurveMap(){return CADCurve;}
 
         std::vector<int> GetEdges(){return Edges;}
         std::vector<int> GetTris(){return Tris;}
@@ -253,7 +250,6 @@ namespace MeshUtils {
 
         int nid;
         NekDouble m_x, m_y, m_z;
-        bool eoc;
 
         std::map<int, NekDouble> CADCurve;
         std::map<int, Array<OneD, NekDouble> > CADSurf;

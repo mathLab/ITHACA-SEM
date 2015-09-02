@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <list>
 #include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 
 #include <LocalRegions/MatrixKey.h>
@@ -48,6 +49,15 @@ void SurfaceMeshing::Mesh()
         cout << endl << "Surface meshing" << endl;
     if(m_verbose)
         cout << "\tCurve meshing..." << endl;
+
+    vector<Array<OneD, NekDouble> > vertices = m_cad->GetVertices();
+    for(int i = 0; i < vertices.size(); i++)
+    {
+        MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
+                          new MeshNode(Nodes.size(),vertices[i][0],
+                          vertices[i][1],vertices[i][2]));
+        Nodes[Nodes.size()] = n;
+    }
 
     //linear mesh all curves
     for(int i = 1; i <= m_cad->GetNumCurve(); i++)
@@ -82,6 +92,59 @@ void SurfaceMeshing::Mesh()
             m_curvemeshes[i]->Report();
         }
     }
+
+    //all nodes thus far exist on curves on sufaces but do not know about the surface
+    map<int, MeshNodeSharedPtr>::iterator it;
+    for(it = Nodes.begin(); it != Nodes.end(); it++)
+    {
+        Array<OneD, NekDouble> loc = it->second->GetLoc();
+        list<int> l;
+        map<int, NekDouble> curves = it->second->GetCurveMap();
+        map<int, NekDouble>::iterator cit;
+        for(cit = curves.begin(); cit != curves.end(); cit++)
+        {
+            vector<int> s = m_cad->GetCurve(cit->first)->GetAdjSurf();
+            for(int i = 0; i < s.size(); i++)
+            {
+                l.push_back(s[i]);
+            }
+        }
+        l.sort(); l.unique();
+        for (list<int>::iterator lit=l.begin(); lit!=l.end(); ++lit)
+        {
+            Array<OneD, NekDouble> uv = m_cad->GetSurf(*lit)->locuv(loc);
+            it->second->SetSurf(*lit,uv);
+        }
+    }
+
+    // this is where high-order awareness can be inserted for curve edges
+    map<int, MeshEdgeSharedPtr>::iterator eit;
+    for(eit = Edges.begin(); eit != Edges.end(); eit++)
+    {
+        Array<OneD, int> n = eit->second->GetN();
+        int c = eit->second->GetCurve();
+        ASSERTL0(c != -1, "edge not on curve");
+        vector<int> s = m_cad->GetCurve(c)->GetAdjSurf();
+        for(int i = 0; i < s.size(); i++)
+        {
+            Array<OneD, NekDouble> uv1,uv2;
+            uv1 = Nodes[n[0]]->GetS(s[i]);
+            uv2 = Nodes[n[1]]->GetS(s[i]);
+            Array<OneD, NekDouble> N1,N2;
+            N1 = m_cad->GetSurf(s[i])->N(uv1);
+            N2 = m_cad->GetSurf(s[i])->N(uv2);
+
+            NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
+            if(dot < 0 )
+            {
+                cout << "invalid edge" << endl;
+            }
+        }
+    }
+    exit(-1);
+
+    //once this has been done, will need to loop over edges again and check that
+    //they are conforming to the octree, if not split
 
     if(m_verbose)
         cout <<endl << "\tSurface meshing..." << endl;

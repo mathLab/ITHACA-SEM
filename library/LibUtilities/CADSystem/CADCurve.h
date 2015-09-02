@@ -90,12 +90,12 @@ class CADCurve
             gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
             for(int i = 0; i < edgeEndPoints.size(); i++)
             {
-                if(start.Distance(edgeEndPoints[i]) < 1e-8)
+                if(start.Distance(edgeEndPoints[i]) < 1e-6)
                 {
                     endsInMainCAD[0] = i;
                     ct++;
                 }
-                if(end.Distance(edgeEndPoints[i]) < 1e-8)
+                if(end.Distance(edgeEndPoints[i]) < 1e-6)
                 {
                     endsInMainCAD[1] = i;
                     ct++;
@@ -110,6 +110,8 @@ class CADCurve
                 return false;
             }
         }
+
+        std::vector<int> GetVertex(){return endsInMainCAD;}
 
     private:
         /// ID of the curve.

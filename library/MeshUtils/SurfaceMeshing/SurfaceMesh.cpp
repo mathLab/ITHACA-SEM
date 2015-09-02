@@ -138,7 +138,12 @@ void SurfaceMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
 
 void SurfaceMesh::Report()
 {
-    cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tLoops: " << orderedLoops.size() << endl;
+    int edgec = 0;
+    for(int i = 0; i < m_cadsurf->GetEdges().size(); i++)
+    {
+        edgec+=m_cadsurf->GetEdges()[i].size();
+    }
+    cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tEdges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
 }
 
 void SurfaceMesh::Stretching()
@@ -306,7 +311,6 @@ void SurfaceMesh::AddNewPoint(Array<OneD, NekDouble> uv,
 void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
 {
     //create integer list of bounding loop node id's.
-    //locuv nodes to get uv.
     for(int i = 0; i < m_edges.size(); i++)
     {
         vector<int> cE;
@@ -335,16 +339,6 @@ void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
             }
         }
         orderedLoops.push_back(cE);
-    }
-
-    for(int i = 0; i < orderedLoops.size(); i++)
-    {
-        for(int j = 0; j < orderedLoops[i].size(); j++)
-        {
-            Array<OneD, NekDouble> uv = m_cadsurf->
-                            locuv(Nodes[orderedLoops[i][j]]->GetLoc());
-            Nodes[orderedLoops[i][j]]->SetSurf(m_id,uv);
-        }
     }
 
     //loops made need to orientate on which is biggest and define holes

@@ -104,35 +104,17 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
     NekDouble t;
     Array<OneD, NekDouble> loc;
 
+    vector<int> endNodeIds = m_cadcurve->GetVertex();
 
-    t = m_cadcurve->tAtArcLength(meshsvalue[0]);
-    loc = m_cadcurve->P(t);
-    MeshNodeSharedPtr n1 = boost::shared_ptr<MeshNode>(
-                            new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
-    n1->SetEOC();
-    n1->SetCurve(m_id,t);
-
-    bool found = false;
-
-    for(int i = 0; i < Nodes.size(); i++)
+    //need a better fix to this
+    if(m_id == 19)
     {
-        if(Nodes[i]->IsEOC())
-        {
-            if(Nodes[i]->Distance(n1) < 1E-4)
-            {
-                m_meshpoints.push_back(i);
-                Nodes[i]->SetCurve(m_id,t);
-                found = true;
-                break;
-            }
-        }
+        reverse(endNodeIds.begin(),endNodeIds.end());
     }
 
-    if(found == false)
-    {
-        Nodes[Nodes.size()] = n1;
-        m_meshpoints.push_back(Nodes.size()-1);
-    }
+    t = m_bounds[0];
+    Nodes[endNodeIds[0]]->SetCurve(m_id,t);
+    m_meshpoints.push_back(endNodeIds[0]);
 
     for(int i = 1; i < meshsvalue.size()-1; i++)
     {
@@ -146,34 +128,8 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
     }
 
     t = m_bounds[1];
-
-    loc = m_cadcurve->P(t);
-    MeshNodeSharedPtr n3 = boost::shared_ptr<MeshNode>(
-                      new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
-    n3->SetCurve(m_id,t);
-    n3->SetEOC();
-
-    found = false;
-
-    for(int i = 0; i < Nodes.size(); i++)
-    {
-        if(Nodes[i]->IsEOC())
-        {
-            if(Nodes[i]->Distance(n3) < 1E-4)
-            {
-                m_meshpoints.push_back(i);
-                Nodes[i]->SetCurve(m_id,t);
-                found = true;
-                break;
-            }
-        }
-    }
-
-    if(found == false)
-    {
-        Nodes[Nodes.size()] = n3;
-        m_meshpoints.push_back(Nodes.size()-1);
-    }
+    Nodes[endNodeIds[1]]->SetCurve(m_id,t);
+    m_meshpoints.push_back(endNodeIds[1]);
 
     for(int i = 0; i < m_meshpoints.size()-1; i++)
     {
@@ -185,6 +141,8 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
         Nodes[m_meshpoints[i+1]]->SetEdge(Edges.size()-1);
         Edges[Edges.size()-1]->SetCurve(m_id);
     }
+
+
 
 
 }

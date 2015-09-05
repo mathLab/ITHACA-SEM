@@ -37,33 +37,35 @@
 #ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSEXTRACTTETPRISMINTERFACE
 #define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSEXTRACTTETPRISMINTERFACE
 
-#include "Module.h"
+#include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief Module to extract interface between prismatic and tetrahedral
-         * elements.
-         */
-        class ProcessExtractTetPrismInterface : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessExtractTetPrismInterface>
-                    ::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            ProcessExtractTetPrismInterface(MeshSharedPtr m);
-            virtual ~ProcessExtractTetPrismInterface();
-
-            /// Write mesh to output file.
-            virtual void Process();
-        };
+/**
+ * @brief Module to extract interface between prismatic and tetrahedral
+ * elements.
+ */
+class ProcessExtractTetPrismInterface : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<ProcessExtractTetPrismInterface>
+            ::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessExtractTetPrismInterface(MeshSharedPtr m);
+    virtual ~ProcessExtractTetPrismInterface();
+
+    /// Write mesh to output file.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

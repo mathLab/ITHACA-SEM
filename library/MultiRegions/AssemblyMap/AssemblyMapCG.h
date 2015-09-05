@@ -55,9 +55,14 @@ namespace Nektar
 
         typedef vector<map<int, int> > DofGraph;
 
+        pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
+            int                           meshEdgeId,
+            StdRegions::Orientation       edgeOrient,
+            const vector<PeriodicEntity> &periodicEdges);
+
         StdRegions::Orientation  DeterminePeriodicFaceOrient(
-                       StdRegions::Orientation   faceOrient1,
-                       StdRegions::Orientation   faceOrient2);
+            StdRegions::Orientation   faceOrient1,
+            StdRegions::Orientation   faceOrient2);
 
   
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.

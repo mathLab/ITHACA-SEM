@@ -99,6 +99,16 @@ namespace Nektar
               m_lambda (0),
               m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
+            // set up session names in fieldMetaDataMap
+            const vector<std::string> filenames = m_session->GetFilenames();
+            
+            for(int i = 0; i < filenames.size(); ++i)
+            {
+                string sessionname = "SessionName";
+                sessionname += boost::lexical_cast<std::string>(i);
+                m_fieldMetaDataMap[sessionname] = filenames[i];
+            }
+            
         }
         
         /**

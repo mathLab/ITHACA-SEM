@@ -5,6 +5,7 @@ list(APPEND libnektar++-utilities_LIBS LibUtilities)
 list(APPEND libnektar++-stdregions_LIBS StdRegions)
 list(APPEND libnektar++-spatialdomains_LIBS SpatialDomains)
 list(APPEND libnektar++-localregions_LIBS LocalRegions)
+list(APPEND libnektar++-collections_LIBS Collections)
 list(APPEND libnektar++-multiregions_LIBS MultiRegions)
 list(APPEND libnektar++-solverutils_LIBS SolverUtils)
 list(APPEND nektar++-incnavierstokes-solver_BINS IncNavierStokesSolver)
@@ -28,7 +29,7 @@ list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
 
 # Nektar++ binary archive
 list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
-                          MultiRegions SolverUtils)
+                          Collections MultiRegions SolverUtils)
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver 
                           DiffusionSolverTimeInt ShallowWaterSolver
@@ -80,6 +81,16 @@ if (NEKTAR_BUILD_LIBRARY)
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
     set(NEK_DEP "${NEK_DEP}, libnektar++-localregions (= ${NEKTAR_VERSION})")
+
+    add_deb_package(
+        NAME libnektar++-collections
+        SUMMARY "Nektar++ Collections library"
+        DESCRIPTION "
+ This library provides efficient multi-expansion implementations of operators
+ on the various supported regions."
+        DEPENDS "${NEK_DEP}"
+        INSTALL_LIBS "${libnektar++-collections_LIBS}")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-collections (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME libnektar++-multiregions
@@ -189,7 +200,7 @@ if (NEKTAR_BUILD_LIBRARY)
         SUMMARY "Nektar++ complete meta package"
         DESCRIPTION "
  This meta-package depends on the entire Nektar++ suite."
-        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${NEKTAR_VERSION}), nektar++-adr-solver (=${NEKTAR_VERSION}), nektar++-cardiacep-solver (=${NEKTAR_VERSION}), nektar++-shallowwater-solver (=${NEKTAR_VERSION}), nektar++-compressibleflow-solver (=${NEKTAR_VERSION}), nektar++-utilities (=${NEKTAR_VERSION})")
+        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${NEKTAR_VERSION}), nektar++-adr-solver (=${NEKTAR_VERSION}), nektar++-cardiacep-solver (=${NEKTAR_VERSION}), nektar++-shallowwater-solver (=${NEKTAR_VERSION}), nektar++-compressibleflow-solver (=${NEKTAR_VERSION}), nektar++-pulsewave-solver (=${NEKTAR_VERSION}),  nektar++-utilities (=${NEKTAR_VERSION})")
 
     ### RPM PACKAGES ###############################################
     add_rpm_package(
@@ -220,6 +231,13 @@ if (NEKTAR_BUILD_LIBRARY)
         "This library provides physical space expansions on the various
          supported regions."
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
+    add_rpm_package(
+        NAME libnektar++-collections
+        SUMMARY "Nektar++ Collections library"
+        DESCRIPTION
+        "This library provides multi-expansion implementations of operators
+         on the various supported regions."
+        INSTALL_LIBS "${libnektar++-collections_LIBS}")
     add_rpm_package(
         NAME libnektar++-multiregions
         SUMMARY "Nektar++ MultiRegions library"
@@ -315,7 +333,7 @@ if (NEKTAR_BUILD_LIBRARY)
         SUMMARY "Nektar++ complete meta package"
         DESCRIPTION "
  This meta-package depends on the entire Nektar++ suite."
-        DEPENDS "nektar++-incnavierstokes-solver = ${NEKTAR_VERSION}, nektar++-adr-solver = ${NEKTAR_VERSION}, nektar++-cardiacep-solver = ${NEKTAR_VERSION}, nektar++-shallowwater-solver = ${NEKTAR_VERSION}, nektar++-compressibleflow-solver = ${NEKTAR_VERSION}, nektar++-utilities = ${NEKTAR_VERSION}")
+        DEPENDS "nektar++-incnavierstokes-solver = ${NEKTAR_VERSION}, nektar++-adr-solver = ${NEKTAR_VERSION}, nektar++-cardiacep-solver = ${NEKTAR_VERSION}, nektar++-shallowwater-solver = ${NEKTAR_VERSION}, nektar++-compressibleflow-solver = ${NEKTAR_VERSION}, nektar++-pulsewave-solver = ${NEKTAR_VERSION}, nektar++-utilities = ${NEKTAR_VERSION}")
 
     add_tgz_package(
         NAME nektar++

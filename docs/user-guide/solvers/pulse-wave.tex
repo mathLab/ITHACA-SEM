@@ -37,7 +37,7 @@ Typically 1D arterial networks are made up of a connection of different base uni
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/PulseWaveBifurcation.png}
+\includegraphics[width=7cm]{img/PulseWaveBifurcation.png}
 \caption{Model of bifurcating artery. The bifurcation is made of three domains and 15 vertices. Vertex V[0] is the inlet and vertices V[10] and V[15] the outlets.}
 \end{center}
 \end{figure}
@@ -224,8 +224,8 @@ are set correctly and how each arterial segment gets its correct physiological
 data.
 
 \begin{figure}
-	\includegraphics[width=0.49\linewidth]{Figures/55_artery_network.jpg}
-	\includegraphics[width=0.49\linewidth]{Figures/Data_Table.png}
+	\includegraphics[width=0.49\linewidth]{img/55_artery_network.jpg}
+	\includegraphics[width=0.49\linewidth]{img/Data_Table.png}
 \end{figure}
 
 First, we will set up the mesh where each arterial segment is represented by one
@@ -342,8 +342,8 @@ The vertices where the network terminates are specified as boundary regions
 based on their subsequent composite ids.
 
 \begin{figure}
-	\includegraphics[width=0.49\linewidth]{Figures/Bifurcation.png}
-	\includegraphics[width=0.49\linewidth]{Figures/Network_Inflow.png}
+	\includegraphics[width=0.49\linewidth]{img/Bifurcation.png}
+	\includegraphics[width=0.49\linewidth]{img/Network_Inflow.png}
 \end{figure}
 
 \begin{lstlisting}[style=XmlStyle]
@@ -432,7 +432,7 @@ values slightly differ from in vivo measurements due to the missing terminal
 resistance, which will be added in future.
 
 \begin{figure}
-	\includegraphics[width=\linewidth]{Figures/Network_Results.png}
+	\includegraphics[width=\linewidth]{img/Network_Results.png}
 \end{figure}
 
 These short examples should give an insight to the functionality of our
@@ -449,7 +449,7 @@ In the following we will explain the usage of the  \hyperref[PulseWaveSolver]{Pu
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/StentGeometry.png}
+\includegraphics[width=7cm]{img/StentGeometry.png}
 \caption{Model of straight artery with a stent in the middle.}
 \end{center}
 \end{figure}
@@ -458,7 +458,7 @@ In the following we will explain the usage of the  \hyperref[PulseWaveSolver]{Pu
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/StentDomain.png}
+\includegraphics[width=7cm]{img/StentDomain.png}
 \caption{1D arterial domain consisting of 30 elements and 31 vertices.}
 \end{center}
 \end{figure}
@@ -488,7 +488,7 @@ These elements are combined to three different composites (shown below): composi
  
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/StentComposite.png}
+\includegraphics[width=7cm]{img/StentComposite.png}
 \caption{Three composites (C[0], C[1] and C[2]) for the stunted artery.}
 \end{center}
 \end{figure}
@@ -553,7 +553,7 @@ Finally the domain is specified by the first composite by
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/StentPressureProfile.png}
+\includegraphics[width=7cm]{img/StentPressureProfile.png}
 \caption{Pressure profile applied at the inlet of the artery}
 \end{center}
 \end{figure}
@@ -593,7 +593,7 @@ The simulation starts from the static equilibrium of the vessel with normalised 
 \paragraph{Functions:~} The stent is introduced by applying a variable material properties function ($\beta$ - see equation \ref{eqn:PA}) along the vessel in the x direction, shown graphically below
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/StentMaterial.png}
+\includegraphics[width=7cm]{img/StentMaterial.png}
 \caption{material property variation along the artery. The stiff region in the middle represents the stent.}
 \end{center}
 \end{figure}
@@ -621,8 +621,8 @@ area in that specific part of the artery compared to the normal vessel
 (Fig.~\ref{f:pulsewave:stented:vessels}).
 
 \begin{figure}
-	\includegraphics[width=0.49\linewidth]{Figures/normal_vessel.jpg}
-	\includegraphics[width=0.49\linewidth]{Figures/stented_vessel.jpg}
+	\includegraphics[width=0.49\linewidth]{img/normal_vessel.jpg}
+	\includegraphics[width=0.49\linewidth]{img/stented_vessel.jpg}
 	\caption{}
 	\label{f:pulsewave:stented:vessels}
 \end{figure}
@@ -635,8 +635,8 @@ artery (right). Here, the stiffening at the stent causes reflections and thus
 there are losses for total pressure at the medial (M) and distal (D) point.
 
 \begin{figure}
-	\includegraphics[width=0.49\linewidth]{Figures/pressure_normal_vessel.jpg}
-	\includegraphics[width=0.49\linewidth]{Figures/pressure_stented_vessel.jpg}
+	\includegraphics[width=0.49\linewidth]{img/pressure_normal_vessel.jpg}
+	\includegraphics[width=0.49\linewidth]{img/pressure_stented_vessel.jpg}
 \end{figure}
 
 \section{Further Information}

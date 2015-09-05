@@ -116,7 +116,6 @@ int main(int argc, char *argv[])
     if (vm.count("generate-metric"))
     {
         metricGenVec = vm["generate-metric"].as<vector<int> >();
-        cout << "SIZE = " << metricGenVec.size() << endl;
     }
     set<int> metricGen(metricGenVec.begin(), metricGenVec.end());
 

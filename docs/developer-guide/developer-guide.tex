@@ -25,8 +25,10 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{kpfonts} %Font
 
 \usepackage{amsmath,amssymb,mathtools} % Math
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 
-% \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
 \usepackage{import}
@@ -48,8 +50,8 @@ openany, % A chapter may start on either a recto or verso page.
 %%% SECTIONAL DIVISIONS
 %%%------------------------------------------------------------------------------
 
-\maxsecnumdepth{subsection} % Subsections (and higher) are numbered
-\setsecnumdepth{subsection}
+\maxsecnumdepth{paragraph} % Subsections (and higher) are numbered
+\setsecnumdepth{paragraph}
 
 \makeatletter %
 \makechapterstyle{standard}{
@@ -92,6 +94,7 @@ openany, % A chapter may start on either a recto or verso page.
 
 \changecaptionwidth          % Change the width of the caption
 \captionwidth{1\textwidth} %
+\usepackage{tabularx}
 
 %%% ABSTRACT
 %%%------------------------------------------------------------------------------
@@ -144,6 +147,9 @@ openany, % A chapter may start on either a recto or verso page.
 %%% NEW COMMANDS
 %%%-----------------------------------------------------------------------------
 
+% Nektar++ version
+\usepackage{xspace}
+\newcommand{\nekver} {\input{VERSION}\unskip}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -154,7 +160,6 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
 \usepackage{lstautogobble}
-\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -214,16 +219,30 @@ openany, % A chapter may start on either a recto or verso page.
 }
 
 \usepackage{tikz}
+\ifdefined\HCode
+\newcommand{\inltt}[1]{\texttt{#1}}
+\newcommand{\inlsh}[1]{\texttt{#1}}
+\else
 \newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
 rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
 \newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
 outer sep=0,fill=black!05]{\texttt{#1}};}
+\fi
 \newcommand{\nekpp}{{\em Nektar++}\xspace}
+
 
 % Highlight box
 \usepackage{environ}
 \usepackage[tikz]{bclogo}
 \usetikzlibrary{calc}
+
+% Only use fancy boxes for PDF
+\ifdefined\HCode
+\NewEnviron{notebox}{\textbf{Note:} \BODY}
+\NewEnviron{warningbox}{\textbf{Warning:} \BODY}
+\NewEnviron{tipbox}{\textbf{Tip:} \BODY}
+\NewEnviron{custombox}[3]{\textbf{#1} \BODY}
+\else
 \NewEnviron{notebox}
   {\par\medskip\noindent
   \begin{tikzpicture}
@@ -284,6 +303,7 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
     };
    \end{tikzpicture}\par\medskip%
 }
+\fi
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------
@@ -297,13 +317,13 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 
 %%% INTERNAL HYPERLINKS
 %%%-----------------------------------------------------------------------------
-\usepackage[linktoc=all]{hyperref}   % Internal hyperlinks
+\usepackage[linktoc=all,hyperfootnotes=false]{hyperref}   % Internal hyperlinks
 \hypersetup{
 colorlinks,
 citecolor=darkblue,
 filecolor=darkblue,
 linkcolor=darkblue,
-urlcolor=darkblue
+urlcolor=darkblue,
 pdfborder={0 0 0},      % No borders around internal hyperlinks
 pdfauthor={I am the Author} % author
 }
@@ -330,7 +350,7 @@ pdfauthor={I am the Author} % author
           \vspace{\drop}
           {\Huge\bfseries\raggedright\@title\par}
           \vskip2.37\baselineskip
-          {\huge\bfseries Version \input{../../VERSION}\par}
+          {\huge\bfseries Version \nekver\par}
           \vskip4\baselineskip
           {\huge\bfseries \textcolor{darkblue}{Developer Guide}\par}
           \vskip1.0\baselineskip
@@ -349,7 +369,7 @@ pdfauthor={I am the Author} % author
 %%% Where all the important stuff is included!
 %%%-------------------------------------------------------------------------------
 
-\author{Department of Aeronautics, Imperial College London, UK\\
+\author{Department of Aeronautics, Imperial College London, UK\newline
 Scientific Computing and Imaging Institute, University of Utah, USA}
 \title{Nektar++: Spectral/hp Element Framework}
 \date{\today}
@@ -361,6 +381,9 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 % Render pretty title page if not building HTML
 \ifdefined\HCode
 \maketitle
+\begin{center}
+    \huge{Developers Guide - Version \nekver}
+\end{center}
 \else
 \titlepage
 \fi
@@ -410,6 +433,9 @@ information.
 \begin{warningbox}
 This document is still under development and may be incomplete in parts.
 \end{warningbox}
+
+For further information and to download the software, visit the Nektar++ website
+at \url{http://www.nektar.info}.
 
 \mainmatter
 

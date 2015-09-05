@@ -64,6 +64,8 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST_LENGTHY(Advection2D_periodic_deformed_GLL_LAGRANGE_SEM_10x10)
     ADD_NEKTAR_TEST_LENGTHY(Advection2D_periodic_deformed_MODIFIED_10x10)
     ADD_NEKTAR_TEST        (Advection_m12_DG_periodic)
+    ADD_NEKTAR_TEST        (Advection2D_ISO_regular_SSPRK2)
+    ADD_NEKTAR_TEST        (Advection2D_ISO_regular_SSPRK3)
 
     # 2D continuous advection (non-conservative)
     ADD_NEKTAR_TEST        (Advection_m12_Order1)

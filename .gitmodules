@@ -1,0 +1,3 @@
+[submodule "docs/tutorial"]
+	path = docs/tutorial
+	url = git@gitlab.nektar.info:nektar/tutorial

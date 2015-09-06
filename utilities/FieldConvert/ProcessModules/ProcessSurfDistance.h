@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Computes surface mesh distance
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSURFDISTANCE
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSURFDISTANCE
+#ifndef UTILITIES_FIELDCONVERT_PROCESSSURFDISTANCE
+#define UTILITIES_FIELDCONVERT_PROCESSSURFDISTANCE
 
 #include "../Module.h"
 

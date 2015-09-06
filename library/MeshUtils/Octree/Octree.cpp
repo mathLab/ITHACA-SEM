@@ -103,6 +103,67 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return OctantList[n]->GetDelta();
 }
 
+void Octree::ModifySpec(Array<OneD, NekDouble> loc, NekDouble d)
+{
+    //starting at master octant 0 move through succsesive octants which contain
+    //the point loc until a leaf is found
+    int n = 0;
+    int quad;
+
+    bool found=false;
+
+    while(!found)
+    {
+        Array<OneD, NekDouble> octloc = OctantList[n]->GetLoc();
+
+        if(loc[0]>=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
+        {
+            quad=0;
+        }
+        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
+        {
+            quad=1;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
+        {
+            quad=2;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
+        {
+            quad=3;
+        }
+        else if(loc[0]>octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=4;
+        }
+        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=5;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=6;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=7;
+        }
+        else
+        {
+            ASSERTL0(false,"Cannot locate quadrant");
+        }
+
+        n=OctantList[n]->GetChild(quad);
+
+        if(OctantList[n]->GetLeaf())
+        {
+            found=true;
+        }
+    }
+
+    OctantList[n]->SetDelta(d);
+}
+
 void Octree::Build(const NekDouble min, const NekDouble max,
                    const NekDouble eps)
 {
@@ -227,6 +288,7 @@ void Octree::Build(const NekDouble min, const NekDouble max,
 
     if(m_verbose)
         cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
+    exit(-1);
 }
 
 /**
@@ -238,14 +300,35 @@ int Octree::CountElemt()
     //by considering the volume of a tet evaluate the number of elements in the
     //mesh
 
+    Array<OneD, NekDouble> box = m_cad->GetBoundingBox();
     NekDouble total=0.0;
 
     for(int i = 0 ; i < OctantList.size(); i++)
     {
-        if(OctantList[i]->GetLeaf())
+        if(OctantList[i]->GetLeaf() && OctantList[i]->HasPoints())
         {
-            if(OctantList[i]->GetOrient() != 3 &&
-               OctantList[i]->GetOrient() != -1)
+            NekDouble xmin, xmax, ymin, ymax, zmin, zmax;
+            xmin = max(box[0], OctantList[i]->FX(-1.0));
+            xmax = min(box[1], OctantList[i]->FX(+1.0));
+            ymin = max(box[2], OctantList[i]->FY(-1.0));
+            ymax = min(box[3], OctantList[i]->FY(+1.0));
+            zmin = max(box[4], OctantList[i]->FZ(-1.0));
+            zmax = min(box[5], OctantList[i]->FZ(+1.0));
+            ASSERTL0(xmin < xmax, "error");
+            ASSERTL0(ymin < ymax, "error");
+            ASSERTL0(zmin < zmax, "error");
+            NekDouble voloverlap = (xmax - xmin)*(ymax - ymin)*(zmax - zmin);
+
+            NekDouble volumeTet = OctantList[i]->GetDelta()*
+                                  OctantList[i]->GetDelta()*
+                                  OctantList[i]->GetDelta()/6.0/sqrt(2.0);
+
+            total += voloverlap/volumeTet;
+        }
+        else if(OctantList[i]->GetLeaf())
+        {
+            Array<OneD, NekDouble> loc = OctantList[i]->GetLoc();
+            if(m_cad->InsideShape(loc))
             {
                 NekDouble volumeTet = OctantList[i]->GetDelta()*
                 OctantList[i]->GetDelta()*
@@ -305,8 +388,8 @@ void Octree::SmoothAllOctants()
                         }
                     }
                     OctantList[i]->SetDelta(deltaSM);
-                    ASSERTL0(!(deltaSM<m_minDelta),
-                                "Delta assignment less than min delta");
+                    ASSERTL0(!(deltaSM<0.0),
+                                "Delta assignment less than zero");
                     ct+=1;
                 }
             }
@@ -374,125 +457,6 @@ void Octree::PropagateDomain()
                     ct+=1;
 
                     deltaPrime.clear();
-                }
-                knownID.clear();
-            }
-
-
-            if(OctantList[i]->GetLeaf() && !OctantList[i]->GetOrientKnown())
-            { //if the node does not know its location
-                vector<int> knownID;
-                vector<int> nList = OctantList[i]->GetNeighbourList();
-
-                for(int j = 0; j < nList.size(); j++)
-                {
-                    if(OctantList[nList[j]]->GetOrientKnown())
-                    {
-                        knownID.push_back(nList[j]);
-                    }
-                }
-                if(knownID.size() > 0)
-                {
-                    vector<int> idKnowsOrient;
-                    for(int j = 0; j < knownID.size(); j++)
-                    {
-                        if(OctantList[knownID[j]]->GetOrientKnown())
-                        {
-                            idKnowsOrient.push_back(knownID[j]);
-                        }
-                    }
-                    if(idKnowsOrient.size() > 0)
-                    {
-
-                        vector<int> isOrient2;
-                        for(int j = 0; j < idKnowsOrient.size(); j++)
-                        {
-                            if(OctantList[idKnowsOrient[j]]->GetOrient()==2)
-                            {
-                                isOrient2.push_back(idKnowsOrient[j]);
-                            }
-                        }
-
-                        if(isOrient2.size() == 0)
-                        {
-                            NekDouble dist=numeric_limits<double>::max();
-                            int closestID;
-                            for(int j = 0; j < idKnowsOrient.size(); j++)
-                            {
-                                NekDouble r = OctantList[i]->
-                                    Distance(OctantList[idKnowsOrient[j]]);
-
-                                if(r < dist)
-                                {
-                                    closestID=idKnowsOrient[j];
-                                    dist = r;
-                                }
-                            }
-
-                            OctantList[i]->SetOrient(OctantList[closestID]->
-                                                    GetOrient());
-                            ct+=1;
-                            if(OctantList[closestID]->GetOrient()==2)
-                            {
-                                cout << "error in assignment" << endl;
-                            }
-                        }
-                        else
-                        {
-                            NekDouble dist=numeric_limits<double>::max();
-                            int closestID;
-                            for(int j = 0; j < isOrient2.size(); j++)
-                            {
-                                NekDouble r = OctantList[i]->
-                                    Distance(OctantList[isOrient2[j]]);
-
-                                if(r < dist)
-                                {
-                                    closestID=isOrient2[j];
-                                    dist = r;
-                                }
-                            }
-
-                            CurvaturePointSharedPtr closestPoint;
-                            dist = numeric_limits<double>::max();
-                            vector<CurvaturePointSharedPtr> cu =
-                                        OctantList[closestID]->GetCPList();
-                            for(int j = 0; j < cu.size(); j++)
-                            {
-                                NekDouble r = OctantList[i]->CPDistance(cu[j]);
-
-                                if(r < dist)
-                                {
-                                    closestPoint=cu[j];
-                                    dist = r;
-                                }
-                            }
-
-                            Array<OneD, NekDouble> r(3);
-                            Array<OneD, NekDouble> ocloc =
-                                                OctantList[i]->GetLoc();
-                            Array<OneD, NekDouble> cploc =
-                                                closestPoint->GetLoc();
-                            r[0] =ocloc[0] - cploc[0];
-                            r[1] =ocloc[1] - cploc[1];
-                            r[2] =ocloc[2] - cploc[2];
-
-                            Array<OneD, NekDouble> N =
-                                                    closestPoint->GetNormal();
-
-                            NekDouble dot = r[0]*N[0]+r[1]*N[1]+r[2]*N[2];
-
-                            if(dot <= 0.0)
-                            {
-                                OctantList[i]->SetOrient(3);
-                            }else{
-                                OctantList[i]->SetOrient(1);
-                            }
-                            ct+=1;
-
-                        }
-                    }
-
                 }
                 knownID.clear();
             }

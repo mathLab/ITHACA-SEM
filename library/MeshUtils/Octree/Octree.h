@@ -99,6 +99,14 @@ class Octree
          */
         NekDouble GetMinDelta(){return m_minDelta;}
 
+        void ModifySpec(Array<OneD, NekDouble> loc, NekDouble d);
+
+        /**
+         * @brief Smooths specification over all octants to a
+         * gradation criteria
+         */
+        void SmoothAllOctants();
+
     private:
 
         /**
@@ -136,12 +144,6 @@ class Octree
          * using gradiation crieteria
          */
         void PropagateDomain();
-
-        /**
-         * @brief Smooths specification over all octants to a
-         * gradation criteria
-         */
-        void SmoothAllOctants();
 
         /**
          * @brief estimates the number of elements to be creted in the mesh

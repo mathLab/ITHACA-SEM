@@ -119,8 +119,6 @@ bool CADSystem::LoadCAD()
     size_t pos = m_name.find(".");
     ext = m_name.substr(pos);
 
-    TopoDS_Shape shape;
-
     if (boost::iequals(ext,".STEP") || boost::iequals(ext,".STP"))
     {
         // Takes step file and makes OpenCascade shape
@@ -289,6 +287,21 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
     CADSurfSharedPtr newSurf = MemoryManager<CADSurf>::
                                             AllocateSharedPtr(i,in,ein);
     m_surfs[i] = newSurf;
+}
+
+bool CADSystem::InsideShape(Array<OneD, NekDouble> loc)
+{
+    gp_Pnt p(loc[0]*1000.0, loc[1]*1000.0, loc[2]*1000.0);
+
+    BRepClass3d_SolidClassifier test(shape, p, 1E-3);
+    if(test.State() == TopAbs_IN )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 }

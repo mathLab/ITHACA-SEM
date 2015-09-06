@@ -129,26 +129,6 @@ class Octant
         bool GetDeltaKnown(){return m_deltaSet;}
 
         /**
-         * @brief get oreitnation of the octant with respect to the domain,
-         * 1 is interior, 2 is on the boundary, 3 is exterior
-         */
-        int GetOrient(){return m_orientation;}
-
-        /**
-         * @brief alter orientation
-         */
-        void SetOrient(int i)
-        {
-            m_orientation = i;
-            m_orientSet = true;
-        }
-
-        /**
-         * @brief get boolean on whether the octant knows its orientation
-         */
-        bool GetOrientKnown(){return m_orientSet;}
-
-        /**
          * @brief get the neigbour list of the octant
          */
         std::vector<int> GetNeighbourList(){return m_neighbourList;}
@@ -276,10 +256,6 @@ class Octant
         /// idenify if delta has ben set
         bool m_deltaSet; //will not know delta
         /// idenify if orientation has been set
-        bool m_orientSet; //does not know orient
-        /// orienation of the octant
-        int m_orientation; //1 is in 2 is partial (haspoints) 3 is out
-        /// number of valid sampling points within the octant
         int m_numValidPoints;
 
 };

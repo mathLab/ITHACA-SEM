@@ -60,5 +60,7 @@
 #include <Geom_TrimmedCurve.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <GCPnts_AbscissaPoint.hxx>
+#include <TopAbs_State.hxx>
+#include <BRepClass3d_SolidClassifier.hxx>
 
 #endif

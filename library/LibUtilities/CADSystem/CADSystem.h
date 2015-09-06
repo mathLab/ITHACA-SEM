@@ -135,6 +135,8 @@ class CADSystem
             return out;
         }
 
+        LIB_UTILITIES_EXPORT bool InsideShape(Array<OneD, NekDouble> loc);
+
     private:
         /// Private function to add curve to CADSystem::m_curves.
         void AddCurve(int i, TopoDS_Shape in);
@@ -151,6 +153,8 @@ class CADSystem
         std::map<int,CADSurfSharedPtr> m_surfs;
         /// list of edge end vertices
         std::vector<gp_Pnt> cadVerts;
+        /// occ master object
+        TopoDS_Shape shape;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

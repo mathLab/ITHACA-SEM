@@ -50,8 +50,6 @@ Octant::Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
     m_leaf = true;
     m_needToDivide = false;
     m_deltaSet = false;
-    m_orientSet = false;
-    m_orientation = -1;
     m_numValidPoints = 0;
     m_delta = -1;
     NekDouble av=0;
@@ -93,11 +91,6 @@ Octant::Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
         }
     }
 
-    //if it has points octant is on the boundary
-    if(NumCurvePoint()>0)
-    {
-        SetOrient(2);
-    }
     //if it has valid points delta can be calculated
     if(NumValidCurvePoint()>0)
     {

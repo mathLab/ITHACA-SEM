@@ -113,8 +113,6 @@ void ProcessExtractTetPrismInterface::Process()
                     bndEl[el->GetBoundaryLink(
                             (*fIt)->m_elLink[0].second)]);
             }
-
-            continue;
         }
     }
 
@@ -136,11 +134,11 @@ void ProcessExtractTetPrismInterface::Process()
                 // Create a new linear triangle from face for boundary.
                 vector<NodeSharedPtr> nodeList(3);
                 vector<int> tags(1);
-                tags[0] = 123;
+                tags[0] = m_mesh->m_composite.size();
 
                 nodeList = (*fIt)->m_vertexList;
                 ElmtConfig conf(
-                    LibUtilities::eTriangle, 1, true, true, false);
+                    LibUtilities::eTriangle, 1, false, false, false);
                 ElementSharedPtr tri = GetElementFactory().
                     CreateInstance(
                         LibUtilities::eTriangle, conf, nodeList, tags);

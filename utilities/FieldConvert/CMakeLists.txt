@@ -24,6 +24,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessJacobianEnergy.h
     ProcessModules/ProcessPrintFldNorms.h
     ProcessModules/ProcessScaleInFld.h
+    ProcessModules/ProcessSurfDistance.h
     ProcessModules/ProcessVorticity.h
     ProcessModules/ProcessScalGrad.h
     ProcessModules/ProcessMultiShear.h
@@ -60,6 +61,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp
     ProcessModules/ProcessScalGrad.cpp
+    ProcessModules/ProcessSurfDistance.cpp
     ProcessModules/ProcessMultiShear.cpp
     ProcessModules/ProcessWSS.cpp
     ProcessModules/ProcessC0Projection.cpp

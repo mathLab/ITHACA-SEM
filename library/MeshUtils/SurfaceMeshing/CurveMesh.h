@@ -81,7 +81,7 @@ class CurveMesh
         /**
          * @brief get id of last node
          */
-        int GetLastPoint(){return m_meshpoints[Ne];}
+        int GetLastPoint(){return m_meshpoints.back();}
 
         /**
          * @brief get list of mesh nodes
@@ -91,12 +91,16 @@ class CurveMesh
         /**
          * @brief get the number of points in the curve
          */
-        int GetNumPoints(){return Ne+1;}
+        int GetNumPoints(){return m_meshpoints.size();}
 
         /**
          * @brief print report to screen
          */
         void Report();
+
+        int SplitEdge(int a, int b,
+                       std::map<int, MeshNodeSharedPtr> &Nodes,
+                       std::map<int, MeshEdgeSharedPtr> &Edges);
 
     private:
 

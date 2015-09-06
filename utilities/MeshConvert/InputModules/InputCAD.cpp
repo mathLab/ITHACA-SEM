@@ -135,7 +135,7 @@ void InputCAD::Process()
 
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;
-    m_mesh->m_order = m_order+1;
+    m_mesh->m_order = 2;
 
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");

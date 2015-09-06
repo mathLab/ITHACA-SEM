@@ -83,16 +83,6 @@ void SurfaceMeshing::Mesh()
 
     }
 
-    if(m_verbose)
-    {
-        cout << endl << "\tCurve mesh stats:" << endl;
-        for(int i = 1; i <= m_cad->GetNumCurve(); i++)
-        {
-            cout << "\t\tCurve: " << i;
-            m_curvemeshes[i]->Report();
-        }
-    }
-
     //all nodes thus far exist on curves on sufaces but do not know about the surface
     map<int, MeshNodeSharedPtr>::iterator it;
     for(it = Nodes.begin(); it != Nodes.end(); it++)
@@ -137,14 +127,28 @@ void SurfaceMeshing::Mesh()
             NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
             if(dot < 0 )
             {
-                cout << "invalid edge" << endl;
+                int nn = m_curvemeshes[c]->SplitEdge(n[0],n[1],Nodes,Edges);
+                //the new node need its surface information added
+                Array<OneD, NekDouble> loc = Nodes[nn]->GetLoc();
+                for(int j = 0; j < s.size(); j++)
+                {
+                    Array<OneD, NekDouble> uvn = m_cad->GetSurf(s[j])->locuv(loc);
+                    Nodes[nn]->SetSurf(s[j],uvn);
+                }
+                continue;
             }
         }
     }
-    exit(-1);
 
-    //once this has been done, will need to loop over edges again and check that
-    //they are conforming to the octree, if not split
+    if(m_verbose)
+    {
+        cout << endl << "\tCurve mesh stats:" << endl;
+        for(int i = 1; i <= m_cad->GetNumCurve(); i++)
+        {
+            cout << "\t\tCurve: " << i;
+            m_curvemeshes[i]->Report();
+        }
+    }
 
     if(m_verbose)
         cout <<endl << "\tSurface meshing..." << endl;
@@ -969,7 +973,7 @@ void SurfaceMeshing::Optimise()
             }
         }
     }
-
+    return;
     //perform 4 runs of elastic relaxation based on the octree
     for(int q = 0; q < 4; q++)
     {
@@ -1025,9 +1029,16 @@ void SurfaceMeshing::Optimise()
                                     (uvj[0]-u0)*(uvj[0]-u0));
             }
             Array<OneD, NekDouble> uv(2);
+            Array<OneD, NekDouble> bounds = m_cad->GetSurf(surface)->GetBounds();
             uv[0] = u0-fu/dfu; uv[1] = v0-fv/dfv;
-            Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(uv);
-            Nodes[it->first]->Move(l2,uv);
+            if(!(uv[0] < bounds[0] ||
+                       uv[0] > bounds[1] ||
+                       uv[1] < bounds[2] ||
+                       uv[1] > bounds[3]))
+            {
+                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(uv);
+                Nodes[it->first]->Move(l2,uv);
+            }
         }
     }
 }

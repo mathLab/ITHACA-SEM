@@ -103,67 +103,6 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return OctantList[n]->GetDelta();
 }
 
-void Octree::ModifySpec(Array<OneD, NekDouble> loc, NekDouble d)
-{
-    //starting at master octant 0 move through succsesive octants which contain
-    //the point loc until a leaf is found
-    int n = 0;
-    int quad;
-
-    bool found=false;
-
-    while(!found)
-    {
-        Array<OneD, NekDouble> octloc = OctantList[n]->GetLoc();
-
-        if(loc[0]>=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
-        {
-            quad=0;
-        }
-        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
-        {
-            quad=1;
-        }
-        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
-        {
-            quad=2;
-        }
-        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
-        {
-            quad=3;
-        }
-        else if(loc[0]>octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
-        {
-            quad=4;
-        }
-        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
-        {
-            quad=5;
-        }
-        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
-        {
-            quad=6;
-        }
-        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
-        {
-            quad=7;
-        }
-        else
-        {
-            ASSERTL0(false,"Cannot locate quadrant");
-        }
-
-        n=OctantList[n]->GetChild(quad);
-
-        if(OctantList[n]->GetLeaf())
-        {
-            found=true;
-        }
-    }
-
-    OctantList[n]->SetDelta(d);
-}
-
 void Octree::Build(const NekDouble min, const NekDouble max,
                    const NekDouble eps)
 {
@@ -284,17 +223,13 @@ void Octree::Build(const NekDouble min, const NekDouble max,
         }
     }
 
-    int elem=CountElemt();
-
     if(m_verbose)
+    {
+        int elem=CountElemt();
         cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
-    exit(-1);
+    }
 }
 
-/**
- * @todo for boundary encompasing octants perform evaluation of overlapping
- * volume, may improve accuracy.
- */
 int Octree::CountElemt()
 {
     //by considering the volume of a tet evaluate the number of elements in the

@@ -362,6 +362,12 @@ namespace MeshUtils {
             }
         }
 
+        void ModifyNodes(int an, int bn)
+        {
+            nodes[0] =an;
+            nodes[1] =bn;
+        }
+
         void SetSurf(int i){surf=i;}
         int GetSurf(){return surf;}
         int GetId(){return eid;}

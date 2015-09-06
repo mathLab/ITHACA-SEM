@@ -99,16 +99,14 @@ class Octree
          */
         NekDouble GetMinDelta(){return m_minDelta;}
 
-        void ModifySpec(Array<OneD, NekDouble> loc, NekDouble d);
+    private:
 
         /**
          * @brief Smooths specification over all octants to a
          * gradation criteria
          */
         void SmoothAllOctants();
-
-    private:
-
+        
         /**
          * @brief gets an optimum number of curvature sampling points and
          * calculates the curavture at these points

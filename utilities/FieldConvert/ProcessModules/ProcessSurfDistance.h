@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes surface mesh distance
+//  Description: Computes height of elements connected to a surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

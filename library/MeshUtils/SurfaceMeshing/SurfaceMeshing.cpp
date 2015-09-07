@@ -115,7 +115,6 @@ void SurfaceMeshing::Mesh()
             Array<OneD, NekDouble> N1,N2;
             N1 = m_cad->GetSurf(s[i])->N(uv1);
             N2 = m_cad->GetSurf(s[i])->N(uv2);
-
             NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
             if(dot < 0 )
             {

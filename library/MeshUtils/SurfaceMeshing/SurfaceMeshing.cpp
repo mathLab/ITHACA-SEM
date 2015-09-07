@@ -36,6 +36,7 @@
 #include <list>
 #include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
@@ -47,8 +48,6 @@ void SurfaceMeshing::Mesh()
 {
     if(m_verbose)
         cout << endl << "Surface meshing" << endl;
-    if(m_verbose)
-        cout << "\tCurve meshing..." << endl;
 
     vector<Array<OneD, NekDouble> > vertices = m_cad->GetVertices();
     for(int i = 0; i < vertices.size(); i++)
@@ -64,15 +63,8 @@ void SurfaceMeshing::Mesh()
     {
         if(m_verbose)
         {
-            int pos = 70*i/m_cad->GetNumCurve();
-            cout << "\t[";
-            for (int j = 0; j < 70; ++j) {
-                if (j < pos) cout << "=";
-                else if (j == pos) cout << ">";
-                else cout << " ";
-            }
-            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-            cout.flush();
+            LibUtilities::PrintProgressbar(i,m_cad->GetNumCurve(),
+                                           "\tCurve meshing");
         }
 
         m_curvemeshes[i] =
@@ -150,23 +142,13 @@ void SurfaceMeshing::Mesh()
         }
     }
 
-    if(m_verbose)
-        cout <<endl << "\tSurface meshing..." << endl;
-
     //linear mesh all surfaces
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
         if(m_verbose)
         {
-            int pos = 70*i/m_cad->GetNumSurf();
-            cout << "\t[";
-            for (int j = 0; j < 70; ++j) {
-                if (j < pos) cout << "=";
-                else if (j == pos) cout << ">";
-                else cout << " ";
-            }
-            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-            cout.flush();
+            LibUtilities::PrintProgressbar(i,m_cad->GetNumSurf(),
+                                           "\tSurface meshing");
         }
         m_surfacemeshes[i] =
             MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,m_verbose,
@@ -196,6 +178,45 @@ void SurfaceMeshing::Mesh()
         NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
         if(dot < 0 )
         {
+            vector<int> t = eit->second->GetTri();
+            ASSERTL0(t.size() == 2, "each edge should have two tri");
+            Array<OneD, int> n = eit->second->GetN();
+            Array<OneD, int> nt = Tris[t[0]]->GetN();
+
+            int A,B,C,D;
+            if(nt[0] != n[0] && nt[0] != n[1])
+            {
+                C = nt[0];
+                B = nt[1];
+                A = nt[2];
+            }
+            else if(nt[1] != n[0] && nt[1] != n[1])
+            {
+                C = nt[1];
+                B = nt[2];
+                A = nt[0];
+            }
+            else if(nt[2] != n[0] && nt[2] != n[1])
+            {
+                C = nt[2];
+                B = nt[0];
+                A = nt[1];
+            }
+
+            nt = Tris[t[1]]->GetN();
+
+            if(nt[0] != n[0] && nt[0] != n[1])
+            {
+                D = nt[0];
+            }
+            else if(nt[1] != n[0] && nt[1] != n[1])
+            {
+                D = nt[1];
+            }
+            else if(nt[2] != n[0] && nt[2] != n[1])
+            {
+                D = nt[2];
+            }
             cout << "edge needs fixing" << endl;
         }
     }
@@ -238,9 +259,6 @@ void SurfaceMeshing::HOSurf()
     if(m_verbose)
         cout << endl << "\tHigh-Order Surface meshing" << endl;
 
-    if(m_verbose)
-        cout << "\t\tEdges..." << endl;
-
     map<int, MeshEdgeSharedPtr>::iterator eit;
     int counter = 0;
 
@@ -249,15 +267,8 @@ void SurfaceMeshing::HOSurf()
     {
         if(m_verbose)
         {
-            int pos = 70*counter/Edges.size();
-            cout << "\t\t[";
-            for (int j = 0; j < 70; ++j) {
-                if (j < pos) cout << "=";
-                else if (j == pos) cout << ">";
-                else cout << " ";
-            }
-            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-            cout.flush();
+            LibUtilities::PrintProgressbar(counter,Edges.size(),
+                                           "\t\tEdges");
         }
         counter++;
 
@@ -412,9 +423,6 @@ void SurfaceMeshing::HOSurf()
         }
     }
 
-    if(m_verbose)
-        cout << endl << "\t\tFaces..." << endl;
-
     map<int, MeshTriSharedPtr>::iterator trit;
 
     //this section of code sets up the standard ho triangle and sorts out
@@ -543,15 +551,8 @@ void SurfaceMeshing::HOSurf()
 
         if(m_verbose)
         {
-            int pos = 70*counter/Tris.size();
-            cout << "\t\t[";
-            for (int j = 0; j < 70; ++j) {
-                if (j < pos) cout << "=";
-                else if (j == pos) cout << ">";
-                else cout << " ";
-            }
-            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-            cout.flush();
+            LibUtilities::PrintProgressbar(counter,Tris.size(),
+                                           "\t\tFaces");
         }
         counter++;
 

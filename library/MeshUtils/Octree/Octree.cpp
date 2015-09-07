@@ -122,7 +122,7 @@ void Octree::Build(const NekDouble min, const NekDouble max,
 
     if(m_verbose)
         cout << "\tCurvature samples: " << m_cpList.size() << endl
-        << "\tInitial subdivision" << endl;
+        << "\tInitial subdivision: ";
 
     NekDouble maxdim = (BoundingBox[1]-BoundingBox[0])/2 >
                            (BoundingBox[3]-BoundingBox[2])/2 ?
@@ -148,20 +148,22 @@ void Octree::Build(const NekDouble min, const NekDouble max,
         InitialSubDivide(0);
     }
 
-    int ct=0;
-    int maxLevel=0;
-
-    for(int i = 0; i < OctantList.size(); i++)
-    {
-        if(OctantList[i]->GetLeaf())
-            ct++;
-        if(OctantList[i]->GetLevel()>maxLevel)
-            maxLevel=OctantList[i]->GetLevel();
-    }
-
     if(m_verbose)
-        cout << "\tNo. octant leaves: " << ct << endl <<
-        "\tMax octree level: " << maxLevel << endl;
+    {
+        int ct=0;
+        int maxLevel=0;
+
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->GetLeaf())
+                ct++;
+            if(OctantList[i]->GetLevel()>maxLevel)
+                maxLevel=OctantList[i]->GetLevel();
+        }
+
+        cout << "No. octant leaves: " << ct <<
+        ", Max octree level: " << maxLevel << endl;
+    }
 
     for(int i = 0; i < OctantList.size(); i++)
     {
@@ -175,24 +177,22 @@ void Octree::Build(const NekDouble min, const NekDouble max,
             OctantList[i]->CreateNeighbourList(OctantList);
         }
     }
-    exit(-1);
-
     if(m_verbose)
-        cout << endl << "\tSmoothing octant levels" << endl;
+        cout << endl;
 
     SubDivideByLevel();
 
-    ct=0;
-    for(int i = 0; i < OctantList.size(); i++)
-    {
-        if(OctantList[i]->GetLeaf()){ct++;}
-    }
+
     if(m_verbose)
     {
-        cout << "\tNew Stats" << endl;
-        cout << "\tNo. octant leaves: " << ct << endl;
-
-        cout << "\tSmoothing across the geometry surface" << endl;
+        int ct=0;
+        for(int i = 0; i < OctantList.size(); i++)
+        {
+            if(OctantList[i]->GetLeaf()){ct++;}
+        }
+        cout << "\tNew Stats: ";
+        cout << "No. octant leaves: " << ct << endl;
+        cout << "Smoothing across the geometry surface" << endl;
     }
 
     SmoothSurfaceOctants();
@@ -493,18 +493,15 @@ void Octree::SubDivideByLevel()
             }
         }
 
-        int pos = 70*imax/OctantList.size();
-        cout << "\t[";
-        for (int k = 0; k < 70; ++k) {
-            if (k < pos) cout << "=";
-            else if (k == pos) cout << ">";
-            else cout << " ";
+        if(m_verbose)
+        {
+            LibUtilities::PrintProgressbar(imax, OctantList.size(),
+                                      "\tSubdivide by level");
         }
-        cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-        cout.flush();
 
     }while(ct>0);
-    cout <<endl;
+    if(m_verbose)
+        cout <<endl;
 }
 
 void Octree::SubDivideLevel(int parent)

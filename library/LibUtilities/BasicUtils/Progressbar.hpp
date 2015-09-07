@@ -76,7 +76,7 @@ inline void PrintProgressbar(const int position, const int goal, const string me
 
         cout << message << ": ";
         float progress = position / float(goal);
-        cout << setw(3) << ceil(100 * progress) << "% [";
+        cout << setw(3) << defaultfloat << ceil(100 * progress) << "% [";
         for (int j = 0; j < ceil(progress * 49); j++)
         {
             cout << "=";

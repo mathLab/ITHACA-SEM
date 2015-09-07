@@ -158,70 +158,6 @@ void SurfaceMeshing::Mesh()
 
     }
 
-    for(eit = Edges.begin(); eit != Edges.end(); eit++)
-    {
-        Array<OneD, int> n = eit->second->GetN();
-        if(eit->second->GetCurve() != -1)
-        {
-            continue;
-        }
-
-        int s = eit->second->GetSurf();
-
-        Array<OneD, NekDouble> uv1,uv2;
-        uv1 = Nodes[n[0]]->GetS(s);
-        uv2 = Nodes[n[1]]->GetS(s);
-        Array<OneD, NekDouble> N1,N2;
-        N1 = m_cad->GetSurf(s)->N(uv1);
-        N2 = m_cad->GetSurf(s)->N(uv2);
-
-        NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
-        if(dot < 0 )
-        {
-            vector<int> t = eit->second->GetTri();
-            ASSERTL0(t.size() == 2, "each edge should have two tri");
-            Array<OneD, int> n = eit->second->GetN();
-            Array<OneD, int> nt = Tris[t[0]]->GetN();
-
-            int A,B,C,D;
-            if(nt[0] != n[0] && nt[0] != n[1])
-            {
-                C = nt[0];
-                B = nt[1];
-                A = nt[2];
-            }
-            else if(nt[1] != n[0] && nt[1] != n[1])
-            {
-                C = nt[1];
-                B = nt[2];
-                A = nt[0];
-            }
-            else if(nt[2] != n[0] && nt[2] != n[1])
-            {
-                C = nt[2];
-                B = nt[0];
-                A = nt[1];
-            }
-
-            nt = Tris[t[1]]->GetN();
-
-            if(nt[0] != n[0] && nt[0] != n[1])
-            {
-                D = nt[0];
-            }
-            else if(nt[1] != n[0] && nt[1] != n[1])
-            {
-                D = nt[1];
-            }
-            else if(nt[2] != n[0] && nt[2] != n[1])
-            {
-                D = nt[2];
-            }
-            cout << "edge needs fixing" << endl;
-        }
-    }
-    exit(-1);
-
     if(m_verbose)
     {
         cout << endl << "\tSurface mesh stats:" << endl;
@@ -422,6 +358,9 @@ void SurfaceMeshing::HOSurf()
             e->SetHONodes(honodes);
         }
     }
+
+    if(m_verbose)
+        cout << endl;
 
     map<int, MeshTriSharedPtr>::iterator trit;
 
@@ -812,6 +751,15 @@ void SurfaceMeshing::Optimise()
             if(CDA < 0.0 || CBD < 0.0)
                 continue;
 
+            //determine high-order applicabilty of alternate config
+            Array<OneD, NekDouble> Nc, Nd;
+            Nc = m_cad->GetSurf(it->second->GetSurf())->N(ci);
+            Nd = m_cad->GetSurf(it->second->GetSurf())->N(di);
+
+            NekDouble dot = Nc[0]*Nd[0] + Nc[1]*Nd[1] + Nc[2]*Nd[2];
+            if(dot < 0)
+                continue;
+
             int nodedefectbefore = 0;
             nodedefectbefore += Nodes[A]->GetEdges().size() > 6 ?
                                 Nodes[A]->GetEdges().size() - 6 :
@@ -948,6 +896,15 @@ void SurfaceMeshing::Optimise()
             if(CDA < 0.0 || CBD < 0.0)
                 continue;
 
+            //determine high-order applicabilty of alternate config
+            Array<OneD, NekDouble> Nc, Nd;
+            Nc = m_cad->GetSurf(it->second->GetSurf())->N(ci);
+            Nd = m_cad->GetSurf(it->second->GetSurf())->N(di);
+
+            NekDouble dot = Nc[0]*Nd[0] + Nc[1]*Nd[1] + Nc[2]*Nd[2];
+            if(dot < 0)
+                continue;
+
             NekDouble minangleb = Nodes[C]->Angle(Nodes[A],Nodes[B]);
             minangleb = min(minangleb,Nodes[B]->Angle(Nodes[C],Nodes[A]));
             minangleb = min(minangleb,Nodes[A]->Angle(Nodes[B],Nodes[C]));
@@ -999,7 +956,7 @@ void SurfaceMeshing::Optimise()
             }
         }
     }
-    return;
+
     //perform 4 runs of elastic relaxation based on the octree
     for(int q = 0; q < 4; q++)
     {

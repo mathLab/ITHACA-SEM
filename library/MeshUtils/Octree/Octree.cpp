@@ -211,7 +211,7 @@ void Octree::Build(const NekDouble min, const NekDouble max,
     {
         if(OctantList[i]->GetLeaf())
         {
-            ASSERTL0(!(OctantList[i]->GetDelta()<m_minDelta),
+            ASSERTL0(!(OctantList[i]->GetDelta()<0.0),
                      "Error in initial octree construction");
         }
     }

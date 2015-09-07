@@ -176,6 +176,31 @@ void SurfaceMeshing::Mesh()
 
     }
 
+    for(eit = Edges.begin(); eit != Edges.end(); eit++)
+    {
+        Array<OneD, int> n = eit->second->GetN();
+        if(eit->second->GetCurve() != -1)
+        {
+            continue;
+        }
+
+        int s = eit->second->GetSurf();
+
+        Array<OneD, NekDouble> uv1,uv2;
+        uv1 = Nodes[n[0]]->GetS(s);
+        uv2 = Nodes[n[1]]->GetS(s);
+        Array<OneD, NekDouble> N1,N2;
+        N1 = m_cad->GetSurf(s)->N(uv1);
+        N2 = m_cad->GetSurf(s)->N(uv2);
+
+        NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
+        if(dot < 0 )
+        {
+            cout << "edge needs fixing" << endl;
+        }
+    }
+    exit(-1);
+
     if(m_verbose)
     {
         cout << endl << "\tSurface mesh stats:" << endl;

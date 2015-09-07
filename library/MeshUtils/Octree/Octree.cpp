@@ -36,6 +36,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+
 #include <MeshUtils/Octree/Octree.h>
 #include <LibUtilities/CADSystem/CADSurf.h>
 
@@ -161,28 +163,19 @@ void Octree::Build(const NekDouble min, const NekDouble max,
         cout << "\tNo. octant leaves: " << ct << endl <<
         "\tMax octree level: " << maxLevel << endl;
 
-    if(m_verbose)
-        cout << "\tPopulating initial neighbours list..." << endl;
-
     for(int i = 0; i < OctantList.size(); i++)
     {
         if(m_verbose)
         {
-            int pos = 70*i/OctantList.size();
-            cout << "\t[";
-            for (int j = 0; j < 70; ++j) {
-                if (j < pos) cout << "=";
-                else if (j == pos) cout << ">";
-                else cout << " ";
-            }
-            cout << "] " << int(float(pos)/(70-1)*100)<< " %\r";
-            cout.flush();
+            LibUtilities::PrintProgressbar(i, OctantList.size(),
+                                           "\tDetermining neigbours");
         }
         if(OctantList[i]->GetLeaf())
         {
             OctantList[i]->CreateNeighbourList(OctantList);
         }
     }
+    exit(-1);
 
     if(m_verbose)
         cout << endl << "\tSmoothing octant levels" << endl;

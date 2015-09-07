@@ -59,10 +59,6 @@ void ForcingMovingBody::v_InitObject(
     ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,
              "Moving body implemented just for 3D Homogenous 1D expansions.");
 
-    // Load mapping
-    m_mapping = GlobalMapping::Mapping::Load(m_session, pFields); 
-    m_mapping->SetTimeDependent( true );
-
     // At this point we know in the xml file where those quantities
     // are declared (equation or file) - via a function name which is now
     // stored in funcNameD etc. We need now to fill in with this info the
@@ -71,77 +67,56 @@ void ForcingMovingBody::v_InitObject(
     // check if we need to load a file or we have an equation
     CheckIsFromFile(pForce);
 
-    // Initialise movingbody and aeroforces filters
+    // Initialise movingbody filter
     InitialiseFilter(m_session, pFields, pForce);
 
     // Initialise the cable model
     InitialiseCableModel(m_session, pFields);
 
-    m_zta = Array<OneD, Array< OneD, NekDouble> >(3);
-    m_eta  = Array<OneD, Array< OneD, NekDouble> >(3);
+    // Load mapping
+    m_mapping = GlobalMapping::Mapping::Load(m_session, pFields);
+    m_mapping->SetTimeDependent( true );
 
-    // What are this bi-dimensional vectors -----------------------------------
-    // m_zta[0] = zta                 |  m_eta[0] = eta                      |
-    // m_zta[1] = d(zta)/dt           |  m_eta[1] = d(eta)/dt                |
-    // m_zta[2] = dd(zta)/ddtt        |  m_eta[2] = dd(eta)/ddtt             |
-    //-------------------------------------------------------------------------
+    if(m_vdim > 0)
+    {
+        m_mapping->SetFromFunction( false );
+    }
+
+    m_zta = Array<OneD, Array< OneD, NekDouble> > (3);
+    m_eta = Array<OneD, Array< OneD, NekDouble> > (3);
+    // What are this bi-dimensional vectors ------------------------------------------
+    // m_zta[0] = m_zta                     |  m_eta[0] = m_eta                      |
+    // m_zta[1] = d(m_zta)/dt               |  m_eta[1] = d(m_eta)/dt                |
+    // m_zta[2] = dd(m_zta)/ddtt            |  m_eta[2] = dd(m_eta)/ddtt             |
+    //--------------------------------------------------------------------------------
     int phystot = pFields[0]->GetTotPoints();
     for(int i = 0; i < m_zta.num_elements(); i++)
     {
         m_zta[i] = Array<OneD, NekDouble>(phystot,0.0);
-        m_eta[i]  = Array<OneD, NekDouble>(phystot,0.0);
+        m_eta[i] = Array<OneD, NekDouble>(phystot,0.0);
     }
-
-    // m_forcing size (it must be 3: Ax, Ay and Az)
-    // total number of structural variables(Disp, Vel and Accel) must be 3
-    m_forcing = Array<OneD, Array<OneD, NekDouble> >(3);
-    // create the storage space for the body motion description
-    for(int i = 0; i < 3; i++)
-    {
-        m_forcing[i] = Array<OneD, NekDouble> (phystot, 0.0);
-    }
- 
 }
 
 void ForcingMovingBody::v_Apply(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>&  fields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
         const Array<OneD, Array<OneD, NekDouble> >&         inarray,
               Array<OneD, Array<OneD, NekDouble> >&         outarray,
         const NekDouble&                                    time)
 {
-    // Fill in m_zta and m_eta with all the required values
-    UpdateMotion(fields,inarray,time);
-}
-
-/**
- *
- */
-void ForcingMovingBody::UpdateMotion(
-        const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
-        const Array<OneD, Array<OneD, NekDouble> >       &  fields,
-              NekDouble                                     time)
-{
     // Update the forces from the calculation of fluid field, which is
-    // implemented in the AeroForces filter
-    //     don't call update on first time-step because it was already done
-    if (m_index++)
-    {
-        m_filterForces->Update(pFields, time);
-    }
-    m_filterForces->GetForces(pFields,m_Aeroforces, time);
+    // implemented in the movingbody filter
+    m_MovBodyfilter->UpdateForce(m_session, pFields, m_Aeroforces, time);
 
-    // for "free" type, the cable vibrates both in streamwise and crossflow
-    // dimections, for "constrained" type, the cable only vibrates in crossflow
-    // dimection, and for "forced" type, the calbe vibrates specifically along
+    // for "free" type (m_vdim = 2), the cable vibrates both in streamwise and crossflow
+    // dimections, for "constrained" type (m_vdim = 1), the cable only vibrates in crossflow
+    // dimection, and for "forced" type (m_vdim = 0), the calbe vibrates specifically along
     // a given function or file
-    std::string vibtype = m_session->GetSolverInfo("VibrationType"); 
-    if(vibtype == "Free" || vibtype == "FREE" ||
-       vibtype == "Constrained" || vibtype == "CONSTRAINED")
+    if(m_vdim == 1 || m_vdim == 2)
     {
         // For free vibration case, displacements, velocities and acceleartions
         // are obtained through solving structure dynamic model
         EvaluateStructDynModel(pFields, time);
-        
+
         // Convert result to format required by mapping
         int physTot = pFields[0]->GetTotPoints();
         Array< OneD, Array< OneD, NekDouble> >  coords(3);
@@ -153,39 +128,41 @@ void ForcingMovingBody::UpdateMotion(
         }
         // Get original coordinates
         pFields[0]->GetCoords(coords[0], coords[1], coords[2]);
-        
+
         // Add displacement to coordinates
         Vmath::Vadd(physTot, coords[0], 1, m_zta[0], 1, coords[0], 1);
         Vmath::Vadd(physTot, coords[1], 1, m_eta[0], 1, coords[1], 1);
         // Copy velocities
         Vmath::Vcopy(physTot, m_zta[1], 1, coordsVel[0], 1);
-        Vmath::Vcopy(physTot, m_eta[1], 1, coordsVel[1], 1);       
+        Vmath::Vcopy(physTot, m_eta[1], 1, coordsVel[1], 1);
         
         // Update mapping
         m_mapping->UpdateMapping(time, coords, coordsVel);
-        
     }
-    else if(vibtype == "Forced" || vibtype == "FORCED")
+    else if(m_vdim == 0)
     {
-        // For forced vibration case, displacements, velocities, accelerations
-        // are loading from specified file or function
+        // For forced vibration case, load from specified file or function
+        int cnt = 0;
         for(int j = 0; j < m_funcName.num_elements(); j++)
         {
-            if(m_IsFromFile[2*j] && m_IsFromFile[2*j+1])
+            if(m_IsFromFile[cnt] && m_IsFromFile[cnt+1])
             {
                 ASSERTL0(false, "Motion loading from file needs specific "
                                 "implementation: Work in Progress!");
             }
+            else
+            {
+                EvaluateFunction(pFields, m_session, m_motion[0], m_zta[j],
+                                 m_funcName[j], time);
+                EvaluateFunction(pFields, m_session, m_motion[1], m_eta[j],
+                                 m_funcName[j], time);
+                cnt = cnt + 2;
+            }
         }
+        
         // Update mapping
         m_mapping->UpdateMapping(time);
-        
-        // Evaluate acceleration function
-        EvaluateFunction(pFields, m_session, m_motion[0], m_zta[2],
-                                 m_funcName[2], time);
-        EvaluateFunction(pFields, m_session, m_motion[1], m_eta[2],
-                                 m_funcName[2], time);
-        
+
         // Convert result from mapping       
         int physTot = pFields[0]->GetTotPoints();
         Array< OneD, Array< OneD, NekDouble> >  coords(3);
@@ -197,15 +174,15 @@ void ForcingMovingBody::UpdateMotion(
         }
         // Get original coordinates
         pFields[0]->GetCoords(coords[0], coords[1], coords[2]);
-        
+
         // Get Coordinates and coord velocity from mapping
         m_mapping->GetCartesianCoordinates(m_zta[0], m_eta[0], coords[2]);
         m_mapping->GetCoordVelocity(coordsVel);
-        
+
         // Calculate displacement
         Vmath::Vsub(physTot, m_zta[0], 1, coords[0], 1, m_zta[0], 1);
         Vmath::Vsub(physTot, m_eta[0], 1, coords[1], 1, m_eta[0], 1);
-        
+
         Vmath::Vcopy(physTot, coordsVel[0], 1, m_zta[1], 1);
         Vmath::Vcopy(physTot, coordsVel[1], 1, m_eta[1], 1);
 
@@ -232,6 +209,7 @@ void ForcingMovingBody::UpdateMotion(
     // Pass the variables of the cable's motion to the movingbody filter
     m_MovBodyfilter->UpdateMotion(m_session, pFields, m_MotionVars, time);
 }
+
 
 /**
  *
@@ -359,16 +337,14 @@ void ForcingMovingBody::TensionedCableModel(
     if(colrank == 0)
     {
         // Implement Fourier transformation of the motion variables
-        if(supptype == "FREE-FREE" || 
-                        supptype == "Free-Free")
+        if(boost::iequals(supptype, "Free-Free"))
         {
             for(int j = 0 ; j < 4; ++j)
             {
                 m_FFT->FFTFwdTrans(fft_i[j], fft_o[j]);
             }
         }
-        else if(supptype == "PINNED-PINNED" || 
-                            supptype == "Pinned-Pinned")
+        else if(boost::iequals(supptype, "Pinned-Pinned"))
         {
             //TODO:
             int N = fft_i[0].num_elements();
@@ -428,16 +404,14 @@ void ForcingMovingBody::TensionedCableModel(
 
         // get physical coeffients via Backward fourier transformation of wave
         // coefficients
-        if(supptype == "FREE-FREE" || 
-                        supptype == "Free-Free")
+        if(boost::iequals(supptype, "Free-Free"))
         {
             for(int var = 0; var < 3; var++)
             {
                 m_FFT->FFTBwdTrans(fft_i[var], fft_o[var]);
             }
         }
-        else if(supptype == "PINNED-PINNED" || 
-                            supptype == "Pinned-Pinned")
+        else if(boost::iequals(supptype, "Pinned-Pinned"))
         {
             //TODO:
             int N = fft_i[0].num_elements();
@@ -684,6 +658,7 @@ void ForcingMovingBody::EvaluateStructDynModel(
         }
     }
 }
+
    
 /**
  *
@@ -692,15 +667,6 @@ void ForcingMovingBody::InitialiseCableModel(
         const LibUtilities::SessionReaderSharedPtr& pSession,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
 {
-    // storage of spanwise-velocity for current and previous time levels
-    // used to calculate dw/dt in m_forcing term
-    int nPointsTot = pFields[0]->GetNpoints();
-    m_W = Array<OneD, Array<OneD, NekDouble> > (2);
-    for(int n = 0; n < 2; ++n)
-    {
-        m_W[n] = Array<OneD, NekDouble> (nPointsTot, 0.0);
-    }
-
     m_session->LoadParameter("Kinvis",m_kinvis);
     m_session->LoadParameter("TimeStep", m_timestep, 0.01);
 
@@ -715,16 +681,18 @@ void ForcingMovingBody::InitialiseCableModel(
 
     std::string vibtype = m_session->GetSolverInfo("VibrationType");
 
-    if(vibtype == "Constrained" || vibtype == "CONSTRAINED")
+    if(boost::iequals(vibtype, "Constrained"))
     {
         m_vdim = 1;
     }
-    else if (vibtype == "Free" || vibtype == "FREE")
+    else if (boost::iequals(vibtype, "Free"))
     {
         m_vdim = 2;
     }
-    else if (vibtype == "Forced" || vibtype == "FORCED")
+    else if (boost::iequals(vibtype, "Forced"))
     {
+        m_vdim = 0;
+
         return;
     }
 
@@ -1099,18 +1067,17 @@ void ForcingMovingBody::SetDynEqCoeffMatrix(
         m_CoeffMat_B[plane]
                 = MemoryManager<DNekMat>::AllocateSharedPtr(nel,nel);
 
-        unsigned int K;
-        NekDouble beta;
+        // Initialised to avoid compiler warnings.
+        unsigned int K = 0;
+        NekDouble beta = 0.0;
 
-        if(supptype == "FREE-FREE" || 
-                    supptype == "Free-Free")
+        if (boost::iequals(supptype, "Free-Free"))
         {
             K = plane/2;
             beta = 2.0 * M_PI/m_lhom;
         }
-        else if(supptype == "PINNED-PINNED" || 
-                        supptype == "Pinned-Pinned")
-        {   
+        else if(boost::iequals(supptype, "Pinned-Pinned"))
+        {
             K = plane+1;
             beta = M_PI/m_lhom;
         }
@@ -1226,28 +1193,100 @@ void ForcingMovingBody::CheckIsFromFile(const TiXmlElement* pForce)
 
     LibUtilities::FunctionType vType;
 
-    // loop: i-> displacement, velocity, accel. j->coordinate
-    int cnt=0;
-    for( int i =0; i<3; i++)
+    // Check Displacement x
+    vType = m_session->GetFunctionType(m_funcName[0],m_motion[0]);
+    if(vType == LibUtilities::eFunctionTypeExpression)
     {
-        for(int j = 0; j<2; j++)
-        {
-            vType = m_session->GetFunctionType(m_funcName[i],m_motion[j]);
-            if(vType == LibUtilities::eFunctionTypeExpression)
-            {
-                m_IsFromFile[cnt] = false;
-            }
-            else if (vType == LibUtilities::eFunctionTypeFile)
-            {
-                m_IsFromFile[cnt] = true;
-            }
-            else
-            {
-                ASSERTL0(false, "Functions for moving body must be specified via an "
-                                "equation <E> or a file <F>");
-            }            
-            cnt++;
-        }
+        m_IsFromFile[0] = false;
+    }
+    else if (vType == LibUtilities::eFunctionTypeFile)
+    {
+        m_IsFromFile[0] = true;
+    }
+    else
+    {
+        ASSERTL0(false, "The displacements in x must be specified via an "
+                        "equation <E> or a file <F>");
+    }
+
+    // Check Displacement y
+    vType = m_session->GetFunctionType(m_funcName[0],m_motion[1]);
+    if(vType == LibUtilities::eFunctionTypeExpression)
+    {
+        m_IsFromFile[1] = false;
+    }
+    else if (vType == LibUtilities::eFunctionTypeFile)
+    {
+        m_IsFromFile[1] = true;
+    }
+    else
+    {
+        ASSERTL0(false, "The displacements in y must be specified via an "
+                        "equation <E> or a file <F>");
+    }
+
+    // Check Velocity x
+    vType = m_session->GetFunctionType(m_funcName[1],m_motion[0]);
+    if (vType == LibUtilities::eFunctionTypeExpression)
+    {
+        m_IsFromFile[2] = false;
+    }
+    else if (vType == LibUtilities::eFunctionTypeFile)
+    {
+        m_IsFromFile[2] = true;
+    }
+    else
+    {
+        ASSERTL0(false, "The velocities in x must be specified via an equation "
+                        "<E> or a file <F>");
+    }
+
+    // Check Velocity y
+    vType = m_session->GetFunctionType(m_funcName[1],m_motion[1]);
+    if (vType == LibUtilities::eFunctionTypeExpression)
+    {
+        m_IsFromFile[3] = false;
+    }
+    else if (vType == LibUtilities::eFunctionTypeFile)
+    {
+        m_IsFromFile[3] = true;
+    }
+    else
+    {
+        ASSERTL0(false, "The velocities in y must be specified via an equation "
+                        "<E> or a file <F>");
+    }
+
+    // Check Acceleration x
+    vType = m_session->GetFunctionType(m_funcName[2],m_motion[0]);
+    if (vType == LibUtilities::eFunctionTypeExpression)
+    {
+        m_IsFromFile[4] = false;
+    }
+    else if (vType == LibUtilities::eFunctionTypeFile)
+    {
+        m_IsFromFile[4] = true;
+    }
+    else
+    {
+        ASSERTL0(false, "The accelerations in x must be specified via an "
+                        "equation <E> or a file <F>");
+    }
+
+    // Check Acceleration y
+    vType = m_session->GetFunctionType(m_funcName[2],m_motion[1]);
+    if (vType == LibUtilities::eFunctionTypeExpression)
+    {
+        m_IsFromFile[5] = false;
+    }
+    else if (vType == LibUtilities::eFunctionTypeFile)
+    {
+        m_IsFromFile[5] = true;
+    }
+    else
+    {
+        ASSERTL0(false, "The accelerations in y must be specified via an "
+                        "equation <E> or a file <F>");
     }
 }
 
@@ -1288,19 +1327,6 @@ void ForcingMovingBody::InitialiseFilter(
 
     // Initialise the object of MovingBody filter
     m_MovBodyfilter->Initialise(pFields, 0.0);
-    
-    // Create a FilterAeroForces object to calculate the forces required for
-    //    the structural model
-    bool homostrip;
-    m_session->MatchSolverInfo("HomoStrip","True",homostrip,false);
-    if (!homostrip)
-    {
-        vParams["OutputAllPlanes"] = "yes";
-    }
-    m_filterForces = MemoryManager<SolverUtils::FilterAeroForces>::
-                                AllocateSharedPtr(m_session, vParams);
-
-    m_filterForces->Initialise(pFields, 0.0);  
 
 }
 

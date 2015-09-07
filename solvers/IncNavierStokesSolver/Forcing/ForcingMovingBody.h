@@ -42,7 +42,6 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <IncNavierStokesSolver/Filters/FilterMovingBody.h>
-#include <SolverUtils/Filters/FilterAeroForces.h>
 #include <GlobalMapping/Mapping.h>
 
 namespace Nektar
@@ -74,7 +73,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
     protected:
         // Mapping object
         GlobalMapping::MappingSharedPtr               m_mapping;
-        
+
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
             const unsigned int&                         pNumForcingFields,
@@ -87,6 +86,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const NekDouble&                            time);
 
     private:
+
         ForcingMovingBody(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -100,11 +100,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement* pForce);
-
-        void UpdateMotion(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
-            const Array<OneD, Array<OneD, NekDouble> >       &  fields,
-                  NekDouble time );
 
         void TensionedCableModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -123,7 +118,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
         int m_movingBodyCalls;     ///< number of times the movbody have been called
         int m_np;                  ///< number of planes per processors
         int m_vdim;                ///< vibration dimension
-        int m_index;
 
         NekDouble m_structrho;     ///< mass of the cable per unit length
         NekDouble m_structdamp;    ///< damping ratio of the cable
@@ -132,19 +126,12 @@ class ForcingMovingBody : public SolverUtils::Forcing
         NekDouble m_timestep;      ///< time step
         ///
         LibUtilities::NektarFFTSharedPtr m_FFT;
-
         ///
         FilterMovingBodySharedPtr m_MovBodyfilter;
-        SolverUtils::FilterAeroForcesSharedPtr m_filterForces;
-        
         /// storage for the cable's force(x,y) variables
         Array<OneD, NekDouble> m_Aeroforces;
         /// storage for the cable's motion(x,y) variables
         Array<OneD, NekDouble> m_MotionVars;
-
-        /// srorage for the velocity in z-direction
-        Array<OneD, Array<OneD, NekDouble> > m_W;
-        
         /// fictitious velocity storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
         /// fictitious acceleration storage
@@ -163,8 +150,6 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, Array< OneD, NekDouble> > m_zta;
         /// Store the derivatives of motion variables in y-direction
         Array<OneD, Array< OneD, NekDouble> > m_eta;
-        ///
-        Array<OneD, Array< OneD, NekDouble> > m_forcing;
 };
 
 }

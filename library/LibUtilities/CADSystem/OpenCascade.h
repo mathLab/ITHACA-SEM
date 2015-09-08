@@ -63,5 +63,6 @@
 #include <TopAbs_State.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
 #include <ShapeFix_Shell.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 
 #endif

@@ -97,9 +97,16 @@ class CADSurf
 
         bool IsPlane();
 
+        void SetBadNomral()
+        {
+            m_correctNormal = false;
+        }
+
     private:
         /// ID of surface.
         int m_ID;
+        /// normal
+        bool m_correctNormal;
         /// OpenCascade object for surface.
         BRepAdaptor_Surface m_occSurface;
         /// Alternate OpenCascade object for surface. Used by reverse lookup.

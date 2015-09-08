@@ -52,6 +52,7 @@ CADSurf::CADSurf(int i, TopoDS_Shape in,
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
     in.Move(mv);
     m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
+    m_correctNormal = true;
 }
 
 /**
@@ -145,6 +146,11 @@ Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
     gp_Vec D1U, D1V;
     m_occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
     gp_Vec n = D1U.Crossed(D1V);
+
+    if(!m_correctNormal)
+    {
+        n.Reverse();
+    }
 
     if (n.X() == 0 && n.Y() == 0 && n.Z() == 0)
     {

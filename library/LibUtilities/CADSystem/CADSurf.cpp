@@ -53,6 +53,7 @@ CADSurf::CADSurf(int i, TopoDS_Shape in,
     in.Move(mv);
     m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
+
 }
 
 /**

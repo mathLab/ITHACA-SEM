@@ -152,6 +152,58 @@ bool CADSystem::LoadCAD()
         return false;
     }
 
+    Handle(ShapeFix_Shape) sfs = new ShapeFix_Shape;
+    sfs->Init(shape);
+    sfs->Perform();
+
+    if(sfs->Status(ShapeExtend_DONE) )
+    {
+        shape = sfs->Shape();
+    }
+    else if(sfs->Status(ShapeExtend_FAIL))
+    {
+        ASSERTL0(false,"Shape could not be fixed");
+    }
+
+    Handle(ShapeFix_Wireframe) sfwf = new ShapeFix_Wireframe(shape);
+    sfwf->ModeDropSmallEdges() = Standard_True;
+    sfwf->FixSmallEdges();
+    sfwf->FixWireGaps();
+
+    if(sfwf->StatusWireGaps(ShapeExtend_DONE) )
+    {
+        shape = sfwf->Shape();
+    }
+    else if(sfwf->StatusWireGaps(ShapeExtend_FAIL))
+    {
+        ASSERTL0(false,"Shape could not be fixed");
+    }
+    if(sfwf->StatusSmallEdges(ShapeExtend_DONE) )
+    {
+        shape = sfwf->Shape();
+    }
+    else if(sfwf->StatusSmallEdges(ShapeExtend_FAIL))
+    {
+        ASSERTL0(false,"Shape could not be fixed");
+    }
+
+    TopTools_IndexedMapOfShape s;
+    TopExp::MapShapes(shape, TopAbs_SHELL, s);
+
+    Handle(ShapeFix_Shell) sfsh = new ShapeFix_Shell;
+    sfsh->FixFaceOrientation(TopoDS::Shell(s.FindKey(1)), false, false);
+
+    if(sfsh->Status(ShapeExtend_DONE) )
+    {
+        shape = sfsh->Shape();
+    }
+    else if(sfsh->Status(ShapeExtend_FAIL))
+    {
+        ASSERTL0(false,"Shape could not be fixed");
+    }
+
+
+
     // From OpenCascade maps calculate Euler-Poincare number.
     TopTools_IndexedMapOfShape fc, vc, ec;
     TopExp::MapShapes(shape, TopAbs_FACE, fc);
@@ -304,7 +356,9 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
 
     if(!InsideShape(loc))
     {
-        m_surfs[i]->SetBadNomral();
+        cout << "bad normal " << i << " orient " << in.Orientation() << endl;
+
+        /*m_surfs[i]->SetBadNomral();
         //check the face normal is pointing interior
         bounds = m_surfs[i]->GetBounds();
         uv[0] = (9.0*bounds[0]+bounds[1])/10.0;
@@ -319,7 +373,7 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
         if(!InsideShape(loc))
         {
             cout << "normal still broken" << endl;
-        }
+        }*/
     }
 }
 

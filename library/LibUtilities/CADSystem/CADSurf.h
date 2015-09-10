@@ -97,7 +97,7 @@ class CADSurf
 
         bool IsPlane();
 
-        void SetBadNomral()
+        void SetReverseNomral()
         {
             m_correctNormal = false;
         }

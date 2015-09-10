@@ -343,37 +343,24 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
     //check the face normal is pointing interior
     Array<OneD, NekDouble> bounds = m_surfs[i]->GetBounds();
     Array<OneD, NekDouble> uv(2);
-    uv[0] = (9.0*bounds[0]+bounds[1])/10.0;
-    uv[1] = (9.0*bounds[2]+bounds[3])/10.0;
+    uv[0] = bounds[1];
+    uv[1] = bounds[2];
     Array<OneD, NekDouble> N = m_surfs[i]->N(uv);
     Array<OneD, NekDouble> P = m_surfs[i]->P(uv);
 
     //create a test point whihc is one unit normal from the center of the surface
     Array<OneD, NekDouble> loc(3);
-    loc[0] = P[0] + N[0];
-    loc[1] = P[1] + N[1];
-    loc[2] = P[2] + N[2];
+    loc[0] = P[0] + 1E-3*N[0];
+    loc[1] = P[1] + 1E-3*N[1];
+    loc[2] = P[2] + 1E-3*N[2];
 
-    if(!InsideShape(loc))
+    ASSERTL0((in.Orientation()==1 && InsideShape(loc)) ||
+             (in.Orientation()==0 && !InsideShape(loc)),
+             "cannot determine normal");
+
+    if(in.Orientation()==0)
     {
-        cout << "bad normal " << i << " orient " << in.Orientation() << endl;
-
-        /*m_surfs[i]->SetBadNomral();
-        //check the face normal is pointing interior
-        bounds = m_surfs[i]->GetBounds();
-        uv[0] = (9.0*bounds[0]+bounds[1])/10.0;
-        uv[1] = (9.0*bounds[2]+bounds[3])/10.0;
-        N = m_surfs[i]->N(uv);
-        P = m_surfs[i]->P(uv);
-
-        //create a test point whihc is one unit normal from the center of the surface
-        loc[0] = P[0] + N[0];
-        loc[1] = P[1] + N[1];
-        loc[2] = P[2] + N[2];
-        if(!InsideShape(loc))
-        {
-            cout << "normal still broken" << endl;
-        }*/
+        m_surfs[i]->SetReverseNomral();
     }
 }
 

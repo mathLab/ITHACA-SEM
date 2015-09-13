@@ -130,7 +130,7 @@ void DriverArpack::v_Execute(ostream &out)
 
     Array<OneD, NekDouble> resid(n);
     Array<OneD, NekDouble> v(n*m_kdim);
-    Array<OneD, NekDouble> workl(lworkl);
+    Array<OneD, NekDouble> workl(lworkl, 0.0);
     Array<OneD, NekDouble> workd(3*n, 0.0);
 
     ASSERTL0(n <= m_maxn,  "N is greater than   MAXN");
@@ -156,8 +156,16 @@ void DriverArpack::v_Execute(ostream &out)
     iparam[4] = 0;      // number of converged ritz eigenvalues
     iparam[5] = 0;      // (deprecated)
 
-    iparam[6] = 3;      // This is shift and invert but fine for zero shift
-    B = 'G';            // used generalised weight
+    // Use generalized B matrix for coupled solver.
+    if (m_timeSteppingAlgorithm)
+    {
+        iparam[6] = 1;      // computation mode 1=> matrix-vector prod
+        B = 'I';
+    }
+    else {
+        iparam[6] = 3;      // computation mode 1=> matrix-vector prod
+        B = 'G';
+    }
 #if 0
     if((fabs(m_realShift) > NekConstants::kNekZeroTol)|| // use shift if m_realShift > 1e-12
        (fabs(m_imagShift) > NekConstants::kNekZeroTol))
@@ -211,10 +219,10 @@ void DriverArpack::v_Execute(ostream &out)
             }
 
             out << endl;
-            for(int k=0; k<=m_kdim-1; ++k)
+            for(int k = 0; k < m_kdim; ++k)
             {
                 // write m_kdim eigs to screen
-                WriteEvs(out,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
+                WriteEvs(out, k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                 // write m_kdim eigs to screen
                 WriteEvs(pFile,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
             }
@@ -229,8 +237,6 @@ void DriverArpack::v_Execute(ostream &out)
                      // (workd[inptr[0]-1]) rather than Mx as
                      // recommended in manual since it is not
                      // possible to impose forcing directly.
-
-                //workd[inptr[0]-1] copied into operator fields
                 CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
                 m_equ[0]->TransCoeffToPhys();
@@ -250,7 +256,6 @@ void DriverArpack::v_Execute(ostream &out)
                     out << endl;
                     m_equ[0]->Output();
                 }
-
 
                 // operated fields are copied into workd[inptr[1]-1]
                 CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));

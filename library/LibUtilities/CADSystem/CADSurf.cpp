@@ -56,12 +56,6 @@ CADSurf::CADSurf(int i, TopoDS_Shape in,
 
 }
 
-/**
- * @brief Performs a reverse look up to find u,v and x,y,z.
- *
- * @param p Array of xyz location
- * @return The parametric location of xyz on this surface
- */
 Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
 {
     //has to transfer back to mm
@@ -105,12 +99,6 @@ bool CADSurf::IsPlane()
     }
 }
 
-/**
- * @brief Get the x,y,z at parametric point u,v.
- *
- * @param uv Array of u and v parametric coords.
- * @return Array of xyz location.
- */
 Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
 {
     ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
@@ -128,12 +116,6 @@ Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
     return location;
 }
 
-/**
- * @brief Get the normal vector at parametric point u,v.
- *
- * @param uv Array of u and v parametric coords.
- * @return Array of xyz components of normal vector.
- */
 Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 {
     ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
@@ -171,13 +153,6 @@ Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
     return normal;
 }
 
-/**
- * @brief Get the set of first derivatives at parametric point u,v
- *
- * @param uv Array of u and v parametric coords.
- * @return Array of xyz copmonents of first derivatives.
- */
-
 Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
 {
     ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
@@ -203,13 +178,6 @@ Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
 
     return r;
 }
-
-/**
- * @brief Get the set of second derivatives at parametric point u,v
- *
- * @param uv array of u and v parametric coords
- * @return array of xyz copmonents of second derivatives
- */
 
 Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
 {

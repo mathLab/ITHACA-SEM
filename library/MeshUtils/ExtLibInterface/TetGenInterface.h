@@ -69,8 +69,14 @@ class TetGenInterface
                          std::map<int, MeshTriSharedPtr> &Tris,
                          std::map<int, MeshNodeSharedPtr> &Nodes);
 
+        /**
+         * @brief gets the locations of the stiener points added by tetgen
+         */
         void GetNewPoints(const std::vector<int> &nis, std::vector<Array<OneD, NekDouble> > &newp);
 
+        /**
+         * @brief refines a previously made tetmesh with node delta information from the Octree
+         */
         void RefineMesh(const std::vector<int> &nis,
                         const std::vector<NekDouble> &ndel,
                         std::map<int, MeshTriSharedPtr> &Tris,
@@ -81,14 +87,17 @@ class TetGenInterface
          */
         void Extract(int &numtet, Array<OneD, Array<OneD, int> > &tetconnect);
 
+        /**
+         * @brief from the list of stiener points creates new mesh node objects
+         */
         void AddNodes(const std::vector<int> &nis, std::map<int, MeshNodeSharedPtr> &Nodes);
-
-    private:
 
         /**
          * @brief clear previous mesh
          */
         void freetet();
+
+    private:
 
         ///tetgen objects
         tetgenio surface, output, input;
@@ -96,8 +105,6 @@ class TetGenInterface
         std::map<int, int> nodemap;
         /// map in reverse
         std::map<int, int> nodemapr;
-        /// has a mesh been peviously loaded
-        bool meshloaded;
 };
 
 typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;

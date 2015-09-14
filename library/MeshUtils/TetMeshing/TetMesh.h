@@ -95,10 +95,6 @@ class TetMesh
         OctreeSharedPtr m_octree;
         /// surfacemeshing object
         SurfaceMeshingSharedPtr m_surfacemesh;
-        /// interior domain nodes
-        std::vector<int> m_stienerpoints;
-        /// nodes added last time around
-        std::vector<int> nodesaddedinthisvalidate;
         /// number of tetrahedra
         int numtet;
         /// conncetivity of the tets from the interface

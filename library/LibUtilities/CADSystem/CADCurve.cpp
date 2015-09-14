@@ -40,9 +40,6 @@ using namespace std;
 namespace Nektar {
 namespace LibUtilities {
 
-/**
- * @brief Default constructor.
- */
 CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
 {
     gp_Trsf transform;
@@ -50,7 +47,7 @@ CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
     in.Move(mv);
-    
+
     m_occEdge = TopoDS::Edge(in);
     m_occCurve = BRepAdaptor_Curve(m_occEdge);
 
@@ -59,15 +56,6 @@ CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
     m_length = System.Mass();
 }
 
-/**
- * @brief Calculates the parametric coordinate and arclength location
- * defined by \p s.
- *
- * @param s Arclength location.
- * @return Calculated parametric coordinate.
- *
- * @todo This really needs improving for accuracy.
- */
 NekDouble CADCurve::tAtArcLength(NekDouble s)
 {
     NekDouble dt = (m_occCurve.LastParameter() -
@@ -89,22 +77,8 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
     }
 
     return t - dt;
-
-    /*Array<OneD, NekDouble> b = Bounds();
-    Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
-    GeomAdaptor_Curve ad( m_c );
-    GCPnts_AbscissaPoint anAP (ad, s*1000.0, b[0]);
-    return anAP.Parameter();*/
 }
 
-/**
- * @brief Calculates the arclength between the two paremetric points \p ti
- * and \p tf. \p ti must be less than \p tf.
- *
- * @param ti First parametric coordinate.
- * @param tf Second parametric coordinate.
- * @return Arc length between \p ti and \p tf.
- */
 NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
@@ -116,12 +90,6 @@ NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
     return System.Mass()/1000.0;
 }
 
-/**
- * @brief Gets the location (x,y,z) in an array out of the curve at point \p t.
- *
- * @param t Parametric coordinate
- * @return Array of x,y,z
- */
 Array<OneD, NekDouble> CADCurve::P(NekDouble t)
 {
     Array<OneD, NekDouble> location(3);
@@ -134,12 +102,6 @@ Array<OneD, NekDouble> CADCurve::P(NekDouble t)
     return location;
 }
 
-/**
- * @brief Returns the minimum and maximum parametric coords t of the curve.
- *
- * @return Array of two entries, min and max parametric coordinate.
- */
-
 Array<OneD, NekDouble> CADCurve::Bounds()
 {
     Array<OneD, NekDouble> t(2);
@@ -148,12 +110,6 @@ Array<OneD, NekDouble> CADCurve::Bounds()
 
     return t;
 }
-
-/**
- * @brief Gets OpenCascade point objects for the start and end of the curve.
- *
- * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
- */
 
 Array<OneD, NekDouble> CADCurve::GetMinMax()
 {
@@ -170,6 +126,35 @@ Array<OneD, NekDouble> CADCurve::GetMinMax()
     locs[5] = end.Z();
 
     return locs;
+}
+
+bool CADCurve::FindEndVertex(vector<gp_Pnt> &edgeEndPoints)
+{
+    int ct = 0;
+    endsInMainCAD.resize(2);
+    gp_Pnt start = BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
+    gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
+    for(int i = 0; i < edgeEndPoints.size(); i++)
+    {
+        if(start.Distance(edgeEndPoints[i]) < 1e-6)
+        {
+            endsInMainCAD[0] = i;
+            ct++;
+        }
+        if(end.Distance(edgeEndPoints[i]) < 1e-6)
+        {
+            endsInMainCAD[1] = i;
+            ct++;
+        }
+    }
+    if(ct == 2)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 }

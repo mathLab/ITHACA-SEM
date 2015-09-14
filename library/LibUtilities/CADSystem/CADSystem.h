@@ -68,9 +68,31 @@ class CADSystem
         {
         }
 
+        /**
+         * @brief Return the name of the CAD system.
+         */
         LIB_UTILITIES_EXPORT std::string GetName();
+
+        /**
+         * @brief Initialises CAD and makes surface and curve maps.
+         *
+         * @return true if completed successfully
+         */
         LIB_UTILITIES_EXPORT bool LoadCAD();
+
+        /**
+         * @brief Reports basic properties to screen.
+         */
         LIB_UTILITIES_EXPORT void Report();
+
+        /**
+         * @brief Returns bounding box of the domain.
+         *
+         * Gets the bounding box of the domain by considering the start and end
+         * points of each curve in the geometry.
+         *
+         * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
+         */
         LIB_UTILITIES_EXPORT Array<OneD, NekDouble> GetBoundingBox();
 
         /**
@@ -135,6 +157,12 @@ class CADSystem
             return out;
         }
 
+        /**
+         * @brief based on location in space, uses opencascade routines to
+         * determin if the point is within the domain. This routine is slow
+         * and should be used sparingly, it is smart enough to take and form
+         * of geometry
+         */
         LIB_UTILITIES_EXPORT bool InsideShape(Array<OneD, NekDouble> loc);
 
     private:

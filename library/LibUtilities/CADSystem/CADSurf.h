@@ -89,14 +89,56 @@ class CADSurf
             return b;
         }
 
+        /**
+         * @brief Get the normal vector at parametric point u,v.
+         *
+         * @param uv Array of u and v parametric coords.
+         * @return Array of xyz components of normal vector.
+         */
         Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+
+        /**
+         * @brief Get the set of first derivatives at parametric point u,v
+         *
+         * @param uv Array of u and v parametric coords.
+         * @return Array of xyz copmonents of first derivatives.
+         */
         Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+
+        /**
+         * @brief Get the set of second derivatives at parametric point u,v
+         *
+         * @param uv array of u and v parametric coords
+         * @return array of xyz copmonents of second derivatives
+         */
         Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+
+        /**
+         * @brief Get the x,y,z at parametric point u,v.
+         *
+         * @param uv Array of u and v parametric coords.
+         * @return Array of xyz location.
+         */
         Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+
+        /**
+         * @brief Performs a reverse look up to find u,v and x,y,z.
+         *
+         * @param p Array of xyz location
+         * @return The parametric location of xyz on this surface
+         */
         Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
+        /**
+         * @brief returns true if the surface is flat (2D)
+         */
         bool IsPlane();
 
+        /**
+         * @brief sets the flag to reverse the normal for this suface,
+         * this is determined in cadsystem and ensures all surface normals,
+         * point internaly
+         */
         void SetReverseNomral()
         {
             m_correctNormal = false;

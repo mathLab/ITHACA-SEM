@@ -58,59 +58,82 @@ class CADCurve
     public:
         friend class MemoryManager<CADCurve>;
 
+        /**
+         * @brief Default constructor.
+         */
         CADCurve(int i, TopoDS_Shape in);
+
+        /**
+         * @brief Returns the minimum and maximum parametric coords t of the curve.
+         *
+         * @return Array of two entries, min and max parametric coordinate.
+         */
         Array<OneD, NekDouble> Bounds();
+
+        /**
+         * @brief Calculates the arclength between the two paremetric points \p ti
+         * and \p tf. \p ti must be less than \p tf.
+         *
+         * @param ti First parametric coordinate.
+         * @param tf Second parametric coordinate.
+         * @return Arc length between \p ti and \p tf.
+         */
         NekDouble Length(NekDouble ti, NekDouble tf);
+
+        /**
+         * @brief Gets the location (x,y,z) in an array out of the curve at point \p t.
+         *
+         * @param t Parametric coordinate
+         * @return Array of x,y,z
+         */
         Array<OneD, NekDouble> P(NekDouble t);
+
+        /**
+         * @brief Calculates the parametric coordinate and arclength location
+         * defined by \p s.
+         *
+         * @param s Arclength location.
+         * @return Calculated parametric coordinate.
+         *
+         * @todo This really needs improving for accuracy.
+         */
         NekDouble tAtArcLength(NekDouble s);
+
+        /**
+         * @brief Gets the start and end of the curve.
+         *
+         * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
+         */
         Array<OneD, NekDouble> GetMinMax();
 
+        /// return the id of the curve
         int GetID()
         {
             return m_ID;
         }
 
+        ///set the ids of the surfaces either side of the curve
         void SetAdjSurf(std::vector<int> i)
         {
             m_adjSurfs = i;
         }
 
+        /// returns the ids of neigbouring surfaces
         std::vector<int> GetAdjSurf()
         {
             return m_adjSurfs;
         }
 
+        /// returns lenght of the curve
         NekDouble GetTotLength(){return m_length;}
 
-        bool FindEndVertex(std::vector<gp_Pnt> &edgeEndPoints)
-        {
-            int ct = 0;
-            endsInMainCAD.resize(2);
-            gp_Pnt start = BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
-            gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
-            for(int i = 0; i < edgeEndPoints.size(); i++)
-            {
-                if(start.Distance(edgeEndPoints[i]) < 1e-6)
-                {
-                    endsInMainCAD[0] = i;
-                    ct++;
-                }
-                if(end.Distance(edgeEndPoints[i]) < 1e-6)
-                {
-                    endsInMainCAD[1] = i;
-                    ct++;
-                }
-            }
-            if(ct == 2)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        /*
+         * @brief from a list of known edge end vertices finds the ones which
+         * belong to this Curve. Only to be used within CADsytem
+         */
+        bool FindEndVertex(std::vector<gp_Pnt> &edgeEndPoints);
 
+        /// get the ids of the vertices that are the ends of the curve, which are in the main cad list
         std::vector<int> GetVertex(){return endsInMainCAD;}
 
     private:

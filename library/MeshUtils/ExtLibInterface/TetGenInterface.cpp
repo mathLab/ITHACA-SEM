@@ -44,8 +44,6 @@ void TetGenInterface::InitialMesh(const std::vector<int> &nis,
                                   std::map<int, MeshTriSharedPtr> &Tris,
                                   std::map<int, MeshNodeSharedPtr> &Nodes)
 {
-    meshloaded = false;
-
     surface.initialize();
     output.initialize();
 
@@ -172,14 +170,11 @@ void TetGenInterface::Extract(int &numtet,
     }
 }
 
-
 void TetGenInterface::freetet()
 {
-    if(meshloaded)
-    {
-        surface.deinitialize();
-        output.deinitialize();
-    }
+    surface.deinitialize();
+    input.deinitialize();
+    output.deinitialize();
 }
 
 }

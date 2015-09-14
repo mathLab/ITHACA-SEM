@@ -47,17 +47,11 @@ using namespace std;
 namespace Nektar {
 namespace LibUtilities {
 
-/**
- * @brief Return the name of the CAD system.
- */
 string CADSystem::GetName()
 {
     return m_name;
 }
 
-/**
- * @brief Reports basic properties to screen.
- */
 void CADSystem::Report()
 {
     cout << endl << "CAD report:" << endl;
@@ -66,14 +60,6 @@ void CADSystem::Report()
     cout << "\tCAD Euler-Poincaré characteristic: " << m_epc << endl;
 }
 
-/**
- * @brief Returns bounding box of the domain.
- *
- * Gets the bounding box of the domain by considering the start and end
- * points of each curve in the geometry.
- *
- * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
- */
 Array<OneD, NekDouble> CADSystem::GetBoundingBox()
 {
     Array<OneD, NekDouble> bound(6);
@@ -103,11 +89,6 @@ Array<OneD, NekDouble> CADSystem::GetBoundingBox()
     return bound;
 }
 
-/**
- * @brief Initialises CAD and makes surface and curve maps.
- *
- * @return true if completed successfully
- */
 bool CADSystem::LoadCAD()
 {
     if (!boost::filesystem::exists(m_name.c_str()))

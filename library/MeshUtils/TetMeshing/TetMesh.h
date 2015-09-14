@@ -41,6 +41,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <LibUtilities/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 #include <MeshUtils/MeshElem.hpp>
@@ -57,9 +58,10 @@ class TetMesh
          *@brief default constructor
          */
         TetMesh(const bool verb,
+                const LibUtilities::CADSystemSharedPtr &cad,
                 const OctreeSharedPtr &oct,
                 const SurfaceMeshingSharedPtr &sm)
-                    : m_verbose(verb), m_octree(oct),
+                    : m_verbose(verb), m_cad(cad), m_octree(oct),
                       m_surfacemesh(sm)
         {
         };
@@ -99,6 +101,8 @@ class TetMesh
 
         /// print stuff to screen?
         bool m_verbose;
+        ///cad object
+        LibUtilities::CADSystemSharedPtr m_cad;
         /// octree object
         OctreeSharedPtr m_octree;
         /// surfacemeshing object

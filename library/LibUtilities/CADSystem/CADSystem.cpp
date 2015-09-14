@@ -368,7 +368,7 @@ bool CADSystem::InsideShape(Array<OneD, NekDouble> loc)
 {
     gp_Pnt p(loc[0]*1000.0, loc[1]*1000.0, loc[2]*1000.0);
 
-    BRepClass3d_SolidClassifier test(shape, p, 1E-6);
+    BRepClass3d_SolidClassifier test(shape, p, 1E-7);
     if(test.State() == TopAbs_IN || test.State() == TopAbs_ON)
     {
         return true;

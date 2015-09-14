@@ -129,7 +129,7 @@ void InputCAD::Process()
     //create tet mesh
     MeshUtils::TetMeshSharedPtr m_tet =
         MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(
-            m_mesh->m_verbose, m_octree, m_surfacemeshing);
+            m_mesh->m_verbose, m_cad, m_octree, m_surfacemeshing);
 
     m_tet->Mesh();
 

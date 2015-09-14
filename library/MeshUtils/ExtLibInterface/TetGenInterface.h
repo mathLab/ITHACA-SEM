@@ -64,27 +64,24 @@ class TetGenInterface
         /**
          * @brief assign parameters for meshing
          */
-        void Assign(const std::vector<int> &nis,
-                    const std::map<int, MeshTriSharedPtr> &t,
-                    const std::map<int, MeshNodeSharedPtr> &n,
-                    const std::vector<int> &stiner)
-        {
-            m_nodesinsurface = nis;
-            Tris = t;
-            Nodes = n;
-            m_stienerpoints = stiner;
-            meshloaded = false;
-        }
+        void InitialMesh(const std::vector<int> &nis,
+                         const std::vector<NekDouble> &ndel,
+                         std::map<int, MeshTriSharedPtr> &Tris,
+                         std::map<int, MeshNodeSharedPtr> &Nodes);
 
-        /**
-         * @brief execture meshing
-         */
-        void Mesh(bool Quiet = true, bool Quality = false);
+        void GetNewPoints(const std::vector<int> &nis, std::vector<Array<OneD, NekDouble> > &newp);
 
+        void RefineMesh(const std::vector<int> &nis,
+                        const std::vector<NekDouble> &ndel,
+                        std::map<int, MeshTriSharedPtr> &Tris,
+                        std::map<int, MeshNodeSharedPtr> &Nodes,
+                        const std::vector<NekDouble> &newndel);
         /**
          * @brief extract mesh information
          */
         void Extract(int &numtet, Array<OneD, Array<OneD, int> > &tetconnect);
+
+        void AddNodes(const std::vector<int> &nis, std::map<int, MeshNodeSharedPtr> &Nodes);
 
     private:
 
@@ -94,15 +91,7 @@ class TetGenInterface
         void freetet();
 
         ///tetgen objects
-        tetgenio surface, additional, output;
-        /// list of all triangles in surface mesh
-        std::map<int, MeshTriSharedPtr> Tris;
-        /// list of all nodes
-        std::map<int, MeshNodeSharedPtr> Nodes;
-        /// list of stiener points
-        std::vector<int> m_stienerpoints;
-        /// list of nodes which are surface verticies
-        std::vector<int> m_nodesinsurface;
+        tetgenio surface, output, input;
         /// map from meshconvert id to tetgen id
         std::map<int, int> nodemap;
         /// map in reverse

@@ -87,18 +87,6 @@ class TetMesh
 
     private:
 
-        /**
-         *@brief validate the tetrahdral mesh against the octree specification
-         */
-        bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
-
-        /**
-         *@brief add a new stiener point to the tet mesh
-         */
-        void AddNewPoint(Array<OneD, NekDouble> loc,
-                                      std::map<int, MeshNodeSharedPtr> &Nodes,
-                                      std::vector<int> tetnodes);
-
         /// print stuff to screen?
         bool m_verbose;
         ///cad object
@@ -107,8 +95,6 @@ class TetMesh
         OctreeSharedPtr m_octree;
         /// surfacemeshing object
         SurfaceMeshingSharedPtr m_surfacemesh;
-        /// nodes which are surface mesh verticies
-        std::vector<int> nodesintris;
         /// interior domain nodes
         std::vector<int> m_stienerpoints;
         /// nodes added last time around

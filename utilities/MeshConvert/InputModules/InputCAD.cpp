@@ -133,6 +133,9 @@ void InputCAD::Process()
 
     m_tet->Mesh();
 
+    if(m_mesh->m_verbose)
+        cout << "Processing mesh elements" << endl;
+
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;
     m_mesh->m_order = m_order+1;

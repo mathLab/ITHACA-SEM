@@ -39,14 +39,14 @@ using namespace std;
 namespace Nektar{
 namespace MeshUtils{
 
-void TetGenInterface::Mesh(bool Quiet, bool Quality)
+void TetGenInterface::InitialMesh(const std::vector<int> &nis,
+                                  const std::vector<NekDouble> &ndel,
+                                  std::map<int, MeshTriSharedPtr> &Tris,
+                                  std::map<int, MeshNodeSharedPtr> &Nodes)
 {
-    if(meshloaded)
-    {
-        freetet();
-    }
+    meshloaded = false;
+
     surface.initialize();
-    additional.initialize();
     output.initialize();
 
     nodemap.clear(); nodemapr.clear();
@@ -56,39 +56,25 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
     tetgenio::polygon *p;
 
     surface.firstnumber = 0;
-    surface.numberofpoints = m_nodesinsurface.size();
+    surface.numberofpoints = nis.size();
+    surface.numberofpointmtrs = 1;
     surface.pointlist = new REAL[surface.numberofpoints*3];
+    surface.pointmtrlist = new REAL[surface.numberofpoints];
 
     int pointc = 0;
 
-    for(int i = 0; i < m_nodesinsurface.size(); i++)
+    for(int i = 0; i < nis.size(); i++)
     {
-        nodemap[pointc] = m_nodesinsurface[i];
-        nodemapr[m_nodesinsurface[i]] = pointc;
+        nodemap[pointc] = nis[i];
+        nodemapr[nis[i]] = pointc;
 
-        Array<OneD, NekDouble> loc = Nodes[m_nodesinsurface[i]]->GetLoc();
+        Array<OneD, NekDouble> loc = Nodes[nis[i]]->GetLoc();
 
         surface.pointlist[i*3+0] = loc[0];
         surface.pointlist[i*3+1] = loc[1];
         surface.pointlist[i*3+2] = loc[2];
 
-        pointc++;
-    }
-
-    //build stiener list in additional
-    additional.firstnumber = 0;
-    additional.numberofpoints = m_stienerpoints.size();
-    additional.pointlist = new REAL[additional.numberofpoints*3];
-
-    for(int i = 0; i < m_stienerpoints.size(); i++)
-    {
-        nodemap[pointc] = m_stienerpoints[i];
-        nodemapr[m_stienerpoints[i]] = pointc;
-
-        Array<OneD, NekDouble> loc = Nodes[m_stienerpoints[i]]->GetLoc();
-        additional.pointlist[i*3+0] = loc[0];
-        additional.pointlist[i*3+1] = loc[1];
-        additional.pointlist[i*3+2] = loc[2];
+        surface.pointmtrlist[i] = ndel[i];
 
         pointc++;
     }
@@ -116,16 +102,57 @@ void TetGenInterface::Mesh(bool Quiet, bool Quality)
 
     }
 
-    //quiet suppresses the output of tetegen to the consol
-    if(Quiet)
+    tetrahedralize("pYmzqQ", &surface, &output);
+
+}
+
+void TetGenInterface::GetNewPoints(const std::vector<int> &nis, vector<Array<OneD, NekDouble> > &newp)
+{
+    for(int i = nis.size(); i < output.numberofpoints; i++)
     {
-        tetrahedralize("pYizfennQ", &surface, &output, &additional, NULL);
+        Array<OneD, NekDouble> loc(3);
+        loc[0] = output.pointlist[i*3+0];
+        loc[1] = output.pointlist[i*3+1];
+        loc[2] = output.pointlist[i*3+2];
+        newp.push_back(loc);
     }
-    else
+}
+
+void TetGenInterface::RefineMesh(const std::vector<int> &nis,
+                                 const std::vector<NekDouble> &ndel,
+                                 std::map<int, MeshTriSharedPtr> &Tris,
+                                 std::map<int, MeshNodeSharedPtr> &Nodes,
+                                 const std::vector<NekDouble> &newndel)
+{
+    input = output;
+
+    input.pointmtrlist = new REAL[input.numberofpoints];
+
+    for(int i = 0; i < nis.size(); i++)
     {
-        tetrahedralize("pYizfenn", &surface, &output, &additional, NULL);
+        input.pointmtrlist[i] = ndel[i];
+    }
+    int c = 0;
+    for(int i = nis.size(); i < input.numberofpoints; i++)
+    {
+        input.pointmtrlist[i] = newndel[c];
+        c++;
     }
 
+    tetrahedralize("pYrmzq1.41/15QO2/7", &input, &output);
+
+}
+
+void TetGenInterface::AddNodes(const vector<int> &nis, map<int, MeshNodeSharedPtr> &Nodes)
+{
+    for(int i = nis.size(); i < output.numberofpoints; i++)
+    {
+        MeshNodeSharedPtr n = MemoryManager<MeshNode>::AllocateSharedPtr(
+            Nodes.size(), output.pointlist[i*3+0], output.pointlist[i*3+1],
+            output.pointlist[i*3+2]);
+        nodemap[i] = Nodes.size();
+        Nodes[Nodes.size()] = n;
+    }
 }
 
 void TetGenInterface::Extract(int &numtet,
@@ -151,7 +178,6 @@ void TetGenInterface::freetet()
     if(meshloaded)
     {
         surface.deinitialize();
-        additional.deinitialize();
         output.deinitialize();
     }
 }

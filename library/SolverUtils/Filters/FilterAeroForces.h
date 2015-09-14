@@ -41,58 +41,64 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+class FilterAeroForces : public Filter
+{
+public:
+    friend class MemoryManager<FilterAeroForces>;
+
+    /// Creates an instance of this class
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams)
     {
-        class FilterAeroForces : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterAeroForces>;
-
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams)
-            {
-                FilterSharedPtr p = MemoryManager<FilterAeroForces>::
-                                        AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
-
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterAeroForces(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT virtual ~FilterAeroForces();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-
-        private:
-            /// ID's of boundary regions where we want the forces
-            vector<unsigned int>            m_boundaryRegionsIdList;
-            /// Determines if a given Boundary Region is in
-            /// m_boundaryRegionsIdList
-            vector<bool>                    m_boundaryRegionIsInList;
-            unsigned int                    m_index;
-            unsigned int                    m_outputFrequency;
-            /// plane to take history point from if using a homogeneous1D
-            /// expansion
-            unsigned int                    m_outputPlane;
-            bool                            m_isHomogeneous1D;
-            std::string                     m_outputFile;
-            std::ofstream                   m_outputStream;
-            LibUtilities::BasisSharedPtr    m_homogeneousBasis;
-            std::string                     m_BoundaryString;
-            /// number of planes for homogeneous1D expansion
-            int                             m_nplanes;
-        };
+        FilterSharedPtr p = MemoryManager<FilterAeroForces>::
+                                AllocateSharedPtr(pSession, pParams);
+        //p->InitObject();
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterAeroForces(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams);
+    SOLVER_UTILS_EXPORT virtual ~FilterAeroForces();
+
+protected:
+    virtual void v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual bool v_IsTimeDependent();
+
+private:
+    /// ID's of boundary regions where we want the forces
+    vector<unsigned int>            m_boundaryRegionsIdList;
+    /// Determines if a given Boundary Region is in
+    /// m_boundaryRegionsIdList
+    vector<bool>                    m_boundaryRegionIsInList;
+    unsigned int                    m_index;
+    unsigned int                    m_outputFrequency;
+    /// plane to take history point from if using a homogeneous1D
+    /// expansion
+    unsigned int                    m_outputPlane;
+    bool                            m_isHomogeneous1D;
+    std::string                     m_outputFile;
+    std::ofstream                   m_outputStream;
+    LibUtilities::BasisSharedPtr    m_homogeneousBasis;
+    std::string                     m_BoundaryString;
+    /// number of planes for homogeneous1D expansion
+    int                             m_nplanes;
+};
+}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

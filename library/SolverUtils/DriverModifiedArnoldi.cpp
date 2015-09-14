@@ -512,7 +512,8 @@ void DriverModifiedArnoldi::EV_post(
         for (int j = 0; j < icon; ++j)
         {
             std::string file = m_session->GetSessionName() + "_eig_"
-                             + boost::lexical_cast<std::string>(j);
+                + boost::lexical_cast<std::string>(j)
+                + ".fld";
 
             WriteFld(file,Kseq[j]);
         }

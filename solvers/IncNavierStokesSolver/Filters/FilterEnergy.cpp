@@ -37,29 +37,28 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        std::string FilterEnergy::className = GetFilterFactory().
-            RegisterCreatorFunction("Energy", FilterEnergy::create);
 
-        FilterEnergy::FilterEnergy(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
-            : FilterEnergyBase(pSession, pParams, true)
-        {
-        }
+std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
+    RegisterCreatorFunction("Energy", FilterEnergy::create);
 
-        FilterEnergy::~FilterEnergy()
-        {
+FilterEnergy::FilterEnergy(
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const ParamMap &pParams)
+    : FilterEnergyBase(pSession, pParams, true)
+{
+}
 
-        }
+FilterEnergy::~FilterEnergy()
+{
 
-        void FilterEnergy::v_GetVelocity(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const int i,
-            Array<OneD, NekDouble> &velocity)
-        {
-            velocity = pFields[i]->GetPhys();
-        }
-    }
+}
+
+void FilterEnergy::v_GetVelocity(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const int i,
+    Array<OneD, NekDouble> &velocity)
+{
+    velocity = pFields[i]->GetPhys();
+}
+
 }

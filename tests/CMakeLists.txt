@@ -6,6 +6,7 @@ SET(TESTER_SOURCES
   MetricFile.cpp
   MetricL2.cpp
   MetricLInf.cpp
+  MetricPrecon.cpp
   MetricRegex.cpp
   TestData.cpp
   ${CMAKE_BINARY_DIR}/tests/Tester.cpp
@@ -17,6 +18,7 @@ SET(TESTER_HEADERS
   MetricFile.h
   MetricL2.h
   MetricLInf.h
+  MetricPrecon.h
   MetricRegex.h
   TestData.h
   Tester.h

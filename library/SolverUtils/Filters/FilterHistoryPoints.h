@@ -62,7 +62,7 @@ class FilterHistoryPoints : public Filter
 
         SOLVER_UTILS_EXPORT FilterHistoryPoints(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams);
+            const ParamMap                             &pParams);
         SOLVER_UTILS_EXPORT ~FilterHistoryPoints();
 
     protected:

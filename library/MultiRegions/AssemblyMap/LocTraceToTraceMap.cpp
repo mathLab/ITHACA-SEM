@@ -47,7 +47,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        
+        // Constructor
         LocTraceToTraceMap::LocTraceToTraceMap(
             const ExpList &locExp,
             const ExpListSharedPtr &trace,
@@ -401,7 +401,6 @@ namespace Nektar
                             
                                 // check to see if we can
                                 // just interpolate endpoint
-                                /*
                                 if ((fromPointsKey0.GetPointsType() ==
                                      LibUtilities::eGaussRadauMAlpha1Beta0) &&
                                     (toPointsKey0.GetPointsType() ==
@@ -423,7 +422,6 @@ namespace Nektar
                                             &m_interpEndPtI0[set][cnt1][0], 1);
                                     }
                                 }
-                                 */
                         }
                         
                         if (set == 0)

@@ -1169,9 +1169,9 @@ namespace Nektar
                 allCompPairs[first[cnt]] = second[cnt];
             }
 
-            // Search for periodic vertices and edges which are not in a
-            // periodic composite but lie in this process. First, loop over all
-            // information we have from other processors.
+            // Search for periodic vertices and edges which are not in
+            // a periodic composite but lie in this process. First, loop
+            // over all information we have from other processors.
             for (cnt = i = 0; i < totEdges; ++i)
             {
                 int edgeId    = edgeIds[i];
@@ -1189,8 +1189,8 @@ namespace Nektar
 
                     if (perId == periodicVerts.end())
                     {
-                        // This vertex is not included in the map. Figure out
-                        // which vertex it is supposed to be periodic
+                        // This vertex is not included in the map. Figure
+                        // out which vertex it is supposed to be periodic
                         // with. perEdgeId is the edge ID which is periodic with
                         // edgeId. The logic is much the same as the loop above.
                         int perVertexId =
@@ -1356,7 +1356,7 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-#if 0
+#if 1
             // blocked routine
             Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                             GetNLocTracePts());
@@ -1368,7 +1368,19 @@ namespace Nektar
             Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
 
-            m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
+            m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
+            
+            /*
+            for (int mm = 0; mm < Fwd.num_elements(); ++mm)
+            {
+                cout << "Fwd = " << Fwd[mm] << endl;
+            }
+            for (int mm = 0; mm < Bwd.num_elements(); ++mm)
+            {
+                cout << "Bwd = " << Bwd[mm] << endl;
+            }
+            int num; cin >> num;
+             */
 #else
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();

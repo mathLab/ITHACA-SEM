@@ -865,7 +865,7 @@ namespace Nektar
                      break;
                  }
                  default:
-                     ASSERTL0(false,"edge value (< 3) is out of range");
+                     ASSERTL0(false, "edge value (< 3) is out of range");
                      break;
              }
         }

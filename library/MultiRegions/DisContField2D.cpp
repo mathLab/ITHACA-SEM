@@ -1356,7 +1356,7 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-//#if 0
+#if 0
             // blocked routine
             Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                             GetNLocTracePts());
@@ -1369,9 +1369,7 @@ namespace Nektar
                                                         GetNFwdLocTracePts();
 
             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
-
-//#else
-            /*
+#else
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
             Array<OneD,NekDouble> e_tmp;
@@ -1406,6 +1404,7 @@ namespace Nektar
                     }
                 }
             }
+            /*
             for (int mm = 0; mm < Fwd.num_elements(); ++mm)
             {
                 cout << "Fwd = " << Fwd[mm] << endl;
@@ -1416,7 +1415,7 @@ namespace Nektar
             }
             int num; cin >> num;
              */
-//#endif
+#endif
             
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;

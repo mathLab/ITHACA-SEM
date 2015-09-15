@@ -1012,8 +1012,8 @@ namespace Nektar
                         {
                             DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
                             DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
-                            Array<OneD, NekDouble > wsp(
-                                                        m_interpNfaces[dir][i] * fnp0 * tnp1 * fnp0);
+                            Array<OneD, NekDouble > wsp(m_interpNfaces[dir][i]
+                                                        * fnp0 * tnp1 * fnp0);
                             
                             for(int j = 0; j <  m_interpNfaces[dir][i]; ++j)
                             {
@@ -1037,8 +1037,9 @@ namespace Nektar
                             {
                                 Blas::Dgemm('N', 'T', fnp0, tnp1, fnp1, 1.0,
                                             locedges.get()+cnt+j*fnp0*fnp1,
-                                            fnp0, I1->GetPtr().get(), tnp1, 0.0,
-                                            tmp.get()+cnt1+j*tnp0*tnp1, tnp0);
+                                            fnp0, I1->GetPtr().get(), tnp1,
+                                            0.0, tmp.get()+cnt1+j*tnp0*tnp1,
+                                            tnp0);
                             }
                             
                             Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];

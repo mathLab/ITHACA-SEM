@@ -7,15 +7,9 @@
         <file description="Session File">PPF_R15000_3D.xml</file>
     </files>
     <metrics>
-        <metric type="L2" id="2">
-            <value variable="u" tolerance="0.0001">2.3183</value>
-            <value variable="v" tolerance="0.0001">0.131496</value>
-            <value variable="w" tolerance="0.0001">2.19656</value>
-        </metric>
-        <metric type="Linf" id="1">
-            <value variable="u" tolerance="0.0001">0.841594</value>
-            <value variable="v" tolerance="0.0001">0.0220322</value>
-            <value variable="w" tolerance="0.0001">0.741417</value>
+        <metric type="Eigenvalue" id="0">
+            <value index="0" tolerance="0.001">2.8057e-01,-2.4005e+01</value>
+            <value index="1" tolerance="0.001">2.8057e-01,2.4005e+01</value>
         </metric>
     </metrics>
 </test>

@@ -275,7 +275,7 @@ void DriverArnoldi::WriteEvs(
         NekDouble abs_ev = hypot (re_ev, im_ev);
         NekDouble ang_ev = atan2 (im_ev, re_ev);
 
-        evlout << setw(2)  << i
+        evlout << "EV: " << setw(2)  << i
                << setw(12) << abs_ev
                << setw(12) << ang_ev
                << setw(12) << log (abs_ev) / m_period
@@ -300,7 +300,7 @@ void DriverArnoldi::WriteEvs(
             sign = 1.0;
         }
 
-        evlout << setw(2)  <<  i
+        evlout << "EV: " << setw(2)  <<  i
                << setw(14) <<  sign*re_ev
                << setw(14) <<  sign*im_ev;
 

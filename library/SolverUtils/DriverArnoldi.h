@@ -52,10 +52,10 @@ public:
     SOLVER_UTILS_EXPORT void ArnoldiSummary(std::ostream &out);
 
 protected:
-    int       m_kdim; /// Dimension of Krylov subspace
-    int       m_nvec; /// Number of vectors to test
-    int       m_nits; /// Maxmum number of iterations
-    NekDouble m_evtol;/// Tolerance of iteratiosn
+    int       m_kdim;  /// Dimension of Krylov subspace
+    int       m_nvec;  /// Number of vectors to test
+    int       m_nits;  /// Maxmum number of iterations
+    NekDouble m_evtol; /// Tolerance of iteratiosn
     NekDouble m_period;/// Period of time stepping algorithm
     bool      m_timeSteppingAlgorithm; /// underlying operator is time stepping
 
@@ -82,11 +82,13 @@ protected:
     /// Copy fields to Arnoldi storage.
     void CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array);
 
-    ///Copy the  forward field to the adjoint system in transient growth calculations
+    /// Copy the  forward field to the adjoint system in transient growth 
+    /// calculations
     void CopyFwdToAdj();
 
-    // write coefficients to file.
-    void WriteFld(std::string file, std::vector<Array<OneD, NekDouble> > coeffs);
+    /// Write coefficients to file
+    void WriteFld(std::string file, 
+                  std::vector<Array<OneD, NekDouble> > coeffs);
 
     void WriteFld(std::string file, Array<OneD, NekDouble> coeffs);
 
@@ -113,4 +115,3 @@ protected:
 } //end of namespace
 
 #endif //NEKTAR_SOLVERUTILS_DRIVERARNOLDI_H
-

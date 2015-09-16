@@ -42,7 +42,7 @@ namespace SolverUtils
 {
 
 /**
- *
+ * Constructor
  */
 DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession)
     : Driver(pSession)
@@ -52,7 +52,7 @@ DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession
 
 
 /**
- *
+ * Destructor
  */
 DriverArnoldi::~DriverArnoldi()
 {
@@ -60,16 +60,19 @@ DriverArnoldi::~DriverArnoldi()
 
 
 /**
- *
+ * Arnoldi driver initialisation
  */
 void DriverArnoldi::v_InitObject(ostream &out)
 {
     Driver::v_InitObject(out);
-    m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
+    m_session->MatchSolverInfo("SolverType",
+                               "VelocityCorrectionScheme",
+                               m_timeSteppingAlgorithm, false);
 
-    if(m_timeSteppingAlgorithm)
+    if (m_timeSteppingAlgorithm)
     {
-        m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
+        m_period  = m_session->GetParameter("TimeStep")
+                  * m_session->GetParameter("NumSteps");
         m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
 
     }
@@ -211,10 +214,11 @@ void DriverArnoldi::CopyFwdToAdj()
         fields = m_equ[0]->UpdateFields();
         int nq = fields[0]->GetNcoeffs();
 
-
         for (int k=0 ; k < m_nfields; ++k)
         {
-            Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
+            Vmath::Vcopy(nq,
+                         &fields[k]->GetCoeffs()[0],                      1,
+                         &m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
 
         }
     }
@@ -258,9 +262,15 @@ void DriverArnoldi::WriteFld(std::string file, Array<OneD, NekDouble> coeffs)
     m_equ[0]->WriteFld(file,m_equ[0]->UpdateFields()[0], fieldcoeffs, variables);
 }
 
-void DriverArnoldi::WriteEvs(ostream &evlout, const int i,  const NekDouble re_ev, const NekDouble im_ev, NekDouble resid, bool DumpInverse)
+void DriverArnoldi::WriteEvs(
+        ostream &evlout,
+        const int i,
+        const NekDouble re_ev,
+        const NekDouble im_ev,
+        NekDouble resid,
+        bool DumpInverse)
 {
-    if(m_timeSteppingAlgorithm)
+    if (m_timeSteppingAlgorithm)
     {
         NekDouble abs_ev = hypot (re_ev, im_ev);
         NekDouble ang_ev = atan2 (im_ev, re_ev);

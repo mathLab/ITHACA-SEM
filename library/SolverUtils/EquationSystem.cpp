@@ -133,15 +133,15 @@ namespace Nektar
 
             // Set space dimension for use in class
             m_spacedim = m_graph->GetSpaceDimension();
-        
+ 
             // Setting parameteres for homogenous problems
-            m_HomoDirec			= 0;
-            m_useFFT			= false;
-            m_homogen_dealiasing	= false;
-            m_singleMode		= false;
-            m_halfMode			= false;
-            m_multipleModes		= false;
-            m_HomogeneousType           = eNotHomogeneous;
+            m_HomoDirec             = 0;
+            m_useFFT                = false;
+            m_homogen_dealiasing    = false;
+            m_singleMode            = false;
+            m_halfMode              = false;
+            m_multipleModes         = false;
+            m_HomogeneousType       = eNotHomogeneous;
 
             if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
             {
@@ -1457,10 +1457,11 @@ namespace Nektar
         {
 
         }
-        
-        /** Virtual function to define if operator in DoSolve is
+
+        /**
+         * Virtual function to define if operator in DoSolve is
          * negated with regard to the strong form. This is currently
-         * only used in Arnoldi solves. Default is false. 
+         * only used in Arnoldi solves. Default is false.
          */
         bool EquationSystem::v_NegatedOp(void)
         {

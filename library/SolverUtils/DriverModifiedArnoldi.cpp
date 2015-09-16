@@ -316,7 +316,8 @@ void DriverModifiedArnoldi::EV_update(
 
 
 /**
- *
+ * Computes the Ritz eigenvalues and eigenvectors of the Hessenberg matrix
+ * constructed from the Krylov sequence.
  */
 void DriverModifiedArnoldi::EV_small(
     Array<OneD, Array<OneD, NekDouble> > &Kseq,
@@ -379,7 +380,7 @@ void DriverModifiedArnoldi::EV_small(
 
 
 /**
- *
+ * Check for convergence of the residuals of the eigenvalues of H.
  */
 int DriverModifiedArnoldi::EV_test(
     const int               itrn,
@@ -443,7 +444,7 @@ int DriverModifiedArnoldi::EV_test(
 
 
 /**
- *
+ * Sorts the computed eigenvalues by smallest residual first.
  */
 void DriverModifiedArnoldi::EV_sort(
     Array<OneD, NekDouble> &evec,
@@ -478,7 +479,9 @@ void DriverModifiedArnoldi::EV_sort(
 
 
 /**
- *
+ * Post-process the Ritz eigenvalues/eigenvectors of the matrix H, to compute
+ * estimations of the leading eigenvalues and eigenvectors of the original
+ * matrix.
  */
 void DriverModifiedArnoldi::EV_post(
     Array<OneD, Array<OneD, NekDouble> > &Tseq,
@@ -527,7 +530,7 @@ void DriverModifiedArnoldi::EV_post(
 
 
 /**
- *
+ * Compute estimates of the eigenvalues/eigenvectors of the original system.
  */
 void DriverModifiedArnoldi::EV_big(
     Array<OneD, Array<OneD, NekDouble> > &bvecs,

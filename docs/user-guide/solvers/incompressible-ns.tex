@@ -676,7 +676,7 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \item \inltt{Re}: sets the Reynolds number
 \item \inltt{Kinvis}: sets the kinematic viscosity $\nu$.
 \item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
-\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \in\item \inltt{imagShift}: provide an imaginary shift to the direct sovler eigenvalue problem by the specified value. 
+\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}: provide an imaginary shift to the direct sovler eigenvalue problem by the specified value. 
 ltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
 \item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
 \item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
@@ -704,9 +704,9 @@ the Arnoldi iteration.
 Examples of the set up of the direct solver stability analysis (and
 other incompressible Navier-Stokes solvers) can be found in the
 regression test directory
-$NEKTAR/solvers/IncNavierStokesSolver/Tests. See for example the files
-PPF\_R15000\_ModifiedArnoldi\_Shift.tst and PPF_R15000\_3D.xml noting
-that some parameters are specified in the .tst files.
+\inlsh{NEKTAR/solvers/IncNavierStokesSolver/Tests}. See for example the files
+\inlsh{PPF\_R15000\_ModifiedArnoldi\_Shift.tst} and \inlsh{PPF\_R15000\_3D.xml}
+noting that some parameters are specified in the .tst files.
 \end{notebox}
 
 \section{Steady-state solver Session file configuration}

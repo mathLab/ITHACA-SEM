@@ -1,4 +1,4 @@
-SET(MeshConvertHeaders 
+SET(MeshConvertHeaders
     InputModules/InputGmsh.h
     InputModules/InputNek.h
     InputModules/InputNekpp.h
@@ -15,13 +15,14 @@ SET(MeshConvertHeaders
     ProcessModules/ProcessDetectSurf.h
     ProcessModules/ProcessExtractSurf.h
     ProcessModules/ProcessJac.h
+    ProcessModules/ProcessLinear.h
     ProcessModules/ProcessPerAlign.h
     ProcessModules/ProcessScalar.h
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
 )
 
-SET(MeshConvertSources 
+SET(MeshConvertSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
     InputModules/InputNekpp.cpp
@@ -39,6 +40,7 @@ SET(MeshConvertSources
     ProcessModules/ProcessDetectSurf.cpp
     ProcessModules/ProcessExtractSurf.cpp
     ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp
     ProcessModules/ProcessScalar.cpp
     ProcessModules/ProcessSpherigon.cpp
@@ -63,7 +65,7 @@ IF (NEKTAR_USE_CCM)
    SET_TARGET_PROPERTIES(MeshConvert PROPERTIES
     IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
    INCLUDE_DIRECTORIES(MeshConvert ${CCMIO_INCLUDE_DIR})
-   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})        
+   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)

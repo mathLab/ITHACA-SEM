@@ -222,8 +222,6 @@ void DriverArpack::v_Execute(ostream &out)
             for(int k = 0; k < m_kdim; ++k)
             {
                 // write m_kdim eigs to screen
-                WriteEvs(out, k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
-                // write m_kdim eigs to screen
                 WriteEvs(pFile,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
             }
         }
@@ -344,8 +342,8 @@ void DriverArpack::v_Execute(ostream &out)
 
     if(m_timeSteppingAlgorithm)
     {
-        out   << "EV  Magnitude   Angle       Growth      Frequency" << endl;
-        pFile << "EV  Magnitude   Angle       Growth      Frequency" << endl;
+        out   << "         Magnitude   Angle       Growth      Frequency" << endl;
+        pFile << "         Magnitude   Angle       Growth      Frequency" << endl;
         for(int i= 0; i< nconv; ++i)
         {
             WriteEvs(out,i,dr[i],di[i]);
@@ -359,8 +357,8 @@ void DriverArpack::v_Execute(ostream &out)
     }
     else
     {
-        out   << "EV  Real        Imaginary " << endl;
-        pFile << "EV  Real        Imaginary " << endl;
+        out   << "         Real        Imaginary " << endl;
+        pFile << "         Real        Imaginary " << endl;
         for(int i= 0; i< nconv; ++i)
         {
             WriteEvs(out,i,dr[i],di[i],

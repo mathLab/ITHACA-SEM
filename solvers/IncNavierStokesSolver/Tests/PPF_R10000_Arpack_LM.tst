@@ -7,13 +7,9 @@
         <file description="Session File">PPF_R10000.xml</file>
     </files>
     <metrics>
-        <metric type="L2" id="2">
-            <value variable="u" tolerance="0.00001">0.0409899</value>
-            <value variable="v" tolerance="0.00001">0.0168088</value>
-        </metric>
-        <metric type="Linf" id="1">
-            <value variable="u" tolerance="0.0001">0.0275149</value>
-            <value variable="v" tolerance="0.0001">0.0119663</value>
+        <metric type="Eigenvalue" id="0">
+            <value index="0" tolerance="0.001">-0.00024674,0</value>
+            <value index="1" tolerance="0.001">-0.00098696,0</value>
         </metric>
     </metrics>
 </test>

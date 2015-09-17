@@ -423,12 +423,12 @@ int DriverModifiedArnoldi::EV_test(
         evlout.setf(ios::scientific, ios::floatfield);
         if(m_timeSteppingAlgorithm)
         {
-            evlout << "EV  Magnitude   Angle       Growth      "
+            evlout << "        Magnitude   Angle       Growth      "
                    << "Frequency   Residual" << endl;
         }
         else
         {
-            evlout << "EV  Real        Imaginary   inverse real  "
+            evlout << "        Real        Imaginary   inverse real  "
                    << "inverse imag  Residual" << endl;
         }
 

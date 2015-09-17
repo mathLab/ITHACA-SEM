@@ -51,7 +51,7 @@ namespace Nektar
         // Set up the regular expression. This (optionally) matches a variable
         // name if it exists: first field is variable name, second field is L2
         // error.
-        std::string fp = "([+-]?\\d*\\.?\\d*)";
+        std::string fp = "([+-]?\\d*\\.?\\d*(e[+-]\\d*)?)";
         m_regex = "^EV:\\s*\\d*\\s*" + fp + "\\s*" + fp + "\\s*.*";
 
         // Find the number of iterations to match against.

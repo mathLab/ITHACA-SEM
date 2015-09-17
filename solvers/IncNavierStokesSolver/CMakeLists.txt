@@ -88,7 +88,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST(ChanStability_Coupled) 
         ADD_NEKTAR_TEST(PPF_R10000_Arpack_LM) 
         ADD_NEKTAR_TEST(PPF_R15000_Arpack_Shift) 
-        ADD_NEKTAR_TEST(PPF_R15000_Arpack_NoImagShift) 
+        #ADD_NEKTAR_TEST(PPF_R15000_Arpack_NoImagShift) 
         #ADD_NEKTAR_TEST(PPF_R15000_Arpack_NoImagShift_LM) 
     ENDIF (NEKTAR_USE_ARPACK)
 

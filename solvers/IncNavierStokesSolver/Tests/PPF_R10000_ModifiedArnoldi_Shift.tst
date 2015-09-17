@@ -8,8 +8,8 @@
     </files>
     <metrics>
         <metric type="Eigenvalue" id="0">
-            <value index="0" tolerance="0.001">0.518448,-26.6405</value>
-            <value index="1" tolerance="0.001">0.518448,26.6405</value>
+            <value tolerance="0.001">0.518448,-26.6405</value>
+            <value tolerance="0.001">0.518448,26.6405</value>
         </metric>
     </metrics>
 </test>

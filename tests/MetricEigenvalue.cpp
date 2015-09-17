@@ -52,7 +52,7 @@ namespace Nektar
         // name if it exists: first field is variable name, second field is L2
         // error.
         std::string fp = "([+-]?\\d*\\.?\\d*)";
-        m_regex = "^EV:\\s*(\\d*)\\s*" + fp + "\\s*" + fp + "\\s*.*";
+        m_regex = "^EV:\\s*\\d*\\s*" + fp + "\\s*" + fp + "\\s*.*";
 
         // Find the number of iterations to match against.
         TiXmlElement *value = metric->FirstChildElement("value");
@@ -65,17 +65,7 @@ namespace Nektar
             ASSERTL0(value->GetText() || value->GetText() == "",
                      "Missing value in preconditioner metric.");
 
-            MetricRegexFieldValue idx, mag, angle;
-
-            // Read eigenvalue index to check, or use 0 by default.
-            if (value->Attribute("index"))
-            {
-                idx.m_value = value->Attribute("index");
-            }
-            else
-            {
-                idx.m_value = "0";
-            }
+            MetricRegexFieldValue mag, angle;
 
             // Read valute as comma-separate mag,angle parts
             std::string cmplx = value->GetText();
@@ -94,10 +84,9 @@ namespace Nektar
 
             if (!m_generate)
             {
-                std::vector<MetricRegexFieldValue> tmp(3);
-                tmp[0] = idx;
-                tmp[1] = mag;
-                tmp[2] = angle;
+                std::vector<MetricRegexFieldValue> tmp(2);
+                tmp[0] = mag;
+                tmp[1] = angle;
                 m_matches.push_back(tmp);
             }
             else

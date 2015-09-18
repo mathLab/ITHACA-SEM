@@ -51,11 +51,14 @@ namespace Nektar
         // We do not mind which order the converged eigenvalues are listed.
         m_unordered = true;
 
-        // Set up the regular expression. This (optionally) matches a variable
-        // name if it exists: first field is variable name, second field is L2
-        // error.
-        std::string fp = "([+-]?\\d*\\.?\\d*(?:e[+-]\\d*)?)";
-        m_regex = "^EV:\\s+\\d*\\s+" + fp + "\\s+" + fp + "\\s+.*";
+        // Regex for FP numbers of forms: 120, -23, 4.345, 2.4563e-01, -nan
+        std::string fp = "-?\\d+\\.?\\d*(?:e[+-]\\d+)?|-?nan";
+
+        // Set up the regular expression. This matches lines beginning with EV:
+        // followed by an eigenvalue index and then at least 2 floating-point
+        // values comprising real and imaginary components of complex evals.
+        // Comparison is made only on the captured eigenvalue components.
+        m_regex = "^EV:\\s+\\d+\\s+(" + fp + ")\\s+(" + fp + ").*";
 
         // Find the number of iterations to match against.
         TiXmlElement *value = metric->FirstChildElement("value");

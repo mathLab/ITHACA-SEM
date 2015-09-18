@@ -263,7 +263,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                     if(rank == 0)
                     {
                         cout << "L 2 error (variable "
-                             << m_f->m_fielddef[0]->m_fields[i] << ") : " 
+                             << fPts->GetFieldName(i) << ") : " 
                              << l2err  << endl;
                     }
                 }                     
@@ -334,7 +334,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                         else
                         {
                             cout << "L 2 error (variable "
-                                 << m_f->m_fielddef[0]->m_fields[i-dim] << ") : " 
+                                 << fPts->GetFieldName(i-dim) << ") : " 
                                  << l2err  << endl;
                         }
                     }

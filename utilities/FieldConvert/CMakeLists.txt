@@ -89,10 +89,10 @@ ADD_NEKTAR_TEST(bfs_vort_rng)
 #    ADD_NEKTAR_TEST(chan3D_isocontour_win)
 #ELSE(WIN32)
 #    ADD_NEKTAR_TEST(chan3D_probe)
-#    ADD_NEKTAR_TEST(chan3D_equispacedoutput)
-#    ADD_NEKTAR_TEST(chan3D_isocontour)
 #ENDIF(WIN32)
 
+ADD_NEKTAR_TEST(chan3D_equispacedoutput)
+ADD_NEKTAR_TEST(chan3D_isocontour)
 
 IF (NEKTAR_USE_MPI)
     #ADD_NEKTAR_TEST(chan3D_tec_par)

@@ -207,6 +207,69 @@ void OutputTecplot::Process(po::variables_map &vm)
                 }
                 outfile << endl;
             }
+
+
+
+            if (m_doError)
+            {
+                NekDouble l2err;
+                std::string coordval[] = {"x","y","z"};
+                int rank = m_f->m_session->GetComm()->GetRank();
+
+                for(int i = 0; i < dim; ++i)
+                {
+                    // calculate rms value 
+                    l2err = 0.0;
+                    for(j = 0; j < fPts->GetNpoints(); ++j)
+                    {
+                        l2err += fPts->GetPointVal(i,j)*fPts->GetPointVal(i,j);
+                    }
+                    m_f->m_session->GetComm()->AllReduce(l2err,
+                                                    LibUtilities::ReduceSum);
+
+                    int npts = fPts->GetNpoints();
+                    m_f->m_session->GetComm()->AllReduce(npts,
+                                                    LibUtilities::ReduceSum);
+                    
+                    l2err /= npts; 
+                    l2err = sqrt(l2err);
+                    
+                    if(rank == 0)
+                    {
+                        cout << "L 2 error (variable "
+                             << coordval[i] << ") : " 
+                             << l2err  << endl;
+                    }
+                }
+
+                for(i = 0; i < fPts->GetNFields(); ++i)
+                {
+                    // calculate rms value 
+                    l2err = 0.0;
+                    for(j = 0; j < fPts->GetNpoints(); ++j)
+                    {
+                        l2err += m_f->m_data[i][j]*m_f->m_data[i][j];
+                    }
+                    m_f->m_session->GetComm()->AllReduce(l2err,
+                                                     LibUtilities::ReduceSum);
+
+                    int npts = fPts->GetNpoints();
+                    m_f->m_session->GetComm()->AllReduce(npts,
+                                                     LibUtilities::ReduceSum);
+                    
+                    l2err /= npts; 
+                    l2err = sqrt(l2err);
+
+                    if(rank == 0)
+                    {
+                        cout << "L 2 error (variable "
+                             << m_f->m_fielddef[0]->m_fields[i] << ") : " 
+                             << l2err  << endl;
+                    }
+                }                     
+            }
+
+
         }
         else // dump in block format
         {
@@ -232,6 +295,48 @@ void OutputTecplot::Process(po::variables_map &vm)
                     if( ( !(j % 10 * dim) ) && j )
                     {
                         outfile << std::endl;
+                    }
+                }
+            }
+
+            if (m_doError)
+            {
+                NekDouble l2err;
+                std::string coordval[] = {"x","y","z"};
+                int rank = m_f->m_session->GetComm()->GetRank();
+
+                for(int i = 0; i < dim + fPts->GetNFields(); ++i)
+                {
+                // calculate rms value 
+                    l2err = 0.0;
+                    for(j = 0; j < fPts->GetNpoints(); ++j)
+                    {
+                        l2err += fPts->GetPointVal(i,j)*fPts->GetPointVal(i,j);
+                    }
+                    m_f->m_session->GetComm()->AllReduce(l2err,
+                                                  LibUtilities::ReduceSum);
+                    
+                    int npts = fPts->GetNpoints();
+                    m_f->m_session->GetComm()->AllReduce(npts,
+                                                  LibUtilities::ReduceSum);
+                
+                    l2err /= npts; 
+                    l2err = sqrt(l2err);
+                    
+                    if(rank == 0)
+                    {
+                        if(i < dim)
+                        {
+                            cout << "L 2 error (variable "
+                                 << coordval[i] << ") : " 
+                                 << l2err  << endl;
+                        }
+                        else
+                        {
+                            cout << "L 2 error (variable "
+                                 << m_f->m_fielddef[0]->m_fields[i-dim] << ") : " 
+                                 << l2err  << endl;
+                        }
                     }
                 }
             }

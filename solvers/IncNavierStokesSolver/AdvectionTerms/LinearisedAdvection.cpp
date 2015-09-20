@@ -105,40 +105,27 @@ void LinearisedAdvection::v_InitObject(
 
             if(m_session->DefinesSolverInfo("ModeType"))
             {
-                m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
-                m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
-                m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
-            }
+                m_session->MatchSolverInfo("ModeType", "SingleMode",    m_SingleMode,    false);
+                m_session->MatchSolverInfo("ModeType", "HalfMode",      m_HalfMode,      false);
+                m_session->MatchSolverInfo("ModeType", "MultipleModes", m_MultipleModes, false);
 
-            if(m_session->DefinesSolverInfo("ModeType"))
-            {
                 if(m_SingleMode)
                 {
-                    m_npointsZ=2;
-
+                    m_npointsZ = 2;
                 }
                 else if(m_HalfMode)
                 {
-                    m_npointsZ=1;
-
+                    m_npointsZ = 1;
                 }
                 else if(m_MultipleModes)
                 {
-                    m_npointsZ        = m_session->GetParameter("HomModesZ");
-                }
-                else
-                {
-                    ASSERTL0(false, "SolverInfo ModeType not valid");
-
-
+                    m_npointsZ = m_session->GetParameter("HomModesZ");
                 }
             }
             else
             {
                 m_session->LoadParameter("HomModesZ",m_npointsZ);
-
             }
-
         }
 
         if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -175,32 +162,32 @@ void LinearisedAdvection::v_InitObject(
         m_npointsZ = 1; // set to default value so can use to identify 2d or 3D (homogeneous) expansions
     }
 
-    if(m_session->DefinesSolverInfo("PROJECTION"))
-    {
-        std::string ProjectStr
-        = m_session->GetSolverInfo("PROJECTION");
-
-        if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
-           (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
-        {
-            m_projectionType = MultiRegions::eGalerkin;
-        }
-        else if(ProjectStr == "DisContinuous")
-        {
-            m_projectionType = MultiRegions::eDiscontinuous;
-        }
-        else
-        {
-            ASSERTL0(false,"PROJECTION value not recognised");
-        }
-    }
-    else
-    {
-        cerr << "Projection type not specified in SOLVERINFO,"
-            "defaulting to continuous Galerkin" << endl;
-        m_projectionType = MultiRegions::eGalerkin;
-    }
-
+//    if(m_session->DefinesSolverInfo("PROJECTION"))
+//    {
+//        std::string ProjectStr
+//        = m_session->GetSolverInfo("PROJECTION");
+//
+//        if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
+//           (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
+//        {
+//            m_projectionType = MultiRegions::eGalerkin;
+//        }
+//        else if(ProjectStr == "DisContinuous")
+//        {
+//            m_projectionType = MultiRegions::eDiscontinuous;
+//        }
+//        else
+//        {
+//            ASSERTL0(false,"PROJECTION value not recognised");
+//        }
+//    }
+//    else
+//    {
+//        cerr << "Projection type not specified in SOLVERINFO,"
+//            "defaulting to continuous Galerkin" << endl;
+//        m_projectionType = MultiRegions::eGalerkin;
+//    }
+//
     int nvar = m_session->GetVariables().size();
     m_baseflow = Array<OneD, Array<OneD, NekDouble> >(nvar);
     for (int i = 0; i < nvar; ++i)
@@ -313,21 +300,17 @@ void LinearisedAdvection::v_Advect(
         grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
 
-        //Evaluation of the base flow for periodic cases
-        //(it requires fld files)
+        // Evaluation of the base flow for periodic cases
         if(m_slices>1)
         {
-            if (m_session->GetFunctionType("BaseFlow", 0)
-                == LibUtilities::eFunctionTypeFile)
+            ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
+                        == LibUtilities::eFunctionTypeFile,
+                     "Base flow should be a sequence of files.");
+
+            for (int i = 0; i < ndim; ++i)
             {
-                for(int i=0; i<ndim;++i)
-                {
-                    UpdateBase(m_slices,m_interp[i],m_baseflow[i],time,m_period);
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Periodic Base flow requires filename_ files");
+                UpdateBase(m_slices, m_interp[i], m_baseflow[i],
+                           time, m_period);
             }
         }
 
@@ -722,15 +705,15 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
 }
 
 
-void LinearisedAdvection::UpdateBase( const NekDouble m_slices,
-                                      const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD, NekDouble> &outarray,
-                                      const NekDouble m_time,
-                                      const NekDouble m_period)
+void LinearisedAdvection::UpdateBase(
+        const NekDouble                     m_slices,
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble>             &outarray,
+        const NekDouble                     m_time,
+        const NekDouble                     m_period)
 {
-    int npoints=m_baseflow[0].num_elements();
-
-    NekDouble BetaT=2*M_PI*fmod (m_time, m_period) / m_period;
+    int npoints     = m_baseflow[0].num_elements();
+    NekDouble BetaT = 2*M_PI*fmod (m_time, m_period) / m_period;
     NekDouble phase;
     Array<OneD, NekDouble> auxiliary(npoints);
 
@@ -742,7 +725,7 @@ void LinearisedAdvection::UpdateBase( const NekDouble m_slices,
         phase = (i>>1) * BetaT;
 
         Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
-        Vmath::Svtvp(npoints, sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+        Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
     }
 
 }

@@ -71,7 +71,7 @@ public:
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
 
-    MultiRegions::ProjectionType m_projectionType;
+//    MultiRegions::ProjectionType m_projectionType;
     int m_spacedim;
     int m_expdim;
 

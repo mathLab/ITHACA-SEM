@@ -218,8 +218,8 @@ void Octree::Build(const NekDouble min, const NekDouble max,
 
     if(m_verbose)
     {
-        int elem=CountElemt();
-        cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
+        //int elem=CountElemt();
+        //cout << endl<< "\tPredicted mesh: " << elem << " elements" << endl;
     }
 }
 
@@ -701,6 +701,8 @@ void Octree::CompileCuravturePointList()
                 Array<OneD, NekDouble> uv(2);
                 uv[0] = k*du + bounds[0];
                 uv[1] = j*dv + bounds[2];
+                if(j==40-1) uv[1]=bounds[3];
+                if(k==40-1) uv[0]=bounds[1];
                 samplepoints[k][j] = surf->P(uv);
             }
         }

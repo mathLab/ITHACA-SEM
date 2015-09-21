@@ -333,24 +333,6 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
                                             AllocateSharedPtr(i,in,ein);
     m_surfs[i] = newSurf;
 
-    //check the face normal is pointing interior
-    Array<OneD, NekDouble> bounds = m_surfs[i]->GetBounds();
-    Array<OneD, NekDouble> uv(2);
-    uv[0] = bounds[1];
-    uv[1] = bounds[2];
-    Array<OneD, NekDouble> N = m_surfs[i]->N(uv);
-    Array<OneD, NekDouble> P = m_surfs[i]->P(uv);
-
-    //create a test point whihc is one unit normal from the center of the surface
-    Array<OneD, NekDouble> loc(3);
-    loc[0] = P[0] + 1E-3*N[0];
-    loc[1] = P[1] + 1E-3*N[1];
-    loc[2] = P[2] + 1E-3*N[2];
-
-    ASSERTL0((in.Orientation()==1 && InsideShape(loc)) ||
-             (in.Orientation()==0 && !InsideShape(loc)),
-             "cannot determine normal");
-
     if(in.Orientation()==0)
     {
         m_surfs[i]->SetReverseNomral();

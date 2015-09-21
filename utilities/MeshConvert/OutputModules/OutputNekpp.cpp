@@ -450,14 +450,14 @@ namespace Nektar
                     exp->SetAttribute("COMPOSITE", "C["
                         + boost::lexical_cast<std::string>(it->second->m_id)
                         + "]");
-                    if(m_mesh->m_order<2)
+                    if(m_mesh->m_nummode<2)
                     {
                         exp->SetAttribute("NUMMODES",4);
                         exp->SetAttribute("TYPE","MODIFIED");
                     }
                     else
                     {
-                        exp->SetAttribute("NUMMODES",m_mesh->m_order);
+                        exp->SetAttribute("NUMMODES",m_mesh->m_nummode);
                         exp->SetAttribute("TYPE","MODIFIED");
                     }
 

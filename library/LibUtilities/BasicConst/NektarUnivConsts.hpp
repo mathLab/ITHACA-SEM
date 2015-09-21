@@ -55,7 +55,7 @@ namespace Nektar
         static const NekDouble kNekSparseNonZeroTol = 1e-16;
 
         //toleranecs for mesh generation and cad handling
-        static const NekDouble GeomTol = 1E-3;
+        static const NekDouble GeomTol = 1E-2;
         static const NekDouble CoinTol = 1E-6;
     }
 } //end of namespace

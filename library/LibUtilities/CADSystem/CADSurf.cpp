@@ -55,7 +55,6 @@ CADSurf::CADSurf(int i, TopoDS_Shape in,
     in.Move(mv);
     m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
-
 }
 
 Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
@@ -70,24 +69,67 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
                         m_occSurface.LastVParameter(),
                         Extrema_ExtAlgo_Tree);
 
-    ASSERTL0(projection.NbPoints() > 0, "locuv failed");
-
-    Quantity_Parameter ui;
-    Quantity_Parameter vi;
-
-    projection.Parameters(1,ui,vi);
-
-    /// @todo create a check so that if the calculated uv is out of bounds
-
     Array<OneD, NekDouble> uvr(2);
-    uvr[0] = ui;
-    uvr[1] = vi;
-
-    if(projection.Distance(1) > NekConstants::GeomTol)
+    if(projection.NbPoints() == 0)
     {
-        stringstream ss;
-        ss << "large locuv distance " << projection.Distance(1)/1000.0 << endl;
-        ASSERTL1(false,ss.str());
+        // alternative locuv methods
+        ShapeAnalysis_Surface sas(m_s);
+        sas.SetDomain(m_occSurface.FirstUParameter(),
+                      m_occSurface.LastUParameter(),
+                      m_occSurface.FirstVParameter(),
+                      m_occSurface.LastVParameter());
+
+        gp_Pnt2d p2 = sas.ValueOfUV(loc,1e-7);
+        uvr[0] = p2.X();
+        uvr[1] = p2.Y();
+
+        gp_Pnt p3 = sas.Value(p2);
+        ASSERTL0(p3.Distance(loc) < 1e-3, "large locuv distance sas");
+
+    }
+    else
+    {
+        Quantity_Parameter ui;
+        Quantity_Parameter vi;
+
+        projection.Parameters(1,ui,vi);
+
+        uvr[0] = ui;
+        uvr[1] = vi;
+
+        if(projection.Distance(1) > 1.0)
+        {
+            stringstream ss;
+            ss << "large locuv distance " << projection.Distance(1)/1000.0 << endl;
+            ASSERTL1(false,ss.str());
+        }
+    }
+
+    if(uvr[0] < m_occSurface.FirstUParameter() ||
+               uvr[0] > m_occSurface.LastUParameter() ||
+               uvr[1] < m_occSurface.FirstVParameter() ||
+               uvr[1] > m_occSurface.LastVParameter())
+    {
+        if(uvr[0] < m_occSurface.FirstUParameter() && fabs(m_occSurface.FirstUParameter() - uvr[0]) < 1E-6)
+        {
+            uvr[0] = m_occSurface.FirstUParameter();
+        }
+        else if(uvr[0] > m_occSurface.LastUParameter() && fabs(m_occSurface.LastUParameter() - uvr[0]) < 1E-6)
+        {
+            uvr[0] = m_occSurface.LastUParameter();
+        }
+        else if(uvr[1] < m_occSurface.FirstVParameter() && fabs(m_occSurface.FirstVParameter() - uvr[1]) < 1E-6)
+        {
+            uvr[1] = m_occSurface.FirstVParameter();
+        }
+        else if(uvr[1] > m_occSurface.LastVParameter() && fabs(m_occSurface.LastVParameter() - uvr[1]) < 1E-6)
+        {
+            uvr[1] = m_occSurface.LastVParameter();
+        }
+        else
+        {
+            ASSERTL0(false,"Cannot correct locuv");
+        }
     }
 
     return uvr;

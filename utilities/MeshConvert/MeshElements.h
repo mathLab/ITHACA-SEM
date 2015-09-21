@@ -1122,7 +1122,7 @@ namespace Nektar
             /// Dimension of the space in which the mesh is defined.
             unsigned int                    m_spaceDim;
             /// a order tag to aid output, a bit of a hack
-            unsigned int                    m_order;
+            unsigned int                    m_nummode;
             /// List of mesh nodes.
             std::vector<NodeSharedPtr>      m_node;
             /// Set of element vertices.

@@ -66,5 +66,7 @@
 #include <ShapeFix_Wireframe.hxx>
 #include <ShapeFix_Shell.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <ShapeAnalysis_Surface.hxx>
+#include <gp_Pnt2d.hxx>
 
 #endif

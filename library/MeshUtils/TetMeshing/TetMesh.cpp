@@ -94,7 +94,7 @@ void TetMesh::Mesh()
 
     tetgen->Extract(numtet, tetconnect);
 
-    tetgen->freetet();
+    //tetgen->freetet();
 
     //create tets
     for(int i = 0; i < numtet; i++)

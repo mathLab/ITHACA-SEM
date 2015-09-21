@@ -67,15 +67,15 @@ namespace Nektar
 
         Element::Element(ElmtConfig   pConf,
                          unsigned int pNumNodes,
-                         unsigned int pGotNodes) 
-            : m_conf(pConf), 
+                         unsigned int pGotNodes)
+            : m_conf(pConf),
               m_curveType(LibUtilities::ePolyEvenlySpaced),
               m_geom()
         {
             if (pNumNodes != pGotNodes)
             {
-                cerr << "Number of modes mismatch for type " 
-                     << pConf.m_e << "! Should be " << pNumNodes 
+                cerr << "Number of modes mismatch for type "
+                     << pConf.m_e << "! Should be " << pNumNodes
                      << " but got " << pGotNodes << " nodes." << endl;
                 abort();
             }
@@ -88,7 +88,7 @@ namespace Nektar
         {
             return m_element[m_expDim].size();
         }
-        
+
         /**
          * @brief Return the number of boundary elements (i.e. one below the
          * expansion dimension).
@@ -96,13 +96,13 @@ namespace Nektar
         unsigned int Mesh::GetNumBndryElements()
         {
             unsigned int i, nElmt = 0;
-            
+
             for (i = 0; i < m_expDim; ++i)
                 nElmt += m_element[i].size();
-            
+
             return nElmt;
         }
-        
+
         /**
          * @brief Return the total number of entities in the mesh (i.e. all
          * elements, regardless of dimension).
@@ -110,12 +110,12 @@ namespace Nektar
         unsigned int Mesh::GetNumEntities()
         {
             unsigned int nEnt = 0;
-            
+
             for (unsigned int d = 0; d <= m_expDim; ++d)
             {
                 nEnt += m_element[d].size();
             }
-            
+
             return nEnt;
         }
 
@@ -126,25 +126,25 @@ namespace Nektar
         bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2)
         {
             int i, n = c1->type.size();
-            
+
             if (n != c2->type.size())
             {
                 return false;
             }
-            
+
             for (i = 0; i < n; ++i)
             {
                 if (c1->type[i] != c2->type[i])
                 {
                     return false;
                 }
-                
+
                 if (c1->field[i] != c2->field[i] || c1->value[i] != c2->value[i])
                 {
                     return false;
                 }
             }
-            
+
             return true;
         }
 
@@ -217,11 +217,11 @@ namespace Nektar
 
         /**
          * @brief Replace a vertex in the element.
-         * 
+         *
          * When a vertex is replaced, the element edges and faces are also
          * searched and the corresponding edge/face nodes are updated to
          * maintain consistency.
-         * 
+         *
          * @param  p     Index of the vertex to replace.
          * @param  pNew  New vertex.
          */
@@ -266,10 +266,10 @@ namespace Nektar
 
         /**
          * @brief Replace an edge in the element.
-         * 
+         *
          * When an edge is replaced, the element faces are also searched and
          * the corresponding face edges are updated to maintain consistency.
-         * 
+         *
          * @param  p     Index of the edge to replace.
          * @param  pNew  New edge.
          */
@@ -288,12 +288,12 @@ namespace Nektar
                 }
             }
         }
-        
+
         /**
          * @brief Replace a face in the element.
-         * 
+         *
          * When a face is replaced, no other consistency checks are required.
-         * 
+         *
          * @param  p     Index of the face to replace.
          * @param  pNew  New face.
          */
@@ -301,14 +301,14 @@ namespace Nektar
         {
             m_face[p] = pNew;
         }
-        
+
         /**
          * @brief Obtain the order of an element by looking at edges.
          */
         int Element::GetMaxOrder()
         {
             int i, ret = 1;
-            
+
             for (i = 0; i < m_edge.size(); ++i)
             {
                 int edgeOrder = m_edge[i]->GetNodeCount()-1;
@@ -317,20 +317,20 @@ namespace Nektar
                     ret = edgeOrder;
                 }
             }
-            
+
             return ret;
         }
-        
+
         /**
          * @brief Generate a Nektar++ string describing the composite.
-         * 
+         *
          * The list of composites may include individual element IDs or ranges
          * of element IDs.
          */
         string Composite::GetXmlString(bool doSort)
         {
 
-#if 0 // turn this option off since causes problem with InputNekpp.cpp 
+#if 0 // turn this option off since causes problem with InputNekpp.cpp
             if (doSort)
             {
                 element_id_less_than sortOperator;
@@ -380,14 +380,14 @@ namespace Nektar
 
         LibUtilities::ShapeType Point::m_type = GetElementFactory().
             RegisterCreatorFunction(LibUtilities::ePoint, Point::create, "Point");
-        
+
         /**
          * @brief Create a point element.
          */
         Point::Point(ElmtConfig            pConf,
-                     vector<NodeSharedPtr> pNodeList, 
+                     vector<NodeSharedPtr> pNodeList,
                      vector<int>           pTagList)
-            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag     = "";
             m_dim     = 0;
@@ -406,20 +406,20 @@ namespace Nektar
 
         LibUtilities::ShapeType Line::m_type = GetElementFactory().
             RegisterCreatorFunction(LibUtilities::eSegment, Line::create, "Line");
-        
+
         /**
          * @brief Create a line element.
          */
         Line::Line(ElmtConfig            pConf,
-                   vector<NodeSharedPtr> pNodeList, 
+                   vector<NodeSharedPtr> pNodeList,
                    vector<int>           pTagList)
-            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag     = "S";
             m_dim     = 1;
             m_taglist = pTagList;
             int n     = m_conf.m_order-1;
-            
+
             // Add vertices
             for (int i = 0; i < 2; ++i) {
                 m_vertex.push_back(pNodeList[i]);
@@ -433,7 +433,7 @@ namespace Nektar
             m_edge.push_back(boost::shared_ptr<Edge>(
                 new Edge(pNodeList[0], pNodeList[1], edgeNodes, m_conf.m_edgeCurveType)));
         }
-        
+
         SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
             // Create edge vertices.
@@ -442,20 +442,20 @@ namespace Nektar
 
             p[0] = m_vertex[0]->GetGeom(coordDim);
             p[1] = m_vertex[1]->GetGeom(coordDim);
-            
+
             if (m_edge[0]->m_edgeNodes.size() > 0)
             {
-                SpatialDomains::CurveSharedPtr c = 
+                SpatialDomains::CurveSharedPtr c =
                     MemoryManager<SpatialDomains::Curve>::
                     AllocateSharedPtr(m_id, m_edge[0]->m_curveType);
-                
+
                 c->m_points.push_back(p[0]);
                 for (int i = 0; i < m_edge[0]->m_edgeNodes.size(); ++i)
                 {
                     c->m_points.push_back(m_edge[0]->m_edgeNodes[i]->GetGeom(coordDim));
                 }
                 c->m_points.push_back(p[1]);
-                
+
                 ret = MemoryManager<SpatialDomains::SegGeom>::
                     AllocateSharedPtr(m_id, 2, p, c);
             }
@@ -479,14 +479,14 @@ namespace Nektar
 
         LibUtilities::ShapeType Triangle::m_type = GetElementFactory().
             RegisterCreatorFunction(LibUtilities::eTriangle, Triangle::create, "Triangle");
-        
+
         /**
          * @brief Create a triangle element.
          */
         Triangle::Triangle(ElmtConfig            pConf,
-                           vector<NodeSharedPtr> pNodeList, 
+                           vector<NodeSharedPtr> pNodeList,
                            vector<int>           pTagList)
-            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag     = "T";
             m_dim     = 2;
@@ -549,25 +549,25 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr   edges[3];
             SpatialDomains::PointGeomSharedPtr verts[3];
             SpatialDomains::TriGeomSharedPtr   ret;
-            
+
             for (int i = 0; i < 3; ++i)
             {
                 edges[i] = m_edge  [i]->GetGeom(coordDim);
                 verts[i] = m_vertex[i]->GetGeom(coordDim);
             }
-            
+
             StdRegions::Orientation edgeorient[3] = {
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
             };
-            
+
             ret = MemoryManager<SpatialDomains::TriGeom>::
                 AllocateSharedPtr(m_id, verts, edges, edgeorient);
 
             return ret;
         }
-        
+
         /**
          * @brief Return the number of nodes defining a triangle.
          */
@@ -583,7 +583,7 @@ namespace Nektar
         void Triangle::Complete(int order)
         {
             int i, j;
-            
+
             // Create basis key for a nodal tetrahedron.
             LibUtilities::BasisKey B0(
                 LibUtilities::eOrtho_A, order+1,
@@ -593,17 +593,17 @@ namespace Nektar
                 LibUtilities::eOrtho_B, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
-            
+
             // Create a standard nodal triangle in order to get the
             // Vandermonde matrix to perform interpolation to nodal points.
-            StdRegions::StdNodalTriExpSharedPtr nodalTri = 
+            StdRegions::StdNodalTriExpSharedPtr nodalTri =
                 MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
                     B0, B1, LibUtilities::eNodalTriEvenlySpaced);
-            
-            SpatialDomains::TriGeomSharedPtr geom = 
+
+            SpatialDomains::TriGeomSharedPtr geom =
                 boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                     this->GetGeom(3));
-            
+
             // Create basis key for a triangle.
             LibUtilities::BasisKey C0(
                 LibUtilities::eOrtho_A, order+1,
@@ -613,12 +613,12 @@ namespace Nektar
                 LibUtilities::eOrtho_B, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
-            
+
             // Create a triangle.
-            LocalRegions::TriExpSharedPtr tri = 
+            LocalRegions::TriExpSharedPtr tri =
                 MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(
                     C0, C1, geom);
-            
+
             // Get coordinate array for tetrahedron.
             int nqtot = tri->GetTotPoints();
             Array<OneD, NekDouble> alloc(6*nqtot);
@@ -629,9 +629,9 @@ namespace Nektar
             Array<OneD, NekDouble> yo(alloc+4*nqtot);
             Array<OneD, NekDouble> zo(alloc+5*nqtot);
             Array<OneD, NekDouble> tmp;
-            
+
             tri->GetCoords(xi, yi, zi);
-            
+
             for (i = 0; i < 3; ++i)
             {
                 Array<OneD, NekDouble> coeffs(nodalTri->GetNcoeffs());
@@ -639,7 +639,7 @@ namespace Nektar
                 // Apply Vandermonde matrix to project onto nodal space.
                 nodalTri->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
-            
+
             // Now extract points from the co-ordinate arrays into the
             // edge/face/volume nodes. First, extract edge-interior nodes.
             for (i = 0; i < 3; ++i)
@@ -660,7 +660,7 @@ namespace Nektar
                 m_volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
             }
-            
+
             m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
             m_conf.m_volumeNodes = true;
@@ -668,16 +668,16 @@ namespace Nektar
 
 
         LibUtilities::ShapeType Quadrilateral::m_type = GetElementFactory().
-            RegisterCreatorFunction(LibUtilities::eQuadrilateral, Quadrilateral::create, 
+            RegisterCreatorFunction(LibUtilities::eQuadrilateral, Quadrilateral::create,
                                     "Quadrilateral");
-        
+
         /**
          * @brief Create a quadrilateral element.
          */
         Quadrilateral::Quadrilateral(ElmtConfig            pConf,
                                      vector<NodeSharedPtr> pNodeList,
                                      vector<int>           pTagList)
-            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag = "Q";
             m_dim = 2;
@@ -729,7 +729,7 @@ namespace Nektar
 
             if (m_conf.m_faceNodes)
             {
-                m_volumeNodes.insert(m_volumeNodes.begin(), 
+                m_volumeNodes.insert(m_volumeNodes.begin(),
                                    pNodeList.begin()+4*m_conf.m_order,
                                    pNodeList.end());
             }
@@ -741,30 +741,30 @@ namespace Nektar
                 LibUtilities::eOrtho_A, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussLobattoLegendre));
-            
-            SpatialDomains::QuadGeomSharedPtr geom = 
+
+            SpatialDomains::QuadGeomSharedPtr geom =
                 boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
                     this->GetGeom(3));
-            
+
             // Create a quad.
-            LocalRegions::QuadExpSharedPtr quad = 
+            LocalRegions::QuadExpSharedPtr quad =
                 MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
                     C0, C0, geom);
-            
+
             // Get coordinate array for quadrilateral.
             int nqtot = quad->GetTotPoints();
             Array<OneD, NekDouble> alloc(3*nqtot);
             Array<OneD, NekDouble> x    (alloc        );
             Array<OneD, NekDouble> y    (alloc+1*nqtot);
             Array<OneD, NekDouble> z    (alloc+2*nqtot);
-            
+
             quad->GetCoords(x, y, z);
-            
+
             // Now extract points from the co-ordinate arrays into the edge
             // and face nodes. First, extract edge-interior nodes.
             int edgeMap[4][2] = {{0,1},{order,order+1},
                                  {nqtot-1,-1},{order*(order+1),-order-1}};
-            
+
             for (int i = 0; i < 4; ++i)
             {
                 int pos = edgeMap[i][0] + edgeMap[i][1];
@@ -785,9 +785,9 @@ namespace Nektar
                 {
                     m_volumeNodes.push_back(
                         NodeSharedPtr(new Node(0, x[pos+j], y[pos+j], z[pos+j])));
-                }                
+                }
             }
-            
+
             m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
             m_conf.m_volumeNodes = true;
@@ -798,13 +798,13 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr   edges[4];
             SpatialDomains::PointGeomSharedPtr verts[4];
             SpatialDomains::QuadGeomSharedPtr  ret;
-            
+
             for (int i = 0; i < 4; ++i)
             {
                 edges[i] = m_edge  [i]->GetGeom(coordDim);
                 verts[i] = m_vertex[i]->GetGeom(coordDim);
             }
-            
+
             StdRegions::Orientation edgeorient[4] = {
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
@@ -829,8 +829,8 @@ namespace Nektar
             else
                 return (n+1)*(n+1);
         }
-        
-        
+
+
         LibUtilities::ShapeType Tetrahedron::m_type = GetElementFactory().
             RegisterCreatorFunction(LibUtilities::eTetrahedron, Tetrahedron::create, "Tetrahedron");
 
@@ -857,7 +857,7 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(1,4)] = 5 + 3*n;
             edgeNodeMap[pair<int,int>(2,4)] = 5 + 4*n;
             edgeNodeMap[pair<int,int>(3,4)] = 5 + 5*n;
-            
+
             // Add vertices
             for (int i = 0; i < 4; ++i)
             {
@@ -881,7 +881,7 @@ namespace Nektar
                                            m_conf.m_edgeCurveType)));
                 m_edge.back()->m_id = eid++;
             }
-            
+
             // Reorient the tet to ensure collapsed coordinates align between
             // adjacent elements.
             if (m_conf.m_reorient)
@@ -897,7 +897,7 @@ namespace Nektar
                     m_orientationMap[i] = i;
                 }
             }
-            
+
             // Face-vertex IDs
             int face_ids[4][3] = {
                 {0,1,2}, {0,1,3}, {1,2,3}, {0,2,3}
@@ -996,12 +996,12 @@ namespace Nektar
             tmp[5] = m_edge[face_edges[2][1]];
             m_edge = tmp;
         }
-        
+
         SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
         {
             SpatialDomains::TriGeomSharedPtr tfaces[4];
             SpatialDomains::TetGeomSharedPtr ret;
-            
+
             for (int i = 0; i < 4; ++i)
             {
                 tfaces[i] = boost::dynamic_pointer_cast
@@ -1013,7 +1013,7 @@ namespace Nektar
 
             return ret;
         }
-        
+
         /**
          * @brief Return the number of nodes defining a tetrahedron.
          */
@@ -1034,7 +1034,7 @@ namespace Nektar
         void Tetrahedron::Complete(int order)
         {
             int i, j;
-            
+
             // Create basis key for a nodal tetrahedron.
             LibUtilities::BasisKey B0(
                 LibUtilities::eOrtho_A, order+1,
@@ -1048,21 +1048,21 @@ namespace Nektar
                 LibUtilities::eOrtho_C, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha2Beta0));
-            
+
             // Create a standard nodal tetrahedron in order to get the
             // Vandermonde matrix to perform interpolation to nodal points.
-            StdRegions::StdNodalTetExpSharedPtr nodalTet = 
+            StdRegions::StdNodalTetExpSharedPtr nodalTet =
                 MemoryManager<StdRegions::StdNodalTetExp>::AllocateSharedPtr(
                     B0, B1, B2, LibUtilities::eNodalTetEvenlySpaced);
-            
+
             Array<OneD, NekDouble> x, y, z;
-            
+
             nodalTet->GetNodalPoints(x,y,z);
-            
-            SpatialDomains::TetGeomSharedPtr geom = 
+
+            SpatialDomains::TetGeomSharedPtr geom =
                 boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(
                     this->GetGeom(3));
-            
+
             // Create basis key for a tetrahedron.
             LibUtilities::BasisKey C0(
                 LibUtilities::eOrtho_A, order+1,
@@ -1076,12 +1076,12 @@ namespace Nektar
                 LibUtilities::eOrtho_C, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha2Beta0));
-            
+
             // Create a tet.
-            LocalRegions::TetExpSharedPtr tet = 
+            LocalRegions::TetExpSharedPtr tet =
                 MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(
                     C0, C1, C2, geom);
-            
+
             // Get coordinate array for tetrahedron.
             int nqtot = tet->GetTotPoints();
             Array<OneD, NekDouble> alloc(6*nqtot);
@@ -1092,9 +1092,9 @@ namespace Nektar
             Array<OneD, NekDouble> yo(alloc+4*nqtot);
             Array<OneD, NekDouble> zo(alloc+5*nqtot);
             Array<OneD, NekDouble> tmp;
-            
+
             tet->GetCoords(xi, yi, zi);
-            
+
             for (i = 0; i < 3; ++i)
             {
                 Array<OneD, NekDouble> coeffs(nodalTet->GetNcoeffs());
@@ -1102,7 +1102,7 @@ namespace Nektar
                 // Apply Vandermonde matrix to project onto nodal space.
                 nodalTet->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
-            
+
             // Now extract points from the co-ordinate arrays into the
             // edge/face/volume nodes. First, extract edge-interior nodes.
             for (i = 0; i < 6; ++i)
@@ -1127,7 +1127,7 @@ namespace Nektar
                         NodeSharedPtr(new Node(0, xo[pos+j], yo[pos+j], zo[pos+j])));
                 }
             }
-            
+
             // Finally extract volume nodes.
             int pos = 4 + 6*(order-1) + 4*(order-2)*(order-1)/2;
             for (i = pos; i < (order+1)*(order+2)*(order+3)/6; ++i)
@@ -1135,7 +1135,7 @@ namespace Nektar
                 m_volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
             }
-            
+
             m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
             m_conf.m_volumeNodes = true;
@@ -1147,7 +1147,7 @@ namespace Nektar
             vector<int> nid;
             int fid;
         };
-        
+
         struct TetOrientHash : std::unary_function<struct TetOrient, std::size_t>
         {
             std::size_t operator()(struct TetOrient const& p) const
@@ -1163,7 +1163,7 @@ namespace Nektar
             {
                 return false;
             }
-            
+
             for (int i = 0; i < a.nid.size(); ++i)
             {
                 if (a.nid[i] != b.nid[i])
@@ -1171,18 +1171,18 @@ namespace Nektar
                     return false;
                 }
             }
-            
+
             return true;
         }
-        
+
         /**
          * @brief Orient tetrahedron to align degenerate vertices.
-         * 
+         *
          * Orientation of tetrahedral elements is required so that the
          * singular vertices of triangular faces (which occur as a part of the
          * collapsed co-ordinate system) align. The algorithm is based on that
          * used in T. Warburton's thesis and in the original Nektar source.
-         * 
+         *
          * First the vertices are ordered with the highest global vertex at
          * the top degenerate point, and the base degenerate point has second
          * lowest ID. These vertices are swapped if the element is incorrectly
@@ -1192,7 +1192,7 @@ namespace Nektar
         {
             static int face_ids[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
-            
+
             TetOrientSet faces;
 
             // Create a copy of the original vertex ordering. This is used to
@@ -1205,7 +1205,7 @@ namespace Nektar
                 nodes[0] = m_vertex[face_ids[i][0]]->m_id;
                 nodes[1] = m_vertex[face_ids[i][1]]->m_id;
                 nodes[2] = m_vertex[face_ids[i][2]]->m_id;
-                
+
                 sort(nodes.begin(), nodes.end());
                 struct TetOrient faceNodes(nodes, i);
                 faces.insert(faceNodes);
@@ -1219,7 +1219,7 @@ namespace Nektar
             // point. Place second highest global vertex at base degenerate
             // point.
             sort(m_vertex.begin(), m_vertex.end());
-            
+
             // Calculate a.(b x c) if negative, reverse order of
             // non-degenerate points to correctly orientate the tet.
 
@@ -1237,9 +1237,9 @@ namespace Nektar
             NekDouble ny = (az*bx-ax*bz);
             NekDouble nz = (ax*by-ay*bx);
             NekDouble nmag = sqrt(nx*nx+ny*ny+nz*nz);
-            nx /= nmag; ny /= nmag; nz /= nmag; 
+            nx /= nmag; ny /= nmag; nz /= nmag;
 
-            // distance of top vertex from base 
+            // distance of top vertex from base
             NekDouble dist = cx*nx+cy*ny+cz*nz;
 
             if (fabs(dist) <= 1e-4)
@@ -1256,9 +1256,9 @@ namespace Nektar
             ny = (az*cx-ax*cz);
             nz = (ax*cy-ay*cx);
             nmag = sqrt(nx*nx+ny*ny+nz*nz);
-            nx /= nmag; ny /= nmag; nz /= nmag; 
-            
-            // distance of top vertex from base 
+            nx /= nmag; ny /= nmag; nz /= nmag;
+
+            // distance of top vertex from base
             dist = bx*nx+by*ny+bz*nz;
 
             if (fabs(dist) <= 1e-4)
@@ -1270,9 +1270,9 @@ namespace Nektar
             ny = (bz*cx-bx*cz);
             nz = (bx*cy-by*cx);
             nmag = sqrt(nx*nx+ny*ny+nz*nz);
-            nx /= nmag; ny /= nmag; nz /= nmag; 
-            
-            // distance of top vertex from base 
+            nx /= nmag; ny /= nmag; nz /= nmag;
+
+            // distance of top vertex from base
             dist = ax*nx+ay*ny+az*nz;
 
             if (fabs(dist) <= 1e-4)
@@ -1280,22 +1280,22 @@ namespace Nektar
                 cerr << "Warning: degenerate tetrahedron, 1st vertex is = " << dist <<" from face" << endl;
             }
 
-            
+
             TetOrientSet::iterator it;
-            
+
             // Search for the face in the original set of face nodes. Then use
             // this to construct the #orientationMap.
             for (int i = 0; i < 4; ++i)
             {
                 vector<int> nodes(3);
-                
+
                 nodes[0] = m_vertex[face_ids[i][0]]->m_id;
                 nodes[1] = m_vertex[face_ids[i][1]]->m_id;
                 nodes[2] = m_vertex[face_ids[i][2]]->m_id;
                 sort(nodes.begin(), nodes.end());
-                
+
                 struct TetOrient faceNodes(nodes, 0);
-                
+
                 it = faces.find(faceNodes);
                 m_orientationMap[it->fid] = i;
 
@@ -1337,7 +1337,7 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(2,5)] = 6 + 5*n;
             edgeNodeMap[pair<int,int>(3,5)] = 6 + 6*n;
             edgeNodeMap[pair<int,int>(4,5)] = 6 + 7*n;
-            
+
             // Add vertices
             for (int i = 0; i < 5; ++i)
             {
@@ -1419,7 +1419,7 @@ namespace Nektar
             tmp[7] = m_edge[face_edges[3][2]];
             m_edge = tmp;
         }
-        
+
         SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
         {
             SpatialDomains::Geometry2DSharedPtr faces[5];
@@ -1434,7 +1434,7 @@ namespace Nektar
 
             return m_geom;
         }
-        
+
         /**
          * @brief Return the number of nodes defining a pyramid.
          */
@@ -1446,7 +1446,7 @@ namespace Nektar
 
         LibUtilities::ShapeType Prism::m_type = GetElementFactory().
             RegisterCreatorFunction(LibUtilities::ePrism, Prism::create, "Prism");
-        
+
         /**
          * @brief Create a prism element.
          */
@@ -1500,7 +1500,7 @@ namespace Nektar
                              m_conf.m_edgeCurveType)));
                 m_edge.back()->m_id = eid++;
             }
-            
+
             if (m_conf.m_reorient)
             {
                 OrientPrism();
@@ -1538,9 +1538,9 @@ namespace Nektar
                     unsigned int i;
                     for (i = 0; i < m_edge.size(); ++i)
                     {
-                        if ((m_edge[i]->m_n1->m_id == a->m_id 
-                             && m_edge[i]->m_n2->m_id == b->m_id) || 
-                            (m_edge[i]->m_n1->m_id == b->m_id 
+                        if ((m_edge[i]->m_n1->m_id == a->m_id
+                             && m_edge[i]->m_n2->m_id == b->m_id) ||
+                            (m_edge[i]->m_n1->m_id == b->m_id
                              && m_edge[i]->m_n2->m_id == a->m_id))
                         {
                             faceEdges.push_back(m_edge[i]);
@@ -1548,7 +1548,7 @@ namespace Nektar
                             break;
                         }
                     }
-                    
+
                     if(i == m_edge.size())
                     {
                         face_edges[j][k] = -1;
@@ -1627,7 +1627,7 @@ namespace Nektar
         {
             SpatialDomains::Geometry2DSharedPtr faces[5];
             SpatialDomains::PrismGeomSharedPtr  ret;
-            
+
             for (int i = 0; i < 5; ++i)
             {
                 faces[i] = m_face[i]->GetGeom(coordDim);
@@ -1645,7 +1645,7 @@ namespace Nektar
         void Prism::Complete(int order)
         {
             int i, j, pos;
-            
+
             // Create basis key for a nodal tetrahedron.
             LibUtilities::BasisKey B0(
                 LibUtilities::eOrtho_A, order+1,
@@ -1659,20 +1659,20 @@ namespace Nektar
                 LibUtilities::eOrtho_B, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
-            
+
             // Create a standard nodal prism in order to get the Vandermonde
             // matrix to perform interpolation to nodal points.
-            StdRegions::StdNodalPrismExpSharedPtr nodalPrism = 
+            StdRegions::StdNodalPrismExpSharedPtr nodalPrism =
                 MemoryManager<StdRegions::StdNodalPrismExp>::AllocateSharedPtr(
                     B0, B1, B2, LibUtilities::eNodalPrismEvenlySpaced);
-            
+
             Array<OneD, NekDouble> x, y, z;
             nodalPrism->GetNodalPoints(x,y,z);
-            
-            SpatialDomains::PrismGeomSharedPtr geom = 
+
+            SpatialDomains::PrismGeomSharedPtr geom =
                 boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
                     this->GetGeom(3));
-            
+
             // Create basis key for a prism.
             LibUtilities::BasisKey C0(
                 LibUtilities::eOrtho_A, order+1,
@@ -1686,12 +1686,12 @@ namespace Nektar
                 LibUtilities::eOrtho_B, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
-            
+
             // Create a prism.
-            LocalRegions::PrismExpSharedPtr prism = 
+            LocalRegions::PrismExpSharedPtr prism =
                 MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
                     C0, C1, C2, geom);
-            
+
             // Get coordinate array for tetrahedron.
             int nqtot = prism->GetTotPoints();
             Array<OneD, NekDouble> alloc(6*nqtot);
@@ -1702,9 +1702,9 @@ namespace Nektar
             Array<OneD, NekDouble> yo(alloc+4*nqtot);
             Array<OneD, NekDouble> zo(alloc+5*nqtot);
             Array<OneD, NekDouble> tmp;
-            
+
             prism->GetCoords(xi, yi, zi);
-            
+
             for (i = 0; i < 3; ++i)
             {
                 Array<OneD, NekDouble> coeffs(nodalPrism->GetNcoeffs());
@@ -1712,7 +1712,7 @@ namespace Nektar
                 // Apply Vandermonde matrix to project onto nodal space.
                 nodalPrism->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
-            
+
             // Now extract points from the co-ordinate arrays into the
             // edge/face/volume nodes. First, extract edge-interior nodes.
             for (i = 0; i < 9; ++i)
@@ -1739,14 +1739,14 @@ namespace Nektar
                 }
                 pos += facesize;
             }
-            
+
             // Finally extract volume nodes.
             for (i = pos; i < (order+1)*(order+1)*(order+2)/2; ++i)
             {
                 m_volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
             }
-            
+
             m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
             m_conf.m_volumeNodes = true;
@@ -1754,29 +1754,29 @@ namespace Nektar
 
         /**
          * @brief Orient prism to align degenerate vertices.
-         * 
+         *
          * Orientation of prismatric elements is required so that the singular
          * vertices of triangular faces (which occur as a part of the
          * collapsed co-ordinate system) align. The algorithm is based on that
          * used in T. Warburton's thesis and in the original Nektar source.
-         * 
+         *
          * First the points are re-ordered so that the highest global IDs
          * represent the two singular points of the prism. Then, if necessary,
          * the nodes are rotated either clockwise or counter-clockwise (w.r.t
          * to the p-r plane) to correctly align the prism. The #orientation
          * variable is set to:
-         * 
+         *
          * - 0 if the prism is not rotated;
          * - 1 if the prism is rotated clockwise;
          * - 2 if the prism is rotated counter-clockwise.
-         * 
+         *
          * This is necessary for some input modules (e.g. #InputNek) which add
          * high-order information or bounary conditions to faces.
          */
         void Prism::OrientPrism()
         {
             int lid[6], gid[6];
-            
+
             // Re-order vertices.
             for (int i = 0; i < 6; ++i)
             {
@@ -1787,7 +1787,7 @@ namespace Nektar
             gid[0] = gid[3] = max(gid[0], gid[3]);
             gid[1] = gid[2] = max(gid[1], gid[2]);
             gid[4] = gid[5] = max(gid[4], gid[5]);
-            
+
             for (int i = 1; i < 6; ++i)
             {
                 if (gid[0] < gid[i])
@@ -1797,11 +1797,11 @@ namespace Nektar
                 }
             }
 
-            if (lid[0] == 4 || lid[0] == 5) 
+            if (lid[0] == 4 || lid[0] == 5)
             {
                 m_orientation = 0;
-            } 
-            else if (lid[0] == 1 || lid[0] == 2) 
+            }
+            else if (lid[0] == 1 || lid[0] == 2)
             {
                 // Rotate prism clockwise in p-r plane
                 vector<NodeSharedPtr> vertexmap(6);
@@ -1843,13 +1843,13 @@ namespace Nektar
         Hexahedron::Hexahedron(ElmtConfig            pConf,
                                vector<NodeSharedPtr> pNodeList,
                                vector<int>           pTagList)
-            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag = "H";
             m_dim = 3;
             m_taglist = pTagList;
             int n = m_conf.m_order-1;
-            
+
             // Create a map to relate edge nodes to a pair of vertices defining an edge
             // This is based on the ordering produced by gmsh.
             map<pair<int,int>, int> edgeNodeMap;
@@ -1941,12 +1941,12 @@ namespace Nektar
             tmp[11] = m_edge[face_edges[5][3]];
             m_edge = tmp;
         }
-        
+
         SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
         {
             SpatialDomains::QuadGeomSharedPtr faces[6];
             SpatialDomains::HexGeomSharedPtr  ret;
-            
+
             for (int i = 0; i < 6; ++i)
             {
                 faces[i] = boost::dynamic_pointer_cast

@@ -169,6 +169,8 @@ void SurfaceMesh::Stretching()
             Array<OneD, NekDouble> uv(2);
             uv[0] = bnds[0] + i*du;
             uv[1] = bnds[2] + j*dv;
+            if(i==40-1) uv[0]=bnds[1];
+            if(j==40-1) uv[1]=bnds[3];
             stretch[i][j]=m_cadsurf->P(uv);
         }
     }

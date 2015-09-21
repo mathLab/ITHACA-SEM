@@ -1113,7 +1113,7 @@ namespace Nektar
         class Mesh
         {
         public:
-            Mesh() : m_verbose(false) {}
+            Mesh() : m_verbose(false), m_nummode(0) {}
 
             /// Verbose flag
             bool                            m_verbose;

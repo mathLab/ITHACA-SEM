@@ -123,7 +123,8 @@ class PtsField
 
         LIB_UTILITIES_EXPORT void CalcWeights(
             const Array< OneD, Array< OneD, NekDouble > > &physCoords,
-            short int coordId = -1);
+            short int coordId = -1,
+            NekDouble width = 0.0);
 
         LIB_UTILITIES_EXPORT void Interpolate(
             const Array< OneD, Array< OneD, NekDouble > > &physCoords,
@@ -218,6 +219,11 @@ class PtsField
         Array<OneD, Array<OneD, unsigned int> > m_neighInds;
 
         boost::function<void (const int position, const int goal)> m_progressCallback;
+
+        LIB_UTILITIES_EXPORT void CalcW_Gauss(
+            const int physPtIdx,
+            const Array< OneD, NekDouble > &physPtCoords,
+            const NekDouble sigma);
 
         LIB_UTILITIES_EXPORT void CalcW_Linear(const int physPtIdx,
                                                const NekDouble coord);

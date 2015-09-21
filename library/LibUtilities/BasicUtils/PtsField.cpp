@@ -52,13 +52,17 @@ namespace LibUtilities
  */
 void PtsField::CalcWeights(
     const Array<OneD, Array<OneD, NekDouble> > &physCoords,
-    short coordId)
+    short coordId,
+    NekDouble width)
 {
     ASSERTL1(physCoords.num_elements() >= m_dim,
              "physCoords is smaller than number of dimesnions");
 
     int nPhysPts = physCoords[0].num_elements();
     int lastProg = 0;
+
+    ASSERTL0(width > NekConstants::kNekZeroTol, "No filter width set");
+    NekDouble sigma = width * 0.4246609001;
 
     m_weights = Array<OneD, Array<OneD, float> >(nPhysPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nPhysPts);
@@ -72,26 +76,27 @@ void PtsField::CalcWeights(
             physPt[j] = physCoords[j][i];
         }
 
-        if (m_dim == 1 || coordId >= 0)
-        {
-            if (m_dim == 1)
-            {
-                coordId = 0;
-            }
-
-            if (m_pts[0].num_elements() <= 2)
-            {
-                CalcW_Linear(i, physPt[coordId]);
-            }
-            else
-            {
-                CalcW_Quadratic(i, physPt[coordId]);
-            }
-        }
-        else
-        {
-            CalcW_Shepard(i, physPt);
-        }
+//         if (m_dim == 1 || coordId >= 0)
+//         {
+//             if (m_dim == 1)
+//             {
+//                 coordId = 0;
+//             }
+//
+//             if (m_pts[0].num_elements() <= 2)
+//             {
+//                 CalcW_Linear(i, physPt[coordId]);
+//             }
+//             else
+//             {
+//                 CalcW_Quadratic(i, physPt[coordId]);
+//             }
+//         }
+//         else
+//         {
+//             CalcW_Shepard(i, physPt);
+//         }
+        CalcW_Gauss(i, physPt, sigma);
 
         int progress = int(100 * i / nPhysPts);
         if (m_progressCallback && progress > lastProg)
@@ -375,6 +380,51 @@ PtsType PtsField::GetPtsType() const
 void PtsField::SetPtsType(const PtsType type)
 {
     m_ptsType = type;
+}
+
+
+/**
+ * @brief Compute interpolation weights for a physical point using Gauss filtering
+ *
+ * @param physPtIdx         The index of the physical point in its storage array
+ * @param physPt            The coordinates of the physical point
+ *
+ */
+void PtsField::CalcW_Gauss(const int physPtIdx,
+                             const Array<OneD, NekDouble> &physPt,
+                             const NekDouble sigma)
+{
+    NekDouble ts2 = 2 * sigma * sigma;
+    NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
+    fac = pow(fac, m_dim);
+
+    // find nearest neighbours
+    int maxPts = 500;
+    vector<PtsPoint> neighbourPts;
+    FindNeighbours(physPt, neighbourPts, 1.96 * sigma);
+    int numPts = min( (int) neighbourPts.size(), maxPts);
+
+    m_neighInds[physPtIdx] = Array<OneD, unsigned int> (numPts);
+    for (int i = 0; i < numPts; i++)
+    {
+        m_neighInds[physPtIdx][i] = neighbourPts.at(i).m_idx;
+    }
+
+    m_weights[physPtIdx] = Array<OneD, float> (numPts, 0.0);
+
+    NekDouble wSum = 0.0;
+    for (int i = 0; i < numPts; ++i)
+    {
+        m_weights[physPtIdx][i] = fac * exp(-1 * neighbourPts[i].m_distSq / ts2);
+        wSum += m_weights[physPtIdx][i];
+    }
+
+    for (int i = 0; i < numPts; ++i)
+    {
+        m_weights[physPtIdx][i] = m_weights[physPtIdx][i] / wSum;
+    }
+
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[physPtIdx], 1) == 0, "NaN found in weights");
 }
 
 

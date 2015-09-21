@@ -33,6 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <sstream>
+
 #include <LibUtilities/CADSystem/CADSurf.h>
 
 using namespace std;
@@ -81,8 +83,12 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
     uvr[0] = ui;
     uvr[1] = vi;
 
-    ASSERTL1(projection.Distance(1) < NekConstants::GeomTol,
-                "large locuv distance");
+    if(projection.Distance(1) > NekConstants::GeomTol)
+    {
+        stringstream ss;
+        ss << "large locuv distance " << projection.Distance(1)/1000.0 << endl;
+        ASSERTL1(false,ss.str());
+    }
 
     return uvr;
 }

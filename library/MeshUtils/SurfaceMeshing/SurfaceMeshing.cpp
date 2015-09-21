@@ -49,7 +49,7 @@ void SurfaceMeshing::Mesh()
     if(m_verbose)
         cout << endl << "Surface meshing" << endl;
 
-    vector<Array<OneD, NekDouble> > vertices = m_cad->GetVertices();
+    vector<Array<OneD, NekDouble> > vertices = m_cad->GetVerts();
     for(int i = 0; i < vertices.size(); i++)
     {
         MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
@@ -99,7 +99,7 @@ void SurfaceMeshing::Mesh()
         }
     }
 
-    // this is where high-order awareness can be inserted for curve edges
+    /*// this is where high-order awareness can be inserted for curve edges
     map<int, MeshEdgeSharedPtr>::iterator eit;
     for(eit = Edges.begin(); eit != Edges.end(); eit++)
     {
@@ -129,7 +129,7 @@ void SurfaceMeshing::Mesh()
                 continue;
             }
         }
-    }
+    }*/
 
     if(m_verbose)
     {

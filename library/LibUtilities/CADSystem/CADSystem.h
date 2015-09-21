@@ -143,18 +143,9 @@ class CADSystem
             return m_epc;
         }
 
-        LIB_UTILITIES_EXPORT std::vector<Array<OneD, NekDouble> > GetVertices()
+        LIB_UTILITIES_EXPORT std::vector<Array<OneD, NekDouble> > GetVerts()
         {
-            std::vector<Array<OneD, NekDouble> > out;
-            for(int i = 0; i < cadVerts.size(); i++)
-            {
-                Array<OneD, NekDouble> p(3);
-                p[0] = cadVerts[i].X();
-                p[1] = cadVerts[i].Y();
-                p[2] = cadVerts[i].Z();
-                out.push_back(p);
-            }
-            return out;
+            return m_verts;
         }
 
         /**
@@ -167,7 +158,7 @@ class CADSystem
 
     private:
         /// Private function to add curve to CADSystem::m_curves.
-        void AddCurve(int i, TopoDS_Shape in);
+        void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
         /// Private function to add surface to CADSystem::m_surfs.
         void AddSurf(int i, TopoDS_Shape in,
                      std::vector<std::vector<std::pair<int,int> > > ein);
@@ -180,7 +171,7 @@ class CADSystem
         /// map of surfaces
         std::map<int,CADSurfSharedPtr> m_surfs;
         /// list of edge end vertices
-        std::vector<gp_Pnt> cadVerts;
+        std::vector<Array<OneD, NekDouble> > m_verts;
         /// occ master object
         TopoDS_Shape shape;
 };

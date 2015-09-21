@@ -75,6 +75,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
             in.pointlist[pointc*2+0] = uv[0]*m_str;
             in.pointlist[pointc*2+1] = uv[1];
+
             pointc++;
         }
     }
@@ -87,6 +88,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
                                             ->GetS(sid);
         in.pointlist[pointc*2+0] = uv[0]*m_str;
         in.pointlist[pointc*2+1] = uv[1];
+
         pointc++;
     }
 

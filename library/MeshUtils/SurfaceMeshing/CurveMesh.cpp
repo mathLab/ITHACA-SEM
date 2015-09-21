@@ -106,12 +106,6 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
 
     vector<int> endNodeIds = m_cadcurve->GetVertex();
 
-    //need a better fix to this
-    if(m_id == 19)
-    {
-        reverse(endNodeIds.begin(),endNodeIds.end());
-    }
-
     t = m_bounds[0];
     Nodes[endNodeIds[0]]->SetCurve(m_id,t);
     m_meshpoints.push_back(endNodeIds[0]);
@@ -131,7 +125,7 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
     Nodes[endNodeIds[1]]->SetCurve(m_id,t);
     m_meshpoints.push_back(endNodeIds[1]);
 
-    for(int i = 0; i < m_meshpoints.size()-1; i++)
+    for(int i = 0; i < Ne; i++)
     {
         Edges[Edges.size()] = MemoryManager<MeshEdge>::
                 AllocateSharedPtr(Edges.size(),
@@ -142,7 +136,7 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
         Edges[Edges.size()-1]->SetCurve(m_id);
     }
 
-
+    ASSERTL0(Ne+1 == m_meshpoints.size(),"incorrect number of points in curve mesh");
 
 
 }

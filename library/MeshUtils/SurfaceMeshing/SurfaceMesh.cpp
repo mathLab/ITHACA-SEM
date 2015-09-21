@@ -79,6 +79,9 @@ void SurfaceMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
         meshcounter++;
     }
 
+    Array<OneD, Array<OneD, int> > edgelist;
+    pplanemesh->GetEdges(edgelist,nume);
+
     //look through all the existing edges and tris in the complete surface mesh
     //if not a duplicate add a new one if duplicate set up data and move on
     for(int i = 0; i < numtri; i++)
@@ -143,7 +146,7 @@ void SurfaceMesh::Report()
     {
         edgec+=m_cadsurf->GetEdges()[i].size();
     }
-    cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tEdges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
+    cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tEdges: " << nume << "\tCAD Edges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
 }
 
 void SurfaceMesh::Stretching()

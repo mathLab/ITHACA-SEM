@@ -128,13 +128,12 @@ class CADCurve
         NekDouble GetTotLength(){return m_length;}
 
         /*
-         * @brief from a list of known edge end vertices finds the ones which
-         * belong to this Curve. Only to be used within CADsytem
+         * @brief assign ids of end vertices in main cad
          */
-        bool FindEndVertex(std::vector<gp_Pnt> &edgeEndPoints);
+        void SetVert(std::vector<int> &falVert){m_mainVerts = falVert;}
 
         /// get the ids of the vertices that are the ends of the curve, which are in the main cad list
-        std::vector<int> GetVertex(){return endsInMainCAD;}
+        std::vector<int> GetVertex(){return m_mainVerts;}
 
     private:
         /// ID of the curve.
@@ -148,7 +147,7 @@ class CADCurve
         /// List of surfaces which this curve belongs to.
         std::vector<int> m_adjSurfs;
         /// list of end vertices
-        std::vector<int> endsInMainCAD;
+        std::vector<int> m_mainVerts;
 };
 
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;

@@ -186,28 +186,30 @@ bool CADSystem::LoadCAD()
 
 
     // From OpenCascade maps calculate Euler-Poincare number.
-    TopTools_IndexedMapOfShape fc, vc, ec;
-    TopExp::MapShapes(shape, TopAbs_FACE, fc);
-    TopExp::MapShapes(shape, TopAbs_EDGE, ec);
-    TopExp::MapShapes(shape, TopAbs_VERTEX, vc);
-
-    m_epc = vc.Extent() - ec.Extent() + fc.Extent();
-
+    TopTools_IndexedMapOfShape mapOfVerts, ec;
     TopTools_IndexedMapOfShape mapOfFaces;
-    TopTools_IndexedMapOfShape mapOfEdges;
     TopExp::MapShapes(shape, TopAbs_FACE, mapOfFaces);
+    TopExp::MapShapes(shape, TopAbs_EDGE, ec);
+    TopExp::MapShapes(shape, TopAbs_VERTEX, mapOfVerts);
 
+    m_epc = mapOfVerts.Extent() - ec.Extent() + mapOfFaces.Extent();
+
+    TopTools_IndexedMapOfShape mapOfEdges; //empty map which is manually built from valid edges
+
+    //standard mm to m conversion
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
 
-    for(int i = 1; i <= vc.Extent(); i++)
+    for(int i = 1; i <= mapOfVerts.Extent(); i++)
     {
-        TopoDS_Shape v = vc.FindKey(i);
+        TopoDS_Shape v = mapOfVerts.FindKey(i);
         v.Move(mv);
         gp_Pnt sp = BRep_Tool::Pnt(TopoDS::Vertex(v));
-        cadVerts.push_back(sp);
+        Array<OneD, NekDouble> p(3);
+        p[0] = sp.X(); p[1] = sp.Y(); p[2] = sp.Z();
+        m_verts.push_back(p);
     }
 
     // For each face of the geometry, get the local edges which bound it. If
@@ -240,7 +242,17 @@ bool CADSystem::LoadCAD()
     for(int i = 1; i <= mapOfEdges.Extent(); i++)
     {
         TopoDS_Shape edge = mapOfEdges.FindKey(i);
-        AddCurve(i, edge);
+        TopoDS_Vertex fv = TopExp::FirstVertex(TopoDS::Edge(edge), Standard_True);
+        TopoDS_Vertex lv = TopExp::LastVertex (TopoDS::Edge(edge), Standard_True);
+
+        if(edge.Orientation() == 0)
+        {
+            AddCurve(i, edge, mapOfVerts.FindIndex(fv), mapOfVerts.FindIndex(lv));
+        }
+        else
+        {
+            AddCurve(i, edge, mapOfVerts.FindIndex(lv), mapOfVerts.FindIndex(fv));
+        }
     }
 
     // For each face, examine all the wires (i.e. bounding loops) and
@@ -299,19 +311,19 @@ bool CADSystem::LoadCAD()
         m_curves[it->first]->SetAdjSurf(it->second);
     }
 
-    map<int,CADCurveSharedPtr>::iterator cit;
-    for(cit = m_curves.begin(); cit != m_curves.end(); cit++)
-    {
-        ASSERTL0(cit->second->FindEndVertex(cadVerts),"faild to find two end points");
-    }
     return true;
 }
 
-void CADSystem::AddCurve(int i, TopoDS_Shape in)
+void CADSystem::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
 {
     CADCurveSharedPtr newCurve = MemoryManager<CADCurve>::
                                             AllocateSharedPtr(i,in);
+
+    vector<int> vs;
+    vs.push_back(fv-1);
+    vs.push_back(lv-1);
     m_curves[i] = newCurve;
+    m_curves[i]->SetVert(vs);
 }
 
 void CADSystem::AddSurf(int i, TopoDS_Shape in,

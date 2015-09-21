@@ -128,34 +128,5 @@ Array<OneD, NekDouble> CADCurve::GetMinMax()
     return locs;
 }
 
-bool CADCurve::FindEndVertex(vector<gp_Pnt> &edgeEndPoints)
-{
-    int ct = 0;
-    endsInMainCAD.resize(2);
-    gp_Pnt start = BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
-    gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
-    for(int i = 0; i < edgeEndPoints.size(); i++)
-    {
-        if(start.Distance(edgeEndPoints[i]) < 1e-6)
-        {
-            endsInMainCAD[0] = i;
-            ct++;
-        }
-        if(end.Distance(edgeEndPoints[i]) < 1e-6)
-        {
-            endsInMainCAD[1] = i;
-            ct++;
-        }
-    }
-    if(ct == 2)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 }
 }

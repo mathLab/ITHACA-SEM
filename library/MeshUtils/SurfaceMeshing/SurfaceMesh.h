@@ -128,7 +128,7 @@ class SurfaceMesh
         /// list of stiener points in the triangulation
         std::vector<int> m_stienerpoints;
         /// number of triangles and points
-        int numtri, nump;
+        int numtri, nump, nume;
         /// list of node connectivities forming triangles
         Array<OneD, Array<OneD, int> > Connec;
         /// paramter plane and real space aspect ratios

@@ -103,6 +103,10 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 
     // interpolate points and transform
     Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
+    for (int i = 0; i < nFields; ++i)
+    {
+        intFields[i] = Array<OneD,  NekDouble>(totpoints);
+    }
     if (m_f->m_session->GetComm()->GetRank() == 0)
     {
         m_f->m_fieldPts->setProgressCallback(

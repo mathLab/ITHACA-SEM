@@ -139,10 +139,8 @@ void PtsField::Interpolate(Array<OneD, Array<OneD, NekDouble> > &intFields)
     int nPhysPts = m_weights.num_elements();
 
     // interpolate points and transform
-    intFields = Array<OneD, Array<OneD, NekDouble> >(nFields);
     for (int i = 0; i < nFields; ++i)
     {
-        intFields[i] = Array<OneD, NekDouble>(nPhysPts);
 
         for (int j = 0; j < nPhysPts; ++j)
         {

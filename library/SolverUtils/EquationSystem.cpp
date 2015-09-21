@@ -913,7 +913,11 @@ namespace Nektar
                         ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
 
-                    Array<OneD,  Array<OneD,  NekDouble> > intFields;
+                    Array<OneD,  Array<OneD,  NekDouble> > intFields(ptsField->GetNFields());
+                    for (int i = 0; i < ptsField->GetNFields(); ++i)
+                    {
+                        intFields[i] = Array<OneD,  NekDouble>(ptsField->GetNpoints());
+                    }
                     ptsField->Interpolate(intFields);
 
                     int fieldInd;

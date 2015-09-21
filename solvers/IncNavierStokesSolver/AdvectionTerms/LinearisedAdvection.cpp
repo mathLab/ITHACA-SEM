@@ -285,8 +285,8 @@ void LinearisedAdvection::v_Advect(
 
         Array<OneD, NekDouble> grad0,grad1,grad2;
 
-        //Evaluation of the gradiend of each component of the base flow
-        //\nabla U
+        // Evaluation of the gradient of each component of the base flow
+        // \nabla U
         Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
 
         // \nabla V
@@ -295,13 +295,13 @@ void LinearisedAdvection::v_Advect(
         // \nabla W
         Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
 
-        grad0 = Array<OneD, NekDouble> (nPointsTot);
+        grad0        = Array<OneD, NekDouble> (nPointsTot);
         grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
 
         // Evaluation of the base flow for periodic cases
-        if(m_slices>1)
+        if (m_slices > 1)
         {
             ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
                         == LibUtilities::eFunctionTypeFile,
@@ -312,6 +312,25 @@ void LinearisedAdvection::v_Advect(
                 UpdateBase(m_slices, m_interp[i], m_baseflow[i],
                            time, m_period);
             }
+
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                = fields[0]->GetFieldDefinitions();
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+            // Copy Data into FieldData and set variable
+            for(int j = 0; j < m_baseflow.num_elements(); ++j)
+            {
+                for(int i = 0; i < FieldDef.size(); ++i)
+                {
+                    // Could do a search here to find correct variable
+                    FieldDef[i]->m_fields.push_back(boost::lexical_cast<string>(i));
+                    fields[0]->AppendFieldData(FieldDef[i], FieldData[i],
+                                           m_baseflow[j]);
+                }
+            }
+
+            LibUtilities::FieldIO fld(fields[0]->GetComm());
+            fld.Write("base" + boost::lexical_cast<string>(time) + ".fld", FieldDef, FieldData);
         }
 
 
@@ -725,7 +744,7 @@ void LinearisedAdvection::UpdateBase(
         phase = (i>>1) * BetaT;
 
         Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
-        Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+        Vmath::Svtvp(npoints, sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
     }
 
 }
@@ -773,15 +792,13 @@ void LinearisedAdvection::DFT(const string file,
         Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
         const NekDouble m_slices)
 {
-    int npoints=m_baseflow[0].num_elements();
+    int ConvectedFields = m_baseflow.num_elements()-1;
+    int npoints         = m_baseflow[0].num_elements();
+    m_interp            = Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
 
-    //Convected fields
-    int ConvectedFields=m_baseflow.num_elements()-1;
-
-    m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
-    for(int i=0; i<ConvectedFields;++i)
+    for (int i = 0; i < ConvectedFields; ++i)
     {
-        m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
+        m_interp[i] = Array<OneD,NekDouble>(npoints*m_slices);
     }
 
     // Import the slides into auxiliary vector

@@ -55,6 +55,7 @@ CADSurf::CADSurf(int i, TopoDS_Shape in,
     in.Move(mv);
     m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
+    m_hasTwoCurves = false;
 }
 
 Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)

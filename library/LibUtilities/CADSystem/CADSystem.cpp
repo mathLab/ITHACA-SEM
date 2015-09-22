@@ -267,6 +267,43 @@ bool CADSystem::LoadCAD()
         TopTools_IndexedMapOfShape mapOfWires;
         TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
 
+        if(mapOfWires.Extent()>1)
+        {
+            TopoDS_Wire ow = BRepTools::OuterWire(TopoDS::Face(face));
+
+            vector<TopoDS_Shape> wirefacecuts;
+            vector<gp_Pnt> centersofcutfaces;
+
+            for(int j = 1; j <= mapOfWires.Extent(); j++)
+            {
+                TopoDS_Shape wire = mapOfWires.FindKey(j);
+
+                if(wire != ow)
+                {
+                    BRepBuilderAPI_MakeFace build(BRep_Tool::Surface(TopoDS::Face(face)),1e-7);
+                    build.Add(TopoDS::Wire(wire));
+                    TopoDS_Shape newface = build.Shape();
+                    wirefacecuts.push_back(newface);
+                    BRepAdaptor_Surface b = BRepAdaptor_Surface(TopoDS::Face(newface));
+                    NekDouble u,v;
+                    u = (b.LastUParameter()-b.FirstUParameter())/2.0;
+                    v = (b.LastVParameter()-b.FirstVParameter())/2.0;
+                    centersofcutfaces.push_back(b.Value(u,v));
+                }
+            }
+            for(int j = 0; j < wirefacecuts.size(); j++)
+            {
+                for(int k = 0; k < wirefacecuts.size(); k++)
+                {
+                    if(j ==k) continue;
+
+                    BRepClass_FaceClassifier fc(TopoDS::Face(wirefacecuts[j]), centersofcutfaces[k], 1e-7);
+                    ASSERTL0(fc.State() == 1, "Internal face loops make this cad impossible to mesh");
+                }
+            }
+
+        }
+
         for(int j = 1; j <= mapOfWires.Extent(); j++)
         {
             vector<pair<int,int> > edgeloop;
@@ -310,7 +347,6 @@ bool CADSystem::LoadCAD()
         ASSERTL0(it->second.size() == 2, "no three curve surfaces");
         m_curves[it->first]->SetAdjSurf(it->second);
     }
-
     return true;
 }
 
@@ -327,7 +363,7 @@ void CADSystem::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
 }
 
 void CADSystem::AddSurf(int i, TopoDS_Shape in,
-                        std::vector<std::vector<std::pair<int,int> > > ein)
+                        vector<vector<pair<int,int> > > ein)
 {
     CADSurfSharedPtr newSurf = MemoryManager<CADSurf>::
                                             AllocateSharedPtr(i,in,ein);
@@ -336,6 +372,19 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
     if(in.Orientation()==0)
     {
         m_surfs[i]->SetReverseNomral();
+    }
+
+    int tote = 0;
+    for(int i = 0; i < ein.size(); i++)
+    {
+        tote += ein[i].size();
+    }
+
+    ASSERTL0(tote != 1, "cannot handle periodic curves");
+
+    if(tote == 2)
+    {
+        m_surfs[i]->SetTwoC();
     }
 }
 

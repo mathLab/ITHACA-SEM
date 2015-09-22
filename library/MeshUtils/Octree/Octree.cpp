@@ -291,6 +291,10 @@ void Octree::SmoothAllOctants()
 
                 for(int j = 0; j < nList.size(); j++)
                 {
+                    if(OctantList[nList[j]]->GetLeaf() == false) //this should not happen but does, this is a bit hacky but fixes it
+                    {
+                        continue;
+                    }
                     if(OctantList[nList[j]]->GetDelta() <
                        OctantList[i]->GetDelta() &&
                        ddx(i, nList[j])>0.25)
@@ -316,8 +320,7 @@ void Octree::SmoothAllOctants()
                         }
                     }
                     OctantList[i]->SetDelta(deltaSM);
-                    ASSERTL0(!(deltaSM<0.0),
-                                "Delta assignment less than zero");
+
                     ct+=1;
                 }
             }
@@ -340,7 +343,7 @@ void Octree::PropagateDomain()
         {
             if(OctantList[i]->GetLeaf() && !OctantList[i]->GetDeltaKnown())
             { //if it is leaf, has no points and delta has not been asigned
-
+                ct+=1;
                 vector<int> knownID;
                 vector<int> nList = OctantList[i]->GetNeighbourList();
 
@@ -382,8 +385,6 @@ void Octree::PropagateDomain()
                     OctantList[i]->SetDelta(min);
                     ASSERTL0(!(min<m_minDelta),
                             "Delta assignment less than min delta");
-                    ct+=1;
-
                     deltaPrime.clear();
                 }
                 knownID.clear();
@@ -392,6 +393,14 @@ void Octree::PropagateDomain()
 
     }while(ct>0);
 
+    for(int i = 0; i<OctantList.size(); i++)
+    {
+        if(OctantList[i]->GetLeaf())
+        {
+            ASSERTL0(OctantList[i]->GetDelta() > 0.0,
+                            "leaf delta less than zero");
+        }
+    }
 }
 
 void Octree::SmoothSurfaceOctants()

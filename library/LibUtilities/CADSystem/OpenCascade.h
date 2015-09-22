@@ -68,5 +68,6 @@
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <ShapeAnalysis_Surface.hxx>
 #include <gp_Pnt2d.hxx>
+#include <BRepClass_FaceClassifier.hxx>
 
 #endif

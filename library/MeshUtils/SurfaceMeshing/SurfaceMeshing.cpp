@@ -99,6 +99,48 @@ void SurfaceMeshing::Mesh()
         }
     }
 
+    //analyse for two node surfaces (not possible)
+    for(int i = 1; i <= m_cad->GetNumSurf(); i++)
+    {
+        if(m_cad->GetSurf(i)->GetTwoC())
+        {
+            vector<vector<pair<int,int> > > es = m_cad->GetSurf(i)->GetEdges();
+            vector<int> cs(2);
+            for(int j = 0; j < 2; j++)
+            {
+                cs[j] = es[0][j].first;
+            }
+            if(m_curvemeshes[cs[0]]->GetNumPoints() == 2 && m_curvemeshes[cs[1]]->GetNumPoints() == 2)
+            {
+                vector<int> s1 = m_cad->GetCurve(cs[0])->GetAdjSurf();
+                vector<int> s2 = m_cad->GetCurve(cs[1])->GetAdjSurf();
+
+                int nn1 = m_curvemeshes[cs[0]]->SplitEdge(
+                                m_curvemeshes[cs[0]]->GetFirstPoint(),
+                                m_curvemeshes[cs[0]]->GetLastPoint(),
+                                Nodes,Edges);
+
+                int nn2 = m_curvemeshes[cs[1]]->SplitEdge(
+                                m_curvemeshes[cs[1]]->GetFirstPoint(),
+                                m_curvemeshes[cs[1]]->GetLastPoint(),
+                                Nodes,Edges);
+                //the new node need its surface information added
+                Array<OneD, NekDouble> loc = Nodes[nn1]->GetLoc();
+                for(int j = 0; j < s1.size(); j++)
+                {
+                    Array<OneD, NekDouble> uvn = m_cad->GetSurf(s1[j])->locuv(loc);
+                    Nodes[nn1]->SetSurf(s1[j],uvn);
+                }
+                loc = Nodes[nn2]->GetLoc();
+                for(int j = 0; j < s2.size(); j++)
+                {
+                    Array<OneD, NekDouble> uvn = m_cad->GetSurf(s2[j])->locuv(loc);
+                    Nodes[nn2]->SetSurf(s2[j],uvn);
+                }
+            }
+        }
+    }
+
     /*// this is where high-order awareness can be inserted for curve edges
     map<int, MeshEdgeSharedPtr>::iterator eit;
     for(eit = Edges.begin(); eit != Edges.end(); eit++)
@@ -1071,6 +1113,7 @@ void SurfaceMeshing::Validate()
     }
     if(m_verbose)
         cout << "\t\tPassed" << endl;
+
 }
 
 }

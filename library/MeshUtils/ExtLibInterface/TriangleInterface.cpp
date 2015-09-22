@@ -35,6 +35,8 @@
 
 #include <MeshUtils/ExtLibInterface/TriangleInterface.h>
 
+#include <sstream>
+
 using namespace std;
 namespace Nektar{
 namespace MeshUtils {
@@ -55,6 +57,11 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         numSeg+=m_boundingloops[i].size();
     }
     numPoints = numSeg + m_stienerpoints.size();
+
+    stringstream ss;
+    ss << "3 points required for triangulation, " << numPoints << " provided";
+
+    ASSERTL0(numPoints > 2, ss.str());
 
     in.numberofpoints = numPoints;
     in.numberofpointattributes = 0;

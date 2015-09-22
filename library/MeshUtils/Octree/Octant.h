@@ -120,6 +120,7 @@ class Octant
         {
             m_delta = d;
             m_deltaSet=true;
+            ASSERTL0(m_delta > 0.0, "delta assignement less than 0");
         }
 
         /**

@@ -51,6 +51,25 @@ void SurfaceMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
 
     OrientateCurves(Nodes);
 
+    int numPoints = 0;
+    for(int i = 0; i < orderedLoops.size(); i++)
+    {
+        numPoints+=orderedLoops[i].size();
+    }
+
+    stringstream ss;
+    ss << "3 points required for triangulation, " << numPoints << " in loop" << endl;
+    ss << "curves: ";
+    for(int i = 0; i < m_edges.size(); i++)
+    {
+        for(int j = 0; j < m_edges[i].size(); j++)
+        {
+            ss << m_edges[i][j].first << " ";
+        }
+    }
+
+    ASSERTL0(numPoints > 2, ss.str());
+
     //create interface to triangle thirdparty library
     TriangleInterfaceSharedPtr pplanemesh =
         MemoryManager<TriangleInterface>::AllocateSharedPtr();

@@ -144,11 +144,20 @@ class CADSurf
             m_correctNormal = false;
         }
 
+        void SetTwoC()
+        {
+            m_hasTwoCurves = true;
+        }
+
+        bool GetTwoC(){return m_hasTwoCurves;}
+
     private:
         /// ID of surface.
         int m_ID;
         /// normal
         bool m_correctNormal;
+        /// flag to alert the mesh generation to a potential problem is both curves have only two points in the mesh
+        bool m_hasTwoCurves;
         /// OpenCascade object for surface.
         BRepAdaptor_Surface m_occSurface;
         /// Alternate OpenCascade object for surface. Used by reverse lookup.

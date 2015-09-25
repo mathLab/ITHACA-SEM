@@ -141,7 +141,7 @@ void SurfaceMeshing::Mesh()
         }
     }
 
-    /*// this is where high-order awareness can be inserted for curve edges
+    // this is where high-order awareness can be inserted for curve edges
     map<int, MeshEdgeSharedPtr>::iterator eit;
     for(eit = Edges.begin(); eit != Edges.end(); eit++)
     {
@@ -171,7 +171,7 @@ void SurfaceMeshing::Mesh()
                 continue;
             }
         }
-    }*/
+    }
 
     if(m_verbose)
     {

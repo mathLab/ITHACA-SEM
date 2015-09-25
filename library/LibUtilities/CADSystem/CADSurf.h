@@ -152,6 +152,9 @@ class CADSurf
         bool GetTwoC(){return m_hasTwoCurves;}
 
     private:
+
+        void Test(Array<OneD, NekDouble> uv);
+
         /// ID of surface.
         int m_ID;
         /// normal

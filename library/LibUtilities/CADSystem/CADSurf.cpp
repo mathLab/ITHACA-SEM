@@ -150,11 +150,7 @@ bool CADSurf::IsPlane()
 
 Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
 {
-    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
-               uv[0] > m_occSurface.LastUParameter() ||
-               uv[1] < m_occSurface.FirstVParameter() ||
-               uv[1] > m_occSurface.LastVParameter()),
-                "Point not within parameter plane");
+    Test(uv);
 
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc;
@@ -167,11 +163,7 @@ Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 {
-    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
-               uv[0] > m_occSurface.LastUParameter() ||
-               uv[1] < m_occSurface.FirstVParameter() ||
-               uv[1] > m_occSurface.LastVParameter()),
-                "Point not within parameter plane");
+    Test(uv);
 
     Array<OneD, NekDouble> normal(3);
     gp_Pnt Loc;
@@ -204,11 +196,7 @@ Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
 {
-    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
-               uv[0] > m_occSurface.LastUParameter() ||
-               uv[1] < m_occSurface.FirstVParameter() ||
-               uv[1] > m_occSurface.LastVParameter()),
-                "Point not within parameter plane");
+    Test(uv);
 
     Array<OneD, NekDouble> r(9);
     gp_Pnt Loc;
@@ -230,11 +218,7 @@ Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
 {
-    ASSERTL0(!(uv[0] < m_occSurface.FirstUParameter() ||
-               uv[0] > m_occSurface.LastUParameter() ||
-               uv[1] < m_occSurface.FirstVParameter() ||
-               uv[1] > m_occSurface.LastVParameter()),
-                "Point not within parameter plane");
+    Test(uv);
 
     Array<OneD, NekDouble> r(18);
     gp_Pnt Loc;
@@ -261,6 +245,39 @@ Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
     r[17] = D2UV.Z();  //d2z/dudv
 
     return r;
+}
+
+void CADSurf::Test(Array<OneD, NekDouble> uv)
+{
+    stringstream error;
+
+    error << "Point not within parameter plane: ";
+
+    bool passed = true;
+
+    if(uv[0] < m_occSurface.FirstUParameter())
+    {
+        error << "U(" << uv[0] << ") is less than Umin(" << m_occSurface.FirstUParameter() << ")";
+        passed = false;
+    }
+    else if(uv[0] > m_occSurface.LastUParameter())
+    {
+        error << "U(" << uv[0] << ") is greater than Umax(" << m_occSurface.LastUParameter() << ")";
+        passed = false;
+    }
+    else if(uv[1] < m_occSurface.FirstVParameter())
+    {
+        error << "V(" << uv[1] << ") is less than Vmin(" << m_occSurface.FirstVParameter() << ")";
+        passed = false;
+    }
+    else if(uv[1] > m_occSurface.LastVParameter())
+    {
+        error << "V(" << uv[1] << ") is greater than Vmax(" << m_occSurface.LastVParameter() << ")";
+        passed = false;
+    }
+
+    ASSERTL0(passed, error.str());
+
 }
 
 }

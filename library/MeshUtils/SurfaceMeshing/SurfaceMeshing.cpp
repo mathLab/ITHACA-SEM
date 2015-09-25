@@ -143,32 +143,41 @@ void SurfaceMeshing::Mesh()
 
     // this is where high-order awareness can be inserted for curve edges
     map<int, MeshEdgeSharedPtr>::iterator eit;
-    for(eit = Edges.begin(); eit != Edges.end(); eit++)
+    bool repeat = true;
+    while(repeat)
     {
-        Array<OneD, int> n = eit->second->GetN();
-        int c = eit->second->GetCurve();
-        ASSERTL0(c != -1, "edge not on curve");
-        vector<int> s = m_cad->GetCurve(c)->GetAdjSurf();
-        for(int i = 0; i < s.size(); i++)
+        repeat = false;
+        for(eit = Edges.begin(); eit != Edges.end(); eit++)
         {
-            Array<OneD, NekDouble> uv1,uv2;
-            uv1 = Nodes[n[0]]->GetS(s[i]);
-            uv2 = Nodes[n[1]]->GetS(s[i]);
-            Array<OneD, NekDouble> N1,N2;
-            N1 = m_cad->GetSurf(s[i])->N(uv1);
-            N2 = m_cad->GetSurf(s[i])->N(uv2);
-            NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
-            if(dot < 0 )
+            Array<OneD, int> n = eit->second->GetN();
+            int c = eit->second->GetCurve();
+            ASSERTL0(c != -1, "edge not on curve");
+            vector<int> s = m_cad->GetCurve(c)->GetAdjSurf();
+            for(int i = 0; i < s.size(); i++)
             {
-                int nn = m_curvemeshes[c]->SplitEdge(n[0],n[1],Nodes,Edges);
-                //the new node need its surface information added
-                Array<OneD, NekDouble> loc = Nodes[nn]->GetLoc();
-                for(int j = 0; j < s.size(); j++)
+                Array<OneD, NekDouble> uv1,uv2;
+                uv1 = Nodes[n[0]]->GetS(s[i]);
+                uv2 = Nodes[n[1]]->GetS(s[i]);
+                Array<OneD, NekDouble> N1,N2;
+                N1 = m_cad->GetSurf(s[i])->N(uv1);
+                N2 = m_cad->GetSurf(s[i])->N(uv2);
+                NekDouble ang = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
+                ang /= sqrt(N1[0]*N1[0] + N1[1]*N1[1] + N1[1]*N1[1]);
+                ang /= sqrt(N2[0]*N2[0] + N2[1]*N2[1] + N2[1]*N2[1]);
+                if(ang < 0.12 )
                 {
-                    Array<OneD, NekDouble> uvn = m_cad->GetSurf(s[j])->locuv(loc);
-                    Nodes[nn]->SetSurf(s[j],uvn);
+                    int nn = m_curvemeshes[c]->SplitEdge(n[0],n[1],Nodes,Edges);
+                    cout << "split edge" << endl;
+                    repeat = true;
+                    //the new node need its surface information added
+                    Array<OneD, NekDouble> loc = Nodes[nn]->GetLoc();
+                    for(int j = 0; j < s.size(); j++)
+                    {
+                        Array<OneD, NekDouble> uvn = m_cad->GetSurf(s[j])->locuv(loc);
+                        Nodes[nn]->SetSurf(s[j],uvn);
+                    }
+                    continue;
                 }
-                continue;
             }
         }
     }
@@ -199,6 +208,62 @@ void SurfaceMeshing::Mesh()
 
     }
 
+    Validate();
+
+    Optimise();
+
+    for(eit = Edges.begin(); eit != Edges.end(); eit++)
+    {
+        Array<OneD, int> n = eit->second->GetN();
+        int c = eit->second->GetCurve();
+        if(c != -1) continue;
+
+        int s = eit->second->GetSurf();
+
+        Array<OneD, NekDouble> uv1,uv2;
+        uv1 = Nodes[n[0]]->GetS(s);
+        uv2 = Nodes[n[1]]->GetS(s);
+        Array<OneD, NekDouble> N1,N2;
+        N1 = m_cad->GetSurf(s)->N(uv1);
+        N2 = m_cad->GetSurf(s)->N(uv2);
+        NekDouble ang = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
+        ang /= sqrt(N1[0]*N1[0] + N1[1]*N1[1] + N1[1]*N1[1]);
+        ang /= sqrt(N2[0]*N2[0] + N2[1]*N2[1] + N2[1]*N2[1]);
+        if(ang < 0.05 )
+        {
+            cout << "need to split edge on surface" << endl;
+            vector<int> ts = eit->second->GetTri();
+            ASSERTL0(ts.size() == 2, "wrong amount of edges");
+            Array<OneD, int> t1n = Tris[ts[0]]->GetN();
+            Array<OneD, int> t2n = Tris[ts[1]]->GetN();
+            int tn1, tn2;
+            cout << "e nodes " << n[0] << " " << n[1] << endl;
+            for(int i = 0; i < 3; i++)
+            {
+                cout << t1n[i] << " ";
+                if(t1n[i] == n[0] || t1n[i] == n[1])
+                    continue;
+                tn1 = t1n[i];
+            }
+            cout << endl;
+            for(int i = 0; i < 3; i++)
+            {
+                cout << t2n[i] << " ";
+                if(t2n[i] == n[0] || t2n[i] == n[1])
+                    continue;
+                tn2 = t2n[i];
+            }
+            cout  << endl;
+
+            Nodes[n[0]]->RemoveTri(ts[0]); Nodes[n[0]]->RemoveTri(ts[1]);
+            Nodes[n[1]]->RemoveTri(ts[0]); Nodes[n[1]]->RemoveTri(ts[1]);
+            //Nodes[tn1]->RemoveTri(ts[0]); Nodes[tn1]->RemoveTri(ts[1]);
+            //Nodes[tn2]->RemoveTri(ts[0]); Nodes[tn2]->RemoveTri(ts[1]);
+
+        }
+    }
+    exit(-1);
+
     if(m_verbose)
     {
         cout << endl << "\tSurface mesh stats:" << endl;
@@ -221,10 +286,6 @@ void SurfaceMeshing::Mesh()
         cout << "\t\tTriangles " << ts << endl;
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
-
-    Validate();
-
-    Optimise();
 
 }
 

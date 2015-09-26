@@ -364,8 +364,9 @@ namespace MeshUtils {
 
         void ModifyNodes(int an, int bn)
         {
-            nodes[0] =an;
-            nodes[1] =bn;
+            nodes = Array<OneD, int>(2);
+            nodes[0] = an;
+            nodes[1] = bn;
         }
 
         void SetSurf(int i){surf=i;}
@@ -422,6 +423,7 @@ namespace MeshUtils {
 
         void Swap(int i, int j, int k)
         {
+            nodes = Array<OneD, int>(3);
             nodes[0] = i;
             nodes[1] = j;
             nodes[2] = k;
@@ -429,6 +431,7 @@ namespace MeshUtils {
 
         void ResetEdges(int i, int j, int k)
         {
+            edges = Array<OneD, int>(3);
             edges[0] = i;
             edges[1] = j;
             edges[2] = k;

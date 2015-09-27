@@ -105,6 +105,70 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return OctantList[n]->GetDelta();
 }
 
+void Octree::Modify(Array<OneD, NekDouble> loc, NekDouble delta)
+{
+    //starting at master octant 0 move through succsesive octants which contain
+    //the point loc until a leaf is found
+    int n = 0;
+    int quad;
+
+    bool found=false;
+
+    while(!found)
+    {
+        Array<OneD, NekDouble> octloc = OctantList[n]->GetLoc();
+
+        if(loc[0]>=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
+        {
+            quad=0;
+        }
+        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
+        {
+            quad=1;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
+        {
+            quad=2;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
+        {
+            quad=3;
+        }
+        else if(loc[0]>octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=4;
+        }
+        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=5;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=6;
+        }
+        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
+        {
+            quad=7;
+        }
+        else
+        {
+            ASSERTL0(false,"Cannot locate quadrant");
+        }
+
+        n=OctantList[n]->GetChild(quad);
+
+        if(OctantList[n]->GetLeaf())
+        {
+            found=true;
+        }
+    }
+
+    if(delta > OctantList[n]->GetDelta())
+        return;
+
+    OctantList[n]->SetDelta(delta);
+}
+
 void Octree::Build(const NekDouble min, const NekDouble max,
                    const NekDouble eps)
 {
@@ -297,7 +361,7 @@ void Octree::SmoothAllOctants()
                     }
                     if(OctantList[nList[j]]->GetDelta() <
                        OctantList[i]->GetDelta() &&
-                       ddx(i, nList[j])>0.25)
+                       ddx(i, nList[j])>0.3)
                     {
                         checkID.push_back(nList[j]);
                     }
@@ -312,10 +376,10 @@ void Octree::SmoothAllOctants()
                         NekDouble r =
                           OctantList[i]->Distance(OctantList[checkID[j]]);
 
-                        if(0.24*r +
+                        if(0.29*r +
                            OctantList[checkID[j]]->GetDelta() < deltaSM)
                         {
-                            deltaSM = 0.24*r +
+                            deltaSM = 0.29*r +
                             OctantList[checkID[j]]->GetDelta();
                         }
                     }

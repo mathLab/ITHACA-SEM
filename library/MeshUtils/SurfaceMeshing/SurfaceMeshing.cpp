@@ -176,11 +176,55 @@ void SurfaceMeshing::Mesh()
                         Array<OneD, NekDouble> uvn = m_cad->GetSurf(s[j])->locuv(loc);
                         Nodes[nn]->SetSurf(s[j],uvn);
                     }
+                    //modify octree
+                    /*for(int j = 0; j < 2; j++)
+                    {
+                        NekDouble dist = Nodes[nn]->Distance(Nodes[n[j]]);
+                        m_octree->Modify(Nodes[nn]->GetLoc(), dist*5.0);
+                        m_octree->Modify(Nodes[n[j]]->GetLoc(), dist*5.0);
+                    }*/
                     continue;
                 }
             }
         }
     }
+
+    /*m_octree->SmoothAllOctants();
+
+    repeat = true;
+    while(repeat)
+    {
+        repeat = false;
+        for(eit = Edges.begin(); eit != Edges.end(); eit++)
+        {
+            Array<OneD, int> n = eit->second->GetN();
+            int c = eit->second->GetCurve();
+            ASSERTL0(c != -1, "edge not on curve");
+            vector<int> s = m_cad->GetCurve(c)->GetAdjSurf();
+
+            NekDouble dist = Nodes[n[0]]->Distance(Nodes[n[1]]);
+            for(int i = 0; i < 2; i++)
+            {
+                if(dist > m_octree->Query(Nodes[n[i]]->GetLoc())*2.0)
+                {
+                    int nn = m_curvemeshes[c]->SplitEdge(n[0],n[1],Nodes,Edges);
+                    cout << "edgesplit octree" << endl;
+                    repeat = true;
+                    Array<OneD, NekDouble> loc = Nodes[nn]->GetLoc();
+                    for(int j = 0; j < s.size(); j++)
+                    {
+                        Array<OneD, NekDouble> uvn = m_cad->GetSurf(s[j])->locuv(loc);
+                        Nodes[nn]->SetSurf(s[j],uvn);
+                    }
+                    break;
+                }
+            }
+            if(repeat == true)
+            {
+                break;
+            }
+        }
+    }*/
 
     if(m_verbose)
     {
@@ -233,38 +277,37 @@ void SurfaceMeshing::Mesh()
             NekDouble ang = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
             ang /= sqrt(N1[0]*N1[0] + N1[1]*N1[1] + N1[1]*N1[1]);
             ang /= sqrt(N2[0]*N2[0] + N2[1]*N2[1] + N2[1]*N2[1]);
-            if(ang < 0.05 )
+            if(ang < 0.12 )
             {
-                cout << endl << "need to split edge on surface" << endl;
-
+                cout << "edge needs to split" << endl;
                 vector<int> ts = eit->second->GetTri();
                 ASSERTL0(ts.size() == 2, "wrong amount of edges");
                 Array<OneD, int> t1n = Tris[ts[0]]->GetN();
                 Array<OneD, int> t2n = Tris[ts[1]]->GetN();
 
-                cout << n[0] << " " << n[1] << endl;
-                for(int i = 0; i < 3; i++)
-                    cout << t1n[i] << " ";
-                cout << endl;
-                for(int i = 0; i < 3; i++)
-                    cout << t2n[i] << " ";
-                cout << endl;
 
-                int tn1 = -1 , tn2 = -1;
+                int tn1, tn2;
+                tn1 = -1; tn2 = -1;
                 for(int i = 0; i < 3; i++)
                 {
-                    if(t1n[i] != n[0] && t1n[i] != n[1])
+                    if(t1n[i] == n[0])
+                        continue;
+                    if(t1n[i] == n[1])
+                        continue;
                     tn1 = t1n[i];
                     break;
                 }
                 for(int i = 0; i < 3; i++)
                 {
-                    if(t2n[i] != n[0] && t2n[i] != n[1])
+                    if(t2n[i] == n[0])
+                        continue;
+                    if(t2n[i] == n[1])
+                        continue;
                     tn2 = t2n[i];
                     break;
                 }
 
-                cout << tn1 << " " << tn2 << endl;
+                ASSERTL0(tn1 != -1 && tn2 != -1, "failed to sort nodes");
 
                 Nodes[n[1]]->RemoveTri(ts[0]); Nodes[n[1]]->RemoveTri(ts[1]);
 
@@ -367,6 +410,7 @@ void SurfaceMeshing::Mesh()
         }
     }
 
+    Optimise();
 
     if(m_verbose)
     {
@@ -959,14 +1003,6 @@ void SurfaceMeshing::Optimise()
             if(CDA < 0.0 || CBD < 0.0)
                 continue;
 
-            //determine high-order applicabilty of alternate config
-            Array<OneD, NekDouble> Nc, Nd;
-            Nc = m_cad->GetSurf(it->second->GetSurf())->N(ci);
-            Nd = m_cad->GetSurf(it->second->GetSurf())->N(di);
-
-            NekDouble dot = Nc[0]*Nd[0] + Nc[1]*Nd[1] + Nc[2]*Nd[2];
-            if(dot < 0)
-                continue;
 
             int nodedefectbefore = 0;
             nodedefectbefore += Nodes[A]->GetEdges().size() > 6 ?
@@ -1104,14 +1140,6 @@ void SurfaceMeshing::Optimise()
             if(CDA < 0.0 || CBD < 0.0)
                 continue;
 
-            //determine high-order applicabilty of alternate config
-            Array<OneD, NekDouble> Nc, Nd;
-            Nc = m_cad->GetSurf(it->second->GetSurf())->N(ci);
-            Nd = m_cad->GetSurf(it->second->GetSurf())->N(di);
-
-            NekDouble dot = Nc[0]*Nd[0] + Nc[1]*Nd[1] + Nc[2]*Nd[2];
-            if(dot < 0)
-                continue;
 
             NekDouble minangleb = Nodes[C]->Angle(Nodes[A],Nodes[B]);
             minangleb = min(minangleb,Nodes[B]->Angle(Nodes[C],Nodes[A]));

@@ -92,6 +92,8 @@ class Octree
          */
         NekDouble Query(Array<OneD, NekDouble> loc);
 
+        void Modify(Array<OneD, NekDouble> loc, NekDouble delta);
+
         /**
          * @brief returns the miminum spacing in the octree (for meshing purposes)
          *
@@ -99,14 +101,16 @@ class Octree
          */
         NekDouble GetMinDelta(){return m_minDelta;}
 
-    private:
-
         /**
          * @brief Smooths specification over all octants to a
          * gradation criteria
          */
         void SmoothAllOctants();
-        
+
+    private:
+
+
+
         /**
          * @brief gets an optimum number of curvature sampling points and
          * calculates the curavture at these points

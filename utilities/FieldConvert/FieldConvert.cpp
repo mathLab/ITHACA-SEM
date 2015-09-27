@@ -178,13 +178,13 @@ int main(int argc, char* argv[])
 
 
     /*
-     * Process list of modules. Each element of the vector of module strings can
-     * be in the following form:
+     * Process list of modules. Each element of the vector of module
+     * strings can be in the following form:
      *
      * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
      *
-     * where the only required argument is 'modname', specifing the name of the
-     * module to load.
+     * where the only required argument is 'modname', specifing the
+     * name of the module to load.
      */
 
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());

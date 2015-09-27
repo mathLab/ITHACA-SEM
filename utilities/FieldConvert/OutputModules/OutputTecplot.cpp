@@ -80,23 +80,24 @@ void OutputTecplot::Process(po::variables_map &vm)
     {
         cout << "OutputTecplot: Writing file..." << endl;
     }
+
     // Do nothing if no expansion defined
     if (fPts == LibUtilities::NullPtsField && !m_f->m_exp.size())
     {
         return;
     }
 
-
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
+    int nprocs = m_f->m_comm->GetSize();
+    int rank  = m_f->m_comm->GetRank();
     // Amend for parallel output if required
-    if(m_f->m_session->GetComm()->GetSize() != 1)
+    if(nprocs != 1)
     {
         int    dot = filename.find_last_of('.');
         string ext = filename.substr(dot,filename.length()-dot);
-        string procId = "_P" + boost::lexical_cast<std::string>(
-                                 m_f->m_session->GetComm()->GetRank());
+        string procId = "_P" + boost::lexical_cast<std::string>(rank);
         string start = filename.substr(0,dot);
         filename = start + procId + ext;
     }
@@ -112,49 +113,76 @@ void OutputTecplot::Process(po::variables_map &vm)
             return;
         }
 
+
         // Write solution.
         ofstream outfile(filename.c_str());
 
-        switch(dim)
-        {
-        case 1:
-            outfile << "VARIABLES = x";
-            break;
-        case 2:
-            outfile << "VARIABLES = x,y";
-            break;
-        case 3:
-            outfile << "VARIABLES = x,y,z";
-            break;
-        }
+        // points type
+        LibUtilities::PtsType pType = fPts->GetPtsType();
 
         vector<Array<OneD, int> > ptsConn;
         fPts->GetConnectivity(ptsConn);
 
-        for(i = 0; i < fPts->GetNFields(); ++i)
-        {
+        // only dump header info for all proces if ptsType is for TriBlock or TetBlock 
+        if((pType > LibUtilities::ePtsBox)||(rank == 0))
+        { 
+            switch(dim)
+            {
+            case 1:
+                outfile << "VARIABLES = x";
+                break;
+            case 2:
+                outfile << "VARIABLES = x,y";
+                break;
+            case 3:
+                outfile << "VARIABLES = x,y,z";
+                break;
+            }
+            
+            for(i = 0; i < fPts->GetNFields(); ++i)
+            {
             outfile << "," << fPts->GetFieldName(i);
+            }
+            outfile << endl;
         }
-        outfile << endl;
+        
         bool DumpAsFEPoint = true;
         switch(fPts->GetPtsType())
         {
-            case LibUtilities::ePtsFile:
-            case LibUtilities::ePtsLine:
+        case LibUtilities::ePtsFile:
+        case LibUtilities::ePtsLine:
             {
-                outfile << " ZONE I="
-                        << fPts->GetNpoints()
-                        << " F=POINT" << endl;
+                if(rank == 0)
+                {
+                    outfile << " ZONE I="
+                            << fPts->GetPointsPerEdge(0)
+                            << " F=POINT" << endl;
+                }
                 break;
             }
-            case LibUtilities::ePtsPlane:
+        case LibUtilities::ePtsPlane:
             {
-                outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
-                        <<      " J=" << fPts->GetPointsPerEdge(1)
-                        << " F=POINT" << endl;
+                if(rank == 0)
+                {
+                    outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
+                            <<      " J=" << fPts->GetPointsPerEdge(1)
+                            << " F=POINT" << endl;
+                }
                 break;
             }
-            case LibUtilities::ePtsTriBlock:
+        case LibUtilities::ePtsBox:
+            {
+                if(rank == 0)
+                {
+                    outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
+                            <<      " J=" << fPts->GetPointsPerEdge(1)
+                            <<      " K=" << fPts->GetPointsPerEdge(2)
+                            << " F=POINT" << endl;
+                }
+                break;
+            }
+            break;
+        case LibUtilities::ePtsTriBlock:
             {
                 int numBlocks = 0;
                 for(i = 0; i < ptsConn.size(); ++i)
@@ -224,12 +252,10 @@ void OutputTecplot::Process(po::variables_map &vm)
                     {
                         l2err += fPts->GetPointVal(i,j)*fPts->GetPointVal(i,j);
                     }
-                    m_f->m_session->GetComm()->AllReduce(l2err,
-                                                    LibUtilities::ReduceSum);
+                    m_f->m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
 
                     int npts = fPts->GetNpoints();
-                    m_f->m_session->GetComm()->AllReduce(npts,
-                                                    LibUtilities::ReduceSum);
+                    m_f->m_comm->AllReduce(npts,  LibUtilities::ReduceSum);
                     
                     l2err /= npts; 
                     l2err = sqrt(l2err);
@@ -269,7 +295,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                 }                     
             }
 
-
+            m_f->m_comm->Block();
         }
         else // dump in block format
         {

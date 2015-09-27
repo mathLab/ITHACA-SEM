@@ -51,7 +51,7 @@ ModuleKey ProcessInterpPoints::className =
        ModuleKey(eProcessModule, "interppoints"),
        ProcessInterpPoints::create,
        "Interpolates a set of points to another, requires fromfld and "
-       "fromxml to be defined, a line or plane of points can be "
+       "fromxml to be defined, a line, plane or block of points can be "
        "defined");
 
 
@@ -85,12 +85,17 @@ ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
             ConfigOption(false, "NotSet",
                          "Specify a line of N points using "
                          "line=N,x0,y0,z0,z1,y1,z1");
-
     m_config["plane"] =
             ConfigOption(false, "NotSet",
-                         "Specify a plane of N1 x N1 points using "
+                         "Specify a plane of N1 x N2 points using "
                          "plane=N1,N2,x0,y0,z0,z1,y1,z1,x2,y2,z2,x3,"
                          "y3,z3");
+    m_config["box"] =
+            ConfigOption(false, "NotSet",
+                         "Specify a rectangular box of N1 x N2 x N3 points "
+                         "using a box of points limited by box="
+                         "N1,N2,N3,xmin,xmax,ymin,ymax,zmin,zmax");
+
 }
 
 ProcessInterpPoints::~ProcessInterpPoints()
@@ -100,7 +105,10 @@ ProcessInterpPoints::~ProcessInterpPoints()
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
 
-    if(m_f->m_verbose)
+    int rank   = m_f->m_comm->GetRank();
+    int nprocs = m_f->m_comm->GetSize();
+            
+    if((m_f->m_verbose)&&(rank == 0))
     {
         cout << "Processing point interpolation" << endl;
     }
@@ -118,7 +126,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "Failed to interpret line string");
 
             ASSERTL0(values.size() > 3,
-                     "line string should contain 2Dim+1 values "
+                     "line string should contain 2 Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
             int dim = (values.size()-1)/2;
@@ -150,8 +158,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             vector<int> ppe;
             ppe.push_back(npts);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-            m_f->m_fieldPts->SetPointsPerEdge(ppe);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
 
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
@@ -162,9 +170,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                              m_config["plane"].as<string>().c_str(),values),
                      "Failed to interpret plane string");
 
-            ASSERTL0(values.size() > 3,
-                     "line string should contain 2Dim+1 values "
-                     "N,x0,y0,z0,x1,y1,z1");
+            ASSERTL0(values.size() > 9,
+                     "plane string should contain 4 Dim+2 values "
+                     "N1,N2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3");
 
 
             int dim = (values.size()-1)/4;
@@ -201,13 +209,111 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                     }
                 }
             }
-
             vector<int> ppe;
             ppe.push_back(npts1);
             ppe.push_back(npts2);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-            m_f->m_fieldPts->SetPointsPerEdge(ppe);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsPlane);
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+
+        }
+        else if(m_config["box"].as<string>().compare("NotSet") != 0)
+        {
+            string help = m_config["box"].as<string>();
+            vector<NekDouble> values;
+            ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                             m_config["box"].as<string>().c_str(),values),
+                     "Failed to interpret plane string");
+
+            ASSERTL0(values.size() == 9,
+                     "box string should contain 9 values "
+                     "N1,N2,N3,xmin,xmax,ymin,ymax,zmin,zmax");
+
+            int dim = 3;
+
+            int npts1 = values[0];
+            int npts2 = values[1];
+            int npts3 = values[2];
+
+            Array<OneD, Array<OneD, NekDouble> > pts(dim);
+
+            int totpts = npts1*npts2*npts3;
+            int nlocpts = totpts/nprocs;
+
+            if(rank < nprocs-1) // for rank 0 to nproc-1
+            {
+                totpts = nlocpts;
+
+                for(int i = 0; i < dim; ++i)
+                {
+                    pts[i] = Array<OneD,NekDouble>(totpts);
+                }
+                
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int k = 0; k < npts3; ++k)
+                {
+                    for(int j = 0; j < npts2; ++j)
+                    {
+                        for(int i = 0; i < npts1; ++i)
+                        {
+                            if((cnt >= rank*nlocpts)&&(cnt < (rank+1)*nlocpts))
+                            {
+                                pts[0][cntloc] = values[3] + 
+                                    i/((NekDouble)(npts1-1))*(values[4]-values[3]);
+                                pts[1][cntloc] = values[5] + 
+                                    j/((NekDouble)(npts2-1))*(values[6]-values[5]);
+                                pts[2][cntloc] = values[7] + 
+                                    k/((NekDouble)(npts3-1))*(values[8]-values[7]);
+                                cntloc++;
+                            }
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            else  // give last rank all remaining points 
+            {
+                totpts = totpts - rank*nlocpts;
+
+                for(int i = 0; i < dim; ++i)
+                {
+                    pts[i] = Array<OneD,NekDouble>(totpts);
+                }
+                
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int k = 0; k < npts3; ++k)
+                {
+                    for(int j = 0; j < npts2; ++j)
+                    {
+                        for(int i = 0; i < npts1; ++i)
+                        {
+                            if(cnt >= rank*nlocpts)
+                            {
+                                pts[0][cntloc] = values[3] + 
+                                    i/((NekDouble)(npts1-1))*(values[4]-values[3]);
+                                pts[1][cntloc] = values[5] + 
+                                    j/((NekDouble)(npts2-1))*(values[6]-values[5]);
+                                pts[2][cntloc] = values[7] + 
+                                    k/((NekDouble)(npts3-1))*(values[8]-values[7]);
+                                cntloc++;
+                            }
+                            cnt++;
+                        }
+                    }
+                }
+            }
+
+            vector<int> ppe;
+            ppe.push_back(npts1);
+            ppe.push_back(npts2);
+            ppe.push_back(npts3);
+            m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsBox);
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
 
         }
     }
@@ -311,7 +417,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
     }
 
-    if(fromField->m_session->GetComm()->GetRank() == 0)
+    if(rank == 0)
     {
         cout << "Interpolating [" << flush;
     }
@@ -320,10 +426,14 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(fromField->m_exp, pts,
+    // check field exsits since could be outo of domain in parallel case 
+    if(fromField->m_exp.size()) 
+    {
+        InterpolateFieldToPts(fromField->m_exp, pts,
                           clamp_low, clamp_up, def_value);
+    }
 
-    if(fromField->m_session->GetComm()->GetRank() == 0)
+    if(rank == 0)
     {
         cout << "]" << endl;
     }

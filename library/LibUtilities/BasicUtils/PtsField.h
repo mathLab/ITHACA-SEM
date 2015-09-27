@@ -57,6 +57,7 @@ enum PtsType{
     ePtsFile,
     ePtsLine,
     ePtsPlane,
+    ePtsBox,
     ePtsTriBlock,
     ePtsTetBlock
 };

@@ -45,12 +45,15 @@ NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
                                     Array<OneD, NekDouble> uvi,
                                     Array<OneD, NekDouble> df,
                                     Array<OneD, NekDouble> bounds,
-                                    vector<Array<OneD,NekDouble> > bcs,
+                                    std::vector<Array<OneD,NekDouble> > bcs,
+                                    std::vector<NekDouble> weights,
                                     NekDouble (SurfaceMeshing::*GetF)(
-                                    NekDouble, NekDouble,
-                                    vector<Array<OneD,NekDouble> >, int))
+                                        NekDouble, NekDouble,
+                                        std::vector<Array<OneD,NekDouble> >,
+                                        std::vector<NekDouble>, int, bool &))
 {
     //enter brent algoithm from book
+    bool valid;
     NekDouble a,b;
     NekDouble e1 = 0.0;
     NekDouble xmin=0.0;
@@ -104,7 +107,7 @@ NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
         {
             break;
         }
-        fu = (this->*GetF)(uvi[0]+df[0]*u,uvi[1]+df[1]*u,bcs,surf);
+        fu = (this->*GetF)(uvi[0]+df[0]*u,uvi[1]+df[1]*u,bcs,weights,surf,valid);
         if(fu <= fx)
         {
             if(u>=x) a=x; else b=x;

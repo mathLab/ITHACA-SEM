@@ -138,7 +138,7 @@ void InputCAD::Process()
 
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = 2;
+    m_mesh->m_nummode = m_order+1;
 
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");
@@ -263,7 +263,7 @@ void InputCAD::Process()
             }
 
             egs[j]->m_edgeNodes = localhonode;
-            egs[j]->m_curveType = LibUtilities::ePolyEvenlySpaced;
+            egs[j]->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
 
         int t = m_mesh->m_element[m_mesh->m_expDim-1][i]->GetTriID();
@@ -296,8 +296,8 @@ void InputCAD::Process()
 
             f->m_faceNodes = hoTri.surfVerts;
         }
-
-        f->m_curveType = LibUtilities::eNodalTriEvenlySpaced;
+        //f->m_faceNodes.clear();
+        f->m_curveType = LibUtilities::eNodalTriFekete;
     }
 
     if(m_mesh->m_verbose)

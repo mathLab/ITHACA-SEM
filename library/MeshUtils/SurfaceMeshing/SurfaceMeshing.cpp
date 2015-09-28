@@ -450,6 +450,12 @@ void SurfaceMeshing::HOSurf()
     map<int, MeshEdgeSharedPtr>::iterator eit;
     int counter = 0;
 
+    LibUtilities::PointsKey ekey(m_order+1,
+                                 LibUtilities::eGaussLobattoLegendre);
+    Array<OneD, NekDouble> gll;
+
+    LibUtilities::PointsManager()[ekey]->GetPoints(gll);
+
     //loop over all edges in the surface
     for(eit = Edges.begin(); eit != Edges.end(); eit++)
     {
@@ -472,16 +478,13 @@ void SurfaceMeshing::HOSurf()
             NekDouble tb = Nodes[n[0]]->GetC(e->GetCurve());
             NekDouble te = Nodes[n[1]]->GetC(e->GetCurve());
 
-            NekDouble dz = 2.0/m_order;
-
             Array<OneD, NekDouble> ti(m_order+1);
 
             for(int i = 0; i < m_order+1; i++)
             {
-                ti[i] = tb*((1.0 - (-1.0 + dz*i))/2.0) +
-                               te*((1.0 + (-1.0 + dz*i))/2.0);
+                ti[i] = tb*(1.0 -  gll[i])/2.0 +
+                        te*(1.0 +  gll[i])/2.0;
             }
-
             vector<int> Surfs = c->GetAdjSurf();
 
             ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
@@ -518,12 +521,13 @@ void SurfaceMeshing::HOSurf()
             uve = Nodes[n[1]]->GetS(e->GetSurf());
 
             vector<int> honodes(m_order-1);
+            vector<NekDouble> gllint(m_order-1);
             for(int i = 1; i < m_order+1 -1; i++)
             {
                 Array<OneD, NekDouble> loc;
                 Array<OneD, NekDouble> uv(2);
-                uv[0] = uvb[0]+i*(uve[0]-uvb[0])/m_order;
-                uv[1] = uvb[1]+i*(uve[1]-uvb[1])/m_order;
+                uv[0] = uvb[0]*(1.0 - gll[i])/2.0 + uve[0]*(1.0 + gll[i])/2.0;
+                uv[1] = uvb[1]*(1.0 - gll[i])/2.0 + uve[1]*(1.0 + gll[i])/2.0;
                 loc = s->P(uv);
                 MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
                         AllocateSharedPtr(Nodes.size(),loc[0],
@@ -531,7 +535,7 @@ void SurfaceMeshing::HOSurf()
                 nn->SetSurf(e->GetSurf(),uv);
                 honodes[i-1] = Nodes.size();
                 Nodes[Nodes.size()] = nn;
-
+                gllint[i-1] = gll[i];
             }
 
             //begin optimisation
@@ -543,33 +547,49 @@ void SurfaceMeshing::HOSurf()
             {
                 int converged = 0;
 
-                Array<OneD, NekDouble> uv1, uv2, uvx, uvi;
+                Array<OneD, NekDouble> uvi;
 
                 Array<OneD, NekDouble> bounds = s->GetBounds();
 
+                NekDouble za,zm,zb;
+
                 for(int i = 0; i < honodes.size(); i++)
                 {
+                    vector<Array<OneD, NekDouble> > bcs;
+
                     if(i==0)
                     {
-                        uv1 = uvb;
+                        bcs.push_back(uvb);
+                        za = -1.0;
                     }
                     else
                     {
-                        uv1 = Nodes[honodes[i-1]]->GetS(e->GetSurf());
+                        bcs.push_back(Nodes[honodes[i-1]]->GetS(e->GetSurf()));
+                        za = gllint[i-1];
                     }
                     if(i==honodes.size()-1)
                     {
-                        uv2 = uve;
+                        bcs.push_back(uve);
+                        zb = 1.0;
                     }
                     else
                     {
-                        uv2 = Nodes[honodes[i+1]]->GetS(e->GetSurf());
+                        bcs.push_back(Nodes[honodes[i+1]]->GetS(e->GetSurf()));
+                        zb = gllint[i+1];
                     }
+
+                    zm = gllint[i];
+
+                    vector<NekDouble> weights(2);
+                    weights[0] = 1.0/(zb - zm);
+                    weights[1] = 1.0 /(zm - za);
 
                     uvi = Nodes[honodes[i]]->GetS(e->GetSurf());
 
                     bool valid;
-                    Array<OneD, NekDouble> df = EdgeGrad(uv1,uv2,uvi,e->GetSurf(),valid);
+                    Array<OneD, NekDouble> df = EdgeGrad(uvi[0],uvi[1],bcs,
+                                                         weights,e->GetSurf(),
+                                                         valid);
                     if(!valid)
                     {
                         converged++;
@@ -580,15 +600,12 @@ void SurfaceMeshing::HOSurf()
 
                     Find1DBounds(a,b,uvi,df,bounds);
 
-                    //initial conditions
-                    vector<Array<OneD, NekDouble> > bcs;
-                    bcs.push_back(uv1); bcs.push_back(uv2);
-
-                    NekDouble fxi = EdgeF(uvi[0],uvi[1],bcs,e->GetSurf());
+                    NekDouble fxi = EdgeF(uvi[0],uvi[1],bcs,weights,
+                                          e->GetSurf(),valid);
                     NekDouble fx= fxi;
 
                     NekDouble xmin = BrentOpti(a,0,b,fx,tol,e->GetSurf(),
-                                               uvi,df,bounds,bcs,
+                                               uvi,df,bounds,bcs,weights,
                                                &SurfaceMeshing::EdgeF);
 
                     if(fabs(fx - fxi) < tol)
@@ -619,7 +636,7 @@ void SurfaceMeshing::HOSurf()
     //this section of code sets up the standard ho triangle and sorts out
     //node numbering for the optimsation scheme
     LibUtilities::PointsKey pkey(m_order+1,
-                                 LibUtilities::eNodalTriEvenlySpaced);
+                                 LibUtilities::eNodalTriFekete);
     Array<OneD, NekDouble> u,v;
 
     int TotNumPoints = LibUtilities::PointsManager()[pkey]->
@@ -695,7 +712,7 @@ void SurfaceMeshing::HOSurf()
         }
     }
 
-    map<pair<int,int>, Array<OneD, NekDouble> > nodeweight;
+    map<pair<int,int>, vector<NekDouble> > nodeweight;
 
     //calculates spring weights from the standard triangle
     for(j = 2; j <= m_order-1; j++)
@@ -725,7 +742,7 @@ void SurfaceMeshing::HOSurf()
             id.first = i; id.second = j;
             Zu = u[nodeorder[id]]; Zv = v[nodeorder[id]];
 
-            Array<OneD, NekDouble> K(3);
+            vector<NekDouble> K(3);
             K[0] = (Zu - Z2u)*(Zv - Z3v) - (Zv - Z2v)*(Zu - Z3u);
             K[1] = -1.0*((Zu - Z1u)*(Zv - Z3v) - (Zv - Z1v)*(Zu - Z3u));
             K[2] = (Zu - Z1u)*(Zv - Z2v) - (Zv - Z1v)*(Zu - Z2u);
@@ -807,8 +824,11 @@ void SurfaceMeshing::HOSurf()
 
         NekDouble tol = 1E-8;
 
+        int ct = 0;
+
         while(repeatoverallnodes)
         {
+            ct++;
             int converged = 0;
 
             Array<OneD, NekDouble> uvi;
@@ -856,10 +876,11 @@ void SurfaceMeshing::HOSurf()
                     id.second = j;
                     node = nodeorder[id];
                     uvi = uvList[node];
-                    W = nodeweight[id];
+                    vector<NekDouble> weights = nodeweight[id];
 
                     bool valid;
-                    Array<OneD, NekDouble> df = FaceGrad(uvi,bcs,t->Getcid(),
+                    Array<OneD, NekDouble> df = FaceGrad(uvi[0],uvi[1],bcs,
+                                                         weights,t->Getcid(),
                                                          valid);
                     if(!valid)
                     {
@@ -870,11 +891,11 @@ void SurfaceMeshing::HOSurf()
                     NekDouble a,b;
                     Find1DBounds(a,b,uvi,df,bounds);
 
-                    NekDouble fxi = FaceF(uvi[0],uvi[1],bcs,t->Getcid());
+                    NekDouble fxi = FaceF(uvi[0],uvi[1],bcs,weights,t->Getcid(),valid);
                     NekDouble fx= fxi;
 
                     NekDouble xmin = BrentOpti(a,0,b,fx,tol,t->Getcid(),
-                                               uvi,df,bounds,bcs,
+                                               uvi,df,bounds,bcs,weights,
                                                &SurfaceMeshing::FaceF);
 
                     if(fabs(fx - fxi) < tol)
@@ -896,6 +917,7 @@ void SurfaceMeshing::HOSurf()
             {
                 repeatoverallnodes = false;
             }
+            ASSERTL0(ct<10000,"falid to optismise face");
         }
         t->SetHONodes(honodes);
     }

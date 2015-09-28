@@ -66,7 +66,45 @@ void TetMesh::Mesh()
         }
     }
 
-    tetgen->InitialMesh(nodesintris, nodedelta, Tris, Nodes);
+    vector<int> stiener;
+
+    map<int, MeshTriSharedPtr>::iterator trit;
+    for(trit = Tris.begin(); trit != Tris.end(); trit++)
+    {
+        int s = trit->second->Getcid();
+        Array<OneD, int> ns = trit->second->GetN();
+        Array<OneD, NekDouble> uva(2); uva[0] = 0.0; uva[1] = 0.0;
+        for(int i = 0; i < 3; i++)
+        {
+            Array<OneD, NekDouble> uv = Nodes[ns[i]]->GetS(s);
+            uva[0] += uv[0]/3.0;
+            uva[1] += uv[1]/3.0;
+        }
+
+        Array<OneD, NekDouble> P = m_cad->GetSurf(s)->P(uva);
+        Array<OneD, NekDouble> N = m_cad->GetSurf(s)->N(uva);
+        Array<OneD, NekDouble> NP(3);
+        NekDouble d = m_octree->Query(P);
+        NP[0] = P[0] + N[0]*d*1.41;
+        NP[1] = P[1] + N[1]*d*1.41;
+        NP[2] = P[2] + N[2]*d*1.41;
+
+        while(!m_cad->InsideShape(NP))
+        {
+            NP[0] += N[0]*d*0.5;
+            NP[1] += N[1]*d*0.5;
+            NP[2] += N[2]*d*0.5;
+        }
+
+        MeshNodeSharedPtr n = MemoryManager<MeshNode>::AllocateSharedPtr(
+            Nodes.size(), NP[0], NP[1], NP[2]);
+        stiener.push_back(Nodes.size());
+        Nodes[Nodes.size()]=n;
+
+        nodedelta.push_back(m_octree->Query(NP));
+    }
+
+    tetgen->InitialMesh(nodesintris, stiener, Tris, Nodes);
 
     int c = 1;
     int newpb = 20;
@@ -77,7 +115,7 @@ void TetMesh::Mesh()
     {
         newpb = newp.size();
         newp.clear();
-        tetgen->GetNewPoints(nodesintris, newp);
+        tetgen->GetNewPoints(nodesintris.size() + stiener.size(), newp);
 
         vector<NekDouble> newpointdelta;
         for(int i = 0; i < newp.size(); i++)
@@ -86,11 +124,11 @@ void TetMesh::Mesh()
             newpointdelta.push_back(d);
         }
 
-        tetgen->RefineMesh(nodesintris, nodedelta, Tris, Nodes, newpointdelta);
+        tetgen->RefineMesh(nodesintris.size() + stiener.size(), nodedelta, Tris, Nodes, newpointdelta);
         c++;
     }
 
-    tetgen->AddNodes(nodesintris, Nodes);
+    tetgen->AddNodes(nodesintris.size() + stiener.size(), Nodes);
 
     tetgen->Extract(numtet, tetconnect);
 

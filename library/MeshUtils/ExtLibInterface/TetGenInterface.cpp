@@ -40,12 +40,13 @@ namespace Nektar{
 namespace MeshUtils{
 
 void TetGenInterface::InitialMesh(const std::vector<int> &nis,
-                                  const std::vector<NekDouble> &ndel,
+                                  const std::vector<int> &nsti,
                                   std::map<int, MeshTriSharedPtr> &Tris,
                                   std::map<int, MeshNodeSharedPtr> &Nodes)
 {
     surface.initialize();
     output.initialize();
+    additional.initialize();
 
     nodemap.clear(); nodemapr.clear();
 
@@ -55,9 +56,11 @@ void TetGenInterface::InitialMesh(const std::vector<int> &nis,
 
     surface.firstnumber = 0;
     surface.numberofpoints = nis.size();
-    surface.numberofpointmtrs = 1;
     surface.pointlist = new REAL[surface.numberofpoints*3];
-    surface.pointmtrlist = new REAL[surface.numberofpoints];
+
+    additional.firstnumber = 0;
+    additional.numberofpoints = nsti.size();
+    additional.pointlist = new REAL[additional.numberofpoints*3];
 
     int pointc = 0;
 
@@ -72,7 +75,19 @@ void TetGenInterface::InitialMesh(const std::vector<int> &nis,
         surface.pointlist[i*3+1] = loc[1];
         surface.pointlist[i*3+2] = loc[2];
 
-        surface.pointmtrlist[i] = ndel[i];
+        pointc++;
+    }
+
+    for(int i = 0; i < nsti.size(); i++)
+    {
+        nodemap[pointc] = nsti[i];
+        nodemapr[nsti[i]] = pointc;
+
+        Array<OneD, NekDouble> loc = Nodes[nsti[i]]->GetLoc();
+
+        additional.pointlist[i*3+0] = loc[0];
+        additional.pointlist[i*3+1] = loc[1];
+        additional.pointlist[i*3+2] = loc[2];
 
         pointc++;
     }
@@ -100,13 +115,13 @@ void TetGenInterface::InitialMesh(const std::vector<int> &nis,
 
     }
 
-    tetrahedralize("pYmzqQ", &surface, &output);
+    tetrahedralize("pYizqQ", &surface, &output, &additional);
 
 }
 
-void TetGenInterface::GetNewPoints(const std::vector<int> &nis, vector<Array<OneD, NekDouble> > &newp)
+void TetGenInterface::GetNewPoints(int num, vector<Array<OneD, NekDouble> > &newp)
 {
-    for(int i = nis.size(); i < output.numberofpoints; i++)
+    for(int i = num; i < output.numberofpoints; i++)
     {
         Array<OneD, NekDouble> loc(3);
         loc[0] = output.pointlist[i*3+0];
@@ -116,7 +131,7 @@ void TetGenInterface::GetNewPoints(const std::vector<int> &nis, vector<Array<One
     }
 }
 
-void TetGenInterface::RefineMesh(const std::vector<int> &nis,
+void TetGenInterface::RefineMesh(int num,
                                  const std::vector<NekDouble> &ndel,
                                  std::map<int, MeshTriSharedPtr> &Tris,
                                  std::map<int, MeshNodeSharedPtr> &Nodes,
@@ -124,14 +139,16 @@ void TetGenInterface::RefineMesh(const std::vector<int> &nis,
 {
     input = output;
 
+    input.numberofpointmtrs = 1;
+
     input.pointmtrlist = new REAL[input.numberofpoints];
 
-    for(int i = 0; i < nis.size(); i++)
+    for(int i = 0; i < num; i++)
     {
         input.pointmtrlist[i] = ndel[i];
     }
     int c = 0;
-    for(int i = nis.size(); i < input.numberofpoints; i++)
+    for(int i = num; i < input.numberofpoints; i++)
     {
         input.pointmtrlist[i] = newndel[c];
         c++;
@@ -141,9 +158,9 @@ void TetGenInterface::RefineMesh(const std::vector<int> &nis,
 
 }
 
-void TetGenInterface::AddNodes(const vector<int> &nis, map<int, MeshNodeSharedPtr> &Nodes)
+void TetGenInterface::AddNodes(int num, map<int, MeshNodeSharedPtr> &Nodes)
 {
-    for(int i = nis.size(); i < output.numberofpoints; i++)
+    for(int i = num; i < output.numberofpoints; i++)
     {
         MeshNodeSharedPtr n = MemoryManager<MeshNode>::AllocateSharedPtr(
             Nodes.size(), output.pointlist[i*3+0], output.pointlist[i*3+1],

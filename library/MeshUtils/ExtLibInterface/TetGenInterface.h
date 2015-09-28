@@ -65,19 +65,19 @@ class TetGenInterface
          * @brief assign parameters for meshing
          */
         void InitialMesh(const std::vector<int> &nis,
-                         const std::vector<NekDouble> &ndel,
+                         const std::vector<int> &nsti,
                          std::map<int, MeshTriSharedPtr> &Tris,
                          std::map<int, MeshNodeSharedPtr> &Nodes);
 
         /**
          * @brief gets the locations of the stiener points added by tetgen
          */
-        void GetNewPoints(const std::vector<int> &nis, std::vector<Array<OneD, NekDouble> > &newp);
+        void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
 
         /**
          * @brief refines a previously made tetmesh with node delta information from the Octree
          */
-        void RefineMesh(const std::vector<int> &nis,
+        void RefineMesh(int num,
                         const std::vector<NekDouble> &ndel,
                         std::map<int, MeshTriSharedPtr> &Tris,
                         std::map<int, MeshNodeSharedPtr> &Nodes,
@@ -90,7 +90,7 @@ class TetGenInterface
         /**
          * @brief from the list of stiener points creates new mesh node objects
          */
-        void AddNodes(const std::vector<int> &nis, std::map<int, MeshNodeSharedPtr> &Nodes);
+        void AddNodes(int num, std::map<int, MeshNodeSharedPtr> &Nodes);
 
         /**
          * @brief clear previous mesh
@@ -100,7 +100,7 @@ class TetGenInterface
     private:
 
         ///tetgen objects
-        tetgenio surface, output, input;
+        tetgenio surface, output, input, additional;
         /// map from meshconvert id to tetgen id
         std::map<int, int> nodemap;
         /// map in reverse

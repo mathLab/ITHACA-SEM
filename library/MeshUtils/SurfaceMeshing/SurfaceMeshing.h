@@ -99,28 +99,33 @@ class SurfaceMeshing
         /**
          * @brief get the gadient of the edge spring energy optimsation function
          */
-        Array<OneD, NekDouble> EdgeGrad(Array<OneD, NekDouble> uv1,
-                                        Array<OneD, NekDouble> uv2,
-                                        Array<OneD, NekDouble> uvx, int surf,
-                                        bool &valid);
+        Array<OneD, NekDouble> EdgeGrad(NekDouble ux, NekDouble vx,
+                                        std::vector<Array<OneD,NekDouble> > bcs,
+                                        std::vector<NekDouble> weights,
+                                        int surf, bool &valid);
 
         /**
          * @brief get the value of the edge spring energy
          */
         NekDouble EdgeF(NekDouble ux, NekDouble vx,
-                        std::vector<Array<OneD,NekDouble> > bcs, int surf);
+                        std::vector<Array<OneD,NekDouble> > bcs,
+                        std::vector<NekDouble> weights,
+                        int surf, bool &valid);
 
         /**
          * @brief get the value of face spring energy
          */
         NekDouble FaceF(NekDouble ux, NekDouble vx,
-                        std::vector<Array<OneD,NekDouble> > bcs, int surf);
+                        std::vector<Array<OneD,NekDouble> > bcs,
+                        std::vector<NekDouble> weights,
+                        int surf, bool &valid);
 
         /**
          * @brief get the gadient of the face spring energy optimsation function
          */
-        Array<OneD, NekDouble> FaceGrad(Array<OneD, NekDouble> uvx,
-                                        std::vector<Array<OneD, NekDouble> > bcs,
+        Array<OneD, NekDouble> FaceGrad(NekDouble ux, NekDouble vx,
+                                        std::vector<Array<OneD,NekDouble> > bcs,
+                                        std::vector<NekDouble> weights,
                                         int surf, bool &valid);
 
         /**
@@ -141,9 +146,11 @@ class SurfaceMeshing
                             Array<OneD, NekDouble> df,
                             Array<OneD, NekDouble> bounds,
                             std::vector<Array<OneD,NekDouble> > bcs,
+                            std::vector<NekDouble> weights,
                             NekDouble (SurfaceMeshing::*GetF)(
                             NekDouble, NekDouble,
-                            std::vector<Array<OneD,NekDouble> >, int));
+                            std::vector<Array<OneD,NekDouble> >,
+                            std::vector<NekDouble>, int, bool &));
 
         /**
          * @brief Validate the linear surface mesh
@@ -166,8 +173,6 @@ class SurfaceMeshing
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
         /// order of the high-order mesh to be created
         int m_order;
-        /// face optimsation requires extra info, hacky way to pass it in
-        Array<OneD, NekDouble> W;
         /// verbosity of the routines
         bool m_verbose;
         /// map of mesh nodes

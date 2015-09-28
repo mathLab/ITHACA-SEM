@@ -39,36 +39,38 @@ using namespace std;
 namespace Nektar{
 namespace MeshUtils{
 
-Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(Array<OneD, NekDouble> uv1,
-                                                Array<OneD, NekDouble> uv2,
-                                                Array<OneD, NekDouble> uvx,
+Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(NekDouble ux, NekDouble vx,
+                                                vector<Array<OneD,NekDouble> > bcs,
+                                                vector<NekDouble> weights,
                                                 int surf, bool &valid)
 {
-    NekDouble sig = m_order/2.0;
+    ASSERTL0(bcs.size()==2,"need two bc for edge optmisation");
 
     Array<OneD, NekDouble> df(2);
 
-    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(uv1);
-    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(uv2);
+    Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
+
+    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(bcs[0]);
+    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(bcs[1]);
     Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D1(uvx);
 
     NekDouble dfdu,dfdv;
 
     dfdu     = ((rm[0] - rb[0])*rm[3] +
                 (rm[1] - rb[1])*rm[4] +
-                (rm[2] - rb[2])*rm[5]
+                (rm[2] - rb[2])*rm[5]) * 2.0*weights[0]
                 +
-                (rm[0] - ra[0])*rm[3] +
+               ((rm[0] - ra[0])*rm[3] +
                 (rm[1] - ra[1])*rm[4] +
-                (rm[2] - ra[2])*rm[5]) * 2.0*sig;
+                (rm[2] - ra[2])*rm[5]) * 2.0*weights[1];
 
     dfdv     = ((rm[0] - rb[0])*rm[6] +
                 (rm[1] - rb[1])*rm[7] +
-                (rm[2] - rb[2])*rm[8]
+                (rm[2] - rb[2])*rm[8]) * 2.0*weights[0]
                 +
-                (rm[0] - ra[0])*rm[6] +
+               ((rm[0] - ra[0])*rm[6] +
                 (rm[1] - ra[1])*rm[7] +
-                (rm[2] - ra[2])*rm[8]) * 2.0*sig;
+                (rm[2] - ra[2])*rm[8]) * 2.0*weights[1];
 
     df[0] = dfdu; df[1] = dfdv;
 
@@ -87,10 +89,11 @@ Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(Array<OneD, NekDouble> uv1,
 }
 
 NekDouble SurfaceMeshing::EdgeF(NekDouble ux, NekDouble vx,
-                                vector<Array<OneD,NekDouble> > bcs, int surf)
+                                vector<Array<OneD,NekDouble> > bcs,
+                                vector<NekDouble> weights,
+                                int surf, bool &valid)
 {
     ASSERTL0(bcs.size()==2,"need two bc for edge optmisation");
-    NekDouble sig = m_order/2.0;
 
     NekDouble F;
 
@@ -102,20 +105,23 @@ NekDouble SurfaceMeshing::EdgeF(NekDouble ux, NekDouble vx,
 
     F        = ((rb[0] - rm[0])*(rb[0] - rm[0]) +
                 (rb[1] - rm[1])*(rb[1] - rm[1]) +
-                (rb[2] - rm[2])*(rb[2] - rm[2])
+                (rb[2] - rm[2])*(rb[2] - rm[2])) * weights[0]
                 +
-                (rm[0] - ra[0])*(rm[0] - ra[0]) +
+               ((rm[0] - ra[0])*(rm[0] - ra[0]) +
                 (rm[1] - ra[1])*(rm[1] - ra[1]) +
-                (rm[2] - ra[2])*(rm[2] - ra[2])) * sig;
+                (rm[2] - ra[2])*(rm[2] - ra[2])) * weights[1];
 
     return F;
 
 }
 
-Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(Array<OneD, NekDouble> uvx,
-                                                vector<Array<OneD, NekDouble> > bcs,
+Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(NekDouble ux, NekDouble vx,
+                                                vector<Array<OneD,NekDouble> > bcs,
+                                                vector<NekDouble> weights,
                                                 int surf, bool &valid)
 {
+    ASSERTL0(bcs.size()==6,"face optimsation needs 6 boundary springs");
+    Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
     Array<OneD, NekDouble> df(2);
 
     Array<OneD, NekDouble> rx = m_cad->GetSurf(surf)->D1(uvx);
@@ -126,32 +132,31 @@ Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(Array<OneD, NekDouble> uvx,
     Array<OneD, NekDouble> re = m_cad->GetSurf(surf)->P(bcs[4]);
     Array<OneD, NekDouble> rf = m_cad->GetSurf(surf)->P(bcs[5]);
 
-
     NekDouble dfdu,dfdv;
 
     dfdu = ((rx[0] - 0.5*(ra[0] + rb[0]))*rx[3] +
             (rx[1] - 0.5*(ra[1] + rb[1]))*rx[4] +
-            (rx[2] - 0.5*(ra[2] + rb[2]))*rx[5])* 2.0*W[0]
+            (rx[2] - 0.5*(ra[2] + rb[2]))*rx[5])* 2.0*weights[0]
            +
            ((rx[0] - 0.5*(rc[0] + rd[0]))*rx[3] +
             (rx[1] - 0.5*(rc[1] + rd[1]))*rx[4] +
-            (rx[2] - 0.5*(rc[2] + rd[2]))*rx[5])* 2.0*W[1]
+            (rx[2] - 0.5*(rc[2] + rd[2]))*rx[5])* 2.0*weights[1]
            +
            ((rx[0] - 0.5*(re[0] + rf[0]))*rx[3] +
             (rx[1] - 0.5*(re[1] + rf[1]))*rx[4] +
-            (rx[2] - 0.5*(re[2] + rf[2]))*rx[5])* 2.0*W[2];
+            (rx[2] - 0.5*(re[2] + rf[2]))*rx[5])* 2.0*weights[2];
 
     dfdv = ((rx[0] - 0.5*(ra[0] + rb[0]))*rx[6] +
             (rx[1] - 0.5*(ra[1] + rb[1]))*rx[7] +
-            (rx[2] - 0.5*(ra[2] + rb[2]))*rx[8])* 2.0*W[0]
+            (rx[2] - 0.5*(ra[2] + rb[2]))*rx[8])* 2.0*weights[0]
            +
            ((rx[0] - 0.5*(rc[0] + rd[0]))*rx[6] +
             (rx[1] - 0.5*(rc[1] + rd[1]))*rx[7] +
-            (rx[2] - 0.5*(rc[2] + rd[2]))*rx[8])* 2.0*W[1]
+            (rx[2] - 0.5*(rc[2] + rd[2]))*rx[8])* 2.0*weights[1]
            +
            ((rx[0] - 0.5*(re[0] + rf[0]))*rx[6] +
             (rx[1] - 0.5*(re[1] + rf[1]))*rx[7] +
-            (rx[2] - 0.5*(re[2] + rf[2]))*rx[8])* 2.0*W[2];
+            (rx[2] - 0.5*(re[2] + rf[2]))*rx[8])* 2.0*weights[2];
 
     df[0] = dfdu; df[1] = dfdv;
     NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
@@ -168,7 +173,9 @@ Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(Array<OneD, NekDouble> uvx,
 }
 
 NekDouble SurfaceMeshing::FaceF(NekDouble ux, NekDouble vx,
-                                vector<Array<OneD,NekDouble> > bcs, int surf)
+                                vector<Array<OneD,NekDouble> > bcs,
+                                vector<NekDouble> weights,
+                                int surf, bool &valid)
 {
     ASSERTL0(bcs.size()==6,"face optimsation needs 6 boundary springs");
     NekDouble F;
@@ -185,15 +192,15 @@ NekDouble SurfaceMeshing::FaceF(NekDouble ux, NekDouble vx,
 
     F = ((rx[0] - 0.5*(ra[0] + rb[0]))*(rx[0] - 0.5*(ra[0] + rb[0])) +
          (rx[1] - 0.5*(ra[1] + rb[1]))*(rx[1] - 0.5*(ra[1] + rb[1])) +
-         (rx[2] - 0.5*(ra[2] + rb[2]))*(rx[2] - 0.5*(ra[2] + rb[2])))*W[0]
+         (rx[2] - 0.5*(ra[2] + rb[2]))*(rx[2] - 0.5*(ra[2] + rb[2])))*weights[0]
         +
         ((rx[0] - 0.5*(rc[0] + rd[0]))*(rx[0] - 0.5*(rc[0] + rd[0])) +
          (rx[1] - 0.5*(rc[1] + rd[1]))*(rx[1] - 0.5*(rc[1] + rd[1])) +
-         (rx[2] - 0.5*(rc[2] + rd[2]))*(rx[2] - 0.5*(rc[2] + rd[2])))*W[1]
+         (rx[2] - 0.5*(rc[2] + rd[2]))*(rx[2] - 0.5*(rc[2] + rd[2])))*weights[1]
         +
         ((rx[0] - 0.5*(re[0] + rf[0]))*(rx[0] - 0.5*(re[0] + rf[0])) +
          (rx[1] - 0.5*(re[1] + rf[1]))*(rx[1] - 0.5*(re[1] + rf[1])) +
-         (rx[2] - 0.5*(re[2] + rf[2]))*(rx[2] - 0.5*(re[2] + rf[2])))*W[2];
+         (rx[2] - 0.5*(re[2] + rf[2]))*(rx[2] - 0.5*(re[2] + rf[2])))*weights[2];
 
     return F;
 

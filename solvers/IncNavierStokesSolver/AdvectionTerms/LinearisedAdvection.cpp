@@ -312,25 +312,6 @@ void LinearisedAdvection::v_Advect(
                 UpdateBase(m_slices, m_interp[i], m_baseflow[i],
                            time, m_period);
             }
-
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = fields[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-            // Copy Data into FieldData and set variable
-            for(int j = 0; j < m_baseflow.num_elements(); ++j)
-            {
-                for(int i = 0; i < FieldDef.size(); ++i)
-                {
-                    // Could do a search here to find correct variable
-                    FieldDef[i]->m_fields.push_back(boost::lexical_cast<string>(i));
-                    fields[0]->AppendFieldData(FieldDef[i], FieldData[i],
-                                           m_baseflow[j]);
-                }
-            }
-
-            LibUtilities::FieldIO fld(fields[0]->GetComm());
-            fld.Write("base" + boost::lexical_cast<string>(time) + ".fld", FieldDef, FieldData);
         }
 
 
@@ -625,11 +606,22 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     int s;
     Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
 
+    int numexp = pFields[0]->GetExpSize();
+    Array<OneD,int> ElementGIDs(numexp);
+
+    // Define list of global element ids
+    for(int i = 0; i < numexp; ++i)
+    {
+        ElementGIDs[i] = pFields[0]->GetExp(i)->GetGeom()->GetGlobalID();
+    }
+
     //Get Homogeneous
     LibUtilities::FieldIOSharedPtr fld =
     MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
                                                     m_session->GetComm());
-    fld->Import(pInfile, FieldDef, FieldData);
+    fld->Import(pInfile, FieldDef, FieldData, 
+                LibUtilities::NullFieldMetaDataMap,
+                ElementGIDs);
 
 
     if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -744,7 +736,7 @@ void LinearisedAdvection::UpdateBase(
         phase = (i>>1) * BetaT;
 
         Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
-        Vmath::Svtvp(npoints, sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+        Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
     }
 
 }
@@ -798,7 +790,7 @@ void LinearisedAdvection::DFT(const string file,
 
     for (int i = 0; i < ConvectedFields; ++i)
     {
-        m_interp[i] = Array<OneD,NekDouble>(npoints*m_slices);
+        m_interp[i] = Array<OneD,NekDouble>(npoints*m_slices, 0.0);
     }
 
     // Import the slides into auxiliary vector

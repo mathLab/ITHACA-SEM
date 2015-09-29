@@ -361,24 +361,57 @@ namespace Nektar
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Edge");
                 ASSERTL0(vSubElement, "Cannot read edges");
-                x = vSubElement->FirstChildElement();
-                while(x)
+
+                // check to see if compressed
+                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
+                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
                 {
-                    TiXmlAttribute* y = x->FirstAttribute();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    MeshEntity e;
-                    e.id = y->IntValue();
-                    e.type = 'E';
-                    std::vector<std::string> vVertices;
-                    std::string vVerticesString = x->FirstChild()->ToText()->Value();
-                    boost::split(vVertices, vVerticesString, boost::is_any_of("\t "));
-                    e.list.push_back(atoi(vVertices[0].c_str()));
-                    e.list.push_back(atoi(vVertices[1].c_str()));
-                    m_meshEdges[e.id] = e;
-                    x = x->NextSiblingElement();
+                    m_isCompressed = true;
+                    // Extract the edge body
+                    TiXmlNode* edgeChild = vSubElement->FirstChild();
+                    ASSERTL0(edgeChild, "Unable to extract the data from the compressed edge tag.");
+                
+                    std::string edgeStr;
+
+                    if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        edgeStr += edgeChild->ToText()->ValueStr();
+                    }
+                    
+                    std::vector<MeshEdge> edgeData;
+                    CompressData::ZlibDecodeFromBase64Str(edgeStr,edgeData);
+                
+                    for(int i = 0; i < edgeData.size(); ++i)
+                    {
+                        MeshEntity e;
+                        e.id = edgeData[i].id;
+                        e.list.push_back(edgeData[i].v0);
+                        e.list.push_back(edgeData[i].v1);
+                        m_meshEdges[e.id] = e;
+                    }
+                }
+                else
+                {
+                    x = vSubElement->FirstChildElement();
+                    
+                    while(x)
+                    {
+                        TiXmlAttribute* y = x->FirstAttribute();
+                        ASSERTL0(y, "Failed to get attribute.");
+                        MeshEntity e;
+                        e.id = y->IntValue();
+                        e.type = 'E';
+                        std::vector<std::string> vVertices;
+                        std::string vVerticesString = x->FirstChild()->ToText()->Value();
+                        boost::split(vVertices, vVerticesString, boost::is_any_of("\t "));
+                        e.list.push_back(atoi(vVertices[0].c_str()));
+                        e.list.push_back(atoi(vVertices[1].c_str()));
+                        m_meshEdges[e.id] = e;
+                        x = x->NextSiblingElement();
+                    }
                 }
             }
-
+            
             // Read mesh faces
             if (m_dim == 3)
             {
@@ -1009,16 +1042,35 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                if(m_isCompressed)
                 {
-                    x = new TiXmlElement("E");
-                    x->SetAttribute("ID", vIt->first);
-                    std::stringstream vVertices;
-                    vVertices << std::setw(10) << vIt->second.list[0]
-                            << std::setw(10) << vIt->second.list[1] << " ";
-                    y = new TiXmlText(vVertices.str());
-                    x->LinkEndChild(y);
-                    vEdge->LinkEndChild(x);
+                    std::vector<MeshEdge> edgeInfo;
+                    for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                    {
+                        MeshEdge e;
+                        e.id = vIt->first;
+                        e.v0 = vIt->second.list[0];
+                        e.v1 = vIt->second.list[1];
+                        edgeInfo.push_back(e);
+                    }
+                    std::string edgeStr;
+                    CompressData::ZlibEncodeToBase64Str(edgeInfo,edgeStr);
+                    vEdge->SetAttribute("COMPRESSED","B64Z");
+                    vEdge->LinkEndChild(new TiXmlText(edgeStr));
+                }
+                else
+                {
+                    for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                    {
+                        x = new TiXmlElement("E");
+                        x->SetAttribute("ID", vIt->first);
+                        std::stringstream vVertices;
+                        vVertices << std::setw(10) << vIt->second.list[0]
+                                  << std::setw(10) << vIt->second.list[1] << " ";
+                        y = new TiXmlText(vVertices.str());
+                        x->LinkEndChild(y);
+                        vEdge->LinkEndChild(x);
+                    }
                 }
             }
 

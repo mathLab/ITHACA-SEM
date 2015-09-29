@@ -145,6 +145,10 @@ namespace LibUtilities
                                              std::vector<MeshVertex>&in,
                                              std::string& out64);
 
+        template LIB_UTILITIES_EXPORT int ZlibEncodeToBase64Str(
+                                             std::vector<MeshEdge>&in,
+                                             std::string& out64);
+
         template<class T> int ZlibEncodeToBase64Str(std::vector<T>& in, 
                                                     std::string& out64)
         {
@@ -239,6 +243,11 @@ namespace LibUtilities
         template LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(
                                                 std::string& in64, 
                                                 std::vector<MeshVertex>& out);
+
+
+        template LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(
+                                                std::string& in64, 
+                                                std::vector<MeshEdge>& out);
 
         template<class T> int ZlibDecodeFromBase64Str(std::string& in64, 
                                                       std::vector<T>& out)

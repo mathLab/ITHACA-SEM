@@ -37,7 +37,6 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPyrExp.h>

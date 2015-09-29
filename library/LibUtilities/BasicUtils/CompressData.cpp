@@ -34,9 +34,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/CompressData.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
 
-#include "zlib.h"
 #include <set>
 
 #ifdef NEKTAR_USE_MPI
@@ -57,17 +57,19 @@ namespace LibUtilities
 
     namespace CompressData
     {
+
+
         /**
          * Compress a vector of NekDouble values into a string using zlib.
          */
-        int Deflate(std::vector<NekDouble>& in, std::string& out)
+        template<class T>  int ZlibEncode(std::vector<T>& in, std::string& out)
         {
             int ret;
             unsigned have;
-            z_stream strm;
-            unsigned char* input = (unsigned char*)(&in[0]);
             std::string buffer;
             buffer.resize(CHUNK);
+            z_stream strm;
+            unsigned char* input = (unsigned char*)(&in[0]);
 
             /* allocate deflate state */
             strm.zalloc = Z_NULL;
@@ -77,14 +79,14 @@ namespace LibUtilities
 
             ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
 
-            strm.avail_in = in.size() * sizeof(NekDouble) / sizeof(char);
+            strm.avail_in = in.size() * sizeof(T) / sizeof(char);
             strm.next_in = input;
 
             // Deflate input until output buffer is no longer full.
             do {
                 strm.avail_out = CHUNK;
                 strm.next_out = (unsigned char*)(&buffer[0]);
-
+                
                 ret = deflate(&strm, Z_FINISH);
 
                 // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
@@ -134,11 +136,21 @@ namespace LibUtilities
         /**
          * Compress a vector of NekDouble values into a base 64 string
          */
-        int DeflateToBase64Str(std::vector<NekDouble>& in, std::string& out64)
+
+        template LIB_UTILITIES_EXPORT int ZlibEncodeToBase64Str(
+                                             std::vector<NekDouble>&in,
+                                             std::string& out64);
+
+        template LIB_UTILITIES_EXPORT int ZlibEncodeToBase64Str(
+                                             std::vector<MeshVertex>&in,
+                                             std::string& out64);
+
+        template<class T> int ZlibEncodeToBase64Str(std::vector<T>& in, 
+                                                    std::string& out64)
         {
             std::string out;
 
-            int ok = Deflate(in,out);
+            int ok = ZlibEncode(in,out);
             
             BinaryStrToBase64Str(out,out64);
 
@@ -149,8 +161,8 @@ namespace LibUtilities
          * Decompress a zlib-compressed string into a vector of NekDouble
          * values.
          */
-        int Inflate(std::string& in,
-                    std::vector<NekDouble>& out)
+        template<class T> int ZlibDecode(std::string& in,
+                                         std::vector<T>& out)
         {
             int ret;
             unsigned have;
@@ -196,9 +208,9 @@ namespace LibUtilities
 
             if (ret == Z_STREAM_END)
             {
-                NekDouble* readFieldData = (NekDouble*) output.c_str();
+                T* readFieldData = (T*) output.c_str();
                 unsigned int len = output.size() * sizeof(*output.c_str())
-                                                 / sizeof(NekDouble);
+                                                 / sizeof(T);
                 out.assign( readFieldData, readFieldData + len);
                 return Z_OK;
             }
@@ -208,6 +220,7 @@ namespace LibUtilities
             }
         }
         
+
         void Base64StrToBinaryStr(std::string &base64string,
                                   std::string &compressedDataString)
         {
@@ -219,12 +232,21 @@ namespace LibUtilities
                                                binary_t(base64string.end()));
         }
 
-        int InflateFromBase64Str(std::string& in64, std::vector<NekDouble>& out)
+        template LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(
+                                                std::string& in64, 
+                                                std::vector<NekDouble>& out);
+
+        template LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(
+                                                std::string& in64, 
+                                                std::vector<MeshVertex>& out);
+
+        template<class T> int ZlibDecodeFromBase64Str(std::string& in64, 
+                                                      std::vector<T>& out)
         {
             std::string in;
             Base64StrToBinaryStr(in64,in);
 
-            return Inflate(in,out);
+            return ZlibDecode(in,out);
         }
     }
 }

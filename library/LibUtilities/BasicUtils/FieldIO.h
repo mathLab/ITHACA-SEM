@@ -226,12 +226,6 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr  &fielddefs);
 
-                LIB_UTILITIES_EXPORT int Deflate(
-                        std::vector<NekDouble>& in,
-                        string& out);
-
-                LIB_UTILITIES_EXPORT int Inflate(string& in,
-                        std::vector<NekDouble>& out);
         };
 
         typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;

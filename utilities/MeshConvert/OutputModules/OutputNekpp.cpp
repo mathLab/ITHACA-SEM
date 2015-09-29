@@ -95,7 +95,7 @@ namespace Nektar
             root->LinkEndChild( geomTag );
 
             WriteXmlNodes     (geomTag,m_config["compress"].as<bool>());
-            WriteXmlEdges     (geomTag);
+            WriteXmlEdges     (geomTag,m_config["compress"].as<bool>());
             WriteXmlFaces     (geomTag);
             WriteXmlElements  (geomTag);
             WriteXmlCurves    (geomTag);
@@ -187,24 +187,48 @@ namespace Nektar
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot)
+        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot, bool IsCompressed)
         {
             if (m_mesh->m_expDim >= 2)
             {
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
+
                 std::set<EdgeSharedPtr>::iterator it;
                 std::set<EdgeSharedPtr> tmp(m_mesh->m_edgeSet.begin(),
                                             m_mesh->m_edgeSet.end());
-                for (it = tmp.begin(); it != tmp.end(); ++it)
+                if(IsCompressed)
                 {
-                    EdgeSharedPtr ed = *it;
-                    stringstream s;
+                    std::vector<LibUtilities::MeshEdge> edgeInfo;
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
+                    {
+                        LibUtilities::MeshEdge e;
+                        EdgeSharedPtr ed = *it;
+                        
+                        e.id = ed->m_id;
+                        e.v0 = ed->m_n1->m_id;
+                        e.v1 = ed->m_n2->m_id;
+                        
+                        edgeInfo.push_back(e);
+                    }
+                    std::string edgeStr;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(edgeInfo,edgeStr);
+                    verTag->SetAttribute("COMPRESSED","B64Z");
+                    verTag->LinkEndChild(new TiXmlText(edgeStr));
+                }
+                else
+                {
 
-                    s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
-                    TiXmlElement * e = new TiXmlElement( "E" );
-                    e->SetAttribute("ID",ed->m_id);
-                    e->LinkEndChild( new TiXmlText(s.str()) );
-                    verTag->LinkEndChild(e);
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
+                    {
+                        EdgeSharedPtr ed = *it;
+                        stringstream s;
+                        
+                        s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
+                        TiXmlElement * e = new TiXmlElement( "E" );
+                        e->SetAttribute("ID",ed->m_id);
+                        e->LinkEndChild( new TiXmlText(s.str()) );
+                        verTag->LinkEndChild(e);
+                    }
                 }
                 pRoot->LinkEndChild( verTag );
             }

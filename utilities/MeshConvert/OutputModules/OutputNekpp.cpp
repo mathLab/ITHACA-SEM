@@ -44,6 +44,7 @@ namespace io = boost::iostreams;
 
 #include <tinyxml.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <SpatialDomains/MeshGraph.h>
 
 #include "../MeshElements.h"
@@ -64,6 +65,8 @@ namespace Nektar
                 "Compress output file and append a .gz extension.");
             m_config["test"] = ConfigOption(true, "0",
                 "Attempt to load resulting mesh and create meshgraph.");
+            m_config["compress"] = ConfigOption(true,"0",
+                 "Compress xml section where possible");
         }
 
         OutputNekpp::~OutputNekpp()
@@ -91,7 +94,7 @@ namespace Nektar
             geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
             root->LinkEndChild( geomTag );
 
-            WriteXmlNodes     (geomTag);
+            WriteXmlNodes     (geomTag,m_config["compress"].as<bool>());
             WriteXmlEdges     (geomTag);
             WriteXmlFaces     (geomTag);
             WriteXmlElements  (geomTag);
@@ -151,18 +154,20 @@ namespace Nektar
 
             if(IsCompressed)
             {
-                std::vector<NekDouble> vertInfo;
+                std::vector<LibUtilities::MeshVertex> vertInfo;
                 for (it = tmp.begin(); it != tmp.end(); ++it)
                 {
+                    LibUtilities::MeshVertex v;
                     NodeSharedPtr n = *it;
-                    vertInfo.push_back(n->m_id);
-                    vertInfo.push_back(n->m_x);
-                    vertInfo.push_back(n->m_y);
-                    vertInfo.push_back(n->m_z);                    
+                    v.id = n->m_id;
+                    v.x  = n->m_x;
+                    v.y  = n->m_y;
+                    v.z  = n->m_z;
+                    vertInfo.push_back(v);     
                 }
                 std::string vertStr;
-                LibUtilities::CompressData::DeflateToBase64Str(vertInfo,vertStr);
-                verTag->SetAttribute("COMPRESSED","True");
+                LibUtilities::CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
+                verTag->SetAttribute("COMPRESSED","B64Z");
                 verTag->LinkEndChild(new TiXmlText(vertStr));
             }
             else

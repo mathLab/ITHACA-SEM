@@ -46,6 +46,8 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/assign/list_of.hpp>
 
+#include "zlib.h"
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -56,33 +58,33 @@ namespace LibUtilities
         /**
          * Compress a vector of NekDouble values into a string using zlib.
          */
-        int Deflate(std::vector<NekDouble>& in, std::string& out);
+        template<class T> LIB_UTILITIES_EXPORT int ZlibEncode(std::vector<T>& in, std::string& out);
 
 
         /**
          * Convert a string containing compressed binary (i.e. from
          * deflate) into a base 64 string
          */
-        void BinaryStrToBase64Str(std::string &compressedDataString,
+        LIB_UTILITIES_EXPORT void BinaryStrToBase64Str(std::string &compressedDataString,
                                  std::string &base64string);
 
         /**
          * Compress a vector of NekDouble values into a base64 string.
          */
-        int DeflateToBase64Str(std::vector<NekDouble>& in, std::string& out64);
+        template<class T> LIB_UTILITIES_EXPORT int ZlibEncodeToBase64Str(std::vector<T>& in, std::string& out64);
 
         /**
          * Decompress a zlib-compressed string into a vector of NekDouble
          * values.
          */
-        int Inflate(std::string& in, std::vector<NekDouble>& out);
+        template<class T> LIB_UTILITIES_EXPORT int ZlibDecode(std::string& in, std::vector<T>& out);
 
 
         /**
          * Convert a string containing base 64 (i.e. from xml file)
          * into a binary string
          */
-        void Base64StrToBinaryStr(std::string &base64string,
+        LIB_UTILITIES_EXPORT void Base64StrToBinaryStr(std::string &base64string,
                                   std::string &compressedDataString);
 
 
@@ -91,8 +93,8 @@ namespace LibUtilities
          * Decompress a base 64 compressed binary string into a vector
          * of NekDouble values.
          */
-        int InflateFromBase64Str(std::string& in64,
-                                 std::vector<NekDouble>& out);
+        template<class T> LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(std::string& in64,
+                                 std::vector<T>& out);
 
     }
 }

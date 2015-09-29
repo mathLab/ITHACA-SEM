@@ -15,6 +15,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIO.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/MeshEntities.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp

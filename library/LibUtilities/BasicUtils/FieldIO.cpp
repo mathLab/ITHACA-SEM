@@ -348,18 +348,10 @@ namespace Nektar
                 elemTag->SetAttribute("ID", idString);
 
                 std::string base64string;
-#if 0
-                ASSERTL0(Z_OK == DeflateToBase64Str(fielddata[f], 
-                                                    base64string),
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f], 
+                                                                     base64string),
                          "Failed to compress field data.");
-#else
-                std::string compressedDataString;
-                ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
-                        "Failed to compress field data.");
-
-                CompressData::BinaryStrToBase64Str(compressedDataString,
-                                                   base64string);
-#endif
+                
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -969,17 +961,11 @@ namespace Nektar
 
                     std::vector<NekDouble> elementFieldData;
                     // Convert from base64 to binary.
-#if 0
-                    std::string vCompressed;
-                    CompressData::Base64StrToBinaryStr(elementStr,vCompressed);
-                    ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
-                            "Failed to decompress field data.");
-#else
-                    ASSERTL0(Z_OK == CompressData::InflateFromBase64Str(
+
+                    ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
                                                         elementStr, 
                                                         elementFieldData),
                              "Failed to decompress field data.");
-#endif
 
 
                     fielddata.push_back(elementFieldData);
@@ -1209,27 +1195,6 @@ namespace Nektar
 
             // Return the full path to the partition for this process
             return LibUtilities::PortablePath(fulloutname);
-        }
-
-
-        /**
-         * Compress a vector of NekDouble values into a string using zlib.
-         */
-        int FieldIO::Deflate(std::vector<NekDouble>& in,
-                        string& out)
-        {
-            return CompressData::Deflate(in,out);
-        }
-
-
-        /**
-         * Decompress a zlib-compressed string into a vector of NekDouble
-         * values.
-         */
-        int FieldIO::Inflate(std::string& in,
-                    std::vector<NekDouble>& out)
-        {
-            return CompressData::Inflate(in,out);
         }
 
         /**

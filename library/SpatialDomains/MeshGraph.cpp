@@ -37,6 +37,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPyrExp.h>
@@ -391,35 +392,29 @@ namespace Nektar
             }
 
             const char *IsCompressed = element->Attribute("COMPRESSED");
-            if(IsCompressed&&boost::iequals(IsCompressed,"True"))
+            if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
             {
                 // Extract the vertex body
                 TiXmlNode* vertexChild = element->FirstChild();
                 ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
                 
                 std::string vertexStr;
-                while(vertexChild)
+                if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
-                    {
-                        vertexStr += vertexChild->ToText()->ValueStr();
-                    }
-                    vertexChild = vertexChild->NextSibling();
+                    vertexStr += vertexChild->ToText()->ValueStr();
                 }
                 
-                std::vector<NekDouble> vertData;
-                LibUtilities::CompressData::InflateFromBase64Str(vertexStr,vertData);
-
-                ASSERTL0(vertData.size()%4 == 0,"Vertex compressed data is not a multiple of 4 in length");
+                std::vector<LibUtilities::MeshVertex> vertData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
 
                 int indx;
                 NekDouble xval, yval, zval;
-                for(int i = 0; i < vertData.size()/4; ++i)
+                for(int i = 0; i < vertData.size(); ++i)
                 {
-                    indx = (int) vertData[4*i];
-                    xval = vertData[4*i+1];
-                    yval = vertData[4*i+2];
-                    zval = vertData[4*i+3];
+                    indx = vertData[i].id;
+                    xval = vertData[i].x;
+                    yval = vertData[i].y;
+                    zval = vertData[i].z;
 
                     xval = xval*xscale + xmove;
                     yval = yval*yscale + ymove;

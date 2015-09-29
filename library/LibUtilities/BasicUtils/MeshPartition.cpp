@@ -73,6 +73,7 @@ namespace Nektar
         }
 
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
+                m_isCompressed(false),
                 m_numFields(0),
                 m_fieldNameToId(),
                 m_comm(pSession->GetComm()),
@@ -309,8 +310,9 @@ namespace Nektar
 
             // check to see if compressed
             const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-            if(IsCompressed&&boost::iequals(IsCompressed,"True"))
+            if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
             {
+                m_isCompressed = true;
                 // Extract the vertex body
                 TiXmlNode* vertexChild = vSubElement->FirstChild();
                 ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
@@ -325,19 +327,12 @@ namespace Nektar
                     vertexChild = vertexChild->NextSibling();
                 }
                 
-                std::vector<NekDouble> vertData;
-                CompressData::InflateFromBase64Str(vertexStr,vertData);
+                std::vector<MeshVertex> vertData;
+                CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
                 
-                ASSERTL0(vertData.size()%4 == 0,"Vertex compressed data is not a multiple of 4 in length");
-                for(int i = 0; i < vertData.size()/4; ++i)
+                for(int i = 0; i < vertData.size(); ++i)
                 {
-                    MeshVertex v;
-                    v.id = (int) vertData[4*i];
-                    v.x = vertData[4*i+1];
-                    v.y = vertData[4*i+2];
-                    v.z = vertData[4*i+3];
-
-                    m_meshVertices[v.id] = v;
+                    m_meshVertices[vertData[i].id] = vertData[i];
                 }
             }
             else
@@ -883,8 +878,7 @@ namespace Nektar
         void MeshPartition::OutputPartition(
                 LibUtilities::SessionReaderSharedPtr& pSession,
                 BoostSubGraph& pGraph,
-                TiXmlElement* pNektar,
-                bool Compressed)
+                TiXmlElement* pNektar)
         {
             // Write Geometry data
             std::string vDim   = pSession->GetElement("Nektar/Geometry")->Attribute("DIM");
@@ -971,19 +965,21 @@ namespace Nektar
             }
 
             // Generate XML data for these mesh entities
-            if(Compressed)
+            if(m_isCompressed)
             {
-                std::vector<NekDouble> vertInfo;
+                std::vector<MeshVertex> vertInfo;
                 for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
                 {
-                    vertInfo.push_back(vVertIt->first);
-                    vertInfo.push_back(vVertIt->second.x);
-                    vertInfo.push_back(vVertIt->second.y);
-                    vertInfo.push_back(vVertIt->second.z);
+                    MeshVertex v;
+                    v.id = vVertIt->first;
+                    v.x = vVertIt->second.x;
+                    v.y = vVertIt->second.y;
+                    v.z = vVertIt->second.z;
+                    vertInfo.push_back(v);
                 }
                 std::string vertStr;
-                CompressData::DeflateToBase64Str(vertInfo,vertStr);
-                vVertex->SetAttribute("COMPRESSED","True");
+                CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
+                vVertex->SetAttribute("COMPRESSED","B64Z");
                 vVertex->LinkEndChild(new TiXmlText(vertStr));
             }
             else

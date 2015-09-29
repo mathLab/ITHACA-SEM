@@ -39,6 +39,7 @@
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 
 class TiXmlElement;
 
@@ -81,59 +82,9 @@ namespace Nektar
                                                     std::vector<unsigned int> &tmp);
 
         private:
-            struct MeshEntity
-            {
-                int id;
-                char type;
-                std::vector<unsigned int> list;
-            };
 
-            struct MeshVertex
-            {
-                int id;
-                NekDouble x;
-                NekDouble y;
-                NekDouble z;
-            };
-
-            struct MeshEdge
-            {
-                int id;
-                int v0;
-                int v1;
-            };
-
-            struct MeshFace
-            {
-                int id;
-                std::vector<int> edgeList;
-            };
-
-            struct MeshElement
-            {
-                int id;
-                char type;
-                std::vector<int> list;
-            };
-
-            struct MeshCurved
-            {
-                int id;
-                std::string entitytype;
-                int entityid;
-                std::string type;
-                int npoints;
-                std::string data;
-            };
+            bool m_isCompressed; // Idenfity if input is compressed and if so set output to be compressed
             typedef std::pair<std::string, int> MeshCurvedKey;
-            
-            struct MeshComposite
-            {
-                int id;
-                char type;
-                std::vector<int> list;
-            };
-
             typedef std::vector<unsigned int>   MultiWeight;
 
             // Element in a mesh
@@ -236,7 +187,7 @@ namespace Nektar
                     int&                              volume,
                     Nektar::Array<Nektar::OneD, int>& part) = 0;
 
-            void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry, bool Compressed = true);
+            void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
             void CheckPartitions(int nParts, Array<OneD, int> &pPart);
             int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
         };

@@ -65,14 +65,7 @@ namespace Nektar
         }
 
         /**
-         * Gmsh file contains a list of nodes and their coordinates, along with
-         * a list of elements and those nodes which define them. We read in and
-         * store the list of nodes in #m_node and store the list of elements in
-         * #m_element. Each new element is supplied with a list of entries from
-         * #m_node which defines the element. Finally some mesh statistics are
-         * printed.
          *
-         * @param   pFilename           Filename of Gmsh file to read.
          */
         void InputNekpp::Process()
         {

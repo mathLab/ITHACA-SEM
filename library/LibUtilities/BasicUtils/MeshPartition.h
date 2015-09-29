@@ -236,7 +236,7 @@ namespace Nektar
                     int&                              volume,
                     Nektar::Array<Nektar::OneD, int>& part) = 0;
 
-            void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry, bool Compressed = true);
             void CheckPartitions(int nParts, Array<OneD, int> &pPart);
             int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
         };

@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_FIELDIO_H
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>

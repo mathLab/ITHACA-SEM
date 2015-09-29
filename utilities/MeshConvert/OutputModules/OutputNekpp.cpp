@@ -140,7 +140,7 @@ namespace Nektar
             }
         }
 
-        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
+        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot, bool IsCompressed)
         {
             TiXmlElement* verTag = new TiXmlElement( "VERTEX" );
             std::set<NodeSharedPtr>::iterator it;
@@ -149,16 +149,35 @@ namespace Nektar
                     m_mesh->m_vertexSet.begin(),
                     m_mesh->m_vertexSet.end());
 
-            for (it = tmp.begin(); it != tmp.end(); ++it)
+            if(IsCompressed)
             {
-                NodeSharedPtr n = *it;
-                stringstream s;
-                s << scientific << setprecision(8) 
-                  << n->m_x << " " << n->m_y << " " << n->m_z;
-                TiXmlElement * v = new TiXmlElement( "V" );
-                v->SetAttribute("ID",n->m_id);
-                v->LinkEndChild(new TiXmlText(s.str()));
-                verTag->LinkEndChild(v);
+                std::vector<NekDouble> vertInfo;
+                for (it = tmp.begin(); it != tmp.end(); ++it)
+                {
+                    NodeSharedPtr n = *it;
+                    vertInfo.push_back(n->m_id);
+                    vertInfo.push_back(n->m_x);
+                    vertInfo.push_back(n->m_y);
+                    vertInfo.push_back(n->m_z);                    
+                }
+                std::string vertStr;
+                LibUtilities::CompressData::DeflateToBase64Str(vertInfo,vertStr);
+                verTag->SetAttribute("COMPRESSED","True");
+                verTag->LinkEndChild(new TiXmlText(vertStr));
+            }
+            else
+            {
+                for (it = tmp.begin(); it != tmp.end(); ++it)
+                {
+                    NodeSharedPtr n = *it;
+                    stringstream s;
+                    s << scientific << setprecision(8) 
+                      << n->m_x << " " << n->m_y << " " << n->m_z;
+                    TiXmlElement * v = new TiXmlElement( "V" );
+                    v->SetAttribute("ID",n->m_id);
+                    v->LinkEndChild(new TiXmlText(s.str()));
+                    verTag->LinkEndChild(v);
+                }
             }
             pRoot->LinkEndChild(verTag);
         }

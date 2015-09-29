@@ -347,29 +347,19 @@ namespace Nektar
                 }
                 elemTag->SetAttribute("ID", idString);
 
+                std::string base64string;
+#if 0
+                ASSERTL0(Z_OK == DeflateToBase64Str(fielddata[f], 
+                                                    base64string),
+                         "Failed to compress field data.");
+#else
                 std::string compressedDataString;
                 ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
                         "Failed to compress field data.");
 
-                // If the string length is not divisible by 3,
-                // pad it. There is a bug in transform_width
-                // that will make it reference past the end
-                // and crash.
-                switch (compressedDataString.length() % 3)
-                {
-                case 1:
-                    compressedDataString += '\0';
-                case 2:
-                    compressedDataString += '\0';
-                    break;
-                }
-
-                // Convert from binary to base64.
-                typedef boost::archive::iterators::base64_from_binary<
-                        boost::archive::iterators::transform_width<
-                        std::string::const_iterator, 6, 8> > base64_t;
-                std::string base64string(base64_t(compressedDataString.begin()),
-                        base64_t(compressedDataString.end()));
+                CompressData::BinaryStrToBase64Str(compressedDataString,
+                                                   base64string);
+#endif
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -977,16 +967,20 @@ namespace Nektar
                         elementChild = elementChild->NextSibling();
                     }
 
-                    // Convert from base64 to binary.
-                    typedef boost::archive::iterators::transform_width<
-                            boost::archive::iterators::binary_from_base64<
-                            std::string::const_iterator>, 8, 6 > binary_t;
-                    std::string vCompressed(binary_t(elementStr.begin()),
-                                            binary_t(elementStr.end()));
-
                     std::vector<NekDouble> elementFieldData;
+                    // Convert from base64 to binary.
+#if 0
+                    std::string vCompressed;
+                    CompressData::Base64StrToBinaryStr(elementStr,vCompressed);
                     ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
                             "Failed to decompress field data.");
+#else
+                    ASSERTL0(Z_OK == CompressData::InflateFromBase64Str(
+                                                        elementStr, 
+                                                        elementFieldData),
+                             "Failed to decompress field data.");
+#endif
+
 
                     fielddata.push_back(elementFieldData);
 
@@ -1224,49 +1218,7 @@ namespace Nektar
         int FieldIO::Deflate(std::vector<NekDouble>& in,
                         string& out)
         {
-            int ret;
-            unsigned have;
-            z_stream strm;
-            unsigned char* input = (unsigned char*)(&in[0]);
-            string buffer;
-            buffer.resize(CHUNK);
-
-            /* allocate deflate state */
-            strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
-            strm.opaque = Z_NULL;
-            ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
-
-            ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
-
-            strm.avail_in = in.size() * sizeof(NekDouble) / sizeof(char);
-            strm.next_in = input;
-
-            // Deflate input until output buffer is no longer full.
-            do {
-                strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*)(&buffer[0]);
-
-                ret = deflate(&strm, Z_FINISH);
-
-                // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
-                // Z_STREAM_END. All, except Z_STREAM_ERROR are ok.
-                ASSERTL0(ret != Z_STREAM_ERROR, "Zlib stream error");
-
-                have = CHUNK - strm.avail_out;
-                out += buffer.substr(0, have);
-
-            } while (strm.avail_out == 0);
-
-            // Check all input was processed.
-            ASSERTL0(strm.avail_in == 0, "Not all input was used.");
-
-            // Check stream is complete.
-            ASSERTL0(ret == Z_STREAM_END, "Stream not finished");
-
-            // Clean-up and return
-            (void)deflateEnd(&strm);
-            return Z_OK;
+            return CompressData::Deflate(in,out);
         }
 
 
@@ -1277,60 +1229,7 @@ namespace Nektar
         int FieldIO::Inflate(std::string& in,
                     std::vector<NekDouble>& out)
         {
-            int ret;
-            unsigned have;
-            z_stream strm;
-            string buffer;
-            buffer.resize(CHUNK);
-            string output;
-
-            strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
-            strm.opaque = Z_NULL;
-            strm.avail_in = 0;
-            strm.next_in = Z_NULL;
-            ret = inflateInit(&strm);
-            ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
-
-            strm.avail_in = in.size();
-            strm.next_in = (unsigned char*)(&in[0]);
-
-            do {
-                strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*)(&buffer[0]);
-
-                ret = inflate(&strm, Z_NO_FLUSH);
-
-                ASSERTL0(ret != Z_STREAM_ERROR, "Stream error occured.");
-
-                switch (ret) {
-                    case Z_NEED_DICT:
-                        ret = Z_DATA_ERROR;     /* and fall through */
-                    case Z_DATA_ERROR:
-                    case Z_MEM_ERROR:
-                        (void)inflateEnd(&strm);
-                        return ret;
-                }
-
-                have = CHUNK - strm.avail_out;
-                output += buffer.substr(0, have);
-
-            } while (strm.avail_out == 0);
-
-            (void)inflateEnd(&strm);
-
-            if (ret == Z_STREAM_END)
-            {
-                NekDouble* readFieldData = (NekDouble*) output.c_str();
-                unsigned int len = output.size() * sizeof(*output.c_str())
-                                                 / sizeof(NekDouble);
-                out.assign( readFieldData, readFieldData + len);
-                return Z_OK;
-            }
-            else
-            {
-                return Z_DATA_ERROR;
-            }
+            return CompressData::Inflate(in,out);
         }
 
         /**

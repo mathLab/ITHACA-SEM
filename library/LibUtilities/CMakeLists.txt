@@ -10,6 +10,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
+    ./BasicUtils/CompressData.h
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
     ./BasicUtils/FileSystem.h
@@ -39,6 +40,7 @@ SET(BasicUtilsHeaders
 
 SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
+    ./BasicUtils/CompressData.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FileSystem.cpp

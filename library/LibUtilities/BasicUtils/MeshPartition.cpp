@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: MeshPartition.cpp
 //
@@ -51,6 +51,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -306,22 +307,58 @@ namespace Nektar
                 }
             }
 
-            x = vSubElement->FirstChildElement();
-
-            while(x)
+            // check to see if compressed
+            const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
+            if(IsCompressed&&boost::iequals(IsCompressed,"True"))
             {
-                TiXmlAttribute* y = x->FirstAttribute();
-                ASSERTL0(y, "Failed to get attribute.");
-                MeshVertex v;
-                v.id = y->IntValue();
-                std::vector<std::string> vCoords;
-                std::string vCoordStr = x->FirstChild()->ToText()->Value();
-                boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
-                v.x = atof(vCoords[0].c_str());
-                v.y = atof(vCoords[1].c_str());
-                v.z = atof(vCoords[2].c_str());
-                m_meshVertices[v.id] = v;
-                x = x->NextSiblingElement();
+                // Extract the vertex body
+                TiXmlNode* vertexChild = vSubElement->FirstChild();
+                ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
+                
+                std::string vertexStr;
+                while(vertexChild)
+                {
+                    if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        vertexStr += vertexChild->ToText()->ValueStr();
+                    }
+                    vertexChild = vertexChild->NextSibling();
+                }
+                
+                std::vector<NekDouble> vertData;
+                CompressData::InflateFromBase64Str(vertexStr,vertData);
+                
+                ASSERTL0(vertData.size()%4 == 0,"Vertex compressed data is not a multiple of 4 in length");
+                for(int i = 0; i < vertData.size()/4; ++i)
+                {
+                    MeshVertex v;
+                    v.id = (int) vertData[4*i];
+                    v.x = vertData[4*i+1];
+                    v.y = vertData[4*i+2];
+                    v.z = vertData[4*i+3];
+
+                    m_meshVertices[v.id] = v;
+                }
+            }
+            else
+            {
+                x = vSubElement->FirstChildElement();
+                
+                while(x)
+                {
+                    TiXmlAttribute* y = x->FirstAttribute();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    MeshVertex v;
+                    v.id = y->IntValue();
+                    std::vector<std::string> vCoords;
+                    std::string vCoordStr = x->FirstChild()->ToText()->Value();
+                    boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
+                    v.x = atof(vCoords[0].c_str());
+                    v.y = atof(vCoords[1].c_str());
+                    v.z = atof(vCoords[2].c_str());
+                    m_meshVertices[v.id] = v;
+                    x = x->NextSiblingElement();
+                }
             }
 
             // Read mesh edges
@@ -846,7 +883,8 @@ namespace Nektar
         void MeshPartition::OutputPartition(
                 LibUtilities::SessionReaderSharedPtr& pSession,
                 BoostSubGraph& pGraph,
-                TiXmlElement* pNektar)
+                TiXmlElement* pNektar,
+                bool Compressed)
         {
             // Write Geometry data
             std::string vDim   = pSession->GetElement("Nektar/Geometry")->Attribute("DIM");
@@ -881,9 +919,9 @@ namespace Nektar
             std::map<std::string, std::string>::iterator vAttrIt;
 
             // Populate lists of elements, edges and vertices required.
-            for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                  vertit != vertit_end;
-                  ++vertit)
+            for (boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                 vertit != vertit_end;
+                 ++vertit)
             {
                 id = pGraph[*vertit].id;
                 vElements[id] = m_meshElements[pGraph[*vertit].id];
@@ -933,18 +971,36 @@ namespace Nektar
             }
 
             // Generate XML data for these mesh entities
-            for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+            if(Compressed)
             {
-                x = new TiXmlElement("V");
-                x->SetAttribute("ID", vVertIt->first);
-                std::stringstream vCoords;
-                vCoords.precision(12);
-                vCoords << std::setw(15) << vVertIt->second.x << " "
-                        << std::setw(15) << vVertIt->second.y << " "
-                        << std::setw(15) << vVertIt->second.z << " ";
-                y = new TiXmlText(vCoords.str());
-                x->LinkEndChild(y);
-                vVertex->LinkEndChild(x);
+                std::vector<NekDouble> vertInfo;
+                for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+                {
+                    vertInfo.push_back(vVertIt->first);
+                    vertInfo.push_back(vVertIt->second.x);
+                    vertInfo.push_back(vVertIt->second.y);
+                    vertInfo.push_back(vVertIt->second.z);
+                }
+                std::string vertStr;
+                CompressData::DeflateToBase64Str(vertInfo,vertStr);
+                vVertex->SetAttribute("COMPRESSED","True");
+                vVertex->LinkEndChild(new TiXmlText(vertStr));
+            }
+            else
+            {
+                for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+                {
+                    x = new TiXmlElement("V");
+                    x->SetAttribute("ID", vVertIt->first);
+                    std::stringstream vCoords;
+                    vCoords.precision(12);
+                    vCoords << std::setw(15) << vVertIt->second.x << " "
+                            << std::setw(15) << vVertIt->second.y << " "
+                            << std::setw(15) << vVertIt->second.z << " ";
+                    y = new TiXmlText(vCoords.str());
+                    x->LinkEndChild(y);
+                    vVertex->LinkEndChild(x);
+                }
             }
 
             // Apply transformation attributes to VERTEX section

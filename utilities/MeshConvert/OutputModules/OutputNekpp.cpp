@@ -44,6 +44,7 @@ namespace io = boost::iostreams;
 
 #include <tinyxml.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <SpatialDomains/MeshGraph.h>
 
 #include "../MeshElements.h"
@@ -64,6 +65,8 @@ namespace Nektar
                 "Compress output file and append a .gz extension.");
             m_config["test"] = ConfigOption(true, "0",
                 "Attempt to load resulting mesh and create meshgraph.");
+            m_config["compress"] = ConfigOption(true,"0",
+                 "Compress xml section where possible");
         }
 
         OutputNekpp::~OutputNekpp()
@@ -91,8 +94,8 @@ namespace Nektar
             geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
             root->LinkEndChild( geomTag );
 
-            WriteXmlNodes     (geomTag);
-            WriteXmlEdges     (geomTag);
+            WriteXmlNodes     (geomTag,m_config["compress"].as<bool>());
+            WriteXmlEdges     (geomTag,m_config["compress"].as<bool>());
             WriteXmlFaces     (geomTag);
             WriteXmlElements  (geomTag);
             WriteXmlCurves    (geomTag);
@@ -140,7 +143,7 @@ namespace Nektar
             }
         }
 
-        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
+        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot, bool IsCompressed)
         {
             TiXmlElement* verTag = new TiXmlElement( "VERTEX" );
             std::set<NodeSharedPtr>::iterator it;
@@ -149,38 +152,83 @@ namespace Nektar
                     m_mesh->m_vertexSet.begin(),
                     m_mesh->m_vertexSet.end());
 
-            for (it = tmp.begin(); it != tmp.end(); ++it)
+            if(IsCompressed)
             {
-                NodeSharedPtr n = *it;
-                stringstream s;
-                s << scientific << setprecision(8) 
-                  << n->m_x << " " << n->m_y << " " << n->m_z;
-                TiXmlElement * v = new TiXmlElement( "V" );
-                v->SetAttribute("ID",n->m_id);
-                v->LinkEndChild(new TiXmlText(s.str()));
-                verTag->LinkEndChild(v);
+                std::vector<LibUtilities::MeshVertex> vertInfo;
+                for (it = tmp.begin(); it != tmp.end(); ++it)
+                {
+                    LibUtilities::MeshVertex v;
+                    NodeSharedPtr n = *it;
+                    v.id = n->m_id;
+                    v.x  = n->m_x;
+                    v.y  = n->m_y;
+                    v.z  = n->m_z;
+                    vertInfo.push_back(v);     
+                }
+                std::string vertStr;
+                LibUtilities::CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
+                verTag->SetAttribute("COMPRESSED","B64Z");
+                verTag->LinkEndChild(new TiXmlText(vertStr));
+            }
+            else
+            {
+                for (it = tmp.begin(); it != tmp.end(); ++it)
+                {
+                    NodeSharedPtr n = *it;
+                    stringstream s;
+                    s << scientific << setprecision(8) 
+                      << n->m_x << " " << n->m_y << " " << n->m_z;
+                    TiXmlElement * v = new TiXmlElement( "V" );
+                    v->SetAttribute("ID",n->m_id);
+                    v->LinkEndChild(new TiXmlText(s.str()));
+                    verTag->LinkEndChild(v);
+                }
             }
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot)
+        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot, bool IsCompressed)
         {
             if (m_mesh->m_expDim >= 2)
             {
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
+
                 std::set<EdgeSharedPtr>::iterator it;
                 std::set<EdgeSharedPtr> tmp(m_mesh->m_edgeSet.begin(),
                                             m_mesh->m_edgeSet.end());
-                for (it = tmp.begin(); it != tmp.end(); ++it)
+                if(IsCompressed)
                 {
-                    EdgeSharedPtr ed = *it;
-                    stringstream s;
+                    std::vector<LibUtilities::MeshEdge> edgeInfo;
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
+                    {
+                        LibUtilities::MeshEdge e;
+                        EdgeSharedPtr ed = *it;
+                        
+                        e.id = ed->m_id;
+                        e.v0 = ed->m_n1->m_id;
+                        e.v1 = ed->m_n2->m_id;
+                        
+                        edgeInfo.push_back(e);
+                    }
+                    std::string edgeStr;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(edgeInfo,edgeStr);
+                    verTag->SetAttribute("COMPRESSED","B64Z");
+                    verTag->LinkEndChild(new TiXmlText(edgeStr));
+                }
+                else
+                {
 
-                    s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
-                    TiXmlElement * e = new TiXmlElement( "E" );
-                    e->SetAttribute("ID",ed->m_id);
-                    e->LinkEndChild( new TiXmlText(s.str()) );
-                    verTag->LinkEndChild(e);
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
+                    {
+                        EdgeSharedPtr ed = *it;
+                        stringstream s;
+                        
+                        s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
+                        TiXmlElement * e = new TiXmlElement( "E" );
+                        e->SetAttribute("ID",ed->m_id);
+                        e->LinkEndChild( new TiXmlText(s.str()) );
+                        verTag->LinkEndChild(e);
+                    }
                 }
                 pRoot->LinkEndChild( verTag );
             }

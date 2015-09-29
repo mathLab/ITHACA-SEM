@@ -96,8 +96,8 @@ namespace Nektar
          *
          */
         MeshGraph::MeshGraph(
-                             const LibUtilities::SessionReaderSharedPtr &pSession,
-                             const DomainRangeShPtr &rng) :
+                       const LibUtilities::SessionReaderSharedPtr &pSession,
+                       const DomainRangeShPtr &rng):
             m_session(pSession),
             m_domainRange(rng)
         {
@@ -390,73 +390,110 @@ namespace Nektar
                 zmove = expEvaluator.Evaluate(expr_id);
             }
 
-            TiXmlElement *vertex = element->FirstChildElement("V");
-
-            int indx;
-            int nextVertexNumber = -1;
-
-            while (vertex)
+            const char *IsCompressed = element->Attribute("COMPRESSED");
+            if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
             {
-                nextVertexNumber++;
-
-                TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
-                std::string attrName(vertexAttr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
-
-                err = vertexAttr->QueryIntValue(&indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-
-                // Now read body of vertex
-                std::string vertexBodyStr;
-
-                TiXmlNode *vertexBody = vertex->FirstChild();
-
-                while (vertexBody)
+                // Extract the vertex body
+                TiXmlNode* vertexChild = element->FirstChild();
+                ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
+                
+                std::string vertexStr;
+                if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    // Accumulate all non-comment body data.
-                    if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
-                    {
-                        vertexBodyStr += vertexBody->ToText()->Value();
-                        vertexBodyStr += " ";
-                    }
-
-                    vertexBody = vertexBody->NextSibling();
+                    vertexStr += vertexChild->ToText()->ValueStr();
                 }
+                
+                std::vector<LibUtilities::MeshVertex> vertData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
 
-                ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
-
-                // Get vertex data from the data string.
+                int indx;
                 NekDouble xval, yval, zval;
-                std::istringstream vertexDataStrm(vertexBodyStr.c_str());
-
-                try
+                for(int i = 0; i < vertData.size(); ++i)
                 {
-                    while(!vertexDataStrm.fail())
+                    indx = vertData[i].id;
+                    xval = vertData[i].x;
+                    yval = vertData[i].y;
+                    zval = vertData[i].z;
+
+                    xval = xval*xscale + xmove;
+                    yval = yval*yscale + ymove;
+                    zval = zval*zscale + zmove;
+                    
+                    PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+                    vert->SetGlobalID(indx);
+                    m_vertSet[indx] = vert;
+                }
+            }
+            else
+            {
+                TiXmlElement *vertex = element->FirstChildElement("V");
+
+                int indx;
+                int nextVertexNumber = -1;
+                
+                while (vertex)
+                {
+                    nextVertexNumber++;
+                    
+                    TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
+                    std::string attrName(vertexAttr->Name());
+                    
+                    ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+                    
+                    err = vertexAttr->QueryIntValue(&indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+
+                    // Now read body of vertex
+                    std::string vertexBodyStr;
+                    
+                    TiXmlNode *vertexBody = vertex->FirstChild();
+                    
+                    while (vertexBody)
                     {
-                        vertexDataStrm >> xval >> yval >> zval;
-
-                        xval = xval*xscale + xmove;
-                        yval = yval*yscale + ymove;
-                        zval = zval*zscale + zmove;
-
-                        // Need to check it here because we may not be
-                        // good after the read indicating that there
-                        // was nothing to read.
-                        if (!vertexDataStrm.fail())
+                        // Accumulate all non-comment body data.
+                        if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
                         {
-                            PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
-                            vert->SetGlobalID(indx);
-                            m_vertSet[indx] = vert;
+                            vertexBodyStr += vertexBody->ToText()->Value();
+                            vertexBodyStr += " ";
+                        }
+                        
+                        vertexBody = vertexBody->NextSibling();
+                    }
+                    
+                    ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
+                    
+                    // Get vertex data from the data string.
+                    NekDouble xval, yval, zval;
+                    std::istringstream vertexDataStrm(vertexBodyStr.c_str());
+                    
+                    try
+                    {
+                        while(!vertexDataStrm.fail())
+                        {
+                            vertexDataStrm >> xval >> yval >> zval;
+                            
+                            xval = xval*xscale + xmove;
+                            yval = yval*yscale + ymove;
+                            zval = zval*zscale + zmove;
+                            
+                            // Need to check it here because we may not be
+                            // good after the read indicating that there
+                            // was nothing to read.
+                            if (!vertexDataStrm.fail())
+                            {
+                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+                                vert->SetGlobalID(indx);
+                                m_vertSet[indx] = vert;
+                            }
                         }
                     }
+                    catch(...)
+                    {
+                        ASSERTL0(false, "Unable to read VERTEX data.");
+                    }
+                    
+                    vertex = vertex->NextSiblingElement("V");
                 }
-                catch(...)
-                {
-                    ASSERTL0(false, "Unable to read VERTEX data.");
-                }
-
-                vertex = vertex->NextSiblingElement("V");
             }
         }
 

@@ -10,10 +10,12 @@ SET(BasicUtilsHeaders
     ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
+    ./BasicUtils/CompressData.h
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/MeshEntities.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
@@ -39,6 +41,7 @@ SET(BasicUtilsHeaders
 
 SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
+    ./BasicUtils/CompressData.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FileSystem.cpp

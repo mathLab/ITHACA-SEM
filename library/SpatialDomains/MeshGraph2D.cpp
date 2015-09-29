@@ -100,84 +100,126 @@ namespace Nektar
             TiXmlHandle docHandle(&doc);
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
+            CurveMap::iterator it;
 
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("EDGE");
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            /// All elements are of the form: "<E ID="#"> ... </E>", with
-            /// ? being the element type.
-            /// Read the ID field first.
-            TiXmlElement *edge = field->FirstChildElement("E");
-
-            /// Since all edge data is one big text block, we need to
-            /// accumulate all TINYXML_TEXT data and then parse it.  This
-            /// approach effectively skips all comments or other node
-            /// types since we only care about the edge list.  We
-            /// cannot handle missing edge numbers as we could with
-            /// missing element numbers due to the text block format.
-            std::string edgeStr;
-            int indx;
-            CurveMap::iterator it;
-
-            while(edge)
+            const char *IsCompressed = field->Attribute("COMPRESSED");
+            if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
             {
-                int err = edge->QueryIntAttribute("ID",&indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-
-                TiXmlNode *child = edge->FirstChild();
-                edgeStr.clear();
-                if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                // Extract the edge body
+                TiXmlNode* edgeChild = field->FirstChild();
+                ASSERTL0(edgeChild, "Unable to extract the data from "
+                         "the compressed edge tag.");
+                
+                std::string edgeStr;
+                if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    edgeStr += child->ToText()->ValueStr();
+                    edgeStr += edgeChild->ToText()->ValueStr();
                 }
+                
+                std::vector<LibUtilities::MeshEdge> edgeData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,edgeData);
 
-                /// Now parse out the edges, three fields at a time.
-                int vertex1, vertex2;
-                std::istringstream edgeDataStrm(edgeStr.c_str());
-
-                try
+                int indx;
+                for(int i = 0; i < edgeData.size(); ++i)
                 {
-                    while (!edgeDataStrm.fail())
+                    indx = edgeData[i].id;
+
+
+                    PointGeomSharedPtr vertices[2] = {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
+                    SegGeomSharedPtr edge;
+
+                    it = m_curvedEdges.find(indx);
+                    
+                    if (it == m_curvedEdges.end())
                     {
-                        edgeDataStrm >> vertex1 >> vertex2;
-
-                        // Must check after the read because we may be
-                        // at the end and not know it.  If we are at
-                        // the end we will add a duplicate of the last
-                        // entry if we don't check here.
-                        if (!edgeDataStrm.fail())
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                    }
+                    else
+                    {
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                    }
+                    
+                    m_segGeoms[indx] = edge;
+                }
+            }
+            else
+            {
+                /// All elements are of the form: "<E ID="#"> ... </E>", with
+                /// ? being the element type.
+                /// Read the ID field first.
+                TiXmlElement *edge = field->FirstChildElement("E");
+                
+                /// Since all edge data is one big text block, we need to
+                /// accumulate all TINYXML_TEXT data and then parse it.  This
+                /// approach effectively skips all comments or other node
+                /// types since we only care about the edge list.  We
+                /// cannot handle missing edge numbers as we could with
+                /// missing element numbers due to the text block format.
+                std::string edgeStr;
+                int indx;
+                
+                while(edge)
+                {
+                    int err = edge->QueryIntAttribute("ID",&indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
+                    
+                    TiXmlNode *child = edge->FirstChild();
+                    edgeStr.clear();
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                    edgeStr += child->ToText()->ValueStr();
+                    }
+                    
+                    /// Now parse out the edges, three fields at a time.
+                    int vertex1, vertex2;
+                    std::istringstream edgeDataStrm(edgeStr.c_str());
+                    
+                    try
+                    {
+                        while (!edgeDataStrm.fail())
                         {
-                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-
-                            SegGeomSharedPtr edge;
-
-                            it = m_curvedEdges.find(indx);
-
-                            if(it == m_curvedEdges.end())
+                            edgeDataStrm >> vertex1 >> vertex2;
+                            
+                            // Must check after the read because we may be
+                            // at the end and not know it.  If we are at
+                            // the end we will add a duplicate of the last
+                            // entry if we don't check here.
+                            if (!edgeDataStrm.fail())
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
-                                edge->SetGlobalID(indx); // Set global mesh id
+                                PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                                
+                                SegGeomSharedPtr edge;
+                                
+                                it = m_curvedEdges.find(indx);
+                                
+                                if(it == m_curvedEdges.end())
+                                {
+                                    edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                                    edge->SetGlobalID(indx); // Set global mesh id
+                                }
+                                else
+                                {
+                                    edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                                    edge->SetGlobalID(indx); //Set global mesh id
+                                }
+                                
+                                m_segGeoms[indx] = edge;
                             }
-                            else
-                            {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
-                                edge->SetGlobalID(indx); //Set global mesh id
-                            }
-
-                            m_segGeoms[indx] = edge;
                         }
                     }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
+                    }
+                    
+                    edge = edge->NextSiblingElement("E");
                 }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
-                }
-
-                edge = edge->NextSiblingElement("E");
             }
-
         }
 
         void MeshGraph2D::ReadElements(TiXmlDocument &doc)

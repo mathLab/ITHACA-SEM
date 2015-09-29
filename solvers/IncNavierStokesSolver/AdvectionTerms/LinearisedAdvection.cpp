@@ -179,7 +179,7 @@ void LinearisedAdvection::v_InitObject(
     {
         std::string ProjectStr
         = m_session->GetSolverInfo("PROJECTION");
-        
+
         if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
            (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
         {
@@ -577,7 +577,7 @@ void LinearisedAdvection::v_Advect(
         Vmath::Neg(nqtot,outarray[n],1);
     }
 }
-    
+
 void LinearisedAdvection::v_SetBaseFlow(
     const Array<OneD, Array<OneD, NekDouble> >    &inarray)
 {
@@ -634,7 +634,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     {
         std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
     }
-    
+
     // copy FieldData into m_fields
     for(int j = 0; j < nvar; ++j)
     {
@@ -679,7 +679,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
                 ASSERTL0(flag, (std::string("Order of ") + pInfile
                                 + std::string(" data and that defined in "
                                               "m_boundaryconditions differs")).c_str());
-                
+
                 pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                FieldDef[i]->m_fields[j],
                                                tmp_coeff);
@@ -691,7 +691,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
             //pFields[j]->SetWaveSpace(true);
 
             pFields[j]->GetPlane(0)->BwdTrans(tmp_coeff, m_baseflow[j]);
-            
+
             if(m_SingleMode)
             {
                 //copy the bwd into the second plane for single Mode Analysis
@@ -714,7 +714,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
 
         for(int i=0; i<nConvectiveFields;++i)
         {
-            
+
             Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][slice*nqtot], 1);
         }
 
@@ -773,7 +773,7 @@ DNekBlkMatSharedPtr LinearisedAdvection::GetFloquetBlockMatrix(FloquetMatType ma
     StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
                                     StdSeg.DetShapeType(),
                                     StdSeg);
-    
+
     loc_mat = StdSeg.GetStdMatrix(matkey);
 
     // set up array of block matrices.
@@ -801,36 +801,43 @@ void LinearisedAdvection::DFT(const string file,
         m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
     }
 
-    //Import the slides into auxiliary vector
-    //The base flow should be stored in the form filename_i.bse
-    for (int i=0; i< m_slices; ++i)
+    // Import the slides into auxiliary vector
+    // The base flow should be stored in the form "filename_%d.ext"
+    // A subdirectory can also be included, such as "dir/filename_%d.ext"
+    size_t found = file.find("%d");
+    ASSERTL0(found != string::npos && file.find("%d", found+1) == string::npos,
+             "Since N_slices is specified, the filename provided for function "
+             "'BaseFlow' must include exactly one instance of the format "
+             "specifier '%d', to index the time-slices.");
+    char* buffer = new char[file.length() + 8];
+    for (int i = 0; i < m_slices; ++i)
     {
-        char chkout[16] = "";
-        sprintf(chkout, "%d", i);
-        ImportFldBase(file+"_"+chkout+".bse",pFields,i);
+        sprintf(buffer, file.c_str(), i);
+        ImportFldBase(buffer,pFields,i);
     }
+    delete[] buffer;
 
 
     // Discrete Fourier Transform of the fields
     for(int k=0; k< ConvectedFields;++k)
     {
 #ifdef NEKTAR_USING_FFTW
-        
+
         //Discrete Fourier Transform using FFTW
         Array<OneD, NekDouble> fft_in(npoints*m_slices);
         Array<OneD, NekDouble> fft_out(npoints*m_slices);
-        
+
         Array<OneD, NekDouble> m_tmpIN(m_slices);
         Array<OneD, NekDouble> m_tmpOUT(m_slices);
-        
+
         //Shuffle the data
         for(int j= 0; j < m_slices; ++j)
         {
             Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
         }
-        
+
         m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
-        
+
         //FFT Transform
         for(int i=0; i<npoints; i++)
         {
@@ -842,7 +849,7 @@ void LinearisedAdvection::DFT(const string file,
         for(int s = 0; s < m_slices; ++s)
         {
             Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
-    
+
         }
 
         Vmath::Zero(fft_in.num_elements(),&fft_in[0],1);

@@ -154,7 +154,7 @@ void TetGenInterface::RefineMesh(int num,
         c++;
     }
 
-    tetrahedralize("pYrmzq1.41/15QO2/7", &input, &output);
+    tetrahedralize("pYrmzq1.41/15QO2/7o/120", &input, &output);
 
 }
 

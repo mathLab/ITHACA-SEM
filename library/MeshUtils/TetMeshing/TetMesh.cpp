@@ -68,7 +68,7 @@ void TetMesh::Mesh()
 
     vector<int> stiener;
 
-    map<int, MeshTriSharedPtr>::iterator trit;
+    /*map<int, MeshTriSharedPtr>::iterator trit;
     for(trit = Tris.begin(); trit != Tris.end(); trit++)
     {
         int s = trit->second->Getcid();
@@ -102,7 +102,7 @@ void TetMesh::Mesh()
         Nodes[Nodes.size()]=n;
 
         nodedelta.push_back(m_octree->Query(NP));
-    }
+    }*/
 
     tetgen->InitialMesh(nodesintris, stiener, Tris, Nodes);
 

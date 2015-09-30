@@ -162,32 +162,6 @@ void LinearisedAdvection::v_InitObject(
         m_npointsZ = 1; // set to default value so can use to identify 2d or 3D (homogeneous) expansions
     }
 
-//    if(m_session->DefinesSolverInfo("PROJECTION"))
-//    {
-//        std::string ProjectStr
-//        = m_session->GetSolverInfo("PROJECTION");
-//
-//        if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
-//           (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
-//        {
-//            m_projectionType = MultiRegions::eGalerkin;
-//        }
-//        else if(ProjectStr == "DisContinuous")
-//        {
-//            m_projectionType = MultiRegions::eDiscontinuous;
-//        }
-//        else
-//        {
-//            ASSERTL0(false,"PROJECTION value not recognised");
-//        }
-//    }
-//    else
-//    {
-//        cerr << "Projection type not specified in SOLVERINFO,"
-//            "defaulting to continuous Galerkin" << endl;
-//        m_projectionType = MultiRegions::eGalerkin;
-//    }
-//
     int nvar = m_session->GetVariables().size();
     m_baseflow = Array<OneD, Array<OneD, NekDouble> >(nvar);
     for (int i = 0; i < nvar; ++i)
@@ -273,14 +247,52 @@ void LinearisedAdvection::v_Advect(
     Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const NekDouble                                   &time)
 {
+    int ndim       = advVel.num_elements();
     int nqtot            = fields[0]->GetTotPoints();
     ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
 
     Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
+    
+    // Evaluation of the base flow for periodic cases
+    if (m_slices > 1)
+    {
+        ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
+                    == LibUtilities::eFunctionTypeFile,
+                 "Base flow should be a sequence of files.");
+
+        Array<OneD, NekDouble> tmp(fields[0]->GetNcoeffs(), 0.0);
+        for (int i = 0; i < ndim; ++i)
+        {
+            UpdateBase(m_slices, m_interp[i], m_baseflow[i],
+                       time, m_period);
+        }
+/*
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+            = fields[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+        // Copy Data into FieldData and set variable
+        for(int j = 0; j < m_baseflow.num_elements(); ++j)
+        {
+            fields[0]->FwdTrans_IterPerExp(m_baseflow[j], tmp);
+            for(int i = 0; i < FieldDef.size(); ++i)
+            {
+                // Could do a search here to find correct variable
+                FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
+                fields[0]->AppendFieldData(FieldDef[i], FieldData[i],
+                                       tmp);
+            }
+        }
+
+        LibUtilities::FieldIO fld(fields[0]->GetComm());
+        fld.Write("base" + boost::lexical_cast<string>(time) + ".fld", FieldDef, FieldData, LibUtilities::NullFieldMetaDataMap);
+*/
+
+    }
+
 
     for(int n = 0; n < nConvectiveFields; ++n)
     {
-        int ndim       = advVel.num_elements();
         int nPointsTot = fields[0]->GetNpoints();
 
         Array<OneD, NekDouble> grad0,grad1,grad2;
@@ -299,21 +311,6 @@ void LinearisedAdvection::v_Advect(
         grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
-
-        // Evaluation of the base flow for periodic cases
-        if (m_slices > 1)
-        {
-            ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
-                        == LibUtilities::eFunctionTypeFile,
-                     "Base flow should be a sequence of files.");
-
-            for (int i = 0; i < ndim; ++i)
-            {
-                UpdateBase(m_slices, m_interp[i], m_baseflow[i],
-                           time, m_period);
-            }
-        }
-
 
         //Evaluate the linearised advection term
         switch(ndim)

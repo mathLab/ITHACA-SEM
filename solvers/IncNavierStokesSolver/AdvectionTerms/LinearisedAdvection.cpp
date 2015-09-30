@@ -266,28 +266,6 @@ void LinearisedAdvection::v_Advect(
             UpdateBase(m_slices, m_interp[i], m_baseflow[i],
                        time, m_period);
         }
-/*
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-            = fields[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        // Copy Data into FieldData and set variable
-        for(int j = 0; j < m_baseflow.num_elements(); ++j)
-        {
-            fields[0]->FwdTrans_IterPerExp(m_baseflow[j], tmp);
-            for(int i = 0; i < FieldDef.size(); ++i)
-            {
-                // Could do a search here to find correct variable
-                FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
-                fields[0]->AppendFieldData(FieldDef[i], FieldData[i],
-                                       tmp);
-            }
-        }
-
-        LibUtilities::FieldIO fld(fields[0]->GetComm());
-        fld.Write("base" + boost::lexical_cast<string>(time) + ".fld", FieldDef, FieldData, LibUtilities::NullFieldMetaDataMap);
-*/
-
     }
 
 

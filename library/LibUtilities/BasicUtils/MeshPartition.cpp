@@ -370,9 +370,9 @@ namespace Nektar
                     // Extract the edge body
                     TiXmlNode* edgeChild = vSubElement->FirstChild();
                     ASSERTL0(edgeChild, "Unable to extract the data from the compressed edge tag.");
-                
+                    
                     std::string edgeStr;
-
+                    
                     if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         edgeStr += edgeChild->ToText()->ValueStr();
@@ -418,21 +418,87 @@ namespace Nektar
                 vSubElement = pSession->GetElement("Nektar/Geometry/Face");
                 ASSERTL0(vSubElement, "Cannot read faces.");
                 x = vSubElement->FirstChildElement();
+
                 while(x)
                 {
-                    TiXmlAttribute* y = x->FirstAttribute();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    MeshEntity f;
-                    f.id = y->IntValue();
-                    f.type = x->Value()[0];
-                    std::vector<std::string> vEdges;
-                    std::string vEdgeStr = x->FirstChild()->ToText()->Value();
-                    boost::split(vEdges, vEdgeStr, boost::is_any_of("\t "));
-                    for (int i = 0; i < vEdges.size(); ++i)
+                    // check to see if compressed
+                    const char *IsCompressed = x->Attribute("COMPRESSED");
+                    if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
                     {
-                        f.list.push_back(atoi(vEdges[i].c_str()));
+                        m_isCompressed = true;
+                    
+                        // Extract the edge body
+                        TiXmlNode* faceChild = x->FirstChild();
+                        ASSERTL0(faceChild, "Unable to extract the data from the compressed edge tag.");
+                        
+                        std::string faceStr;                        
+                        if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            faceStr += faceChild->ToText()->ValueStr();
+                        }
+
+                        // uncompress and fill in values. 
+                        const std::string val= x->Value();
+                        
+                        if(boost::iequals(val,"T")) // triangle
+                        {
+                            std::vector<MeshTri> faceData;
+                            CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
+                            
+                            for(int i= 0; i < faceData.size(); ++i)
+                            {
+                                MeshEntity f;
+
+                                f.id = faceData[i].id;
+                                f.type = 'T';
+                                for (int j = 0; j < 3; ++j)
+                                {
+                                    f.list.push_back(faceData[i].e[j]);
+                                }
+                                m_meshFaces[f.id] = f;
+                            }
+                            
+                        } 
+                        else if (boost::iequals(val,"Q"))
+                        {
+                            std::vector<MeshQuad> faceData;
+                            CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
+                            
+                            for(int i= 0; i < faceData.size(); ++i)
+                            {
+                                MeshEntity f;
+
+                                f.id = faceData[i].id;
+                                f.type = 'Q';
+                                for (int j = 0; j < 4; ++j)
+                                {
+                                    f.list.push_back(faceData[i].e[j]);
+                                }
+                                m_meshFaces[f.id] = f;
+                            }
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"Unrecognised face tag");
+                        }
+                        
                     }
-                    m_meshFaces[f.id] = f;
+                    else
+                    {
+                        TiXmlAttribute* y = x->FirstAttribute();
+                        ASSERTL0(y, "Failed to get attribute.");
+                        MeshEntity f;
+                        f.id = y->IntValue();
+                        f.type = x->Value()[0];
+                        std::vector<std::string> vEdges;
+                        std::string vEdgeStr = x->FirstChild()->ToText()->Value();
+                        boost::split(vEdges, vEdgeStr, boost::is_any_of("\t "));
+                        for (int i = 0; i < vEdges.size(); ++i)
+                        {
+                            f.list.push_back(atoi(vEdges[i].c_str()));
+                        }
+                        m_meshFaces[f.id] = f;
+                    }
                     x = x->NextSiblingElement();
                 }
             }
@@ -443,19 +509,167 @@ namespace Nektar
             x = vSubElement->FirstChildElement();
             while(x)
             {
-                TiXmlAttribute* y = x->FirstAttribute();
-                ASSERTL0(y, "Failed to get attribute.");
-                MeshEntity e;
-                e.id = y->IntValue();
-                std::vector<std::string> vItems;
-                std::string vItemStr = x->FirstChild()->ToText()->Value();
-                boost::split(vItems, vItemStr, boost::is_any_of("\t "));
-                for (int i = 0; i < vItems.size(); ++i)
+                // check to see if compressed
+                const char *IsCompressed = x->Attribute("COMPRESSED");
+                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
                 {
-                    e.list.push_back(atoi(vItems[i].c_str()));
+                    m_isCompressed = true;
+                    
+                    // Extract the body
+                    TiXmlNode* child = x->FirstChild();
+                    ASSERTL0(child, "Unable to extract the data from the compressed element tag.");
+                    
+                    std::string elmtStr;                        
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        elmtStr += child->ToText()->ValueStr();
+                    }
+
+                    // uncompress and fill in values. 
+                    const std::string val= x->Value();
+                    
+                    switch(val[0])
+                    {
+                    case 'S':// triangle
+                        {
+                            std::vector<MeshEdge> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity e;
+                                e.id = data[i].id;
+                                e.type = 'T';
+                                e.list.push_back(data[i].v0);
+                                e.list.push_back(data[i].v1);
+                                m_meshElements[e.id] = e;
+                            }
+                        } 
+                        break;
+                    case 'T':// triangle
+                        {
+                            std::vector<MeshTri> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'T';
+                                for (int j = 0; j < 3; ++j)
+                                {
+                                    f.list.push_back(data[i].e[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                            
+                        } 
+                        break;
+                    case 'Q':
+                        {
+                            std::vector<MeshQuad> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'Q';
+                                for (int j = 0; j < 4; ++j)
+                                {
+                                    f.list.push_back(data[i].e[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                    case 'A':
+                        {
+                            std::vector<MeshTet> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'A';
+                                for (int j = 0; j < 4; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                    case 'P':
+                        {
+                            std::vector<MeshPyr> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'P';
+                                for (int j = 0; j < 5; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                    case 'R':
+                        {
+                            std::vector<MeshPrism> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'Q';
+                                for (int j = 0; j < 5; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                    case 'H':
+                        {
+                            std::vector<MeshHex> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+                            
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'Q';
+                                for (int j = 0; j < 6; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                    default:
+                        ASSERTL0(false,"Unrecognised element tag");
+                    }
                 }
-                e.type = x->Value()[0];
-                m_meshElements[e.id] = e;
+                else
+                {
+                    TiXmlAttribute* y = x->FirstAttribute();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    MeshEntity e;
+                    e.id = y->IntValue();
+                    std::vector<std::string> vItems;
+                    std::string vItemStr = x->FirstChild()->ToText()->Value();
+                    boost::split(vItems, vItemStr, boost::is_any_of("\t "));
+                    for (int i = 0; i < vItems.size(); ++i)
+                    {
+                        e.list.push_back(atoi(vItems[i].c_str()));
+                    }
+                    e.type = x->Value()[0];
+                    m_meshElements[e.id] = e;
+                }
                 x = x->NextSiblingElement();
             }
 
@@ -1076,39 +1290,282 @@ namespace Nektar
 
             if (m_dim >= 3)
             {
-                for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
+
+                if(m_isCompressed)
                 {
-                    std::string vType("F");
-                    vType[0] = vIt->second.type;
-                    x = new TiXmlElement(vType);
-                    x->SetAttribute("ID", vIt->first);
-                    std::stringstream vListStr;
-                    for (unsigned int i = 0; i < vIt->second.list.size(); ++i)
+                    std::vector<MeshTri>  TriFaceInfo;
+                    std::vector<MeshQuad> QuadFaceInfo;
+                    
+                    for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
                     {
-                        vListStr << std::setw(10) << vIt->second.list[i];
+                        switch(vIt->second.list.size())
+                        {
+                        case 3:
+                            {
+                                MeshTri f; 
+                                f.id = vIt->first;
+                                for(int i = 0; i < 3; ++i)
+                                {
+                                    f.e[i] = vIt->second.list[i];
+                                }
+                                TriFaceInfo.push_back(f);
+                            }
+                            break;
+                        case 4:
+                            {
+                                MeshQuad f; 
+                                f.id = vIt->first;
+                                for(int i = 0; i < 4; ++i)
+                                {
+                                    f.e[i] = vIt->second.list[i];
+                                }
+                                QuadFaceInfo.push_back(f);
+                            }
+                            break;                        
+                        default:
+                            ASSERTL0(false,"Unkonwn face type");
+                        }
                     }
-                    vListStr << " ";
-                    y = new TiXmlText(vListStr.str());
-                    x->LinkEndChild(y);
-                    vFace->LinkEndChild(x);
+
+                    if(TriFaceInfo.size())
+                    {
+                        std::string vType("T");
+                        x = new TiXmlElement(vType);
+                        
+                        std::string faceStr;
+                        CompressData::ZlibEncodeToBase64Str(TriFaceInfo,faceStr);
+                        x->SetAttribute("COMPRESSED","B64Z");
+                        x->LinkEndChild(new TiXmlText(faceStr));
+                        vFace->LinkEndChild(x);
+                    }
+                    
+                    if(QuadFaceInfo.size())
+                    {
+                        std::string vType("Q");
+                        x = new TiXmlElement(vType);
+                        std::string faceStr;
+                        CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,faceStr);
+                        x->SetAttribute("COMPRESSED","B64Z");
+                        x->LinkEndChild(new TiXmlText(faceStr));
+                        vFace->LinkEndChild(x);
+                    }
+                }
+                else
+                {
+                    for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
+                    {
+                        std::string vType("F");
+                        vType[0] = vIt->second.type;
+                        x = new TiXmlElement(vType);
+                        x->SetAttribute("ID", vIt->first);
+                        std::stringstream vListStr;
+                        for (unsigned int i = 0; i < vIt->second.list.size(); ++i)
+                        {
+                            vListStr << std::setw(10) << vIt->second.list[i];
+                        }
+                        vListStr << " ";
+                        y = new TiXmlText(vListStr.str());
+                        x->LinkEndChild(y);
+                        vFace->LinkEndChild(x);
+                    }
                 }
             }
 
-            for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
+
+            if(m_isCompressed)
             {
-                std::string vType("T");
-                vType[0] = vIt->second.type;
-                x = new TiXmlElement(vType.c_str());
-                x->SetAttribute("ID", vIt->first);
-                std::stringstream vEdges;
-                for (unsigned i = 0; i < vIt->second.list.size(); ++i)
+                std::vector<MeshEdge>  SegInfo;
+                std::vector<MeshTri>   TriInfo;
+                std::vector<MeshQuad>  QuadInfo;
+                std::vector<MeshTet>   TetInfo;
+                std::vector<MeshPyr>   PyrInfo;
+                std::vector<MeshPrism> PrismInfo;
+                std::vector<MeshHex>   HexInfo;
+                    
+                //gather elemements in groups. 
+                for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
                 {
-                    vEdges << std::setw(10) << vIt->second.list[i];
+                    switch(vIt->second.type)
+                    {
+                    case 'S':
+                        {
+                            MeshEdge e; 
+                            e.id = vIt->first;
+                            e.v0 = vIt->second.list[0];
+                            e.v1 = vIt->second.list[1];
+                            SegInfo.push_back(e);
+                        }
+                        break;
+
+                    case 'T':
+                        {
+                            MeshTri f; 
+                            f.id = vIt->first;
+                            for(int i = 0; i < 3; ++i)
+                            {
+                                f.e[i] = vIt->second.list[i];
+                            }
+                            TriInfo.push_back(f);
+                        }
+                        break;
+                    case 'Q':
+                        {
+                            MeshQuad f; 
+                            f.id = vIt->first;
+                            for(int i = 0; i < 4; ++i)
+                            {
+                                f.e[i] = vIt->second.list[i];
+                            }
+                            QuadInfo.push_back(f);
+                        }
+                        break;                        
+                    case 'A': 
+                        {
+                            MeshTet vol; 
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 4; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            TetInfo.push_back(vol);
+                        }
+                        break;
+                    case 'P':
+                        {
+                            MeshPyr vol; 
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 5; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            PyrInfo.push_back(vol);
+                        }
+                        break;
+                    case 'R':
+                        {
+                            MeshPrism vol; 
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 5; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            PrismInfo.push_back(vol);
+                        }
+                        break;
+                    case 'H':
+                        {
+                            MeshHex vol; 
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 6; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            HexInfo.push_back(vol);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"Unknown element type");
+                    }         
+                }   
+
+                if(SegInfo.size())
+                {
+                    std::string vType("S");
+                    x = new TiXmlElement(vType);
+                    
+                    std::string segStr;
+                    CompressData::ZlibEncodeToBase64Str(SegInfo,segStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(segStr));
+                    vElement->LinkEndChild(x);
                 }
-                vEdges << " ";
-                y = new TiXmlText(vEdges.str());
-                x->LinkEndChild(y);
-                vElement->LinkEndChild(x);
+
+                if(TriInfo.size())
+                {
+                    std::string vType("T");
+                    x = new TiXmlElement(vType);
+                    
+                    std::string faceStr;
+                    CompressData::ZlibEncodeToBase64Str(TriInfo,faceStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(faceStr));
+                    vElement->LinkEndChild(x);
+                }
+                
+                if(QuadInfo.size())
+                {
+                    std::string vType("Q");
+                    x = new TiXmlElement(vType);
+                    std::string faceStr;
+                    CompressData::ZlibEncodeToBase64Str(QuadInfo,faceStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(faceStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(TetInfo.size())
+                {
+                    std::string vType("A");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(TetInfo,volStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(PyrInfo.size())
+                {
+                    std::string vType("P");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(PyrInfo,volStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(PrismInfo.size())
+                {
+                    std::string vType("R");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(PrismInfo,volStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(HexInfo.size())
+                {
+                    std::string vType("H");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(HexInfo,volStr);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+            }
+            else
+            {
+                for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
+                {
+                    std::string vType("T");
+                    vType[0] = vIt->second.type;
+                    x = new TiXmlElement(vType.c_str());
+                    x->SetAttribute("ID", vIt->first);
+                    std::stringstream vEdges;
+                    for (unsigned i = 0; i < vIt->second.list.size(); ++i)
+                    {
+                        vEdges << std::setw(10) << vIt->second.list[i];
+                    }
+                    vEdges << " ";
+                    y = new TiXmlText(vEdges.str());
+                    x->LinkEndChild(y);
+                    vElement->LinkEndChild(x);
+                }
             }
 
             if (m_dim >= 2)

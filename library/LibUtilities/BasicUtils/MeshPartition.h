@@ -82,6 +82,42 @@ namespace Nektar
                                                     std::vector<unsigned int> &tmp);
 
         private:
+            struct MeshEntity
+            {
+                int id;
+                char type;
+                std::vector<unsigned int> list;
+            };
+            
+            struct MeshFace
+            {
+                int id;
+                std::vector<int> edgeList;
+            };
+            
+            struct MeshElement
+            {
+                int id;
+                char type;
+                std::vector<int> list;
+            };
+            
+            struct MeshCurved
+            {
+                int id;
+                std::string entitytype;
+                int entityid;
+                std::string type;
+                int npoints;
+                std::string data;
+            };
+            
+            struct MeshComposite
+            {
+                int id;
+                char type;
+                std::vector<int> list;
+            };
 
             bool m_isCompressed; // Idenfity if input is compressed and if so set output to be compressed
             typedef std::pair<std::string, int> MeshCurvedKey;

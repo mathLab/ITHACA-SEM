@@ -275,7 +275,8 @@ namespace Nektar
             }
             m_mesh->m_element[m_mesh->m_expDim].resize(nel);
 
-            // loop over all composites and set up elements with edges and faces from the maps above. 
+            // loop over all composites and set up elements with edges
+            // and faces from the maps above.
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
             {
                 // Get hold of dimension

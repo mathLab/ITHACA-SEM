@@ -242,20 +242,122 @@ namespace Nektar
 
             TiXmlElement *element = field->FirstChildElement();
 
-                while (element)
+            while (element)
+            {
+                std::string elementType(element->ValueStr());
+                
+                ASSERTL0(elementType == "Q" || elementType == "T",
+                         (std::string("Unknown 2D element type: ") + elementType).c_str());
+                
+                const char *IsCompressed = element->Attribute("COMPRESSED");
+                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
                 {
-                    std::string elementType(element->ValueStr());
+                    // Extract the face body
+                    TiXmlNode* faceChild = element->FirstChild();
+                    ASSERTL0(faceChild, "Unable to extract the data from "
+                             "the compressed face tag.");
+                
+                    std::string faceStr;
+                    if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        faceStr += faceChild->ToText()->ValueStr();
+                    }
+                    
+                    int indx;
+                    if(elementType == "T")
+                    {
+                        std::vector<LibUtilities::MeshTri> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
+                        
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
 
-                    ASSERTL0(elementType == "Q" || elementType == "T",
-                             (std::string("Unknown 2D element type: ") + elementType).c_str());
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
 
+                            /// Create a TriGeom to hold the new definition.
+                            SegGeomSharedPtr edges[TriGeom::kNedges] =
+                                {
+                                    GetSegGeom(faceData[i].e[0]),
+                                    GetSegGeom(faceData[i].e[1]),
+                                    GetSegGeom(faceData[i].e[2])
+                                };
+
+                            StdRegions::Orientation edgeorient[TriGeom::kNedges] =
+                                {
+                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                                };
+                            
+                            TriGeomSharedPtr trigeom;
+                            
+                            if (it == m_curvedFaces.end())
+                            {
+                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
+                            }
+
+                            trigeom->SetGlobalID(indx);
+                            m_triGeoms[indx] = trigeom;
+                        }
+                        
+                    }
+                    else if (elementType == "Q")
+                    {
+                        std::vector<LibUtilities::MeshQuad> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
+                            
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+                            
+                            
+                            /// Create a QuadGeom to hold the new definition.
+                            SegGeomSharedPtr edges[QuadGeom::kNedges] =
+                                {GetSegGeom(faceData[i].e[0]),GetSegGeom(faceData[i].e[1]),
+                                 GetSegGeom(faceData[i].e[2]),GetSegGeom(faceData[i].e[3])};
+                            
+                            StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
+                                {
+                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                                    SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
+                                };
+                            
+                            QuadGeomSharedPtr quadgeom;
+                            
+                            if (it == m_curvedEdges.end())
+                            {
+                                quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
+                            }
+                            quadgeom->SetGlobalID(indx);
+                            
+                            m_quadGeoms[indx] = quadgeom;
+                        }
+                    }
+                }
+                else
+                {
                     /// Read id attribute.
                     int indx;
                     int err = element->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-
+                    
                     it = m_curvedFaces.find(indx);
-
+                
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
                     std::string elementStr;
@@ -287,18 +389,18 @@ namespace Nektar
 
                             /// Create a TriGeom to hold the new definition.
                             SegGeomSharedPtr edges[TriGeom::kNedges] =
-                        {
-                            GetSegGeom(edge1),
-                            GetSegGeom(edge2),
-                            GetSegGeom(edge3)
-                        };
+                            {
+                                GetSegGeom(edge1),
+                                GetSegGeom(edge2),
+                                GetSegGeom(edge3)
+                            };
 
                             StdRegions::Orientation edgeorient[TriGeom::kNedges] =
-                        {
-                            SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                            SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
-                        };
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                            };
 
                             TriGeomSharedPtr trigeom;
                             if (it == m_curvedFaces.end())
@@ -379,10 +481,10 @@ namespace Nektar
                             NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
                         }
                     }
-
-                    /// Keep looking
-                    element = element->NextSiblingElement();
                 }
+                /// Keep looking
+                element = element->NextSiblingElement();
+            }
         }
 
         void MeshGraph2D::ReadComposites(TiXmlDocument &doc)

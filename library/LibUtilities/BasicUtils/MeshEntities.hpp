@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: MeshEntities.hpp
 //
@@ -40,13 +40,6 @@ namespace Nektar
     namespace LibUtilities
     {
         
-        struct MeshEntity
-        {
-            int id;
-            char type;
-            std::vector<unsigned int> list;
-        };
-        
         struct MeshVertex
         {
             int id;
@@ -61,36 +54,43 @@ namespace Nektar
             int v0;
             int v1;
         };
-        
-        struct MeshFace
+
+        struct MeshTri
         {
             int id;
-            std::vector<int> edgeList;
+            int e[3];
         };
 
-        struct MeshElement
+        struct MeshQuad
         {
             int id;
-            char type;
-            std::vector<int> list;
+            int e[4];
+        };
+
+        struct MeshTet
+        {
+            int id;
+            int f[4];
+        };
+
+        struct MeshPyr
+        {
+            int id;
+            int f[5];
+        };
+
+        struct MeshPrism
+        {
+            int id;
+            int f[5];
+        };
+
+        struct MeshHex
+        {
+            int id;
+            int f[6];
         };
         
-        struct MeshCurved
-        {
-            int id;
-            std::string entitytype;
-            int entityid;
-            std::string type;
-            int npoints;
-            std::string data;
-        };
-        
-        struct MeshComposite
-        {
-            int id;
-            char type;
-            std::vector<int> list;
-        };
     }
 }
 #endif

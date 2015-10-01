@@ -65,8 +65,8 @@ namespace Nektar
                 "Compress output file and append a .gz extension.");
             m_config["test"] = ConfigOption(true, "0",
                 "Attempt to load resulting mesh and create meshgraph.");
-            m_config["compress"] = ConfigOption(true,"0",
-                 "Compress xml section where possible");
+            m_config["uncompress"] = ConfigOption(true,"0",
+                 "Uncompress xml sections");
         }
 
         OutputNekpp::~OutputNekpp()
@@ -94,10 +94,10 @@ namespace Nektar
             geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
             root->LinkEndChild( geomTag );
 
-            WriteXmlNodes     (geomTag,m_config["compress"].as<bool>());
-            WriteXmlEdges     (geomTag,m_config["compress"].as<bool>());
-            WriteXmlFaces     (geomTag);
-            WriteXmlElements  (geomTag);
+            WriteXmlNodes     (geomTag,m_config["uncompress"].as<bool>());
+            WriteXmlEdges     (geomTag,m_config["uncompress"].as<bool>());
+            WriteXmlFaces     (geomTag,m_config["uncompress"].as<bool>());
+            WriteXmlElements  (geomTag,m_config["uncompress"].as<bool>());
             WriteXmlCurves    (geomTag);
             WriteXmlComposites(geomTag);
             WriteXmlDomain    (geomTag);
@@ -143,7 +143,7 @@ namespace Nektar
             }
         }
 
-        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot, bool IsCompressed)
+        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot, bool UnCompressed)
         {
             TiXmlElement* verTag = new TiXmlElement( "VERTEX" );
             std::set<NodeSharedPtr>::iterator it;
@@ -152,7 +152,21 @@ namespace Nektar
                     m_mesh->m_vertexSet.begin(),
                     m_mesh->m_vertexSet.end());
 
-            if(IsCompressed)
+            if(UnCompressed)
+            {
+                for (it = tmp.begin(); it != tmp.end(); ++it)
+                {
+                    NodeSharedPtr n = *it;
+                    stringstream s;
+                    s << scientific << setprecision(8) 
+                      << n->m_x << " " << n->m_y << " " << n->m_z;
+                    TiXmlElement * v = new TiXmlElement( "V" );
+                    v->SetAttribute("ID",n->m_id);
+                    v->LinkEndChild(new TiXmlText(s.str()));
+                    verTag->LinkEndChild(v);
+                }
+            }
+            else
             {
                 std::vector<LibUtilities::MeshVertex> vertInfo;
                 for (it = tmp.begin(); it != tmp.end(); ++it)
@@ -170,24 +184,11 @@ namespace Nektar
                 verTag->SetAttribute("COMPRESSED","B64Z");
                 verTag->LinkEndChild(new TiXmlText(vertStr));
             }
-            else
-            {
-                for (it = tmp.begin(); it != tmp.end(); ++it)
-                {
-                    NodeSharedPtr n = *it;
-                    stringstream s;
-                    s << scientific << setprecision(8) 
-                      << n->m_x << " " << n->m_y << " " << n->m_z;
-                    TiXmlElement * v = new TiXmlElement( "V" );
-                    v->SetAttribute("ID",n->m_id);
-                    v->LinkEndChild(new TiXmlText(s.str()));
-                    verTag->LinkEndChild(v);
-                }
-            }
+
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot, bool IsCompressed)
+        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot, bool UnCompressed)
         {
             if (m_mesh->m_expDim >= 2)
             {
@@ -196,7 +197,21 @@ namespace Nektar
                 std::set<EdgeSharedPtr>::iterator it;
                 std::set<EdgeSharedPtr> tmp(m_mesh->m_edgeSet.begin(),
                                             m_mesh->m_edgeSet.end());
-                if(IsCompressed)
+                if(UnCompressed)
+                {
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
+                    {
+                        EdgeSharedPtr ed = *it;
+                        stringstream s;
+                        
+                        s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
+                        TiXmlElement * e = new TiXmlElement( "E" );
+                        e->SetAttribute("ID",ed->m_id);
+                        e->LinkEndChild( new TiXmlText(s.str()) );
+                        verTag->LinkEndChild(e);
+                    }
+                }
+                else
                 {
                     std::vector<LibUtilities::MeshEdge> edgeInfo;
                     for (it = tmp.begin(); it != tmp.end(); ++it)
@@ -215,26 +230,11 @@ namespace Nektar
                     verTag->SetAttribute("COMPRESSED","B64Z");
                     verTag->LinkEndChild(new TiXmlText(edgeStr));
                 }
-                else
-                {
-
-                    for (it = tmp.begin(); it != tmp.end(); ++it)
-                    {
-                        EdgeSharedPtr ed = *it;
-                        stringstream s;
-                        
-                        s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
-                        TiXmlElement * e = new TiXmlElement( "E" );
-                        e->SetAttribute("ID",ed->m_id);
-                        e->LinkEndChild( new TiXmlText(s.str()) );
-                        verTag->LinkEndChild(e);
-                    }
-                }
                 pRoot->LinkEndChild( verTag );
             }
         }
 
-        void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot)
+        void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot, bool Uncompressed)
         {
             if (m_mesh->m_expDim == 3)
             {
@@ -244,18 +244,20 @@ namespace Nektar
                         m_mesh->m_faceSet.begin(),
                         m_mesh->m_faceSet.end());
 
-                for (it = tmp.begin(); it != tmp.end(); ++it)
+                if(Uncompressed)
                 {
-                    stringstream s;
-                    FaceSharedPtr fa = *it;
-
-                    for (int j = 0; j < fa->m_edgeList.size(); ++j)
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
                     {
-                        s << setw(10) << fa->m_edgeList[j]->m_id;
-                    }
-                    TiXmlElement * f;
-                    switch(fa->m_vertexList.size())
-                    {
+                        stringstream s;
+                        FaceSharedPtr fa = *it;
+                        
+                        for (int j = 0; j < fa->m_edgeList.size(); ++j)
+                        {
+                            s << setw(10) << fa->m_edgeList[j]->m_id;
+                        }
+                        TiXmlElement * f;
+                        switch(fa->m_vertexList.size())
+                        {
                         case 3:
                             f = new TiXmlElement("T");
                             break;
@@ -264,27 +266,264 @@ namespace Nektar
                             break;
                         default:
                             abort();
+                        }
+                        f->SetAttribute("ID", fa->m_id);
+                        f->LinkEndChild( new TiXmlText(s.str()));
+                        verTag->LinkEndChild(f);
                     }
-                    f->SetAttribute("ID", fa->m_id);
-                    f->LinkEndChild( new TiXmlText(s.str()));
-                    verTag->LinkEndChild(f);
+                }
+                else
+                {
+                    
+                    std::vector<LibUtilities::MeshTri>   TriFaceInfo;
+                    std::vector<LibUtilities::MeshQuad>  QuadFaceInfo;
+                    
+                    for (it = tmp.begin(); it != tmp.end(); ++it)
+                    {
+                        FaceSharedPtr fa = *it;
+                        
+                        switch(fa->m_edgeList.size())
+                        {
+                        case 3:
+                            {
+                                LibUtilities::MeshTri f; 
+                                f.id = fa->m_id;
+                                for(int i = 0; i < 3; ++i)
+                                {
+                                    f.e[i] = fa->m_edgeList[i]->m_id;
+                                }
+                                TriFaceInfo.push_back(f);
+                            }
+                            break;
+                        case 4:
+                            {
+                                LibUtilities::MeshQuad f; 
+                                f.id = fa->m_id;
+                                for(int i = 0; i < 4; ++i)
+                                {
+                                    f.e[i] = fa->m_edgeList[i]->m_id;
+                                }
+                                QuadFaceInfo.push_back(f);
+                            }
+                            break;                        
+                        default:
+                            ASSERTL0(false,"Unkonwn face type");
+                        }
+                    }
+                        
+                    if(TriFaceInfo.size())
+                    {
+                        std::string vType("T");
+                        TiXmlElement* x = new TiXmlElement(vType);
+                        std::string faceStr;
+                        LibUtilities::CompressData::ZlibEncodeToBase64Str(TriFaceInfo,faceStr);
+                        x->SetAttribute("COMPRESSED","B64Z");
+                        x->LinkEndChild(new TiXmlText(faceStr));
+                        verTag->LinkEndChild(x);
+                    }
+                    
+                    if(QuadFaceInfo.size())
+                    {
+                        std::string vType("Q");
+                        TiXmlElement* x = new TiXmlElement(vType);
+                        std::string faceStr;
+                        LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,faceStr);
+                        x->SetAttribute("COMPRESSED","B64Z");
+                        x->LinkEndChild(new TiXmlText(faceStr));
+                        verTag->LinkEndChild(x);
+                    }
                 }
                 pRoot->LinkEndChild( verTag );
             }
         }
-
-        void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot)
+            
+        void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot, bool UnCompressed)
         {
             TiXmlElement* verTag = new TiXmlElement( "ELEMENT" );
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
-            for(int i = 0; i < elmt.size(); ++i)
+            if(UnCompressed)
             {
-                TiXmlElement *elm_tag = new TiXmlElement(elmt[i]->GetTag());
-                elm_tag->SetAttribute("ID", elmt[i]->GetId());
-                elm_tag->LinkEndChild(new TiXmlText(elmt[i]->GetXmlString()));
-                verTag->LinkEndChild(elm_tag);
+                for(int i = 0; i < elmt.size(); ++i)
+                {
+                    TiXmlElement *elm_tag = new TiXmlElement(elmt[i]->GetTag());
+                    elm_tag->SetAttribute("ID", elmt[i]->GetId());
+                    elm_tag->LinkEndChild(new TiXmlText(elmt[i]->GetXmlString()));
+                    verTag->LinkEndChild(elm_tag);
+                }
             }
+            else
+            {
+                std::vector<LibUtilities::MeshEdge>  SegInfo;
+                std::vector<LibUtilities::MeshTri>   TriInfo;
+                std::vector<LibUtilities::MeshQuad>  QuadInfo;
+                std::vector<LibUtilities::MeshTet>   TetInfo;
+                std::vector<LibUtilities::MeshPyr>   PyrInfo;
+                std::vector<LibUtilities::MeshPrism> PrismInfo;
+                std::vector<LibUtilities::MeshHex>   HexInfo;
+                
+                for(int i = 0; i < elmt.size(); ++i)
+                {                    
+                    switch(elmt[i]->GetTag()[0])
+                    {
+                    case 'S':
+                        {
+                            LibUtilities::MeshEdge e; 
+                            e.id = elmt[i]->GetId();
+                            e.v0 = elmt[i]->GetVertex(0)->m_id;
+                            e.v1 = elmt[i]->GetVertex(1)->m_id;
+                            SegInfo.push_back(e);
+                        }
+                        break;
+                    case 'T':
+                        {
+                            LibUtilities::MeshTri e;
+                            e.id = elmt[i]->GetId();
+                            for(int j = 0; j < 3; ++j)
+                            {
+                                e.e[j] = elmt[i]->GetEdge(j)->m_id;
+                            }
+                            TriInfo.push_back(e);                        
+                        }
+                        break;
+                    case 'Q':
+                        {
+                            LibUtilities::MeshQuad e;
+                            e.id  = elmt[i]->GetId();
+                            for(int j = 0; j < 4; ++j)
+                            {
+                                e.e[j] = elmt[i]->GetEdge(j)->m_id;
+                            }
+                            QuadInfo.push_back(e);                        
+                        }
+                        break;
+                    case 'A':
+                        {   
+                            LibUtilities::MeshTet e;
+                            e.id  = elmt[i]->GetId();
+                            for(int j = 0; j < 4; ++j)
+                            {
+                                e.f[j] = elmt[i]->GetFace(j)->m_id;
+                            }
+                            TetInfo.push_back(e);                        
+                        }
+                        break;
+                    case 'P':
+                        {   
+                            LibUtilities::MeshPyr e;
+                            e.id  = elmt[i]->GetId();
+                            for(int j = 0; j < 5; ++j)
+                            {
+                                e.f[j] = elmt[i]->GetFace(j)->m_id;
+                            }
+                            PyrInfo.push_back(e);                        
+                        }
+                        break;
+                    case 'R':
+                        {   
+                            LibUtilities::MeshPrism e;
+                            e.id  = elmt[i]->GetId();
+                            for(int j = 0; j < 5; ++j)
+                            {
+                                e.f[j] = elmt[i]->GetFace(j)->m_id;
+                            }
+                            PrismInfo.push_back(e);                        
+                        }
+                        break;
+                    case 'H':
+                        {   
+                            LibUtilities::MeshHex e;
+                            e.id  = elmt[i]->GetId();
+                            for(int j = 0; j < 8; ++j)
+                            {
+                                e.f[j] = elmt[i]->GetFace(j)->m_id;
+                            }
+                            HexInfo.push_back(e);                        
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"Unknown element type");
+                    }         
+                }
+                
+                if(SegInfo.size())
+                {
+                    std::string vType("S");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(SegInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+                
+                if(TriInfo.size())
+                {
+                    std::string vType("T");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(TriInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+                
+                if(QuadInfo.size())
+                {
+                    std::string vType("Q");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+
+                if(TetInfo.size())
+                {
+                    std::string vType("A");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(TetInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+
+                if(PyrInfo.size())
+                {
+                    std::string vType("P");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(PyrInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+
+                if(PrismInfo.size())
+                {
+                    std::string vType("R");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(PrismInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+
+                if(HexInfo.size())
+                {
+                    std::string vType("H");
+                    TiXmlElement* x = new TiXmlElement(vType);
+                    std::string Str;
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(HexInfo,Str);
+                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->LinkEndChild(new TiXmlText(Str));
+                    verTag->LinkEndChild(x);
+                }
+            }
+
             pRoot->LinkEndChild(verTag);
         }
 

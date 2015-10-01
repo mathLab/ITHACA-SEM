@@ -434,7 +434,7 @@ namespace Nektar
                         {   
                             LibUtilities::MeshHex e;
                             e.id  = elmt[i]->GetId();
-                            for(int j = 0; j < 8; ++j)
+                            for(int j = 0; j < 6; ++j)
                             {
                                 e.f[j] = elmt[i]->GetFace(j)->m_id;
                             }

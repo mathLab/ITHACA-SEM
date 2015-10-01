@@ -580,7 +580,7 @@ namespace Nektar
                                     Nqfaces++;
                                 }
                             }
-                            ASSERTL0((Ntfaces == 3)&&(Nqfaces = 1),"Did not identify the correct number of triangular and "
+                            ASSERTL0((Ntfaces == 4)&&(Nqfaces = 1),"Did not identify the correct number of triangular and "
                                      "quadrilateral faces for a pyramid");
 
                             PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(faces));

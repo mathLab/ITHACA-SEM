@@ -55,42 +55,40 @@ namespace Nektar
      * Stimulus, at specified frequencies determined by the derived classes of
      * Protocol.
      */
-    
+
     /**
      * Stimulus base class constructor.
      */
     StimulusPoint::StimulusPoint(
             const LibUtilities::SessionReaderSharedPtr& pSession,
-            const MultiRegions::ExpListSharedPtr& pField, 
+            const MultiRegions::ExpListSharedPtr& pField,
             const TiXmlElement* pXml)
             : Stimulus(pSession, pField, pXml)
     {
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
-        
+
         if (!pXml)
         {
             return;
         }
-        
 
-        const TiXmlElement *pXmlparameter; 
-        
+        const TiXmlElement *pXmlparameter;
+
         pXmlparameter = pXml->FirstChildElement("p_strength");
         m_strength = atof(pXmlparameter->GetText());
     }
-   
+
 
     /**
      * Initialise the stimulus. Allocate workspace and variable storage.
      */
     void StimulusPoint::Initialise()
     {
-
-        
     }
-   
+
+
     /**
      *
      */
@@ -100,17 +98,15 @@ namespace Nektar
     {
         // Get the protocol amplitude
         NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
-        
+
         outarray[0][0] += v_amp;
     }
-    
+
 
     /**
      *
      */
     void StimulusPoint::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-
-
     }
 }

@@ -118,30 +118,22 @@ namespace Nektar
                 m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
                 m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
             
-                
                 // check to see if any user defined boundary condition is
                 // indeed implemented
                 
                 for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
                 {    
-                    // Time Dependent Boundary Condition (if no user
-                    // defined then this is empty)
-                    ASSERTL0 (
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eNoUserDefined ||
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eWall_Forces ||
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eTimeDependent ||
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eMovingBody ||
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eRadiation ||
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eI ||
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eHighOutflow,
-                        "Unknown USERDEFINEDTYPE boundary condition");
+                    std::string type =m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+                    if(!type.empty())
+                        // Time Dependent Boundary Condition (if no user
+                        // defined then this is empty)
+                        ASSERTL0 (boost::iequals(type,"Wall_Forces")   ||
+                                  boost::iequals(type,"TimeDependent") ||
+                                  boost::iequals(type,"MovingBody")    ||
+                                  boost::iequals(type,"Radiation")     ||
+                                  boost::iequals(type,"I")             ||
+                                  boost::iequals(type,"HOutflow"),
+                                  "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
             break;
@@ -156,22 +148,24 @@ namespace Nektar
         std::string vConvectiveType;
         switch(m_equationType)
         {
-            case eUnsteadyStokes:
-                vConvectiveType = "NoAdvection";
-                break;
-            case eUnsteadyNavierStokes:
-            case eSteadyNavierStokes:
-                vConvectiveType = "Convective";
-                break;
-            case eUnsteadyLinearisedNS:
-                vConvectiveType = "Linearised";
-                break;
-            default:
-                break;
+        case eUnsteadyStokes:
+        case eSteadyLinearisedNS:
+            vConvectiveType = "NoAdvection";
+            break;
+        case eUnsteadyNavierStokes:
+        case eSteadyNavierStokes:
+            vConvectiveType = "Convective";
+            break;
+        case eUnsteadyLinearisedNS:
+            vConvectiveType = "Linearised";
+            break;
+        default:
+            break;
         }
 
         // Check if advection type overridden
-        if (m_session->DefinesTag("AdvectiveType") && m_equationType != eUnsteadyStokes)
+        if (m_session->DefinesTag("AdvectiveType") && m_equationType != eUnsteadyStokes &&
+            m_equationType != eSteadyLinearisedNS)
         {
             vConvectiveType = m_session->GetTag("AdvectiveType");
         }
@@ -202,7 +196,7 @@ namespace Nektar
             BndExp   = m_fields[i]->GetBndCondExpansions();
             for(int n = 0; n < BndConds.num_elements(); ++n)
             {    
-                if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
+                if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
                     ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin,
                              "Radiation boundary condition must be of type Robin <R>");
@@ -222,7 +216,7 @@ namespace Nektar
 
             for(int n = 0; n < BndConds.num_elements(); ++n)
             {    
-                if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
+                if(boost::iequals(BndConds[n]->GetUserDefined(),"Radiation"))
                 {
                     
                     int npoints    = BndExp[n]->GetNpoints();
@@ -335,7 +329,7 @@ namespace Nektar
 
         for(i = 0; i < VelDim; ++i)
         {
-            if(m_fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            if(m_fields[i]->GetWaveSpace() && !m_singleMode && !m_halfMode)
             {
                 velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
                 m_fields[i]->HomogeneousBwdTrans(inarray[m_velocity[i]],velocity[i]);
@@ -375,10 +369,9 @@ namespace Nektar
         {
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
-                if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eTimeDependent ||
-                    m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                       SpatialDomains::eMovingBody)
+                if(m_fields[i]->GetBndConditions()[n]->IsTimeDependent()  ||
+                   m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+                   "MovingBody")
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -399,26 +392,24 @@ namespace Nektar
         int  i,n;
         
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
-        Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
-        
+        Array<OneD, MultiRegions::ExpListSharedPtr>                BndExp;
         
         BndConds = m_fields[fieldid]->GetBndConditions();
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
         
-        StdRegions::StdExpansionSharedPtr   elmt;
+        StdRegions::StdExpansionSharedPtr elmt;
         StdRegions::StdExpansionSharedPtr Bc;
         
         int cnt;
         int elmtid,nq,offset, boundary;
         Array<OneD, NekDouble> Bvals, U;
         int cnt1 = 0;
-
-
+        
         for(cnt = n = 0; n < BndConds.num_elements(); ++n)
         {            
-            SpatialDomains::BndUserDefinedType type = BndConds[n]->GetUserDefined(); 
+            std::string type = BndConds[n]->GetUserDefined(); 
             
-            if((BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)&&(type == SpatialDomains::eRadiation))
+            if((BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)&&(boost::iequals(type,"Radiation")))
             {
                 for(i = 0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -445,18 +436,9 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined ||
-                    type == SpatialDomains::eWall_Forces || 
-                    type == SpatialDomains::eTimeDependent || 
-                    type == SpatialDomains::eMovingBody ||
-                    type == SpatialDomains::eHigh ||
-                    type == SpatialDomains::eHighOutflow) 
+            else 
             {
                 cnt += BndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
         }
     }

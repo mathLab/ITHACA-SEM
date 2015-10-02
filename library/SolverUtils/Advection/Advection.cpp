@@ -47,7 +47,8 @@ AdvectionFactory& GetAdvectionFactory()
 {
     typedef Loki::SingletonHolder<AdvectionFactory,
     Loki::CreateUsingNew,
-    Loki::NoDestroy > Type;
+    Loki::NoDestroy,
+    Loki::SingleThreaded> Type;
     return Type::Instance();
 }
 

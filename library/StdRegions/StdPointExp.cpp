@@ -241,8 +241,9 @@ namespace Nektar
         }
 		
         void StdPointExp::v_IProductWRTBase_SumFac(
-												 const Array<OneD, const NekDouble>& inarray,
-												 Array<OneD, NekDouble> &outarray)
+                                                   const Array<OneD, const NekDouble>& inarray,
+                                                   Array<OneD, NekDouble> &outarray,
+                                                   bool multiplybyweights)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }

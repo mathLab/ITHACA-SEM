@@ -179,7 +179,7 @@ void LinearisedAdvection::v_InitObject(
     {
         std::string ProjectStr
         = m_session->GetSolverInfo("PROJECTION");
-        
+
         if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
            (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
         {
@@ -389,6 +389,7 @@ void LinearisedAdvection::v_Advect(
 
             //3D
         case 3:
+        {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
@@ -399,9 +400,16 @@ void LinearisedAdvection::v_Advect(
             grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
 
-            fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
-            fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1,grad_base_v2);
-            fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, grad_base_w1, grad_base_w2);
+            // Differentiate base flow in physical space
+            bool oldwavespace = fields[0]->GetWaveSpace();
+            fields[0]->SetWaveSpace(false);
+            fields[0]->PhysDeriv(m_baseflow[0],
+                                 grad_base_u0, grad_base_u1, grad_base_u2);
+            fields[0]->PhysDeriv(m_baseflow[1],
+                                 grad_base_v0, grad_base_v1, grad_base_v2);
+            fields[0]->PhysDeriv(m_baseflow[2],
+                                 grad_base_w0, grad_base_w1, grad_base_w2);
+            fields[0]->SetWaveSpace(oldwavespace);
 
             //HalfMode has W(x,y,t)=0
             if(m_HalfMode || m_SingleMode)
@@ -415,6 +423,12 @@ void LinearisedAdvection::v_Advect(
             }
 
             fields[0]->PhysDeriv(inarray[n], grad0, grad1, grad2);
+            if (oldwavespace)
+            {
+                fields[0]->HomogeneousBwdTrans(grad0, grad0);
+                fields[0]->HomogeneousBwdTrans(grad1, grad1);
+                fields[0]->HomogeneousBwdTrans(grad2, grad2);
+            }
 
             switch (n)
             {
@@ -447,15 +461,18 @@ void LinearisedAdvection::v_Advect(
                 else
                 {
                     //Evaluate U du'/dx
-                    Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
+                    Vmath::Vmul (nPointsTot, grad0,       1,  m_baseflow[0], 1,
+                                             outarray[n], 1);
                     //Evaluate U du'/dx+ V du'/dy
-                    Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, grad1,       1,  m_baseflow[1], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
                     Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
                     Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx +v' dU/dy) + W du'/dz
-                    Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, grad2,       1,  m_baseflow[2], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx +v' dU/dy + W du'/dz)+ w' dU/dz
                     Vmath::Vvtvp(nPointsTot,grad_base_u2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
@@ -486,15 +503,18 @@ void LinearisedAdvection::v_Advect(
                 else
                 {
                     //Evaluate U dv'/dx
-                    Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
+                    Vmath::Vmul (nPointsTot, grad0,       1,  m_baseflow[0], 1,
+                                             outarray[n], 1);
                     //Evaluate U dv'/dx+ V dv'/dy
-                    Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, grad1,       1,  m_baseflow[1], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
                     Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dV/dx)+v' dV/dy
                     Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy) + W du'/dz
-                    Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, grad2,       1,  m_baseflow[2], 1,
+                                             outarray[n], 1,  outarray[n],   1);
                     //Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy + W dv'/dz)+ w' dV/dz
                     Vmath::Vvtvp(nPointsTot,grad_base_v2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
@@ -526,21 +546,30 @@ void LinearisedAdvection::v_Advect(
                 else
                 {
                     //Evaluate U dw'/dx
-                    Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
+                    Vmath::Vmul (nPointsTot, grad0,        1, m_baseflow[0], 1,
+                                             outarray[n],  1);
                     //Evaluate U dw'/dx+ V dw'/dx
-                    Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, grad1,        1, m_baseflow[1], 1,
+                                             outarray[n],  1, outarray[n],   1);
                     //Evaluate (U dw'/dx+ V dw'/dx)+u' dW/dx
                     Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +w' dW/dx)+v' dW/dy
                     Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy) + W dw'/dz
-                    Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot, grad2,        1, m_baseflow[2], 1,
+                                             outarray[n],  1, outarray[n],   1);
                     //Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy + W dw'/dz)+ w' dW/dz
                     Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
                 break;
             }
+
+            if (oldwavespace)
+            {
+                fields[0]->HomogeneousFwdTrans(outarray[n],outarray[n]);
+            }
             break;
+        }
         default:
             ASSERTL0(false,"dimension unknown");
         }
@@ -548,7 +577,7 @@ void LinearisedAdvection::v_Advect(
         Vmath::Neg(nqtot,outarray[n],1);
     }
 }
-    
+
 void LinearisedAdvection::v_SetBaseFlow(
     const Array<OneD, Array<OneD, NekDouble> >    &inarray)
 {
@@ -605,7 +634,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     {
         std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
     }
-    
+
     // copy FieldData into m_fields
     for(int j = 0; j < nvar; ++j)
     {
@@ -650,7 +679,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
                 ASSERTL0(flag, (std::string("Order of ") + pInfile
                                 + std::string(" data and that defined in "
                                               "m_boundaryconditions differs")).c_str());
-                
+
                 pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                FieldDef[i]->m_fields[j],
                                                tmp_coeff);
@@ -662,7 +691,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
             //pFields[j]->SetWaveSpace(true);
 
             pFields[j]->GetPlane(0)->BwdTrans(tmp_coeff, m_baseflow[j]);
-            
+
             if(m_SingleMode)
             {
                 //copy the bwd into the second plane for single Mode Analysis
@@ -672,8 +701,10 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
         }
         else
         {
+            bool oldwavespace = pFields[j]->GetWaveSpace();
+            pFields[j]->SetWaveSpace(false);
             pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
-            
+            pFields[j]->SetWaveSpace(oldwavespace);
         }
     }
 
@@ -683,7 +714,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
 
         for(int i=0; i<nConvectiveFields;++i)
         {
-            
+
             Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][slice*nqtot], 1);
         }
 
@@ -742,7 +773,7 @@ DNekBlkMatSharedPtr LinearisedAdvection::GetFloquetBlockMatrix(FloquetMatType ma
     StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
                                     StdSeg.DetShapeType(),
                                     StdSeg);
-    
+
     loc_mat = StdSeg.GetStdMatrix(matkey);
 
     // set up array of block matrices.
@@ -770,36 +801,43 @@ void LinearisedAdvection::DFT(const string file,
         m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
     }
 
-    //Import the slides into auxiliary vector
-    //The base flow should be stored in the form filename_i.bse
-    for (int i=0; i< m_slices; ++i)
+    // Import the slides into auxiliary vector
+    // The base flow should be stored in the form "filename_%d.ext"
+    // A subdirectory can also be included, such as "dir/filename_%d.ext"
+    size_t found = file.find("%d");
+    ASSERTL0(found != string::npos && file.find("%d", found+1) == string::npos,
+             "Since N_slices is specified, the filename provided for function "
+             "'BaseFlow' must include exactly one instance of the format "
+             "specifier '%d', to index the time-slices.");
+    char* buffer = new char[file.length() + 8];
+    for (int i = 0; i < m_slices; ++i)
     {
-        char chkout[16] = "";
-        sprintf(chkout, "%d", i);
-        ImportFldBase(file+"_"+chkout+".bse",pFields,i);
+        sprintf(buffer, file.c_str(), i);
+        ImportFldBase(buffer,pFields,i);
     }
+    delete[] buffer;
 
 
     // Discrete Fourier Transform of the fields
     for(int k=0; k< ConvectedFields;++k)
     {
 #ifdef NEKTAR_USING_FFTW
-        
+
         //Discrete Fourier Transform using FFTW
         Array<OneD, NekDouble> fft_in(npoints*m_slices);
         Array<OneD, NekDouble> fft_out(npoints*m_slices);
-        
+
         Array<OneD, NekDouble> m_tmpIN(m_slices);
         Array<OneD, NekDouble> m_tmpOUT(m_slices);
-        
+
         //Shuffle the data
         for(int j= 0; j < m_slices; ++j)
         {
             Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
         }
-        
+
         m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
-        
+
         //FFT Transform
         for(int i=0; i<npoints; i++)
         {
@@ -811,7 +849,7 @@ void LinearisedAdvection::DFT(const string file,
         for(int s = 0; s < m_slices; ++s)
         {
             Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
-    
+
         }
 
         Vmath::Zero(fft_in.num_elements(),&fft_in[0],1);

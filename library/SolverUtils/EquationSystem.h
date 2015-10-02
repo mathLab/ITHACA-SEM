@@ -42,6 +42,9 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
@@ -402,6 +405,9 @@ namespace Nektar
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
                 const string & s1, const string& s2) ;
                 
+            /// Virtual function to identify if operator is negated in DoSolve
+            SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
+
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
@@ -409,6 +415,10 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
+            /// Map of the interpolation weights for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  float> > > m_interpWeights;
+            /// Map of the interpolation indices for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  unsigned int> > > m_interpInds;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -440,11 +450,11 @@ namespace Nektar
             /// Expansion dimension.
             int                                         m_expdim;
             /// Flag to determine if single homogeneous mode is used.
-            bool                                        m_SingleMode;
+            bool                                        m_singleMode;
             /// Flag to determine if half homogeneous mode is used.
-            bool                                        m_HalfMode;
+            bool                                        m_halfMode;
             /// Flag to determine if use multiple homogenenous modes are used.
-            bool                                        m_MultipleModes;
+            bool                                        m_multipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
             /**
@@ -518,6 +528,7 @@ namespace Nektar
             
             /// Virtual function for solve implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
+            
             
             /// Virtual function for the L_inf error computation between fields and a given exact solution.
             SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(
@@ -603,6 +614,12 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble > >              &qflux);
+
+            SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
+                                                      const int goal) const
+            {
+                LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+            }
         };
         
         

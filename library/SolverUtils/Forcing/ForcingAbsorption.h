@@ -89,6 +89,7 @@ namespace SolverUtils
 
         private:
             ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession);
+            virtual ~ForcingAbsorption(void){};
 
     };
 

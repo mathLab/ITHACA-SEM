@@ -55,8 +55,10 @@ namespace Nektar
             const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
-            // Initialise PETSc
-            PetscInitialize(0, NULL, NULL, NULL);
+            // Check PETSc is initialized
+            // For some reason, this is needed on OS X as logging is not
+            // initialized properly in the call within CommMpi.
+            PetscInitializeNoArguments();
 
             // Create matrix
             MatCreate(PETSC_COMM_WORLD, &m_matrix);

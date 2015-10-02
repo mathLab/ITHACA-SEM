@@ -431,23 +431,35 @@ namespace Nektar
 
         void StdPrismExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
+            
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(inarray.num_elements());
 
-            MultiplyByQuadratureMetric(inarray,tmp);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,
-                                         true,true,true);
+                MultiplyByQuadratureMetric(inarray,tmp);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             inarray,outarray,wsp,
+                                             true,true,true);
+            }
         }
 
         void StdPrismExp::v_IProductWRTBase_SumFacKernel(
@@ -1653,6 +1665,13 @@ namespace Nektar
             int Q   = m_base[1]->GetNumModes() - 1, q;
             int R   = m_base[2]->GetNumModes() - 1, r;
             int idx = 0;
+            
+            int nBnd = NumBndryCoeffs();
+            
+            if (maparray.num_elements() != nBnd)
+            {
+                maparray = Array<OneD, unsigned int>(nBnd);
+            }
 
             // Loop over all boundary modes (in ascending order).
             for (p = 0; p <= P; ++p)
@@ -1915,7 +1934,11 @@ namespace Nektar
                     {
                         if(j >= cutoff ||  i + k >= cutoff)
                         {
-                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                            orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
                         }
                         cnt++;
                     }

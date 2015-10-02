@@ -94,7 +94,8 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
+                Array<OneD,       NekDouble>& outarray,
+                bool multiplybyweights = true);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
                 const int                           dir,
                 const Array<OneD, const NekDouble>& inarray,
@@ -126,6 +127,9 @@ namespace Nektar
             //-----------------------------
             LOCAL_REGIONS_EXPORT virtual 
                 LibUtilities::ShapeType v_DetShapeType() const;
+
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
 
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
@@ -170,6 +174,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
 
             //-----------------------------
             // Matrix creation functions

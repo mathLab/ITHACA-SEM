@@ -100,7 +100,7 @@ namespace Nektar
                                   Array<OneD, NekDouble> &out_d1,
                                   Array<OneD, NekDouble> &out_d2)
         {
-            PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
+            StdExpansion3D::PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
 
@@ -396,7 +396,8 @@ namespace Nektar
          */
         void StdHexExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD, NekDouble> &outarray)
+                  Array<OneD,       NekDouble> &outarray,
+            bool                                multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -404,16 +405,26 @@ namespace Nektar
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
-            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + 
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) +
                                        order0*order1*nquad2);
 
-            MultiplyByQuadratureMetric(inarray,tmp);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(inarray.num_elements());
+                MultiplyByQuadratureMetric(inarray,tmp);
 
-            StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,true,true,true);
+                StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                           m_base[1]->GetBdata(),
+                                           m_base[2]->GetBdata(),
+                                           tmp,outarray,wsp,true,true,true);
+            }
+            else
+            {
+                StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                           m_base[1]->GetBdata(),
+                                           m_base[2]->GetBdata(),
+                                           inarray,outarray,wsp,true,true,true);
+            }
         }
 
 
@@ -431,12 +442,12 @@ namespace Nektar
                                                      bool doCheckCollDir1,
                                                      bool doCheckCollDir2)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
-            int    nmodes0 = m_base[0]->GetNumModes();
-            int    nmodes1 = m_base[1]->GetNumModes();
-            int    nmodes2 = m_base[2]->GetNumModes();
+            int  nquad0  = m_base[0]->GetNumPoints();
+            int  nquad1  = m_base[1]->GetNumPoints();
+            int  nquad2  = m_base[2]->GetNumPoints();
+            int  nmodes0 = m_base[0]->GetNumModes();
+            int  nmodes1 = m_base[1]->GetNumModes();
+            int  nmodes2 = m_base[2]->GetNumModes();
 
             bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
             bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
@@ -2324,7 +2335,11 @@ namespace Nektar
                     {
                         if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]+fac[j]+fac[k]));
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (SvvDiffCoeff*exp( -(fac[i]+fac[j]+fac[k]) ));
+                        }
+                        else
+                        {
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= 0.0;
                         }
                     }
                 }

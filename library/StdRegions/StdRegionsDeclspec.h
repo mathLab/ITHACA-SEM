@@ -43,5 +43,7 @@
     #define STD_REGIONS_EXPORT
 #endif
 
+#define LOKI_CLASS_LEVEL_THREADING
+
 #endif //NEKTAR_STD_REGIONS_DECLSPEC_H
 

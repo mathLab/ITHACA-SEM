@@ -157,7 +157,7 @@ namespace Nektar
 
             if (out_dxi0.num_elements() > 0)
             {
-                // out_dxi1 = 4.0/((1-eta_1)(1-eta_2)) Out_dEta0
+                // out_dxi0 = 4.0/((1-eta_1)(1-eta_2)) Out_dEta0
                 Vmath::Smul(Qtot,2.0,out_dEta0,1,out_dxi0,1);
             }
 
@@ -199,7 +199,7 @@ namespace Nektar
                         }
                     }
 
-                    // calculate out_dxi1 =
+                    // calculate out_dxi2 =
                     // 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) Out_dEta0 +
                     // (1 + eta_1)/(1 -eta_2)*out_dEta1 + out_dEta2
                     Vmath::Vadd(Qtot,out_dEta0,1,out_dEta1,1,out_dxi2,1);
@@ -375,9 +375,6 @@ namespace Nektar
             Array<OneD, NekDouble > tmp  = wsp;
             Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1*(order1+1)/2;
 
-            //Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
-            //Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
-
             int i, j, mode, mode1, cnt;
 
             // Perform summation over '2' direction
@@ -547,7 +544,8 @@ namespace Nektar
          */
         void StdTetExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
@@ -555,17 +553,28 @@ namespace Nektar
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
             Array<OneD, NekDouble> wsp (nquad1*nquad2*order0 +
-                                        nquad2*order0*(order1+1)/2);
+                                        nquad2*order0*(2*order1-order0+1)/2);
 
-            MultiplyByQuadratureMetric(inarray, tmp);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
+                MultiplyByQuadratureMetric(inarray, tmp);
 
-            StdTetExp::IProductWRTBase_SumFacKernel(
-                    m_base[0]->GetBdata(),
-                    m_base[1]->GetBdata(),
-                    m_base[2]->GetBdata(),
-                    tmp, outarray, wsp, true, true, true);
+                StdTetExp::IProductWRTBase_SumFacKernel(
+                              m_base[0]->GetBdata(),
+                              m_base[1]->GetBdata(),
+                              m_base[2]->GetBdata(),
+                              tmp, outarray, wsp, true, true, true);
+            }
+            else
+            {
+                StdTetExp::IProductWRTBase_SumFacKernel(
+                               m_base[0]->GetBdata(),
+                               m_base[1]->GetBdata(),
+                               m_base[2]->GetBdata(),
+                               inarray, outarray, wsp, true, true, true);
+            }
         }
 
 
@@ -687,7 +696,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
+            StdMatrixKey     iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -714,7 +723,7 @@ namespace Nektar
             int    nmodes0 = m_base[0]->GetNumModes();
             int    nmodes1 = m_base[1]->GetNumModes();
             int    wspsize = nquad0 + nquad1 + nquad2 + max(nqtot,m_ncoeffs)
-                + nquad1*nquad2*nmodes0 + nquad2*nmodes0*(nmodes1+1)/2;
+                + nquad1*nquad2*nmodes0 + nquad2*nmodes0*(2*nmodes1-nmodes0+1)/2;
 
             Array<OneD, NekDouble> gfac0(wspsize);
             Array<OneD, NekDouble> gfac1(gfac0 + nquad0);
@@ -1680,6 +1689,13 @@ namespace Nektar
             int i,j,k;
             int idx = 0;
 
+            int nBnd = NumBndryCoeffs();
+
+            if (outarray.num_elements() != nBnd)
+            {
+                outarray = Array<OneD, unsigned int>(nBnd);
+            }
+
             for (i = 0; i < P; ++i)
             {
             	// First two Q-R planes are entirely boundary modes
@@ -1986,7 +2002,11 @@ namespace Nektar
                     {
                         if(i + j + k >= cutoff)
                         {
-                            orthocoeffs[cnt] *= ((1.0+SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                            orthocoeffs[cnt] *= ((SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
                         }
                         cnt++;
                     }

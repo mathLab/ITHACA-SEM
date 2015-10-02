@@ -114,7 +114,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     }
 
 
-    // Check for command line point specification if no .pts file specified
+    // Check for command line point specification if no .pts file
+    // specified
     if(m_f->m_fieldPts == LibUtilities::NullPtsField)
     {
         if(m_config["line"].as<string>().compare("NotSet") != 0)
@@ -314,6 +315,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsBox);
             m_f->m_fieldPts->SetPointsPerEdge(ppe);
+            vector<NekDouble> boxdim;
+            boxdim.assign(&values[3],&values[3]+6);
+            m_f->m_fieldPts->SetBoxSize(boxdim);
 
         }
     }

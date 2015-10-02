@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputTecplot.h
+//  File: OutputMTCProp.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -52,36 +52,21 @@ enum TecOutType
 };
 
 /// Converter from fld to dat.
-class OutputTecplot : public OutputModule
+class OutputMTCProp : public OutputModule
 {
     public:
         /// Creates an instance of this class
         static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
+            return MemoryManager<OutputMTCProp>::AllocateSharedPtr(f);
         }
         static ModuleKey m_className;
-        OutputTecplot(FieldSharedPtr f);
-        virtual ~OutputTecplot();
+        OutputMTCProp(FieldSharedPtr f);
+        virtual ~OutputMTCProp();
 
         /// Write fld to output file.
         virtual void Process(po::variables_map &vm);
 
     private:
-        bool m_doError;
-        TecOutType m_outputType;
-
-        void WriteTecplotHeader(std::ofstream &outfile,
-                                std::string var);
-
-        void WriteTecplotZone(std::ofstream &outfile);
-
-        int GetNumTecplotBlocks(void);
-
-        void WriteTecplotField(const int field,
-                               std::ofstream &outfile);
-
-        void WriteTecplotConnectivity(std::ofstream &outfile);
-        
 };
 
 }

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 //
 //  File: OutputTecplot.cpp
 //
@@ -55,6 +55,7 @@ ModuleKey OutputTecplot::m_className =
 
 OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
 {
+
     if(f->m_setUpEquiSpacedFields)
     {
         m_outputType = eFullBlockZoneEquiSpaced;
@@ -64,6 +65,7 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         m_requireEquiSpaced = true;
         m_outputType = eFullBlockZone;
     }
+
 }
 
 OutputTecplot::~OutputTecplot()
@@ -107,12 +109,11 @@ void OutputTecplot::Process(po::variables_map &vm)
         int i   = 0;
         int j   = 0;
         int dim = fPts->GetDim();
-
+        
         if(fPts->GetNpoints() == 0)
         {
             return;
         }
-
 
         // Write solution.
         ofstream outfile(filename.c_str());
@@ -123,7 +124,8 @@ void OutputTecplot::Process(po::variables_map &vm)
         vector<Array<OneD, int> > ptsConn;
         fPts->GetConnectivity(ptsConn);
 
-        // only dump header info for all proces if ptsType is for TriBlock or TetBlock 
+        // only dump header info for all proces if ptsType is for
+        // TriBlock or TetBlock
         if((pType > LibUtilities::ePtsBox)||(rank == 0))
         { 
             switch(dim)
@@ -141,7 +143,7 @@ void OutputTecplot::Process(po::variables_map &vm)
             
             for(i = 0; i < fPts->GetNFields(); ++i)
             {
-            outfile << "," << fPts->GetFieldName(i);
+                outfile << "," << fPts->GetFieldName(i);
             }
             outfile << endl;
         }

@@ -358,6 +358,18 @@ void PtsField::SetPtsType(const PtsType type)
     m_ptsType = type;
 }
 
+vector<NekDouble> PtsField::GetBoxSize() const
+{
+    return m_boxSize;
+}
+
+void PtsField::SetBoxSize(const vector< NekDouble> boxSize)
+{
+    m_boxSize = boxSize;
+}
+
+
+
 
 /**
  * @brief Compute interpolation weights for a 1D physical point using linear

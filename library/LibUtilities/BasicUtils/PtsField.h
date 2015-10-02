@@ -190,6 +190,9 @@ class PtsField
 
         LIB_UTILITIES_EXPORT void SetPtsType(const PtsType type);
 
+        LIB_UTILITIES_EXPORT vector<NekDouble> GetBoxSize() const;
+
+        LIB_UTILITIES_EXPORT void SetBoxSize(const vector<NekDouble> boxsize);
         template<typename FuncPointerT, typename ObjectPointerT>
         void setProgressCallback(FuncPointerT func,
                 ObjectPointerT obj)
@@ -222,6 +225,9 @@ class PtsField
         /// Indices of the relevant neighbours for each physical point.
         /// Structure: m_neighInds[ptIdx][neighbourIdx]
         Array<OneD, Array<OneD, unsigned int> > m_neighInds;
+
+        /// vector of box size xmin,xmax,ymin,ymax,zmin,zmax
+        vector<NekDouble> m_boxSize;
 
         boost::function<void (const int position, const int goal)> m_progressCallback;
 

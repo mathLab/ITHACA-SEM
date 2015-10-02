@@ -188,105 +188,217 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // Copy data from field file
-    for(j = 0; j < nfields; ++j)
-    {
-        for(int i = 0; i < fielddata.size(); ++i)
+
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+
+    std::vector<std::vector<NekDouble> > FieldData;
+	
+	if(!vSession->DefinesSolverInfo("HomoStrip"))
+	{
+	    for(j = 0; j < nfields; ++j)
+    	{
+        	for(int i = 0; i < fielddata.size(); ++i)
+        	{
+            	Exp[j]->ExtractDataToCoeffs(fielddef [i],
+                	                        fielddata[i],
+                    	                    fielddef [i]->m_fields[j],
+                        	                Exp[j]->UpdateCoeffs());
+        	}
+        	Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+    	}
+    	//----------------------------------------------
+
+    	//----------------------------------------------
+    	// Compute gradients of fields
+    	ASSERTL0(nfields >= 3, "Need two fields (u,v) to add reentricity");
+    	int nq = Exp[0]->GetNpoints();
+    	Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
+    	Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
+
+    	for(i = 0; i < nfields*nfields; ++i)
+    	{
+        	grad[i] = Array<OneD, NekDouble>(nq);
+    	}
+
+    	for(i = 0; i < addfields; ++i)
+    	{
+        	outfield[i] = Array<OneD, NekDouble>(nq);
+    	}
+
+	    // Calculate Gradient & Vorticity
+    	if(nfields == 3)
+    	{
+        	for(i = 0; i < nfields; ++i)
+        	{
+            	Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1]);
+        	}
+        	// W_z = Vx - Uy
+        	Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[0],1);
+    	}
+    	else
+    	{
+        	for(i = 0; i < nfields; ++i)
+        	{
+            	Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1],grad[i*nfields+2]);
+        	}
+
+        	// W_x = Wy - Vz
+        	Vmath::Vsub(nq,grad[2*nfields+1],1,grad[1*nfields+2],1,outfield[0],1);
+        	// W_y = Uz - Wx
+        	Vmath::Vsub(nq,grad[0*nfields+2],1,grad[2*nfields+0],1,outfield[1],1);
+        	// W_z = Vx - Uy
+        	Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[2],1);
+    	}
+
+    	for (i = 0; i < addfields; ++i)
+    	{
+        	Exp[nfields + i]->FwdTrans(outfield[i], Exp[nfields+i]->UpdateCoeffs());
+    	}
+
+    	//-----------------------------------------------
+    	// Write solution to file with additional computed fields
+    	string   out(argv[argc-1]);
+    	FieldDef
+        	= Exp[0]->GetFieldDefinitions();
+    	FieldData 
+			= std::vector<std::vector<NekDouble> >(FieldDef.size());
+
+    	vector<string > outname;
+
+    	if(addfields == 1)
+    	{
+        	outname.push_back("W_z");
+    	}
+    	else
+    	{
+        	outname.push_back("W_x");
+        	outname.push_back("W_y");
+        	outname.push_back("W_z");
+    	}
+
+    	for(j = 0; j < nfields + addfields; ++j)
+    	{
+        	for(i = 0; i < FieldDef.size(); ++i)
+        	{
+            	if (j >= nfields)
+            	{
+                	FieldDef[i]->m_fields.push_back(outname[j-nfields]);
+            	}
+            	else
+            	{
+                	FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
+            	}
+            	Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+        	}
+    	}
+    	LibUtilities::Write(out, FieldDef, FieldData);
+    	//-----------------------------------------------
+	}
+	else
+	{
+        //-----------------------------------------------
+        // Write solution to file with additional computed fields
+        string   out(argv[argc-1]);
+        FieldDef
+            = fielddef;
+        FieldData
+			= std::vector<std::vector<NekDouble> >(fielddef.size());
+
+        int nstrips;
+        vSession->LoadParameter("Strip_Z", nstrips);
+
+    	// Copy data from field file
+        for(int n = 0; n < nstrips; n++)
         {
-            Exp[j]->ExtractDataToCoeffs(fielddef [i],
-                                        fielddata[i],
-                                        fielddef [i]->m_fields[j],
-                                        Exp[j]->UpdateCoeffs());
-        }
-        Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
-    }
-    //----------------------------------------------
+    		for(j = 0; j < nfields; ++j)
+    		{
+        		for(int i = 0; i < fielddata.size()/nstrips; ++i)
+        		{
+            		Exp[j]->ExtractDataToCoeffs(fielddef [i*nstrips+n],
+                    	                    fielddata[i*nstrips+n],
+                        	                fielddef [i*nstrips+n]->m_fields[j],
+                            	            Exp[j]->UpdateCoeffs());
+        		}	
+        		Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+    		}
+    		//----------------------------------------------
 
-    //----------------------------------------------
-    // Compute gradients of fields
-    ASSERTL0(nfields >= 3, "Need two fields (u,v) to add reentricity");
-    int nq = Exp[0]->GetNpoints();
-    Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
-    Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
+    		//----------------------------------------------
+    		// Compute gradients of fields
+    		ASSERTL0(nfields >= 3, "Need two fields (u,v) to add reentricity");
+    		int nq = Exp[0]->GetNpoints();
+    		Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
+    		Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
 
-    for(i = 0; i < nfields*nfields; ++i)
-    {
-        grad[i] = Array<OneD, NekDouble>(nq);
-    }
+    		for(i = 0; i < nfields*nfields; ++i)
+    		{
+        		grad[i] = Array<OneD, NekDouble>(nq);
+    		}
 
-    for(i = 0; i < addfields; ++i)
-    {
-        outfield[i] = Array<OneD, NekDouble>(nq);
-    }
+    		for(i = 0; i < addfields; ++i)
+    		{
+        		outfield[i] = Array<OneD, NekDouble>(nq);
+    		}
 
-    // Calculate Gradient & Vorticity
-    if(nfields == 3)
-    {
-        for(i = 0; i < nfields; ++i)
-        {
-            Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1]);
-        }
-        // W_z = Vx - Uy
-        Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[0],1);
-    }
-    else
-    {
-        for(i = 0; i < nfields; ++i)
-        {
-            Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1],grad[i*nfields+2]);
-        }
+    		// Calculate Gradient & Vorticity
+    		if(nfields == 3)
+    		{
+        		for(i = 0; i < nfields; ++i)
+        		{
+            		Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1]);
+        		}
+        		// W_z = Vx - Uy
+        		Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[0],1);
+    		}
+    		else
+    		{
+        		for(i = 0; i < nfields; ++i)
+        		{
+            		Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1],grad[i*nfields+2]);
+        		}
 
-        // W_x = Wy - Vz
-        Vmath::Vsub(nq,grad[2*nfields+1],1,grad[1*nfields+2],1,outfield[0],1);
-        // W_y = Uz - Wx
-        Vmath::Vsub(nq,grad[0*nfields+2],1,grad[2*nfields+0],1,outfield[1],1);
-        // W_z = Vx - Uy
-        Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[2],1);
-    }
+        		// W_x = Wy - Vz
+        		Vmath::Vsub(nq,grad[2*nfields+1],1,grad[1*nfields+2],1,outfield[0],1);
+        		// W_y = Uz - Wx
+        		Vmath::Vsub(nq,grad[0*nfields+2],1,grad[2*nfields+0],1,outfield[1],1);
+        		// W_z = Vx - Uy
+        		Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[2],1);
+    		}
 
-    for (i = 0; i < addfields; ++i)
-    {
-        Exp[nfields + i]->FwdTrans(outfield[i], Exp[nfields+i]->UpdateCoeffs());
-    }
+    		for (i = 0; i < addfields; ++i)
+    		{
+        		Exp[nfields + i]->FwdTrans(outfield[i], Exp[nfields+i]->UpdateCoeffs());
+    		}
 
-    //-----------------------------------------------
-    // Write solution to file with additional computed fields
-    string   out(argv[argc-1]);
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = Exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+    		vector<string > outname;
 
-    vector<string > outname;
+    		if(addfields == 1)
+    		{
+        		outname.push_back("W_z");
+    		}
+    		else
+    		{
+        		outname.push_back("W_x");
+        		outname.push_back("W_y");
+        		outname.push_back("W_z");
+    		}
 
-    if(addfields == 1)
-    {
-        outname.push_back("W_z");
-    }
-    else
-    {
-        outname.push_back("W_x");
-        outname.push_back("W_y");
-        outname.push_back("W_z");
-    }
-
-    for(j = 0; j < nfields + addfields; ++j)
-    {
-        for(i = 0; i < FieldDef.size(); ++i)
-        {
-            if (j >= nfields)
-            {
-                FieldDef[i]->m_fields.push_back(outname[j-nfields]);
-            }
-            else
-            {
-                FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
-            }
-            Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-    LibUtilities::Write(out, FieldDef, FieldData);
-    //-----------------------------------------------
-
+    		for(j = 0; j < nfields + addfields; ++j)
+    		{
+        		for(i = 0; i < fielddef.size()/nstrips; ++i)
+        		{
+            		if (j >= nfields)
+            		{
+                		FieldDef[i*nstrips+n]->m_fields.push_back(outname[j-nfields]);
+            		}
+            		Exp[j]->AppendFieldData(FieldDef[i*nstrips+n], FieldData[i*nstrips+n]);
+        		}
+    		}
+		}	
+    	LibUtilities::Write(out, FieldDef, FieldData);
+    	//-----------------------------------------------
+		
+	}
     return 0;
 }
 

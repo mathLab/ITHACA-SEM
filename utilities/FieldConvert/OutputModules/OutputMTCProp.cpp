@@ -104,15 +104,14 @@ void OutputMTCProp::Process(po::variables_map &vm)
         return;
     }
     // Write solution.
-    //ofstream outfile(filename.c_str());
-    ofstream outfile(filename.c_str(), ios::out | ios::binary);
-    
+    ofstream outfile(filename.c_str());
+        
     // points type
     LibUtilities::PtsType pType = fPts->GetPtsType();
     
     ASSERTL0(pType == LibUtilities::ePtsBox,"MTC Propriety format only suitable for box version of interppoints");
 
-
+#if 1
     // write header information 
     if(rank == 0)
     {
@@ -141,9 +140,9 @@ void OutputMTCProp::Process(po::variables_map &vm)
         outfile.write((char*)& y0,  sizeof(float));
         outfile.write((char*)& z0,  sizeof(float));
 
-        dx = boxsize[1] - boxsize[0];
-        dy = boxsize[3] - boxsize[2];
-        dz = boxsize[5] - boxsize[4];
+        dx = (boxsize[1] - boxsize[0])/(double)ni;
+        dy = (boxsize[3] - boxsize[2])/(double)nj;
+        dz = (boxsize[5] - boxsize[4])/(double)nk;
 
         outfile.write((char*)& dx,  sizeof(float));
         outfile.write((char*)& dy,  sizeof(float));
@@ -155,25 +154,85 @@ void OutputMTCProp::Process(po::variables_map &vm)
         {
             outfile.write((char*)& one,  sizeof(int));
         }
-    }    
-            
-    for(i = 0; i < fPts->GetNFields(); ++i)
-    {
-        string var = fPts->GetFieldName(i);
-        var.resize(80);
-        outfile.write((char*)&var[0],80*sizeof(char));
-    }
 
+        for(i = 0; i < fPts->GetNFields(); ++i)
+        {
+            string var = fPts->GetFieldName(i);
+            var.resize(80);
+            outfile.write((char*)&var[0],80*sizeof(char));
+        }
+    }    
     
     for(i = 0; i < fPts->GetNpoints(); ++i)
     {
-        
         for(j = 0; j < fPts->GetNFields(); ++j)
         {
             float data = m_f->m_data[j][i];
             outfile.write((char *) &data,sizeof(float));
         }
     }
+#else //ascii output for debugging. 
+    // write header information 
+    if(rank == 0)
+    {
+        int nvar = fPts->GetNFields();
+        int ni = fPts->GetPointsPerEdge(0);
+        int nj = fPts->GetPointsPerEdge(1);
+        int nk = fPts->GetPointsPerEdge(0);
+        
+        outfile << nvar << " "; 
+        outfile << ni  << " "; 
+        outfile << nj  << " "; 
+        outfile << nk  << " "; 
+
+        float x0,y0,z0,dx,dy,dz;
+
+        vector<NekDouble> boxsize = fPts->GetBoxSize();
+        
+        ASSERTL0(boxsize.size() == 6,"Insufficient points specified in box size");
+        
+        x0 = boxsize[0];
+        y0 = boxsize[2];
+        z0 = boxsize[4];
+        
+        outfile << x0 << " ";
+        outfile << y0 << " ";
+        outfile << z0 << " ";
+
+        dx = (boxsize[1] - boxsize[0])/(double)ni;
+        dy = (boxsize[3] - boxsize[2])/(double)nj;
+        dz = (boxsize[5] - boxsize[4])/(double)nk;
+
+        outfile << dx << " ";
+        outfile << dy << " ";
+        outfile << dz << " ";
+
+        // write out number of components of each variable
+        int one = 1;
+        for(int i = 0; i < nvar; ++i)
+        {
+            outfile << one << " "; 
+        }
+            
+        for(i = 0; i < fPts->GetNFields(); ++i)
+        {
+            string var("0",80);
+            var = fPts->GetFieldName(i);
+            //var.resize(80);
+            outfile << var << " "; 
+        }
+    }
+
+    
+    for(i = 0; i < fPts->GetNpoints(); ++i)
+    {
+        for(j = 0; j < fPts->GetNFields(); ++j)
+        {
+            float data = m_f->m_data[j][i];
+            outfile << data << " "; 
+        }
+    }
+#endif
 
     cout << "Written file: " << filename << endl;
 }

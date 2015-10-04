@@ -90,13 +90,11 @@ protected:
     Array<OneD,NekDouble>                           m_tmpOUT;
     bool                                            m_useFFTW;
     /// flag to determine if use single mode or not
-    bool                                            m_SingleMode;
+    bool                                            m_singleMode;
     /// flag to determine if use half mode or not
-    bool                                            m_HalfMode;
+    bool                                            m_halfMode;
     /// flag to determine if use multiple mode or not
-    bool                                            m_MultipleModes;
-    bool                                            m_homogen_dealiasing;
-    MultiRegions::CoeffState                        m_CoeffState;
+    bool                                            m_multipleModes;
 
     DNekBlkMatSharedPtr GetFloquetBlockMatrix(
             FloquetMatType mattype,

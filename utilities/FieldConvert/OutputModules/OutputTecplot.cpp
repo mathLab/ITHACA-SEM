@@ -418,7 +418,14 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
 
     if(HomoExpType == MultiRegions::e3DH1D)
     {
-        coordim +=1;
+        if(m_f->m_session->DefinesSolverInfo("ModeType")&&
+           boost::iequals(m_f->m_session->GetSolverInfo("ModeType"),"HalfMode"))
+        { // turn off for half mode case
+        }
+        else
+        {
+            coordim +=1;
+        }
     }
     else if (HomoExpType == MultiRegions::e3DH2D)
     {
@@ -493,11 +500,18 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 
             if (HomoExpType == MultiRegions::e3DH1D)
             {
-                nBases  += 1;
-                coordim += 1;
                 int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
-                NekDouble tmp = numBlocks * (nPlanes-1);
-                numBlocks = (int)tmp;
+                if(nPlanes == 1) // halfMode case
+                {
+                    // do nothing
+                }
+                else
+                {
+                    nBases  += 1;
+                    coordim += 1;
+                    NekDouble tmp = numBlocks * (nPlanes-1);
+                    numBlocks = (int)tmp;
+                }
             }
             else if (HomoExpType == MultiRegions::e3DH2D)
             {
@@ -668,36 +682,42 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
             {
                 nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
-                totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
-                
-                
-                for(int n = 1; n < nPlanes; ++n)
-                {
-                    for(j = 1; j < np1; ++j)
-                    {
-                        for(k = 1; k < np0; ++k)
-                        {
-                            outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k
-                                    << " ";
-                            outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + (n-1)*totPoints + j*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + (n-1)*totPoints + j*np0 + k
-                                    << " ";
 
-                            outfile << cnt + n*totPoints + (j-1)*np0 + k
+                if(nPlanes > 1) // default to 2D case for HalfMode when nPlanes = 1
+                {
+                    totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+
+
+                    for(int n = 1; n < nPlanes; ++n)
+                    {
+                        for(j = 1; j < np1; ++j)
+                        {
+                            for(k = 1; k < np0; ++k)
+                            {
+                                outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k
+                                        << " ";
+                                outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + (n-1)*totPoints + j*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + (n-1)*totPoints + j*np0 + k
                                     << " ";
-                            outfile << cnt + n*totPoints + (j-1)*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + n*totPoints + j*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + n*totPoints + j*np0 + k    << endl;
+                                
+                                outfile << cnt + n*totPoints + (j-1)*np0 + k
+                                        << " ";
+                                outfile << cnt + n*totPoints + (j-1)*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + n*totPoints + j*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + n*totPoints + j*np0 + k    << endl;
+                            }
                         }
                     }
+                    cnt += np0*np1;
                 }
             }
-            else
+
+            if(nPlanes == 1)
             {
                 for(j = 1; j < np1; ++j)
                 {

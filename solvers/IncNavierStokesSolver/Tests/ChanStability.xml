@@ -311,7 +311,7 @@
         <FUNCTION NAME="BaseFlow">
             <F VAR="u,v,p" FILE="ChanStability.bse" />
         </FUNCTION>
-
+j
         <FUNCTION NAME="Forcing">
             <E VAR="u" VALUE="0" />
             <E VAR="v" VALUE="0" />

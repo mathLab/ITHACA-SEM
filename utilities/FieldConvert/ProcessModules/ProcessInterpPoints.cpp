@@ -96,6 +96,11 @@ ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
                          "using a box of points limited by box="
                          "N1,N2,N3,xmin,xmax,ymin,ymax,zmin,zmax");
 
+    m_config["cp"] = 
+            ConfigOption(false,"NotSet",
+                         "Parameters p0 and q to determine pressure coefficient "
+                         "(box only currently)");
+
 }
 
 ProcessInterpPoints::~ProcessInterpPoints()
@@ -224,8 +229,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             vector<NekDouble> values;
             ASSERTL0(ParseUtils::GenerateUnOrderedVector(
                              m_config["box"].as<string>().c_str(),values),
-                     "Failed to interpret plane string");
-
+                     "Failed to interpret box string");
+            
             ASSERTL0(values.size() == 9,
                      "box string should contain 9 values "
                      "N1,N2,N3,xmin,xmax,ymin,ymax,zmin,zmax");
@@ -458,11 +463,53 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     int elmtid, offset;
     int r, f;
     int intpts = 0;
+    int nfields = field0.size();
+    int pfield = -1;
+    NekDouble p0,qinv;
 
+    if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
+    {
+
+        vector<NekDouble> values;
+        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                      m_config["cp"].as<string>().c_str(),values),
+                 "Failed to interpret cp string");
+
+        ASSERTL0(values.size() == 2,
+                 "cp string should contain 2 values "
+                 "p0 and q (=1/2 rho u^2)");
+
+        p0  =  values[0];
+        qinv = 1.0/values[1];
+        
+        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
+
+        for(int i = 0; i < fPts->GetNFields(); ++i)
+        {
+            if(boost::iequals(fPts->GetFieldName(i),"p"))
+            {
+                pfield = i;
+                break;
+            }
+        }
+        
+        if(pfield != -1)
+        {
+            Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+            m_f->m_fieldPts->AddField(newPts, "Cp");
+            nfields += 1;
+        }
+        else
+        {
+            WARNINGL0(false,"Failed to find 'p' field to determine cp0");
+        }
+
+    }
+    
     // resize data field
-    m_f->m_data.resize(field0.size());
+    m_f->m_data.resize(nfields);
 
-    for (f = 0; f < field0.size(); ++f)
+    for (f = 0; f < nfields; ++f)
     {
         m_f->m_data[f].resize(nq1);
     }
@@ -517,6 +564,11 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             cout <<"." << flush;
         }
         intpts ++;
+
+        if(pfield != -1) // calculate cp0
+        {
+            m_f->m_data[nfields-1][r] = qinv*(m_f->m_data[pfield][r] - p0);
+        }
     }
 }
 

@@ -98,7 +98,7 @@ ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
 
     m_config["cp"] = 
             ConfigOption(false,"NotSet",
-                         "Parameters p0 and q to determine pressure coefficient "
+                         "Parameters p0 and q to determine pressure coefficients "
                          "(box only currently)");
 
 }
@@ -466,6 +466,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     int nfields = field0.size();
     int pfield = -1;
     NekDouble p0,qinv;
+    vector<int> velid;
 
     if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
     {
@@ -489,7 +490,13 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             if(boost::iequals(fPts->GetFieldName(i),"p"))
             {
                 pfield = i;
-                break;
+            }
+
+            if(boost::iequals(fPts->GetFieldName(i),"u")||
+               boost::iequals(fPts->GetFieldName(i),"v")||
+               boost::iequals(fPts->GetFieldName(i),"w"))
+            {
+                velid.push_back(i);
             }
         }
         
@@ -498,6 +505,17 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
             m_f->m_fieldPts->AddField(newPts, "Cp");
             nfields += 1;
+
+            if(velid.size())
+            {
+                Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+                m_f->m_fieldPts->AddField(newPts, "Cp0");
+                nfields += 1;
+            }
+            else
+            {
+                WARNINGL0(false,"Did not fine velocity components for Cp0");
+            }
         }
         else
         {
@@ -565,10 +583,22 @@ void ProcessInterpPoints::InterpolateFieldToPts(
         }
         intpts ++;
 
-        if(pfield != -1) // calculate cp0
+        if(pfield != -1) // calculate cp
         {
-            m_f->m_data[nfields-1][r] = qinv*(m_f->m_data[pfield][r] - p0);
+            m_f->m_data[nfields-2][r] = qinv*(m_f->m_data[pfield][r] - p0);
+
+            if(velid.size()) // calculate cp
+            {
+                NekDouble q = 0; 
+                for(int i = 0; i < velid.size(); ++i)
+                {
+                    q += 0.5*m_f->m_data[velid[i]][r]*m_f->m_data[velid[i]][r];
+                }
+                
+                m_f->m_data[nfields-1][r] = qinv*(m_f->m_data[pfield][r]+q - p0);
+            }
         }
+
     }
 }
 

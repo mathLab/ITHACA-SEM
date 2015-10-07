@@ -435,13 +435,10 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    // check field exsits since could be outo of domain in parallel case 
-    if(fromField->m_exp.size()) 
-    {
-        InterpolateFieldToPts(fromField->m_exp, pts,
+    // check expansions exits since could be outo of domain in parallel case 
+    InterpolateFieldToPts(fromField->m_exp, pts,
                           clamp_low, clamp_up, def_value);
-    }
-
+    
     if(rank == 0)
     {
         cout << "]" << endl;
@@ -456,9 +453,9 @@ void ProcessInterpPoints::InterpolateFieldToPts(
                          NekDouble                              clamp_up,
                          NekDouble                              def_value)
 {
-    int expdim = field0[0]->GetCoordim(0);
+    int dim = pts.num_elements();
 
-    Array<OneD, NekDouble> coords(expdim), Lcoords(expdim);
+    Array<OneD, NekDouble> coords(dim), Lcoords(dim);
     int nq1 = pts[0].num_elements();
     int elmtid, offset;
     int r, f;
@@ -536,7 +533,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     {
         coords[0] = pts[0][r];
         coords[1] = pts[1][r];
-        if (expdim == 3)
+        if (dim == 3)
         {
             coords[2] = pts[2][r];
         }

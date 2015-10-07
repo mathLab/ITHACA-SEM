@@ -435,7 +435,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    // check expansions exits since could be outo of domain in parallel case 
     InterpolateFieldToPts(fromField->m_exp, pts,
                           clamp_low, clamp_up, def_value);
     

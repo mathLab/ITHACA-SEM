@@ -120,7 +120,7 @@ void OutputMTCProp::Process(po::variables_map &vm)
             int nvar = fPts->GetNFields();
             int ni = fPts->GetPointsPerEdge(0);
             int nj = fPts->GetPointsPerEdge(1);
-            int nk = fPts->GetPointsPerEdge(0);
+            int nk = fPts->GetPointsPerEdge(2);
             
             outfile << nvar << " "; 
             outfile << ni  << " "; 
@@ -182,7 +182,7 @@ void OutputMTCProp::Process(po::variables_map &vm)
             int nvar = fPts->GetNFields();
             int ni = fPts->GetPointsPerEdge(0);
             int nj = fPts->GetPointsPerEdge(1);
-            int nk = fPts->GetPointsPerEdge(0);
+            int nk = fPts->GetPointsPerEdge(2);
             
             
             outfile.write((char*)& nvar,sizeof(int));

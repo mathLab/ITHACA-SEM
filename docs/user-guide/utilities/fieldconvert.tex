@@ -1,4 +1,4 @@
-\section{FieldConvert}
+\chapter{FieldConvert}
 \label{s:utilities:fieldconvert}
 FieldConvert is a utility embedded in \nekpp with the primary 
 aim of allowing the user to convert the \nekpp output binary files 
@@ -15,11 +15,11 @@ files will be performed.
 Almost all of the FieldConvert functionalities can be run in parallel if \nekpp 
 is compiled using MPI (see the installation documentation for additional 
 info on how to implement \nekpp using MPI). \footnote{the modules which 
-does not have parallel support will be specified the related subsection}
+does not have parallel support will be specified in the related section}
 %
 %
 %
-\subsection{Convert .fld / .chk files into Paraview or Tecplot format}
+\section{Convert .fld / .chk files into Paraview or Tecplot format}
 \label{s:utilities:fieldconvert:sub:convert}
 To convert the \nekpp output binary files (.chk and .fld) into a format 
 which can be read by two common visualisation softwares: Paraview 
@@ -53,7 +53,7 @@ in its compressed format \inltt{test.xml.gz}.
 %
 %
 %
-\subsection{Range option \textit{-r}}
+\section{Range option \textit{-r}}
 The Fieldconvert range option \inltt{-r} allows the user to specify 
 a sub-range of the mesh (computational domain) by using an 
 additional flag, \inltt{-r} (which stands for \inltt{r}ange and either 
@@ -86,16 +86,16 @@ to define the $z$ range.
 %
 %
 %
-\subsection{FieldConvert modules \textit{-m}}
+\section{FieldConvert modules \textit{-m}}
 FieldConvert allows the user to manipulate the \nekpp output 
 binary files (.chk and .fld) by using the flag \inltt{-m} (which 
 stands for \inltt{m}odule).. 
 Specifically, FieldConvert has these additional functionalities
 %
 \begin{enumerate}
-\item \inltt{AddFld}: Sum two .fld files;
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{addFld}: Sum two .fld files;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
@@ -103,8 +103,14 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing; 
-\item \inltt{scaleinputfld}: Rescale input field by a constant factor.
+\item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
+\item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
+\item \inltt{scalargrad}: Computes scalar gradient field;
+\item \inltt{scaleinputfld}: Rescale input field by a constant factor;
+\item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
+\item \inltt{surfdistance}: Computes height of a prismatic boundary layer mesh and projects onto the surface (for e.g. $y^+$ calculation).
 \item \inltt{vorticity}: Computes the vorticity field.
+\item \inltt{wss}: Computes wall shear stress field.
 \end{enumerate}
 The module list above can be seen by running the command
 %
@@ -117,8 +123,35 @@ In the following we will detail the usage of each module.
 %
 %
 
-\subsubsection{Sum two .fld files: \textit{AddFld} module}
-To sum two .fld files one can use the \inltt{AddFld} module of FieldConvert
+\subsection{Smooth the data: \textit{C0Projection} module}
+To smooth the data of a given .fld file one can 
+use the \inltt{C0Projection} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m C0Projection test.xml test.fld test-C0Proj.fld
+\end{lstlisting}
+%
+where the file \inltt{test-C0Proj.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+
+\subsection{Calculate Q-Criterion: \textit{QCriterion} module}
+To perform the Q-criterion calculation and obtain an output 
+data containing the Q-criterion solution, the user can run
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
+\end{lstlisting}
+%
+where the file \inltt{test-QCrit.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+
+\subsection{Sum two .fld files: \textit{addFld} module}
+To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
 %
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
@@ -136,33 +169,7 @@ it either in Tecplot or in Paraview the result.
 %
 %
 %
-\subsubsection{Smooth the data: \textit{C0Projection} module}
-To smooth the data of a given .fld file one can 
-use the \inltt{C0Projection} module of FieldConvert
-%
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m C0Projection test.xml test.fld test-C0Proj.fld
-\end{lstlisting}
-%
-where the file \inltt{test-C0Proj.fld} can be processed in a similar 
-way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
-
-\subsubsection{Calculate Q-Criterion: \textit{QCriterion} module}
-To perform the Q-criterion calculation and obtain an output 
-data containing the Q-criterion solution, the user can run
-%
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
-\end{lstlisting}
-%
-where the file \inltt{test-QCrit.fld} can be processed in a similar 
-way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
-%
-%
-%
-\subsubsection{Concatenate two files: \textit{concatenate} module}
+\subsection{Concatenate two files: \textit{concatenate} module}
 To concatenate \inltt{file1.fld} and \inltt{file2.fld} into \inltt{file-conc.fld}
 one can run the following command
 %
@@ -176,7 +183,7 @@ to visualise either in Tecplot or in Paraview the result.
 %
 %
 %
-\subsubsection{Equi-spaced output of data: \textit{equispacedoutput} module}
+\subsection{Equi-spaced output of data: \textit{equispacedoutput} module}
 This module interpolates the output data to an truly equispaced set of
 points (not equispaced along the collapsed coordinate
 system). Therefore a tetrahedron is represented by a tetrahedral
@@ -194,7 +201,7 @@ tetrahedrons and prisms. It also only is currently used in tecplot
 output.
 \end{notebox}
 
-\subsubsection{Extract a boundary region: \textit{extract} module}
+\subsection{Extract a boundary region: \textit{extract} module}
 The boundary region of a domain can be extracted from the output 
 data using the following command line
 %
@@ -233,7 +240,21 @@ a Paraview output.
 %
 %
 %
-\subsubsection{Interpolate one field to another: \textit{interpfield} module}
+\subsection{Compute the gradient of a field: \textit{gradient} module}
+To compute the spatial gradients of all fields one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m gradient test.xml  test.fld  test-grad.fld
+\end{lstlisting}
+%
+where the file \inltt{file-grad.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+%
+\subsection{Interpolate one field to another: \textit{interpfield} module}
 To interpolate one field to another, one can use the following command:
 %
 \begin{lstlisting}[style=BashInputStyle]
@@ -258,7 +279,7 @@ faster.
 %
 %
 %
-\subsubsection{Interpolate scattered point data to a field: \textit{interppointdatatofld} module}
+\subsection{Interpolate scattered point data to a field: \textit{interppointdatatofld} module}
 \label{s:utilities:fieldconvert:sub:interppointdatatofld}
 To interpolate discrete point data to a field, use the interppointdatatofld module:
 %
@@ -309,14 +330,14 @@ The Inverse Distance implementation has no such requirement.
 %
 %
 %
-\subsubsection{Interpolate a field to a series of points: \textit{interppoints} module}
+\subsection{Interpolate a field to a series of points: \textit{interppoints} module}
 You can interpolate one field to a series of given points using the following command:
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m interppoints:fromxml=from.xml:fromfld=file1.fld \
+FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld \
         file2.pts file2.dat
 \end{lstlisting}
 This command will interpolate the field defined by \inltt{file1.xml} and
-\inltt{file1.fld} to the points defined in \inltt{file2.xml} and output it to
+\inltt{file1.fld} to the points defined in \inltt{file2.pts} and output it to
 \inltt{file2.dat}.
 The \inltt{fromxml} and \inltt{fromfld} must be specified in this module.
 The format of the file \inltt{file2.pts} is of the same form as for the
@@ -361,7 +382,7 @@ This module does not run in parallel.
 %
 %
 %
-\subsubsection{Isoncontour extraction: \textit{iscontour} module}
+\subsection{Isoncontour extraction: \textit{iscontour} module}
 
 Extract an isocontour from a field file. This option automatically
 take the field to an equispaced distribution of points connected by
@@ -392,16 +413,64 @@ automatically calls a \inltt{globalcondense} option which remove
 multiply defined verties from the simplex definition which arise as
 isocontour are generated element by element. 
 
+In addition to the \inltt{smooth} or \inltt{globalcondense} options
+you can specify \inltt{removesmallcontour}=100 which will remove
+separate isocontours of less than 100 triangles. This optin requires
+\inltt{smooth} or \inltt{globalcondense} to be specified.
+
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,
  tetrahedrons and prisms. 
 \end{notebox}
+%
+%
+%
+%
 
-
-\subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
+\subsection{Show high frequency energy of the Jacobian: \textit{jacobianenergy} module}
 
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld
+FieldConvert -m jacobianenergy file.xml file.fld jacenergy.fld
+\end{lstlisting}
+
+The option \inltt{topmodes} can be used to specify the number of top modes to
+keep.
+
+The output file \inltt{jacenergy.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+
+\subsection{Print L2 and LInf norms: \textit{printfldnorms} module}
+
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m printfldnorms test.xml test.fld 
+\end{lstlisting}
+
+This module does not create an output file. The L2 and LInf norms for each field variable is printed to the stdout. 
+
+%
+%
+%
+
+\subsection{Computes the scalar gradient: \textit{scalargrad} module}
+The scalar gradient of a field is computed by running:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m scalargrad:bnd=0 test.xml test.fld test-scalgrad.fld
+\end{lstlisting}
+The option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. To process this file you will need an xml file of the same region. 
+
+%
+%
+%
+
+\subsection{Scale a given .fld: \textit{scaleinputfld} module}
+To scale a .fld file by a given scalar quantity, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m scaleinputfld:scale=value test.xml test.fld test-scal.fld
 \end{lstlisting}
 The argument \inltt{scale=value} rescales of a factor \inltt{value} 
 \inltt{test.fld} by the factor value.
@@ -412,7 +481,53 @@ to visualise it either in Tecplot or in Paraview the result.
 %
 %
 %
-\subsubsection{Calculate vorticity: \textit{vorticity} module}
+\subsection{Time-averaged shear stress metrics: \textit{shear} module}
+Time-dependent wall shear stress derived metrics relevant to cardiovascular fluid dynamics research can be computed using this module. They are
+
+\begin{itemize}
+\item TAWSS: time-averaged wall shear stress;
+\item OSI: oscillatory shear index;
+\item transWSS: transverse wall shear stress;
+\item TACFI: time-averaged cross-flow index;
+\item TAAFI: time-averaged aneurysm formation index;
+\item |WSSG|: wall shear stress gradient.
+\end{itemize}
+
+To compute these, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m shear:N=value:fromfld=test_id_b0.fld test.xml test-multishear.fld
+\end{lstlisting}
+The argument \inltt{N} and \inltt{fromfld} are compulsory arguments that respectively define the number of \inltt{fld} files corresponding to the number of discrete equispaced time-steps, and the first \inltt{fld} file which should have the form of \inltt{test\_id\_b0.fld} where the first underscore in the name marks the starting time-step file ID. 
+
+The input \inltt{.fld} files are the outputs of the \textit{wss} module. If they do not contain the surface normals (an optional output of the \textit{wss} modle), then the \textit{shear} module will not compute the last metric, |WSSG|. 
+
+
+%
+%
+%
+\subsection{Boundary layer height calculation: \textit{surfdistance} module}
+
+The surface distance module computes the height of a prismatic boundary layer
+and projects this value onto the surface of the boundary, in a similar fashion
+to the \inltt{extract} module. In conjunction with a mesh of the surface, which
+can be obtained with \inltt{MeshConvert}, and a value of the average wall shear
+stress, one potential application of this module is to determine the
+distribution of $y^+$ grid spacings for turbulence calculations.
+
+To compute the height of the prismatic layer connected to boundary region 3, the
+user can issue the command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m surfdistance:bnd=3 input.xml output.fld
+\end{lstlisting}
+Note that no \inltt{.fld} file is required, since the mesh is the only input
+required in order to calculate the element height. This produces a file
+\inltt{output\_b3.fld}, which can be visualised with the appropriate surface
+mesh from \inltt{MeshConvert}.
+
+%
+%
+%
+\subsection{Calculate vorticity: \textit{vorticity} module}
 To perform the vorticity calculation and obtain an output 
 data containing the vorticity solution, the user can run
 \begin{lstlisting}[style=BashInputStyle]
@@ -423,7 +538,18 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}.
 %
 %
 %
-\subsubsection{Manipulating meshes with FieldConvert}
+
+\subsection{Computing the wall shear stress: \textit{wss} module}
+To obtain the wall shear stres vector and magnitude, the user can run:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m wss:bnd=0:addnormals=1 test.xml test.fld test-wss.fld
+\end{lstlisting}
+The option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If \inltt{bnd} is not provided, all boundaries are extracted to different fields. The \inltt{addnormals} is an optional command argument which, when turned on, outputs the normal vector of the extracted boundary region as well as the shear stress vector and magnitude. This option is off by default. To process the output file(s) you will need an xml file of the same region. 
+%
+%
+%
+
+\subsection{Manipulating meshes with FieldConvert}
 FieldConvert has support for two modules that can be used in conjunction with
 the linear elastic solver, as shown in chapter~\ref{s:elasticity}. To do this,
 FieldConvert has an XML output module, in addition to the Tecplot and VTK
@@ -466,7 +592,7 @@ LinearElasticSolver mesh-linear.xml conditions.xml
 FieldConvert-g -m deform mesh-linear.xml mesh-linear.fld mesh-deformed.xml
 \end{lstlisting}
 
-\subsection{FieldConvert in parallel}
+\section{FieldConvert in parallel}
 To run FieldConvert in parallel the user needs to compile 
 \nekpp with MPI support and can employ the following 
 command
@@ -483,7 +609,7 @@ within the directory.
 %
 %
 %
-\subsection{Processing large files}
+\section{Processing large files}
 When processing large files it is not always convenient to run in parallel 
 but process each parallel partition in serial, for example when interpolating 
 one field to another. To do this we can use the \inltt{--nprocs} and 

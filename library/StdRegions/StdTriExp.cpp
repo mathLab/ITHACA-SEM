@@ -1375,7 +1375,11 @@ namespace Nektar
                 {
                     if(j + k >= cutoff)
                     {
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
+                        orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
+                    }
+                    else
+                    {
+                        orthocoeffs[cnt] *= 0.0;
                     }
                     cnt++;
                 }

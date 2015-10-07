@@ -81,8 +81,9 @@ namespace Nektar
         EquationSystemFactory& GetEquationSystemFactory()
         {
             typedef Loki::SingletonHolder<EquationSystemFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                                          Loki::CreateUsingNew,
+                                          Loki::NoDestroy,
+                                          Loki::ClassLevelLockable> Type;
             return Type::Instance();
         }
 
@@ -98,6 +99,16 @@ namespace Nektar
               m_lambda (0),
               m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
+            // set up session names in fieldMetaDataMap
+            const vector<std::string> filenames = m_session->GetFilenames();
+            
+            for(int i = 0; i < filenames.size(); ++i)
+            {
+                string sessionname = "SessionName";
+                sessionname += boost::lexical_cast<std::string>(i);
+                m_fieldMetaDataMap[sessionname] = filenames[i];
+            }
+            
         }
         
         /**
@@ -122,15 +133,15 @@ namespace Nektar
 
             // Set space dimension for use in class
             m_spacedim = m_graph->GetSpaceDimension();
-        
+ 
             // Setting parameteres for homogenous problems
-            m_HomoDirec			= 0;
-            m_useFFT			= false;
-            m_homogen_dealiasing	= false;
-            m_SingleMode		= false;
-            m_HalfMode			= false;
-            m_MultipleModes		= false;
-            m_HomogeneousType           = eNotHomogeneous;
+            m_HomoDirec             = 0;
+            m_useFFT                = false;
+            m_homogen_dealiasing    = false;
+            m_singleMode            = false;
+            m_halfMode              = false;
+            m_multipleModes         = false;
+            m_HomogeneousType       = eNotHomogeneous;
 
             if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
             {
@@ -147,25 +158,25 @@ namespace Nektar
                     if(m_session->DefinesSolverInfo("ModeType"))
                     {
                         m_session->MatchSolverInfo("ModeType", "SingleMode", 
-                                                   m_SingleMode, false);
+                                                   m_singleMode, false);
                         m_session->MatchSolverInfo("ModeType", "HalfMode", 
-                                                   m_HalfMode, false);
+                                                   m_halfMode, false);
                         m_session->MatchSolverInfo("ModeType", "MultipleModes", 
-                                                   m_MultipleModes, false);
+                                                   m_multipleModes, false);
                     }
 
                     // Stability Analysis flags
                     if (m_session->DefinesSolverInfo("ModeType"))
                     {
-                        if(m_SingleMode)
+                        if(m_singleMode)
                         {
                             m_npointsZ = 2;
                         }
-                        else if(m_HalfMode)
+                        else if(m_halfMode)
                         {
                             m_npointsZ = 1;
                         }
-                        else if(m_MultipleModes)
+                        else if(m_multipleModes)
                         {
                             m_npointsZ = m_session->GetParameter("HomModesZ");
                         }
@@ -320,7 +331,7 @@ namespace Nektar
                         if (m_HomogeneousType == eHomogeneous1D)
                         {
                             // Fourier single mode stability analysis
-							if (m_SingleMode)
+                            if (m_singleMode)
                             {	
                                 const LibUtilities::PointsKey PkeyZ(
                                     m_npointsZ,
@@ -344,7 +355,7 @@ namespace Nektar
                                 }
                             }
                             // Half mode stability analysis
-                            else if(m_HalfMode)
+                            else if(m_halfMode)
                             {
                                 const LibUtilities::PointsKey PkeyZ(
                                     m_npointsZ,
@@ -374,16 +385,17 @@ namespace Nektar
                                                     m_session->GetVariable(i), 
                                                     m_checkIfSystemSingular[i]);
                                     }
-	
-                                    m_fields[i] = MemoryManager<MultiRegions
-                                                                ::ContField3DHomogeneous1D>
-                                        ::AllocateSharedPtr(
-                                                            m_session, BkeyZR, m_LhomZ, 
-                                                            m_useFFT, m_homogen_dealiasing,
-                                                            m_graph, 
-                                                            m_session->GetVariable(i), 
-                                                            m_checkIfSystemSingular[i]);
-                                    
+                                    else
+                                    {
+                                        m_fields[i] = MemoryManager<MultiRegions
+                                            ::ContField3DHomogeneous1D>
+                                                ::AllocateSharedPtr(
+                                                    m_session, BkeyZR, m_LhomZ, 
+                                                    m_useFFT, m_homogen_dealiasing,
+                                                    m_graph, 
+                                                    m_session->GetVariable(i), 
+                                                    m_checkIfSystemSingular[i]);
+                                    }
                                     
                                     
                                 }
@@ -1266,7 +1278,7 @@ namespace Nektar
                     {
                         if (m_HomogeneousType == eHomogeneous1D)
                         {
-                            if (m_SingleMode)
+                            if (m_singleMode)
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,
                                         LibUtilities::eFourierSingleModeSpaced);
@@ -1286,7 +1298,7 @@ namespace Nektar
                                     m_base[i]->SetWaveSpace(true);
                                 }
                             }
-                            else if (m_HalfMode)
+                            else if (m_halfMode)
                             {
                                 //1 plane field (half mode expansion)
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,
@@ -1445,7 +1457,17 @@ namespace Nektar
         {
 
         }
-	
+
+        /**
+         * Virtual function to define if operator in DoSolve is
+         * negated with regard to the strong form. This is currently
+         * only used in Arnoldi solves. Default is false.
+         */
+        bool EquationSystem::v_NegatedOp(void)
+        {
+            return false; 
+        }
+
         /**
          * 
          */
@@ -1468,6 +1490,7 @@ namespace Nektar
         {
             SessionSummary(l);
         }
+        
 
         /**
          * Write the field data to file. The file is named according to the session
@@ -2219,7 +2242,7 @@ namespace Nektar
                 AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
                 AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
                 AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
-                AddSummaryItem(s, "Selected Mode", m_MultipleModes
+                AddSummaryItem(s, "Selected Mode", m_multipleModes
                         ? boost::lexical_cast<string>(m_NumMode) : "ALL");
             }
             else if(m_HomogeneousType == eHomogeneous2D)

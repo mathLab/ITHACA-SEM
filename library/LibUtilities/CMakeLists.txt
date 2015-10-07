@@ -29,6 +29,8 @@ SET(BasicUtilsHeaders
     ./BasicUtils/SessionReader.h
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
+    ./BasicUtils/Thread.h
+    ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
@@ -45,6 +47,8 @@ SET(BasicUtilsSources
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
+    ./BasicUtils/Thread.cpp
+    ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
     ./BasicUtils/XmlUtil.cpp
@@ -72,7 +76,7 @@ IF(NEKTAR_USE_SCOTCH)
 ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
-    SET(CommunicationHeaders ${CommunicationHeaders} 
+    SET(CommunicationHeaders ${CommunicationHeaders}
         ./Communication/CommMpi.h)
     SET(CommunicationSources ${CommunicationSources}
         ./Communication/CommMpi.cpp)
@@ -80,12 +84,12 @@ ENDIF(NEKTAR_USE_MPI)
 
 SET(FFTHeaders
        ./FFT/NektarFFT.h
-)	
+)
 
 SET(FFTSources
        ./FFT/NektarFFT.cpp
 )
- 
+
 IF(NEKTAR_USE_FFTW)
     SET(FFTHeaders ${FFTHeaders} ./FFT/NekFFTW.h)
     SET(FFTSources ${FFTSources} ./FFT/NekFFTW.cpp)
@@ -122,41 +126,41 @@ SET(FoundationHeaders
 
 SET(FoundationSources
         ./Foundations/Basis.cpp
-	./Foundations/BLPoints.cpp
-	./Foundations/FourierPoints.cpp
-	./Foundations/FourierSingleModePoints.cpp
-	./Foundations/GaussPoints.cpp
-	./Foundations/Graph.cpp
-	./Foundations/InterpCoeff.cpp
-	./Foundations/Interp.cpp
-	./Foundations/ManagerAccess.cpp
+    ./Foundations/BLPoints.cpp
+    ./Foundations/FourierPoints.cpp
+    ./Foundations/FourierSingleModePoints.cpp
+    ./Foundations/GaussPoints.cpp
+    ./Foundations/Graph.cpp
+    ./Foundations/InterpCoeff.cpp
+    ./Foundations/Interp.cpp
+    ./Foundations/ManagerAccess.cpp
         ./Foundations/NodalPrismEvenlySpaced.cpp
-	./Foundations/NodalTetElec.cpp
+    ./Foundations/NodalTetElec.cpp
         ./Foundations/NodalTetEvenlySpaced.cpp
-	./Foundations/NodalTriElec.cpp
+    ./Foundations/NodalTriElec.cpp
         ./Foundations/NodalTriEvenlySpaced.cpp
-	./Foundations/NodalTriFekete.cpp
-	./Foundations/NodalUtil.cpp
-        ./Foundations/PhysGalerkinProject.cpp       
-	./Foundations/Points.cpp
-	./Foundations/PolyEPoints.cpp
+    ./Foundations/NodalTriFekete.cpp
+    ./Foundations/NodalUtil.cpp
+        ./Foundations/PhysGalerkinProject.cpp
+    ./Foundations/Points.cpp
+    ./Foundations/PolyEPoints.cpp
 )
 
 SET(InterpreterHeaders
-	  ./Interpreter/AnalyticExpressionEvaluator.hpp   
-)       
+      ./Interpreter/AnalyticExpressionEvaluator.hpp
+)
 
 SET(InterpreterSources
         ./Interpreter/AnalyticExpressionEvaluator.cpp
-)    
+)
 
 SET(KernelHeaders
-	./Kernel/kernel.h
+    ./Kernel/kernel.h
 )
 
 SET(KernelSources
-	./Kernel/kernel.cpp
-)   
+    ./Kernel/kernel.cpp
+)
 
 SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
@@ -231,26 +235,26 @@ IF(NEKTAR_USING_SMV)
 ENDIF(NEKTAR_USING_SMV)
 
 SET(MemoryHeaders
-	./Memory/ThreadSpecificPool.hpp
-	./Memory/NekMemoryManager.hpp	
+    ./Memory/ThreadSpecificPool.hpp
+    ./Memory/NekMemoryManager.hpp
 )
 
 SET(MemorySources
-	./Memory/ThreadSpecificPool.cpp
-)    
+    ./Memory/ThreadSpecificPool.cpp
+)
 
 SET(PolyLibHeaders
-	./Polylib/Polylib.h
-)	
+    ./Polylib/Polylib.h
+)
 
 SET(PolylibSources
-	./Polylib/Polylib.cpp
+    ./Polylib/Polylib.cpp
 )
 
 SET(TimeIntegrationHeaders
         ./TimeIntegration/TimeIntegrationScheme.h
         ./TimeIntegration/TimeIntegrationWrapper.h
-) 
+)
 
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
@@ -308,21 +312,41 @@ SOURCE_GROUP("TimeIntegration Headers" FILES ${TimeIntegrationHeaders})
 SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
 
 SOURCE_GROUP("FFT Headers" FILES ${FFTHeaders})
-SOURCE_GROUP("FFT Sources" FILES ${FFTSources})  
+SOURCE_GROUP("FFT Sources" FILES ${FFTSources})
+
+IF(NEKTAR_USE_OCC)
+    SET(CADSystemSources
+        ./CADSystem/CADSystem.cpp
+        ./CADSystem/CADCurve.cpp
+        ./CADSystem/CADSurf.cpp
+        )
+
+    SET(CADSystemHeaders
+        ./CADSystem/CADSystem.h
+        ./CADSystem/CADCurve.h
+        ./CADSystem/CADSurf.h
+        ./CADSystem/OpenCascade.h
+        )
+
+    SOURCE_GROUP("CAD System Headers" FILES ${CADSystemHeaders})
+    SOURCE_GROUP("CAD System Sources" FILES ${CADSystemSources})
+
+ENDIF(NEKTAR_USE_OCC)
 
 SOURCE_GROUP("Base" FILES ${BaseHeaders})
 
 SET(LibUtilityHeaders
     ${MemoryHeaders}
-	${BasicUtilsHeaders}
-	${ExpressionTemplates}
-	${PolyLibHeaders}
+    ${BasicUtilsHeaders}
+    ${ExpressionTemplates}
+    ${PolyLibHeaders}
     ${CommunicationHeaders}
-	${FoundationHeaders}
-	${LinearAlgebraHeaders}
-	${BasicConstHeaders}
-	${InterpreterHeaders}
-	${KernelHeaders}
+    ${FoundationHeaders}
+    ${CADSystemHeaders}
+    ${LinearAlgebraHeaders}
+    ${BasicConstHeaders}
+    ${InterpreterHeaders}
+    ${KernelHeaders}
     ${TimeIntegrationHeaders}
     ${FFTHeaders}
     ${BaseHeaders}
@@ -338,6 +362,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
 SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
+    ${CADSystemSources}
     ${PolylibSources}
     ${CommunicationSources}
     ${LinearAlgebraSources}
@@ -357,7 +382,7 @@ ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 
 
 ### Libraries needed specifically by LibUtilities ###
-### Static libraries do not need to be linked by 
+### Static libraries do not need to be linked by
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
@@ -372,7 +397,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${METIS_LIB})
 IF( NEKTAR_USE_FFTW )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIBRARY})
     ADD_DEPENDENCIES(LibUtilities fftw-3.2.2)
-    SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp 
+    SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp
         PROPERTY COMPILE_FLAGS "-I${FFTW_INCLUDE_DIR}")
 ENDIF( NEKTAR_USE_FFTW )
 
@@ -452,6 +477,13 @@ IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities petsc-3.5.2)
 ENDIF( NEKTAR_USE_PETSC )
+
+IF(NEKTAR_USE_OCC)
+    SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
+    SET_TARGET_PROPERTIES(LibUtilities PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OCC_LIBS})
+    ADD_DEPENDENCIES(LibUtilities opencascade-6.8)
+ENDIF(NEKTAR_USE_OCC)
 
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

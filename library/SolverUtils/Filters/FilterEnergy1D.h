@@ -40,59 +40,59 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        /**
-         * @brief Filter for one-dimensional energy spectrum.
-         *
-         * This filter transforms the coefficients of each element into an
-         * orthogonal basis and outputs these coefficients at each timestep. It
-         * can be used to, for example, detect high-order oscillations in the
-         * solution field.
-         */
-        class FilterEnergy1D : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterEnergy1D>;
+namespace SolverUtils
+{
+/**
+ * @brief Filter for one-dimensional energy spectrum.
+ *
+ * This filter transforms the coefficients of each element into an
+ * orthogonal basis and outputs these coefficients at each timestep. It
+ * can be used to, for example, detect high-order oscillations in the
+ * solution field.
+ */
+class FilterEnergy1D : public Filter
+{
+public:
+    friend class MemoryManager<FilterEnergy1D>;
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterEnergy1D>
-                    ::AllocateSharedPtr(pSession, pParams);
-                return p;
-            }
-
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterEnergy1D(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterEnergy1D();
-
-        protected:
-            virtual void v_Initialise(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const NekDouble                                         &time);
-            virtual void v_Update(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const NekDouble                                         &time);
-            virtual void v_Finalise(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const NekDouble                                         &time);
-            virtual bool v_IsTimeDependent();
-
-        private:
-            /// Output file.
-            ofstream m_out;
-            /// Output frequency.
-            unsigned int m_outputFrequency;
-            /// Current index counter.
-            unsigned int m_index;
-        };
+    /// Creates an instance of this class
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams) {
+        FilterSharedPtr p = MemoryManager<FilterEnergy1D>
+            ::AllocateSharedPtr(pSession, pParams);
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterEnergy1D(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams);
+    SOLVER_UTILS_EXPORT ~FilterEnergy1D();
+
+protected:
+    virtual void v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const NekDouble                                         &time);
+    virtual void v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const NekDouble                                         &time);
+    virtual void v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const NekDouble                                         &time);
+    virtual bool v_IsTimeDependent();
+
+private:
+    /// Output file.
+    ofstream m_out;
+    /// Output frequency.
+    unsigned int m_outputFrequency;
+    /// Current index counter.
+    unsigned int m_index;
+};
+}
 }
 
 #endif

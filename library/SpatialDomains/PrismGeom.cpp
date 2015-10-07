@@ -183,15 +183,32 @@ namespace Nektar
                 }
             }
 
-            // Convert to the local (eta) coordinates.
+            // Convert to the local Cartesian coordinates.
             resid = v_GetLocCoords(gloCoord, locCoord);
             
-            // Check local coordinate is within [-1,1]^3 bounds.
+            // Check local coordinate is within std region bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol) && locCoord[1] <=  (1+tol) &&
                 locCoord[0] + locCoord[2] <= tol)
             {
                 return true;
+            }
+            
+            // If out of range clamp locCoord to be within [-1,1]^3
+            // since any larger value will be very oscillatory if
+            // called by 'returnNearestElmt' option in
+            // ExpList::GetExpIndex
+            for(int i = 0; i < 3; ++i)
+            {
+                if(locCoord[i] <-(1+tol))
+                {
+                    locCoord[i] = -(1+tol);
+                }
+
+                if(locCoord[i] > (1+tol))
+                {
+                    locCoord[i] = 1+tol;
+                }
             }
             
             return false;
@@ -260,7 +277,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            NekDouble resid = 0.0;
+            NekDouble ptdist = 1e6; 
 
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
@@ -275,13 +292,11 @@ namespace Nektar
                 e30.Sub(*m_verts[3],*m_verts[0]);
                 e40.Sub(*m_verts[4],*m_verts[0]);
 
-
                 // Cross products (Normal times area)
                 PointGeom cp1030, cp3040, cp4010;
                 cp1030.Mult(e10,e30);
                 cp3040.Mult(e30,e40);
                 cp4010.Mult(e40,e10);
-
 
                 // Barycentric coordinates (relative volume)
                 NekDouble V = e40.dot(cp1030); // Prism Volume = {(e40)dot(e10)x(e30)}/2
@@ -293,6 +308,12 @@ namespace Nektar
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
+
+                // Set ptdist to distance to nearest vertex 
+                for(int i = 0; i < 6; ++i)
+                {
+                    ptdist = min(ptdist,r.dist(*m_verts[i]));
+                }
             }
             else
             {
@@ -321,6 +342,9 @@ namespace Nektar
                           
                 int min_i = Vmath::Imin(npts,tmp1,1);
                 
+                // distance from coordinate to nearest point for return value. 
+                ptdist = sqrt(tmp1[min_i]);
+
                 // Get collapsed coordinate
                 int qa = za.num_elements(), qb = zb.num_elements();
                 Lcoords[2] = zc[min_i/(qa*qb)];
@@ -332,9 +356,10 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 - 1.0;
 
                 // Perform newton iteration to find local coordinates 
+                NekDouble resid = 0.0;
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
             }
-            return resid; 
+            return ptdist; 
         }
         
         int PrismGeom::v_GetVertexEdgeMap(const int i, const int j) const

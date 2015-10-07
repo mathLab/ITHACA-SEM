@@ -50,6 +50,7 @@ CollectionOptimisation::CollectionOptimisation(
 {
     int i;
     map<ElmtOrder, ImplementationType> defaults;
+    map<ElmtOrder, ImplementationType> defaultsPhysDeriv;
     map<ElmtOrder, ImplementationType>::iterator it;
     bool verbose  = (pSession.get()) &&
                     (pSession->DefinesCmdLineArgument("verbose")) &&
@@ -58,7 +59,7 @@ CollectionOptimisation::CollectionOptimisation(
     m_setByXml    = false;
     m_autotune    = false;
     m_maxCollSize = 0;
-    m_defaultType = defaultType == eNoImpType ? eNoCollection : defaultType;
+    m_defaultType = defaultType == eNoImpType ? eIterPerExp : defaultType;
 
     map<string, LibUtilities::ShapeType> elTypes;
     map<string, LibUtilities::ShapeType>::iterator it2;
@@ -73,14 +74,38 @@ CollectionOptimisation::CollectionOptimisation(
     // Set defaults for all element types.
     for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
     {
-        defaults[ElmtOrder(it2->second, -1)] = m_defaultType;
+        defaults          [ElmtOrder(it2->second, -1)] = m_defaultType;
+        defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = m_defaultType;
+    }
+
+    if (defaultType == eNoImpType)
+    {
+        for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
+        {
+            defaultsPhysDeriv [ElmtOrder(it2->second, -1)] = eNoCollection;
+            for (int i = 1; i < 5; ++i)
+            {
+                defaults[ElmtOrder(it2->second, i)] = eStdMat;
+            }
+            for (int i = 1; i < 3; ++i)
+            {
+                defaultsPhysDeriv[ElmtOrder(it2->second, i)] = eSumFac;
+            }
+        }
     }
 
     map<string, OperatorType> opTypes;
     for (i = 0; i < SIZE_OperatorType; ++i)
     {
         opTypes[OperatorTypeMap[i]] = (OperatorType)i;
-        m_global[(OperatorType)i] = defaults;
+        switch ((OperatorType)i)
+        {
+            case ePhysDeriv:
+                m_global[(OperatorType)i] = defaultsPhysDeriv;
+                break;
+            default:
+                m_global[(OperatorType)i] = defaults;
+        }
     }
 
     map<string, ImplementationType> impTypes;
@@ -98,17 +123,23 @@ CollectionOptimisation::CollectionOptimisation(
 
         TiXmlElement *xmlCol = master->FirstChildElement("COLLECTIONS");
 
+        // Check if user has specified some options
         if (xmlCol)
         {
+            // Set the maxsize and default implementation type if provided
             const char *maxSize = xmlCol->Attribute("MAXSIZE");
             m_maxCollSize = (maxSize ? atoi(maxSize) : 0);
 
             const char *defaultImpl = xmlCol->Attribute("DEFAULT");
             m_defaultType = defaultType;
+
+            // If user has specified a default impl type, autotuning
+            // and set this default across all operators.
             if (defaultType == eNoImpType && defaultImpl)
             {
                 const std::string collinfo = string(defaultImpl);
                 m_autotune = boost::iequals(collinfo, "auto");
+
                 if (!m_autotune)
                 {
                     for(i = 1; i < Collections::SIZE_ImplementationType; ++i)
@@ -122,7 +153,7 @@ CollectionOptimisation::CollectionOptimisation(
                     }
 
                     ASSERTL0(i != Collections::SIZE_ImplementationType,
-                             "Unknown default collection scheme: "+collinfo);
+                         "Unknown default collection scheme: "+collinfo);
 
                     // Override default types
                     for (it2 = elTypes.begin(); it2 != elTypes.end(); ++it2)
@@ -137,6 +168,7 @@ CollectionOptimisation::CollectionOptimisation(
                 }
             }
 
+            // Now process operator-specific implementation selections
             TiXmlElement *elmt = xmlCol->FirstChildElement();
             while (elmt)
             {
@@ -323,7 +355,23 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
     CollectionVector coll;
     for(int imp = 1; imp < SIZE_ImplementationType; ++imp)
     {
-        OperatorImpMap impTypes = SetFixedImpType((ImplementationType) imp);
+        ImplementationType impType = (ImplementationType)imp;
+        OperatorImpMap impTypes;
+        for (int i = 0; i < SIZE_OperatorType; ++i)
+        {
+            OperatorType opType = (OperatorType)i;
+            OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
+                              pCollExp[0]->IsNodalNonTensorialExp());
+
+            if (GetOperatorFactory().ModuleExists(opKey))
+            {
+                impTypes[opType] = impType;
+            }
+            else
+            {
+                cout << "Note: Implementation does not exist: " << opKey << endl;
+            }
+        }
 
         Collection collloc(pCollExp,impTypes);
         coll.push_back(collloc);
@@ -357,17 +405,24 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
         // call collection implementation in thorugh ExpList.
         for (int imp = 0; imp < coll.size(); ++imp)
         {
-            t.Start();
-            for(int n = 0; n < Ntest[i]; ++n)
+            if (coll[imp].HasOperator(OpType))
             {
-                coll[imp].ApplyOperator(OpType,
+                t.Start();
+                for(int n = 0; n < Ntest[i]; ++n)
+                {
+                    coll[imp].ApplyOperator(OpType,
                                       inarray,
                                       outarray1,
                                       outarray2,
                                       outarray3);
+                }
+                t.Stop();
+                timing[imp] = t.TimePerTest(Ntest[i]);
             }
-            t.Stop();
-            timing[imp] = t.TimePerTest(Ntest[i]);
+            else
+            {
+                timing[imp] = 1000.0;
+            }
         }
         // determine optimal implementation. Note +1 to
         // remove NoImplementationType flag
@@ -379,7 +434,14 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
                  << ImplementationTypeMap[minImp] << "\t (";
             for(int j = 0; j < coll.size(); ++j)
             {
-                cout << timing[j] ;
+                if (timing[j] > 999.0)
+                {
+                    cout << "-";
+                }
+                else
+                {
+                    cout << timing[j] ;
+                }
                 if(j != coll.size()-1)
                 {
                     cout <<", ";

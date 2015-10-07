@@ -14,10 +14,12 @@ available.
 	\toprule
 	Distribution & Repository \\
 	\midrule
+    Debian 8.0 (jessie) &
+       \texttt{deb http://www.nektar.info/debian-jessie jessie contrib} \\
 	Debian 7.0 (wheezy) & 
-	   \texttt{deb http://www.nektar.info/debian wheezy contrib} \\
+	   \texttt{deb http://www.nektar.info/debian-wheezy wheezy contrib} \\
 	Ubuntu 14.04 (trusty) & 
-	   \texttt{deb http://www.nektar.info/ubuntu trusty contrib}\\
+	   \texttt{deb http://www.nektar.info/ubuntu-trusty trusty contrib}\\
 	\bottomrule
 	\end{tabular}
 	}
@@ -25,7 +27,7 @@ available.
 	\begin{lstlisting}[style=BashInputStyle]
 	apt-get update
 	\end{lstlisting}
-	\item Install the required Nektar++ packages:
+	\item Install the required Nektar++ packages, or the complete suite with:
 	\begin{lstlisting}[style=BashInputStyle]
 	apt-get install nektar++
 	\end{lstlisting}

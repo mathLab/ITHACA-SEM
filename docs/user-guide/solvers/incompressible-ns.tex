@@ -236,7 +236,7 @@ where $\sigma=\left\| \mathbf{u'}(\tau)\right\|$. This is no other that the sing
 \begin{figure}[!htbp]
 \centering
  \label{TG}
- {\includegraphics[width=1 \textwidth]{Figures/transient_growth.png}}
+ {\includegraphics[width=1 \textwidth]{img/transient_growth.png}}
    \caption {Geometric interpretation of the transient growth. Adapted from Schmid, 2007 }
 \end{figure}
 
@@ -320,10 +320,10 @@ Possible values are:
 {Equations} & {\texttt{EQTYPE}} &{Dim.}&{Projections} & Alg.\\
 \midrule
 Steady Stokes (SS)& \texttt{SteadyStokes} & All & CG &VCS \\
-Steady Onseen (SO) & \texttt{SteadyOseen} & All & CG& DS \\
+Steady Oseen (SO) & \texttt{SteadyOseen} & All & CG& DS \\
 Unsteady Stokes (US) & \texttt{UnsteadyStokes} & All & CG &VCS \\
 Steady Linearised NS (SLNS) & \texttt{SteadyLinearisedNS} & All & CG & DS \\
-Unsteady Linearised NS (ULNS) & \texttt{UnsteadyLinearisedNS} & All & CG & DS \\
+Unsteady Linearised NS (ULNS) & \texttt{UnsteadyLinearisedNS} & All & CG & VCS,DS \\
 Unsteady NS (UNS) & \texttt{UnsteadyNavierStokes} & All & CG,CG-DG & VCS \\
 \bottomrule
 \end{tabular}
@@ -676,30 +676,64 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \item \inltt{Re}: sets the Reynolds number
 \item \inltt{Kinvis}: sets the kinematic viscosity $\nu$.
 \item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
-\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
+\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \item \inltt{imagShift}: provide an imaginary shift to the direct sovler eigenvalue problem by the specified value. 
+ltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
 \item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
 \item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
 \item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.
 \item \inltt{N\_slices}: sets the number of temporal slices for Floquet stability analysis.
 \item \inltt{period}: sets the periodicity of the base flow.
+\item \inltt{realShift}: provide a real shift to the direct sovler eigenvalue problem by the specified value. 
 \end{itemize}
 
 \subsection{Functions}
-\begin{itemize}
-\item To be INserted
-\end{itemize}
+When using the direct solver for stability analysis it is necessary to specify a Forcing function ``StabilityCoupledLNS'' in the form:
+\begin{lstlisting}[style=XMLStyle]
+<FORCING>
+   <FORCE TYPE="StabilityCoupledLNS">
+   </FORCE>
+</FORCING>
+\end{lstlisting}
+
+This is required since we need to tell the solver to use the existing
+field as a forcing function to the direct matrix inverse as part of
+the Arnoldi iteration.
+
+
+\begin{notebox}
+Examples of the set up of the direct solver stability analysis (and
+other incompressible Navier-Stokes solvers) can be found in the
+regression test directory
+\inlsh{NEKTAR/solvers/IncNavierStokesSolver/Tests}. See for example the files
+\inlsh{PPF\_R15000\_ModifiedArnoldi\_Shift.tst} and \inlsh{PPF\_R15000\_3D.xml}
+noting that some parameters are specified in the .tst files.
+\end{notebox}
 
 \section{Steady-state solver Session file configuration}
 \label{SectionSFD_XML}
 
-In this section, we detail how to use the steady-state solver (that implements the selective frequency damping method, see Sec. \ref{SectionSFD}).
-Two cases are detailed here: the execution of the classical SFD method and the \textit{adaptive} SFD method, where the control coefficient $\chi$ and the filter width $\Delta$ of the SFD method are updated all along the solver execution. For the second case, the parameters of the SFD method do not need to be defined by the user (they will be automatically calculated all along the solver execution) but several session files must be defined in a very specific way.
+In this section, we detail how to use the steady-state solver (that
+implements the selective frequency damping method, see
+Sec. \ref{SectionSFD}).  Two cases are detailed here: the execution of
+the classical SFD method and the \textit{adaptive} SFD method, where
+the control coefficient $\chi$ and the filter width $\Delta$ of the
+SFD method are updated all along the solver execution. For the second
+case, the parameters of the SFD method do not need to be defined by
+the user (they will be automatically calculated all along the solver
+execution) but several session files must be defined in a very
+specific way.
 
 \subsection{Execution of the classical steady-state solver}
 
 \subsubsection{Solver Info}
 
-The definition of \inltt{Eqtype},  \inltt{TimeIntegrationMethod} and \inltt{Projection} is similar as what is explained in \ref{SectionIncNS_SolverInfo_Stab}. The use of the steady-state solver is enforced through the definition of the \inltt{Driver}: is has to be  \inltt{SteadyState}. \inltt{EvolutionOperator} does not need to be defined to run the unadapted SFD method (by default, it is \inltt{Nonlinear}).
+The definition of \inltt{Eqtype}, \inltt{TimeIntegrationMethod} and
+\inltt{Projection} is similar as what is explained in
+\ref{SectionIncNS_SolverInfo_Stab}. The use of the steady-state solver
+is enforced through the definition of the \inltt{Driver} which has to be
+\inltt{SteadyState}. \inltt{EvolutionOperator} does not need to be
+defined to run the unadapted SFD method (by default, it is set to
+\inltt{Nonlinear}).
 
 \subsubsection{Parameters}
 
@@ -870,8 +904,8 @@ The result should look similar to that shown in Figure~\ref{f:incns:kovaflow}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/KF2DCVP8.png}
-\includegraphics[width=7cm]{Figures/KF2DCVP8SL.png}
+\includegraphics[width=7cm]{img/KF2DCVP8.png}
+\includegraphics[width=7cm]{img/KF2DCVP8SL.png}
 \caption{Velocity profiles for the Kovasznay Flow (2D).}
 \label{f:incns:kovaflow}
 \end{center}
@@ -948,8 +982,8 @@ Figure~\ref{f:incns:kovaflow2d_hobc}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/KF2DCVP8HOBC_U.png}
-\includegraphics[width=7cm]{Figures/KF2DCVP8HOBC_V.png}
+\includegraphics[width=7cm]{img/KF2DCVP8HOBC_U.png}
+\includegraphics[width=7cm]{img/KF2DCVP8HOBC_V.png}
 \caption{Velocity profiles for the Kovasznay Flow in truncated domain (2D).}
 \label{f:incns:kovaflow2d_hobc}
 \end{center}
@@ -1083,8 +1117,8 @@ Figure~\ref{f:incns:laminar2d}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/CF2DSKP3PR.png}
-\includegraphics[width=7cm]{Figures/CF2DSKP3.png}
+\includegraphics[width=7cm]{img/CF2DSKP3PR.png}
+\includegraphics[width=7cm]{img/CF2DSKP3.png}
 \caption{Pressure and velocity profiles for the laminar channel flow (2D).}
 \label{f:incns:laminar2d}
 \end{center}
@@ -1180,8 +1214,8 @@ The expected results are shown in Figure~\ref{f:incns:laminar3d}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/CF3DP8PR.png}
-\includegraphics[width=7cm]{Figures/CF3DP8.png}
+\includegraphics[width=7cm]{img/CF3DP8PR.png}
+\includegraphics[width=7cm]{img/CF3DP8.png}
 \caption{Pressure and velocity profiles for the laminar channel flow (full 3D).}
 \label{f:incns:laminar3d}
 \end{center}
@@ -1269,7 +1303,7 @@ Figure~\ref{f:incns:turbchanmesh}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=10cm]{Figures/ChanMesh.png}
+\includegraphics[width=10cm]{img/ChanMesh.png}
 \caption{Mesh used for the turbulent channel flow.}
 \label{f:incns:turbchanmesh}
 \end{center}
@@ -1363,7 +1397,7 @@ Figure~\ref{f:incns:turbchanflow}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=12cm]{Figures/ChanCont.png}
+\includegraphics[width=12cm]{img/ChanCont.png}
 \caption{Velocity profile of the turbulent channel flow (quasi-3D).}
 \label{f:incns:turbchanflow}
 \end{center}
@@ -1384,7 +1418,7 @@ Figure~\ref{f:incns:turbpipemesh}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=10cm]{Figures/PipeDomain.png}
+\includegraphics[width=10cm]{img/PipeDomain.png}
 \caption{Domain for the turbulent pipe flow problem.}
 \label{f:incns:turbpipemesh}
 \end{center}
@@ -1431,7 +1465,7 @@ Figure~\ref{f:incns:turbpipeflow}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=12cm]{Figures/PipeCont.png}
+\includegraphics[width=12cm]{img/PipeCont.png}
 \caption{Velocity profile of the turbulent pipe flow (quasi-3D).}
 \label{f:incns:turbpipeflow}
 \end{center}
@@ -1458,7 +1492,7 @@ The geometry under consideration is a segment of a rabbit descending aorta with 
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=10cm]{Figures/IntercostalGeometry.png}
+\includegraphics[width=10cm]{img/IntercostalGeometry.png}
 \caption{Reduced region of rabbit descending thoracic aorta.}
 \end{center}
 \end{figure}
@@ -1467,7 +1501,7 @@ In order to capture the physics of the flow in the boundary layer, a thin layer 
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=7cm]{Figures/spherigons.png}
+\includegraphics[width=7cm]{img/spherigons.png}
 \caption{Surface mesh indicating curved surface elements at a branch location.}
 \end{center}
 \end{figure}
@@ -1561,7 +1595,7 @@ We can visualise the internal velocity field by applying a volume render filter 
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=10cm]{Figures/velocityRendered.png}
+\includegraphics[width=10cm]{img/velocityRendered.png}
 \caption{The solved-for velocity field.}
 \end{center}
 \end{figure}
@@ -1570,8 +1604,73 @@ It is possible to visualise the wall shear stress distribution by running the Fl
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=12cm]{Figures/WSS.png}
+\includegraphics[width=12cm]{img/WSS.png}
 \caption{Non-dimensional wall shear stress distribution.}
+\end{center}
+\end{figure}
+
+\subsection{finite-strip modeling of flow past flexible cables}
+
+As a computationally efficient model, strip theory-based modeling technique has been proposed previously to predict vortex-induced vibration (VIV) for higher Reynolds number flows. In the strip theory-based model, the fluid flow solution is obtained on a series of 2D computational planes (also called as “strips”) along the riser’s axis direction. These strips then are coupled with each other through structural dynamic model of the riser, and then VIV response prediction is achieved by the strip-structure interactions.In the 2D strip theory, it is assumed that the flow is purely two-dimensional without spanwise correlation, which allows the problems to be split into various 2D planes. A consequence of 2D strip solution under this assumption is that it is unable to reflect the influence of spanwise wake turbulence on the structural dynamics. In order to overcome this shortcoming, we proposed a new module in the framework of Nektar++, in which a spanwise scale is locally allocated to each one of the strips, so that the spanwise velocity correlation is reconstructed in the flow field within each strips. In particular, this model lets the fluid domain to be divided in $N$ strips with thickness ratio of $L_{z}/D$ and evenly distributed along the spanwise ($z$) direction. The gap between the neighboring strips, represented by $L_{g}$, satisfies relation $L_{c}=N(L_{z}+L_{g})$. Since the strip in this model has finite scale in the $z$-direction, we named it as finite strip to distinguish from traditional 2D strip plane. Next, the flow dynamics within each individual strips are modeled by viscous incompressible Navier-Stokes equations, while a tensioned beam model is employed to govern the dynamics of the flexible structures. In this example, we will show how to perform a finite-strip model to predict the vortex-induced vibration responses of flexible cables. Let us consider a vortex-induced vibration of a slender cable with an aspect ratio of $L_z/D$=4$\pi$, which is immersed in uniform flows at Re=100.
+
+\subsubsection{Input File}
+
+The cable with a mass ratio (defined as the ratio of the total oscillating mass to the mass of displaced fluid) of 1 has diameter $D=1$, the 2D mesh is composed of 284 quadrilateral elements. The spanwise direction is split in 16 strips with thickness ratio of $L_c/D$=$\pi$/8 and one pair of complex Fourier modes for each one of the strips. We will use a sixth order polynomial expansion for the spectral element and the input file for this example is \inlsh{CylFlow\_HomoStrip.xml}.
+
+
+
+\begin{lstlisting}[style=XMLStyle]
+<E COMPOSITE="C[73]" NUMMODES="6" TYPE="MODIFIED" FIELDS="u,v,w,p" />
+\end{lstlisting}
+
+To use the finite strip routines we need just to insert a flag of \inlsh{"HomoStrip"} in the solver information as below, in addition, we need to specify the types of vibration and support ends for the cables. In this case, the vibration type is specified as \inlsh{VALUE="CONSTRAINED"}, which means that the cable's vibration is constrained only in the crossflow direction. Other options include \inlsh{VALUE="FREE"} and \inlsh{"FORCED"}, respectively corresponding to the free vibrations in both streamwise and crossflow directions and forced vibration by specified functions given in input file. For the support ends of the cable, another option of \inlsh{VALUE="PINNED-PINNED"} is available for the simulations, which satisfies the condition of zero values of displacements on the support ends.
+
+\subsubsection{Solver information:~}
+\begin{lstlisting}[style=XMLStyle]
+        <SOLVERINFO>
+            <I PROPERTY="HomoStrip" VALUE="True"/>
+            <I PROPERTY="VibrationType" VALUE="CONSTRAINED"/>
+            <I PROPERTY="SupportType" VALUE="FREE-FREE"/>
+        </SOLVERINFO>
+\end{lstlisting}
+        
+\subsubsection{Parameters}
+
+All the simulation parameters are specified in the section as follows.
+
+    \begin{lstlisting}[style=XMLStyle]
+        <PARAMETERS>
+            <P> LZ            = PI/8             </P> <!--thickness ratio-->
+            <P> LC            = 4*PI             </P> <!--aspect ratio-->
+            <P> A             = 0.025            </P>
+            <P> omega         = 1.0              </P>
+            <P> PROC_Z        = 16               </P>
+            <P> Strip_Z       = 16               </P> <!--number of the strips-->
+            <P> DistStrip     = PI/4             </P> <!--distance of the strips-->
+            <P> StructStiff   = 0.02             </P>  
+            <P> StructRho     = 2.0              </P>
+            <P> CableTension  = 8.82             </P>
+            <P> BendingStiff  = 0.0              </P>
+            <P> FictDamp      = 0.0              </P>
+            <P> FictMass      = 3.0              </P>
+        </PARAMETERS>
+     \end{lstlisting}    
+
+\subsubsection{Running the solver}
+In this example we will run the solver in parallel. We can specify the number of the strips by providing an additional flag to the solver, –nsz. In this example, we will run 16 strips, therefore it would be specified as –nsz 16. The solver can now be run as follows    
+
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np 16 IncNavierStokesSolver  CylFlow_HomoStrip.xml --npz 16 --nsz 16
+\end{lstlisting}
+
+The simulation results are illustrated in spanwise vorticity contours in Figure \ref{f:incns:finite-strip-modeling}. The wake response of the cable appears as standing wave patter in the earlier stage and then it transitions into traveling wave response, as shown in this figure.  
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=7cm]{img/strip-16-time-100.png}
+\includegraphics[width=7cm]{img/strip-16-time-600.png}
+\caption{Spanwise vorticity contours in standing wave and traveling wave patterns predicted in finite strip modeling.}
+\label{f:incns:finite-strip-modeling}
 \end{center}
 \end{figure}
 
@@ -1747,13 +1846,13 @@ The stability simulation takes about 250 iterations to converge and the dominant
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/chan_u.png}}
+ {\includegraphics[width=1 \textwidth]{img/chan_u.png}}
    \caption {}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/chan_v}}
+ {\includegraphics[width=1 \textwidth]{img/chan_v}}
     \caption {}
 \end{figure}
 
@@ -1871,13 +1970,13 @@ The equations will then be evolved backwards in time (consistently with the nega
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/chan_u_adj.png}}
+ {\includegraphics[width=1 \textwidth]{img/chan_u_adj.png}}
    \caption {}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/chan_v_adj}}
+ {\includegraphics[width=1 \textwidth]{img/chan_v_adj}}
     \caption {}
 \end{figure}
 
@@ -1887,7 +1986,7 @@ In this section it will be described how to perform a transient growth stability
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/bfs_geo}}
+ {\includegraphics[width=1 \textwidth]{img/bfs_geo}}
     \caption {}\label{bfs_geo}
 \end{figure}
 
@@ -2051,13 +2150,13 @@ The solution will be evolved forward in time using the operator $\mathcal{A}$, t
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/bfs_eig_u}}
+ {\includegraphics[width=1 \textwidth]{img/bfs_eig_u}}
    \caption {}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/bfs_eig_v}}
+ {\includegraphics[width=1 \textwidth]{img/bfs_eig_v}}
     \caption {}
 \end{figure}
 
@@ -2066,7 +2165,7 @@ It is possible to visualise the transient growth plotting the energy evolution o
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/energy_bfs}}
+ {\includegraphics[width=1 \textwidth]{img/energy_bfs}}
    \caption {}
 \end{figure}
 
@@ -2076,7 +2175,7 @@ It is possible to visualise the transient growth plotting the energy evolution o
 
  \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/cylinder_geo}}
+ {\includegraphics[width=1 \textwidth]{img/cylinder_geo}}
    \caption {}
 \end{figure}
 
@@ -2135,7 +2234,7 @@ The stability simulation takes about 20 cycles to converge and the leading eigen
 
 \begin{figure}[!htbp]
 \centering
- {\includegraphics[width=1 \textwidth]{Figures/floquet}}
+ {\includegraphics[width=1 \textwidth]{img/floquet}}
    \caption {}
 \end{figure}
 

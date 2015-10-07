@@ -516,7 +516,7 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
     {
         std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
     }
-	
+
     // copy FieldData into m_fields
     for(int j = 0; j < nvar; ++j)
     {
@@ -678,14 +678,21 @@ void AdjointAdvection::DFT(const string file,
         m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
     }
 
-    //Import the slides into auxiliary vector
-    //The base flow should be stored in the form filename_i.bse
-    for (int i=0; i< m_slices; ++i)
+    // Import the slides into auxiliary vector
+    // The base flow should be stored in the form "filename_%d.ext"
+    // A subdirectory can also be included, such as "dir/filename_%d.ext"
+    size_t found = file.find("%d");
+    ASSERTL0(found != string::npos && file.find("%d", found+1) == string::npos,
+             "Since N_slices is specified, the filename provided for function "
+             "'BaseFlow' must include exactly one instance of the format "
+             "specifier '%d', to index the time-slices.");
+    char* buffer = new char[file.length() + 8];
+    for (int i = 0; i < m_slices; ++i)
     {
-        char chkout[16] = "";
-        sprintf(chkout, "%d", i);
-        ImportFldBase(file+"_"+chkout+".bse",pFields,i);
+        sprintf(buffer, file.c_str(), i);
+        ImportFldBase(buffer,pFields,i);
     }
+    delete[] buffer;
 
 
     // Discrete Fourier Transform of the fields

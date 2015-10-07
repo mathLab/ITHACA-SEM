@@ -2,7 +2,7 @@
 
 \section{Synopsis}
 
-The CardiacEPSolver is intended to model the electrophysiology of cardiac
+The CardiacEPSolver is used to model the electrophysiology of cardiac
 tissue, specifically using the monodomain or bidomain model. These models are
 continuum models and represent an average of the electrical activity over many
 cells. The system is a reaction-diffusion system, with the reaction term
@@ -159,6 +159,24 @@ $\mathbf{\sigma}$ of the tissue.
 
 \subsection{Filters}
 \begin{itemize}
+    \item \inltt{CellHistoryPoints} writes all cell model states over time at
+        fixed points. Can be used along with the \inltt{HistoryPoints} filter to
+        record all variables at specific points during a simulation.
+\begin{lstlisting}[style=XmlStyle]
+<FILTER TYPE="CellHistoryPoints">
+    <PARAM NAME="OutputFile">crn.his</PARAM>
+    <PARAM NAME="OutputFrequency">1</PARAM>
+    <PARAM NAME="Points">
+        0.00 0.0 0.0
+    </PARAM>
+</FILTER>
+\end{lstlisting}
+    \begin{itemize}
+        \item \inltt{OutputFile} specifies the filename to write history data to.
+        \item \inltt{OutputFrequency} specifies the number of steps between successive outputs.
+        \item \inltt{Points} lists coordinates at which history data is to be recorded.
+    \end{itemize}
+
     \item \inltt{CheckpointCellModel} checkpoints the cell model. Can be
     used along with the \inltt{Checkpoint} filter to record complete simulation
     state and regular intervals.

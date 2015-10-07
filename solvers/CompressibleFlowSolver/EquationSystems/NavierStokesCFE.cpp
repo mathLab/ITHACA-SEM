@@ -253,7 +253,7 @@ namespace Nektar
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
-            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();       
+            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
             SetCommonBC(type,n,time,cnt,inarray);
         }
     }

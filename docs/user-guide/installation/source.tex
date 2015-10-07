@@ -22,7 +22,7 @@ There are two ways to obtain the source code for \nekpp:
 	\item Using anonymous access. This does not require
 	credentials but any changes to the code cannot be pushed to the
 	public repository. Use this initially if you would like to try using 
-	Nektar++.
+	Nektar++ or make local changes to the code.
     \begin{lstlisting}[style=BashInputStyle]
         git clone http://gitlab.nektar.info/clone/nektar/nektar.git nektar++
     \end{lstlisting}
@@ -517,10 +517,26 @@ Components of the \nekpp package can be selected using the following options:
     Enabled compilation of the 'X' solver.
 \end{itemize}
 
-A number of ThirdParty libraries are required by \nekpp. There are also
-optional libraries which provide additional functionality. These can be selected
-using the following options:
+A number of ThirdParty libraries are required by \nekpp. There are
+also optional libraries which provide additional functionality. These
+can be selected using the following options:
 \begin{itemize}
+    \item \inlsh{NEKTAR\_USE\_ACML}
+
+    Use the optimised BLAS library for AMD processors.
+
+    \item \inlsh{NEKTAR\_USE\_ACCELERATE\_FRAMEWORK}
+      
+    Use the Mac Osx accelerate framework for BLAS and LAPACK
+    methods. This option should only be required under in a Mac OSX
+    environment.
+
+    \item \inlsh{NEKTAR\_USE\_ARPACK}
+    
+    Build \nekpp with support for ARPACK. This provides routines used for
+    linear stability analyses. Alternative Arnoldi algorithms are also
+    implemented directly in \nekpp.
+    
     \item \inlsh{NEKTAR\_USE\_BLAS\_LAPACK} (Required)
     
     Enables the use of Basic Linear Algebra Subroutines libraries for linear
@@ -532,35 +548,53 @@ using the following options:
     This may not be the implementation offering the highest performance for your
     architecture, but it is the most likely to work without problem.
     
+    \item \inlsh{NEKTAR\_USE\_CCM}
+    
+    Use the ccmio library provided with the Star-CCM package for
+    reading ccm files. This option is required as part of MeshConvert
+    if you wish to convert a Star-CCM mesh into the Nektar format. It
+    is possible to read a Tecplot plt file from Star-CCM but this
+    output currently needs to be converted to ascii format using the
+    Tecplot package.
+
+    \item \inlsh{NEKTAR\_USE\_FFTW}
+    
+    Build \nekpp with support for FFTW for performing Fast Fourier Transforms
+    (FFTs). This is used only when using domains with homogeneous coordinate
+    directions.
+        
+    \item \inlsh{NEKTAR\_USE\_MKL}
+    
+    Use the Intel MKL library. This is typically available on cluster
+    environments and should offer performance tuned for the specific cluster
+    environment.
+
+    \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
+    
+    Build Nektar++ with MPI parallelisation. This allows solvers to be run in
+    serial or parallel.
+    
     \item \inlsh{NEKTAR\_USE\_OPENBLAS}
     
     Use OpenBLAS for the BLAS library. OpenBLAS is based on the Goto BLAS
     implementation and generally offers better performance than a non-optimised
     system BLAS. However, the library must be installed on the system.
     
-    \item \inlsh{NEKTAR\_USE\_MKL}
-    
-    Use the Intel MKL library. This is typically available on cluster
-    environments and should offer performance tuned for the specific cluster
-    environment.
-    
-    \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
-    
-    Build Nektar++ with MPI parallelisation. This allows solvers to be run in
-    serial or parallel.
-    
-    \item \inlsh{NEKTAR\_USE\_FFTW}
-    
-    Build \nekpp with support for FFTW for performing Fast Fourier Transforms
-    (FFTs). This is used only when using domains with homogeneous coordinate
-    directions.
-    
-    \item \inlsh{NEKTAR\_USE\_ARPACK}
-    
-    Build \nekpp with support for ARPACK. This provides routines used for
-    linear stability analyses. Alternative Arnoldi algorithms are also
-    implemented directly in \nekpp.
-    
+    \item \inlsh{NEKTAR\_USE\_PETSC}
+
+    Build \nekpp with support for the PETSc package for solving linear systems.
+
+    \item \inlsh{NEKTAR\_USE\_SCOTCH}
+
+    Build \nekpp with support for the SCOTCH graph partitioning library. This
+    provides an alternative mesh partitioning algorithm to METIS. However, METIS
+    is still required as it is used by the multi-level static condensation
+    algorithm.
+
+    \item \inlsh{NEKTAR\_USE\_SMV}
+
+    Build \nekpp with support for optimised sparse matrix-vector operations.
+
     \item \inlsh{NEKTAR\_USE\_VTK}
     
     Build \nekpp with support for VTK libraries. This is only needed for

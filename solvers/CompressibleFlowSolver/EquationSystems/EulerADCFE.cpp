@@ -277,6 +277,7 @@ namespace Nektar
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+
             // Wall Boundary Condition
             if (boost::iequals(type,"WallViscous"))
             {

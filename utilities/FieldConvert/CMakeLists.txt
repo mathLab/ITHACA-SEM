@@ -6,7 +6,6 @@ SET(FieldConvertHeaders
     InputModules/InputXml.h
     InputModules/InputPts.h
     OutputModules/OutputInfo.h
-    OutputModules/OutputMTCProp.h
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
@@ -42,7 +41,6 @@ SET(FieldConvertSources
     InputModules/InputXml.cpp
     InputModules/InputPts.cpp
     OutputModules/OutputInfo.cpp
-    OutputModules/OutputMTCProp.cpp
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp
     OutputModules/OutputFld.cpp

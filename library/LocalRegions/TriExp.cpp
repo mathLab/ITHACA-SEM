@@ -698,13 +698,32 @@ namespace Nektar
             switch(edge)
             {
             case 0:
-                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                Vmath::Vcopy(nquad0, &(inarray[0]), 1, &(outarray[0]), 1);
+                /*
+                for (int i = 0; i < nquad0; ++i)
+                {
+                    cout << "outarray = " << outarray[i] << endl;
+                }
+                 */
                 break;
             case 1:
-                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outarray[0]),1);
+                Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
+                             nquad0, &(outarray[0]), 1);
+                /*
+                for (int i = 0; i < nquad1; ++i)
+                {
+                    cout << "outarray = " << outarray[i] << endl;
+                }
+                 */
                 break;
             case 2:
-                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
+                Vmath::Vcopy(nquad1, &(inarray[0]), nquad0, &(outarray[0]), 1);
+                /*
+                for (int i = 0; i < nquad1; ++i)
+                {
+                    cout << "outarray = " << outarray[i] << endl;
+                }
+                 */
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
@@ -718,8 +737,10 @@ namespace Nektar
 		
                 outtmp = outarray;
                 
-                LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),outtmp,
-                                       EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+                LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),
+                                       outtmp,
+                                       EdgeExp->GetBasis(0)->GetPointsKey(),
+                                       outarray);
             }
             
             //Reverse data if necessary
@@ -770,19 +791,24 @@ namespace Nektar
                     //             &(outarray[0]), 1);
                     break;
                 case 1:
-                    outarray = Array<OneD, int>(nquad0);
-                    for (int i = 0; i < nquad0; ++i)
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
                     {
-                        outarray[i] = i;
+                        outarray[i] = (nquad0-1) + i * nquad0;
                     }
                     //Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
                     //             nquad0, &(outarray[0]), 1);
                     break;
                 case 2:
-                    outarray = Array<OneD, int>(nquad0);
-                    for (int i = 0; i < nquad0; ++i)
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
                     {
-                        outarray[i] = i;
+                        //cout << "i = " << i << endl;
+                        //cout << "i + i*(nquad0-1) = "
+                        //     << i + i*(nquad0-1) << endl;
+                        outarray[i] = i + i*(nquad0-1);
+                        
+                        //cout << "outarray = " << outarray[i] << endl;
                     }
                     //Vmath::Vcopy(nquad1, &(inarray[0]),
                     //             nquad0, &(outarray[0]), 1);
@@ -792,14 +818,29 @@ namespace Nektar
                     break;
             }
             
-            // Reverse data if necessary
             /*
+            cout << "eBackwards?"
+                 << (GetCartesianEorient(edge) == StdRegions::eBackwards)
+                 << endl;
+            
+            // Reverse data if necessary
             if (GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                Vmath::Reverse(EdgeExp->GetNumPoints(0),
-                               &outarray[0], 1, &outarray[0], 1);
+                cout << "Hello" <<endl;
+                
+                int nn = outarray.num_elements();
+                int nloop = nn/2;
+                int store;
+                
+                for (int rev = 0; rev < nloop; ++rev)
+                {
+                    store = outarray[nn-1-rev];
+                    outarray[nn-1-rev] = outarray[rev];
+                    outarray[rev] = store;
+                    cout << "outarray = " << outarray[rev] << endl;
+                }
             }
-            */
+             */
         }
 
 

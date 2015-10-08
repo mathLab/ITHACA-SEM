@@ -515,8 +515,8 @@ namespace Nektar
 
                         if (it2 == perEdgeToExpMap.end())
                         {
-                            if (m_session->GetComm()->GetRowComm()->GetSize() > 1 &&
-                                !ent.isLocal)
+                            if (m_session->GetComm()->
+                                GetRowComm()->GetSize() > 1 && !ent.isLocal)
                             {
                                 continue;
                             }
@@ -1317,7 +1317,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Fwd,
             Array<OneD, NekDouble> &Bwd)
         {
-            v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+            v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
         }
 
         /**
@@ -1357,11 +1357,25 @@ namespace Nektar
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
 #if 1
+            cout << "================== NEW v_GetFwdBwdTracePhys ======================" << endl;
+            /*
+            for (int mm = 0; mm < field.num_elements(); ++mm)
+            {
+                cout <<"i = " << mm << "\tfield = " << field[mm] << endl;
+            }
+            */
             // blocked routine
             Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                             GetNLocTracePts());
-
+            
             m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
+            
+            /*
+            for (int mm = 0; mm < edgevals.num_elements(); ++mm)
+            {
+                cout << "edgevals = " << edgevals[mm] << endl;
+            }
+            */
             
             m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
 
@@ -1370,7 +1384,6 @@ namespace Nektar
 
             m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
             
-            /*
             for (int mm = 0; mm < Fwd.num_elements(); ++mm)
             {
                 cout << "Fwd = " << Fwd[mm] << endl;
@@ -1380,8 +1393,8 @@ namespace Nektar
                 cout << "Bwd = " << Bwd[mm] << endl;
             }
             int num; cin >> num;
-             */
 #else
+            cout << "================== OLD v_GetFwdBwdTracePhys ======================" << endl;
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
             Array<OneD,NekDouble> e_tmp;
@@ -1401,7 +1414,7 @@ namespace Nektar
                 {
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
-
+                    
                     if (m_leftAdjacentEdges[cnt])
                     {
                         exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
@@ -1416,7 +1429,7 @@ namespace Nektar
                     }
                 }
             }
-            /*
+
             for (int mm = 0; mm < Fwd.num_elements(); ++mm)
             {
                 cout << "Fwd = " << Fwd[mm] << endl;
@@ -1426,7 +1439,6 @@ namespace Nektar
                 cout << "Bwd = " << Bwd[mm] << endl;
             }
             int num; cin >> num;
-             */
 #endif
             
             // Fill boundary conditions into missing elements
@@ -1548,6 +1560,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
         {
+            //cout << "v_AddTraceIntegral 3 ============================" << endl;
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
@@ -1591,6 +1604,19 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
+            for (int i = 0; i < Fn.num_elements(); ++i)
+            {
+                cout << "i = " << i << "\tFn = " << Fn[i] << endl;
+            }
+#if 1
+            cout << "================== NEW v_AddTraceIntegral 2 ======================" << endl;
+            Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
+            m_trace->IProductWRTBase(Fn, Fcoeffs);
+            
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                              outarray);
+#else
+            cout << "================== OLD v_AddTraceIntegral 2 ======================" << endl;
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
@@ -1604,9 +1630,16 @@ namespace Nektar
                     t_offset = GetTrace()->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->AddEdgeNormBoundaryInt(
-                        e, elmtToTrace[n][e], Fn+t_offset,
+                        e,
+                        elmtToTrace[n][e],
+                        Fn+t_offset,
                         e_outarray = outarray+offset);
                 }
+            }
+#endif
+            for (int i = 0; i < outarray.num_elements(); ++i)
+            {
+                cout << "i = " << i << "\toutarray = " << outarray[i] << endl;
             }
         }
         
@@ -1638,6 +1671,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Bwd, 
                   Array<OneD,       NekDouble> &outarray)
         {
+            //cout << "v_AddFwdBwdTraceIntegral 3 ============================" << endl;
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >

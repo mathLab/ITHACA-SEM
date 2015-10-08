@@ -125,6 +125,10 @@ namespace Nektar
                     fields[i]->IProductWRTDerivBase(j, inarray[i], qcoeffs);
                     Vmath::Neg                      (nCoeffs, qcoeffs, 1);
                     fields[i]->AddTraceIntegral     (flux[j][i], qcoeffs);
+                    for (int mm = 0; mm < qcoeffs.num_elements(); ++mm)
+                    {
+                        cout << "i = " << mm << "\tqcoeffs = " << qcoeffs[mm] << endl;
+                    }
                     fields[i]->SetPhysState         (false);
                     fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);
                     fields[i]->BwdTrans             (qcoeffs, qfield[j][i]);

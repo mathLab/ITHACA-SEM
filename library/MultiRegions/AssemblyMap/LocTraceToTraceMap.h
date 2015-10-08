@@ -61,8 +61,10 @@ namespace Nektar
             eInterpEndPtDir0InterpDir1
         };
 
-        typedef boost::tuple<LibUtilities::PointsKey,
-            LibUtilities::PointsKey, LibUtilities::PointsKey,
+        typedef boost::tuple<
+            LibUtilities::PointsKey,
+            LibUtilities::PointsKey,
+            LibUtilities::PointsKey,
             LibUtilities::PointsKey> TraceInterpPoints;
         
         struct cmpop

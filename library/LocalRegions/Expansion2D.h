@@ -171,15 +171,15 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray);
             
             LOCAL_REGIONS_EXPORT void ReOrientQuadEdgePhysMap(
-                const StdRegions::Orientation orient,
-                const int nq0,
-                Array<OneD, int> &idmap);
+                const StdRegions::Orientation    orient,
+                const int                        nq0,
+                Array<OneD, int>                &idmap);
 
             Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
 
-            virtual void v_NegateEdgeNormal(const int edge);
+            virtual void v_NegateEdgeNormal (const int edge);
             virtual bool v_EdgeNormalNegated(const int edge);
-            virtual void v_SetUpPhysNormals(const int edge);
+            virtual void v_SetUpPhysNormals (const int edge);
             const StdRegions::NormalVector &v_GetEdgeNormal(const int edge) const;
             const StdRegions::NormalVector &v_GetSurfaceNormal(const int id) const;
         };

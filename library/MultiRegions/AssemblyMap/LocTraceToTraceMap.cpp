@@ -345,6 +345,7 @@ namespace Nektar
                             locTraceToTraceMap);
                     
 
+#if 0 // not sure we need this
                     if (orient == StdRegions::eBackwards)
                     {
                         int nn = toPointsKey0.GetNumPoints();
@@ -364,8 +365,8 @@ namespace Nektar
                                 edgeids[rev] = store;
                             }
                         }
-                    }
-                    
+                    }                    
+#endif
                     
                     int offset = trace->GetPhys_Offset(elmtToTrace[n][e]->
                                                        GetElmtId());

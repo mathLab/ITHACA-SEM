@@ -806,7 +806,8 @@ namespace Nektar
                         //cout << "i = " << i << endl;
                         //cout << "i + i*(nquad0-1) = "
                         //     << i + i*(nquad0-1) << endl;
-                        outarray[i] = i + i*(nquad0-1);
+                        //outarray[i] = i + i*(nquad0-1);
+                        outarray[i] =  i*nquad0;
                         
                         //cout << "outarray = " << outarray[i] << endl;
                     }

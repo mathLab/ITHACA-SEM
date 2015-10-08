@@ -714,27 +714,42 @@ namespace Nektar
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
                 std::map<int,int>::iterator it;
+                int zoffset = 0;
+                bool CheckOnBasis; 
 
+                // offset planes information if single mode expansion
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+                {
+                    CheckOnBasis = false;
+                    zoffset = 2;
+                }
 
                 // Build map of plane IDs lying on this processor.
                 std::map<int,int> homoZids;
                 for (i = 0; i < m_planes.num_elements(); ++i)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)] = i;
+                    homoZids[m_transposition->GetPlaneID(i)] = i + zoffset;
                 }
                 
                 if(fielddef->m_numHomogeneousDir)
                 {
-                    for(i = 0; i < fielddef->m_basis.size(); ++i)
+                    if(CheckOnBasis)
                     {
-                        if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
+                        for(i = 0; i < fielddef->m_basis.size(); ++i)
                         {
-                            nzmodes = fielddef->m_homogeneousZIDs.size();
-                            break;
+                            if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
+                            {
+                                nzmodes = fielddef->m_homogeneousZIDs.size();
+                                break;
+                            }
                         }
+                        ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of Homogeneous modes");
+                        
                     }
-                    ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of Homogeneous modes");
-                    
+                    else
+                    {
+                        nzmodes = fielddef->m_homogeneousZIDs.size();
+                    }
                     fieldDefHomoZids = fielddef->m_homogeneousZIDs;
                 }
                 else // input file is 2D and so set nzmodes to 1

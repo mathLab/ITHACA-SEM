@@ -606,10 +606,18 @@ namespace Nektar
             HomoLen.push_back(m_lhom);
             
             std::vector<unsigned int> PlanesIDs;
-            
+            int IDoffset = 0;
+
+            // introduce a 2 plane offset for single mode case so can
+            // be post-processed or used in MultiMode expansion. 
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                IDoffset  = 2;
+            }
+
             for(int i = 0; i < m_planes.num_elements(); i++)
             {
-                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
             int NumHomoStrip;
@@ -629,10 +637,16 @@ namespace Nektar
             HomoLen.push_back(m_lhom);
             
             std::vector<unsigned int> PlanesIDs;
-            
+            int IDoffset = 0;
+
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                IDoffset = 2;
+            }
+
             for(int i = 0; i < m_planes.num_elements(); i++)
             {
-                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
             int NumHomoStrip;
@@ -714,42 +728,17 @@ namespace Nektar
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
                 std::map<int,int>::iterator it;
-                int zoffset = 0;
-                bool CheckOnBasis; 
-
-                // offset planes information if single mode expansion
-                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
-                {
-                    CheckOnBasis = false;
-                    zoffset = 2;
-                }
 
                 // Build map of plane IDs lying on this processor.
                 std::map<int,int> homoZids;
                 for (i = 0; i < m_planes.num_elements(); ++i)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)] = i + zoffset;
+                    homoZids[m_transposition->GetPlaneID(i)] = i;
                 }
                 
                 if(fielddef->m_numHomogeneousDir)
                 {
-                    if(CheckOnBasis)
-                    {
-                        for(i = 0; i < fielddef->m_basis.size(); ++i)
-                        {
-                            if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
-                            {
-                                nzmodes = fielddef->m_homogeneousZIDs.size();
-                                break;
-                            }
-                        }
-                        ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of Homogeneous modes");
-                        
-                    }
-                    else
-                    {
-                        nzmodes = fielddef->m_homogeneousZIDs.size();
-                    }
+                    nzmodes = fielddef->m_homogeneousZIDs.size();
                     fieldDefHomoZids = fielddef->m_homogeneousZIDs;
                 }
                 else // input file is 2D and so set nzmodes to 1

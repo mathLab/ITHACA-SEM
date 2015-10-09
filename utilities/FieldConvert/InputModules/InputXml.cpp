@@ -290,8 +290,16 @@ void InputXml::Process(po::variables_map &vm)
 
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
     }
+    
+    int zplanes = -1;
 
-    m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
+    if(vm.count("zplanes"))
+    {
+        zplanes = vm["zplanes"].as<int>();
+    }
+
+
+    m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven,zplanes);
 }
 
 }

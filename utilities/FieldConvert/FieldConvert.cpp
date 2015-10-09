@@ -75,7 +75,9 @@ int main(int argc, char* argv[])
         ("useSessionVariables",
                 "Use variables defined in session for output")
         ("verbose,v",
-                "Enable verbose mode.");
+                "Enable verbose mode.")
+        ("zplanes,z", po::value<int>(),
+                "use specified number of z planes in Homogeneous direction.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()

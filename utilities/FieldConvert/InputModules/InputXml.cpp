@@ -443,7 +443,6 @@ void InputXml::Process(po::variables_map &vm)
         }
         
     }
-
 }
 
 }

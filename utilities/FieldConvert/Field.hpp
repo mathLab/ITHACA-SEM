@@ -113,7 +113,8 @@ struct Field {
     LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
-                                                     bool fldfilegiven = false)
+                                                     bool fldfilegiven = false,
+                                                     int zplanes = -1)
     {
 
         MultiRegions::ExpListSharedPtr exp;
@@ -143,22 +144,36 @@ struct Field {
 
                     if(fldfilegiven)
                     {
-                        nplanes = m_fielddef[0]->m_numModes[1];
+                        if(zplanes == -1)
+                        {
+                            nplanes = m_fielddef[0]->m_numModes[1];
+                        }
+                        else
+                        {
+                            nplanes = zplanes;
+                        }
                         ly      = m_fielddef[0]->m_homogeneousLengths[0];
                         btype   = m_fielddef[0]->m_basis[1];
                     }
                     else
                     {
-                        m_session->LoadParameter("HomModesZ", nplanes);
+                        if(zplanes == -1)
+                        {
+                            m_session->LoadParameter("HomModesZ", nplanes);
+                        }
+                        else
+                        {
+                            nplanes = zplanes;
+                        }
                         m_session->LoadParameter("LY",ly);
                         btype = LibUtilities::eFourier;
                     }
 
                     // Choose points to be at evenly spaced points at
-                    // nplanes points
+                    // nplanes +1 points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
-
+                        Pkey(nplanes+1, LibUtilities::ePolyEvenlySpaced);
+                    
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 
 
@@ -283,24 +298,52 @@ struct Field {
                     int nplanes;
                     NekDouble lz;
                     LibUtilities::BasisType btype;
-
+                    
                     if(fldfilegiven)
                     {
-                        nplanes =  m_fielddef[0]->m_numModes[2];
+                        if(zplanes == -1)
+                        {
+                            nplanes = m_fielddef[0]->m_numModes[2];
+                        }
+                        else
+                        {
+                            nplanes = zplanes;
+                        }
                         lz      = m_fielddef[0]->m_homogeneousLengths[0];
                         btype   = m_fielddef[0]->m_basis[2];
+
+                        // redefined single mode to be Fourier modes
+                        // so visualisation makes sense
+                        if(btype == LibUtilities::eFourierSingleMode)
+                        {
+                            btype = LibUtilities::eFourier;
+                            m_fielddef[0]->m_basis[2] = LibUtilities::eFourierSingleMode;
+                            if(nplanes <= 2)
+                            {
+                                nplanes = 4;
+                                WARNINGL0(false,"Redefining HomModesZ to 4 "
+                                          "so that First Fourier mode is visible");
+                            }
+                        }
                     }
                     else
                     {
-                        m_session->LoadParameter("HomModesZ", nplanes);
+                        if(zplanes == -1)
+                        {
+                            m_session->LoadParameter("HomModesZ", nplanes);
+                        }
+                        else
+                        {
+                            nplanes = zplanes; 
+                        }
                         m_session->LoadParameter("LZ",lz);
                         btype = LibUtilities::eFourier;
                     }
 
                     // Choose points to be at evenly spaced points at
-                    // nplanes points
+                    // nplanes +1 points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes+1, LibUtilities::ePolyEvenlySpaced);
 
                     const LibUtilities::BasisKey  Bkey(btype, nplanes, Pkey);
 

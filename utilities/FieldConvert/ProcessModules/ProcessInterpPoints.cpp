@@ -150,9 +150,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             vector<int> ppe;
             ppe.push_back(npts);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-            m_f->m_fieldPts->SetPointsPerEdge(ppe);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
-
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+       
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
         {
@@ -162,12 +162,12 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                              m_config["plane"].as<string>().c_str(),values),
                      "Failed to interpret plane string");
 
-            ASSERTL0(values.size() > 3,
+            ASSERTL0(values.size() > 10,
                      "line string should contain 2Dim+1 values "
-                     "N,x0,y0,z0,x1,y1,z1");
+                     "N1,N2,x0,y0,x1,y1,x2,y2,x2,y3");
 
 
-            int dim = (values.size()-1)/4;
+            int dim = (values.size()-2)/4;
 
             int npts1 = values[0];
             int npts2 = values[1];
@@ -186,18 +186,15 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                     pts[0][i+j*npts1] =
                         (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
                         (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
-                    if(dim > 1)
+                    pts[1][i+j*npts1] =
+                        (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
+                        (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                    
+                    if(dim > 2)
                     {
-                        pts[1][i+j*npts1] =
-                            (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
-                            (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
-
-                        if(dim > 2)
-                        {
-                            pts[2][i+j*npts1] =
-                                (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
-                                (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
-                        }
+                        pts[2][i+j*npts1] =
+                            (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
+                            (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
                     }
                 }
             }
@@ -206,9 +203,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             ppe.push_back(npts1);
             ppe.push_back(npts2);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-            m_f->m_fieldPts->SetPointsPerEdge(ppe);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsPlane);
-
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+           
         }
     }
 
@@ -337,7 +334,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
                          NekDouble                              clamp_up,
                          NekDouble                              def_value)
 {
-    int expdim = field0[0]->GetCoordim(0);
+    int expdim = pts.num_elements();
 
     Array<OneD, NekDouble> coords(expdim), Lcoords(expdim);
     int nq1 = pts[0].num_elements();

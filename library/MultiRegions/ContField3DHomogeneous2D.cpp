@@ -164,7 +164,7 @@ namespace Nektar
             int cnt = 0;
             int cnt1 = 0;
             int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
-			int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
             NekDouble beta_y;
 			NekDouble beta_z;
 			NekDouble beta;
@@ -173,16 +173,16 @@ namespace Nektar
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
 			
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else 
+            {
 				// Fourier transform forcing function
-                            HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
-			}
-
+                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+            }
+            
             for(n = 0; n < nhom_modes_z; ++n)
             {
                 for(m = 0; m < nhom_modes_y; ++m)
@@ -202,6 +202,17 @@ namespace Nektar
                     cnt1 += m_lines[n]->GetNcoeffs();
                     
                 }
+            }
+        }
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField3DHomogeneous2D::v_ClearGlobalLinSysManager(void)
+        {
+            for(int n = 0; n < m_lines.num_elements(); ++n)
+            {
+                m_lines[n]->ClearGlobalLinSysManager();
             }
         }
         

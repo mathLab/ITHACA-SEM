@@ -629,5 +629,15 @@ namespace Nektar
             }
         }
 
+
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField1D::v_ClearGlobalLinSysManager(void)
+        {
+            m_globalLinSysManager.ClearManager("GlobalLinSys");
+        }
+
     } // end of namespace
 } //end of namespace

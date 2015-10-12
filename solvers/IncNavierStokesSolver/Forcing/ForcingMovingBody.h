@@ -101,13 +101,14 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement* pForce);
 
-        void TensionedCableModel(
+        void Newmark_betaSolver(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                   Array<OneD, NekDouble> &FcePhysinArray,
                   Array<OneD, NekDouble> &MotPhysinArray);
 
         void EvaluateStructDynModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                  Array<OneD, NekDouble> &Hydroforces,
                   NekDouble time );
 
         void SetDynEqCoeffMatrix(
@@ -131,7 +132,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
         /// storage for the cable's force(x,y) variables
         Array<OneD, NekDouble> m_Aeroforces;
         /// storage for the cable's motion(x,y) variables
-        Array<OneD, NekDouble> m_MotionVars;
+        Array<OneD, Array<OneD, NekDouble> >m_MotionVars;
         /// fictitious velocity storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
         /// fictitious acceleration storage
@@ -150,6 +151,11 @@ class ForcingMovingBody : public SolverUtils::Forcing
         Array<OneD, Array< OneD, NekDouble> > m_zta;
         /// Store the derivatives of motion variables in y-direction
         Array<OneD, Array< OneD, NekDouble> > m_eta;
+        ///
+        unsigned int                    m_outputFrequency;
+        Array<OneD, std::ofstream>      m_outputStream;
+        std::string                     m_outputFile_fce;
+        std::string                     m_outputFile_mot;
 };
 
 }

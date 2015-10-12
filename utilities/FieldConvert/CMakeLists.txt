@@ -22,6 +22,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessInterpPointDataToFld.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
+    ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
     ProcessModules/ProcessScaleInFld.h
     ProcessModules/ProcessSurfDistance.h
@@ -57,6 +58,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessInterpPointDataToFld.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+    ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessPrintFldNorms.cpp
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp

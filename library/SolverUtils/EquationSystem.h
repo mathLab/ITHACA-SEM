@@ -405,6 +405,9 @@ namespace Nektar
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
                 const string & s1, const string& s2) ;
                 
+            /// Virtual function to identify if operator is negated in DoSolve
+            SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
+
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
@@ -447,11 +450,11 @@ namespace Nektar
             /// Expansion dimension.
             int                                         m_expdim;
             /// Flag to determine if single homogeneous mode is used.
-            bool                                        m_SingleMode;
+            bool                                        m_singleMode;
             /// Flag to determine if half homogeneous mode is used.
-            bool                                        m_HalfMode;
+            bool                                        m_halfMode;
             /// Flag to determine if use multiple homogenenous modes are used.
-            bool                                        m_MultipleModes;
+            bool                                        m_multipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
             /**
@@ -525,6 +528,7 @@ namespace Nektar
             
             /// Virtual function for solve implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
+            
             
             /// Virtual function for the L_inf error computation between fields and a given exact solution.
             SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(

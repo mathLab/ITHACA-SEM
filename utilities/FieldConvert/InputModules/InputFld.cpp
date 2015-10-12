@@ -48,16 +48,19 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputFld::m_className[3] = {
+ModuleKey InputFld::m_className[4] = {
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "fld"), InputFld::create,
         "Reads Fld file."),
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "chk"), InputFld::create,
-        "Reads Fld file."),
+        "Reads checkpoint file."),
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "rst"), InputFld::create,
-        "Reads Fld file."),
+        "Reads restart file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "bse"), InputFld::create,
+        "Reads stability base-flow file.")
 };
 
 
@@ -70,6 +73,7 @@ InputFld::InputFld(FieldSharedPtr f) : InputModule(f)
     m_allowedFiles.insert("fld");
     m_allowedFiles.insert("chk");
     m_allowedFiles.insert("rst");
+    m_allowedFiles.insert("bse");
 }
 
 
@@ -105,6 +109,10 @@ void InputFld::Process(po::variables_map &vm)
     else if (m_f->m_inputfiles.count("rst") != 0)
     {
         fldending = "rst";
+    }
+    else if (m_f->m_inputfiles.count("bse") != 0)
+    {
+        fldending = "bse";
     }
     else
     {

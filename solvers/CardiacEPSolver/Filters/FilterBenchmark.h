@@ -50,7 +50,7 @@ public:
     /// Creates an instance of this class
     static SolverUtils::FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams) {
+        const ParamMap &pParams) {
         SolverUtils::FilterSharedPtr p =
             MemoryManager<FilterBenchmark>::AllocateSharedPtr(pSession,
                                                               pParams);
@@ -63,7 +63,7 @@ public:
     /// Construct the benchmark filter.
     FilterBenchmark(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams);
+        const ParamMap &pParams);
 
     /// Destructor for the benchmark filter.
     virtual ~FilterBenchmark();

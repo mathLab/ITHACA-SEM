@@ -69,7 +69,7 @@ namespace Nektar
             /// Writes the <ELEMENTS> section of the XML file.
             void WriteXmlElements(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <CURVES> section of the XML file if needed.
-            void WriteXmlCurves(TiXmlElement * pRoot);
+            void WriteXmlCurves(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <COMPOSITES> section of the XML file.
             void WriteXmlComposites(TiXmlElement * pRoot);
             /// Writes the <DOMAIN> section of the XML file.

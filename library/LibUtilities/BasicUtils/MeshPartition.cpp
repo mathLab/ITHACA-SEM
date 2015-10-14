@@ -1685,9 +1685,9 @@ namespace Nektar
                         {
                             MeshCurvedInfo cinfo; 
                             // add in
-                            cinfo.id = c.id;
+                            cinfo.id       = c.id;
                             cinfo.entityid = c.entityid;
-                            cinfo.npoints = c.npoints;
+                            cinfo.npoints  = c.npoints;
                             for(int i = 0; i < SIZE_PointsType; ++i)
                             {
                                 if(c.type.compare(kPointsTypeStr[i]) == 0)
@@ -1714,7 +1714,7 @@ namespace Nektar
                                     idxmap[idx] = newidx; 
                                     curvedpts.index.push_back(newidx);
                                     curvedpts.pts.push_back(m_meshCurvedPts[c.ptid].pts[idx]);
-                                    newidx = 0; 
+                                    newidx++; 
                                 }
                                 else
                                 {

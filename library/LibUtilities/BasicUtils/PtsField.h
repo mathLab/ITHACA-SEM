@@ -63,6 +63,14 @@ enum PtsType{
 };
 
 
+enum PtsInfo{
+    eIsEquiSpacedData,
+    ePtsPerElmtEdge
+};
+
+
+static map<PtsInfo,int> NullPtsInfoMap;
+
 class PtsPoint
 {
     public:
@@ -93,22 +101,25 @@ class PtsField
     public:
 
         LIB_UTILITIES_EXPORT PtsField(
-            const int dim,
-            const Array<OneD, Array<OneD, NekDouble> > &pts) :
-            m_dim(dim),
-            m_pts(pts),
-            m_ptsType(ePtsFile)
+                                      const int dim,
+                                      const Array<OneD, Array<OneD, NekDouble> > &pts) :
+        m_ptsInfo(NullPtsInfoMap),
+        m_dim(dim),
+        m_pts(pts),
+        m_ptsType(ePtsFile)
         {
         };
 
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
             const vector<std::string> fieldnames,
-            const Array<OneD, Array<OneD, NekDouble> > &pts) :
-            m_dim(dim),
-            m_fieldNames(fieldnames),
-            m_pts(pts),
-            m_ptsType(ePtsFile)
+            const Array<OneD, Array<OneD, NekDouble> > &pts,
+            map<PtsInfo,int> ptsInfo = NullPtsInfoMap):
+               m_ptsInfo(ptsInfo),
+                 m_dim(dim),
+                m_fieldNames(fieldnames),
+                m_pts(pts),
+                m_ptsType(ePtsFile)
         {
         };
 
@@ -118,12 +129,13 @@ class PtsField
             const Array<OneD, Array<OneD, NekDouble> > &pts,
             const Array<OneD, Array<OneD, float> > &weights,
             const Array<OneD, Array<OneD, unsigned int> > &neighInds) :
+            m_ptsInfo(NullPtsInfoMap),
             m_dim(dim),
             m_fieldNames(fieldnames),
             m_pts(pts),
             m_ptsType(ePtsFile),
             m_weights(weights),
-            m_neighInds(neighInds)
+                m_neighInds(neighInds)
         {
         };
 
@@ -200,6 +212,9 @@ class PtsField
             m_progressCallback = boost::bind(func, obj, _1, _2);
         }
 
+        /// map for information about points that can be added through PtsInfo enum
+        map<PtsInfo,int> m_ptsInfo; 
+
     private:
 
         /// Dimension of the pts field
@@ -228,7 +243,7 @@ class PtsField
 
         /// vector of box size xmin,xmax,ymin,ymax,zmin,zmax
         vector<NekDouble> m_boxSize;
-
+        
         boost::function<void (const int position, const int goal)> m_progressCallback;
 
         LIB_UTILITIES_EXPORT void CalcW_Linear(const int physPtIdx,

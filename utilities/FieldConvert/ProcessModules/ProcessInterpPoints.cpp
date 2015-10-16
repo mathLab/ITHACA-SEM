@@ -131,7 +131,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                         m_config["line"].as<string>().c_str(),values),
                      "Failed to interpret line string");
 
-            ASSERTL0(values.size() > 3,
+            ASSERTL0(values.size() > 2,
                      "line string should contain 2 Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
@@ -181,40 +181,93 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "N1,N2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3");
 
 
-            int dim = (values.size()-1)/4;
+            int dim = (values.size()-2)/4;
 
             int npts1 = values[0];
             int npts2 = values[1];
 
             Array<OneD, Array<OneD, NekDouble> > pts(dim);
 
-            for(int i = 0; i < dim; ++i)
-            {
-                pts[i] = Array<OneD,NekDouble>(npts1*npts2);
-            }
+            int totpts = npts1*npts2;
+            int nlocpts = totpts/nprocs;
 
-            for(int j = 0; j < npts2; ++j)
+            if(rank < nprocs-1)
             {
-                for(int i = 0; i < npts1; ++i)
+                for(int i = 0; i < dim; ++i)
                 {
-                    pts[0][i+j*npts1] =
-                        (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
-                        (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
-                    if(dim > 1)
-                    {
-                        pts[1][i+j*npts1] =
-                            (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
-                            (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                    pts[i] = Array<OneD,NekDouble>(nlocpts);
+                }
 
-                        if(dim > 2)
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int j = 0; j < npts2; ++j)
+                {
+                    for(int i = 0; i < npts1; ++i)
+                    {
+                        
+                        if((cnt >= rank*nlocpts)&&(cnt < (rank+1)*nlocpts))
                         {
-                            pts[2][i+j*npts1] =
-                                (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
-                                (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
+                            pts[0][cntloc] =
+                                (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
+
+                            pts[1][cntloc] =
+                                (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                            
+                            if(dim > 2)
+                            {
+                                pts[2][cntloc] =
+                                    (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                    (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
+                            }
+                            cntloc++;
                         }
+                        cnt++;
                     }
                 }
             }
+            else
+            {
+                totpts = totpts - rank*nlocpts;
+                
+                for(int i = 0; i < dim; ++i)
+                {
+                    pts[i] = Array<OneD,NekDouble>(totpts);
+                }
+                
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int j = 0; j < npts2; ++j)
+                {
+                    for(int i = 0; i < npts1; ++i)
+                    {
+                        
+                        if(cnt >= rank*nlocpts)
+                        {
+                            pts[0][cntloc] =
+                                (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
+                            
+                            pts[1][cntloc] =
+                                (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                            
+                            if(dim > 2)
+                            {
+                                pts[2][cntloc] =
+                                    (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                    (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
+                            }
+                            cntloc++;
+                        }
+                        cnt++;
+                    }
+                }
+            }
+
             vector<int> ppe;
             ppe.push_back(npts1);
             ppe.push_back(npts2);

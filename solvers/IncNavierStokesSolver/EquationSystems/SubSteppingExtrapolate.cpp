@@ -57,6 +57,7 @@ namespace Nektar
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
         m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.6);
         m_session->LoadParameter("MinSubSteps", m_minsubsteps,1);
+        m_session->LoadParameter("MaxSubSteps", m_maxsubsteps,100);
 
         int dim = m_fields[0]->GetCoordim(0);
         m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(dim);
@@ -341,6 +342,8 @@ namespace Nektar
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
         nsubsteps = max(m_minsubsteps, nsubsteps);
+
+        ASSERTL0(nsubsteps < m_maxsubsteps,"Number of substeps has exceeded maximum");
 
         dt = m_timestep/nsubsteps;
         

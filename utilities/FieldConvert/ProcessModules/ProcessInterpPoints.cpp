@@ -164,7 +164,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
             ASSERTL0(values.size() > 10,
                      "line string should contain 2Dim+1 values "
-                     "N1,N2,x0,y0,x1,y1,x2,y2,x2,y3");
+                     "N1,N2,x0,y0,x1,y1,x2,y2,x3,y3");
 
 
             int dim = (values.size()-2)/4;
@@ -405,5 +405,3 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
 }
 }
-
-

@@ -61,6 +61,9 @@ ProcessPointDataToFld::ProcessPointDataToFld(FieldSharedPtr f)
 {
     m_requireEquiSpaced = true;
 
+    m_config["setnantovalue"] = ConfigOption(false,"NotSet",
+                                             "reset any nan value to prescribed value");
+
     if((f->m_inputfiles.count("pts") == 0))
     {
         cout << endl << "A pts input file must be specified for the boundary extraction module" << endl;
@@ -85,6 +88,14 @@ ProcessPointDataToFld::~ProcessPointDataToFld()
 void ProcessPointDataToFld::Process(po::variables_map &vm)
 {
     int i,j;
+    bool setnantovalue = false;
+    NekDouble defvalue;
+    
+    if(!boost::iequals(m_config["setnantovalue"].as<string>(),"NotSet"))
+    {
+        setnantovalue = true;
+        defvalue = m_config["setnantovalue"].as<NekDouble>();
+    }
 
     // Check for command line point specification if no .pts file specified
     ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
@@ -139,9 +150,18 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
                 mismatch +=1;
             }
         }
+        NekDouble value; 
         for(j = 0;j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, pts[j+dim][i]);
+            value = pts[j+dim][i];
+            if(setnantovalue)
+            {
+                if ((boost::math::isnan)(pts[j+dim][i]))
+                {
+                    value = defvalue; 
+                }
+            }
+            m_f->m_exp[j]->SetPhys(i, value);
         }
     }
 

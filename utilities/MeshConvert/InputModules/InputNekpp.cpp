@@ -306,7 +306,14 @@ namespace Nektar
                     
                     E->SetId((*geomIt)->GetGlobalID());
                     
-                    m_mesh->m_element[dim].push_back(E);
+                    if(dim == m_mesh->m_expDim) // load mesh into location based on globalID
+                    {
+                        m_mesh->m_element[dim][(*geomIt)->GetGlobalID()] = E;
+                    }
+                    else // push onto vector for later usage as composite region
+                    {
+                        m_mesh->m_element[dim].push_back(E);
+                    }
                     
                     if(dim > 1)
                     {

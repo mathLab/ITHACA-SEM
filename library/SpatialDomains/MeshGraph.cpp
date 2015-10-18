@@ -1407,7 +1407,7 @@ namespace Nektar
                         int offset = facinfo[i].ptoffset;
                         for(int j = 0; j < facinfo[i].npoints; ++j)
                         {
-                            int idx = cpts.index[offset+i];
+                            int idx = cpts.index[offset+j];
                             
                             PointGeomSharedPtr vert(MemoryManager<PointGeom>::
                                                     AllocateSharedPtr(m_meshDimension, facinfo[i].id, 

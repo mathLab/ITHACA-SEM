@@ -540,7 +540,7 @@ namespace Nektar
                             {
                                 MeshEntity e;
                                 e.id = data[i].id;
-                                e.type = 'T';
+                                e.type = 'S';
                                 e.list.push_back(data[i].v0);
                                 e.list.push_back(data[i].v1);
                                 m_meshElements[e.id] = e;
@@ -629,7 +629,7 @@ namespace Nektar
                             {
                                 MeshEntity f;
                                 f.id = data[i].id;
-                                f.type = 'Q';
+                                f.type = 'R';
                                 for (int j = 0; j < 5; ++j)
                                 {
                                     f.list.push_back(data[i].f[j]);
@@ -647,7 +647,7 @@ namespace Nektar
                             {
                                 MeshEntity f;
                                 f.id = data[i].id;
-                                f.type = 'Q';
+                                f.type = 'H';
                                 for (int j = 0; j < 6; ++j)
                                 {
                                     f.list.push_back(data[i].f[j]);

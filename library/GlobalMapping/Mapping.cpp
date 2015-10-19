@@ -249,7 +249,8 @@ namespace Nektar
                     }
                 }
                 else
-                {                    
+                {                   
+                    int expdim = m_fields[0]->GetGraph()->GetMeshDimension();
                     string fieldNames[3] = {"x", "y", "z"};
                     string velFieldNames[3] = {"vx", "vy", "vz"};
                     
@@ -263,7 +264,7 @@ namespace Nektar
                     bool wavespace = m_fields[0]->GetWaveSpace();
                     m_fields[0]->SetWaveSpace(false);
                     // copy coordinates Data into FieldData and set variable
-                    for(int j = 0; j < m_nConvectiveFields; ++j)
+                    for(int j = 0; j < expdim; ++j)
                     {                
                         m_fields[0]->FwdTrans_IterPerExp(m_coords[j], fieldcoeffs);
 
@@ -277,7 +278,7 @@ namespace Nektar
                     if (m_timeDependent)
                     {
                         // copy coordinates velocity Data into FieldData and set variable
-                        for(int j = 0; j < m_nConvectiveFields; ++j)
+                        for(int j = 0; j < expdim; ++j)
                         {                
                             m_fields[0]->FwdTrans_IterPerExp(m_coordsVel[j], fieldcoeffs);
 

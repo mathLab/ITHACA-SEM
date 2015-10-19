@@ -74,7 +74,7 @@ void ProcessMapping::Process(po::variables_map &vm)
         spacedim = 3;
     }
     int nfields = m_f->m_fielddef[0]->m_fields.size();
-    int addfields = spacedim;
+    int addfields = expdim;
     m_f->m_exp.resize(nfields+addfields);
     
     // Load mapping

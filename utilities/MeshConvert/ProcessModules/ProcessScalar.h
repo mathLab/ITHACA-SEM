@@ -33,37 +33,39 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSSCALAR
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSSCALAR
+#ifndef UTILITIES_MESHCONVERT_PROCESSSCALAR
+#define UTILITIES_MESHCONVERT_PROCESSSCALAR
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the Jacobian of elements
-         * using %SpatialDomains::GeomFactors and the %Element::GetGeom
-         * method. For now it simply prints a list of elements which have
-         * negative Jacobian.
-         */
-        class ProcessScalar : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessScalar>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            ProcessScalar(MeshSharedPtr m);
-            virtual ~ProcessScalar();
-
-            /// Write mesh to output file.
-            virtual void Process();
-        };
+/**
+ * @brief This processing module calculates the Jacobian of elements
+ * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+ * method. For now it simply prints a list of elements which have
+ * negative Jacobian.
+ */
+class ProcessScalar : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<ProcessScalar>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessScalar(MeshSharedPtr m);
+    virtual ~ProcessScalar();
+
+    /// Write mesh to output file.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

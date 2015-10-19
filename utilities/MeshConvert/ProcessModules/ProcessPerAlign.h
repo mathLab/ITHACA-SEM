@@ -33,32 +33,34 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSPERALIGN
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSPERALIGN
+#ifndef UTILITIES_MESHCONVERT_PROCESSPERALIGN
+#define UTILITIES_MESHCONVERT_PROCESSPERALIGN
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+class ProcessPerAlign : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        class ProcessPerAlign : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m)
-            {
-                return MemoryManager<ProcessPerAlign>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-
-            ProcessPerAlign(MeshSharedPtr m);
-            virtual ~ProcessPerAlign();
-
-            /// Write mesh to output file.
-            virtual void Process();
-        };
+        return MemoryManager<ProcessPerAlign>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessPerAlign(MeshSharedPtr m);
+    virtual ~ProcessPerAlign();
+
+    /// Write mesh to output file.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

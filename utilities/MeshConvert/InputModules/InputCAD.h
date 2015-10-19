@@ -40,23 +40,25 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        class InputCAD : public InputModule
-        {
-        public:
-            InputCAD(MeshSharedPtr m);
-            virtual ~InputCAD();
-            virtual void Process();
+namespace Utilities
+{
 
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputCAD>::AllocateSharedPtr(m);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey className;
-        };
+class InputCAD : public InputModule
+{
+public:
+    InputCAD(MeshSharedPtr m);
+    virtual ~InputCAD();
+    virtual void Process();
+
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
     }
+    /// %ModuleKey for class.
+    static ModuleKey className;
+};
+
+}
 }
 
 #endif

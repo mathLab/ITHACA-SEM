@@ -33,32 +33,34 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTVTK
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTVTK
+#ifndef UTILITIES_MESHCONVERT_INPUTVTK
+#define UTILITIES_MESHCONVERT_INPUTVTK
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /// Converter for VTK files.
-        class InputVtk : public InputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputVtk>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            InputVtk(MeshSharedPtr m);
-            virtual ~InputVtk();
-
-            /// Populate and validate required data structures.
-            virtual void Process();
-        };
+/// Converter for VTK files.
+class InputVtk : public InputModule
+{
+public:
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputVtk>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    InputVtk(MeshSharedPtr m);
+    virtual ~InputVtk();
+
+    /// Populate and validate required data structures.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

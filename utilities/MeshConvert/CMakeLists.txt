@@ -7,7 +7,7 @@ SET(MeshConvertHeaders
     InputModules/InputSwan.h
     InputModules/InputStarTec.h
     Module.h
-    OutputModules/OutputGmsh.h
+#    OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
     ProcessModules/ProcessBL.h
     ProcessModules/ProcessCyl.h
@@ -31,7 +31,7 @@ SET(MeshConvertSources
     InputModules/InputStarTec.cpp
     MeshConvert.cpp
     Module.cpp
-    OutputModules/OutputGmsh.cpp
+#    OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
     ProcessModules/ProcessBL.cpp
     ProcessModules/ProcessCyl.cpp

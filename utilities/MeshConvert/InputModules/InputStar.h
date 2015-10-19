@@ -37,7 +37,7 @@
 #define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSTAR
 
 #include "../Module.h"
-#include <MeshUtils/MeshElements/MeshElements.h>
+
 #include "ccmio.h"
 
 

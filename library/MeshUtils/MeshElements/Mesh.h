@@ -38,7 +38,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace MeshUtils
 {
     /**
      * Enumeration of condition types (Dirichlet, Neumann, etc).

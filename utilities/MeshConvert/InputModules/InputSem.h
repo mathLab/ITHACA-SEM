@@ -33,39 +33,41 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSEM
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSEM
+#ifndef UTILITIES_MESHCONVERT_INPUTSEM
+#define UTILITIES_MESHCONVERT_INPUTSEM
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * Converter for Semtex session files.
-         */
-        class InputSem : public InputModule
-        {
-        public:
-            InputSem(MeshSharedPtr m);
-            virtual ~InputSem();
-            virtual void Process();
-            
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputSem>::AllocateSharedPtr(m);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey className;
-            
-        private:
-            void insertEdge(int elmt, int side, int tagId);
-            
-            /// Maps Semtex sections to positions inside the input file.
-            std::map<std::string,std::streampos> sectionMap;
-        };
+namespace Utilities
+{
+
+/**
+ * Converter for Semtex session files.
+ */
+class InputSem : public InputModule
+{
+public:
+    InputSem(MeshSharedPtr m);
+    virtual ~InputSem();
+    virtual void Process();
+
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputSem>::AllocateSharedPtr(m);
     }
+    /// %ModuleKey for class.
+    static ModuleKey className;
+
+private:
+    void insertEdge(int elmt, int side, int tagId);
+
+    /// Maps Semtex sections to positions inside the input file.
+    std::map<std::string,std::streampos> sectionMap;
+};
+
+}
 }
 
 #endif

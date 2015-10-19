@@ -34,120 +34,125 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <MeshUtils/MeshElements/MeshElements.h>
-#include "ProcessScalar.h"
 
 #include <SpatialDomains/MeshGraph.h>
+
 #include <LocalRegions/QuadExp.h>
+
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
-#include <vector>
+#include "ProcessScalar.h"
+
 using namespace std;
+using namespace Nektar::MeshUtils;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey ProcessScalar::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "scalar"), ProcessScalar::create,
+        "Impose a scalar function z=f(x,y) on a surface.");
+
+ProcessScalar::ProcessScalar(MeshSharedPtr m) : ProcessModule(m)
+{
+    m_config["surf"]   = ConfigOption(false, "-1",
+        "Tag identifying surface/composite to process.");
+    m_config["nq"]     = ConfigOption(false, "-1",
+        "Number of quadrature points to generate.");
+    m_config["scalar"] = ConfigOption(false, "",
+        "Expression to evaluate.");
+}
+
+ProcessScalar::~ProcessScalar()
+{
+}
+
+void ProcessScalar::Process()
+{
+    int i, j, k;
+    string surf = m_config["surf"].as<string>();
+
+    // Obtain vector of surface IDs from string.
+    vector<unsigned int> surfs;
+    ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+    sort(surfs.begin(), surfs.end());
+
+    // If we're running in verbose mode print out a list of surfaces.
+    if (m_mesh->m_verbose)
     {
-        ModuleKey ProcessScalar::className =
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "scalar"), ProcessScalar::create,
-                "Impose a scalar function z=f(x,y) on a surface.");
+        cout << "ProcessScalar: extracting surface"
+             << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
+    }
 
-        ProcessScalar::ProcessScalar(MeshSharedPtr m) : ProcessModule(m)
+    const int nq = m_config["nq"].as<int>();
+    string expr  = m_config["scalar"].as<string>();
+
+    LibUtilities::AnalyticExpressionEvaluator rEval;
+    int rExprId = rEval.DefineFunction("x y z", expr);
+
+    // Make a copy of all existing elements of one dimension lower.
+    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim-1];
+
+    // Iterate over list of surface elements.
+    for (i = 0; i < el.size(); ++i)
+    {
+        // Work out whether this lies on our surface of interest.
+        vector<int> inter, tags = el[i]->GetTagList();
+
+        sort(tags.begin(), tags.end());
+        set_intersection(surfs.begin(), surfs.end(),
+                         tags .begin(), tags .end(),
+                         back_inserter(inter));
+
+        // It doesn't continue to next element.
+        if (inter.size() != 1)
         {
-            m_config["surf"]   = ConfigOption(false, "-1",
-                "Tag identifying surface/composite to process.");
-            m_config["nq"]     = ConfigOption(false, "-1",
-                "Number of quadrature points to generate.");
-            m_config["scalar"] = ConfigOption(false, "",
-                "Expression to evaluate.");
+            continue;
         }
 
-        ProcessScalar::~ProcessScalar()
+        // Grab face link.
+        FaceSharedPtr f = el[i]->GetFaceLink();
+
+        // Update vertices
+        for (j = 0; j < 4; ++j)
         {
-        }
+            NodeSharedPtr n = f->m_vertexList[j];
+            n->m_z = rEval.Evaluate(rExprId, n->m_x, n->m_y, 0.0, 0.0);
 
-        void ProcessScalar::Process()
-        {
-            int i, j, k;
-            string surf = m_config["surf"].as<string>();
-
-            // Obtain vector of surface IDs from string.
-            vector<unsigned int> surfs;
-            ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
-            sort(surfs.begin(), surfs.end());
-
-            // If we're running in verbose mode print out a list of surfaces.
-            if (m_mesh->m_verbose)
+            if (n->m_z < 1e-32)
             {
-                cout << "ProcessScalar: extracting surface"
-                     << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
+                n->m_z = 0;
             }
+        }
 
-            const int nq = m_config["nq"].as<int>();
-            string expr  = m_config["scalar"].as<string>();
+        // Put curvature into edges
+        for (j = 0; j < f->m_edgeList.size(); ++j)
+        {
+            NodeSharedPtr n1 = f->m_edgeList[j]->m_n1;
+            NodeSharedPtr n2 = f->m_edgeList[j]->m_n2;
+            Node disp = *n2-*n1;
 
-            LibUtilities::AnalyticExpressionEvaluator rEval;
-            int rExprId = rEval.DefineFunction("x y z", expr);
+            f->m_edgeList[j]->m_edgeNodes.clear();
 
-            // Make a copy of all existing elements of one dimension lower.
-            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim-1];
-
-            // Iterate over list of surface elements.
-            for (i = 0; i < el.size(); ++i)
+            for (k = 1; k < nq-1; ++k)
             {
-                // Work out whether this lies on our surface of interest.
-                vector<int> inter, tags = el[i]->GetTagList();
-
-                sort(tags.begin(), tags.end());
-                set_intersection(surfs.begin(), surfs.end(),
-                                 tags .begin(), tags .end(),
-                                 back_inserter(inter));
-
-                // It doesn't continue to next element.
-                if (inter.size() != 1)
+                Node n = *n1 + disp * k / (nq-1.0);
+                n.m_z = rEval.Evaluate(rExprId, n.m_x, n.m_y, 0.0, 0.0);
+                if (n.m_z < 1e-32)
                 {
-                    continue;
+                    n.m_z = 0;
                 }
 
-                // Grab face link.
-                FaceSharedPtr f = el[i]->GetFaceLink();
-
-                // Update vertices
-                for (j = 0; j < 4; ++j)
-                {
-                    NodeSharedPtr n = f->m_vertexList[j];
-                    n->m_z = rEval.Evaluate(rExprId, n->m_x, n->m_y, 0.0, 0.0);
-
-                    if (n->m_z < 1e-32)
-                    {
-                        n->m_z = 0;
-                    }
-                }
-
-                // Put curvature into edges
-                for (j = 0; j < f->m_edgeList.size(); ++j)
-                {
-                    NodeSharedPtr n1 = f->m_edgeList[j]->m_n1;
-                    NodeSharedPtr n2 = f->m_edgeList[j]->m_n2;
-                    Node disp = *n2-*n1;
-
-                    f->m_edgeList[j]->m_edgeNodes.clear();
-
-                    for (k = 1; k < nq-1; ++k)
-                    {
-                        Node n = *n1 + disp * k / (nq-1.0);
-                        n.m_z = rEval.Evaluate(rExprId, n.m_x, n.m_y, 0.0, 0.0);
-                        if (n.m_z < 1e-32)
-                        {
-                            n.m_z = 0;
-                        }
-
-                        f->m_edgeList[j]->m_edgeNodes.push_back(
-                            NodeSharedPtr(new Node(n)));
-                    }
-                }
+                f->m_edgeList[j]->m_edgeNodes.push_back(
+                    NodeSharedPtr(new Node(n)));
             }
         }
     }
+}
+
+}
 }

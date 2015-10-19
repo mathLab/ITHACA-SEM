@@ -41,10 +41,11 @@
 
 using namespace std;
 using namespace Nektar::Utilities;
+using namespace Nektar::MeshUtils;
 
 namespace po = boost::program_options;
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
     po::options_description desc("Available options");
     desc.add_options()
@@ -52,31 +53,31 @@ int main(int argc, char* argv[])
         ("modules-list,l", "Print the list of available modules.")
         ("modules-opt,p",  po::value<string>(),
              "Print options for a module.")
-        ("module,m",       po::value<vector<string> >(), 
+        ("module,m",       po::value<vector<string> >(),
              "Specify modules which are to be used.")
         ("verbose,v",      "Enable verbose mode.");
-    
+
     po::options_description hidden("Hidden options");
     hidden.add_options()
         ("input-file",   po::value<vector<string> >(), "Input filename");
-    
+
     po::options_description cmdline_options;
     cmdline_options.add(hidden).add(desc);
-    
+
     po::options_description visible("Allowed options");
     visible.add(desc);
-    
+
     po::positional_options_description p;
     p.add("input-file", -1);
-    
+
     po::variables_map vm;
-    
+
     try
     {
         po::store(po::command_line_parser(argc, argv).
                   options(cmdline_options).positional(p).run(), vm);
         po::notify(vm);
-    } 
+    }
     catch (const std::exception& e)
     {
         cerr << e.what() << endl;
@@ -90,27 +91,27 @@ int main(int argc, char* argv[])
         GetModuleFactory().PrintAvailableClasses(std::cerr);
         return 1;
     }
-    
+
     if (vm.count("modules-opt"))
     {
         vector<string> tmp1;
         boost::split(tmp1, vm["modules-opt"].as<string>(), boost::is_any_of(":"));
-        
+
         if (tmp1.size() != 2)
         {
             cerr << "ERROR: To specify a module, use one of in, out or proc "
                  << "together with the filename; for example in:vtk." << endl;
             return 1;
         }
-        
+
         if (tmp1[0] != "in" && tmp1[0] != "out" && tmp1[0] != "proc")
         {
             cerr << "ERROR: Invalid module type " << tmp1[0] << endl;
             return 1;
         }
-        
+
         ModuleType t;
-        
+
         if (tmp1[0] == "in")
         {
             t = eInputModule;
@@ -123,7 +124,7 @@ int main(int argc, char* argv[])
         {
             t = eProcessModule;
         }
-        
+
         MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), m);
@@ -131,16 +132,16 @@ int main(int argc, char* argv[])
         mod->PrintConfig();
         return 1;
     }
-    
+
     if (vm.count("help") || vm.count("input-file") != 1) {
-        cerr << "Usage: MeshConvert [options] inputfile.ext1 outputfile.ext2" 
+        cerr << "Usage: MeshConvert [options] inputfile.ext1 outputfile.ext2"
              << endl;
         cout << desc;
         return 1;
     }
-    
+
     vector<string> inout = vm["input-file"].as<vector<string> >();
-    
+
     if (inout.size() < 2)
     {
         cerr << "ERROR: You must specify an input and output file." << endl;
@@ -150,9 +151,9 @@ int main(int argc, char* argv[])
     /*
      * Process list of modules. Each element of the vector of module strings can
      * be in the following form:
-     * 
+     *
      * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
-     * 
+     *
      * where the only required argument is 'modname', specifing the name of the
      * module to load.
      */
@@ -160,7 +161,7 @@ int main(int argc, char* argv[])
     MeshSharedPtr mesh = boost::shared_ptr<Mesh>(new Mesh());
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
-    
+
     if (vm.count("verbose"))
     {
         mesh->m_verbose = true;
@@ -170,11 +171,11 @@ int main(int argc, char* argv[])
     {
         modcmds = vm["module"].as<vector<string> >();
     }
-    
+
     // Add input and output modules to beginning and end of this vector.
     modcmds.insert   (modcmds.begin(), inout[0]);
     modcmds.push_back(inout[1]);
-        
+
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
@@ -183,11 +184,11 @@ int main(int argc, char* argv[])
         int offset = 1;
 
         boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
-        
+
         if (i == 0 || i == modcmds.size() - 1)
         {
             module.first = (i == 0 ? eInputModule : eOutputModule);
-                
+
             // If no colon detected, automatically detect mesh type from
             // file extension. Otherwise override and use tmp1[1] as the
             // module to load. This also allows us to pass options to
@@ -214,17 +215,17 @@ int main(int argc, char* argv[])
             module.first  = eProcessModule;
             module.second = tmp1[0];
         }
-            
+
         // Create module.
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module,mesh);
         modules.push_back(mod);
-        
+
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)
         {
             vector<string> tmp2;
             boost::split(tmp2, tmp1[j], boost::is_any_of("="));
-            
+
             if (tmp2.size() == 1)
             {
                 mod->RegisterConfig(tmp2[0], "1");
@@ -240,7 +241,7 @@ int main(int argc, char* argv[])
                 abort();
             }
         }
-        
+
         // Ensure configuration options have been set.
         mod->SetDefaults();
     }
@@ -250,6 +251,6 @@ int main(int argc, char* argv[])
     {
         modules[i]->Process();
     }
-    
+
     return 0;
 }

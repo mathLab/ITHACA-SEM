@@ -40,26 +40,28 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+class ProcessCyl : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        class ProcessCyl : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) 
-            {
-                return MemoryManager<ProcessCyl>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            ProcessCyl(MeshSharedPtr m);
-            virtual ~ProcessCyl();
-            
-            /// Write mesh to output file.
-            virtual void Process();
-            void GenerateEdgeNodes(EdgeSharedPtr edge);
-        };
+        return MemoryManager<ProcessCyl>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessCyl(MeshSharedPtr m);
+    virtual ~ProcessCyl();
+
+    /// Write mesh to output file.
+    virtual void Process();
+    void GenerateEdgeNodes(EdgeSharedPtr edge);
+};
+
+}
 }
 
 #endif

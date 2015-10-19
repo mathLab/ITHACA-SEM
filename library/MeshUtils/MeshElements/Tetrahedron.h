@@ -38,7 +38,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace MeshUtils
 {
     /**
      * @brief A 3-dimensional four-faced element.

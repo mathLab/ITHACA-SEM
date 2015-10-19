@@ -33,9 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-
-
+#include <MeshUtils/MeshElements/MeshElements.h>
 
 #include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
@@ -45,12 +43,15 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
-#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputCAD.h"
 
 using namespace std;
-namespace Nektar{
-namespace Utilities{
+using namespace Nektar::MeshUtils;
+
+namespace Nektar
+{
+namespace Utilities
+{
 
 ModuleKey InputCAD::className =
 GetModuleFactory().RegisterCreatorFunction(

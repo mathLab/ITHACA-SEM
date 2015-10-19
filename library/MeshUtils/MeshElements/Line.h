@@ -38,7 +38,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace MeshUtils
 {
     /**
      * @brief A 1-dimensional line between two vertex nodes.

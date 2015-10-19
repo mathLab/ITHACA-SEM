@@ -33,53 +33,56 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTNEKPP
-#define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTNEKPP
+#ifndef UTILITIES_MESHCONVERT_OUTPUTNEKPP
+#define UTILITIES_MESHCONVERT_OUTPUTNEKPP
 
 #include <tinyxml.h>
+
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /// Converter for Gmsh files.
-        class OutputNekpp : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<OutputNekpp>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            OutputNekpp(MeshSharedPtr m);
-            virtual ~OutputNekpp();
-            
-            /// Write mesh to output file.
-            virtual void Process();
+namespace Utilities
+{
 
-        private:
-            /// Writes the <NODES> section of the XML file.
-            void WriteXmlNodes(TiXmlElement * pRoot);
-            /// Writes the <EDGES> section of the XML file.
-            void WriteXmlEdges(TiXmlElement * pRoot);
-            /// Writes the <FACES> section of the XML file if needed.
-            void WriteXmlFaces(TiXmlElement * pRoot);
-            /// Writes the <ELEMENTS> section of the XML file.
-            void WriteXmlElements(TiXmlElement * pRoot);
-            /// Writes the <CURVES> section of the XML file if needed.
-            void WriteXmlCurves(TiXmlElement * pRoot);
-            /// Writes the <COMPOSITES> section of the XML file.
-            void WriteXmlComposites(TiXmlElement * pRoot);
-            /// Writes the <DOMAIN> section of the XML file.
-            void WriteXmlDomain(TiXmlElement * pRoot);
-            /// Writes the <EXPANSIONS> section of the XML file.
-            void WriteXmlExpansions(TiXmlElement * pRoot);
-            /// Writes the <CONDITIONS> section of the XML file.
-            void WriteXmlConditions(TiXmlElement * pRoot);
-        };
+/// Converter for Gmsh files.
+class OutputNekpp : public OutputModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<OutputNekpp>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    OutputNekpp(MeshSharedPtr m);
+    virtual ~OutputNekpp();
+
+    /// Write mesh to output file.
+    virtual void Process();
+
+private:
+    /// Writes the <NODES> section of the XML file.
+    void WriteXmlNodes(TiXmlElement * pRoot);
+    /// Writes the <EDGES> section of the XML file.
+    void WriteXmlEdges(TiXmlElement * pRoot);
+    /// Writes the <FACES> section of the XML file if needed.
+    void WriteXmlFaces(TiXmlElement * pRoot);
+    /// Writes the <ELEMENTS> section of the XML file.
+    void WriteXmlElements(TiXmlElement * pRoot);
+    /// Writes the <CURVES> section of the XML file if needed.
+    void WriteXmlCurves(TiXmlElement * pRoot);
+    /// Writes the <COMPOSITES> section of the XML file.
+    void WriteXmlComposites(TiXmlElement * pRoot);
+    /// Writes the <DOMAIN> section of the XML file.
+    void WriteXmlDomain(TiXmlElement * pRoot);
+    /// Writes the <EXPANSIONS> section of the XML file.
+    void WriteXmlExpansions(TiXmlElement * pRoot);
+    /// Writes the <CONDITIONS> section of the XML file.
+    void WriteXmlConditions(TiXmlElement * pRoot);
+};
+
+}
 }
 
 #endif

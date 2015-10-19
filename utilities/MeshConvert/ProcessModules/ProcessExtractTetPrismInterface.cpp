@@ -35,13 +35,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <MeshUtils/MeshElements/MeshElements.h>
-#include "ProcessExtractTetPrismInterface.h"
 
 #include <SpatialDomains/MeshGraph.h>
+
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
-#include <vector>
+#include "ProcessExtractTetPrismInterface.h"
+
 using namespace std;
+using namespace Nektar::MeshUtils;
 
 namespace Nektar
 {

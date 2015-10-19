@@ -33,8 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <vector>
 #include <loki/Singleton.h>
 
 #include <StdRegions/StdNodalTriExp.h>
@@ -55,7 +53,7 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+    namespace MeshUtils
     {
         ElementFactory& GetElementFactory()
         {

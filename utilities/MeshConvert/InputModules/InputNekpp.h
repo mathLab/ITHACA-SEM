@@ -33,33 +33,35 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTNEKPP
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTNEKPP
+#ifndef UTILITIES_MESHCONVERT_INPUTNEKPP
+#define UTILITIES_MESHCONVERT_INPUTNEKPP
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * Converter for Gmsh files.
-         */
-        class InputNekpp : public InputModule
-        {
-        public:
-            InputNekpp(MeshSharedPtr m);
-            virtual ~InputNekpp();
-            virtual void Process();
+namespace Utilities
+{
 
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputNekpp>::AllocateSharedPtr(m);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey className;
-        };
+/**
+ * Converter for Gmsh files.
+ */
+class InputNekpp : public InputModule
+{
+public:
+    InputNekpp(MeshSharedPtr m);
+    virtual ~InputNekpp();
+    virtual void Process();
+
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputNekpp>::AllocateSharedPtr(m);
     }
+    /// %ModuleKey for class.
+    static ModuleKey className;
+};
+
+}
 }
 
 #endif

@@ -33,58 +33,60 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
-#define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
+#ifndef UTILITIES_MESHCONVERT_OUTPUTGMSH
+#define UTILITIES_MESHCONVERT_OUTPUTGMSH
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+bool operator==(ElmtConfig const &p1, ElmtConfig const &p2);
+
+struct ElmtConfigHash : std::unary_function<ElmtConfig, std::size_t>
+{
+    std::size_t operator()(ElmtConfig const& el) const
     {
-        bool operator==(ElmtConfig const &p1, ElmtConfig const &p2);
-
-        struct ElmtConfigHash : std::unary_function<ElmtConfig, std::size_t>
-        {
-            std::size_t operator()(ElmtConfig const& el) const
-            {
-                std::size_t seed = 0;
-                boost::hash_combine(seed, (int)el.m_e        );
-                boost::hash_combine(seed,      el.m_faceNodes  );
-                boost::hash_combine(seed,      el.m_volumeNodes);
-                boost::hash_combine(seed,      el.m_order      );
-                return seed;
-            }
-        };
-
-        bool operator==(ElmtConfig const &p1, ElmtConfig const &p2)
-        {
-            return p1.m_e           == p2.m_e           &&
-                   p1.m_faceNodes   == p2.m_faceNodes   &&
-                   p1.m_volumeNodes == p2.m_volumeNodes &&
-                   p1.m_order       == p2.m_order;
-        }
-
-        /// Converter for Gmsh files.
-        class OutputGmsh : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<OutputGmsh>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            OutputGmsh(MeshSharedPtr m);
-            virtual ~OutputGmsh();
-            
-            /// Write mesh to output file.
-            virtual void Process();
-            
-        private:
-            boost::unordered_map<ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
-        };
+        std::size_t seed = 0;
+        boost::hash_combine(seed, (int)el.m_e        );
+        boost::hash_combine(seed,      el.m_faceNodes  );
+        boost::hash_combine(seed,      el.m_volumeNodes);
+        boost::hash_combine(seed,      el.m_order      );
+        return seed;
     }
+};
+
+bool operator==(ElmtConfig const &p1, ElmtConfig const &p2)
+{
+    return p1.m_e           == p2.m_e           &&
+           p1.m_faceNodes   == p2.m_faceNodes   &&
+           p1.m_volumeNodes == p2.m_volumeNodes &&
+           p1.m_order       == p2.m_order;
+}
+
+/// Converter for Gmsh files.
+class OutputGmsh : public OutputModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<OutputGmsh>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
+
+    OutputGmsh(MeshSharedPtr m);
+    virtual ~OutputGmsh();
+
+    /// Write mesh to output file.
+    virtual void Process();
+
+private:
+    boost::unordered_map<ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
+};
+
+}
 }
 
 #endif

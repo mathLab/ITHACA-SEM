@@ -33,32 +33,34 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSWAN
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSWAN
+#ifndef UTILITIES_MESHCONVERT_INPUTSWAN
+#define UTILITIES_MESHCONVERT_INPUTSWAN
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /// Converter for Swansea mesh format.
-        class InputSwan : public InputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<InputSwan>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            InputSwan(MeshSharedPtr m);
-            virtual ~InputSwan();
-
-            /// Populate and validate required data structures.
-            virtual void Process();
-        };
+/// Converter for Swansea mesh format.
+class InputSwan : public InputModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<InputSwan>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    InputSwan(MeshSharedPtr m);
+    virtual ~InputSwan();
+
+    /// Populate and validate required data structures.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

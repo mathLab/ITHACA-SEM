@@ -37,7 +37,6 @@
 #define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
 
 #include "../Module.h"
-#include <MeshUtils/MeshElements/MeshElements.h>
 
 namespace Nektar
 {

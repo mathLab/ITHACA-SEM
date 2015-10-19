@@ -33,87 +33,89 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTNEK
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTNEK
+#ifndef UTILITIES_MESHCONVERT_INPUTNEK
+#define UTILITIES_MESHCONVERT_INPUTNEK
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+enum NekCurve
+{
+    eFile,
+    eRecon
+};
+
+typedef HOTriangle<NodeSharedPtr> HOSurf;
+typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
+
+/**
+ * Hash class for high-order surfaces.
+ */
+struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
+{
+    /**
+     * Calculate hash of a given high-order surface p by taking
+     * successive hashes of the vertex IDs.
+     */
+    std::size_t operator()(HOSurfSharedPtr const& p) const
     {
-        enum NekCurve
+        std::size_t seed = 0;
+        std::vector<int> ids = p->vertId;
+        std::sort(ids.begin(), ids.end());
+        for (int i = 0; i < ids.size(); ++i)
         {
-            eFile,
-            eRecon
-        };
-
-        typedef HOTriangle<NodeSharedPtr> HOSurf;
-        typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
-
-        /**
-         * Hash class for high-order surfaces.
-         */
-        struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
-        {
-            /** 
-             * Calculate hash of a given high-order surface p by taking
-             * successive hashes of the vertex IDs.
-             */
-            std::size_t operator()(HOSurfSharedPtr const& p) const
-            {
-                std::size_t seed = 0;
-                std::vector<int> ids = p->vertId;
-                std::sort(ids.begin(), ids.end());
-                for (int i = 0; i < ids.size(); ++i)
-                {
-                    boost::hash_combine(seed, ids[i]);
-                }
-                return seed;
-            }
-        };
-
-        bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2);
-        
-        typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
-
-        /**
-         * Converter class for Nektar session files.
-         */
-        class InputNek : public InputModule
-        {
-        public:
-            InputNek(MeshSharedPtr p_m);
-            virtual ~InputNek();
-            virtual void Process();
-            
-            /// Creates an instance of this class.
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputNek>::AllocateSharedPtr(m);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey className;
-            
-        private:
-            void LoadHOSurfaces();
-            int  GetNnodes     (LibUtilities::ShapeType elType);
-
-            /**
-             * Maps a curve tag to a filename containing surface information.
-             */
-            std::map<string, pair<NekCurve, string> > curveTags;
-
-            /**
-             * Maps a curve tag to the high-order surface data for that tag.
-             */
-            std::map<string, HOSurfSet> hoData;
-
-            /**
-             * Maps ordering of hsf standard element to Nektar++ ordering.
-             */
-            std::map<int, int> hoMap;
-        };
+            boost::hash_combine(seed, ids[i]);
+        }
+        return seed;
     }
+};
+
+bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2);
+
+typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
+
+/**
+ * Converter class for Nektar session files.
+ */
+class InputNek : public InputModule
+{
+public:
+    InputNek(MeshSharedPtr p_m);
+    virtual ~InputNek();
+    virtual void Process();
+
+    /// Creates an instance of this class.
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputNek>::AllocateSharedPtr(m);
+    }
+    /// %ModuleKey for class.
+    static ModuleKey className;
+
+private:
+    void LoadHOSurfaces();
+    int  GetNnodes     (LibUtilities::ShapeType elType);
+
+    /**
+     * Maps a curve tag to a filename containing surface information.
+     */
+    std::map<string, pair<NekCurve, string> > curveTags;
+
+    /**
+     * Maps a curve tag to the high-order surface data for that tag.
+     */
+    std::map<string, HOSurfSet> hoData;
+
+    /**
+     * Maps ordering of hsf standard element to Nektar++ ordering.
+     */
+    std::map<int, int> hoMap;
+};
+
+}
 }
 
 #endif

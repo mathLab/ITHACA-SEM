@@ -33,37 +33,39 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTPLY
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTPLY
+#ifndef UTILITIES_MESHCONVERT_INPUTPLY
+#define UTILITIES_MESHCONVERT_INPUTPLY
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /// Converter for Ply files.
-        class InputPly : public InputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputPly>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
+namespace Utilities
+{
 
-            InputPly(MeshSharedPtr m);
-            virtual ~InputPly();
-
-            /// Populate and validate required data structures.
-            virtual void Process();
-
-            void ReadPly(std::ifstream &mshFile, NekDouble scale = 1.0);
-        private:
-        };
-
-        typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
+/// Converter for Ply files.
+class InputPly : public InputModule
+{
+public:
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputPly>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    InputPly(MeshSharedPtr m);
+    virtual ~InputPly();
+
+    /// Populate and validate required data structures.
+    virtual void Process();
+
+    void ReadPly(std::ifstream &mshFile, NekDouble scale = 1.0);
+private:
+};
+
+typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
+
+}
 }
 
 #endif

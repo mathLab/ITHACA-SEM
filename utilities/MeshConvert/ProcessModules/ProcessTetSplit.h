@@ -33,37 +33,39 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
+#ifndef UTILITIES_MESHCONVERT_PROCESSJAC
+#define UTILITIES_MESHCONVERT_PROCESSJAC
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the Jacobian of elements
-         * using %SpatialDomains::GeomFactors and the %Element::GetGeom
-         * method. For now it simply prints a list of elements which have
-         * negative Jacobian.
-         */
-        class ProcessTetSplit : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessTetSplit>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            ProcessTetSplit(MeshSharedPtr m);
-            virtual ~ProcessTetSplit();
-            
-            /// Write mesh to output file.
-            virtual void Process();
-        };
+namespace Utilities
+{
+
+/**
+ * @brief This processing module calculates the Jacobian of elements
+ * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+ * method. For now it simply prints a list of elements which have
+ * negative Jacobian.
+ */
+class ProcessTetSplit : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<ProcessTetSplit>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessTetSplit(MeshSharedPtr m);
+    virtual ~ProcessTetSplit();
+
+    /// Write mesh to output file.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

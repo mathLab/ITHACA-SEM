@@ -33,33 +33,34 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTVTK
-#define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTVTK
+#ifndef UTILITIES_MESHCONVERT_OUTPUTVTK
+#define UTILITIES_MESHCONVERT_OUTPUTVTK
 
-#include <tinyxml.h>
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /// Converter for Gmsh files.
-        class OutputVtk : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<OutputVtk>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            OutputVtk(MeshSharedPtr m);
-            virtual ~OutputVtk();
-            
-            /// Write mesh to output file.
-            virtual void Process();
-        };
+namespace Utilities
+{
+
+/// Converter for Gmsh files.
+class OutputVtk : public OutputModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<OutputVtk>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    OutputVtk(MeshSharedPtr m);
+    virtual ~OutputVtk();
+
+    /// Write mesh to output file.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

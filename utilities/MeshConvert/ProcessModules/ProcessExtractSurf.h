@@ -33,37 +33,39 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSEXTRACTSURF
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSEXTRACTSURF
+#ifndef UTILITIES_MESHCONVERT_PROCESSEXTRACTSURF
+#define UTILITIES_MESHCONVERT_PROCESSEXTRACTSURF
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * @brief This processing module calculates the Jacobian of elements
-         * using %SpatialDomains::GeomFactors and the %Element::GetGeom
-         * method. For now it simply prints a list of elements which have
-         * negative Jacobian.
-         */
-        class ProcessExtractSurf : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessExtractSurf>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            ProcessExtractSurf(MeshSharedPtr m);
-            virtual ~ProcessExtractSurf();
-            
-            /// Write mesh to output file.
-            virtual void Process();
-        };
+namespace Utilities
+{
+
+/**
+ * @brief This processing module calculates the Jacobian of elements
+ * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+ * method. For now it simply prints a list of elements which have
+ * negative Jacobian.
+ */
+class ProcessExtractSurf : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+        return MemoryManager<ProcessExtractSurf>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessExtractSurf(MeshSharedPtr m);
+    virtual ~ProcessExtractSurf();
+
+    /// Write mesh to output file.
+    virtual void Process();
+};
+
+}
 }
 
 #endif

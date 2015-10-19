@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
+#ifndef UTILITIES_MESHCONVERT_PROCESSJAC
+#define UTILITIES_MESHCONVERT_PROCESSJAC
 
 
 #include "../Module.h"
@@ -42,36 +42,38 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+class ProcessSpherigon : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        class ProcessSpherigon : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) 
-            {
-                return MemoryManager<ProcessSpherigon>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-            
-            ProcessSpherigon(MeshSharedPtr m);
-            virtual ~ProcessSpherigon();
-            
-            /// Write mesh to output file.
-            virtual void Process();
-            
-        protected:
-            void   GenerateNormals(vector<ElementSharedPtr> &el,
-                                   MeshSharedPtr &mesh);
-            double CrossProdMag   (Node &a, Node &b);
-            void   UnitCrossProd  (Node &a, Node &b, Node &c);
-            double Blend          (double r);
-            void   SuperBlend     (vector<double> &r, 
-                                   vector<Node>   &Q, 
-                                   Node           &P, 
-                                   vector<double> &blend);
-        };
+        return MemoryManager<ProcessSpherigon>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessSpherigon(MeshSharedPtr m);
+    virtual ~ProcessSpherigon();
+
+    /// Write mesh to output file.
+    virtual void Process();
+
+protected:
+    void   GenerateNormals(vector<ElementSharedPtr> &el,
+                           MeshSharedPtr &mesh);
+    double CrossProdMag   (Node &a, Node &b);
+    void   UnitCrossProd  (Node &a, Node &b, Node &c);
+    double Blend          (double r);
+    void   SuperBlend     (vector<double> &r,
+                           vector<Node>   &Q,
+                           Node           &P,
+                           vector<double> &blend);
+};
+
+}
 }
 
 #endif

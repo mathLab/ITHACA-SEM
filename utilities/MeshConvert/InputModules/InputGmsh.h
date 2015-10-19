@@ -33,48 +33,50 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
+#ifndef UTILITIES_MESHCONVERT_INPUTGMSH
+#define UTILITIES_MESHCONVERT_INPUTGMSH
 
 #include "../Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        /**
-         * Converter for Gmsh files.
-         */
-        class InputGmsh : public InputModule
-        {
-        public:
-            InputGmsh(MeshSharedPtr m);
-            virtual ~InputGmsh();
-            virtual void Process();
+namespace Utilities
+{
 
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputGmsh>::AllocateSharedPtr(m);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey className;
-            static std::map<unsigned int, ElmtConfig> GenElmMap();
-            
-            /**
-             * Element map; takes a msh id to an %ElmtConfig object.
-             */
-            static std::map<unsigned int, ElmtConfig> elmMap;
+/**
+ * Converter for Gmsh files.
+ */
+class InputGmsh : public InputModule
+{
+public:
+    InputGmsh(MeshSharedPtr m);
+    virtual ~InputGmsh();
+    virtual void Process();
 
-        private:
-            int GetNnodes(unsigned int InputGmshEntity);
-            vector<int> CreateReordering(unsigned int InputGmshEntity);
-            vector<int> TriReordering(ElmtConfig conf);
-            vector<int> QuadReordering(ElmtConfig conf);
-            vector<int> HexReordering(ElmtConfig conf);
-            vector<int> PrismReordering(ElmtConfig conf);
-            vector<int> TetReordering(ElmtConfig conf);
-        };
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m) {
+        return MemoryManager<InputGmsh>::AllocateSharedPtr(m);
     }
+    /// %ModuleKey for class.
+    static ModuleKey className;
+    static std::map<unsigned int, ElmtConfig> GenElmMap();
+
+    /**
+     * Element map; takes a msh id to an %ElmtConfig object.
+     */
+    static std::map<unsigned int, ElmtConfig> elmMap;
+
+private:
+    int GetNnodes(unsigned int InputGmshEntity);
+    vector<int> CreateReordering(unsigned int InputGmshEntity);
+    vector<int> TriReordering(ElmtConfig conf);
+    vector<int> QuadReordering(ElmtConfig conf);
+    vector<int> HexReordering(ElmtConfig conf);
+    vector<int> PrismReordering(ElmtConfig conf);
+    vector<int> TetReordering(ElmtConfig conf);
+};
+
+}
 }
 
 #endif

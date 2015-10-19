@@ -36,12 +36,19 @@
 #ifndef UTILITIES_PREPROCESSING_MESHCONVERT_MODULE
 #define UTILITIES_PREPROCESSING_MESHCONVERT_MODULE
 
+#include <map>
+#include <vector>
+#include <sstream>
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <set>
+
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
-
 #include <MeshUtils/MeshElements/MeshElements.h>
+
+using namespace Nektar::MeshUtils;
 
 namespace Nektar
 {

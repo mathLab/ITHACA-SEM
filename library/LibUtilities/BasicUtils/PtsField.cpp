@@ -60,6 +60,7 @@ void PtsField::CalcWeights(
 
     int nPhysPts = physCoords[0].num_elements();
     int lastProg = 0;
+    int meanNPts = 0;
 
     ASSERTL0(width > NekConstants::kNekZeroTol, "No filter width set");
     NekDouble sigma = width * 0.4246609001;
@@ -98,6 +99,8 @@ void PtsField::CalcWeights(
 //         }
         CalcW_Gauss(i, physPt, sigma);
 
+        meanNPts += m_neighInds[i].num_elements();
+
         int progress = int(100 * i / nPhysPts);
         if (m_progressCallback && progress > lastProg)
         {
@@ -105,6 +108,9 @@ void PtsField::CalcWeights(
             lastProg = progress;
         }
     }
+
+    meanNPts = meanNPts / nPhysPts;
+    cout << "mean N neighbour Pts: " << meanNPts << endl;
 }
 
 

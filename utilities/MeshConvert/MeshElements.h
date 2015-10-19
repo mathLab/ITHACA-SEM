@@ -519,44 +519,101 @@ namespace Nektar
 
                 if(m_faceNodes.size() > 0)
                 {
-                    SpatialDomains::CurveSharedPtr c =
-                        MemoryManager<SpatialDomains::Curve>::
-                        AllocateSharedPtr(m_id, m_curveType);
-
-                    for(int j = 0; j < m_vertexList.size(); j++)
-                    {
-                        c->m_points.push_back(m_vertexList[j]->GetGeom(coordDim));
-                    }
-                    for(int j = 0; j < nEdge; j++)
-                    {
-                        vector<NodeSharedPtr> ed = m_edgeList[j]->m_edgeNodes;
-                        if(edgeo[j] == StdRegions::eBackwards)
-                        {
-                            for(int k = ed.size()-1; k >=0; k--)
-                            {
-                                c->m_points.push_back(ed[k]->GetGeom(coordDim));
-                            }
-                        }
-                        else
-                        {
-                            for(int k = 0; k < ed.size(); k++)
-                            {
-                                c->m_points.push_back(ed[k]->GetGeom(coordDim));
-                            }
-                        }
-                    }
-                    for(int j = 0; j < m_faceNodes.size(); j++)
-                    {
-                        c->m_points.push_back(m_faceNodes[j]->GetGeom(coordDim));
-                    }
-
                     if (nEdge == 3)
                     {
+                        SpatialDomains::CurveSharedPtr c =
+                            MemoryManager<SpatialDomains::Curve>::
+                            AllocateSharedPtr(m_id, m_curveType);
+
+                        for(int j = 0; j < m_vertexList.size(); j++)
+                        {
+                            c->m_points.push_back(m_vertexList[j]->GetGeom(coordDim));
+                        }
+                        for(int j = 0; j < nEdge; j++)
+                        {
+                            vector<NodeSharedPtr> ed = m_edgeList[j]->m_edgeNodes;
+                            if(edgeo[j] == StdRegions::eBackwards)
+                            {
+                                for(int k = ed.size()-1; k >=0; k--)
+                                {
+                                    c->m_points.push_back(ed[k]->GetGeom(coordDim));
+                                }
+                            }
+                            else
+                            {
+                                for(int k = 0; k < ed.size(); k++)
+                                {
+                                    c->m_points.push_back(ed[k]->GetGeom(coordDim));
+                                }
+                            }
+                        }
+                        for(int j = 0; j < m_faceNodes.size(); j++)
+                        {
+                            c->m_points.push_back(m_faceNodes[j]->GetGeom(coordDim));
+                        }
+
                         ret = MemoryManager<SpatialDomains::TriGeom>::
                             AllocateSharedPtr(m_id, edges, edgeo, c);
                     }
                     else
                     {
+                        SpatialDomains::CurveSharedPtr c =
+                            MemoryManager<SpatialDomains::Curve>::
+                            AllocateSharedPtr(m_id, m_curveType);
+
+                        ASSERTL0(m_vertexList.size() == 4,
+                                 "Face nodes of tensor product only supported "
+                                 "for quadrilaterals.");
+
+                        int n = (int)sqrt((NekDouble)GetNodeCount());
+                        vector<NodeSharedPtr> tmp(n*n);
+
+                        ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");
+
+                        // Write vertices
+                        tmp[0]       = m_vertexList[0];
+                        tmp[n-1]     = m_vertexList[1];
+                        tmp[n*n-1]   = m_vertexList[2];
+                        tmp[n*(n-1)] = m_vertexList[3];
+
+                        // Write edge-interior
+                        int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            bool reverseEdge = m_edgeList[i]->m_n1 == m_vertexList[i];
+
+                            if (!reverseEdge)
+                            {
+                                for (int j = 1; j < n-1; ++j)
+                                {
+                                    tmp[skips[i][0] + j*skips[i][1]] =
+                                        m_edgeList[i]->m_edgeNodes[n-2-j];
+                                }
+                            }
+                            else
+                            {
+                                for (int j = 1; j < n-1; ++j)
+                                {
+                                    tmp[skips[i][0] + j*skips[i][1]] =
+                                        m_edgeList[i]->m_edgeNodes[j-1];
+                                }
+                            }
+                        }
+
+                        // Write interior
+                        for (int i = 1; i < n-1; ++i)
+                        {
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                tmp[i*n+j] = m_faceNodes[(i-1)*(n-2)+(j-1)];
+                            }
+                        }
+
+                        for (int k = 0; k < tmp.size(); ++k)
+                        {
+                            c->m_points.push_back(tmp[k]->GetGeom(coordDim));
+                        }
+
                         ret = MemoryManager<SpatialDomains::QuadGeom>::
                             AllocateSharedPtr(m_id, edges, edgeo, c);
                     }

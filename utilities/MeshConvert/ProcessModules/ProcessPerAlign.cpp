@@ -36,7 +36,7 @@
 #include <string>
 using namespace std;
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ProcessPerAlign.h"
 
 #include <LocalRegions/SegExp.h>
@@ -164,7 +164,7 @@ namespace Nektar
             boost::unordered_set<int> elmtDone;
             map<int, int> elmtPairs;
             map<int, int> vertCheck;
-            
+
             for (int i = 0; i < c1->m_items.size(); ++i)
             {
                 Node centroid;
@@ -212,12 +212,12 @@ namespace Nektar
                             {
                                 NodeSharedPtr n1 = c1->m_items[i]->GetFaceLink()->m_vertexList[k];
                                 int l;
-                                
+
                                 for (l = 0; l < nVerts; ++l)
                                 {
                                     NodeSharedPtr n2 =
                                         c2->m_items[it->first]->GetFaceLink()->m_vertexList[l];
-                                    
+
                                     Node dn = *n2 - *n1;
                                     if (fabs(fabs(dn.m_x*vec[0] + dn.m_y*vec[1] +
                                                   dn.m_z*vec[2])/
@@ -225,7 +225,7 @@ namespace Nektar
                                     {
                                         perVerts   [k] = l;
                                         perVertsInv[l] = k;
-                                        
+
                                         int id1 = n1->m_id;
                                         int id2 = n2->m_id;
                                         if (vertCheck.count(id1) == 0)
@@ -244,7 +244,7 @@ namespace Nektar
                                 ASSERTL1(l < nVerts,
                                          "Could not identify periodic vertices.");
                             }
-                            
+
                             int tot1 = 0, tot2 = 0;
                             for (int k = 0; k < nVerts; ++k)
                             {

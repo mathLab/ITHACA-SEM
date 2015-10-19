@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ProcessExtractSurf.h"
 
 #include <SpatialDomains/MeshGraph.h>

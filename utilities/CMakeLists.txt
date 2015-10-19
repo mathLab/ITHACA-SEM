@@ -5,13 +5,13 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
     SET_COMMON_PROPERTIES(${name})
 
     TARGET_LINK_LIBRARIES(${name} SolverUtils)
-    
+
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-        SET_TARGET_PROPERTIES(${name} 
+        SET_TARGET_PROPERTIES(${name}
             PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
 	SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
-    INSTALL(TARGETS ${name} 
+    INSTALL(TARGETS ${name}
 		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component})
 
 ENDMACRO(ADD_UTILITIES_EXECUTABLE name component source)
@@ -38,4 +38,3 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
-

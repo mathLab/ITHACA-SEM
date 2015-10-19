@@ -43,9 +43,9 @@
 
 #include <Standard_Macro.hxx>
 
-#include <LibUtilities/CADSystem/OpenCascade.h>
-#include <LibUtilities/CADSystem/CADCurve.h>
-#include <LibUtilities/CADSystem/CADSurf.h>
+#include <MeshUtils/CADSystem/OpenCascade.h>
+#include <MeshUtils/CADSystem/CADCurve.h>
+#include <MeshUtils/CADSystem/CADSurf.h>
 
 namespace Nektar {
 namespace LibUtilities {

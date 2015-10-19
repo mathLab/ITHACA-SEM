@@ -42,7 +42,7 @@ using namespace std;
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "OutputVtk.h"
 
 namespace Nektar
@@ -56,14 +56,14 @@ namespace Nektar
 
         OutputVtk::OutputVtk(MeshSharedPtr m) : OutputModule(m)
         {
-            
+
         }
 
         OutputVtk::~OutputVtk()
         {
 
         }
-        
+
         void OutputVtk::Process()
         {
             if (m_mesh->m_verbose)
@@ -88,7 +88,7 @@ namespace Nektar
             }
 
             vtkIdType p[8];
-            vector<ElementSharedPtr> &elmt = 
+            vector<ElementSharedPtr> &elmt =
                                     m_mesh->m_element[m_mesh->m_expDim];
             for(int i = 0; i < elmt.size(); ++i)
             {
@@ -112,6 +112,6 @@ namespace Nektar
             vtkMeshWriter->SetInputData(vtkMesh);
 #endif
             vtkMeshWriter->Update();
-        }        
+        }
     }
 }

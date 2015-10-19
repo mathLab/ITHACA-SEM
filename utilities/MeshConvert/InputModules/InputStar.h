@@ -37,7 +37,7 @@
 #define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSTAR
 
 #include "../Module.h"
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ccmio.h"
 
 
@@ -64,9 +64,9 @@ namespace Nektar
             void ReadZone(int &nComposite);
 
         protected:
-            
+
             void GenElement3D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces, 
+                              int i, vector<int> &ElementFaces,
                               map<int, vector<int> >&FaceNodes,
                               int ncomposite,
                               bool DoOrient);
@@ -74,35 +74,35 @@ namespace Nektar
             void GenElement2D(vector<NodeSharedPtr> &Nodes,
                               int i,
                               vector<int> &FaceNodes,
-                              int ncomposite); 
+                              int ncomposite);
 
             Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
                                            vector<int> &FaceNodes);
 
             Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces, 
+                                           vector<int> &ElementFaces,
                                            map<int, vector<int> >&FaceNodes);
-            
+
             void ResetNodes(vector<NodeSharedPtr>     &Nodes,
                             Array<OneD, vector<int> > &ElementFaces,
                             map<int, vector<int> >      &FaceNodes);
-            
+
 
         private:
             CCMIOError m_ccmErr;        //Star CCM error flag
             CCMIOID    m_ccmTopology;   //Star CCM mesh topology
             CCMIOID    m_ccmProcessor;
-            map<int,string> m_faceLabels; // label from CCM into composite 
-            
+            map<int,string> m_faceLabels; // label from CCM into composite
+
             void InitCCM(void);
 
             void ReadNodes( std::vector<NodeSharedPtr> &Nodes);
 
-            void ReadInternalFaces(map<int,  vector<int> > &FacesNodes, 
+            void ReadInternalFaces(map<int,  vector<int> > &FacesNodes,
                                    Array<OneD, vector<int> > &ElementFaces);
 
             void ReadBoundaryFaces(vector< vector<int> > &BndElementFaces,
-                                   map<int, vector<int> > &FacesNodes, 
+                                   map<int, vector<int> > &FacesNodes,
                                    Array<OneD, vector<int> > &ElementFaces,
                                    vector<string> &facelabels);
 

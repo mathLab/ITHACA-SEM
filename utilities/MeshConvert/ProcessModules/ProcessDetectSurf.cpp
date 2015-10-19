@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ProcessDetectSurf.h"
 
 #include <SpatialDomains/MeshGraph.h>
@@ -46,7 +46,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessDetectSurf::className = 
+        ModuleKey ProcessDetectSurf::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "detect"), ProcessDetectSurf::create,
                 "Process elements to detect a surface.");
@@ -60,7 +60,7 @@ namespace Nektar
         ProcessDetectSurf::~ProcessDetectSurf()
         {
         }
-        
+
         struct EdgeInfo {
             EdgeInfo() : count(0) {}
             int           count;
@@ -115,14 +115,14 @@ namespace Nektar
                     set_intersection(surfs.begin(), surfs.end(),
                                      tags .begin(), tags .end(),
                                      back_inserter(inter));
-                
+
                     // It doesn't continue to next element.
                     if (inter.size() != 1)
                     {
                         continue;
                     }
                 }
-                
+
                 // List all edges.
                 ElementSharedPtr elmt = el[i];
                 for (j = 0; j < elmt->GetEdgeCount(); ++j)

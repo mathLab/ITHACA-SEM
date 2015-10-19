@@ -36,7 +36,7 @@
 #include <string>
 using namespace std;
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "../InputModules/InputNek.h"
 #include "ProcessTetSplit.h"
 

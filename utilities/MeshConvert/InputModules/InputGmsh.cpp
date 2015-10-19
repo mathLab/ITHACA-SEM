@@ -37,7 +37,7 @@
 #include <iostream>
 using namespace std;
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputGmsh.h"
 
 namespace Nektar

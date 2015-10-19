@@ -40,7 +40,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
-#include <LibUtilities/CADSystem/CADSystem.h>
+#include <MeshUtils/CADSystem/CADSystem.h>
 
 using namespace std;
 

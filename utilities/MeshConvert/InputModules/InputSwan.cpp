@@ -36,26 +36,26 @@
 #include <iostream>
 using namespace std;
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputSwan.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputSwan::className = 
+        ModuleKey InputSwan::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "plt"), InputSwan::create,
                 "Reads Swansea plt format for third-order tetrahedra.");
-        
+
         InputSwan::InputSwan(MeshSharedPtr m) : InputModule(m)
         {
-            
+
         }
 
         InputSwan::~InputSwan()
         {
-            
+
         }
 
         void InputSwan::Process()
@@ -74,21 +74,21 @@ namespace Nektar
 
             m_mesh->m_expDim = 3;
             m_mesh->m_spaceDim = 3;
-            
+
             // First read in header; 4 integers containing number of tets,
             // number of points, nas2 (unknown) and order of the grid
             // (i.e. GridOrder = 3 => cubic mesh).
             tmp.resize(6);
             m_mshFile.read(reinterpret_cast<char*>(&tmp[0]),
-                         static_cast<int>       (6*sizeof(int))); 
-            
+                         static_cast<int>       (6*sizeof(int)));
+
             if (tmp[0] != tmp[5] || tmp[0] != 4*sizeof(int))
             {
                 cout << "Header data broken" << endl;
                 m_mshFile.close();
                 return;
             }
-            
+
             int NB_Tet    = tmp[1];
             int NB_Points = tmp[2];
             int GridOrder = tmp[4];
@@ -98,7 +98,7 @@ namespace Nektar
             cout << "NB_Points = " << NB_Points << endl;
             cout << "GridOrder = " << GridOrder << endl;
             cout << "ND        = " << ND << endl;
-            
+
             // Now read in list of tetrahedra. Each tet has ND points, and
             // data are ordered with memory traversed fastest with point
             // number.
@@ -142,7 +142,7 @@ namespace Nektar
                 m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(vid, x, y, z)));
                 vid++;
             }
-            
+
             // Iterate over list of tetrahedra: for each, create nodes. At the
             // moment discard high order data and create linear mesh.
             for (i = 0; i < NB_Tet; ++i)
@@ -153,7 +153,7 @@ namespace Nektar
                     int vid = tets[j*NB_Tet+i+1];
                     nodeList.push_back(m_mesh->m_node[vid-1]);
                 }
-                
+
                 vector<int> tags;
                 tags.push_back(0);      // composite
                 tags.push_back(elType); // element type
@@ -163,7 +163,7 @@ namespace Nektar
                     CreateInstance(elType,conf,nodeList,tags);
                 m_mesh->m_element[3].push_back(E);
             }
-            
+
             // Attempt to read in composites. Need to determine number of
             // triangles from data.
             tmp.resize(2);
@@ -175,7 +175,7 @@ namespace Nektar
                          static_cast<int>       (tmp[0]));
             m_mshFile.read(reinterpret_cast<char*>(&tmp[1]),
                          static_cast<int>       (sizeof(int)));
-            
+
             if (tmp[0] != tmp[1])
             {
                 cout << "ERROR [InputSwan]: Surface data broken." << endl;
@@ -184,21 +184,21 @@ namespace Nektar
             }
 
             elType = LibUtilities::eTriangle;
-            
+
             // Process list of triangles forming surfaces.
             for (i = 0; i < n_tri; ++i)
             {
                 vector<NodeSharedPtr> nodeList;
-                
+
                 for (j = 0; j < 3; ++j)
                 {
                     nodeList.push_back(m_mesh->m_node[tets[i+j*n_tri]-1]);
                 }
-                
+
                 vector<int> tags;
                 tags.push_back(1);      // composite
                 tags.push_back(elType); // element type
-                
+
                 ElmtConfig conf(elType,1,false,false);
                 ElementSharedPtr E = GetElementFactory().
                     CreateInstance(elType,conf,nodeList,tags);

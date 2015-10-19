@@ -39,14 +39,14 @@ using namespace std;
 
 #include <SpatialDomains/MeshGraph.h>
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputNekpp.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputNekpp::className = 
+        ModuleKey InputNekpp::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "xml"), InputNekpp::create,
                 "Reads Nektar++ xml file.");
@@ -56,12 +56,12 @@ namespace Nektar
          */
         InputNekpp::InputNekpp(MeshSharedPtr m) : InputModule(m)
         {
-            
+
         }
 
         InputNekpp::~InputNekpp()
         {
-            
+
         }
 
         /**
@@ -78,7 +78,7 @@ namespace Nektar
         {
             vector<string> filename;
             filename.push_back(m_config["infile"].as<string>());
-            
+
             LibUtilities::SessionReaderSharedPtr pSession =
                 LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
             SpatialDomains::MeshGraphSharedPtr graph =
@@ -118,15 +118,15 @@ namespace Nektar
                     pair<int, SpatialDomains::GeometrySharedPtr> tmp2(
                             it->first, boost::dynamic_pointer_cast<
                             SpatialDomains::Geometry>(it->second));
-                    
-                    // load up edge set in order of SegGeomMap; 
+
+                    // load up edge set in order of SegGeomMap;
                     vector<NodeSharedPtr> curve; // curved nodes if deformed
                     int id0 = it->second->GetVid(0);
                     int id1 = it->second->GetVid(1);
                     LibUtilities::PointsType ptype = it->second->GetPointsKeys()[0].GetPointsType();
                     EdgeSharedPtr ed = EdgeSharedPtr(new Edge(vIdMap[id0], vIdMap[id1],
                                                               curve, ptype));
-                    
+
                     testIns = m_mesh->m_edgeSet.insert(ed);
                     (*(testIns.first))->m_id = it->second->GetEid();
                     eIdMap[it->second->GetEid()] = ed;
@@ -147,17 +147,17 @@ namespace Nektar
                     pair<int, SpatialDomains::GeometrySharedPtr> tmp2(
                             it->first, boost::dynamic_pointer_cast<
                             SpatialDomains::Geometry>(it->second));
-                            
+
                     vector<NodeSharedPtr> faceVertices;
                     vector<EdgeSharedPtr> faceEdges;
                     vector<NodeSharedPtr> faceNodes;
-                    
+
                     for(int i = 0; i < 3; ++i)
                     {
                         faceVertices.push_back(vIdMap[it->second->GetVid(i)]);
                         faceEdges.push_back(eIdMap[it->second->GetEid(i)]);
                     }
-                    
+
                     FaceSharedPtr fac = FaceSharedPtr( new Face(faceVertices,faceNodes,faceEdges,
                                                                 LibUtilities::ePolyEvenlySpaced));
                     testIns = m_mesh->m_faceSet.insert(fac);
@@ -167,23 +167,23 @@ namespace Nektar
 
                 SpatialDomains::QuadGeomMap tmp3 = graph->GetAllQuadGeoms();
                 SpatialDomains::QuadGeomMap::iterator it2;
-                
+
                 for (it2 = tmp3.begin(); it2 != tmp3.end(); ++it2)
                 {
                     pair<int, SpatialDomains::GeometrySharedPtr> tmp2(
                             it2->first, boost::dynamic_pointer_cast<
                             SpatialDomains::Geometry>(it2->second));
-                            
+
                     vector<NodeSharedPtr> faceVertices;
                     vector<EdgeSharedPtr> faceEdges;
                     vector<NodeSharedPtr> faceNodes;
-                    
+
                     for(int i = 0; i < 4; ++i)
                     {
                         faceVertices.push_back(vIdMap[it2->second->GetVid(i)]);
                         faceEdges.push_back(eIdMap[it2->second->GetEid(i)]);
                     }
-                    
+
                     FaceSharedPtr fac = FaceSharedPtr( new Face(faceVertices,faceNodes,faceEdges,
                                                                 LibUtilities::ePolyEvenlySpaced));
                     testIns = m_mesh->m_faceSet.insert(fac);
@@ -269,47 +269,47 @@ namespace Nektar
             // element vector of this size to allow for
             // non-consecutive insertion to list (Might consider
             // setting element up as a map)?
-            int nel = 0; 
+            int nel = 0;
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
             {
                 // Get hold of dimension
                 int dim = (*compIt->second)[0]->GetShapeDim();
-                
-                if(dim == m_mesh->m_expDim) 
+
+                if(dim == m_mesh->m_expDim)
                 {
                     nel += (*compIt->second).size();
                 }
             }
             m_mesh->m_element[m_mesh->m_expDim].resize(nel);
 
-            // loop over all composites and set up elements with edges and faces from the maps above. 
+            // loop over all composites and set up elements with edges and faces from the maps above.
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
             {
                 // Get hold of dimension
                 int dim = (*compIt->second)[0]->GetShapeDim();
 
                 // compIt->second is a GeometryVector
-                for(geomIt  = (*compIt->second).begin(); 
+                for(geomIt  = (*compIt->second).begin();
                     geomIt != (*compIt->second).end();
                         ++geomIt)
                 {
                     ElmtConfig conf((*geomIt)->GetShapeType(),1,true,true);
-                    
+
                     // Get hold of geometry
                     vector<NodeSharedPtr> nodeList;
                     for (int i = 0; i < (*geomIt)->GetNumVerts(); ++i)
                     {
                         nodeList.push_back(vIdMap[(*geomIt)->GetVid(i)]);
                     }
-                
+
                     vector<int> tags;
                     tags.push_back(compIt->first);
-                    
+
                     ElementSharedPtr E = GetElementFactory().
                         CreateInstance((*geomIt)->GetShapeType(),conf,nodeList,tags);
-                    
+
                     E->SetId((*geomIt)->GetGlobalID());
-                    
+
                     if(dim == m_mesh->m_expDim) // load mesh into location baded on globalID
                     {
                         m_mesh->m_element[dim][(*geomIt)->GetGlobalID()] = E;
@@ -318,10 +318,10 @@ namespace Nektar
                     {
                         m_mesh->m_element[dim].push_back(E);
                     }
-                    
+
                     if(dim > 1)
                     {
-                        // reset edges 
+                        // reset edges
                         for (int i = 0; i < (*geomIt)->GetNumEdges(); ++i)
                         {
                             EdgeSharedPtr edg = eIdMap[(*geomIt)->GetEid(i)];
@@ -330,10 +330,10 @@ namespace Nektar
                             edg->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
                     }
-                    
+
                     if(dim  == 3)
                     {
-                        // reset faces 
+                        // reset faces
                         for (int i = 0; i < (*geomIt)->GetNumFaces(); ++i)
                         {
                             FaceSharedPtr fac = fIdMap[(*geomIt)->GetFid(i)];
@@ -342,9 +342,9 @@ namespace Nektar
                             fac->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
                     }
-                }                             
+                }
             }
-            ProcessEdges(false); 
+            ProcessEdges(false);
             ProcessFaces(false);
             ProcessComposites();
         }

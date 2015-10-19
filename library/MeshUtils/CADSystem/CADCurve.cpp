@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/CADSystem/CADCurve.h>
+#include <MeshUtils/CADSystem/CADCurve.h>
 
 using namespace std;
 

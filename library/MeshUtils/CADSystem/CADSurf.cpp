@@ -35,7 +35,7 @@
 
 #include <sstream>
 
-#include <LibUtilities/CADSystem/CADSurf.h>
+#include <MeshUtils/CADSystem/CADSurf.h>
 
 using namespace std;
 

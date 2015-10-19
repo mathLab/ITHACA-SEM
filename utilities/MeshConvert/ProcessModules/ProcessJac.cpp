@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ProcessJac.h"
 
 #include <SpatialDomains/MeshGraph.h>
@@ -116,15 +116,15 @@ namespace Nektar
 
                     if(RemoveCurveIfSingular)
                     {
-                        int nSurf = el[i]->GetFaceCount(); 
-                        if(nSurf == 5) // prism mesh 
+                        int nSurf = el[i]->GetFaceCount();
+                        if(nSurf == 5) // prism mesh
                         {
                             // find edges ndoes and blend to far side.
                             for(int e = 0; e < el[i]->GetEdgeCount(); ++e)
                             {
                                 EdgeSharedPtr ed = el[i]->GetEdge(e);
-                                EdgeSet::iterator it; 
-                                // find edge in m_edgeSet; 
+                                EdgeSet::iterator it;
+                                // find edge in m_edgeSet;
                                 if((it = m_mesh->m_edgeSet.find(ed)) != m_mesh->m_edgeSet.end())
                                 {
                                     if((*it)->m_edgeNodes.size())

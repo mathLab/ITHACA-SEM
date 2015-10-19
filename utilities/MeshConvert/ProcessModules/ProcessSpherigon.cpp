@@ -36,7 +36,7 @@
 #include <string>
 using namespace std;
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ProcessSpherigon.h"
 
 #include <LocalRegions/SegExp.h>
@@ -53,29 +53,29 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessSpherigon::className = 
+        ModuleKey ProcessSpherigon::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "spherigon"),
                 ProcessSpherigon::create);
-        
+
         /**
          * @class ProcessSpherigon
-         * 
+         *
          * This class implements the spherigon surface smoothing technique which
          * is documented in
-         * 
+         *
          *   "The SPHERIGON: A Simple Polygon Patch for Smoothing Quickly your
          *   Polygonal Meshes": P. Volino and N. Magnenat Thalmann, Computer
          *   Animation Proceedings (1998).
-         * 
+         *
          * This implementation works in both a 2D manifold setting (for
          * triangles and quadrilaterals embedded in 3-space) and in a full 3D
-         * enviroment (prisms, tetrahedra and hexahedra). 
-         * 
+         * enviroment (prisms, tetrahedra and hexahedra).
+         *
          * No additional information needs to be supplied directly to the module
          * in order for it to work. However, 3D elements do rely on the mapping
          * Mesh::spherigonSurfs to be populated by the relevant input modules.
-         * 
+         *
          * Additionally, since the algorithm assumes normals are supplied which
          * are perpendicular to the true surface defined at each vertex. If
          * these are specified in Mesh::vertexNormals by the input module,
@@ -83,7 +83,7 @@ namespace Nektar
          * estimated by taking the average of all edge/face normals which
          * connect to the vertex.
          */
-      
+
         /**
          * @brief Default constructor.
          */
@@ -96,19 +96,19 @@ namespace Nektar
             m_config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
                 "Curve both triangular faces of prism on boundary.");
             m_config["usenormalfile"] = ConfigOption(false,"NoFile",
-                 "Use alternative file for Spherigon definition"); 
+                 "Use alternative file for Spherigon definition");
             m_config["scalefile"] = ConfigOption(false,"1.0",
                  "Apply scaling factor to coordinates in file ");
             m_config["normalnoise"] = ConfigOption(false,"NotSpecified",
                        "Add randowm noise to normals of amplitude AMP in specified region. input string is Amp,xmin,xmax,ymin,ymax,zmin,zmax");
        }
-      
+
         /**
          * @brief Destructor.
          */
         ProcessSpherigon::~ProcessSpherigon()
         {
-            
+
         }
 
         /*
@@ -124,12 +124,12 @@ namespace Nektar
             c.m_z = a.m_x*b.m_y - a.m_y*b.m_x;
 
             inv_mag = 1.0/sqrt(c.m_x*c.m_x + c.m_y*c.m_y + c.m_z*c.m_z);
-            
+
             c.m_x = c.m_x*inv_mag;
             c.m_y = c.m_y*inv_mag;
             c.m_z = c.m_z*inv_mag;
         }
-        
+
         /**
          * @brief Calculate the magnitude of the cross product \f$
          * \vec{a}\times\vec{b} \f$.
@@ -145,9 +145,9 @@ namespace Nektar
         /**
          * @brief Calculate the \f$ C^0 \f$ blending function for spherigon
          * implementation.
-         * 
+         *
          * See equation (5) of the paper.
-         * 
+         *
          * @param r  Barycentric coordinate.
          */
         double ProcessSpherigon::Blend(double r)
@@ -158,9 +158,9 @@ namespace Nektar
         /**
          * @brief Calculate the \f$ C^1 \f$ blending function for spherigon
          * implementation.
-         * 
+         *
          * See equation (10) of the paper.
-         * 
+         *
          * @param r      Generalised barycentric coordinates of the point P.
          * @param Q      Vector of vertices denoting this triangle/quad.
          * @param P      Point in the triangle to apply blending to.
@@ -183,7 +183,7 @@ namespace Nektar
             for (i = 0; i < nV; ++i)
             {
                 int ip = (i+1) % nV, im = (i-1+nV) % nV;
-                
+
                 if (r[i] > TOL_BLEND && r[i] < (1-TOL_BLEND))
                 {
                     blend[i] = r[i]*r[i]*(
@@ -192,7 +192,7 @@ namespace Nektar
                     totBlend += blend[i];
                 }
             }
-            
+
             for (i = 0; i < nV; ++i)
             {
                 blend[i] /= totBlend;
@@ -211,44 +211,44 @@ namespace Nektar
          * @brief Generate a set of approximate vertex normals to a surface
          * represented by line segments in 2D and a hybrid
          * triangular/quadrilateral mesh in 3D.
-         * 
+         *
          * This routine approximates the true vertex normals to a surface by
          * averaging the normals of all edges/faces which connect to the
          * vertex. It is better to use the exact surface normals which can be
          * set in Mesh::vertexNormals, but where they are not supplied this
          * routine calculates an approximation for the spherigon implementation.
-         * 
+         *
          * @param el  Vector of elements denoting the surface mesh.
          */
-        void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el, 
+        void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
                                                MeshSharedPtr &mesh)
         {
             boost::unordered_map<int, Node>::iterator nIt;
-         
-            
-   
+
+
+
             for (int i = 0; i < el.size(); ++i)
             {
                 ElementSharedPtr e = el[i];
-                
+
                 // Ensure that element is a line, triangle or quad.
                 ASSERTL0(e->GetConf().m_e == LibUtilities::eSegment      ||
-                         e->GetConf().m_e == LibUtilities::eTriangle     || 
+                         e->GetConf().m_e == LibUtilities::eTriangle     ||
                          e->GetConf().m_e == LibUtilities::eQuadrilateral,
                          "Spherigon expansions must be lines, triangles or "
                          "quadrilaterals.");
-                
+
                 // Calculate normal for this element.
                 int nV = e->GetVertexCount();
                 vector<NodeSharedPtr> node(nV);
- 
+
                 for (int j = 0; j < nV; ++j)
                 {
                     node[j] = e->GetVertex(j);
                 }
-                
+
                 Node n;
-                
+
                 if (mesh->m_spaceDim == 3)
                 {
                     // Create two tangent vectors and take unit cross product.
@@ -265,7 +265,7 @@ namespace Nektar
                     n.m_y      = dx.m_x;
                     n.m_z      = 0;
                 }
-                
+
                 // Insert face normal into vertex normal list or add to existing
                 // value.
                 for (int j = 0; j < nV; ++j)
@@ -281,7 +281,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Normalize resulting vectors.
             for (nIt  = mesh->m_vertexNormals.begin();
                  nIt != mesh->m_vertexNormals.end  (); ++nIt)
@@ -322,7 +322,7 @@ namespace Nektar
                 set<pair<int,int> >::iterator it;
                 vector<int> t;
                 t.push_back(0);
-                
+
 
                 // Construct list of spherigon edges/faces from a tag.
                 string surfTag = m_config["surf"].as<string>();
@@ -338,9 +338,9 @@ namespace Nektar
                     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
                     {
                         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-                        int nSurf = m_mesh->m_expDim == 3 ? el->GetFaceCount() : 
+                        int nSurf = m_mesh->m_expDim == 3 ? el->GetFaceCount() :
                                                      el->GetEdgeCount();
-                        
+
                         for (int j = 0; j < nSurf; ++j)
                         {
                             int bl = el->GetBoundaryLink(j);
@@ -361,7 +361,7 @@ namespace Nektar
                             if (inter.size() == 1)
                             {
                                 m_mesh->m_spherigonSurfs.insert(make_pair(i, j));
-                                
+
                                 // Curve other tri face on Prism. Note could be
                                 // problem on pyramid when implemented.
                                 if(nSurf == 5 && prismTag)
@@ -376,7 +376,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if (m_mesh->m_spherigonSurfs.size() == 0)
                 {
                     cerr << "WARNING: Spherigon surfaces have not been defined "
@@ -394,11 +394,11 @@ namespace Nektar
                         vector<NodeSharedPtr> nodes = f->m_vertexList;
                         LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size());
                         ElmtConfig conf(eType, 1, false, false);
-                        
+
                         // Create 2D element.
                         ElementSharedPtr elmt = GetElementFactory().
                             CreateInstance(eType,conf,nodes,t);
-                        
+
                         // Copy vertices/edges from face.
                         for (int i = 0; i < f->m_vertexList.size(); ++i)
                         {
@@ -408,7 +408,7 @@ namespace Nektar
                         {
                             elmt->SetEdge(i, f->m_edgeList[i]);
                         }
-                        
+
                         el.push_back(elmt);
                     }
                 }
@@ -422,14 +422,14 @@ namespace Nektar
                         vector<NodeSharedPtr> nodes;
                         LibUtilities::ShapeType eType = LibUtilities::eSegment;
                         ElmtConfig conf(eType, 1, false, false);
-                        
+
                         nodes.push_back(edge->m_n1);
                         nodes.push_back(edge->m_n2);
-                        
+
                         // Create 2D element.
                         ElementSharedPtr elmt = GetElementFactory().
                             CreateInstance(eType,conf,nodes,t);
-                        
+
                         // Copy vertices/edges from original element.
                         elmt->SetVertex(0, nodes[0]);
                         elmt->SetVertex(1, nodes[1]);
@@ -443,8 +443,8 @@ namespace Nektar
             {
                 ASSERTL0(false, "Spherigon expansions must be 2/3 dimensional");
             }
-            
-            
+
+
             // See if vertex normals have been generated. If they have not,
             // approximate them by summing normals of surrounding elements.
             bool normalsGenerated = false;
@@ -462,7 +462,7 @@ namespace Nektar
 
                 ifstream inply;
                 InputPlySharedPtr  plyfile;
-                
+
                 inply.open(normalfile.c_str());
                 ASSERTL0(inply,string("Could not open input ply file: ") +
                          normalfile);
@@ -472,18 +472,18 @@ namespace Nektar
                 plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
                 plyfile->ReadPly(inply,scale);
                 plyfile->ProcessVertices();
-                
+
                 MeshSharedPtr plymesh = plyfile->GetMesh();
                 GenerateNormals(plymesh->m_element[plymesh->m_expDim],plymesh);
-                
-                // finaly find nearest vertex and set normal to mesh surface file normal. 
-                // probably should have a hex tree search ? 
+
+                // finaly find nearest vertex and set normal to mesh surface file normal.
+                // probably should have a hex tree search ?
                 Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
                 Node minx(0,0.0,0.0,0.0), tmp,tmpsav;
-                NodeSet::iterator it; 
+                NodeSet::iterator it;
                 map<int,NodeSharedPtr>::iterator vIt;
                 map<int,NodeSharedPtr> surfverts;
-                
+
                 // make a map of normal vertices to visit based on elements el
                 for (int i = 0; i < el.size(); ++i)
                 {
@@ -498,11 +498,11 @@ namespace Nektar
 
                 //loop over all element in ply mesh and determine
                 //xmin,xmax,ymin,ymax as search criterion
-                
+
 
                 NekDouble mindiff,diff;
                 int       cntmin;
-                
+
                 if (m_mesh->m_verbose)
                 {
                     cout << "\t Processing surface normals "  << endl;
@@ -512,12 +512,12 @@ namespace Nektar
                 for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt,++cnt)
                 {
                     mindiff  = 1e12;
-                    
+
                     for(j = 0, it = plymesh->m_vertexSet.begin(); it != plymesh->m_vertexSet.end(); ++it, ++j)
                     {
                         tmp = *(vIt->second)- *(*it);
                         diff = tmp.abs2();
-                        
+
                         if(diff < mindiff)
                         {
                             mindiff = diff;
@@ -526,8 +526,8 @@ namespace Nektar
                         }
                     }
                     locnorm[cntmin] = vIt->first;
-                    
-                    ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),"cntmin is out of range"); 
+
+                    ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),"cntmin is out of range");
                     m_mesh->m_vertexNormals[vIt->first] = plymesh->m_vertexNormals[cntmin];
 
                 }
@@ -560,14 +560,14 @@ namespace Nektar
                     cout << "\t adding noise to normals of amplitude "<< amp << " in range: ";
                     for(int i = 0; i < nvalues; ++i)
                     {
-                        cout << values[2*i+1] <<"," << values[2*i+2] << " "; 
+                        cout << values[2*i+1] <<"," << values[2*i+2] << " ";
                     }
                     cout << endl;
                 }
-                
+
                 map<int,NodeSharedPtr>::iterator vIt;
                 map<int,NodeSharedPtr> surfverts;
-                
+
                 // make a map of normal vertices to visit based on elements el
                 for (int i = 0; i < el.size(); ++i)
                 {
@@ -583,10 +583,10 @@ namespace Nektar
                 for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt)
                 {
                     bool AddNoise = false;
-                    
+
                     for(int i = 0; i < nvalues; ++i)
                     {
-                        // check to see if point is in range 
+                        // check to see if point is in range
                         switch(nvalues)
                         {
                         case 1:
@@ -613,7 +613,7 @@ namespace Nektar
                                 if(((vIt->second)->m_x > values[2*i+1])&&
                                    ((vIt->second)->m_x < values[2*i+2])&&
                                    ((vIt->second)->m_y > values[2*i+3])&&
-                                   ((vIt->second)->m_y < values[2*i+4])&&  
+                                   ((vIt->second)->m_y < values[2*i+4])&&
                                    ((vIt->second)->m_z > values[2*i+5])&&
                                    ((vIt->second)->m_z < values[2*i+6]))
 
@@ -623,15 +623,15 @@ namespace Nektar
                             }
                             break;
                         }
-                        
+
                         if(AddNoise)
                         {
-                            // generate random unit vector; 
+                            // generate random unit vector;
                             Node rvec(0,rand(),rand(),rand());
                             rvec *= values[0]/sqrt(rvec.abs2());
-                            
+
                             Node normal = m_mesh->m_vertexNormals[vIt->first];
-                            
+
                             normal += rvec;
                             normal /= sqrt(normal.abs2());
 
@@ -652,7 +652,7 @@ namespace Nektar
             Array<OneD, NekDouble> xc(nq*nq);
             Array<OneD, NekDouble> yc(nq*nq);
             Array<OneD, NekDouble> zc(nq*nq);
-            
+
             ASSERTL0(nq > 2, "Number of points must be greater than 2.");
 
             LibUtilities::BasisKey B0(
@@ -669,19 +669,19 @@ namespace Nektar
 
             Array<OneD, NekDouble> xnodal(nq*(nq+1)/2), ynodal(nq*(nq+1)/2);
             stdtri->GetNodalPoints(xnodal, ynodal);
-            
+
             int edgeMap[3][4][2] = {
                 {{0, 1}, {-1,   -1}, {-1,        -1 }, {-1,        -1}}, // seg
                 {{0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}, {-1,        -1}}, // tri
                 {{0, 1}, {nq-1, nq}, {nq*nq-1,   -1 }, {nq*(nq-1), -nq}} // quad
             };
-            
+
             int vertMap[3][4][2] = {
                 {{0, 1}, {0, 0}, {0, 0}, {0, 0}}, // seg
                 {{0, 1}, {1, 2}, {2, 3}, {0, 0}}, // tri
                 {{0, 1}, {1, 2}, {2, 3}, {3, 0}}, // quad
             };
-            
+
             for (int i = 0; i < el.size(); ++i)
             {
                 // Construct a Nektar++ element to obtain coordinate points
@@ -693,7 +693,7 @@ namespace Nektar
                     LibUtilities::eModified_A, nq,
                     LibUtilities::PointsKey(
                         nq, LibUtilities::eGaussLobattoLegendre));
-                
+
                 if (e->GetConf().m_e == LibUtilities::eSegment)
                 {
                     SpatialDomains::SegGeomSharedPtr geom =
@@ -718,14 +718,14 @@ namespace Nektar
                     Array<OneD, NekDouble> coord(2);
                     tri->GetCoords(xc,yc,zc);
                     nquad = nq*(nq+1)/2;
-                    
+
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
                         x[j] = stdtri->PhysEvaluate(coord, xc);
                     }
-                    
+
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
@@ -755,13 +755,13 @@ namespace Nektar
                 {
                     ASSERTL0(false, "Unknown expansion type.");
                 }
-                
+
                 // Zero z-coordinate in 2D.
                 if (m_mesh->m_spaceDim == 2)
                 {
                     Vmath::Zero(nquad, z, 1);
                 }
-                
+
                 // Find vertex normals.
                 int nV = e->GetVertexCount();
                 vector<Node> v, vN;
@@ -782,7 +782,7 @@ namespace Nektar
 
                 // Calculate segment length for 2D spherigon routine.
                 double segLength = sqrt((v[0] - v[1]).abs2());
-                
+
                 // Perform Spherigon method to smooth manifold.
                 for (int j = 0; j < nquad; ++j)
                 {
@@ -799,7 +799,7 @@ namespace Nektar
                         r[0] = sqrt((P - v[0]).abs2()) / segLength;
                         r[0] = max(min(1.0, r[0]), 0.0);
                         r[1] = 1.0 - r[0];
-                        
+
                         // Calculate Phong normal.
                         N = vN[0]*r[0] + vN[1]*r[1];
                     }
@@ -809,7 +809,7 @@ namespace Nektar
                         {
                             tmp[k] = P - v[k];
                         }
-                        
+
                         // Calculate generalized barycentric coordinate system
                         // (see equation 6 of paper).
                         double weight = 0.0;
@@ -818,12 +818,12 @@ namespace Nektar
                             r[k] = 1.0;
                             for (int l = 0; l < nV-2; ++l)
                             {
-                                r[k] *= CrossProdMag(tmp[(k+l+1) % nV], 
+                                r[k] *= CrossProdMag(tmp[(k+l+1) % nV],
                                                      tmp[(k+l+2) % nV]);
                             }
                             weight += r[k];
                         }
-                        
+
                         // Calculate Phong normal (equation 1).
                         for (int k = 0; k < nV; ++k)
                         {
@@ -831,10 +831,10 @@ namespace Nektar
                             N    += vN[k]*r[k];
                         }
                     }
-                    
+
                     // Normalise Phong normal.
                     N /= sqrt(N.abs2());
-                    
+
                     for (int k = 0; k < nV; ++k)
                     {
                         // Perform steps denoted in equations 2, 3, 8 for C1
@@ -845,25 +845,25 @@ namespace Nektar
                         Q [k] = K[k] + N*tmp1;
                         Qp[k] = v[k] - N*((v[k]-P).dot(N));
                     }
-                    
+
                     // Apply C1 blending function to the surface. TODO: Add
                     // option to do (more efficient) C0 blending function.
                     SuperBlend(r, Qp, P, blend);
                     P.m_x = P.m_y = P.m_z = 0.0;
-                    
+
                     // Apply blending (equation 4).
                     for (int k = 0; k < nV; ++k)
                     {
                         P += Q[k]*blend[k];
                     }
-                    
+
                     out[j] = P;
                 }
-                
-                // Push nodes into lines - TODO: face interior nodes. 
+
+                // Push nodes into lines - TODO: face interior nodes.
                 // offset = 0 (seg), 1 (tri) or 2 (quad)
                 int offset = (int)e->GetConf().m_e-2;
-                
+
                 for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
                 {
                     eIt = visitedEdges.find(e->GetEdge(edge)->m_id);
@@ -879,7 +879,7 @@ namespace Nektar
                         {
                             for (int j = 1; j < nq-1; ++j)
                             {
-                                int v = edgeMap[offset][edge][0] + 
+                                int v = edgeMap[offset][edge][0] +
                                     j*edgeMap[offset][edge][1];
                                 e->GetEdge(edge)->m_edgeNodes.push_back(
                                     NodeSharedPtr(new Node(out[v])));
@@ -894,7 +894,7 @@ namespace Nektar
                                     NodeSharedPtr(new Node(out[v])));
                             }
                         }
-                        
+
                         if (reverseEdge)
                         {
                             reverse(e->GetEdge(edge)->m_edgeNodes.begin(),
@@ -907,12 +907,12 @@ namespace Nektar
                         visitedEdges.insert(e->GetEdge(edge)->m_id);
                     }
                 }
-                
+
                 // Add face nodes in manifold and full 3D case, but not for 2D.
                 if (m_mesh->m_spaceDim == 3)
                 {
                     vector<NodeSharedPtr> volNodes;
-                    
+
                     if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
                     {
                         volNodes.resize((nq-2)*(nq-2));
@@ -933,7 +933,7 @@ namespace Nektar
                             volNodes.push_back(NodeSharedPtr(new Node(out[j])));
                         }
                     }
-                    
+
                     e->SetVolumeNodes(volNodes);
                 }
             }

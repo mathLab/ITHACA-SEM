@@ -34,7 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "ProcessExtractTetPrismInterface.h"
 
 #include <SpatialDomains/MeshGraph.h>
@@ -157,4 +157,3 @@ void ProcessExtractTetPrismInterface::Process()
 
 }
 }
-

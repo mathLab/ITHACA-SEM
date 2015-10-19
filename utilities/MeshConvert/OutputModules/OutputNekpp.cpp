@@ -46,7 +46,7 @@ namespace io = boost::iostreams;
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/MeshGraph.h>
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "OutputNekpp.h"
 
 namespace Nektar

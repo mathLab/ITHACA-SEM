@@ -39,7 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <LibUtilities/CADSystem/CADSystem.h>
+#include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/CurvaturePoint.hpp>
 #include <MeshUtils/Octree/Octant.h>
 

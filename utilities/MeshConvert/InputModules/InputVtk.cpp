@@ -43,7 +43,7 @@ using namespace std;
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputVtk.h"
 
 namespace Nektar

@@ -37,7 +37,7 @@
 #define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
 
 #include "../Module.h"
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 
 namespace Nektar
 {
@@ -62,26 +62,26 @@ namespace Nektar
             void ReadZone(int &nComposite);
 
         protected:
-            
+
             void GenElement3D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces, 
+                              int i, vector<int> &ElementFaces,
                               vector<vector<int> >&FaceNodes,
                               int ncomposite,
                               bool DoOrient);
 
 
             void GenElement2D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces, 
+                              int i, vector<int> &ElementFaces,
                               vector<vector<int> >&FaceNodes,
-                              int ncomposite); 
+                              int ncomposite);
 
 
             Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces, 
+                                           vector<int> &ElementFaces,
                                            vector<vector<int> >&FaceNodes);
 
             Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces, 
+                                           vector<int> &ElementFaces,
                                            vector<vector<int> >&FaceNodes);
 
             void ResetNodes(vector<NodeSharedPtr> &Nodes,

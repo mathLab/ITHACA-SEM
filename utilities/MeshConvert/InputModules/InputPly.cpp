@@ -37,14 +37,14 @@
 #include <iostream>
 using namespace std;
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputPly.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputPly::className = 
+        ModuleKey InputPly::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "ply"), InputPly::create,
                 "Reads ply triangulation format.");
@@ -69,7 +69,7 @@ namespace Nektar
 
             // Open the file stream.
             OpenStream();
-           
+
             ReadPly(m_mshFile);
 
             m_mshFile.close();
@@ -95,7 +95,7 @@ namespace Nektar
             {
                 cout << "InputPly: Start reading file..." << endl;
             }
-            
+
             while (!mshFile.eof())
             {
                 getline(mshFile, line);
@@ -136,16 +136,16 @@ namespace Nektar
                     {
                         getline(mshFile, line);
                         stringstream st(line);
-                        
+
                         for (int j = 0; j < nProperties; ++j)
                         {
                             st >> data[j];
                         }
-                        
+
                         double x = data[propMap["x"]];
                         double y = data[propMap["y"]];
                         double z = data[propMap["z"]];
-                        
+
                         if ((y * y) > 0.000001 && m_mesh->m_spaceDim != 3)
                         {
                             m_mesh->m_spaceDim = 2;
@@ -154,7 +154,7 @@ namespace Nektar
                         {
                             m_mesh->m_spaceDim = 3;
                         }
-                        
+
                         x *= scale;
                         y *= scale;
                         z *= scale;
@@ -162,7 +162,7 @@ namespace Nektar
 
                         m_mesh->m_node.push_back(
                             boost::shared_ptr<Node>(new Node(i, x, y, z)));
-                        
+
                         // Read vertex normals.
                         if (propMap.count("nx") > 0)
                         {
@@ -183,7 +183,7 @@ namespace Nektar
                         // Create element tags
                         vector<int> tags;
                         tags.push_back(0); // composite
-                        
+
                         // Read element node list
                         st >> id;
                         vector<NodeSharedPtr> nodeList;
@@ -193,14 +193,14 @@ namespace Nektar
                             st >> node;
                             nodeList.push_back(m_mesh->m_node[node]);
                         }
-                        
+
                         // Create element
                         ElmtConfig conf(elType,1,false,false);
                         ElementSharedPtr E = GetElementFactory().
                             CreateInstance(elType,conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m_mesh->m_expDim) 
+                        if (E->GetDim() > m_mesh->m_expDim)
                         {
                             m_mesh->m_expDim = E->GetDim();
                         }

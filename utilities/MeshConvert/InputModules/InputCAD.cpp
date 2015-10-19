@@ -37,7 +37,7 @@
 
 
 
-#include <LibUtilities/CADSystem/CADSystem.h>
+#include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 #include <MeshUtils/TetMeshing/TetMesh.h>
@@ -45,7 +45,7 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
-#include "../MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputCAD.h"
 
 using namespace std;

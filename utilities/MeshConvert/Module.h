@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 
-#include "MeshElements.h"
+#include <MeshUtils/MeshElements/MeshElements.h>
 
 namespace Nektar
 {
@@ -57,7 +57,7 @@ namespace Nektar
             eOutputModule,
             SIZE_ModuleType
         };
-        
+
         const char* const ModuleTypeMap[] =
         {
             "Input",
@@ -74,17 +74,17 @@ namespace Nektar
         {
             /**
              * @brief Construct a new configuration option.
-             * 
+             *
              * @param isBool    True if the option is boolean type.
              * @param defValue  Default value of the option.
              * @param desc      Description of the option.
              */
             ConfigOption(bool isBool, string defValue, string desc) :
-                isBool(isBool), beenSet(false), value(), defValue(defValue), 
+                isBool(isBool), beenSet(false), value(), defValue(defValue),
                 desc(desc) {}
             ConfigOption() :
                 isBool(false), beenSet(false), value(), defValue(), desc() {}
-            
+
             /**
              * @brief Re-interpret the value stored in #value as some type using
              * boost::lexical_cast.
@@ -102,7 +102,7 @@ namespace Nektar
                     abort();
                 }
             }
-            
+
             /**
              * @brief Interpret the value stored in #value as some type using
              * boost::lexical_cast and return true of false depending on cast
@@ -122,7 +122,7 @@ namespace Nektar
 
                 return returnval;
             }
-            
+
 
             /// True if the configuration option is a boolean (thus does not
             /// need additional arguments).
@@ -149,12 +149,12 @@ namespace Nektar
         public:
         Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
             virtual void Process() = 0;
-            
+
             void RegisterConfig(string key, string value);
             void PrintConfig();
             void SetDefaults();
             MeshSharedPtr GetMesh()
-            { 
+            {
                 return m_mesh;
             }
 
@@ -166,7 +166,7 @@ namespace Nektar
             MeshSharedPtr m_mesh;
             /// List of configuration values.
             map<string, ConfigOption> m_config;
-            
+
             /// Extract element edges
             virtual void ProcessEdges(bool ReprocessEdges = true);
             /// Extract element faces
@@ -182,7 +182,7 @@ namespace Nektar
                                set<int>                 &prismsDone,
                                vector<ElementSharedPtr> &line);
         };
-        
+
         /**
          * @brief Abstract base class for input modules.
          *
@@ -197,7 +197,7 @@ namespace Nektar
         public:
             InputModule(MeshSharedPtr p_m);
             void OpenStream();
-            
+
         protected:
             /// Print summary of elements.
             void         PrintSummary();
@@ -207,7 +207,7 @@ namespace Nektar
 
         /**
          * @brief Abstract base class for processing modules.
-         * 
+         *
          * Processing modules take a populated %Mesh object and process it in
          * some fashion; for example the %ProcessJac module calculates the
          * Jacobian of each element and prints warnings for non-positive
@@ -218,7 +218,7 @@ namespace Nektar
         public:
             ProcessModule(MeshSharedPtr p_m) : Module(p_m) {}
         };
-        
+
         /**
          * @brief Abstract base class for output modules.
          *
@@ -230,18 +230,18 @@ namespace Nektar
         public:
             OutputModule(MeshSharedPtr p_m);
             void OpenStream();
-            
+
         protected:
             /// Output stream
             std::ofstream m_mshFile;
         };
-        
+
         typedef std::pair<ModuleType,std::string> ModuleKey;
         std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs);
 
         typedef boost::shared_ptr<Module> ModuleSharedPtr;
         typedef LibUtilities::NekFactory< ModuleKey, Module, MeshSharedPtr > ModuleFactory;
-        
+
         ModuleFactory& GetModuleFactory();
     }
 }

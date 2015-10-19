@@ -580,7 +580,7 @@ namespace Nektar
                         int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
                         for (int i = 0; i < 4; ++i)
                         {
-                            bool reverseEdge = m_edgeList[i]->m_n1 == m_vertexList[i];
+                            bool reverseEdge = edgeo[i] == StdRegions::eBackwards;
 
                             if (!reverseEdge)
                             {

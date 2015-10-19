@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File DriverArpack.h
+// File: MetricPrecon.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,67 +29,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Driver class for the stability solver using Arpack
+// Description: Definition of the preconditioner metric.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_DRIVERARPACK_H
-#define NEKTAR_SOLVERUTILS_DRIVERARPACK_H
+#ifndef NEKTAR_TESTS_METRICEIGENVALUE_H
+#define NEKTAR_TESTS_METRICEIGENVALUE_H
 
-#include <LibUtilities/LinearAlgebra/Arpack.hpp>
-
-#include <SolverUtils/DriverArnoldi.h>
+#include <map>
+#include <MetricRegex.h>
 
 namespace Nektar
 {
-namespace SolverUtils
-{
+    class MetricEigenvalue : public MetricRegex
+    {
+    public:
+        static MetricSharedPtr create(TiXmlElement *metric, bool generate)
+        {
+            return MetricSharedPtr(new MetricEigenvalue(metric, generate));
+        }
 
-/// Base class for the development of solvers.
-class DriverArpack: public DriverArnoldi
-{
-public:
-    friend class MemoryManager<DriverArpack>;
+        static std::string type;
+        static std::string defaultTolerance;
 
-    /// Creates an instance of this class
-    static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-        DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
-        p->InitObject();
-        return p;
-    }
+    protected:
+        MetricEigenvalue(TiXmlElement *metric, bool generate);
 
-    ///Name of the class
-    static std::string className;
+        std::string m_varTolerance;
 
-
-
-protected:
-    int m_maxn;//Maximum size of the problem
-    int m_maxnev;//maximum number of eigenvalues requested
-    int m_maxncv;//Largest number of basis vector used in Implicitly Restarted Arnoldi
-
-    /// Constructor
-    DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
-
-    /// Destructor
-    virtual ~DriverArpack();
-
-    /// Virtual function for initialisation implementation.
-    virtual void v_InitObject(ostream &out = cout);
-
-    /// Virtual function for solve implementation.
-    virtual void v_Execute(ostream &out = cout);
-
-    static std::string arpackProblemTypeLookupIds[];
-    static std::string arpackProblemTypeDefault;
-    static std::string driverLookupId;
-
-private:
-    static std::string ArpackProblemTypeTrans[];
-};
-
+        virtual void v_Generate(std::istream& pStdout, std::istream& pStderr);
+    };
 }
-} //end of namespace
 
-#endif //NEKTAR_SOLVERUTILS_DRIVERARPACK_H
-
+#endif

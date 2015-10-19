@@ -70,12 +70,14 @@ namespace Nektar
         }
 
         static std::string type;
-    
+
     protected:
         /// Storage for the boost regex.
         boost::regex                                     m_regex;
         /// Stores the multiple matches defined in each <MATCH> tag.
         std::vector<std::vector<MetricRegexFieldValue> > m_matches;
+        /// If true, regex matches may be in any order in output
+        bool m_unordered;
 
         MetricRegex(TiXmlElement *metric, bool generate);
 

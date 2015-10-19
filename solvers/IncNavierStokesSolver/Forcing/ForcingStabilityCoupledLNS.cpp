@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File DriverArpack.h
+// File: ForcingStabilityCoupledLNS.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,67 +29,52 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Driver class for the stability solver using Arpack
+// Description: Copy velocity field into forcing terms for stability
+// analysis of coupled solver. 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_DRIVERARPACK_H
-#define NEKTAR_SOLVERUTILS_DRIVERARPACK_H
-
-#include <LibUtilities/LinearAlgebra/Arpack.hpp>
-
-#include <SolverUtils/DriverArnoldi.h>
+#include <IncNavierStokesSolver/Forcing/ForcingStabilityCoupledLNS.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
-namespace SolverUtils
-{
+std::string ForcingStabilityCoupledLNS::className = SolverUtils::GetForcingFactory().
+            RegisterCreatorFunction("StabilityCoupledLNS",
+                                    ForcingStabilityCoupledLNS::create,
+                                    "RHS forcing for coupled LNS stability solver");
 
-/// Base class for the development of solvers.
-class DriverArpack: public DriverArnoldi
+ForcingStabilityCoupledLNS::ForcingStabilityCoupledLNS(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+    : Forcing(pSession)
 {
-public:
-    friend class MemoryManager<DriverArpack>;
+}
 
-    /// Creates an instance of this class
-    static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-        DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
-        p->InitObject();
-        return p;
+void ForcingStabilityCoupledLNS::v_InitObject(
+        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+        const unsigned int& pNumForcingFields,
+        const TiXmlElement* pForce)
+{
+}
+
+void ForcingStabilityCoupledLNS::v_Apply(
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&  fields,
+        const Array<OneD, Array<OneD, NekDouble> >&         inarray,
+              Array<OneD, Array<OneD, NekDouble> >&         outarray,
+        const NekDouble&                                    time)
+{
+    int npts = fields[0]->GetTotPoints();
+    
+    ASSERTL1(fields.num_elements() == outarray.num_elements(),
+             "Fields and outarray are of different size");
+        
+    // Apply m_forcing terms
+    for (int i = 0; i < fields.num_elements(); i++)
+    {
+        Vmath::Vadd(npts, fields[i]->GetPhys(), 1, outarray[i], 1, 
+                    outarray[i], 1);
     }
 
-    ///Name of the class
-    static std::string className;
-
-
-
-protected:
-    int m_maxn;//Maximum size of the problem
-    int m_maxnev;//maximum number of eigenvalues requested
-    int m_maxncv;//Largest number of basis vector used in Implicitly Restarted Arnoldi
-
-    /// Constructor
-    DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
-
-    /// Destructor
-    virtual ~DriverArpack();
-
-    /// Virtual function for initialisation implementation.
-    virtual void v_InitObject(ostream &out = cout);
-
-    /// Virtual function for solve implementation.
-    virtual void v_Execute(ostream &out = cout);
-
-    static std::string arpackProblemTypeLookupIds[];
-    static std::string arpackProblemTypeDefault;
-    static std::string driverLookupId;
-
-private:
-    static std::string ArpackProblemTypeTrans[];
-};
+}
 
 }
-} //end of namespace
-
-#endif //NEKTAR_SOLVERUTILS_DRIVERARPACK_H
-

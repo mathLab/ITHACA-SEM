@@ -20,6 +20,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./Filters/FilterEnergy.cpp
        ./Filters/FilterMovingBody.cpp
        ./Forcing/ForcingMovingBody.cpp	
+       ./Forcing/ForcingStabilityCoupledLNS.cpp	
        ./IncNavierStokesSolver.cpp 
        )
 
@@ -78,11 +79,18 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(ChanFlow_Standard_BodyForce)
     ADD_NEKTAR_TEST(Cyl_AdaptiveSFD)
 
-    #IF (NEKTAR_USING_ARPACK)
-        #ADD_NEKTAR_TEST(ChanStability_adj_Ar) ###
-        #ADD_NEKTAR_TEST(ChanStability_Coupled) ###
-        #ADD_NEKTAR_TEST(bfs_tg-AR)
-    #ENDIF (NEKTAR_USING_ARPACK)
+    ADD_NEKTAR_TEST(PPF_R10000_ModifiedArnoldi_Shift) 
+    ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift) 
+
+    IF (NEKTAR_USE_ARPACK)
+        ADD_NEKTAR_TEST(ChanStability_adj_Ar) 
+        ADD_NEKTAR_TEST(bfs_tg-AR)
+        ADD_NEKTAR_TEST(ChanStability_Coupled) 
+        ADD_NEKTAR_TEST(PPF_R10000_Arpack_LM) 
+        ADD_NEKTAR_TEST(PPF_R15000_Arpack_Shift) 
+        #ADD_NEKTAR_TEST(PPF_R15000_Arpack_NoImagShift) 
+        ADD_NEKTAR_TEST(PPF_R15000_Arpack_NoImagShift_LM) 
+    ENDIF (NEKTAR_USE_ARPACK)
 
     IF (NEKTAR_USE_FFTW)
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_FFT)

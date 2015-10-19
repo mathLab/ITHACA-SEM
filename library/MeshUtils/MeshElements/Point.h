@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.h
+//  File: Mesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,42 +33,40 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESHELEMENTS
-#define MESHUTILS_MESHELEMENTS_MESHELEMENTS
+#ifndef MESHUTILS_MESHELEMENTS_POINT
+#define MESHUTILS_MESHELEMENTS_POINT
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <iomanip>
+namespace Nektar
+{
+namespace Utilities
+{
+    /**
+     * @brief A 0-dimensional vertex.
+     */
+    class Point : public Element {
+    public:
+        /// Creates an instance of this class
+        static ElementSharedPtr create(
+            ElmtConfig                 pConf,
+            std::vector<NodeSharedPtr> pNodeList,
+            std::vector<int>           pTagList)
+        {
+            return boost::shared_ptr<Element>(
+                new Point(pConf, pNodeList, pTagList));
+        }
+        /// Element type
+        static LibUtilities::ShapeType m_type;
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
+        Point(ElmtConfig                 pConf,
+              std::vector<NodeSharedPtr> pNodeList,
+              std::vector<int>           pTagList);
+        Point(const Point& pSrc);
+        virtual ~Point() {}
 
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
+        static unsigned int GetNumNodes(ElmtConfig pConf);
+    };
 
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/MeshComponents.h>
-
-#include "Node.h"
-#include "Edge.h"
-#include "Face.h"
-#include "Element.h"
-#include "Composite.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Line.h"
-#include "Triangle.h"
-#include "Quadrilateral.h"
-#include "Tetrahedron.h"
-#include "Pyramid.h"
-#include "Prism.h"
-#include "Hexahedron.h"
-
+}
+}
 
 #endif

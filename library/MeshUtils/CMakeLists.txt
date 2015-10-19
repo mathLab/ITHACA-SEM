@@ -18,6 +18,20 @@ ENDIF()
 
 SET(MESHUTILS_HEADERS
     MeshElements/MeshElements.h
+    MeshElements/Node.h
+    MeshElements/Edge.h
+    MeshElements/Face.h
+    MeshElements/Element.h
+    MeshElements/Composite.h
+    MeshElements/Mesh.h
+    MeshElements/Point.h
+    MeshElements/Line.h
+    MeshElements/Triangle.h
+    MeshElements/Quadrilateral.h
+    MeshElements/Tetrahedron.h
+    MeshElements/Pyramid.h
+    MeshElements/Prism.h
+    MeshElements/Hexahedron.h
     )
 IF(NEKTAR_USE_MESH)
     SET(MESHUTILS_HEADERS ${MESHUTILS_HEADERS}

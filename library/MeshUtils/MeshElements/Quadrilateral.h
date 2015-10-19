@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.h
+//  File: Mesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,42 +33,49 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESHELEMENTS
-#define MESHUTILS_MESHELEMENTS_MESHELEMENTS
+#ifndef MESHUTILS_MESHELEMENTS_QUAD
+#define MESHUTILS_MESHELEMENTS_QUAD
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <iomanip>
+namespace Nektar
+{
+namespace Utilities
+{
+    /**
+     * @brief A 2-dimensional four-sided element.
+     */
+    class Quadrilateral : public Element {
+    public:
+        /// Creates an instance of this class
+        static ElementSharedPtr create(
+            ElmtConfig                 pConf,
+            std::vector<NodeSharedPtr> pNodeList,
+            std::vector<int>           pTagList)
+        {
+            ElementSharedPtr e = boost::shared_ptr<Element>(
+                new Quadrilateral(pConf, pNodeList, pTagList));
+            vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
+            for (int i = 0; i < m_edges.size(); ++i)
+            {
+                m_edges[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+            }
+            return e;
+        }
+        /// Element type
+        static LibUtilities::ShapeType m_type;
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
+        Quadrilateral(ElmtConfig                 pConf,
+                      std::vector<NodeSharedPtr> pNodeList,
+                      std::vector<int>           pTagList);
+        Quadrilateral(const Quadrilateral& pSrc);
+        virtual ~Quadrilateral() {}
 
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
+        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        virtual void Complete(int order);
 
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/MeshComponents.h>
+        static unsigned int GetNumNodes(ElmtConfig pConf);
+    };
 
-#include "Node.h"
-#include "Edge.h"
-#include "Face.h"
-#include "Element.h"
-#include "Composite.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Line.h"
-#include "Triangle.h"
-#include "Quadrilateral.h"
-#include "Tetrahedron.h"
-#include "Pyramid.h"
-#include "Prism.h"
-#include "Hexahedron.h"
-
+}
+}
 
 #endif

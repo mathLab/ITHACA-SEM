@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.h
+//  File: Mesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,42 +33,52 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESHELEMENTS
-#define MESHUTILS_MESHELEMENTS_MESHELEMENTS
+#ifndef MESHUTILS_MESHELEMENTS_PYM
+#define MESHUTILS_MESHELEMENTS_PYM
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <iomanip>
+namespace Nektar
+{
+namespace Utilities
+{
+    /**
+     * @brief A 3-dimensional square-based pyramidic element
+     */
+    class Pyramid : public Element {
+    public:
+        /// Creates an instance of this class
+        static ElementSharedPtr create(
+            ElmtConfig                 pConf,
+            std::vector<NodeSharedPtr> pNodeList,
+            std::vector<int>           pTagList)
+        {
+            ElementSharedPtr e = boost::shared_ptr<Element>(
+                new Pyramid(pConf, pNodeList, pTagList));
+            vector<FaceSharedPtr> faces = e->GetFaceList();
+            for (int i = 0; i < faces.size(); ++i)
+            {
+                faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+            }
+            return e;
+        }
+        /// Element type
+        static LibUtilities::ShapeType type;
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
+        Pyramid(ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList,
+                std::vector<int>           pTagList);
+        Pyramid(const Pyramid& pSrc);
+        virtual ~Pyramid() {}
 
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
+        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        static unsigned int GetNumNodes(ElmtConfig pConf);
 
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/MeshComponents.h>
+        /**
+         * Orientation of pyramid.
+         */
+        int orientationMap[5];
+    };
 
-#include "Node.h"
-#include "Edge.h"
-#include "Face.h"
-#include "Element.h"
-#include "Composite.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Line.h"
-#include "Triangle.h"
-#include "Quadrilateral.h"
-#include "Tetrahedron.h"
-#include "Pyramid.h"
-#include "Prism.h"
-#include "Hexahedron.h"
-
+}
+}
 
 #endif

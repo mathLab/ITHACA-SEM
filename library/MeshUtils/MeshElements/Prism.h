@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.h
+//  File: Mesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,42 +33,59 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESHELEMENTS
-#define MESHUTILS_MESHELEMENTS_MESHELEMENTS
+#ifndef MESHUTILS_MESHELEMENTS_PRISM
+#define MESHUTILS_MESHELEMENTS_PRISM
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <iomanip>
+namespace Nektar
+{
+namespace Utilities
+{
+    /**
+     * @brief A 3-dimensional five-faced element (2 triangles, 3
+     * quadrilaterals).
+     */
+    class Prism : public Element {
+    public:
+        /// Creates an instance of this class
+        static ElementSharedPtr create(
+            ElmtConfig                 pConf,
+            std::vector<NodeSharedPtr> pNodeList,
+            std::vector<int>           pTagList)
+        {
+            ElementSharedPtr e = boost::shared_ptr<Element>(
+                new Prism(pConf, pNodeList, pTagList));
+            vector<FaceSharedPtr> faces = e->GetFaceList();
+            for (int i = 0; i < faces.size(); ++i)
+            {
+                faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+            }
+            return e;
+        }
+        /// Element type
+        static LibUtilities::ShapeType m_type;
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
+        Prism(ElmtConfig                 pConf,
+              std::vector<NodeSharedPtr> pNodeList,
+              std::vector<int>           pTagList);
+        Prism(const Prism& pSrc);
+        virtual ~Prism() {}
 
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
+        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        virtual void Complete(int order);
 
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/MeshComponents.h>
+        static unsigned int GetNumNodes(ElmtConfig pConf);
 
-#include "Node.h"
-#include "Edge.h"
-#include "Face.h"
-#include "Element.h"
-#include "Composite.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Line.h"
-#include "Triangle.h"
-#include "Quadrilateral.h"
-#include "Tetrahedron.h"
-#include "Pyramid.h"
-#include "Prism.h"
-#include "Hexahedron.h"
+        /**
+         * Orientation of prism; unchanged = 0; clockwise = 1;
+         * counter-clockwise = 2. This is set by OrientPrism.
+         */
+        unsigned int m_orientation;
 
+    protected:
+        void OrientPrism();
+    };
+
+}
+}
 
 #endif

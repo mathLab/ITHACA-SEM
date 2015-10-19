@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.h
+//  File: Face.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,42 +33,43 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESHELEMENTS
-#define MESHUTILS_MESHELEMENTS_MESHELEMENTS
+#ifndef MESHUTILS_MESHELEMENTS_COMPOSITE
+#define MESHUTILS_MESHELEMENTS_COMPOSITE
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <iomanip>
+namespace Nektar
+{
+namespace Utilities
+{
+    /**
+     * @brief A composite is a collection of elements.
+     *
+     * All elements should be of the same type, i.e. have the same tag.
+     */
+    class Composite {
+    public:
+        Composite() : m_reorder(true) {}
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
+        /// Generate the list of IDs of elements within this composite.
+        std::string GetXmlString(bool doSort=true);
 
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
+        /// ID of composite.
+        unsigned int m_id;
+        /// Element type tag.
+        std::string m_tag;
+        /// boundary label
+        std::string m_label;
+        /// Determines whether items can be reordered.
+        bool m_reorder;
+        /// List of elements in this composite.
+        std::vector<ElementSharedPtr> m_items;
+    };
+    /// Shared pointer to a composite.
+    typedef boost::shared_ptr<Composite> CompositeSharedPtr;
+    /// Container of composites; key is the composite id, value is the
+    /// composite.
+    typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;
 
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/MeshComponents.h>
-
-#include "Node.h"
-#include "Edge.h"
-#include "Face.h"
-#include "Element.h"
-#include "Composite.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Line.h"
-#include "Triangle.h"
-#include "Quadrilateral.h"
-#include "Tetrahedron.h"
-#include "Pyramid.h"
-#include "Prism.h"
-#include "Hexahedron.h"
-
+}
+}
 
 #endif

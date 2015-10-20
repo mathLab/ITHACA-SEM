@@ -52,60 +52,58 @@ std::string FilterMovingBody::className = SolverUtils::GetFilterFactory().
  */
 FilterMovingBody::FilterMovingBody(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const ParamMap &pParams)
     : Filter(pSession),
       m_session(pSession)
 {
-    if (pParams.find("OutputFile") == pParams.end())
+    ParamMap::const_iterator it;
+
+    // OutputFile
+    it = pParams.find("OutputFile");
+    if (it == pParams.end())
     {
         m_outputFile_fce = pSession->GetSessionName();
         m_outputFile_mot = pSession->GetSessionName();
     }
     else
     {
-        ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                 "Missing parameter 'OutputFile'.");
+        ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
 
-        m_outputFile_fce = pParams.find("OutputFile")->second;
-        m_outputFile_mot = pParams.find("OutputFile")->second;
+        m_outputFile_fce = it->second;
+        m_outputFile_mot = it->second;
     }
     if (!(m_outputFile_fce.length() >= 4 &&
           m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
     {
         m_outputFile_fce += ".fce";
     }
-
     if (!(m_outputFile_mot.length() >= 4 &&
           m_outputFile_mot.substr(m_outputFile_mot.length() - 4) == ".mot"))
     {
         m_outputFile_mot += ".mot";
     }
-    if (pParams.find("OutputFrequency") == pParams.end())
+
+    // OutputFrequency
+    it = pParams.find("OutputFrequency");
+    if (it == pParams.end())
     {
         m_outputFrequency = 1;
     }
     else
     {
-        m_outputFrequency = atoi(
-                        pParams.find("OutputFrequency")->second.c_str());
+        LibUtilities::Equation equ(m_session, it->second);
+        m_outputFrequency = floor(equ.Evaluate());
     }
 
     pSession->MatchSolverInfo("Homogeneous", "1D", m_isHomogeneous1D, false);
-
     ASSERTL0(m_isHomogeneous1D, "Moving Body implemented just for 3D "
                                 "Homogeneous 1D discetisations.");
 
-    //specify the boundary to calculate the forces
-    if (pParams.find("Boundary") == pParams.end())
-    {
-        ASSERTL0(false, "Missing parameter 'Boundary'.");
-    }
-    else
-    {
-        ASSERTL0(!(pParams.find("Boundary")->second.empty()),
-                 "Missing parameter 'Boundary'.");
-        m_BoundaryString = pParams.find("Boundary")->second;
-    }
+    // Boundary (to calculate the forces)
+    it = pParams.find("Boundary");
+    ASSERTL0(it != pParams.end(),     "Missing parameter 'Boundary'.");
+    ASSERTL0(it->second.length() > 0, "Missing parameter 'Boundary'.");
+    m_BoundaryString = it->second;
 }
 
 

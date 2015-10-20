@@ -113,7 +113,7 @@ namespace Nektar
 
         if(m_HomogeneousType == eHomogeneous1D)
         {
-            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
+            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velocity fields with homogenous expansion");
 
             if(m_useHomo1DSpecVanVisc == false)
             {

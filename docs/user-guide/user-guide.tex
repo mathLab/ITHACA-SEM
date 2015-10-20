@@ -1,6 +1,5 @@
 %%% DOCUMENTCLASS 
 %%%-------------------------------------------------------------------------------
-
 \documentclass[
 a4paper, % Stock and paper size.
 11pt, % Type size.
@@ -48,9 +47,8 @@ openany, % A chapter may start on either a recto or verso page.
 
 %%% SECTIONAL DIVISIONS
 %%%------------------------------------------------------------------------------
-
-\maxsecnumdepth{subsection} % Subsections (and higher) are numbered
-\setsecnumdepth{subsection}
+\maxsecnumdepth{paragraph} % Subsections (and higher) are numbered
+\setsecnumdepth{paragraph}
 
 \makeatletter %
 \makechapterstyle{standard}{
@@ -149,7 +147,7 @@ openany, % A chapter may start on either a recto or verso page.
 
 % Nektar++ version
 \usepackage{xspace}
-\newcommand{\nekver} {\input{../../VERSION}\unskip}
+\newcommand{\nekver} {\input{VERSION}\unskip}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -214,17 +212,31 @@ openany, % A chapter may start on either a recto or verso page.
 \lstset{%
     escapeinside={(*}{*)},%
 }
+
 \usepackage{tikz}
+\ifdefined\HCode
+\newcommand{\inltt}[1]{\texttt{#1}}
+\newcommand{\inlsh}[1]{\texttt{#1}}
+\else
 \newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
 rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
 \newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
 outer sep=0,fill=black!05]{\texttt{#1}};}
+\fi
 \newcommand{\nekpp}{{\em Nektar++}\xspace}
 
 % Highlight box
 \usepackage{environ}
 \usepackage[tikz]{bclogo}
 \usetikzlibrary{calc}
+
+% Only use fancy boxes for PDF
+\ifdefined\HCode
+\NewEnviron{notebox}{\textbf{Note:} \BODY}
+\NewEnviron{warningbox}{\textbf{Warning:} \BODY}
+\NewEnviron{tipbox}{\textbf{Tip:} \BODY}
+\NewEnviron{custombox}[3]{\textbf{#1} \BODY}
+\else
 \NewEnviron{notebox}
   {\par\medskip\noindent
   \begin{tikzpicture}
@@ -285,6 +297,7 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
     };
    \end{tikzpicture}\par\medskip%
 }
+\fi
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------
@@ -298,7 +311,7 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 
 %%% INTERNAL HYPERLINKS
 %%%-----------------------------------------------------------------------------
-\usepackage[linktoc=all]{hyperref}   % Internal hyperlinks
+\usepackage[linktoc=all,hyperfootnotes=false]{hyperref}   % Internal hyperlinks
 \hypersetup{
 colorlinks,
 citecolor=darkblue,
@@ -324,6 +337,8 @@ pdfauthor={I am the Author} % author
 
 %%% PRETTY TITLE PAGE FOR PDF DOC
 %%%-----------------------------------------------------------------------------
+\ifdefined\HCode
+\else
 \makeatletter
 \newlength\drop
 \newcommand{\br}{\hfill\break}
@@ -356,12 +371,13 @@ pdfauthor={I am the Author} % author
     \null
 \endgroup}
 \makeatother
+\fi
 
 %%% THE DOCUMENT
 %%% Where all the important stuff is included!
 %%%-------------------------------------------------------------------------------
 
-\author{Department of Aeronautics, Imperial College London, UK\\
+\author{Department of Aeronautics, Imperial College London, UK\newline
 Scientific Computing and Imaging Institute, University of Utah, USA}
 \title{Nektar++: Spectral/hp Element Framework}
 \date{\today}
@@ -373,6 +389,9 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 % Render pretty title page if not building HTML
 \ifdefined\HCode
 \maketitle
+\begin{center}
+    \huge{Users Guide - Version \nekver}
+\end{center}
 \else
 \titlepage
 \fi

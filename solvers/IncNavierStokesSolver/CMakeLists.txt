@@ -91,6 +91,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST(ChanFlow_3DH2D_FFT)
         ADD_NEKTAR_TEST(CylFlow_MovBody)
         ADD_NEKTAR_TEST(KovaFlow_3DH1D_MVM_FFTW_Consistency)
+        ADD_NEKTAR_TEST(KovaFlow_3DH1D_P8_16modes_Mapping-explicit)
+        ADD_NEKTAR_TEST(KovaFlow_3DH1D_P8_16modes_Mapping-implicit)
     ENDIF (NEKTAR_USE_FFTW)
 
     IF (NEKTAR_USE_MPI)

@@ -7,7 +7,7 @@ SET(MeshConvertHeaders
     InputModules/InputSwan.h
     InputModules/InputStarTec.h
     Module.h
-#    OutputModules/OutputGmsh.h
+    OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
     ProcessModules/ProcessBL.h
     ProcessModules/ProcessCyl.h
@@ -31,7 +31,7 @@ SET(MeshConvertSources
     InputModules/InputStarTec.cpp
     MeshConvert.cpp
     Module.cpp
-#    OutputModules/OutputGmsh.cpp
+    OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
     ProcessModules/ProcessBL.cpp
     ProcessModules/ProcessCyl.cpp
@@ -62,8 +62,6 @@ IF (NEKTAR_USE_MESH)
 ENDIF (NEKTAR_USE_MESH)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
-
-TARGET_LINK_LIBRARIES(MeshConvert MeshUtils)
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(MeshConvert ccmio adf)

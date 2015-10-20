@@ -63,6 +63,11 @@ namespace Nektar
             return Type::Instance();
         }
 
+        bool operator==(ElmtConfig const &c1, ElmtConfig const &c2)
+        {
+            return (c1.m_e == c2.m_e && c1.m_order == c2.m_order);
+        }
+
         Element::Element(ElmtConfig   pConf,
                          unsigned int pNumNodes,
                          unsigned int pGotNodes)

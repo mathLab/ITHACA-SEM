@@ -150,6 +150,36 @@ namespace MeshUtils
                         m_z*pSrc.m_x-m_x*pSrc.m_z, m_x*pSrc.m_y-m_y*pSrc.m_x);
         }
 
+        void SetCADCurve(int i, NekDouble t)
+        {
+            CADCurve[i] = t;
+        }
+
+        void SetCADSurf(int i, Array<OneD, NekDouble> uv)
+        {
+            CADSurf[i] = uv;
+        }
+
+        NekDouble GetCADCurve(int i)
+        {
+            std::map<int, NekDouble>::iterator search =
+                            CADCurve.find(i);
+            ASSERTL0(search->first == i, "node not on this curve");
+
+            return search->second;
+        }
+
+        Array<OneD, NekDouble>  GetCADSurf(int i)
+        {
+            //I dont know why I ahev to do this to get it to work
+            //this really needs bound checking
+            std::map<int, Array<OneD, NekDouble> >::iterator search =
+                        CADSurf.find(i);
+            ASSERTL0(search->first == i,"surface not found");
+
+            return search->second;
+        }
+
         /// Generate a %SpatialDomains::PointGeom for this node.
         SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
         {
@@ -168,8 +198,10 @@ namespace MeshUtils
         NekDouble m_y;
         /// Z-coordinate.
         NekDouble m_z;
-        /// Mesh Gen ID
-        int m_mid;
+        ///list of cadcurves the node lies on
+        std::map<int, NekDouble> CADCurve;
+        ///list of cadsurfs the node lies on
+        std::map<int, Array<OneD, NekDouble> > CADSurf;
 
     private:
         SpatialDomains::PointGeomSharedPtr m_geom;

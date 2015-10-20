@@ -36,7 +36,7 @@
 #include <MeshUtils/MeshElements/MeshElements.h>
 
 #include <MeshUtils/CADSystem/CADSystem.h>
-//#include <MeshUtils/Octree/Octree.h>
+#include <MeshUtils/Octree/Octree.h>
 //#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
 //#include <MeshUtils/TetMeshing/TetMesh.h>
 //#include <MeshUtils/MeshElem.hpp>
@@ -85,8 +85,8 @@ void InputCAD::Process()
     pSession->LoadParameter("Order",    m_order);
     m_CADName = pSession->GetSolverInfo("CADFile");
 
-    LibUtilities::CADSystemSharedPtr m_cad =
-        MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(m_CADName);
+    CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
+                                            AllocateSharedPtr(m_CADName);
 
     if(m_mesh->m_verbose)
         cout << "Building mesh for: " << m_CADName << endl;
@@ -103,23 +103,26 @@ void InputCAD::Process()
              << "\torder: " << m_order << endl;
         m_cad->Report();
     }
-    /*
-    //create octree
-    MeshUtils::OctreeSharedPtr m_octree =
-        MemoryManager<MeshUtils::Octree>::AllocateSharedPtr(m_cad,
-                                m_mesh->m_verbose);
 
-    m_octree->Build(m_minDelta, m_maxDelta, m_eps);
+    //create octree
+    OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
+                                    m_mesh->m_verbose, m_minDelta,
+                                    m_maxDelta, m_eps);
+
+    m_octree->Build();
+
+    m_mesh->m_expDim = 3;
+    m_mesh->m_spaceDim = 3;
+    m_mesh->m_nummode = m_order+1;
 
     //create surface mesh
-    MeshUtils::SurfaceMeshingSharedPtr m_surfacemeshing =
-        MemoryManager<MeshUtils::SurfaceMeshing>::
-            AllocateSharedPtr(m_mesh->m_verbose,m_cad,m_octree,m_order);
+    SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
+                                AllocateSharedPtr(m_mesh, m_cad, m_octree);
 
-    m_surfacemeshing->Mesh();
+    m_surfacemesh->Mesh();
 
-    m_surfacemeshing->HOSurf();
-
+    //m_surfacemeshing->HOSurf();
+    /*
     //create tet mesh
     MeshUtils::TetMeshSharedPtr m_tet =
         MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(

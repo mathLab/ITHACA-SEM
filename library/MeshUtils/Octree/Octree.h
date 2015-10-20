@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE_H
-#define NEKTAR_MESHUTILS_OCTREE_OCTREE_H
+#ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE
+#define NEKTAR_MESHUTILS_OCTREE_OCTREE
 
 #include <boost/shared_ptr.hpp>
 
@@ -46,8 +46,10 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-namespace Nektar {
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 /**
  * @brief class for octree
@@ -57,127 +59,125 @@ namespace MeshUtils {
  */
 class Octree
 {
-    public:
-        friend class MemoryManager<Octree>;
+public:
+    friend class MemoryManager<Octree>;
 
-        /**
-         * @brief Defualt constructor
-         *
-         * @param cad CAD object
-         * @param ver bool verbose
-         */
-        Octree(const LibUtilities::CADSystemSharedPtr &cad,
-               const bool ver) : m_cad(cad), m_verbose(ver)
-        {
-        };
+    /**
+     * @brief Defualt constructor
+     *
+     * @param cad CAD object
+     * @param ver bool verbose
+     */
+    Octree(CADSystemSharedPtr cad, const bool ver,
+            const NekDouble min, const NekDouble max, const NekDouble eps) :
+                            m_minDelta(min), m_maxDelta(max), m_eps(eps),
+                            m_cad(cad), m_verbose(ver)
+    {
+    }
 
-        /**
-         * @brief executes octree building routines
-         *
-         * @param min minimum delta to be found in the octree
-         * @param max maximum delta to be found in the Octree
-         * @param eps curvature sensivity parameter
-         */
-        void Build(const NekDouble min, const NekDouble max,
-                   const NekDouble eps);
+    /**
+     * @brief executes octree building routines
+     *
+     * @param min minimum delta to be found in the octree
+     * @param max maximum delta to be found in the Octree
+     * @param eps curvature sensivity parameter
+     */
+    void Build();
 
-        /**
-         * @brief once constructed queryies the octree based on x,y,z location
-         * to get a mesh spacing
-         *
-         * @param loc array of x,y,z
-         * @return mesh spacing parameter
-         * @todo improve this algorithm for both robustness and completness,
-         * functions just fine regardless
-         */
-        NekDouble Query(Array<OneD, NekDouble> loc);
+    /**
+     * @brief once constructed queryies the octree based on x,y,z location
+     * to get a mesh spacing
+     *
+     * @param loc array of x,y,z
+     * @return mesh spacing parameter
+     * @todo improve this algorithm for both robustness and completness,
+     * functions just fine regardless
+     */
+    NekDouble Query(Array<OneD, NekDouble> loc);
 
-        void Modify(Array<OneD, NekDouble> loc, NekDouble delta);
+    void Modify(Array<OneD, NekDouble> loc, NekDouble delta);
 
-        /**
-         * @brief returns the miminum spacing in the octree (for meshing purposes)
-         *
-         * @return miminum delta in octree
-         */
-        NekDouble GetMinDelta(){return m_minDelta;}
+    /**
+     * @brief returns the miminum spacing in the octree (for meshing purposes)
+     *
+     * @return miminum delta in octree
+     */
+    NekDouble GetMinDelta(){return m_minDelta;}
 
-        /**
-         * @brief Smooths specification over all octants to a
-         * gradation criteria
-         */
-        void SmoothAllOctants();
+    /**
+     * @brief Smooths specification over all octants to a
+     * gradation criteria
+     */
+    void SmoothAllOctants();
 
-    private:
+private:
 
+    /**
+     * @brief gets an optimum number of curvature sampling points and
+     * calculates the curavture at these points
+     */
+    void CompileCuravturePointList();
 
+    /**
+     * @brief Recursive alorithm which divides and creates new octants based
+     * on the geometry
+     */
+    void InitialSubDivide(int parent);
 
-        /**
-         * @brief gets an optimum number of curvature sampling points and
-         * calculates the curavture at these points
-         */
-        void CompileCuravturePointList();
+    /**
+     * @brief Recursive alorithm which subdivides octants so that the
+     * neighbours differ by no more that one level
+     */
+    void SubDivideByLevel();
 
-        /**
-         * @brief Recursive alorithm which divides and creates new octants based
-         * on the geometry
-         */
-        void InitialSubDivide(int parent);
+    /**
+     * @brief Subdivision step for smoothoctants()
+     */
+    void SubDivideLevel(int parent);
 
-        /**
-         * @brief Recursive alorithm which subdivides octants so that the
-         * neighbours differ by no more that one level
-         */
-        void SubDivideByLevel();
+    /**
+     * @brief Smooths specification over the surface octants to a
+     * gradation criteria
+     */
+    void SmoothSurfaceOctants();
 
-        /**
-         * @brief Subdivision step for smoothoctants()
-         */
-        void SubDivideLevel(int parent);
+    /**
+     * @brief takes the mesh specification from surface octants and
+     * progates that through the domain so all octants have a specification
+     * using gradiation crieteria
+     */
+    void PropagateDomain();
 
-        /**
-         * @brief Smooths specification over the surface octants to a
-         * gradation criteria
-         */
-        void SmoothSurfaceOctants();
+    /**
+     * @brief estimates the number of elements to be creted in the mesh
+     */
+    int CountElemt();
 
-        /**
-         * @brief takes the mesh specification from surface octants and
-         * progates that through the domain so all octants have a specification
-         * using gradiation crieteria
-         */
-        void PropagateDomain();
+    /**
+     * @brief Calculates the difference in delta divided by the difference
+     * in location between two octants i and j
+     */
+    NekDouble ddx(int i, int j);
 
-        /**
-         * @brief estimates the number of elements to be creted in the mesh
-         */
-        int CountElemt();
+    /// minimum delta in the octree
+    NekDouble m_minDelta;
+    /// maximum delta in the octree
+    NekDouble m_maxDelta;
+    /// curavture sensivity paramter
+    NekDouble m_eps;
 
-        /**
-         * @brief Calculates the difference in delta divided by the difference
-         * in location between two octants i and j
-         */
-        NekDouble ddx(int i, int j);
-
-        /// minimum delta in the octree
-        NekDouble m_minDelta;
-        /// maximum delta in the octree
-        NekDouble m_maxDelta;
-        /// curavture sensivity paramter
-        NekDouble m_eps;
-
-        /// cad object
-        LibUtilities::CADSystemSharedPtr m_cad;
-        /// verbose output?
-        bool m_verbose;
-        /// max and min dimensions of the domain 6 varibles
-        Array<OneD, NekDouble> BoundingBox;
-        /// list of curvature sample points
-        std::vector<CurvaturePointSharedPtr> m_cpList;
-        /// list of octants
-        std::vector<OctantSharedPtr> OctantList;
-        /// number which do not need subdivding, when this is 0 octree complete
-        int m_totNotDividing;
-
+    /// cad object
+    CADSystemSharedPtr m_cad;
+    /// verbose output?
+    bool m_verbose;
+    /// max and min dimensions of the domain 6 varibles
+    Array<OneD, NekDouble> BoundingBox;
+    /// list of curvature sample points
+    std::vector<CurvaturePointSharedPtr> m_cpList;
+    /// list of octants
+    std::vector<OctantSharedPtr> OctantList;
+    /// number which do not need subdivding, when this is 0 octree complete
+    int m_totNotDividing;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

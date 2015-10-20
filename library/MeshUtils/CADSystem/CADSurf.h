@@ -47,7 +47,7 @@
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace MeshUtils
 {
 
 class CADCurve;

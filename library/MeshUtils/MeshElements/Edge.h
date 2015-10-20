@@ -54,6 +54,10 @@ namespace MeshUtils
              LibUtilities::PointsType pCurveType)
             : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
               m_curveType(pCurveType), m_geom() {}
+        /// Creates a new linear edge.
+        Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
+            : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(),
+              m_curveType(), m_geom() {}
         /// Copies an existing edge.
         Edge(const Edge& pSrc)
             : m_n1(pSrc.m_n1), m_n2(pSrc.m_n2), m_edgeNodes(pSrc.m_edgeNodes),

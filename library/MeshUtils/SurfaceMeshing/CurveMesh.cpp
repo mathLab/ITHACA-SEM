@@ -36,11 +36,12 @@
 #include <MeshUtils/SurfaceMeshing/CurveMesh.h>
 
 using namespace std;
-namespace Nektar{
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
-void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
-                     std::map<int, MeshEdgeSharedPtr> &Edges)
+void CurveMesh::Mesh()
 {
     m_bounds = m_cadcurve->Bounds();
     m_curvelength = m_cadcurve->GetTotLength();
@@ -104,31 +105,33 @@ void CurveMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
     NekDouble t;
     Array<OneD, NekDouble> loc;
 
-    vector<int> endNodeIds = m_cadcurve->GetVertex();
+    vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
 
+    int id = verts[0]->GetId() - 1;
     t = m_bounds[0];
-    Nodes[endNodeIds[0]]->SetCurve(m_id,t);
-    m_meshpoints.push_back(endNodeIds[0]);
+    m_mesh->m_meshnode[id]->SetCADCurve(m_id,t);
+    m_meshpoints.push_back(m_mesh->m_meshnode[id]);
 
     for(int i = 1; i < meshsvalue.size()-1; i++)
     {
         t = m_cadcurve->tAtArcLength(meshsvalue[i]);
         loc = m_cadcurve->P(t);
-        MeshNodeSharedPtr n2 = boost::shared_ptr<MeshNode>(
-                          new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
-        n2->SetCurve(m_id,t);
-        Nodes[Nodes.size()] = n2;
-        m_meshpoints.push_back(Nodes.size()-1);
+        NodeSharedPtr n2 = boost::shared_ptr<Node>(
+                          new Node(m_mesh->m_meshnode.size(),loc[0],loc[1],loc[2]));
+        n2->SetCADCurve(m_id,t);
+        m_mesh->m_meshnode.push_back(n2);
+        m_meshpoints.push_back(n2);
     }
 
+    id = verts[1]->GetId() - 1;
     t = m_bounds[1];
-    Nodes[endNodeIds[1]]->SetCurve(m_id,t);
-    m_meshpoints.push_back(endNodeIds[1]);
+    m_mesh->m_meshnode[id]->SetCurve(m_id,t);
+    m_meshpoints.push_back(m_mesh->m_meshnode[id]);
 
     for(int i = 0; i < Ne; i++)
     {
-        Edges[Edges.size()] = MemoryManager<MeshEdge>::
-                AllocateSharedPtr(Edges.size(),
+        EdgeSharedPtr e = MemoryManager<Edge>::AllocateSharedPtr(
+                                  m_mesh->m_edge.size(),
                                   m_meshpoints[i],
                                   m_meshpoints[i+1]);
         Nodes[m_meshpoints[i]]->SetEdge(Edges.size()-1);

@@ -46,7 +46,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace MeshUtils
 {
 
 string CADSystem::GetName()

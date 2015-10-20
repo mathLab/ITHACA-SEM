@@ -34,12 +34,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <MeshUtils/MeshElements/MeshElements.h>
+#include "InputNek.h"
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
-
 #include <boost/algorithm/string.hpp>
 
-#include "InputNek.h"
+#include <map>
+#include <vector>
+#include <sstream>
+#include <string>
 
 using namespace std;
 using namespace Nektar::MeshUtils;
@@ -534,11 +537,23 @@ void InputNek::Process()
                     }
                 }
 
-                // Find vertex combination in hoData.
-                hoIt = hoData[word].find(HOSurfSharedPtr(
-                    new HOSurf(vertId)));
+                HOSurfSet::iterator it;
 
-                if (hoIt == hoData[word].end())
+                HOSurfSharedPtr hs = boost::shared_ptr<HOSurf>(new HOSurf(vertId));
+                // Find vertex combination in hoData.
+
+                for(it = hoData[word].begin(); it != hoData[word].end(); it++)
+                {
+                    if(*it == hs)
+                    {
+                        hoIt = it;
+                        break;
+                    }
+                }
+                ///@todo figure out why the find algorithm isnt working and reinstate it
+                //hoIt = hoData[word].find(hs);
+
+                if (it == hoData[word].end())
                 {
                     cerr << "Unable to find high-order surface data "
                          << "for element id " << elId+1 << endl;

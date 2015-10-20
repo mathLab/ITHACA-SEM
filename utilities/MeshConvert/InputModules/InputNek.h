@@ -36,6 +36,10 @@
 #ifndef UTILITIES_MESHCONVERT_INPUTNEK
 #define UTILITIES_MESHCONVERT_INPUTNEK
 
+#include <algorithm>
+#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
+
 #include "../Module.h"
 
 namespace Nektar
@@ -65,6 +69,7 @@ struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
     {
         std::size_t seed = 0;
         std::vector<int> ids = p->vertId;
+
         std::sort(ids.begin(), ids.end());
         for (int i = 0; i < ids.size(); ++i)
         {

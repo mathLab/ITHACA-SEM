@@ -45,7 +45,7 @@
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace MeshUtils
 {
 
 /**
@@ -72,6 +72,15 @@ public:
 
         m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
     }
+
+    Array<OneD, NekDouble> GetLoc()
+    {
+        Array<OneD, NekDouble> out(3);
+        out[0] = m_occVert.X(); out[1] = m_occVert.Y(); out[2] = m_occVert.Z();
+        return out;
+    }
+
+    int GetId(){return m_ID;}
 
 private:
     /// ID of the vert.

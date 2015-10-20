@@ -33,11 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <MeshUtils/MeshElements/MeshElements.h>
+#include <string>
+#include <iostream>
+using namespace std;
 
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include "InputGmsh.h"
 
-using namespace std;
+
 using namespace Nektar::MeshUtils;
 
 namespace Nektar

@@ -169,13 +169,8 @@ void Octree::Modify(Array<OneD, NekDouble> loc, NekDouble delta)
     OctantList[n]->SetDelta(delta);
 }
 
-void Octree::Build(const NekDouble min, const NekDouble max,
-                   const NekDouble eps)
+void Octree::Build()
 {
-    m_minDelta = min;
-    m_maxDelta = max;
-    m_eps = eps;
-
     BoundingBox = m_cad->GetBoundingBox();
 
     if(m_verbose)
@@ -746,7 +741,7 @@ void Octree::CompileCuravturePointList()
 
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
-        LibUtilities::CADSurfSharedPtr surf = m_cad->GetSurf(i);
+        CADSurfSharedPtr surf = m_cad->GetSurf(i);
         Array<OneD, NekDouble> bounds = surf->GetBounds();
 
         //to figure out the amount of curvature sampling to be conducted on
@@ -818,15 +813,15 @@ void Octree::CompileCuravturePointList()
 
         //these are the acutal number of sample points in each parametric
         //direction
-        int nu = ceil(DeltaU/m_minDelta)*40*1.2;
-        int nv = ceil(DeltaV/m_minDelta)*40*1.2;
+        int nu = ceil(DeltaU/m_minDelta)*40;
+        int nv = ceil(DeltaV/m_minDelta)*40;
 
         for(int j = 0; j < nu; j++)
         {
             for(int k = 0; k < nv; k++)
             {
                 Array<OneD, NekDouble> uv(2);
-                uv[0] = (bounds[1]- bounds[0])/(nu-1)*j + bounds[0];
+                uv[0] = (bounds[1]-bounds[0])/(nu-1)*j + bounds[0];
                 uv[1] = (bounds[3]-bounds[2])/(nv-1)*k + bounds[2];
 
                 //this prevents round off error at the end of the surface
@@ -873,17 +868,16 @@ void Octree::CompileCuravturePointList()
                 if(kv[0] != 0 || kv[1] != 0)
                 {
                     CurvaturePointSharedPtr newCPoint =
-                    MemoryManager<CurvaturePoint>::AllocateSharedPtr
-                    (surf->P(uv),
-                     1.0/(kv[0] > kv[1] ? kv[0] : kv[1]),
-                     N);
+                        MemoryManager<CurvaturePoint>::AllocateSharedPtr
+                        (surf->P(uv), 1.0/(kv[0] > kv[1] ? kv[0] : kv[1]), N);
 
                     m_cpList.push_back(newCPoint);
                 }else
                 {
                     CurvaturePointSharedPtr newCPoint =
-                    MemoryManager<CurvaturePoint>::AllocateSharedPtr
-                    (surf->P(uv), N);
+                        MemoryManager<CurvaturePoint>::AllocateSharedPtr
+                        (surf->P(uv), N);
+
                     m_cpList.push_back(newCPoint);
                 }
             }

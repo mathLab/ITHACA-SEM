@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMesh.h
+//  File: SurfaceMeshing.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,110 +29,141 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class for indivdual surface meshes
+//  Description: class containing all surfacemeshing routines and classes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_MESHUTILS_SURFACEMESHING_SURFACEMESH_H
-#define NEKTAR_MESHUTILS_SURFACEMESHING_SURFACEMESH_H
+#ifndef MESHUTILS_SURFACEMESHING_SURFACEMESH
+#define MESHUTILS_SURFACEMESHING_SURFACEMESH
 
-#include <boost/shared_ptr.hpp>
-
-#include <MeshUtils/MeshElem.hpp>
-#include <MeshUtils/CADSystem/CADSurf.h>
+#include <MeshUtils/MeshElements/MeshElements.h>
+#include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
+#include <MeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <MeshUtils/SurfaceMeshing/CurveMesh.h>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <MeshUtils/MeshElem.hpp>
 
 
-namespace Nektar {
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
+/**
+ * @brief class containing all surface meshing routines methods and classes
+ */
 class SurfaceMesh
 {
     public:
         friend class MemoryManager<SurfaceMesh>;
 
         /**
-         * @brief Default constructor
+         * @brief Default constructor, requires the cad and octree objects to
+         * begin
          */
-        SurfaceMesh(const int id,
-                    const bool verb,
-                    const LibUtilities::CADSurfSharedPtr &cad,
-                    const OctreeSharedPtr &oct,
-                    const std::map<int, CurveMeshSharedPtr> &cmeshes)
-                        : m_verbose(verb), m_cadsurf(cad), m_octree(oct),
-                          m_curvemeshes(cmeshes),m_id(id)
-
+        SurfaceMesh(   MeshSharedPtr m,
+                       CADSystemSharedPtr cad,
+                       OctreeSharedPtr octree) :
+                          m_mesh(m), m_cad(cad), m_octree(octree)
         {
-            m_edges = m_cadsurf->GetEdges();
         };
 
         /**
-         * @brief mesh exectuation command
+         * @brief Run all linear meshing routines
          */
-        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
-                  std::map<int, MeshEdgeSharedPtr> &Edges,
-                  std::map<int, MeshTriSharedPtr> &Tris);
+        void Mesh();
 
         /**
-         * @brief Print report of the surface mesh to screen
+         * @brief run all high-order surface meshing routines
          */
-        void Report();
-
+        void HOSurf();
 
     private:
 
         /**
-         * @brief Calculate the paramter plane streching factor
+         * @brief get the gadient of the edge spring energy optimsation function
          */
-        void Stretching();
+        Array<OneD, NekDouble> EdgeGrad(NekDouble ux, NekDouble vx,
+                                        std::vector<Array<OneD,NekDouble> > bcs,
+                                        std::vector<NekDouble> weights,
+                                        int surf, bool &valid);
 
         /**
-         * @brief Validate the surface mesh base on the octree and real
-         * dimensions of the edges
+         * @brief get the value of the edge spring energy
          */
-        bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
+        NekDouble EdgeF(NekDouble ux, NekDouble vx,
+                        std::vector<Array<OneD,NekDouble> > bcs,
+                        std::vector<NekDouble> weights,
+                        int surf, bool &valid);
 
         /**
-         * @brief Get the boundries of the surface and extracts the nodes from
-         * the curve meshes in the correct order
+         * @brief get the value of face spring energy
          */
-        void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
+        NekDouble FaceF(NekDouble ux, NekDouble vx,
+                        std::vector<Array<OneD,NekDouble> > bcs,
+                        std::vector<NekDouble> weights,
+                        int surf, bool &valid);
 
         /**
-         * @brief addes a new stiener point to the triangulation for meshing
+         * @brief get the gadient of the face spring energy optimsation function
          */
-        void AddNewPoint(Array<OneD, NekDouble> uv,
-                         std::map<int, MeshNodeSharedPtr> &Nodes);
+        Array<OneD, NekDouble> FaceGrad(NekDouble ux, NekDouble vx,
+                                        std::vector<Array<OneD,NekDouble> > bcs,
+                                        std::vector<NekDouble> weights,
+                                        int surf, bool &valid);
 
-        ///verbosity
-        bool m_verbose;
-        /// CAD surface
-        LibUtilities::CADSurfSharedPtr m_cadsurf;
+        /**
+         * @brief get the bracketing for brent optimisation
+         */
+        void Find1DBounds(NekDouble &a, NekDouble &b,
+                          Array<OneD, NekDouble> uvi,
+                          Array<OneD, NekDouble> df,
+                          Array<OneD, NekDouble> bounds);
+
+        /**
+         * @brief perform brent optimsation
+         */
+        NekDouble BrentOpti(NekDouble ax, NekDouble bx,
+                            NekDouble cx, NekDouble &fx,
+                            NekDouble tol, int surf,
+                            Array<OneD, NekDouble> uvi,
+                            Array<OneD, NekDouble> df,
+                            Array<OneD, NekDouble> bounds,
+                            std::vector<Array<OneD,NekDouble> > bcs,
+                            std::vector<NekDouble> weights,
+                            NekDouble (SurfaceMesh::*GetF)(
+                            NekDouble, NekDouble,
+                            std::vector<Array<OneD,NekDouble> >,
+                            std::vector<NekDouble>, int, bool &));
+
+        /**
+         * @brief Validate the linear surface mesh
+         */
+        void Validate();
+
+        /**
+         * @brief Optimise the linear surface mesh using spring relaxation
+         * and edge swapping
+         */
+        void Optimise();
+
+        /// mesh object
+        MeshSharedPtr m_mesh;
+        /// CAD object
+        CADSystemSharedPtr m_cad;
         /// Octree object
         OctreeSharedPtr m_octree;
-        /// Map of the curve meshes which bound the surfaces
+        /// map of individual surface meshes from parametric surfaces
+        std::map<int, FaceMeshSharedPtr> m_facemeshes;
+        /// map of individual curve meshes of the curves in the domain
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-        /// data structure containing the edges, their order and oreientation for the surface
-        std::vector<std::vector<std::pair<int,int> > > m_edges;
-        /// id of the surface mesh
-        int m_id;
-        /// list of boundary nodes in their order loops
-        std::vector<std::vector<int> > orderedLoops;
-        /// center coords of the loops
-        std::vector<std::vector<NekDouble> > m_centers;
-        /// list of stiener points in the triangulation
-        std::vector<int> m_stienerpoints;
-        /// number of triangles and points
-        int numtri, nump, nume;
-        /// list of node connectivities forming triangles
-        Array<OneD, Array<OneD, int> > Connec;
-        /// paramter plane and real space aspect ratios
-        NekDouble pasr,asr;
+        /// map of mesh nodes
+        std::map<int, MeshNodeSharedPtr> Nodes;
+        /// map of mesh edges
+        std::map<int, MeshEdgeSharedPtr> Edges;
+        /// map of mesh triangles
+        std::map<int, MeshTriSharedPtr> Tris;
 };
 
 typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;

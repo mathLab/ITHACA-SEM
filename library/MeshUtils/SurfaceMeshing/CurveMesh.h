@@ -40,6 +40,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <MeshUtils/MeshElem.hpp>
+#include <MeshUtils/CADSystem/CADVert.h>
 #include <MeshUtils/CADSystem/CADCurve.h>
 #include <MeshUtils/Octree/Octree.h>
 
@@ -47,8 +48,10 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
-namespace Nektar {
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 class CurveMesh
 {
@@ -58,20 +61,19 @@ class CurveMesh
         /**
          * @brief default constructor
          */
-        CurveMesh(bool verbose,
-                  int id,
-                  const LibUtilities::CADCurveSharedPtr &cad,
-                  const OctreeSharedPtr &oct) :
-                  m_cadcurve(cad),m_octree(oct),m_verbose(verbose),
-                  m_id(id)
+        CurveMesh(int id,
+                  MeshSharedPtr m,
+                  CADCurveSharedPtr c,
+                  OctreeSharedPtr o) :
+                  m_cadcurve(c),m_octree(o),
+                  m_id(id), m_mesh(m)
         {
         };
 
         /**
          * @brief execute meshing
          */
-        void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
-                  std::map<int, MeshEdgeSharedPtr> &Edges);
+        void Mesh();
 
         /**
          * @brief get id of first node
@@ -125,7 +127,7 @@ class CurveMesh
         NekDouble EvaluatePS(NekDouble s);
 
         /// CAD curve
-        LibUtilities::CADCurveSharedPtr m_cadcurve;
+        CADCurveSharedPtr m_cadcurve;
         /// Octree object
         OctreeSharedPtr m_octree;
         /// length of the curve in real space
@@ -147,11 +149,11 @@ class CurveMesh
         /// paramteric coordiates of the mesh nodes
         std::vector<NekDouble> meshsvalue;
         /// ids of the mesh nodes
-        std::vector<int> m_meshpoints;
-        /// verbosity
-        bool m_verbose;
+        std::vector<NodeSharedPtr> m_meshpoints;
         /// id of the curvemesh
         int m_id;
+        ///
+        MeshSharedPtr m_mesh;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

@@ -33,22 +33,25 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSYSTEM_H
-#define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSYSTEM_H
+#ifndef MESHUTILS_CADSYSTEM_CADSYSTEM
+#define MESHUTILS_CADSYSTEM_CADSYSTEM
 
 #include <boost/shared_ptr.hpp>
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <Standard_Macro.hxx>
 
 #include <MeshUtils/CADSystem/OpenCascade.h>
+#include <MeshUtils/CADSystem/CADVert.h>
 #include <MeshUtils/CADSystem/CADCurve.h>
 #include <MeshUtils/CADSystem/CADSurf.h>
 
-namespace Nektar {
-namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
 /**
  * @brief Base class for CAD interface system.
@@ -58,122 +61,113 @@ namespace LibUtilities {
  */
 class CADSystem
 {
-    public:
-        friend class MemoryManager<CADSystem>;
+public:
+    friend class MemoryManager<CADSystem>;
 
-        /**
-         * @brief Default constructor.
-         */
-        LIB_UTILITIES_EXPORT CADSystem(const std::string &name) : m_name(name)
-        {
-        }
+    /**
+     * @brief Default constructor.
+     */
+    CADSystem(const std::string &name) : m_name(name)
+    {
+    }
 
-        /**
-         * @brief Return the name of the CAD system.
-         */
-        LIB_UTILITIES_EXPORT std::string GetName();
+    /**
+     * @brief Return the name of the CAD system.
+     */
+    std::string GetName();
 
-        /**
-         * @brief Initialises CAD and makes surface and curve maps.
-         *
-         * @return true if completed successfully
-         */
-        LIB_UTILITIES_EXPORT bool LoadCAD();
+    /**
+     * @brief Initialises CAD and makes surface and curve maps.
+     *
+     * @return true if completed successfully
+     */
+    bool LoadCAD();
 
-        /**
-         * @brief Reports basic properties to screen.
-         */
-        LIB_UTILITIES_EXPORT void Report();
+    /**
+     * @brief Reports basic properties to screen.
+     */
+    void Report();
 
-        /**
-         * @brief Returns bounding box of the domain.
-         *
-         * Gets the bounding box of the domain by considering the start and end
-         * points of each curve in the geometry.
-         *
-         * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
-         */
-        LIB_UTILITIES_EXPORT Array<OneD, NekDouble> GetBoundingBox();
+    /**
+     * @brief Returns bounding box of the domain.
+     *
+     * Gets the bounding box of the domain by considering the start and end
+     * points of each curve in the geometry.
+     *
+     * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
+     */
+    Array<OneD, NekDouble> GetBoundingBox();
 
-        /**
-         * @brief Return number of surfaces.
-         */
-        LIB_UTILITIES_EXPORT int GetNumSurf()
-        {
-            return m_surfs.size();
-        }
+    /**
+     * @brief Return number of surfaces.
+     */
+    int GetNumSurf()
+    {
+        return m_surfs.size();
+    }
 
-        /**
-         * @brief Return number of curves.
-         */
-        LIB_UTILITIES_EXPORT int GetNumCurve()
-        {
-            return m_curves.size();
-        }
+    /**
+     * @brief Return number of curves.
+     */
+    int GetNumCurve()
+    {
+        return m_curves.size();
+    }
 
-        /**
-         * @brief Gets curve type from map.
-         */
-        LIB_UTILITIES_EXPORT const CADCurveSharedPtr GetCurve(int i)
-        {
-            std::map<int,CADCurveSharedPtr>::iterator
-                                    search = m_curves.find(i);
-            ASSERTL0(search != m_curves.end(), "curve does not exist");
+    /**
+     * @brief Gets curve type from map.
+     */
+    const CADCurveSharedPtr GetCurve(int i)
+    {
+        std::map<int,CADCurveSharedPtr>::iterator
+                                search = m_curves.find(i);
+        ASSERTL0(search != m_curves.end(), "curve does not exist");
 
-            return search->second;
-        }
+        return search->second;
+    }
 
-        /**
-         * @brief Gets suface from map.
-         */
-        LIB_UTILITIES_EXPORT CADSurfSharedPtr GetSurf(int i)
-        {
-            std::map<int,CADSurfSharedPtr>::iterator
-                            search = m_surfs.find(i);
-            ASSERTL0(search != m_surfs.end(), "surface does not exist");
+    /**
+     * @brief Gets suface from map.
+     */
+    CADSurfSharedPtr GetSurf(int i)
+    {
+        std::map<int,CADSurfSharedPtr>::iterator
+                        search = m_surfs.find(i);
+        ASSERTL0(search != m_surfs.end(), "surface does not exist");
 
-            return search->second;
-        }
+        return search->second;
+    }
 
-        /**
-         * @brief Return Euler-Poincare number.
-         */
-        LIB_UTILITIES_EXPORT int GetEPC()
-        {
-            return m_epc;
-        }
+    std::map<int, CADVertSharedPtr> GetVerts()
+    {
+        return m_verts;
+    }
 
-        LIB_UTILITIES_EXPORT std::vector<Array<OneD, NekDouble> > GetVerts()
-        {
-            return m_verts;
-        }
+    /**
+     * @brief based on location in space, uses opencascade routines to
+     * determin if the point is within the domain. This routine is slow
+     * and should be used sparingly, it is smart enough to take and form
+     * of geometry
+     */
+    bool InsideShape(Array<OneD, NekDouble> loc);
 
-        /**
-         * @brief based on location in space, uses opencascade routines to
-         * determin if the point is within the domain. This routine is slow
-         * and should be used sparingly, it is smart enough to take and form
-         * of geometry
-         */
-        LIB_UTILITIES_EXPORT bool InsideShape(Array<OneD, NekDouble> loc);
-
-    private:
-        /// Private function to add curve to CADSystem::m_curves.
-        void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
-        /// Private function to add surface to CADSystem::m_surfs.
-        void AddSurf(int i, TopoDS_Shape in,
-                     std::vector<std::vector<std::pair<int,int> > > ein);
-        /// Name of cad file to be opened, including file extension.
-        std::string m_name;
-        /// Euler-Poincare number of the CAD.
-        int m_epc;
-        /// map of curves
-        std::map<int,CADCurveSharedPtr> m_curves;
-        /// map of surfaces
-        std::map<int,CADSurfSharedPtr> m_surfs;
-        /// list of edge end vertices
-        std::vector<Array<OneD, NekDouble> > m_verts;
-        /// occ master object
-        TopoDS_Shape shape;
+private:
+    /// Private function to add curve to CADSystem::m_verts.
+    void AddVert(int i, TopoDS_Shape in);
+    /// Private function to add curve to CADSystem::m_curves.
+    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
+    /// Private function to add surface to CADSystem::m_surfs.
+    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    /// Name of cad file to be opened, including file extension.
+    std::string m_name;
+    /// map of curves
+    std::map<int, CADCurveSharedPtr> m_curves;
+    /// map of surfaces
+    std::map<int, CADSurfSharedPtr> m_surfs;
+    /// list of edge end vertices
+    std::map<int, CADVertSharedPtr> m_verts;
+    /// occ master object
+    TopoDS_Shape shape;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

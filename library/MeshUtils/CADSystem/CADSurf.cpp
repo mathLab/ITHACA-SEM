@@ -42,8 +42,7 @@ using namespace std;
 namespace Nektar {
 namespace LibUtilities {
 
-CADSurf::CADSurf(int i, TopoDS_Shape in,
-                 vector<vector<pair<int,int> > > ein) : m_ID(i), m_edges(ein)
+CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein) : m_ID(i), m_edges(ein)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m

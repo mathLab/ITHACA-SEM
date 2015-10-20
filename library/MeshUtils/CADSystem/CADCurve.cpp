@@ -37,8 +37,10 @@
 
 using namespace std;
 
-namespace Nektar {
-namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
 CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
 {

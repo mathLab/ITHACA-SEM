@@ -44,8 +44,10 @@
 
 using namespace std;
 
-namespace Nektar {
-namespace LibUtilities {
+namespace Nektar
+{
+namespace LibUtilities
+{
 
 string CADSystem::GetName()
 {
@@ -57,7 +59,6 @@ void CADSystem::Report()
     cout << endl << "CAD report:" << endl;
     cout << "\tCAD has: " << m_curves.size() << " curves." << endl;
     cout << "\tCAD has: " << m_surfs.size() << " surfaces." << endl;
-    cout << "\tCAD Euler-Poincaré characteristic: " << m_epc << endl;
 }
 
 Array<OneD, NekDouble> CADSystem::GetBoundingBox()
@@ -133,83 +134,19 @@ bool CADSystem::LoadCAD()
         return false;
     }
 
-    Handle(ShapeFix_Shape) sfs = new ShapeFix_Shape;
-    sfs->Init(shape);
-    sfs->Perform();
-
-    if(sfs->Status(ShapeExtend_DONE) )
-    {
-        shape = sfs->Shape();
-    }
-    else if(sfs->Status(ShapeExtend_FAIL))
-    {
-        ASSERTL0(false,"Shape could not be fixed");
-    }
-
-    Handle(ShapeFix_Wireframe) sfwf = new ShapeFix_Wireframe(shape);
-    sfwf->ModeDropSmallEdges() = Standard_True;
-    sfwf->FixSmallEdges();
-    sfwf->FixWireGaps();
-
-    if(sfwf->StatusWireGaps(ShapeExtend_DONE) )
-    {
-        shape = sfwf->Shape();
-    }
-    else if(sfwf->StatusWireGaps(ShapeExtend_FAIL))
-    {
-        ASSERTL0(false,"Shape could not be fixed");
-    }
-    if(sfwf->StatusSmallEdges(ShapeExtend_DONE) )
-    {
-        shape = sfwf->Shape();
-    }
-    else if(sfwf->StatusSmallEdges(ShapeExtend_FAIL))
-    {
-        ASSERTL0(false,"Shape could not be fixed");
-    }
-
-    TopTools_IndexedMapOfShape s;
-    TopExp::MapShapes(shape, TopAbs_SHELL, s);
-
-    Handle(ShapeFix_Shell) sfsh = new ShapeFix_Shell;
-    sfsh->FixFaceOrientation(TopoDS::Shell(s.FindKey(1)), false, false);
-
-    if(sfsh->Status(ShapeExtend_DONE) )
-    {
-        shape = sfsh->Shape();
-    }
-    else if(sfsh->Status(ShapeExtend_FAIL))
-    {
-        ASSERTL0(false,"Shape could not be fixed");
-    }
-
-
-
-    // From OpenCascade maps calculate Euler-Poincare number.
-    TopTools_IndexedMapOfShape mapOfVerts, ec;
-    TopTools_IndexedMapOfShape mapOfFaces;
-    TopExp::MapShapes(shape, TopAbs_FACE, mapOfFaces);
-    TopExp::MapShapes(shape, TopAbs_EDGE, ec);
+    //faces and verts can be extracted straight from shape
+    TopTools_IndexedMapOfShape mapOfVerts, mapOfFaces;
     TopExp::MapShapes(shape, TopAbs_VERTEX, mapOfVerts);
+    TopExp::MapShapes(shape, TopAbs_FACE, mapOfFaces);
 
-    m_epc = mapOfVerts.Extent() - ec.Extent() + mapOfFaces.Extent();
+    //edges need to be built from loops around faces to elimiate degen and hanging edges
+    TopTools_IndexedMapOfShape mapOfEdges;
 
-    TopTools_IndexedMapOfShape mapOfEdges; //empty map which is manually built from valid edges
-
-    //standard mm to m conversion
-    gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-
+    //build map of verticies
     for(int i = 1; i <= mapOfVerts.Extent(); i++)
     {
         TopoDS_Shape v = mapOfVerts.FindKey(i);
-        v.Move(mv);
-        gp_Pnt sp = BRep_Tool::Pnt(TopoDS::Vertex(v));
-        Array<OneD, NekDouble> p(3);
-        p[0] = sp.X(); p[1] = sp.Y(); p[2] = sp.Z();
-        m_verts.push_back(p);
+        AddVert(i, v);
     }
 
     // For each face of the geometry, get the local edges which bound it. If
@@ -236,7 +173,7 @@ bool CADSystem::LoadCAD()
         }
     }
 
-    map<int, vector<int> > adjsurfmap;
+    map<int, vector<int> > adjsurfmap; //from id of curve to list of ids of surfs
 
     // Adds edges to our type and map
     for(int i = 1; i <= mapOfEdges.Extent(); i++)
@@ -260,13 +197,13 @@ bool CADSystem::LoadCAD()
     // and edges are associated with surfaces.
     for(int i = 1; i <= mapOfFaces.Extent(); i++)
     {
-        vector<vector<pair<int,int> > > edges;
-
         TopoDS_Shape face = mapOfFaces.FindKey(i);
 
         TopTools_IndexedMapOfShape mapOfWires;
         TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
 
+        //this pice of code does an idiot check on the loops to make sure
+        //they dont cross or touch
         if(mapOfWires.Extent()>1)
         {
             TopoDS_Wire ow = BRepTools::OuterWire(TopoDS::Face(face));
@@ -304,9 +241,12 @@ bool CADSystem::LoadCAD()
 
         }
 
+        vector<EdgeLoop> edgeloops;
+
+        //now we acutally analyse the loops for cad building
         for(int j = 1; j <= mapOfWires.Extent(); j++)
         {
-            vector<pair<int,int> > edgeloop;
+            EdgeLoop edgeloop;
 
             TopoDS_Shape wire = mapOfWires.FindKey(j);
 
@@ -324,20 +264,19 @@ bool CADSystem::LoadCAD()
 
                 if(mapOfEdges.Contains(edge))
                 {
-                    pair<int,int> e;
-                    e.first = mapOfEdges.FindIndex(edge);
-                    adjsurfmap[e.first].push_back(i);
-                    e.second = exp.Orientation();
-                    edgeloop.push_back(e);
+                    int e = mapOfEdges.FindIndex(edge);
+                    edgeloop.edges.push_back(m_curves[e]);
+                    edgeloop.edgeo.push_back(exp.Orientation());
+                    adjsurfmap[e].push_back(i);
                 }
 
                 exp.Next();
             }
 
-            edges.push_back(edgeloop);
+            edgeloops.push_back(edgeloop);
         }
 
-        AddSurf(i, face, edges);
+        AddSurf(i, face, edgeloops);
     }
 
     // This checks that all edges are bound by two surfaces, sanity check.
@@ -345,9 +284,22 @@ bool CADSystem::LoadCAD()
         it != adjsurfmap.end(); it++)
     {
         ASSERTL0(it->second.size() == 2, "no three curve surfaces");
-        m_curves[it->first]->SetAdjSurf(it->second);
+        vector<CADSurfSharedPtr> sfs;
+        for(int i = 0; i < it->second.size(); i++)
+        {
+            sfs.push_back(m_surfs[it->second[i]]);
+        }
+        m_curves[it->first]->SetAdjSurf(sfs);
     }
     return true;
+}
+
+void CADSystem::AddVert(int i, TopoDS_Shape in)
+{
+    CADVertSharedPtr newVert = MemoryManager<CADVert>::
+                                AllocateSharedPtr(i,in);
+
+    m_verts[i] = newVert;
 }
 
 void CADSystem::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
@@ -355,15 +307,14 @@ void CADSystem::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
     CADCurveSharedPtr newCurve = MemoryManager<CADCurve>::
                                             AllocateSharedPtr(i,in);
 
-    vector<int> vs;
-    vs.push_back(fv-1);
-    vs.push_back(lv-1);
+    vector<CADVertSharedPtr> vs;
+    vs.push_back(m_verts[fv]);
+    vs.push_back(m_verts[lv]);
     m_curves[i] = newCurve;
     m_curves[i]->SetVert(vs);
 }
 
-void CADSystem::AddSurf(int i, TopoDS_Shape in,
-                        vector<vector<pair<int,int> > > ein)
+void CADSystem::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
 {
     CADSurfSharedPtr newSurf = MemoryManager<CADSurf>::
                                             AllocateSharedPtr(i,in,ein);
@@ -377,7 +328,7 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in,
     int tote = 0;
     for(int i = 0; i < ein.size(); i++)
     {
-        tote += ein[i].size();
+        tote += ein[i].edges.size();
     }
 
     ASSERTL0(tote != 1, "cannot handle periodic curves");

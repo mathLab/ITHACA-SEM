@@ -36,12 +36,12 @@
 #include <MeshUtils/MeshElements/MeshElements.h>
 
 #include <MeshUtils/CADSystem/CADSystem.h>
-#include <MeshUtils/Octree/Octree.h>
-#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
-#include <MeshUtils/TetMeshing/TetMesh.h>
-#include <MeshUtils/MeshElem.hpp>
+//#include <MeshUtils/Octree/Octree.h>
+//#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
+//#include <MeshUtils/TetMeshing/TetMesh.h>
+//#include <MeshUtils/MeshElem.hpp>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 
 #include "InputCAD.h"
 
@@ -55,7 +55,7 @@ namespace Utilities
 
 ModuleKey InputCAD::className =
 GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eInputModule, "CAD"), InputCAD::create,
+    ModuleKey(eInputModule, "mcf"), InputCAD::create,
     "Reads CAD geometry and will generate the mesh file.");
 
 /**
@@ -63,14 +63,7 @@ GetModuleFactory().RegisterCreatorFunction(
  */
 InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
 {
-    m_config["min"] = ConfigOption(false,"-1",
-            "minimum delta to be in mesh");
-    m_config["max"] = ConfigOption(false,"-1",
-            "maximum delta to be in mesh");
-    m_config["eps"] = ConfigOption(false,"-1",
-            "sensitivity to curvature");
-    m_config["order"] = ConfigOption(false,"-1",
-            "order of the mesh to be produced");
+
 }
 
 InputCAD::~InputCAD()
@@ -78,25 +71,25 @@ InputCAD::~InputCAD()
 
 }
 
-
 void InputCAD::Process()
 {
-    string CADName = m_config["infile"].as<string>();
-    NekDouble m_minDelta = m_config["min"].as<NekDouble>();
-    NekDouble m_maxDelta = m_config["max"].as<NekDouble>();
-    NekDouble m_eps = m_config["eps"].as<NekDouble>();
-    int m_order = m_config["order"].as<int>();
+    vector<string> filename;
+    filename.push_back(m_config["infile"].as<string>());
 
-    ASSERTL0(!(m_minDelta == -1 || m_maxDelta == -1 ||
-               m_eps == -1 || m_order == -1),
-             "User parameters required");
+    LibUtilities::SessionReaderSharedPtr pSession =
+        LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
 
+    pSession->LoadParameter("MinDelta", m_minDelta);
+    pSession->LoadParameter("MaxDelta", m_maxDelta);
+    pSession->LoadParameter("EPS",      m_eps);
+    pSession->LoadParameter("Order",    m_order);
+    m_CADName = pSession->GetSolverInfo("CADFile");
 
     LibUtilities::CADSystemSharedPtr m_cad =
-        MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(CADName);
+        MemoryManager<LibUtilities::CADSystem>::AllocateSharedPtr(m_CADName);
 
     if(m_mesh->m_verbose)
-        cout << "Building mesh for: " << m_cad->GetName() << endl;
+        cout << "Building mesh for: " << m_CADName << endl;
 
     ASSERTL0(m_cad->LoadCAD(),
              "Failed to load CAD");
@@ -110,7 +103,7 @@ void InputCAD::Process()
              << "\torder: " << m_order << endl;
         m_cad->Report();
     }
-
+    /*
     //create octree
     MeshUtils::OctreeSharedPtr m_octree =
         MemoryManager<MeshUtils::Octree>::AllocateSharedPtr(m_cad,
@@ -302,7 +295,7 @@ void InputCAD::Process()
     }
 
     if(m_mesh->m_verbose)
-        cout << endl;
+        cout << endl;*/
 }
 
 }

@@ -33,140 +33,151 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSURF_H
-#define NEKTAR_LIB_UTILITIES_CADSYSTEM_CADSURF_H
+#ifndef MESHUTILS_CADSYSTEM_CADSURF
+#define MESHUTILS_CADSYSTEM_CADSURF
 
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <MeshUtils/CADSystem/OpenCascade.h>
 
-namespace Nektar {
-namespace LibUtilities {
+#include <MeshUtils/CADSystem/CADVert.h>
+
+namespace Nektar
+{
+namespace LibUtilities
+{
+
+class CADCurve;
+typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+
+struct EdgeLoop
+{
+    std::vector<CADCurveSharedPtr> edges;
+    std::vector<int> edgeo; //0 is forward 1 is backward
+};
 
 class CADSurf
 {
-    public:
-        friend class MemoryManager<CADSurf>;
+public:
+    friend class MemoryManager<CADSurf>;
 
-        /**
-         * @brief Default constructor.
-         */
-        CADSurf(int i, TopoDS_Shape in,
-                std::vector<std::vector<std::pair<int,int> > > ein);
+    /**
+     * @brief Default constructor.
+     */
+    CADSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
 
-        /**
-         * @brief Get the IDs of the edges which bound the surface.
-         *
-         * The edges are organsised into two vectors, which are grouped into the
-         * continuous loops of the bounding edges, then the edges, which are a
-         * pair of integers. The first item is the edge ID and the second is an
-         * integer that indicates whether this edge is orientated forwards or
-         * backwards on this surface to form the loop.
-         */
-        std::vector<std::vector<std::pair<int,int> > > GetEdges()
-        {
-            return m_edges;
-        }
+    /**
+     * @brief Get the IDs of the edges which bound the surface.
+     *
+     * The edges are organsised into two vectors, which are grouped into the
+     * continuous loops of the bounding edges, then the edges, which are a
+     * pair of integers. The first item is the edge ID and the second is an
+     * integer that indicates whether this edge is orientated forwards or
+     * backwards on this surface to form the loop.
+     */
+    std::vector<EdgeLoop> GetEdges()
+    {
+        return m_edges;
+    }
 
-        /**
-         * @brief Get the limits of the parametric space for the surface.
-         *
-         * @return Array of 4 entries with parametric umin,umax,vmin,vmax.
-         */
-        Array<OneD, NekDouble> GetBounds()
-        {
-            Array<OneD,NekDouble> b(4);
+    /**
+     * @brief Get the limits of the parametric space for the surface.
+     *
+     * @return Array of 4 entries with parametric umin,umax,vmin,vmax.
+     */
+    Array<OneD, NekDouble> GetBounds()
+    {
+        Array<OneD,NekDouble> b(4);
 
-            b[0] = m_occSurface.FirstUParameter();
-            b[1] = m_occSurface.LastUParameter();
-            b[2] = m_occSurface.FirstVParameter();
-            b[3] = m_occSurface.LastVParameter();
+        b[0] = m_occSurface.FirstUParameter();
+        b[1] = m_occSurface.LastUParameter();
+        b[2] = m_occSurface.FirstVParameter();
+        b[3] = m_occSurface.LastVParameter();
 
-            return b;
-        }
+        return b;
+    }
 
-        /**
-         * @brief Get the normal vector at parametric point u,v.
-         *
-         * @param uv Array of u and v parametric coords.
-         * @return Array of xyz components of normal vector.
-         */
-        Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+    /**
+     * @brief Get the normal vector at parametric point u,v.
+     *
+     * @param uv Array of u and v parametric coords.
+     * @return Array of xyz components of normal vector.
+     */
+    Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
 
-        /**
-         * @brief Get the set of first derivatives at parametric point u,v
-         *
-         * @param uv Array of u and v parametric coords.
-         * @return Array of xyz copmonents of first derivatives.
-         */
-        Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+    /**
+     * @brief Get the set of first derivatives at parametric point u,v
+     *
+     * @param uv Array of u and v parametric coords.
+     * @return Array of xyz copmonents of first derivatives.
+     */
+    Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
 
-        /**
-         * @brief Get the set of second derivatives at parametric point u,v
-         *
-         * @param uv array of u and v parametric coords
-         * @return array of xyz copmonents of second derivatives
-         */
-        Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+    /**
+     * @brief Get the set of second derivatives at parametric point u,v
+     *
+     * @param uv array of u and v parametric coords
+     * @return array of xyz copmonents of second derivatives
+     */
+    Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
 
-        /**
-         * @brief Get the x,y,z at parametric point u,v.
-         *
-         * @param uv Array of u and v parametric coords.
-         * @return Array of xyz location.
-         */
-        Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+    /**
+     * @brief Get the x,y,z at parametric point u,v.
+     *
+     * @param uv Array of u and v parametric coords.
+     * @return Array of xyz location.
+     */
+    Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
 
-        /**
-         * @brief Performs a reverse look up to find u,v and x,y,z.
-         *
-         * @param p Array of xyz location
-         * @return The parametric location of xyz on this surface
-         */
-        Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+    /**
+     * @brief Performs a reverse look up to find u,v and x,y,z.
+     *
+     * @param p Array of xyz location
+     * @return The parametric location of xyz on this surface
+     */
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
-        /**
-         * @brief returns true if the surface is flat (2D)
-         */
-        bool IsPlane();
+    /**
+     * @brief returns true if the surface is flat (2D)
+     */
+    bool IsPlane();
 
-        /**
-         * @brief sets the flag to reverse the normal for this suface,
-         * this is determined in cadsystem and ensures all surface normals,
-         * point internaly
-         */
-        void SetReverseNomral()
-        {
-            m_correctNormal = false;
-        }
+    /**
+     * @brief sets the flag to reverse the normal for this suface,
+     * this is determined in cadsystem and ensures all surface normals,
+     * point internaly
+     */
+    void SetReverseNomral()
+    {
+        m_correctNormal = false;
+    }
 
-        void SetTwoC()
-        {
-            m_hasTwoCurves = true;
-        }
+    void SetTwoC()
+    {
+        m_hasTwoCurves = true;
+    }
 
-        bool GetTwoC(){return m_hasTwoCurves;}
+    bool GetTwoC(){return m_hasTwoCurves;}
 
-    private:
+private:
 
-        void Test(Array<OneD, NekDouble> uv);
+    void Test(Array<OneD, NekDouble> uv);
 
-        /// ID of surface.
-        int m_ID;
-        /// normal
-        bool m_correctNormal;
-        /// flag to alert the mesh generation to a potential problem is both curves have only two points in the mesh
-        bool m_hasTwoCurves;
-        /// OpenCascade object for surface.
-        BRepAdaptor_Surface m_occSurface;
-        /// Alternate OpenCascade object for surface. Used by reverse lookup.
-        Handle(Geom_Surface) m_s;
-        /// List of bounding edges in loops with orientation.
-        std::vector<std::vector<std::pair<int,int> > > m_edges;
+    /// ID of surface.
+    int m_ID;
+    /// normal
+    bool m_correctNormal;
+    /// flag to alert the mesh generation to a potential problem is both curves have only two points in the mesh
+    bool m_hasTwoCurves;
+    /// OpenCascade object for surface.
+    BRepAdaptor_Surface m_occSurface;
+    /// Alternate OpenCascade object for surface. Used by reverse lookup.
+    Handle(Geom_Surface) m_s;
+    /// List of bounding edges in loops with orientation.
+    std::vector<EdgeLoop> m_edges;
 };
 
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;

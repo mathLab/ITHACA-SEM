@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_LIB_UTILITIES_CADSYSTEM_OCC_H
-#define NEKTAR_LIB_UTILITIES_CADSYSTEM_OCC_H
+#ifndef MESHUTILS_CADSYSTEM_OCC
+#define MESHUTILS_CADSYSTEM_OCC
 
 #include <STEPControl_Reader.hxx>
 #include <IGESControl_Reader.hxx>
@@ -52,8 +52,6 @@
 #include <BRep_Tool.hxx>
 #include <gp_Trsf.hxx>
 #include <TopLoc_Location.hxx>
-#include <ShapeAnalysis.hxx>
-#include <ShapeAnalysis_Wire.hxx>
 #include <BRepTools_WireExplorer.hxx>
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
@@ -62,12 +60,11 @@
 #include <GCPnts_AbscissaPoint.hxx>
 #include <TopAbs_State.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
-#include <ShapeFix_Shape.hxx>
-#include <ShapeFix_Wireframe.hxx>
-#include <ShapeFix_Shell.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
-#include <ShapeAnalysis_Surface.hxx>
 #include <gp_Pnt2d.hxx>
 #include <BRepClass_FaceClassifier.hxx>
+#include <ShapeAnalysis_Wire.hxx>
+#include <TopoDS_Wire.hxx>
+#include <ShapeAnalysis_Surface.hxx>
 
 #endif

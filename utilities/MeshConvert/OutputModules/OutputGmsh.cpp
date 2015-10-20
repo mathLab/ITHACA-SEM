@@ -53,11 +53,13 @@ ModuleKey OutputGmsh::className =
 
 OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 {
+    map<unsigned int, ElmtConfig> igelmap = InputGmsh::GenElmMap();
+
     map<unsigned int, ElmtConfig>::iterator it;
 
     // Populate #InputGmsh::elmMap and use this to construct an
     // inverse mapping from %ElmtConfig to Gmsh ID.
-    for (it = InputGmsh::elmMap.begin(); it != InputGmsh::elmMap.end(); ++it)
+    for (it = igelmap.begin(); it != igelmap.end(); ++it)
     {
         elmMap[it->second] = it->first;
     }

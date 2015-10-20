@@ -161,8 +161,12 @@ namespace Nektar
         // Update mapping and Deal with Dirichlet boundary conditions
         if (m_mapping->IsTimeDependent())
         {
-            // Update mapping is now done by the MovingBody forcing
-            //m_mapping->UpdateMapping(time);
+            if (m_mapping->IsFromFunction())
+            {
+                // If the transformation is explicitly defined, update it here 
+                // Otherwise, it will be done somewhere else (ForcingMovingBody)
+                m_mapping->UpdateMapping(time);
+            }
             m_mapping->UpdateBCs(time);
         }       
         

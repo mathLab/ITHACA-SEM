@@ -259,7 +259,13 @@ namespace GlobalMapping
                 m_timeDependent = value;
             }
             
-            // Change the value of m_timeDependent
+            // Get the value from m_fromFunction
+            GLOBAL_MAPPING_EXPORT bool IsFromFunction()
+            {
+                return m_fromFunction;
+            } 
+            
+            // Change the value of m_fromFunction
             GLOBAL_MAPPING_EXPORT void SetFromFunction( const bool value)
             {
                 m_fromFunction = value;

@@ -93,7 +93,6 @@ namespace Nektar
                 const TiXmlElement                                *pMapping)
         {   
             int phystot         = m_fields[0]->GetTotPoints();
-            m_timeDependent     = false;
             m_fromFunction      = true;
             // Initialise variables
             m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
@@ -104,6 +103,20 @@ namespace Nektar
                 m_coords[i]    = Array<OneD, NekDouble> (phystot);
                 m_coordsVel[i] = Array<OneD, NekDouble> (phystot);
                 coords[i]      = Array<OneD, NekDouble> (phystot);
+            }      
+            
+            // Check if mapping is defined as time-dependent
+            const TiXmlElement* timeDep = pMapping->
+                                            FirstChildElement("TIMEDEPENDENT");
+            if (timeDep)
+            {
+                string sTimeDep = timeDep->GetText();
+                m_timeDependent = ( boost::iequals(sTimeDep,"true")) ||
+                                  ( boost::iequals(sTimeDep,"yes"));
+            }
+            else
+            {
+                m_timeDependent     = false;
             }            
             
             // Load coordinates   

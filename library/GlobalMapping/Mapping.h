@@ -47,401 +47,408 @@ namespace Nektar
 {
 namespace GlobalMapping
 {
-    //  Forward declaration
-    class Mapping;
+//  Forward declaration
+class Mapping;
 
-    /// A shared pointer to a Mapping object
-    GLOBAL_MAPPING_EXPORT typedef boost::shared_ptr<Mapping> MappingSharedPtr;
+/// A shared pointer to a Mapping object
+GLOBAL_MAPPING_EXPORT typedef boost::shared_ptr<Mapping> MappingSharedPtr;
 
-    /// Declaration of the mapping factory
-    typedef LibUtilities::NekFactory<std::string, Mapping,
-            const LibUtilities::SessionReaderSharedPtr&,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>&,
-            const TiXmlElement*> MappingFactory;
+/// Declaration of the mapping factory
+typedef LibUtilities::NekFactory<std::string, Mapping,
+        const LibUtilities::SessionReaderSharedPtr&,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&,
+        const TiXmlElement*> MappingFactory;
 
-    /// Declaration of the mapping factory singleton
-    GLOBAL_MAPPING_EXPORT MappingFactory& GetMappingFactory();
+/// Declaration of the mapping factory singleton
+GLOBAL_MAPPING_EXPORT MappingFactory& GetMappingFactory();
 
-    /**
-     * @class Mapping
-     * @brief Defines a mapping to be applied to the coordinate system
-     */
-    class Mapping
-    {
-        public:
-            GLOBAL_MAPPING_EXPORT virtual ~Mapping() {}
+/**
+ * @class Mapping
+ * @brief Defines a mapping to be applied to the coordinate system
+ */
+class Mapping
+{
+    public:
+        GLOBAL_MAPPING_EXPORT virtual ~Mapping() {}
 
-            /// Initialise the mapping object
-            GLOBAL_MAPPING_EXPORT void InitObject(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&     pFields,
-                const TiXmlElement* pMapping)
-            {
-                v_InitObject( pFields, pMapping);
-            }
-            
-            GLOBAL_MAPPING_EXPORT static MappingSharedPtr Load(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
-            
-            // Output function called when a chk or fld file is written
-            GLOBAL_MAPPING_EXPORT void Output( 
-                    LibUtilities::FieldMetaDataMap & fieldMetaDataMap,
-                    const std::string                    &outname);
-            
-            /////////////////////////////////////////////////////////////
-            //
-            //    Functions for transforming results to and from the
-            //          Cartesian coordinate system 
-            //          (useful for pre and post processing)
-            /////////////////////////////////////////////////////////////
-              
-            /// Convert a contravariant vector to the Cartesian system
-            GLOBAL_MAPPING_EXPORT void ContravarToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            /// Convert a covariant vector to the Cartesian system
-            GLOBAL_MAPPING_EXPORT void CovarToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            /// Convert a contravariant vector to the transformed system
-            GLOBAL_MAPPING_EXPORT void ContravarFromCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            /// Convert a covariant vector to the transformed system
-            GLOBAL_MAPPING_EXPORT void CovarFromCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            /// Get the Cartesian coordinates in the field
-            GLOBAL_MAPPING_EXPORT void GetCartesianCoordinates(
-                Array<OneD, NekDouble>               &out0,
-                Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2)
-            {
-                v_GetCartesianCoordinates( out0, out1, out2);
-            }
-            
-            /////////////////////////////////////////////////////////////
-            //
-            //   Basic tensor calculus functions
-            //    
-            /////////////////////////////////////////////////////////////   
+        /// Initialise the mapping object
+        GLOBAL_MAPPING_EXPORT void InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&     pFields,
+            const TiXmlElement* pMapping)
+        {
+            v_InitObject( pFields, pMapping);
+        }
 
-            /// Get the Jacobian of the transformation
-            GLOBAL_MAPPING_EXPORT void GetJacobian(
-                Array<OneD, NekDouble>               &outarray)
-            {
-                v_GetJacobian( outarray);
-            } 
-            
-            /// Calculate the dot product with the Jacobian gradient
-            GLOBAL_MAPPING_EXPORT void DotGradJacobian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, NekDouble>               &outarray)
-            {
-                v_DotGradJacobian( inarray, outarray);
-            } 
-            
-            /// Get the metric tensor g_(i,j)
-            GLOBAL_MAPPING_EXPORT void GetMetricTensor(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_GetMetricTensor( outarray);
-            }  
-            
-            /// Get the inverse of metric tensor g^(i,j)
-            GLOBAL_MAPPING_EXPORT void GetInvMetricTensor(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_GetInvMetricTensor( outarray);
-            }
-            
-            /// Lower index using v_(i) = g_(i,j)*v^(j)
-            GLOBAL_MAPPING_EXPORT void LowerIndex(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);  
-            
-            /// Raise index using v^(i) = g^(i,j)*v_(j)
-            GLOBAL_MAPPING_EXPORT void RaiseIndex(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            // Apply the Christoffel symbols to a contravariant vector
-            //          outarray = {i,pk}*u^p
-            GLOBAL_MAPPING_EXPORT void ApplyChristoffelContravar(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_ApplyChristoffelContravar( inarray, outarray);
-            }
-            
-            // Apply the Christoffel symbols to a convariant vector
-            //          outarray = {p,ik}*u_p
-            GLOBAL_MAPPING_EXPORT void ApplyChristoffelCovar(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_ApplyChristoffelCovar( inarray, outarray);
-            }
-            
-            // Obtain the velocity of the coordinates for time-dependent mappings
-            GLOBAL_MAPPING_EXPORT void GetCoordVelocity(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_GetCoordVelocity( outarray);
-            }
-            
-            /////////////////////////////////////////////////////////////
-            //
-            //   Differential operators
-            //    
-            /////////////////////////////////////////////////////////////             
-            
-            // Generalized divergence operator
-            //         D = u^i_,i = 1/J*d(J*u^i)/dx^i
-            GLOBAL_MAPPING_EXPORT void Divergence(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, NekDouble>                            &outarray)
-            {
-                v_Divergence( inarray, outarray);
-            }  
-            
-            // Generalized velocity Laplacian operator
-            //         L = g^jk u^i_{,jk}
-            GLOBAL_MAPPING_EXPORT void VelocityLaplacian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_VelocityLaplacian( inarray, outarray);
-            } 
-            
-            // Generalized velocity second order derivatives
-            //         ddU = u^i_{,jk}
-            GLOBAL_MAPPING_EXPORT void gradgradU(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray)
-            {
-                v_gradgradU( inarray, outarray);
-            }
-            
-            // CurlCurl calculated on the whole field
-            //     if the flag generalized is: 
-            //        - false, this corresponds to the usual Cartesian operator
-            //        - true,  it corresponds to the Generalized curl-curl
-                    
-            GLOBAL_MAPPING_EXPORT void CurlCurlField(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray,
-                const bool                                        generalized)
-            {
-                v_CurlCurlField( inarray, outarray, generalized);
-            }
-            
-            
-            /////////////////////////////////////////////////////////////
-            //
-            //   Functions defining mapping properties
-            //    
-            /////////////////////////////////////////////////////////////             
-            
-            // Define if mapping is constant or time-dependent
-            GLOBAL_MAPPING_EXPORT bool IsTimeDependent()
-            {
-                return m_timeDependent;
-            } 
-            
-            // Change the value of m_timeDependent
-            GLOBAL_MAPPING_EXPORT void SetTimeDependent( const bool value)
-            {
-                m_timeDependent = value;
-            }
-            
-            // Get the value from m_fromFunction
-            GLOBAL_MAPPING_EXPORT bool IsFromFunction()
-            {
-                return m_fromFunction;
-            } 
-            
-            // Change the value of m_fromFunction
-            GLOBAL_MAPPING_EXPORT void SetFromFunction( const bool value)
-            {
-                m_fromFunction = value;
-            }
-            
-            // Define if the Jacobian of the transformation is constant
-            GLOBAL_MAPPING_EXPORT bool HasConstantJacobian()
-            {
-                return m_constantJacobian;
-            }
-            
-            // Define if the Jacobian of the transformation is constant
-            GLOBAL_MAPPING_EXPORT bool IsDefined()
-            {
-                return m_isDefined;
-            }
-            
-            //
-            //  Function to update time-dependent mappings
-            //            
-            GLOBAL_MAPPING_EXPORT void UpdateBCs( const NekDouble time)
-            {
-                v_UpdateBCs(time);
-            }
-            
-            GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time,
-                const Array<OneD, Array<OneD, NekDouble> > &coords    = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &coordsVel = NullNekDoubleArrayofArray)
-            {
-                v_UpdateMapping( time, coords, coordsVel);
-            }
-            
-            GLOBAL_MAPPING_EXPORT void UpdateGeomInfo()
-            {
-                v_UpdateGeomInfo();
-            }
-            
+        // Create mapping, or return a pointer to it if it already exists 
+        GLOBAL_MAPPING_EXPORT static MappingSharedPtr Load(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
 
-        protected:
-            /// Session reader
-            LibUtilities::SessionReaderSharedPtr        m_session;
-            
-            LibUtilities::FieldIOSharedPtr              m_fld;
-            /// Fields
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
-            // Arrays with coordinates and coordinates velocity
-            Array<OneD, Array<OneD, NekDouble> >        m_coords;
-            Array<OneD, Array<OneD, NekDouble> >        m_coordsVel;
-            // Arrays with geometric parameters of the mapping
-            Array<OneD, Array<OneD, NekDouble> >        m_GeometricInfo;
-            // Number of velocity components
-            int                                         m_nConvectiveFields;
-            
-            // Name of the function containing the coordinates
-            string                                      m_funcName;
-            string                                      m_velFuncName;
-            
-            
-            // Flags to help the solver
-            bool                                        m_constantJacobian;
-            bool                                        m_timeDependent;
-            bool                                        m_fromFunction;
-            
-            // Static variables to load mapping
-            static MappingSharedPtr                     m_mappingPtr;
-            static bool                                 m_init;
-            static bool                                 m_isDefined;
-            
-            
+        // Output function called when a chk or fld file is written
+        GLOBAL_MAPPING_EXPORT void Output( 
+                LibUtilities::FieldMetaDataMap & fieldMetaDataMap,
+                const std::string                    &outname);
 
-            /// Constructor
-            GLOBAL_MAPPING_EXPORT Mapping(
-                const LibUtilities::SessionReaderSharedPtr&          pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
+        /////////////////////////////////////////////////////////////
+        //
+        //    Functions for transforming results to and from the
+        //          Cartesian coordinate system 
+        //          (useful for pre and post processing)
+        /////////////////////////////////////////////////////////////
 
-            // Evaluators
-            GLOBAL_MAPPING_EXPORT void EvaluateFunction(
-                    Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-                    LibUtilities::SessionReaderSharedPtr        pSession,
-                    std::string                                 pFieldName, 
-                    Array<OneD, NekDouble>&                     pArray,
-                    const std::string& pFunctionName,
-                    NekDouble pTime = NekDouble(0));
+        /// Convert a contravariant vector to the Cartesian system
+        GLOBAL_MAPPING_EXPORT void ContravarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            GLOBAL_MAPPING_EXPORT void EvaluateTimeFunction(
-                    LibUtilities::SessionReaderSharedPtr        pSession,
-                    std::string                                 pFieldName, 
-                    Array<OneD, NekDouble>&                     pArray,
-                    const std::string&                          pFunctionName,
-                    NekDouble pTime = NekDouble(0));            
-            
-            // Virtual functions
-            GLOBAL_MAPPING_EXPORT virtual void v_InitObject(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields,
-                const TiXmlElement* pMapping);
+        /// Convert a covariant vector to the Cartesian system
+        GLOBAL_MAPPING_EXPORT void CovarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+        /// Convert a contravariant vector to the transformed system
+        GLOBAL_MAPPING_EXPORT void ContravarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;            
+        /// Convert a covariant vector to the transformed system
+        GLOBAL_MAPPING_EXPORT void CovarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-            GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+        /// Get the Cartesian coordinates in the field
+        GLOBAL_MAPPING_EXPORT void GetCartesianCoordinates(
+            Array<OneD, NekDouble>               &out0,
+            Array<OneD, NekDouble>               &out1,
+            Array<OneD, NekDouble>               &out2)
+        {
+            v_GetCartesianCoordinates( out0, out1, out2);
+        }
 
-            GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
-                Array<OneD, NekDouble>               &out0,
-                Array<OneD, NekDouble>               &out1,
-                Array<OneD, NekDouble>               &out2);
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_GetCoordVelocity(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
-                Array<OneD, NekDouble>               &outarray)             =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_DotGradJacobian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, NekDouble>               &outarray);
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_LowerIndex(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_RaiseIndex(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        /////////////////////////////////////////////////////////////
+        //
+        //   Basic tensor calculus functions
+        //    
+        /////////////////////////////////////////////////////////////   
 
-            GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_Divergence(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, NekDouble>                            &outarray); 
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_VelocityLaplacian(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);  
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_gradgradU(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray);
+        /// Get the Jacobian of the transformation
+        GLOBAL_MAPPING_EXPORT void GetJacobian(
+            Array<OneD, NekDouble>               &outarray)
+        {
+            v_GetJacobian( outarray);
+        } 
 
-            GLOBAL_MAPPING_EXPORT virtual void v_CurlCurlField(
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >              &outarray,
-                const bool                                      generalized);
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
-                const NekDouble time,
-                const Array<OneD, Array<OneD, NekDouble> > &coords    = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &coordsVel = NullNekDoubleArrayofArray);
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo() =0;
-            
-            GLOBAL_MAPPING_EXPORT virtual void v_UpdateBCs(const NekDouble time);
-            
-    };
+        /// Calculate the dot product with the Jacobian gradient
+        GLOBAL_MAPPING_EXPORT void DotGradJacobian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>               &outarray)
+        {
+            v_DotGradJacobian( inarray, outarray);
+        } 
+
+        /// Get the metric tensor g_(i,j)
+        GLOBAL_MAPPING_EXPORT void GetMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_GetMetricTensor( outarray);
+        }  
+
+        /// Get the inverse of metric tensor g^(i,j)
+        GLOBAL_MAPPING_EXPORT void GetInvMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_GetInvMetricTensor( outarray);
+        }
+
+        /// Lower index using v_(i) = g_(i,j)*v^(j)
+        GLOBAL_MAPPING_EXPORT void LowerIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);  
+
+        /// Raise index using v^(i) = g^(i,j)*v_(j)
+        GLOBAL_MAPPING_EXPORT void RaiseIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        // Apply the Christoffel symbols to a contravariant vector
+        //          outarray = {i,pk}*u^p
+        GLOBAL_MAPPING_EXPORT void ApplyChristoffelContravar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_ApplyChristoffelContravar( inarray, outarray);
+        }
+
+        // Apply the Christoffel symbols to a convariant vector
+        //          outarray = {p,ik}*u_p
+        GLOBAL_MAPPING_EXPORT void ApplyChristoffelCovar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_ApplyChristoffelCovar( inarray, outarray);
+        }
+
+        // Obtain the velocity of the coordinates for time-dependent mappings
+        GLOBAL_MAPPING_EXPORT void GetCoordVelocity(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_GetCoordVelocity( outarray);
+        }
+
+        /////////////////////////////////////////////////////////////
+        //
+        //   Differential operators
+        //    
+        /////////////////////////////////////////////////////////////             
+
+        // Generalized divergence operator
+        //         D = u^i_,i = 1/J*d(J*u^i)/dx^i
+        GLOBAL_MAPPING_EXPORT void Divergence(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>                            &outarray)
+        {
+            v_Divergence( inarray, outarray);
+        }  
+
+        // Generalized velocity Laplacian operator
+        //         L = g^jk u^i_{,jk}
+        GLOBAL_MAPPING_EXPORT void VelocityLaplacian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_VelocityLaplacian( inarray, outarray);
+        } 
+
+        // Generalized velocity second order derivatives
+        //         ddU = u^i_{,jk}
+        GLOBAL_MAPPING_EXPORT void gradgradU(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+        {
+            v_gradgradU( inarray, outarray);
+        }
+
+        // CurlCurl calculated on the whole field
+        //     if the flag generalized is: 
+        //        - false, this corresponds to the usual Cartesian operator
+        //        - true,  it corresponds to the Generalized curl-curl
+
+        GLOBAL_MAPPING_EXPORT void CurlCurlField(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const bool                                        generalized)
+        {
+            v_CurlCurlField( inarray, outarray, generalized);
+        }
+
+
+        /////////////////////////////////////////////////////////////
+        //
+        //   Functions defining mapping properties
+        //    
+        /////////////////////////////////////////////////////////////             
+
+        // Define if mapping is constant or time-dependent
+        GLOBAL_MAPPING_EXPORT bool IsTimeDependent()
+        {
+            return m_timeDependent;
+        } 
+
+        // Change the value of m_timeDependent
+        GLOBAL_MAPPING_EXPORT void SetTimeDependent( const bool value)
+        {
+            m_timeDependent = value;
+        }
+
+        // Get the value from m_fromFunction
+        GLOBAL_MAPPING_EXPORT bool IsFromFunction()
+        {
+            return m_fromFunction;
+        } 
+
+        // Change the value of m_fromFunction
+        GLOBAL_MAPPING_EXPORT void SetFromFunction( const bool value)
+        {
+            m_fromFunction = value;
+        }
+
+        // Define if the Jacobian of the transformation is constant
+        GLOBAL_MAPPING_EXPORT bool HasConstantJacobian()
+        {
+            return m_constantJacobian;
+        }
+
+        // Define if the session file defines a mapping
+        GLOBAL_MAPPING_EXPORT bool IsDefined()
+        {
+            return m_isDefined;
+        }
+
+        //
+        //  Function to update time-dependent mappings
+        //            
+
+        GLOBAL_MAPPING_EXPORT void UpdateBCs( const NekDouble time)
+        {
+            v_UpdateBCs(time);
+        }
+
+        GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time,
+            const Array<OneD, Array<OneD, NekDouble> > &coords    
+                                                    = NullNekDoubleArrayofArray,
+            const Array<OneD, Array<OneD, NekDouble> > &coordsVel 
+                                                    = NullNekDoubleArrayofArray)
+        {
+            v_UpdateMapping( time, coords, coordsVel);
+        }
+
+        GLOBAL_MAPPING_EXPORT void UpdateGeomInfo()
+        {
+            v_UpdateGeomInfo();
+        }
+
+
+    protected:
+        /// Session reader
+        LibUtilities::SessionReaderSharedPtr        m_session;
+
+        LibUtilities::FieldIOSharedPtr              m_fld;
+        /// Fields
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
+        // Arrays with coordinates and coordinates velocity
+        Array<OneD, Array<OneD, NekDouble> >        m_coords;
+        Array<OneD, Array<OneD, NekDouble> >        m_coordsVel;
+        // Arrays with geometric parameters of the mapping
+        Array<OneD, Array<OneD, NekDouble> >        m_GeometricInfo;
+        // Number of velocity components
+        int                                         m_nConvectiveFields;
+
+        // Name of the function containing the coordinates
+        string                                      m_funcName;
+        string                                      m_velFuncName;
+
+
+        // Flags to help the solver
+        bool                                        m_constantJacobian;
+        bool                                        m_timeDependent;
+        bool                                        m_fromFunction;
+
+        // Static variables to load mapping
+        static MappingSharedPtr                     m_mappingPtr;
+        static bool                                 m_init;
+        static bool                                 m_isDefined;
+
+
+
+        /// Constructor
+        GLOBAL_MAPPING_EXPORT Mapping(
+            const LibUtilities::SessionReaderSharedPtr&          pSession,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
+
+        // Evaluators
+        GLOBAL_MAPPING_EXPORT void EvaluateFunction(
+                Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+                LibUtilities::SessionReaderSharedPtr        pSession,
+                std::string                                 pFieldName, 
+                Array<OneD, NekDouble>&                     pArray,
+                const std::string& pFunctionName,
+                NekDouble pTime = NekDouble(0));
+
+        GLOBAL_MAPPING_EXPORT void EvaluateTimeFunction(
+                LibUtilities::SessionReaderSharedPtr        pSession,
+                std::string                                 pFieldName, 
+                Array<OneD, NekDouble>&                     pArray,
+                const std::string&                          pFunctionName,
+                NekDouble pTime = NekDouble(0));            
+
+        // Virtual functions
+        GLOBAL_MAPPING_EXPORT virtual void v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields,
+            const TiXmlElement* pMapping);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;            
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0; 
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetCartesianCoordinates(
+            Array<OneD, NekDouble>               &out0,
+            Array<OneD, NekDouble>               &out1,
+            Array<OneD, NekDouble>               &out2);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetCoordVelocity(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
+            Array<OneD, NekDouble>               &outarray)             =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_DotGradJacobian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>               &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_LowerIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_RaiseIndex(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray) =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_Divergence(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, NekDouble>                            &outarray); 
+
+        GLOBAL_MAPPING_EXPORT virtual void v_VelocityLaplacian(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);  
+
+        GLOBAL_MAPPING_EXPORT virtual void v_gradgradU(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_CurlCurlField(
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const bool                                      generalized);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
+            const NekDouble time,
+            const Array<OneD, Array<OneD, NekDouble> > &coords    
+                                                = NullNekDoubleArrayofArray,
+            const Array<OneD, Array<OneD, NekDouble> > &coordsVel 
+                                                = NullNekDoubleArrayofArray);
+
+        GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo() =0;
+
+        GLOBAL_MAPPING_EXPORT virtual void v_UpdateBCs(const NekDouble time);
+
+};
+
 }
 }
 

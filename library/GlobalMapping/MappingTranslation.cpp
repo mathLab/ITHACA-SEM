@@ -41,254 +41,226 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-    std::string MappingTranslation::className =
-            GetMappingFactory().RegisterCreatorFunction("Translation",
-                    MappingTranslation::create, "Translation mapping (X_i = x_i + constant)");
+std::string MappingTranslation::className =
+    GetMappingFactory().RegisterCreatorFunction("Translation",
+    MappingTranslation::create, "Translation mapping (X_i = x_i + constant)");
 
-    /**
-     *
-     */
-    MappingTranslation::MappingTranslation(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
-        : Mapping(pSession, pFields)
+/**
+ *
+ */
+MappingTranslation::MappingTranslation(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields)
+    : Mapping(pSession, pFields)
+{
+}
+
+
+/**
+ *
+ */
+void MappingTranslation::v_InitObject(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const TiXmlElement                                *pMapping)
+{   
+    m_constantJacobian = true;
+    // When there is no Mapping object defined, use the identity
+    //      transformation as a default
+    if (m_session->DefinesElement("Nektar/Mapping"))
     {
+        Mapping::v_InitObject(pFields, pMapping);
     }
+    else
+    {            
+        int phystot         = pFields[0]->GetTotPoints();
 
+        m_timeDependent    = false;
 
-    /**
-     *
-     */
-    void MappingTranslation::v_InitObject(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const TiXmlElement                                *pMapping)
-    {   
-        m_constantJacobian = true;
-        // When there is no Mapping object defined, use the identity
-        //      transformation as a default
-        if (m_session->DefinesElement("Nektar/Mapping"))
+        m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
+        m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
+        for (int i = 0; i < 3; i++)
         {
-            Mapping::v_InitObject(pFields, pMapping);
+            m_coords[i]    = Array<OneD, NekDouble> (phystot);
+            m_coordsVel[i] = Array<OneD, NekDouble> (phystot, 0.0);
         }
-        else
-        {            
-            int phystot         = pFields[0]->GetTotPoints();
-            
-            m_timeDependent    = false;
 
-            m_coords    = Array<OneD, Array<OneD, NekDouble> > (3);
-            m_coordsVel = Array<OneD, Array<OneD, NekDouble> > (3);
-            for (int i = 0; i < 3; i++)
-            {
-                m_coords[i]    = Array<OneD, NekDouble> (phystot);
-                m_coordsVel[i] = Array<OneD, NekDouble> (phystot, 0.0);
-            }
-
-            m_fields[0]->GetCoords(m_coords[0], m_coords[1], m_coords[2]);
-        }
-        
+        m_fields[0]->GetCoords(m_coords[0], m_coords[1], m_coords[2]);
     }
 
-    void MappingTranslation::v_ContravarToCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
+}
+
+void MappingTranslation::v_ContravarToCartesian(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+
+    for (int i = 0; i < m_nConvectiveFields; ++i)
     {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
+        Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1);
+    }        
+}
+
+void MappingTranslation::v_CovarToCartesian(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+
+    for (int i = 0; i < m_nConvectiveFields; ++i)
+    {
+        Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1);
+    }   
+}
+
+void MappingTranslation::v_ContravarFromCartesian(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+
+    for (int i = 0; i < m_nConvectiveFields; ++i)
+    {
+        Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1);
+    }          
+}
+
+void MappingTranslation::v_CovarFromCartesian(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+
+    for (int i = 0; i < m_nConvectiveFields; ++i)
+    {
+        Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1);
+    }   
+}
+
+void MappingTranslation::v_GetJacobian(
+    Array<OneD, NekDouble>               &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    Vmath::Fill(physTot, 1.0, outarray, 1);
+}
+
+void MappingTranslation::v_DotGradJacobian(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, NekDouble>               &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+
+    Vmath::Zero(physTot, outarray, 1);   
+}
+
+void MappingTranslation::v_GetMetricTensor(
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    int nvel = m_nConvectiveFields;
+
+    for (int i=0; i<nvel*nvel; i++)
+    {
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+    }
+    // Fill diagonal with 1.0
+    for (int i=0; i<nvel; i++)
+    {
+        Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                    outarray[i+nvel*i], 1); 
+    }            
+}
+
+void MappingTranslation::v_GetInvMetricTensor(
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    int nvel = m_nConvectiveFields;
+
+    for (int i=0; i<nvel*nvel; i++)
+    {
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+    }
+    // Fill diagonal with 1.0
+    for (int i=0; i<nvel; i++)
+    {
+        Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
+                                    outarray[i+nvel*i], 1); 
+    }            
+}
+
+void MappingTranslation::v_RaiseIndex(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    int nvel = m_nConvectiveFields;
+
+    for (int i=0; i<nvel; i++)
+    {
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+    }
+    // Copy
+    for (int i=0; i<nvel; i++)
+    {
+        Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1); 
+    }            
+}
+
+void MappingTranslation::v_LowerIndex(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    int nvel = m_nConvectiveFields;
+
+    for (int i=0; i<nvel; i++)
+    {
+        outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
+    }
+    // Copy
+    for (int i=0; i<nvel; i++)
+    {
+        Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1); 
+    }            
+}
+
+void MappingTranslation::v_ApplyChristoffelContravar(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    int nvel = m_nConvectiveFields;
+
+    for (int i = 0; i< nvel; i++)
+    {
+        for (int j = 0; j< nvel; j++)
         {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        }        
-    }
+            outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
+        }            
+    }        
+}
 
-    void MappingTranslation::v_CovarToCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
+void MappingTranslation::v_ApplyChristoffelCovar(
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+{
+    int physTot = m_fields[0]->GetTotPoints();
+    int nvel = m_nConvectiveFields;
+
+    for (int i = 0; i< nvel; i++)
     {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
+        for (int j = 0; j< nvel; j++)
         {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        } 
-    }
-
-    void MappingTranslation::v_ContravarFromCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
-        {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        }         
-    }
-
-    void MappingTranslation::v_CovarFromCartesian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        // U1 = u1
-        Vmath::Vcopy(physTot, inarray[0], 1, outarray[0], 1);
-        
-        // U2 = u2
-        Vmath::Vcopy(physTot, inarray[1], 1, outarray[1], 1);
-        
-        // U3 = u3
-        if (m_nConvectiveFields ==3)
-        {
-            Vmath::Vcopy(physTot, inarray[2], 1, outarray[2], 1);
-        } 
-    }
-
-    void MappingTranslation::v_GetJacobian(
-        Array<OneD, NekDouble>               &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        Vmath::Fill(physTot, 1.0, outarray, 1);
-    }
-    
-    void MappingTranslation::v_DotGradJacobian(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, NekDouble>               &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        
-        Vmath::Zero(physTot, outarray, 1);   
-    }
-
-    void MappingTranslation::v_GetMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel*nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Fill diagonal with 1.0
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
-                                        outarray[i+nvel*i], 1); 
+            outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
         }            
     }
+}
 
-    void MappingTranslation::v_GetInvMetricTensor(
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
+void MappingTranslation::v_UpdateGeomInfo()
+{
 
-        for (int i=0; i<nvel*nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Fill diagonal with 1.0
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Sadd(physTot, 1.0, outarray[i+nvel*i], 1, 
-                                        outarray[i+nvel*i], 1); 
-        }            
-    }
-    
-    void MappingTranslation::v_RaiseIndex(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Copy
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1); 
-        }            
-    }
-    
-    void MappingTranslation::v_LowerIndex(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-
-        for (int i=0; i<nvel; i++)
-        {
-            outarray[i] = Array<OneD, NekDouble> (physTot, 0.0); 
-        }
-        // Copy
-        for (int i=0; i<nvel; i++)
-        {
-            Vmath::Vcopy(physTot, inarray[i], 1, outarray[i], 1); 
-        }            
-    }
-
-    void MappingTranslation::v_ApplyChristoffelContravar(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-        
-        for (int i = 0; i< nvel; i++)
-        {
-            for (int j = 0; j< nvel; j++)
-            {
-                outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            }            
-        }        
-    }
-
-    void MappingTranslation::v_ApplyChristoffelCovar(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray)
-    {
-        int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_nConvectiveFields;
-        
-        for (int i = 0; i< nvel; i++)
-        {
-            for (int j = 0; j< nvel; j++)
-            {
-                outarray[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            }            
-        }
-    }
-
-    void MappingTranslation::v_UpdateGeomInfo()
-    {
-
-    }
+}
 
 }
 }

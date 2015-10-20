@@ -49,91 +49,91 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-    class MappingGeneral: public Mapping
+class MappingGeneral: public Mapping
+{
+public:
+
+    friend class MemoryManager<MappingGeneral> ;
+
+    /// Creates an instance of this class
+    GLOBAL_MAPPING_EXPORT
+    static MappingSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr        &pSession,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const TiXmlElement                                *pMapping)
     {
-    public:
+        MappingSharedPtr p =
+                MemoryManager<MappingGeneral>::AllocateSharedPtr(pSession,
+                                                                pFields);
+        p->InitObject(pFields, pMapping);
+        return p;
+    }
 
-        friend class MemoryManager<MappingGeneral> ;
+    ///Name of the class
+    static std::string className;
 
-        /// Creates an instance of this class
-        GLOBAL_MAPPING_EXPORT
-        static MappingSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr        &pSession,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const TiXmlElement                                *pMapping)
-        {
-            MappingSharedPtr p =
-                    MemoryManager<MappingGeneral>::AllocateSharedPtr(pSession,
-                                                                    pFields);
-            p->InitObject(pFields, pMapping);
-            return p;
-        }
+protected:
+    // Functions and variables to calculate the terms 
+    //      of the metric tensor and of the Christoffel symbols
+    void CalculateMetricTerms();
 
-        ///Name of the class
-        static std::string className;
+    void CalculateChristoffel();
 
-    protected:
-        // Functions and variables to calculate the terms 
-        //      of the metric tensor and of the Christoffel symbols
-        void CalculateMetricTerms();
+    Array<OneD, Array<OneD, NekDouble> >        m_metricTensor;
+    Array<OneD, Array<OneD, NekDouble> >        m_invMetricTensor;
+    Array<OneD, Array<OneD, NekDouble> >        m_deriv;
+    Array<OneD, Array<OneD, NekDouble> >        m_invDeriv;
+    Array<OneD, Array<OneD, NekDouble> >        m_Christoffel;
+    Array<OneD, NekDouble>                      m_jac;
 
-        void CalculateChristoffel();
+    // Constructor
+    MappingGeneral(const LibUtilities::SessionReaderSharedPtr  &pSession,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields); 
 
-        Array<OneD, Array<OneD, NekDouble> >        m_metricTensor;
-        Array<OneD, Array<OneD, NekDouble> >        m_invMetricTensor;
-        Array<OneD, Array<OneD, NekDouble> >        m_deriv;
-        Array<OneD, Array<OneD, NekDouble> >        m_invDeriv;
-        Array<OneD, Array<OneD, NekDouble> >        m_Christoffel;
-        Array<OneD, NekDouble>                      m_jac;
+    // Virtual functions
+    GLOBAL_MAPPING_EXPORT
+    virtual void v_InitObject(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const TiXmlElement                                *pMapping);
 
-        // Constructor
-        MappingGeneral(const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields); 
-        
-        // Virtual functions
-        GLOBAL_MAPPING_EXPORT
-        virtual void v_InitObject(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const TiXmlElement                                *pMapping);
+    GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_ContravarToCartesian(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);            
 
-        GLOBAL_MAPPING_EXPORT virtual void v_CovarToCartesian(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);            
+    GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_ContravarFromCartesian(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray); 
 
-        GLOBAL_MAPPING_EXPORT virtual void v_CovarFromCartesian(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray); 
+    GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
+        Array<OneD, NekDouble>               &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_GetJacobian(
-            Array<OneD, NekDouble>               &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_GetInvMetricTensor(
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelContravar(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
-        GLOBAL_MAPPING_EXPORT virtual void v_ApplyChristoffelCovar(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);
+    GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo();
 
-        GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo();
+private: 
 
-    private: 
-
-    };
+};
 
 }
 }

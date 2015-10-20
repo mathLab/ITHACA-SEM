@@ -152,11 +152,8 @@ void PtsField::Interpolate(Array<OneD, Array<OneD, NekDouble> > &intFields)
     // interpolate points and transform
     for (int i = 0; i < nFields; ++i)
     {
-
         for (int j = 0; j < nPhysPts; ++j)
         {
-            intFields[i][j] = 0.0;
-
             int nPts = m_weights[j].num_elements();
             for (int k = 0; k < nPts; ++k)
             {
@@ -413,8 +410,8 @@ void PtsField::CalcW_Gauss(const int physPtIdx,
     // handle the case that there was no point within 1.96 * sigma
     if (numPts == 0)
     {
-        m_neighInds[physPtIdx] = Array<OneD, unsigned int> (1, 1);
-        m_weights[physPtIdx] = Array<OneD, float> (1, 0.0);
+        m_neighInds[physPtIdx] = Array<OneD, unsigned int> (0);
+        m_weights[physPtIdx] = Array<OneD, float> (0);
 
         return;
     }

@@ -3,7 +3,6 @@ SET(GLOBAL_MAPPING_SOURCES
   MappingXofXZ.cpp
   MappingXofZ.cpp
   MappingXYofZ.cpp
-  MappingXYofT.cpp
   MappingXYofXY.cpp
   MappingGeneral.cpp
   MappingTranslation.cpp
@@ -14,7 +13,6 @@ SET(GLOBAL_MAPPING_HEADERS
   MappingXofXZ.h
   MappingXofZ.h
   MappingXYofZ.h
-  MappingXYofT.h
   MappingXYofXY.h
   MappingGeneral.h
   MappingTranslation.h

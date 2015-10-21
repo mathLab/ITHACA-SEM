@@ -438,7 +438,7 @@ void PtsField::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.m_idx][i] = fac * exp(-1 * neighbourPts[i].m_distSq / ts2);
+        m_weights[searchPt.m_idx][i] = fac * exp(-1 * pow(neighbourPts[i].m_dist, 2.0f) / ts2);
         wSum += m_weights[searchPt.m_idx][i];
     }
 
@@ -524,7 +524,7 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
     // point and return
     for (int i = 0; i < numPts; ++i)
     {
-        if (neighbourPts[i].m_distSq <= NekConstants::kNekSqrtTol)
+        if (neighbourPts[i].m_dist <= NekConstants::kNekZeroTol)
         {
             m_weights[physPtIdx][i] = 1.0;
             return;
@@ -534,8 +534,8 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[physPtIdx][i] = 1 / pow(double(neighbourPts[i].m_distSq),
-                                          double(m_dim / float(2)));
+        m_weights[physPtIdx][i] = 1 / pow(double(neighbourPts[i].m_dist),
+                                          double(m_dim));
         wSum += m_weights[physPtIdx][i];
     }
 
@@ -625,27 +625,6 @@ void PtsField::CalcW_Quadratic(const int physPtIdx, const NekDouble coord)
 
 
 /**
- * @brief Compute the square of the euclidean distance between point1 and point2
- *
- * @param   point1 The first point
- * @param   point2 The second point
- */
-NekDouble PtsField::DistSq(const Array< OneD, NekDouble > &point1,
-                           const Array< OneD, NekDouble > &point2) const
-{
-    NekDouble d = 0.0;
-    NekDouble tmp;
-    for (int i = 0; i < point1.num_elements(); i++)
-    {
-        tmp = point1[i] - point2[i];
-        d += tmp * tmp;
-    }
-
-    return d;
-}
-
-
-/**
  * @brief Find nearest neighbours using a brute-force "algorithm".
  *
  * @param physPt              Coordinates of the physical point its neighbours
@@ -725,16 +704,15 @@ void PtsField::FindNeighbours(const PtsPoint &searchPoint,
 
     for (int i = 0; i < neighbourPts.size(); ++i)
     {
-        neighbourPts[i].m_distSq = DistSq(searchPoint.m_coords, neighbourPts[i].m_coords);
+        neighbourPts[i].m_dist = bg::distance(searchPoint, neighbourPts[i]);
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
 
-    // remove everythind beyond the distance
-    NekDouble distsq = dist * dist;
+    // remove everything beyond the distance
     for (int i = 0; i < neighbourPts.size(); ++i)
     {
-        if (neighbourPts[i].m_distSq > distsq)
+        if (neighbourPts[i].m_dist > dist)
         {
             neighbourPts.erase(neighbourPts.begin() + i, neighbourPts.end());
             break;

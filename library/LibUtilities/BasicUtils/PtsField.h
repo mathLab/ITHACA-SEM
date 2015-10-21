@@ -77,21 +77,21 @@ class PtsPoint
 
         int                                         m_idx;
         Array<OneD, NekDouble>                      m_coords;
-        NekDouble                                   m_distSq;
+        NekDouble                                   m_dist;
 
         LIB_UTILITIES_EXPORT PtsPoint() {};
 
         LIB_UTILITIES_EXPORT PtsPoint(int idx, Array<OneD, NekDouble> coords,
-                                      NekDouble distSq):
+                                      NekDouble dist):
             m_idx(idx),
             m_coords(coords),
-            m_distSq(distSq)
+            m_dist(dist)
         {
         };
 
         LIB_UTILITIES_EXPORT bool operator < (const PtsPoint &comp) const
         {
-            return (m_distSq < comp.m_distSq);
+            return (m_dist < comp.m_dist);
         };
 };
 
@@ -258,10 +258,6 @@ class PtsField
 
         LIB_UTILITIES_EXPORT void CalcW_Quadratic(const int physPtIdx,
                 const NekDouble coord);
-
-        LIB_UTILITIES_EXPORT NekDouble DistSq(
-            const Array<OneD, NekDouble > &point1,
-            const Array<OneD, NekDouble > &point2) const;
 
         LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &physPt,
                 vector<PtsPoint> &neighbourPts,

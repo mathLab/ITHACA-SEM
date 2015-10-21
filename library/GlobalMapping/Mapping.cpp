@@ -1063,9 +1063,13 @@ namespace Nektar
             Array<OneD, NekDouble>  Vals(physTot, 0.0);
             
             Array<OneD, bool>  isDirichlet(nfields);
-            
-            
+
             Array<OneD, Array<OneD, NekDouble> > values(nfields);
+            for (int i=0; i < nfields; i++)
+            {
+                values[i] = Array<OneD, NekDouble> (physTot, 0.0);
+            }            
+            
             Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
             Array<OneD, Array<OneD, NekDouble> > tmp2(nvel);
             Array<OneD, Array<OneD, NekDouble> > coordVel(nvel);
@@ -1085,7 +1089,6 @@ namespace Nektar
             for (int dir=0; dir < 3; dir++)
             {
                 coords[dir] = Array<OneD, NekDouble> (physTot, 0.0);
-                values[dir] = Array<OneD, NekDouble> (physTot, 0.0);
             }                       
             GetCartesianCoordinates(coords[0],coords[1],coords[2]);
                        

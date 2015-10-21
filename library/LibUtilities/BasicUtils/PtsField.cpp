@@ -702,19 +702,19 @@ void PtsField::FindNeighbours(const PtsPoint &searchPoint,
     // find points within the distance box
     m_rtree.query(bgi::within(bbox), std::back_inserter(neighbourPts));
 
-    for (int i = 0; i < neighbourPts.size(); ++i)
+    for(vector<PtsPoint>::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
-        neighbourPts[i].m_dist = bg::distance(searchPoint, neighbourPts[i]);
+        it->m_dist = bg::distance(searchPoint, *it);
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
 
     // remove everything beyond the distance
-    for (int i = 0; i < neighbourPts.size(); ++i)
+    for(vector<PtsPoint>::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
-        if (neighbourPts[i].m_dist > dist)
+        if (it->m_dist > dist)
         {
-            neighbourPts.erase(neighbourPts.begin() + i, neighbourPts.end());
+            neighbourPts.erase(it, neighbourPts.end());
             break;
         }
     }

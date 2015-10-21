@@ -68,21 +68,27 @@ void PtsField::CalcWeights(
     m_weights = Array<OneD, Array<OneD, float> >(nPhysPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nPhysPts);
 
-    std::vector<value> values;
+    std::vector<PtsPoint> points;
     for (int i = 0; i < GetNpoints(); ++i)
     {
-        values.push_back(value(point(m_pts[0][i], m_pts[1][i] ,m_pts[2][i]), i));
+        Array<OneD, NekDouble> coords(m_dim);
+        for (int j = 0; j < m_dim; ++j)
+        {
+            coords[j] = m_pts[j][i];
+        }
+        points.push_back(PtsPoint(i, coords, 1E30));
     }
-    m_rtree.insert(values.begin(), values.end());
+    m_rtree.insert(points.begin(), points.end());
 
     // interpolate points and transform
     for (int i = 0; i < nPhysPts; ++i)
     {
-        Array<OneD, NekDouble> physPt(m_dim);
+        Array<OneD, NekDouble> tmp(m_dim);
         for (int j = 0; j < m_dim; ++j)
         {
-            physPt[j] = physCoords[j][i];
+            tmp[j] = physCoords[j][i];
         }
+        PtsPoint searchPt(i, tmp, 1E30);
 
 //         if (m_dim == 1 || coordId >= 0)
 //         {
@@ -104,7 +110,7 @@ void PtsField::CalcWeights(
 //         {
 //             CalcW_Shepard(i, physPt);
 //         }
-        CalcW_Gauss(i, physPt, sigma);
+        CalcW_Gauss(searchPt, sigma);
 
         meanNPts += m_neighInds[i].num_elements();
 
@@ -400,9 +406,7 @@ void PtsField::SetPtsType(const PtsType type)
  * @param physPt            The coordinates of the physical point
  *
  */
-void PtsField::CalcW_Gauss(const int physPtIdx,
-                             const Array<OneD, NekDouble> &physPt,
-                             const NekDouble sigma)
+void PtsField::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 {
     NekDouble ts2 = 2 * sigma * sigma;
     NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
@@ -411,39 +415,39 @@ void PtsField::CalcW_Gauss(const int physPtIdx,
     // find nearest neighbours
     int maxPts = 500;
     vector<PtsPoint> neighbourPts;
-    FindNeighbours(physPt, neighbourPts, 1.96 * sigma);
+    FindNeighbours(searchPt, neighbourPts, 1.96 * sigma);
     int numPts = min( (int) neighbourPts.size(), maxPts);
 
     // handle the case that there was no point within 1.96 * sigma
     if (numPts == 0)
     {
-        m_neighInds[physPtIdx] = Array<OneD, unsigned int> (0);
-        m_weights[physPtIdx] = Array<OneD, float> (0);
+        m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (0);
+        m_weights[searchPt.m_idx] = Array<OneD, float> (0);
 
         return;
     }
 
-    m_neighInds[physPtIdx] = Array<OneD, unsigned int> (numPts);
+    m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (numPts);
     for (int i = 0; i < numPts; i++)
     {
-        m_neighInds[physPtIdx][i] = neighbourPts.at(i).m_idx;
+        m_neighInds[searchPt.m_idx][i] = neighbourPts.at(i).m_idx;
     }
 
-    m_weights[physPtIdx] = Array<OneD, float> (numPts, 0.0);
+    m_weights[searchPt.m_idx] = Array<OneD, float> (numPts, 0.0);
 
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[physPtIdx][i] = fac * exp(-1 * neighbourPts[i].m_distSq / ts2);
-        wSum += m_weights[physPtIdx][i];
+        m_weights[searchPt.m_idx][i] = fac * exp(-1 * neighbourPts[i].m_distSq / ts2);
+        wSum += m_weights[searchPt.m_idx][i];
     }
 
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[physPtIdx][i] = m_weights[physPtIdx][i] / wSum;
+        m_weights[searchPt.m_idx][i] = m_weights[searchPt.m_idx][i] / wSum;
     }
 
-    ASSERTL0(Vmath::Nnan(numPts, m_weights[physPtIdx], 1) == 0, "NaN found in weights");
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.m_idx], 1) == 0, "NaN found in weights");
 }
 
 
@@ -506,7 +510,7 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
     vector<PtsPoint> neighbourPts;
     int numPts = pow(float(2), m_dim);
     numPts = min(numPts, int(m_pts[0].num_elements() / 2));
-    FindNNeighbours(physPt, neighbourPts, numPts);
+//     FindNNeighbours(physPt, neighbourPts, numPts);
 
     m_neighInds[physPtIdx] = Array<OneD, unsigned int> (numPts);
     for (int i = 0; i < numPts; i++)
@@ -653,41 +657,41 @@ NekDouble PtsField::DistSq(const Array< OneD, NekDouble > &point1,
  * and chooses the numPts closest points. Thus, its very expensive and
  * inefficient.
  */
-void PtsField::FindNNeighbours(const Array< OneD, NekDouble > &physPt,
-                              vector< PtsPoint > &neighbourPts,
-                              const unsigned int numPts)
+void PtsField::FindNNeighbours(const PtsPoint &physPt,
+                               vector< PtsPoint > &neighbourPts,
+                               const unsigned int numPts)
 {
-    int npts = m_pts[0].num_elements();
-
-    // generate an initial set of intPts
-    for (int i = 0; i < numPts; ++i)
-    {
-        PtsPoint intPt = PtsPoint(-1, Array<OneD, NekDouble>(m_dim), 1E30);
-        neighbourPts.push_back(intPt);
-    }
-
-    // generate and iterate over all intPts
-    for (int i = 0; i < npts; ++i)
-    {
-        Array<OneD, NekDouble> coords(m_dim);
-        for (int j = 0; j < m_dim; ++j)
-        {
-            coords[j] = m_pts[j][i];
-        }
-        NekDouble d = DistSq(physPt, coords);
-
-        if (d < neighbourPts.back().m_distSq)
-        {
-            // create new point struct
-            PtsPoint intPt = PtsPoint(i, coords, d);
-
-            // add it to list, sort the list and remove last point from the sorted
-            // list
-            neighbourPts.push_back(intPt);
-            sort(neighbourPts.begin(), neighbourPts.end());
-            neighbourPts.pop_back();
-        }
-    }
+//     int npts = m_pts[0].num_elements();
+//
+//     // generate an initial set of intPts
+//     for (int i = 0; i < numPts; ++i)
+//     {
+//         PtsPoint intPt = PtsPoint(-1, Array<OneD, NekDouble>(m_dim), 1E30);
+//         neighbourPts.push_back(intPt);
+//     }
+//
+//     // generate and iterate over all intPts
+//     for (int i = 0; i < npts; ++i)
+//     {
+//         Array<OneD, NekDouble> coords(m_dim);
+//         for (int j = 0; j < m_dim; ++j)
+//         {
+//             coords[j] = m_pts[j][i];
+//         }
+//         NekDouble d = DistSq(physPt, coords);
+//
+//         if (d < neighbourPts.back().m_distSq)
+//         {
+//             // create new point struct
+//             PtsPoint intPt = PtsPoint(i, coords, d);
+//
+//             // add it to list, sort the list and remove last point from the sorted
+//             // list
+//             neighbourPts.push_back(intPt);
+//             sort(neighbourPts.begin(), neighbourPts.end());
+//             neighbourPts.pop_back();
+//         }
+//     }
 }
 
 
@@ -703,37 +707,34 @@ void PtsField::FindNNeighbours(const Array< OneD, NekDouble > &physPt,
  * and chooses the points within the defined distance. Thus, its very expensive
  * and inefficient.
  */
-void PtsField::FindNeighbours(const Array<OneD, NekDouble> &physPt,
+void PtsField::FindNeighbours(const PtsPoint &searchPoint,
                               vector<PtsPoint> &neighbourPts,
                               const NekDouble dist)
 {
-    box bbox(point(physPt[0] - dist, physPt[1] - dist, physPt[2] - dist),
-             point(physPt[0] + dist, physPt[1] + dist, physPt[2] + dist));
+    PtsPoint bbMin, bbMax;
+    bbMin.m_coords = Array< OneD, NekDouble >(3);
+    bbMax.m_coords = Array< OneD, NekDouble >(3);
+    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint> t1(- dist, - dist, - dist);
+    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint> t2(dist, dist, dist);
+    bg::transform(searchPoint, bbMin, t1);
+    bg::transform(searchPoint, bbMax, t2);
+    PtsBox bbox(bbMin, bbMax);
 
     // find points within the distance box
-    std::vector<value> result_n;
-    m_rtree.query(bgi::within(bbox), std::back_inserter(result_n));
+    m_rtree.query(bgi::within(bbox), std::back_inserter(neighbourPts));
 
-    // massage into or own format
-    //TODO: just use the boost containers instead of our own
-    for (int i = 0; i < result_n.size(); ++i)
+    for (int i = 0; i < neighbourPts.size(); ++i)
     {
-        int idx = result_n[i].second;
-        Array<OneD, NekDouble> coords(m_dim);
-        for (int j = 0; j < m_dim; ++j)
-        {
-            coords[j] = m_pts[j][idx];
-        }
-        PtsPoint intPt = PtsPoint(idx, coords, DistSq(physPt, coords));
-        neighbourPts.push_back(intPt);
+        neighbourPts[i].m_distSq = DistSq(searchPoint.m_coords, neighbourPts[i].m_coords);
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
 
     // remove everythind beyond the distance
+    NekDouble distsq = dist * dist;
     for (int i = 0; i < neighbourPts.size(); ++i)
     {
-        if (neighbourPts[i].m_distSq > dist * dist)
+        if (neighbourPts[i].m_distSq > distsq)
         {
             neighbourPts.erase(neighbourPts.begin() + i, neighbourPts.end());
             break;

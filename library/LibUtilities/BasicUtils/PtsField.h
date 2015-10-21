@@ -44,6 +44,7 @@
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
@@ -60,11 +61,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-
-typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> point;
-typedef bg::model::box<point> box;
-typedef std::pair<point, unsigned> value;
-
 
 enum PtsType{
     ePtsFile,
@@ -98,6 +94,18 @@ class PtsPoint
             return (m_distSq < comp.m_distSq);
         };
 };
+
+}
+}
+// BOOST_GEOMETRY_REGISTER_POINT_2D(Nektar::LibUtilities::PtsPoint, Nektar::NekDouble, cs::cartesian, m_coords[0], m_coords[1])
+BOOST_GEOMETRY_REGISTER_POINT_3D(Nektar::LibUtilities::PtsPoint, Nektar::NekDouble, cs::cartesian, m_coords[0], m_coords[1], m_coords[2])
+
+namespace Nektar
+{
+namespace LibUtilities
+{
+
+typedef bg::model::box<PtsPoint> PtsBox;
 
 
 class PtsField
@@ -227,7 +235,7 @@ class PtsField
         /// A tree structure to speed up the neighbour search.
         /// Note that we fill it with an iterator, so instead of rstar, the
         /// packing algorithm is used.
-        bgi::rtree< value, bgi::rstar<16> >     m_rtree;
+        bgi::rtree< PtsPoint, bgi::rstar<16> >  m_rtree;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >        m_weights;
@@ -238,8 +246,7 @@ class PtsField
         boost::function<void (const int position, const int goal)> m_progressCallback;
 
         LIB_UTILITIES_EXPORT void CalcW_Gauss(
-            const int physPtIdx,
-            const Array< OneD, NekDouble > &physPtCoords,
+            const PtsPoint &searchPt,
             const NekDouble sigma);
 
         LIB_UTILITIES_EXPORT void CalcW_Linear(const int physPtIdx,
@@ -256,13 +263,11 @@ class PtsField
             const Array<OneD, NekDouble > &point1,
             const Array<OneD, NekDouble > &point2) const;
 
-        LIB_UTILITIES_EXPORT void FindNeighbours(const Array<OneD, NekDouble>
-                &physPtCoords,
+        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &physPt,
                 vector<PtsPoint> &neighbourPts,
                 const NekDouble dist);
 
-        LIB_UTILITIES_EXPORT void FindNNeighbours(const Array<OneD, NekDouble>
-                &physPtCoords,
+        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint &physPt,
                 vector<PtsPoint> &neighbourPts,
                 const unsigned int numPts = 1);
 
@@ -274,4 +279,6 @@ static PtsFieldSharedPtr NullPtsField;
 
 }
 }
+
 #endif
+

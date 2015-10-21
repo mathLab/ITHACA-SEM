@@ -156,6 +156,7 @@ namespace Nektar
             }
             else
             {
+                m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
                 for(int i = 0; i < 3; i++)
                 {
                     // Use (x^i)' = x^i as default. This can be useful if we
@@ -1127,7 +1128,7 @@ namespace Nektar
                                         m_dirichletCondition;
                         // Evaluate
                         condition.Evaluate(coords[0], coords[1], coords[2],
-                                                        0.0, values[i]);
+                                                        time, values[i]);
                     }
                     else
                     {

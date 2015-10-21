@@ -68,7 +68,7 @@ void PtsField::CalcWeights(
     m_weights = Array<OneD, Array<OneD, float> >(nPhysPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nPhysPts);
 
-    std::vector<PtsPoint> points;
+    std::vector<PtsPoint<3> > points;
     for (int i = 0; i < GetNpoints(); ++i)
     {
         Array<OneD, NekDouble> coords(m_dim);
@@ -76,7 +76,7 @@ void PtsField::CalcWeights(
         {
             coords[j] = m_pts[j][i];
         }
-        points.push_back(PtsPoint(i, coords, 1E30));
+        points.push_back(PtsPoint<3>(i, coords, 1E30));
     }
     m_rtree.insert(points.begin(), points.end());
 
@@ -88,9 +88,9 @@ void PtsField::CalcWeights(
         {
             tmp[j] = physCoords[j][i];
         }
-        PtsPoint searchPt(i, tmp, 1E30);
+        PtsPoint<3> searchPt(i, tmp, 1E30);
 
-        if (m_dim == 1 || coordId >= 0)
+        if ((m_dim == 1 || coordId >= 0) && ! (method == ePtsGauss || method == ePtsShepard))
         {
             if (m_dim == 1)
             {
@@ -411,7 +411,7 @@ void PtsField::SetPtsType(const PtsType type)
  * @param physPt            The coordinates of the physical point
  *
  */
-void PtsField::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
+void PtsField::CalcW_Gauss(const PtsPoint<3> &searchPt, const NekDouble sigma)
 {
     NekDouble ts2 = 2 * sigma * sigma;
     NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
@@ -419,40 +419,40 @@ void PtsField::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 
     // find nearest neighbours
     int maxPts = 500;
-    vector<PtsPoint> neighbourPts;
+    vector<PtsPoint<3> > neighbourPts;
     FindNeighbours(searchPt, neighbourPts, 1.96 * sigma);
     int numPts = min( (int) neighbourPts.size(), maxPts);
 
     // handle the case that there was no point within 1.96 * sigma
     if (numPts == 0)
     {
-        m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (0);
-        m_weights[searchPt.m_idx] = Array<OneD, float> (0);
+        m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (0);
+        m_weights[searchPt.idx] = Array<OneD, float> (0);
 
         return;
     }
 
-    m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (numPts);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
     for (int i = 0; i < numPts; i++)
     {
-        m_neighInds[searchPt.m_idx][i] = neighbourPts.at(i).m_idx;
+        m_neighInds[searchPt.idx][i] = neighbourPts.at(i).idx;
     }
 
-    m_weights[searchPt.m_idx] = Array<OneD, float> (numPts, 0.0);
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
 
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.m_idx][i] = fac * exp(-1 * pow(neighbourPts[i].m_dist, 2.0f) / ts2);
-        wSum += m_weights[searchPt.m_idx][i];
+        m_weights[searchPt.idx][i] = fac * exp(-1 * pow(neighbourPts[i].dist, 2.0f) / ts2);
+        wSum += m_weights[searchPt.idx][i];
     }
 
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.m_idx][i] = m_weights[searchPt.m_idx][i] / wSum;
+        m_weights[searchPt.idx][i] = m_weights[searchPt.idx][i] / wSum;
     }
 
-    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.m_idx], 1) == 0, "NaN found in weights");
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
 }
 
 
@@ -463,16 +463,16 @@ void PtsField::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
  * @param physPtIdx         The index of the physical point in its storage array
  * @param coord             The coordinate of the physical point
  */
-void PtsField::CalcW_Linear(const PtsPoint &searchPt, int coordId)
+void PtsField::CalcW_Linear(const PtsPoint<3> &searchPt, int coordId)
 {
     int npts = m_pts[0].num_elements();
     int i;
 
-    NekDouble coord = searchPt.m_coords[coordId];
+    NekDouble coord = searchPt.coords[coordId];
 
     int numPts = 2;
-    m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (numPts);
-    m_weights[searchPt.m_idx] = Array<OneD, float> (numPts, 0.0);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
 
     for (i = 0; i < npts - 1; ++i)
     {
@@ -480,11 +480,11 @@ void PtsField::CalcW_Linear(const PtsPoint &searchPt, int coordId)
         {
             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
 
-            m_neighInds[searchPt.m_idx][0] = i;
-            m_neighInds[searchPt.m_idx][1] = i + 1;
+            m_neighInds[searchPt.idx][0] = i;
+            m_neighInds[searchPt.idx][1] = i + 1;
 
-            m_weights[searchPt.m_idx][0] = (m_pts[0][i + 1] - coord) / pdiff;
-            m_weights[searchPt.m_idx][1] = (coord - m_pts[0][i]) / pdiff;
+            m_weights[searchPt.idx][0] = (m_pts[0][i + 1] - coord) / pdiff;
+            m_weights[searchPt.idx][1] = (coord - m_pts[0][i]) / pdiff;
 
             break;
         }
@@ -510,29 +510,29 @@ void PtsField::CalcW_Linear(const PtsPoint &searchPt, int coordId)
  * Contrary to Shepard, we use a fixed number of points with fixed weighting
  * factors 1/d^n.
  */
-void PtsField::CalcW_Shepard(const PtsPoint &searchPt)
+void PtsField::CalcW_Shepard(const PtsPoint<3> &searchPt)
 {
     // find nearest neighbours
-    vector<PtsPoint> neighbourPts;
+    vector<PtsPoint<3> > neighbourPts;
     int numPts = pow(float(2), m_dim);
     numPts = min(numPts, int(m_pts[0].num_elements() / 2));
     FindNNeighbours(searchPt, neighbourPts, numPts);
 
-    m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (numPts);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
     for (int i = 0; i < numPts; i++)
     {
-        m_neighInds[searchPt.m_idx][i] = neighbourPts.at(i).m_idx;
+        m_neighInds[searchPt.idx][i] = neighbourPts.at(i).idx;
     }
 
-    m_weights[searchPt.m_idx] = Array<OneD, float> (numPts, 0.0);
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
 
     // In case d < kVertexTheSameDouble ( d^2 < kNekSqrtTol), use the exact
     // point and return
     for (int i = 0; i < numPts; ++i)
     {
-        if (neighbourPts[i].m_dist <= NekConstants::kNekZeroTol)
+        if (neighbourPts[i].dist <= NekConstants::kNekZeroTol)
         {
-            m_weights[searchPt.m_idx][i] = 1.0;
+            m_weights[searchPt.idx][i] = 1.0;
             return;
         }
     }
@@ -540,17 +540,17 @@ void PtsField::CalcW_Shepard(const PtsPoint &searchPt)
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.m_idx][i] = 1 / pow(double(neighbourPts[i].m_dist),
+        m_weights[searchPt.idx][i] = 1 / pow(double(neighbourPts[i].dist),
                                           double(m_dim));
-        wSum += m_weights[searchPt.m_idx][i];
+        wSum += m_weights[searchPt.idx][i];
     }
 
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.m_idx][i] = m_weights[searchPt.m_idx][i] / wSum;
+        m_weights[searchPt.idx][i] = m_weights[searchPt.idx][i] / wSum;
     }
 
-    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.m_idx], 1) == 0, "NaN found in weights");
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
 
 }
 
@@ -561,16 +561,16 @@ void PtsField::CalcW_Shepard(const PtsPoint &searchPt)
 * @param physPtIdx         The index of the physical point in its storage array
 * @param coord             The coordinate of the physical point
 */
-void PtsField::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
+void PtsField::CalcW_Quadratic(const PtsPoint<3> &searchPt, int coordId)
 {
     int npts = m_pts[0].num_elements();
     int i;
 
-    NekDouble coord = searchPt.m_coords[coordId];
+    NekDouble coord = searchPt.coords[coordId];
 
     int numPts = 3;
-    m_neighInds[searchPt.m_idx] = Array<OneD, unsigned int> (numPts);
-    m_weights[searchPt.m_idx] = Array<OneD, float> (numPts, 0.0);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
 
     for (i = 0; i < npts - 1; ++i)
     {
@@ -594,9 +594,9 @@ void PtsField::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
                      * (coord - m_pts[0][i + 1])
                      / ((pdiff + pdiff2) * pdiff2);
 
-                m_neighInds[searchPt.m_idx][0] = i;
-                m_neighInds[searchPt.m_idx][1] = i + 1;
-                m_neighInds[searchPt.m_idx][2] = i + 2;
+                m_neighInds[searchPt.idx][0] = i;
+                m_neighInds[searchPt.idx][1] = i + 1;
+                m_neighInds[searchPt.idx][2] = i + 2;
             }
             else
             {
@@ -613,15 +613,15 @@ void PtsField::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
                      * (m_pts[0][i + 1] - coord)
                      / ((pdiff + pdiff2) * pdiff);
 
-                m_neighInds[searchPt.m_idx][0] = i;
-                m_neighInds[searchPt.m_idx][1] = i + 1;
-                m_neighInds[searchPt.m_idx][2] = i - 1;
+                m_neighInds[searchPt.idx][0] = i;
+                m_neighInds[searchPt.idx][1] = i + 1;
+                m_neighInds[searchPt.idx][2] = i - 1;
             }
 
 
-            m_weights[searchPt.m_idx][0] = h1;
-            m_weights[searchPt.m_idx][1] = h2;
-            m_weights[searchPt.m_idx][2] = h3;
+            m_weights[searchPt.idx][0] = h1;
+            m_weights[searchPt.idx][1] = h2;
+            m_weights[searchPt.idx][2] = h3;
 
             break;
         }
@@ -644,16 +644,16 @@ void PtsField::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
  * and chooses the numPts closest points. Thus, its very expensive and
  * inefficient.
  */
-void PtsField::FindNNeighbours(const PtsPoint &searchPt,
-                               vector< PtsPoint > &neighbourPts,
+void PtsField::FindNNeighbours(const PtsPoint<3> &searchPt,
+                               vector< PtsPoint<3> > &neighbourPts,
                                const unsigned int numPts)
 {
     // find points within the distance box
     m_rtree.query(bgi::nearest(searchPt, numPts), std::back_inserter(neighbourPts));
 
-    for(vector<PtsPoint>::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    for(vector<PtsPoint<3> >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
-        it->m_dist = bg::distance(searchPt, *it);
+        it->dist = bg::distance(searchPt, *it);
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
@@ -672,15 +672,13 @@ void PtsField::FindNNeighbours(const PtsPoint &searchPt,
  * and chooses the points within the defined distance. Thus, its very expensive
  * and inefficient.
  */
-void PtsField::FindNeighbours(const PtsPoint &searchPt,
-                              vector<PtsPoint> &neighbourPts,
+void PtsField::FindNeighbours(const PtsPoint<3> &searchPt,
+                              vector<PtsPoint<3> > &neighbourPts,
                               const NekDouble dist)
 {
-    PtsPoint bbMin, bbMax;
-    bbMin.m_coords = Array< OneD, NekDouble >(3);
-    bbMax.m_coords = Array< OneD, NekDouble >(3);
-    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint> t1(- dist, - dist, - dist);
-    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint> t2(dist, dist, dist);
+    PtsPoint<3> bbMin, bbMax;
+    bg::strategy::transform::translate_transformer<PtsPoint<3>, PtsPoint<3> > t1(- dist, - dist, - dist);
+    bg::strategy::transform::translate_transformer<PtsPoint<3>, PtsPoint<3> > t2(dist, dist, dist);
     bg::transform(searchPt, bbMin, t1);
     bg::transform(searchPt, bbMax, t2);
     PtsBox bbox(bbMin, bbMax);
@@ -688,17 +686,17 @@ void PtsField::FindNeighbours(const PtsPoint &searchPt,
     // find points within the distance box
     m_rtree.query(bgi::within(bbox), std::back_inserter(neighbourPts));
 
-    for(vector<PtsPoint>::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    for(vector<PtsPoint<3> >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
-        it->m_dist = bg::distance(searchPt, *it);
+        it->dist = bg::distance(searchPt, *it);
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
 
     // remove everything beyond the distance
-    for(vector<PtsPoint>::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    for(vector<PtsPoint<3> >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
-        if (it->m_dist > dist)
+        if (it->dist > dist)
         {
             neighbourPts.erase(it, neighbourPts.end());
             break;

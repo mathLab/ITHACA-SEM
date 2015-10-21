@@ -169,6 +169,13 @@ namespace MeshUtils
             return search->second;
         }
 
+        Array<OneD, NekDouble> GetLoc()
+        {
+            Array<OneD, NekDouble> out(3);
+            out[0] = m_x; out[1] = m_y; out[2] = m_z;
+            return out;
+        }
+
         Array<OneD, NekDouble>  GetCADSurf(int i)
         {
             //I dont know why I ahev to do this to get it to work

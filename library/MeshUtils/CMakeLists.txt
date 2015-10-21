@@ -3,10 +3,10 @@ SET(MESHUTILS_SOURCES
     )
 IF(NEKTAR_USE_MESH)
     SET(MESHUTILS_SOURCES ${MESHUTILS_SOURCES}
-#        SurfaceMeshing/CurveMesh.cpp
-#        Octree/Octant.cpp
-#        Octree/Octree.cpp
-#        SurfaceMeshing/SurfaceMeshMesh.cpp
+        SurfaceMeshing/CurveMesh.cpp
+        Octree/Octant.cpp
+        Octree/Octree.cpp
+        SurfaceMeshing/SurfaceMeshMesh.cpp
 #        SurfaceMeshing/SurfaceMeshHOMesh.cpp
 #        SurfaceMeshing/FaceMesh.cpp
 #        SurfaceMeshing/OptimiseFunctions.cpp
@@ -36,13 +36,13 @@ SET(MESHUTILS_HEADERS
     )
 IF(NEKTAR_USE_MESH)
     SET(MESHUTILS_HEADERS ${MESHUTILS_HEADERS}
-#        Octree/CurvaturePoint.hpp
-#        MeshElem.hpp
-#        SurfaceMeshing/CurveMesh.h
-#        Octree/Octant.h
-#        Octree/Octree.h
-#        SurfaceMeshing/SurfaceMesh.h
-#        SurfaceMeshing/FaceMesh.h
+        Octree/CurvaturePoint.hpp
+        MeshElem.hpp
+        SurfaceMeshing/CurveMesh.h
+        Octree/Octant.h
+        Octree/Octree.h
+        SurfaceMeshing/SurfaceMesh.h
+        SurfaceMeshing/FaceMesh.h
 #        ExtLibInterface/TriangleInterface.h
 #        ExtLibInterface/TetGenInterface.h
 #        TetMeshing/TetMesh.h

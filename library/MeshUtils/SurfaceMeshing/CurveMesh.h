@@ -39,6 +39,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include <MeshUtils/MeshElem.hpp>
 #include <MeshUtils/CADSystem/CADVert.h>
 #include <MeshUtils/CADSystem/CADCurve.h>
@@ -78,17 +79,17 @@ class CurveMesh
         /**
          * @brief get id of first node
          */
-        int GetFirstPoint(){return m_meshpoints[0];}
+        NodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
 
         /**
          * @brief get id of last node
          */
-        int GetLastPoint(){return m_meshpoints.back();}
+        NodeSharedPtr GetLastPoint(){return m_meshpoints.back();}
 
         /**
          * @brief get list of mesh nodes
          */
-        std::vector<int> GetMeshPoints(){return m_meshpoints;}
+        std::vector<NodeSharedPtr> GetMeshPoints(){return m_meshpoints;}
 
         /**
          * @brief get the number of points in the curve

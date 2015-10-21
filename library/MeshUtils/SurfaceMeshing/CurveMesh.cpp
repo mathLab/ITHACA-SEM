@@ -125,18 +125,15 @@ void CurveMesh::Mesh()
 
     id = verts[1]->GetId() - 1;
     t = m_bounds[1];
-    m_mesh->m_meshnode[id]->SetCurve(m_id,t);
+    m_mesh->m_meshnode[id]->SetCADCurve(m_id,t);
     m_meshpoints.push_back(m_mesh->m_meshnode[id]);
 
     for(int i = 0; i < Ne; i++)
     {
-        EdgeSharedPtr e = MemoryManager<Edge>::AllocateSharedPtr(
-                                  m_mesh->m_edge.size(),
-                                  m_meshpoints[i],
-                                  m_meshpoints[i+1]);
-        Nodes[m_meshpoints[i]]->SetEdge(Edges.size()-1);
-        Nodes[m_meshpoints[i+1]]->SetEdge(Edges.size()-1);
-        Edges[Edges.size()-1]->SetCurve(m_id);
+        EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(m_meshpoints[i],
+                                                           m_meshpoints[i+1]));
+        e->CADCurveID = m_id;
+        m_mesh->m_meshedge.push_back(e);
     }
 
     ASSERTL0(Ne+1 == m_meshpoints.size(),"incorrect number of points in curve mesh");
@@ -148,8 +145,12 @@ int CurveMesh::SplitEdge(int a, int b,
                           std::map<int, MeshNodeSharedPtr> &Nodes,
                           std::map<int, MeshEdgeSharedPtr> &Edges)
 {
+    // this needs to be re written when format is decided.
+
+
+
     //find position of a and b in the meshpoints vector
-    int posa, posb;
+    /*int posa, posb;
     for(int i = 0; i < m_meshpoints.size(); i++)
     {
         if(m_meshpoints[i] == a)
@@ -190,7 +191,7 @@ int CurveMesh::SplitEdge(int a, int b,
 
     m_meshpoints.insert(m_meshpoints.begin() + posa + 1, 1, Nodes.size()-1);
 
-    Ne++;
+    Ne++;*/
 
     return Nodes.size()-1;
 }

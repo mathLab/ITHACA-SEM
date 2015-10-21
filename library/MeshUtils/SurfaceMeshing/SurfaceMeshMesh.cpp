@@ -57,7 +57,7 @@ void SurfaceMesh::Mesh()
     {
         Array<OneD, NekDouble> loc = itv->second->GetLoc();
         NodeSharedPtr n = boost::shared_ptr<Node>(
-                          new Node(itv->first-1, loc[0], loc[1], loc[2]);
+                          new Node(itv->first-1, loc[0], loc[1], loc[2]));
         m_mesh->m_meshnode.push_back(n);
     }
 
@@ -77,14 +77,13 @@ void SurfaceMesh::Mesh()
         m_curvemeshes[i]->Mesh();
 
     }
-    /*
+
     //all nodes thus far exist on curves on sufaces but do not know about the surface
-    map<int, MeshNodeSharedPtr>::iterator it;
-    for(it = Nodes.begin(); it != Nodes.end(); it++)
+    for(int i = 0; i < m_mesh->m_meshnode.size(); i++)
     {
-        Array<OneD, NekDouble> loc = it->second->GetLoc();
+        Array<OneD, NekDouble> loc = m_mesh->m_meshnode[i]->GetLoc();
         list<int> l;
-        map<int, NekDouble> curves = it->second->GetCurveMap();
+        map<int, NekDouble> curves = m_mesh->m_meshnode[i]->GetCurveMap();
         map<int, NekDouble>::iterator cit;
         for(cit = curves.begin(); cit != curves.end(); cit++)
         {
@@ -102,6 +101,7 @@ void SurfaceMesh::Mesh()
         }
     }
 
+    /*
     //analyse for two node surfaces (not possible)
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {

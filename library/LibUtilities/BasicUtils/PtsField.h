@@ -108,6 +108,14 @@ namespace LibUtilities
 typedef bg::model::box<PtsPoint> PtsBox;
 
 
+enum PtsInterpMethod{
+    ePtsNoMethod,
+    ePtsQuadratic,
+    ePtsShepard,
+    ePtsGauss,
+};
+
+
 class PtsField
 {
     public:
@@ -145,7 +153,8 @@ class PtsField
         LIB_UTILITIES_EXPORT void CalcWeights(
             const Array< OneD, Array< OneD, NekDouble > > &physCoords,
             short int coordId = -1,
-            NekDouble width = 0.0);
+            NekDouble width = 0.0,
+            PtsInterpMethod method = ePtsNoMethod);
 
         LIB_UTILITIES_EXPORT void Interpolate(
             const Array< OneD, Array< OneD, NekDouble > > &physCoords,
@@ -230,6 +239,8 @@ class PtsField
         /// Blocks with m elements each, m_ptsConn is a vector of n arrays with
         /// 3*m (ePtsTriBlock) or 4*m (ePtsTetBlock) entries.
         vector<Array<OneD, int> >               m_ptsConn;
+        /// Typeof interpolation method used
+        PtsInterpMethod                         m_ptsInterpMethod;
         /// Type of the PtsField
         PtsType                                 m_ptsType;
         /// A tree structure to speed up the neighbour search.
@@ -249,21 +260,18 @@ class PtsField
             const PtsPoint &searchPt,
             const NekDouble sigma);
 
-        LIB_UTILITIES_EXPORT void CalcW_Linear(const int physPtIdx,
-                                               const NekDouble coord);
+        LIB_UTILITIES_EXPORT void CalcW_Linear(const Nektar::LibUtilities::PtsPoint &searchPt, int coordId);
 
         LIB_UTILITIES_EXPORT void CalcW_Shepard(
-            const int physPtIdx,
-            const Array< OneD, NekDouble > &physPtCoords);
+            const Nektar::LibUtilities::PtsPoint &searchPt);
 
-        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const int physPtIdx,
-                const NekDouble coord);
+        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const Nektar::LibUtilities::PtsPoint &searchPt, int coordId);
 
-        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &physPt,
+        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &searchPt,
                 vector<PtsPoint> &neighbourPts,
                 const NekDouble dist);
 
-        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint &physPt,
+        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint &searchPt,
                 vector<PtsPoint> &neighbourPts,
                 const unsigned int numPts = 1);
 

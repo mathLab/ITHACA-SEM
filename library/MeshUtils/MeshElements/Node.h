@@ -45,6 +45,9 @@ namespace MeshUtils
     /// Shared pointer to an element.
     typedef boost::shared_ptr<Element> ElementSharedPtr;
 
+    class Node;
+    typedef boost::shared_ptr<Node> NodeSharedPtr;
+
     /**
      * @brief Represents a point in the domain.
      *
@@ -160,6 +163,13 @@ namespace MeshUtils
             CADSurf[i] = uv;
         }
 
+        Array<OneD, NekDouble> GetLoc()
+        {
+            Array<OneD, NekDouble> out(3);
+            out[0] = m_x; out[1] = m_y; out[2] = m_z;
+            return out;
+        }
+
         NekDouble GetCADCurve(int i)
         {
             std::map<int, NekDouble>::iterator search =
@@ -169,14 +179,7 @@ namespace MeshUtils
             return search->second;
         }
 
-        Array<OneD, NekDouble> GetLoc()
-        {
-            Array<OneD, NekDouble> out(3);
-            out[0] = m_x; out[1] = m_y; out[2] = m_z;
-            return out;
-        }
-
-        Array<OneD, NekDouble>  GetCADSurf(int i)
+        Array<OneD, NekDouble> GetCADSurf(int i)
         {
             //I dont know why I ahev to do this to get it to work
             //this really needs bound checking
@@ -185,6 +188,23 @@ namespace MeshUtils
             ASSERTL0(search->first == i,"surface not found");
 
             return search->second;
+        }
+
+        std::vector<int> GetListCADCurve()
+        {
+            std::vector<int> list;
+            std::map<int, NekDouble >::iterator c;
+            for(c = CADCurve.begin(); c != CADCurve.end(); c++)
+            {
+                list.push_back(c->first);
+            }
+            return list;
+        }
+
+        NekDouble Distance(NodeSharedPtr p)
+        {
+            return sqrt((m_x-p->m_x)*(m_x-p->m_x)+(m_y-p->m_y)*(m_y-p->m_y)
+                        +(m_z-p->m_z)*(m_z-p->m_z));
         }
 
         /// Generate a %SpatialDomains::PointGeom for this node.
@@ -214,7 +234,6 @@ namespace MeshUtils
         SpatialDomains::PointGeomSharedPtr m_geom;
     };
     /// Shared pointer to a Node.
-    typedef boost::shared_ptr<Node> NodeSharedPtr;
 
     bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
     bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);

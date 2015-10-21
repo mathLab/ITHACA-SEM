@@ -49,103 +49,101 @@ extern "C"{
 #include <triangle.h>
 }
 
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include <MeshUtils/MeshElem.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 
-namespace Nektar {
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 class TriangleInterface
 {
-    public:
-        friend class MemoryManager<TriangleInterface>;
+public:
+    friend class MemoryManager<TriangleInterface>;
 
-        /**
-         * @brief default constructor
-         */
-        TriangleInterface()
-        {
-            meshloaded = false;
-        };
+    /**
+     * @brief default constructor
+     */
+    TriangleInterface()
+    {
+        meshloaded = false;
+    };
 
-        /**
-         * @brief assign meshing paramters
-         */
-        void Assign(const std::vector<std::vector<int> > &boundingloops,
-                    const std::vector<std::vector<NekDouble> > &centers,
-                    const std::map<int, MeshNodeSharedPtr> &n,
-                    const std::vector<int> &stiner, int i,
-                    NekDouble str = 1.0)
+    /**
+     * @brief assign meshing paramters
+     */
+    void Assign(std::vector<std::vector<NodeSharedPtr> > &boundingloops,
+                std::vector<Array<OneD, NekDouble> > &centers,
+                std::vector<NodeSharedPtr> stiner, int i,
+                NekDouble str = 1.0)
+    {
+        if(meshloaded)
         {
-            if(meshloaded)
-            {
-                freetri();
-            }
-            m_boundingloops = boundingloops;
-            m_centers = centers;
-            Nodes = n;
-            m_stienerpoints = stiner;
-            m_str = str;
-            sid = i;
+            freetri();
         }
+        m_boundingloops = boundingloops;
+        m_centers = centers;
+        m_stienerpoints = stiner;
+        m_str = str;
+        sid = i;
+    }
 
-        /**
-         * @brief destructor, clear mesh to prevent memory leak
-         */
-        ~TriangleInterface()
-        {
-            if(meshloaded)
-                freetri();
-        }
+    void AssignStiener(std::vector<NodeSharedPtr> stiner)
+    {
+        m_stienerpoints = stiner;
+    }
 
-        /**
-         * @brief execute meshing
-         */
-        void Mesh(bool Quiet = true, bool Quality = false);
+    /**
+     * @brief destructor, clear mesh to prevent memory leak
+     */
+    ~TriangleInterface()
+    {
+        if(meshloaded)
+            freetri();
+    }
 
-        /**
-         * @brief extract mesh
-         */
-        void Extract(int &np, int &nt, Array<OneD, Array<OneD, int> > &Connec);
+    /**
+     * @brief execute meshing
+     */
+    void Mesh(bool Quiet = true, bool Quality = false);
 
-        /**
-         * @brief get list of edges in the mesh
-         */
-        void GetEdges(Array<OneD, Array<OneD, int> > &edgelist,  int &num);
+    /**
+     * @brief extract mesh
+     */
+    void Extract(std::vector<Array<OneD, int> > &Connec);
 
-    private:
+private:
 
-        /**
-         * @brief clear memory
-         */
-        void freetri();
+    /**
+     * @brief clear memory
+     */
+    void freetri();
 
-        /// list of bounding nodes to the surface
-        std::vector<std::vector<int> > m_boundingloops;
-        /// list of additional nodes
-        std::vector<int> m_stienerpoints;
-        /// coordinates of the centers of the loops
-        std::vector<std::vector<NekDouble> > m_centers;
-        /// all nodes
-        std::map<int, MeshNodeSharedPtr> Nodes;
-        /// map from meshconvert id to triangle id
-        std::map<int, int> nodemap;
-        /// reverse map
-        std::map<int, int> nodemapr;
-        /// id of the surface
-        int sid;
-        /// has mesh been run before
-        bool meshloaded;
-        /// Stretching factor of parameter plane
-        NekDouble m_str;
-        /// triangle data strucutres
-        struct triangulateio in,out;
+    /// list of bounding nodes to the surface
+    std::vector<std::vector<NodeSharedPtr> > m_boundingloops;
+    /// list of additional nodes
+    std::vector<NodeSharedPtr> m_stienerpoints;
+    /// coordinates of the centers of the loops
+    std::vector<Array<OneD, NekDouble> > m_centers;
+    /// map from meshconvert id to triangle id
+    std::map<int, int> nodemap;
+    /// reverse map
+    std::map<int, int> nodemapr;
+    /// id of the surface
+    int sid;
+    /// has mesh been run before
+    bool meshloaded;
+    /// Stretching factor of parameter plane
+    NekDouble m_str;
+    /// triangle data strucutres
+    struct triangulateio in,out;
 };
 
-typedef boost::shared_ptr<TriangleInterface>
-                TriangleInterfaceSharedPtr;
+typedef boost::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;
 }
 }
 

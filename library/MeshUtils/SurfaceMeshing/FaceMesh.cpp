@@ -33,23 +33,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <MeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <MeshUtils/ExtLibInterface/TriangleInterface.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
-namespace Nektar{
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
-void SurfaceMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
-                       std::map<int, MeshEdgeSharedPtr> &Edges,
-                       std::map<int, MeshTriSharedPtr> &Tris)
+void FaceMesh::Mesh()
 {
     Stretching();
 
-    OrientateCurves(Nodes);
+    OrientateCurves();
 
     int numPoints = 0;
     for(int i = 0; i < orderedLoops.size(); i++)
@@ -60,11 +60,11 @@ void SurfaceMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
     stringstream ss;
     ss << "3 points required for triangulation, " << numPoints << " in loop" << endl;
     ss << "curves: ";
-    for(int i = 0; i < m_edges.size(); i++)
+    for(int i = 0; i < m_edgeloops.size(); i++)
     {
-        for(int j = 0; j < m_edges[i].size(); j++)
+        for(int j = 0; j < m_edgeloops[i].edges.size(); j++)
         {
-            ss << m_edges[i][j].first << " ";
+            ss << m_edgeloops[i].edges[j]->GetID() << " ";
         }
     }
 
@@ -74,101 +74,75 @@ void SurfaceMesh::Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
     TriangleInterfaceSharedPtr pplanemesh =
         MemoryManager<TriangleInterface>::AllocateSharedPtr();
 
-    pplanemesh->Assign(orderedLoops, m_centers, Nodes,
-                       m_stienerpoints, m_id, asr/pasr);
+    vector<Array<OneD, NekDouble> > centers;
+    for(int i = 0; i < m_edgeloops.size(); i++)
+    {
+        centers.push_back(m_edgeloops[i].center);
+    }
+
+    pplanemesh->Assign(orderedLoops, centers, m_stienerpoints, m_id, asr/pasr);
 
     pplanemesh->Mesh();
 
-    pplanemesh->Extract(nump,numtri, Connec);
+    vector<Array<OneD, int> > intconnec;
+    pplanemesh->Extract(intconnec);
+    for(int i = 0; i < intconnec.size(); i++)
+    {
+        vector<NodeSharedPtr> tri(3);
+        tri[0] = m_mesh->m_meshnode[intconnec[i][0]];
+        tri[1] = m_mesh->m_meshnode[intconnec[i][1]];
+        tri[2] = m_mesh->m_meshnode[intconnec[i][2]];
+        m_connec.push_back(tri);
+    }
 
     bool repeat = true;
     int meshcounter = 1;
 
     while (repeat)
     {
-        repeat = Validate(Nodes);
+        repeat = Validate();
         if(!repeat)
         {
             break;
         }
-        pplanemesh->Assign(orderedLoops, m_centers, Nodes,
-                           m_stienerpoints, m_id, asr/pasr);
+        pplanemesh->AssignStiener(m_stienerpoints);
         pplanemesh->Mesh();
-        pplanemesh->Extract(nump,numtri,Connec);
+        pplanemesh->Extract(intconnec);
+        for(int i = 0; i < intconnec.size(); i++)
+        {
+            vector<NodeSharedPtr> tri(3);
+            tri[0] = m_mesh->m_meshnode[intconnec[i][0]];
+            tri[1] = m_mesh->m_meshnode[intconnec[i][1]];
+            tri[2] = m_mesh->m_meshnode[intconnec[i][2]];
+            m_connec.push_back(tri);
+        }
         meshcounter++;
     }
 
-    Array<OneD, Array<OneD, int> > edgelist;
-    pplanemesh->GetEdges(edgelist,nume);
-
-    //look through all the existing edges and tris in the complete surface mesh
-    //if not a duplicate add a new one if duplicate set up data and move on
-    for(int i = 0; i < numtri; i++)
+    //make new elements and add to list from list of nodes and connectivity from triangle
+    for(int i = 0; i < m_connec.size(); i++)
     {
-        int n1,n2,n3;
-        n1 = Connec[i][0];
-        n2 = Connec[i][1];
-        n3 = Connec[i][2];
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
-        Nodes[n1]->SetTri(Tris.size());
-        Nodes[n2]->SetTri(Tris.size());
-        Nodes[n3]->SetTri(Tris.size());
-
-        int e1,e2,e3;
-        e1 = Nodes[n1]->EdgeInCommon(Nodes[n2]);
-        e2 = Nodes[n2]->EdgeInCommon(Nodes[n3]);
-        e3 = Nodes[n3]->EdgeInCommon(Nodes[n1]);
-        if(e1 == -1)
-        {
-            MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
-                Edges.size(),n1,n2);
-            e->SetSurf(m_id);
-            Nodes[n1]->SetEdge(Edges.size());
-            Nodes[n2]->SetEdge(Edges.size());
-            e1 = Edges.size();
-            Edges[Edges.size()] = e;
-        }
-        if(e2 == -1)
-        {
-            MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
-                Edges.size(),n2,n3);
-            e->SetSurf(m_id);
-            Nodes[n2]->SetEdge(Edges.size());
-            Nodes[n3]->SetEdge(Edges.size());
-            e2 = Edges.size();
-            Edges[Edges.size()] = e;
-        }
-        if(e3 == -1)
-        {
-            MeshEdgeSharedPtr e = MemoryManager<MeshEdge>::AllocateSharedPtr(
-                Edges.size(),n3,n1);
-            e->SetSurf(m_id);
-            Nodes[n3]->SetEdge(Edges.size());
-            Nodes[n1]->SetEdge(Edges.size());
-            e3 = Edges.size();
-            Edges[Edges.size()] = e;
-        }
-
-        Edges[e1]->SetTri(Tris.size());
-        Edges[e2]->SetTri(Tris.size());
-        Edges[e3]->SetTri(Tris.size());
-
-        Tris[Tris.size()] = MemoryManager<MeshTri>::AllocateSharedPtr(
-            Tris.size(),n1,n2,n3,e1,e2,e3,m_id);
+        vector<int> tags;
+        tags.push_back(m_id);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                LibUtilities::eTriangle, conf, m_connec[i], tags);
+        m_mesh->m_element[m_mesh->m_expDim].push_back(E);
     }
 }
 
-void SurfaceMesh::Report()
+void FaceMesh::Report()
 {
-    int edgec = 0;
+    /*int edgec = 0;
     for(int i = 0; i < m_cadsurf->GetEdges().size(); i++)
     {
         edgec+=m_cadsurf->GetEdges()[i].size();
     }
     cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tEdges: " << nume << "\tCAD Edges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
-}
+*/}
 
-void SurfaceMesh::Stretching()
+void FaceMesh::Stretching()
 {
     //define a sampling and calculate the aspect ratio of the paramter plane
     asr = 0.0;
@@ -224,30 +198,25 @@ void SurfaceMesh::Stretching()
     asr/=ct;
 }
 
-bool SurfaceMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
+bool FaceMesh::Validate()
 {
     //check all edges in the current mesh for length against the octree
     //if the octree is not conformed to add a new point inside the triangle
     //if no new points are added meshing can stop
     int pointBefore = m_stienerpoints.size();
-    for(int i = 0; i < numtri; i++)
+    for(int i = 0; i < m_connec.size(); i++)
     {
-        int triVert[3];
-        triVert[0]=Connec[i][0];
-        triVert[1]=Connec[i][1];
-        triVert[2]=Connec[i][2];
-
         Array<OneD, NekDouble> triDelta(3);
 
         Array<OneD, NekDouble> r(3);
 
-        r[0]=Nodes[triVert[0]]->Distance(Nodes[triVert[1]]);
-        r[1]=Nodes[triVert[1]]->Distance(Nodes[triVert[2]]);
-        r[2]=Nodes[triVert[2]]->Distance(Nodes[triVert[0]]);
+        r[0]=m_connec[i][0]->Distance(m_connec[i][1]);
+        r[1]=m_connec[i][1]->Distance(m_connec[i][2]);
+        r[2]=m_connec[i][2]->Distance(m_connec[i][0]);
 
-        triDelta[0] = m_octree->Query(Nodes[triVert[0]]->GetLoc());
-        triDelta[1] = m_octree->Query(Nodes[triVert[1]]->GetLoc());
-        triDelta[2] = m_octree->Query(Nodes[triVert[2]]->GetLoc());
+        triDelta[0] = m_octree->Query(m_connec[i][0]->GetLoc());
+        triDelta[1] = m_octree->Query(m_connec[i][1]->GetLoc());
+        triDelta[2] = m_octree->Query(m_connec[i][2]->GetLoc());
 
         int numValid = 0;
 
@@ -263,14 +232,14 @@ bool SurfaceMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
         if(numValid != 3)
         {
             Array<OneD,NekDouble> ainfo,binfo,cinfo;
-            ainfo = Nodes[triVert[0]]->GetS(m_id);
-            binfo = Nodes[triVert[1]]->GetS(m_id);
-            cinfo = Nodes[triVert[2]]->GetS(m_id);
+            ainfo = m_connec[i][0]->GetCADSurf(m_id);
+            binfo = m_connec[i][1]->GetCADSurf(m_id);
+            cinfo = m_connec[i][2]->GetCADSurf(m_id);
 
             Array<OneD, NekDouble> uvc(2);
             uvc[0] = (ainfo[0]+binfo[0]+cinfo[0])/3.0;
             uvc[1] = (ainfo[1]+binfo[1]+cinfo[1])/3.0;
-            AddNewPoint(uvc,Nodes);
+            AddNewPoint(uvc);
         }
     }
 
@@ -284,15 +253,14 @@ bool SurfaceMesh::Validate(std::map<int, MeshNodeSharedPtr> &Nodes)
     }
 }
 
-void SurfaceMesh::AddNewPoint(Array<OneD, NekDouble> uv,
-                              std::map<int, MeshNodeSharedPtr> &Nodes)
+void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 {
     //adds a new point but checks that there are no other points nearby first
     Array<OneD, NekDouble> np = m_cadsurf->P(uv);
     NekDouble npDelta = m_octree->Query(np);
 
-    MeshNodeSharedPtr n = boost::shared_ptr<MeshNode>(
-                        new MeshNode(Nodes.size(),np[0],np[1],np[2]));
+    NodeSharedPtr n = boost::shared_ptr<Node>(
+                        new Node(m_mesh->m_meshnode.size(),np[0],np[1],np[2]));
 
     bool add = true;
 
@@ -300,7 +268,7 @@ void SurfaceMesh::AddNewPoint(Array<OneD, NekDouble> uv,
     {
         for(int j = 0; j < orderedLoops[i].size(); j++)
         {
-            NekDouble r = Nodes[orderedLoops[i][j]]->Distance(n);
+            NekDouble r = orderedLoops[i][j]->Distance(n);
 
             if(r<npDelta/1.414)
             {
@@ -314,7 +282,7 @@ void SurfaceMesh::AddNewPoint(Array<OneD, NekDouble> uv,
     {
         for(int i = 0; i < m_stienerpoints.size(); i++)
         {
-            NekDouble r = Nodes[m_stienerpoints[i]]->Distance(n);
+            NekDouble r = m_stienerpoints[i]->Distance(n);
 
             if(r<npDelta/1.414)
             {
@@ -326,28 +294,26 @@ void SurfaceMesh::AddNewPoint(Array<OneD, NekDouble> uv,
 
     if(add)
     {
-        n->SetSurf(m_id,uv);
-        Nodes[Nodes.size()] = n;
-        m_stienerpoints.push_back(Nodes.size()-1);
+        n->SetCADSurf(m_id,uv);
+        m_mesh->m_meshnode.push_back(n);
+        m_stienerpoints.push_back(n);
     }
 }
 
-void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
+void FaceMesh::OrientateCurves()
 {
-    //create integer list of bounding loop node id's.
-    for(int i = 0; i < m_edges.size(); i++)
+    //create list of bounding loop nodes
+    for(int i = 0; i < m_edgeloops.size(); i++)
     {
-        vector<int> cE;
-        for(int j = 0; j < m_edges[i].size(); j++)
+        vector<NodeSharedPtr> cE;
+        for(int j = 0; j < m_edgeloops[i].edges.size(); j++)
         {
-            vector<int> edgePoints =
-                    m_curvemeshes[m_edges[i][j].first]->
-                        GetMeshPoints();
+            int cid = m_edgeloops[i].edges[j]->GetID();
+            vector<NodeSharedPtr> edgePoints = m_curvemeshes[cid]->GetMeshPoints();
 
-            int numPoints = m_curvemeshes[m_edges[i][j].first]->
-                                GetNumPoints();
+            int numPoints = m_curvemeshes[cid]->GetNumPoints();
 
-            if(m_edges[i][j].second == 0)
+            if(m_edgeloops[i].edgeo[j] == 0)
             {
                 for(int k = 0; k < numPoints-1; k++)
                 {
@@ -367,34 +333,6 @@ void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
 
     //loops made need to orientate on which is biggest and define holes
 
-    for(int i = 0; i < orderedLoops.size(); i++)
-    {
-        int half = int(orderedLoops[i].size()/2) - 1;
-
-        MeshNodeSharedPtr n1,n2,nh;
-
-        n1 = Nodes[orderedLoops[i][0]];
-        n2 = Nodes[orderedLoops[i][1]];
-        nh = Nodes[orderedLoops[i][half]];
-
-        Array<OneD,NekDouble> n1info,n2info,nhinfo;
-        n1info = n1->GetS(m_id);
-        n2info = n2->GetS(m_id);
-        nhinfo = nh->GetS(m_id);
-
-        NekDouble ua = (100.0*n1info[0]+
-                        100.0*n2info[0]+
-                        1.0* nhinfo[0])/201.0 ;
-        NekDouble va = (100.0*n1info[1]+
-                        100.0*n2info[1]+
-                        1.0* nhinfo[1])/201.0 ;
-
-        vector<NekDouble> tmp;
-        tmp.push_back(ua);
-        tmp.push_back(va);
-        m_centers.push_back(tmp);
-    }
-
     vector<NekDouble> areas;
 
     for(int i = 0; i < orderedLoops.size(); i++)
@@ -402,20 +340,15 @@ void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
         NekDouble area=0.0;
         for(int j = 0; j < orderedLoops[i].size()-1; j++)
         {
-            MeshNodeSharedPtr n1,n2;
-            n1 = Nodes[orderedLoops[i][j]];
-            n2 = Nodes[orderedLoops[i][j+1]];
             Array<OneD,NekDouble> n1info,n2info;
-            n1info = n1->GetS(m_id);
-            n2info = n2->GetS(m_id);
+            n1info = orderedLoops[i][j]->GetCADSurf(m_id);
+            n2info = orderedLoops[i][j+1]->GetCADSurf(m_id);
 
-            area+=-n2info[1]*
-                        (n2info[0]-n1info[0])
-                  +n1info[0]*
-                        (n2info[1]-n1info[1]);
+            area += -n2info[1]*(n2info[0]-n1info[0])
+                    +n1info[0]*(n2info[1]-n1info[1]);
         }
         area*=0.5;
-        areas.push_back(area);
+        m_edgeloops[i].area = area;
     }
 
     int ct=0;
@@ -423,25 +356,19 @@ void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
     do
     {
         ct=0;
-        for(int i = 0; i < areas.size()-1; i++)
+        for(int i = 0; i < m_edgeloops.size()-1; i++)
         {
-            if(abs(areas[i])<abs(areas[i+1]))
+            if(fabs(m_edgeloops[i].area)<fabs(m_edgeloops[i+1].area))
             {
                 //swap
-                NekDouble areatmp = areas[i];
-                vector<NekDouble> centerstmp = m_centers[i];
-                vector<int> orderedlooptmp = orderedLoops[i];
-                vector<pair<int,int> > edgeLoopstmp = m_edges[i];
+                vector<NodeSharedPtr> orderedlooptmp = orderedLoops[i];
+                EdgeLoop edgeLoopstmp = m_edgeloops[i];
 
-                areas[i]=areas[i+1];
-                m_centers[i]=m_centers[i+1];
                 orderedLoops[i]=orderedLoops[i+1];
-                m_edges[i]=m_edges[i+1];
+                m_edgeloops[i]=m_edgeloops[i+1];
 
-                areas[i+1]=areatmp;
-                m_centers[i+1]=centerstmp;
                 orderedLoops[i+1]=orderedlooptmp;
-                m_edges[i+1]=edgeLoopstmp;
+                m_edgeloops[i+1]=edgeLoopstmp;
 
                 ct+=1;
             }
@@ -451,7 +378,7 @@ void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
 
     if(areas[0]<0) //reverse the first uvLoop
     {
-        vector<int > tmp = orderedLoops[0];
+        vector<NodeSharedPtr> tmp = orderedLoops[0];
         reverse(tmp.begin(), tmp.end());
         orderedLoops[0]=tmp;
     }
@@ -460,13 +387,11 @@ void SurfaceMesh::OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes)
     {
         if(areas[i]>0) //reverse the loop
         {
-            vector<int> tmp = orderedLoops[i];
+            vector<NodeSharedPtr> tmp = orderedLoops[i];
             reverse(tmp.begin(), tmp.end());
             orderedLoops[i]=tmp;
         }
     }
-
-
 }
 
 }

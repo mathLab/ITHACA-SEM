@@ -89,8 +89,6 @@ namespace MeshUtils
         unsigned int                    m_nummode;
         ///list of nodes used in meshing routines before its a full mesh
         std::vector<NodeSharedPtr>      m_meshnode;
-        ///list of edges used in meshing routines before its a full mesh
-        std::vector<EdgeSharedPtr>      m_meshedge;
         /// List of mesh nodes.
         std::vector<NodeSharedPtr>      m_node;
         /// Set of element vertices.

@@ -57,6 +57,8 @@ struct EdgeLoop
 {
     std::vector<CADCurveSharedPtr> edges;
     std::vector<int> edgeo; //0 is forward 1 is backward
+    Array<OneD, NekDouble> center;
+    NekDouble area;
 };
 
 class CADSurf
@@ -161,6 +163,8 @@ public:
     }
 
     bool GetTwoC(){return m_hasTwoCurves;}
+
+    int GetId(){return m_ID;}
 
 private:
 

@@ -8,10 +8,10 @@ IF(NEKTAR_USE_MESH)
         Octree/Octree.cpp
         SurfaceMeshing/SurfaceMeshMesh.cpp
 #        SurfaceMeshing/SurfaceMeshHOMesh.cpp
-#        SurfaceMeshing/FaceMesh.cpp
+        SurfaceMeshing/FaceMesh.cpp
 #        SurfaceMeshing/OptimiseFunctions.cpp
 #        SurfaceMeshing/OptimiseUtils.cpp
-#        ExtLibInterface/TriangleInterface.cpp
+        ExtLibInterface/TriangleInterface.cpp
 #        ExtLibInterface/TetGenInterface.cpp
 #        TetMeshing/TetMesh.cpp
     )
@@ -43,7 +43,7 @@ IF(NEKTAR_USE_MESH)
         Octree/Octree.h
         SurfaceMeshing/SurfaceMesh.h
         SurfaceMeshing/FaceMesh.h
-#        ExtLibInterface/TriangleInterface.h
+        ExtLibInterface/TriangleInterface.h
 #        ExtLibInterface/TetGenInterface.h
 #        TetMeshing/TetMesh.h
     )

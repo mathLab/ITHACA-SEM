@@ -37,6 +37,7 @@
 #ifndef MESHUTILS_SURFACEMESHING_FACEMESH
 #define MESHUTILS_SURFACEMESHING_FACEMESH
 
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include <MeshUtils/MeshElem.hpp>
 #include <MeshUtils/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree/Octree.h>
@@ -56,23 +57,21 @@ public:
      * @brief Default constructor
      */
     FaceMesh(   const int id,
-                const bool verb,
-                const CADSurfSharedPtr &cad,
-                const OctreeSharedPtr &oct,
+                MeshSharedPtr m,
+                CADSurfSharedPtr cad,
+                OctreeSharedPtr oct,
                 const std::map<int, CurveMeshSharedPtr> &cmeshes)
-                    : m_verbose(verb), m_cadsurf(cad), m_octree(oct),
+                    : m_mesh(m), m_cadsurf(cad), m_octree(oct),
                       m_curvemeshes(cmeshes),m_id(id)
 
     {
-        m_edges = m_cadsurf->GetEdges();
+        m_edgeloops = m_cadsurf->GetEdges();
     };
 
     /**
      * @brief mesh exectuation command
      */
-    void Mesh(std::map<int, MeshNodeSharedPtr> &Nodes,
-              std::map<int, MeshEdgeSharedPtr> &Edges,
-              std::map<int, MeshTriSharedPtr> &Tris);
+    void Mesh();
 
     /**
      * @brief Print report of the surface mesh to screen
@@ -91,22 +90,21 @@ private:
      * @brief Validate the surface mesh base on the octree and real
      * dimensions of the edges
      */
-    bool Validate(std::map<int, MeshNodeSharedPtr> &Nodes);
+    bool Validate();
 
     /**
      * @brief Get the boundries of the surface and extracts the nodes from
      * the curve meshes in the correct order
      */
-    void OrientateCurves(std::map<int, MeshNodeSharedPtr> &Nodes);
+    void OrientateCurves();
 
     /**
      * @brief addes a new stiener point to the triangulation for meshing
      */
-    void AddNewPoint(Array<OneD, NekDouble> uv,
-                     std::map<int, MeshNodeSharedPtr> &Nodes);
+    void AddNewPoint(Array<OneD, NekDouble> uv);
 
-    ///verbosity
-    bool m_verbose;
+    ///mesh pointer
+    MeshSharedPtr m_mesh;
     /// CAD surface
     CADSurfSharedPtr m_cadsurf;
     /// Octree object
@@ -114,21 +112,17 @@ private:
     /// Map of the curve meshes which bound the surfaces
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for the surface
-    std::vector<EdgeLoop> m_edges;
+    std::vector<EdgeLoop> m_edgeloops;
     /// id of the surface mesh
     int m_id;
     /// list of boundary nodes in their order loops
-    std::vector<std::vector<int> > orderedLoops;
-    /// center coords of the loops
-    std::vector<std::vector<NekDouble> > m_centers;
+    std::vector<std::vector<NodeSharedPtr> > orderedLoops;
     /// list of stiener points in the triangulation
-    std::vector<int> m_stienerpoints;
-    /// number of triangles and points
-    int numtri, nump, nume;
-    /// list of node connectivities forming triangles
-    Array<OneD, Array<OneD, int> > Connec;
+    std::vector<NodeSharedPtr> m_stienerpoints;
     /// paramter plane and real space aspect ratios
     NekDouble pasr,asr;
+    /// triangle connectiviities
+    std::vector<std::vector<NodeSharedPtr> > m_connec;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

@@ -254,6 +254,21 @@ bool CADSystem::LoadCAD()
                                         TopoDS::Face(face),
                                         1E-6);
 
+            //calculate the center of the wire
+            GProp_GProps massProps;
+            BRepGProp::SurfaceProperties(wire, massProps);
+            gp_Pnt gPt = massProps.CentreOfMass();
+            // alternative locuv methods
+            ShapeAnalysis_Surface sas(BRep_Tool::Surface(TopoDS::Face(face)));
+            sas.SetDomain(BRepAdaptor_Surface(TopoDS::Face(face)).FirstUParameter(),
+                          BRepAdaptor_Surface(TopoDS::Face(face)).LastUParameter(),
+                          BRepAdaptor_Surface(TopoDS::Face(face)).FirstVParameter(),
+                          BRepAdaptor_Surface(TopoDS::Face(face)).LastVParameter());
+            gp_Pnt2d p2 = sas.ValueOfUV(gPt,1e-7);
+            Array<OneD, NekDouble> cen(2);
+            cen[0] = p2.X(); cen[1] = p2.Y();
+            edgeloop.center = cen;
+
             BRepTools_WireExplorer exp;
 
             exp.Init(TopoDS::Wire(wire));

@@ -37,7 +37,7 @@
 
 #include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
-//#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
 //#include <MeshUtils/TetMeshing/TetMesh.h>
 //#include <MeshUtils/MeshElem.hpp>
 
@@ -116,6 +116,7 @@ void InputCAD::Process()
     m_mesh->m_nummode = m_order+1;
 
     //create surface mesh
+    m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
                                 AllocateSharedPtr(m_mesh, m_cad, m_octree);
 

@@ -128,14 +128,6 @@ void CurveMesh::Mesh()
     m_mesh->m_meshnode[id]->SetCADCurve(m_id,t);
     m_meshpoints.push_back(m_mesh->m_meshnode[id]);
 
-    for(int i = 0; i < Ne; i++)
-    {
-        EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(m_meshpoints[i],
-                                                           m_meshpoints[i+1]));
-        e->CADCurveID = m_id;
-        m_mesh->m_meshedge.push_back(e);
-    }
-
     ASSERTL0(Ne+1 == m_meshpoints.size(),"incorrect number of points in curve mesh");
 
 

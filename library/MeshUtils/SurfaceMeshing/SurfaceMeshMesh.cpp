@@ -83,23 +83,24 @@ void SurfaceMesh::Mesh()
     {
         Array<OneD, NekDouble> loc = m_mesh->m_meshnode[i]->GetLoc();
         list<int> l;
-        map<int, NekDouble> curves = m_mesh->m_meshnode[i]->GetCurveMap();
-        map<int, NekDouble>::iterator cit;
-        for(cit = curves.begin(); cit != curves.end(); cit++)
+        vector<int> cs = m_mesh->m_meshnode[i]->GetListCADCurve();
+        for(int j = 0; j < cs.size(); j++)
         {
-            vector<int> s = m_cad->GetCurve(cit->first)->GetAdjSurf();
-            for(int i = 0; i < s.size(); i++)
+            vector<CADSurfSharedPtr> s = m_cad->GetCurve(cs[j])->GetAdjSurf();
+            for(int k = 0; k < s.size(); k++)
             {
-                l.push_back(s[i]);
+                l.push_back(s[i]->GetId());
             }
         }
         l.sort(); l.unique();
         for (list<int>::iterator lit=l.begin(); lit!=l.end(); ++lit)
         {
             Array<OneD, NekDouble> uv = m_cad->GetSurf(*lit)->locuv(loc);
-            it->second->SetSurf(*lit,uv);
+            m_mesh->m_meshnode[i]->SetCADSurf(*lit,uv);
         }
     }
+
+    //This needs improving to be more general.
 
     /*
     //analyse for two node surfaces (not possible)
@@ -142,7 +143,10 @@ void SurfaceMesh::Mesh()
                 }
             }
         }
-    }
+    }*/
+
+    /*
+    //again this needs improving before being used again.
 
     // this is where high-order awareness can be inserted for curve edges
     map<int, MeshEdgeSharedPtr>::iterator eit;
@@ -180,56 +184,19 @@ void SurfaceMesh::Mesh()
                         Nodes[nn]->SetSurf(s[j],uvn);
                     }
                     //modify octree
-                    /*for(int j = 0; j < 2; j++)
+                    for(int j = 0; j < 2; j++)
                     {
                         NekDouble dist = Nodes[nn]->Distance(Nodes[n[j]]);
                         m_octree->Modify(Nodes[nn]->GetLoc(), dist*5.0);
                         m_octree->Modify(Nodes[n[j]]->GetLoc(), dist*5.0);
-                    }*/
-/*                    continue;
-                }
-            }
-        }
-    }
-
-    /*m_octree->SmoothAllOctants();
-
-    repeat = true;
-    while(repeat)
-    {
-        repeat = false;
-        for(eit = Edges.begin(); eit != Edges.end(); eit++)
-        {
-            Array<OneD, int> n = eit->second->GetN();
-            int c = eit->second->GetCurve();
-            ASSERTL0(c != -1, "edge not on curve");
-            vector<int> s = m_cad->GetCurve(c)->GetAdjSurf();
-
-            NekDouble dist = Nodes[n[0]]->Distance(Nodes[n[1]]);
-            for(int i = 0; i < 2; i++)
-            {
-                if(dist > m_octree->Query(Nodes[n[i]]->GetLoc())*2.0)
-                {
-                    int nn = m_curvemeshes[c]->SplitEdge(n[0],n[1],Nodes,Edges);
-                    cout << "edgesplit octree" << endl;
-                    repeat = true;
-                    Array<OneD, NekDouble> loc = Nodes[nn]->GetLoc();
-                    for(int j = 0; j < s.size(); j++)
-                    {
-                        Array<OneD, NekDouble> uvn = m_cad->GetSurf(s[j])->locuv(loc);
-                        Nodes[nn]->SetSurf(s[j],uvn);
                     }
-                    break;
+                    continue;
                 }
-            }
-            if(repeat == true)
-            {
-                break;
             }
         }
     }*/
-/*
-    if(m_verbose)
+
+    if(m_mesh->m_verbose)
     {
         cout << endl << "\tCurve mesh stats:" << endl;
         for(int i = 1; i <= m_cad->GetNumCurve(); i++)
@@ -242,19 +209,19 @@ void SurfaceMesh::Mesh()
     //linear mesh all surfaces
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
-        if(m_verbose)
+        if(m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(i,m_cad->GetNumSurf(),
                                            "\tSurface meshing");
         }
-        m_surfacemeshes[i] =
-            MemoryManager<SurfaceMesh>::AllocateSharedPtr(i,m_verbose,
+        m_facemeshes[i] =
+            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
                 m_cad->GetSurf(i), m_octree, m_curvemeshes);
 
-        m_surfacemeshes[i]->Mesh(Nodes,Edges,Tris);
+        m_facemeshes[i]->Mesh();
 
     }
-
+    /*
     Validate();
 
     Optimise();

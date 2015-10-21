@@ -38,12 +38,13 @@
 #include <sstream>
 
 using namespace std;
-namespace Nektar{
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 void TriangleInterface::Mesh(bool Quiet, bool Quality)
 {
-
     if(meshloaded)
     {
         freetri();
@@ -74,12 +75,10 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
         for(int j = 0; j < m_boundingloops[i].size(); j++)
         {
-            nodemap[pointc] = m_boundingloops[i][j];
-            nodemapr[m_boundingloops[i][j]] = pointc;
+            nodemap[pointc] = m_boundingloops[i][j]->m_id;
+            nodemapr[m_boundingloops[i][j]->m_id] = pointc;
 
-            Array<OneD, NekDouble> uv = Nodes[m_boundingloops[i][j]]
-                                            ->GetS(sid);
-
+            Array<OneD, NekDouble> uv = m_boundingloops[i][j]->GetCADSurf(sid);
             in.pointlist[pointc*2+0] = uv[0]*m_str;
             in.pointlist[pointc*2+1] = uv[1];
 
@@ -89,10 +88,10 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     for(int i = 0; i < m_stienerpoints.size(); i++)
     {
-        nodemap[pointc] = m_stienerpoints[i];
-        nodemapr[m_stienerpoints[i]] = pointc;
-        Array<OneD, NekDouble> uv = Nodes[m_stienerpoints[i]]
-                                            ->GetS(sid);
+        nodemap[pointc] = m_stienerpoints[i]->m_id;
+        nodemapr[m_stienerpoints[i]->m_id] = pointc;
+
+        Array<OneD, NekDouble> uv = m_stienerpoints[i]->GetCADSurf(sid);
         in.pointlist[pointc*2+0] = uv[0]*m_str;
         in.pointlist[pointc*2+1] = uv[1];
 
@@ -106,12 +105,12 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
         for(int j = 0; j < m_boundingloops[i].size()-1; j++)
         {
-            in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i][j]];
-            in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][j+1]];
+            in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i][j]->m_id];
+            in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][j+1]->m_id];
             pointc++;
         }
-        in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i].back()];
-        in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][0]];
+        in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i].back()->m_id];
+        in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][0]->m_id];
         pointc++;
     }
 
@@ -161,34 +160,17 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
 }
 
-void TriangleInterface::Extract(int &np, int &nt,
-                                Array<OneD, Array<OneD, int> > &Connec)
+void TriangleInterface::Extract(std::vector<Array<OneD, int> > &Connec)
 {
-    Connec = Array<OneD, Array<OneD, int> >(out.numberoftriangles);
-    nt = out.numberoftriangles;
-    np = out.numberofpoints;
+    Connec.clear();
     for(int i = 0; i < out.numberoftriangles; i++)
     {
         Array<OneD, int> tri(3);
         tri[0] = nodemap[out.trianglelist[i*3+0]];
         tri[1] = nodemap[out.trianglelist[i*3+1]];
         tri[2] = nodemap[out.trianglelist[i*3+2]];
-        Connec[i] = tri;
+        Connec.push_back(tri);
     }
-}
-
-void TriangleInterface::GetEdges(Array<OneD, Array<OneD, int> > &edgelist,
-                                 int &num)
-{
-    edgelist = Array<OneD, Array<OneD, int> >(out.numberofedges);
-    for(int i = 0; i < out.numberofedges; i++)
-    {
-        Array<OneD, int> el(2);
-        el[0] = nodemap[out.edgelist[i*2+0]];
-        el[1] = nodemap[out.edgelist[i*2+1]];
-        edgelist[i] = el;
-    }
-    num = out.numberofedges;
 }
 
 void TriangleInterface::freetri()

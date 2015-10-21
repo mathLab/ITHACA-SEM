@@ -537,23 +537,11 @@ void InputNek::Process()
                     }
                 }
 
-                HOSurfSet::iterator it;
-
                 HOSurfSharedPtr hs = boost::shared_ptr<HOSurf>(new HOSurf(vertId));
                 // Find vertex combination in hoData.
+                hoIt = hoData[word].find(hs);
 
-                for(it = hoData[word].begin(); it != hoData[word].end(); it++)
-                {
-                    if(*it == hs)
-                    {
-                        hoIt = it;
-                        break;
-                    }
-                }
-                ///@todo figure out why the find algorithm isnt working and reinstate it
-                //hoIt = hoData[word].find(hs);
-
-                if (it == hoData[word].end())
+                if (hoIt == hoData[word].end())
                 {
                     cerr << "Unable to find high-order surface data "
                          << "for element id " << elId+1 << endl;
@@ -1090,33 +1078,6 @@ int InputNek::GetNnodes(LibUtilities::ShapeType InputNekEntity)
     }
 
     return nNodes;
-}
-
-/**
- * @brief Compares two %HOSurf objects referred to as shared pointers.
- *
- * Two %HOSurf objects are defined to be equal if they contain identical
- * vertex ids contained in HOSurf::vertId.
- */
-bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2)
-{
-    if (p1->vertId.size() != p2->vertId.size())
-    {
-        return false;
-    }
-
-    vector<int> ids1 = p1->vertId;
-    vector<int> ids2 = p2->vertId;
-    sort(ids1.begin(), ids1.end());
-    sort(ids2.begin(), ids2.end());
-
-    for (int i = 0; i < ids1.size(); ++i)
-    {
-        if (ids1[i] != ids2[i])
-            return false;
-    }
-
-    return true;
 }
 
 }

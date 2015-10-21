@@ -123,6 +123,33 @@ namespace Nektar
         }
 
         /**
+         * @brief Compares two %HOSurf objects referred to as shared pointers.
+         *
+         * Two %HOSurf objects are defined to be equal if they contain identical
+         * vertex ids contained in HOSurf::vertId.
+         */
+        bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2)
+        {
+            if (p1->vertId.size() != p2->vertId.size())
+            {
+                return false;
+            }
+
+            vector<int> ids1 = p1->vertId;
+            vector<int> ids2 = p2->vertId;
+            sort(ids1.begin(), ids1.end());
+            sort(ids2.begin(), ids2.end());
+
+            for (int i = 0; i < ids1.size(); ++i)
+            {
+                if (ids1[i] != ids2[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        /**
          * @brief Test equality of two conditions - i.e. compare types, fields
          * and values but _not_ composite ids.
          */

@@ -55,18 +55,25 @@ namespace Nektar
 
         typedef vector<map<int, int> > DofGraph;
 
-        StdRegions::Orientation  DeterminePeriodicFaceOrient(
-                       StdRegions::Orientation   faceOrient1,
-                       StdRegions::Orientation   faceOrient2);
+        MULTI_REGIONS_EXPORT
+        pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
+            int                           meshEdgeId,
+            StdRegions::Orientation       edgeOrient,
+            const vector<PeriodicEntity> &periodicEdges);
 
-  
+        MULTI_REGIONS_EXPORT
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+            StdRegions::Orientation   faceOrient1,
+            StdRegions::Orientation   faceOrient2);
+
+
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMap
         {
             typedef Array<OneD, const ExpListSharedPtr> BndCondExp;
             typedef Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                 BndCond;
-        
+
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG(

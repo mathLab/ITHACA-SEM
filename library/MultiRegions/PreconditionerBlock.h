@@ -41,17 +41,16 @@
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
 
-
 namespace Nektar
 {
-
     namespace MultiRegions
     {
         class PreconditionerBlock;
-        typedef boost::shared_ptr<PreconditionerBlock>  PreconditionerBlockSharedPtr;
+        typedef boost::shared_ptr<PreconditionerBlock>
+            PreconditionerBlockSharedPtr;
 
-        class PreconditionerBlock: public Preconditioner
-	{
+        class PreconditionerBlock : public Preconditioner
+        {
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
@@ -59,9 +58,10 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerBlock>::AllocateSharedPtr(plinsys,pLocToGloMap);
-	        p->InitObject();
-	        return p;
+                PreconditionerSharedPtr p = MemoryManager<PreconditionerBlock>
+                    ::AllocateSharedPtr(plinsys,pLocToGloMap);
+                p->InitObject();
+                return p;
             }
 
             /// Name of class
@@ -69,35 +69,25 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT PreconditionerBlock(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
-	                 const AssemblyMapSharedPtr &pLocToGloMap);
+                         const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerBlock() {}
 
-	protected:
-
+        protected:
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
-
             PreconditionerType                          m_preconType;
-
-	    DNekBlkMatSharedPtr                         m_blkMat;
-
+            DNekBlkMatSharedPtr                         m_blkMat;
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
-	private:
-
-	    void BlockPreconditioner2D(void);
-
-	    void BlockPreconditioner3D(void);
-
+        private:
+            void BlockPreconditionerCG(void);
             void BlockPreconditionerHDG(void);
 
             virtual void v_InitObject();
-
-            virtual void v_DoPreconditioner(                
+            virtual void v_DoPreconditioner(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);
-
             virtual void v_BuildPreconditioner();
         };
     }

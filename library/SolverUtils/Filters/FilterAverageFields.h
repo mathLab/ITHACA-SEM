@@ -40,49 +40,58 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterAverageFields : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterAverageFields>;
-            
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterAverageFields>::AllocateSharedPtr(pSession, pParams);
-                return p;
-            }
+namespace SolverUtils
+{
+class FilterAverageFields : public Filter
+{
+public:
+    friend class MemoryManager<FilterAverageFields>;
 
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterAverageFields(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-            
-            void OutputAvgField(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump = -1);
-
-        private:
-            unsigned int       m_numAverages;
-            unsigned int       m_outputFrequency;
-            unsigned int       m_sampleFrequency;
-            unsigned int       m_index;
-            unsigned int       m_outputIndex;
-            std::string        m_outputFile;
-            LibUtilities::FieldIOSharedPtr m_fld;
-            LibUtilities::FieldMetaDataMap m_avgFieldMetaData;
-            Array<OneD, Array<OneD, NekDouble> > m_avgFields;
-        };
+    /// Creates an instance of this class
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams) {
+        FilterSharedPtr p = MemoryManager<FilterAverageFields>
+                                ::AllocateSharedPtr(pSession, pParams);
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterAverageFields(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams);
+    SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
+
+protected:
+    virtual void v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual bool v_IsTimeDependent();
+
+    void OutputAvgField(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            int dump = -1);
+
+private:
+    unsigned int       m_numAverages;
+    unsigned int       m_outputFrequency;
+    unsigned int       m_sampleFrequency;
+    unsigned int       m_index;
+    unsigned int       m_outputIndex;
+    std::string        m_outputFile;
+    LibUtilities::FieldIOSharedPtr m_fld;
+    LibUtilities::FieldMetaDataMap m_avgFieldMetaData;
+    Array<OneD, Array<OneD, NekDouble> > m_avgFields;
+};
+}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

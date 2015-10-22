@@ -169,8 +169,6 @@ int main(int argc, char *argv[])
         }
         cout << "  </EDGE>\n" << endl;
 
-
-
         cout << "  <ELEMENT>" << endl;
         cnt = 0;
         for(j = 0; j < ny-1; ++j)

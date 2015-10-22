@@ -38,141 +38,144 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+std::string FilterEnergy1D::className = GetFilterFactory().
+    RegisterCreatorFunction("Energy1D", FilterEnergy1D::create);
+
+/**
+ * @brief Set up filter with output file and frequency parameters.
+ *
+ * @param pSession  Current session.
+ * @param pParams   Map of parameters defined in XML file.
+ */
+FilterEnergy1D::FilterEnergy1D(
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const ParamMap &pParams) :
+    Filter(pSession),
+    m_index(0)
+{
+    ASSERTL0(pSession->GetComm()->GetSize() == 1,
+             "The 1D energy filter currently only works in serial.");
+
+    ParamMap::const_iterator it;
+    std::string outName;
+
+    // OutputFile
+    it = pParams.find("OutputFile");
+    if (it == pParams.end())
     {
-        std::string FilterEnergy1D::className = GetFilterFactory().
-            RegisterCreatorFunction("Energy1D", FilterEnergy1D::create);
+        outName = m_session->GetSessionName();
+    }
+    else
+    {
+        ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
+        outName = it->second;
+    }
+    outName += ".eny";
+    m_out.open(outName.c_str());
 
-        /**
-         * @brief Set up filter with output file and frequency parameters.
-         *
-         * @param pSession  Current session.
-         * @param pParams   Map of parameters defined in XML file.
-         */
-        FilterEnergy1D::FilterEnergy1D(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) :
-            Filter(pSession),
-            m_index(0)
+    // OutputFrequency
+    it = pParams.find("OutputFrequency");
+    if (it == pParams.end())
+    {
+        m_outputFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(m_session, it->second);
+        m_outputFrequency = floor(equ.Evaluate());
+    }
+}
+
+/**
+ * @brief Destructor.
+ */
+FilterEnergy1D::~FilterEnergy1D()
+{
+
+}
+
+/**
+ * @brief Initialize filter.
+ */
+void FilterEnergy1D::v_Initialise(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
+{
+    ASSERTL0(pFields[0]->GetExp(0)->GetNumBases() == 1,
+             "The Energy 1D filter is only valid in 1D.");
+}
+
+/**
+ * @brief Update filter output with the current timestep's orthogonal
+ * coefficients.
+ */
+void FilterEnergy1D::v_Update(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
+{
+    // Only output every m_outputFrequency
+    if ((m_index++) % m_outputFrequency)
+    {
+        return;
+    }
+
+    int nElmt = pFields[0]->GetExpSize();
+
+    // Loop over all elements
+    m_out << "##" << endl;
+    m_out << "## Time = " << time << endl;
+    m_out << "##" << endl;
+
+    for (int i = 0; i < nElmt; ++i)
+    {
+        // Figure out number of modes in this expansion.
+        LocalRegions::ExpansionSharedPtr exp = pFields[0]->GetExp(i);
+        int nModes = exp->GetBasis(0)->GetNumModes();
+
+        // Set uo basis key for orthogonal basis
+        LibUtilities::BasisType btype = LibUtilities::eOrtho_A;
+        LibUtilities::BasisKey bkeyOrth(
+            btype, nModes, exp->GetBasis(0)->GetPointsKey());
+
+        // Get basis key for existing expansion
+        LibUtilities::BasisKey bkey(
+            exp->GetBasis(0)->GetBasisType(),
+            exp->GetBasis(0)->GetNumModes(),
+            exp->GetBasis(0)->GetPointsKey());
+
+        // Find coeffs for this element in the list of all coefficients
+        Array<OneD, NekDouble> coeffs =
+            pFields[0]->GetCoeffs() + pFields[0]->GetCoeff_Offset(i);
+
+        // Storage for orthogonal coefficients
+        Array<OneD, NekDouble> coeffsOrth(nModes);
+
+        // Project from coeffs -> orthogonal coeffs
+        LibUtilities::InterpCoeff1D(bkey, coeffs, bkeyOrth, coeffsOrth);
+
+        // Write coeffs to file
+        m_out << "# Element " << i << " (ID "
+              << exp->GetGeom()->GetGlobalID() << ")" << endl;
+        for (int j = 0; j < nModes; ++j)
         {
-            std::string outName;
-            if (pParams.find("OutputFile") == pParams.end())
-            {
-                outName = m_session->GetSessionName();
-            }
-            else
-            {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                         "Missing parameter 'OutputFile'.");
-                outName = pParams.find("OutputFile")->second;
-            }
-
-            if (pParams.find("OutputFrequency") == pParams.end())
-            {
-                m_outputFrequency = 1;
-            }
-            else
-            {
-                m_outputFrequency =
-                    atoi(pParams.find("OutputFrequency")->second.c_str());
-            }
-
-            outName += ".eny";
-
-            ASSERTL0(pSession->GetComm()->GetSize() == 1,
-                     "The 1D energy filter currently only works in serial.");
-
-            m_out.open(outName.c_str());
-        }
-
-        /**
-         * @brief Destructor.
-         */
-        FilterEnergy1D::~FilterEnergy1D()
-        {
-
-        }
-
-        /**
-         * @brief Initialize filter.
-         */
-        void FilterEnergy1D::v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
-        {
-            ASSERTL0(pFields[0]->GetExp(0)->GetNumBases() == 1,
-                     "The Energy 1D filter is only valid in 1D.");
-        }
-
-        /**
-         * @brief Update filter output with the current timestep's orthogonal
-         * coefficients.
-         */
-        void FilterEnergy1D::v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
-        {
-            // Only output every m_outputFrequency
-            if ((m_index++) % m_outputFrequency)
-            {
-                return;
-            }
-
-            int nElmt = pFields[0]->GetExpSize();
-
-            // Loop over all elements
-            m_out << "##" << endl;
-            m_out << "## Time = " << time << endl;
-            m_out << "##" << endl;
-
-            for (int i = 0; i < nElmt; ++i)
-            {
-                // Figure out number of modes in this expansion.
-                LocalRegions::ExpansionSharedPtr exp = pFields[0]->GetExp(i);
-                int nModes = exp->GetBasis(0)->GetNumModes();
-
-                // Set uo basis key for orthogonal basis
-                LibUtilities::BasisType btype = LibUtilities::eOrtho_A;
-                LibUtilities::BasisKey bkeyOrth(
-                    btype, nModes, exp->GetBasis(0)->GetPointsKey());
-
-                // Get basis key for existing expansion
-                LibUtilities::BasisKey bkey(
-                    exp->GetBasis(0)->GetBasisType(),
-                    exp->GetBasis(0)->GetNumModes(),
-                    exp->GetBasis(0)->GetPointsKey());
-
-                // Find coeffs for this element in the list of all coefficients
-                Array<OneD, NekDouble> coeffs =
-                    pFields[0]->GetCoeffs() + pFields[0]->GetCoeff_Offset(i);
-
-                // Storage for orthogonal coefficients
-                Array<OneD, NekDouble> coeffsOrth(nModes);
-
-                // Project from coeffs -> orthogonal coeffs
-                LibUtilities::InterpCoeff1D(bkey, coeffs, bkeyOrth, coeffsOrth);
-
-                // Write coeffs to file
-                m_out << "# Element " << i << " (ID "
-                      << exp->GetGeom()->GetGlobalID() << ")" << endl;
-                for (int j = 0; j < nModes; ++j)
-                {
-                    m_out << coeffsOrth[j] << endl;
-                }
-            }
-            m_out << endl;
-        }
-
-        void FilterEnergy1D::v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
-        {
-            m_out.close();
-        }
-
-        bool FilterEnergy1D::v_IsTimeDependent()
-        {
-            return true;
+            m_out << coeffsOrth[j] << endl;
         }
     }
+    m_out << endl;
+}
+
+void FilterEnergy1D::v_Finalise(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
+{
+    m_out.close();
+}
+
+bool FilterEnergy1D::v_IsTimeDependent()
+{
+    return true;
+}
+}
 }

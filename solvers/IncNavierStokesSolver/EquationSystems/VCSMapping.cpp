@@ -111,9 +111,12 @@ namespace Nektar
         
         // Load solve parameters related to the mapping
         // Flags determining if pressure/viscous terms should be treated implicitly
-        m_session->MatchSolverInfo("MappingImplicitPressure","True",m_implicitPressure,false);
-        m_session->MatchSolverInfo("MappingImplicitViscous","True",m_implicitViscous,false);
-        m_session->MatchSolverInfo("MappingNeglectViscous","True",m_neglectViscous,false);
+        m_session->MatchSolverInfo("MappingImplicitPressure","True",
+                                                    m_implicitPressure,false);
+        m_session->MatchSolverInfo("MappingImplicitViscous","True",
+                                                    m_implicitViscous,false);
+        m_session->MatchSolverInfo("MappingNeglectViscous","True",
+                                                    m_neglectViscous,false);
         
         if (m_neglectViscous)
         {
@@ -121,10 +124,14 @@ namespace Nektar
         }
         
         // Tolerances and relaxation parameters for implicit terms
-        m_session->LoadParameter("MappingPressureTolerance",m_pressureTolerance,1e-12);
-        m_session->LoadParameter("MappingViscousTolerance",m_viscousTolerance,1e-12);
-        m_session->LoadParameter("MappingPressureRelaxation",m_pressureRelaxation,1.0);
-        m_session->LoadParameter("MappingViscousRelaxation",m_viscousRelaxation,1.0);
+        m_session->LoadParameter("MappingPressureTolerance",
+                                            m_pressureTolerance,1e-12);
+        m_session->LoadParameter("MappingViscousTolerance",
+                                            m_viscousTolerance,1e-12);
+        m_session->LoadParameter("MappingPressureRelaxation",
+                                            m_pressureRelaxation,1.0);
+        m_session->LoadParameter("MappingViscousRelaxation",
+                                            m_viscousRelaxation,1.0);
         
     }
     
@@ -140,8 +147,10 @@ namespace Nektar
         UnsteadySystem::v_DoInitialise();
 
         // Set up Field Meta Data for output files
-        m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
-        m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
+        m_fieldMetaDataMap["Kinvis"]   = 
+                                boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["TimeStep"] = 
+                                boost::lexical_cast<std::string>(m_timestep);
 
         // Correct Dirichlet boundary conditions to account for mapping
         m_mapping->UpdateBCs(0.0);
@@ -212,7 +221,8 @@ namespace Nektar
     {                
         if (m_mapping->HasConstantJacobian())
         {
-            VelocityCorrectionScheme::v_SetUpPressureForcing(fields, Forcing, aii_Dt);
+            VelocityCorrectionScheme::v_SetUpPressureForcing(fields, 
+                                                            Forcing, aii_Dt);
         }
         else
         {
@@ -294,7 +304,8 @@ namespace Nektar
 
                 // Part 2: grad(J) . curl(curl(U))
                 m_mapping->CurlCurlField(velocity, tmp, m_implicitViscous);
-                m_mapping->DotGradJacobian(tmp, velocity[0]); // dont need velocity any more
+                // dont need velocity any more, so reuse it
+                m_mapping->DotGradJacobian(tmp, velocity[0]); 
 
                 // Add two parts
                 Vmath::Vadd(physTot, velocity[0], 1, wk, 1, wk, 1);
@@ -303,7 +314,8 @@ namespace Nektar
                 Vmath::Smul(physTot, m_kinvis, wk, 1, wk, 1);
 
                 // Extrapolate correction
-                m_extrapolation->ExtrapolateArray(m_presForcingCorrection, wk, wk);
+                m_extrapolation->ExtrapolateArray(m_presForcingCorrection, 
+                                                    wk, wk);
 
                 // Put in wavespace
                 if (wavespace)
@@ -328,7 +340,8 @@ namespace Nektar
     {
         if (m_mapping->HasConstantJacobian() && !m_implicitPressure)
         {
-            VelocityCorrectionScheme::v_SetUpViscousForcing(inarray, Forcing, aii_Dt);
+            VelocityCorrectionScheme::v_SetUpViscousForcing(inarray, 
+                                                            Forcing, aii_Dt);
         }
         else
         {
@@ -336,20 +349,22 @@ namespace Nektar
             int physTot = m_fields[0]->GetTotPoints();
 
             // Grad p
-            m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            m_pressure->BwdTrans(m_pressure->GetCoeffs(),
+                                    m_pressure->UpdatePhys());
 
             int nvel = m_velocity.num_elements();
             if(nvel == 2)
             {
-                m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1]);
+                m_pressure->PhysDeriv(m_pressure->GetPhys(), 
+                                        Forcing[0], Forcing[1]);
             }
             else
             {
-                m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1],
-                                      Forcing[2]);
+                m_pressure->PhysDeriv(m_pressure->GetPhys(), 
+                                        Forcing[0], Forcing[1], Forcing[2]);
             }
             
-            // If the pressure terms are treated explicitly, we need to divide by J
+            // If pressure terms are treated explicitly, we need to divide by J
             //    if they are implicit, we need to calculate G(p)
             Array<OneD, Array<OneD, NekDouble> > tmp (nvel);
             if (m_pressure->GetWaveSpace())
@@ -446,7 +461,8 @@ namespace Nektar
             StdRegions::ConstFactorMap factors;
             factors[StdRegions::eFactorLambda] = 0.0;
 
-            m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            m_pressure->BwdTrans(m_pressure->GetCoeffs(),
+                                    m_pressure->UpdatePhys());
             forcing_L2 = m_pressure->L2(Forcing, wk1[0]);
             while (!converged)
             {
@@ -456,10 +472,11 @@ namespace Nektar
                 ASSERTL0(s < maxIter,
                          "VCSMapping exceeded maximum number of iterations.");
                 
-                Vmath::Vcopy(physTot, m_pressure->GetPhys(), 1, previous_iter, 1);
+                Vmath::Vcopy(physTot, m_pressure->GetPhys(), 1, 
+                                        previous_iter, 1);
                 
                 // Correct pressure bc to account for iteration
-                m_extrapolation->CorrectPressureBCs(previous_iter);            
+                m_extrapolation->CorrectPressureBCs(previous_iter);
 
                 //
                 // Calculate forcing term for this iteration
@@ -482,10 +499,13 @@ namespace Nektar
                 m_mapping->Divergence(wk2, F_corrected);   // div(G(p))
                 if (!m_mapping->HasConstantJacobian())
                 {
-                    Vmath::Vmul(physTot, F_corrected, 1, Jac, 1, F_corrected, 1);
+                    Vmath::Vmul(physTot, F_corrected, 1, 
+                                         Jac, 1, 
+                                         F_corrected, 1);
                 }                
                 // alpha*J*div(G(p))
-                Vmath::Smul(physTot, m_pressureRelaxation, F_corrected, 1, F_corrected, 1); 
+                Vmath::Smul(physTot, m_pressureRelaxation, F_corrected, 1, 
+                                                           F_corrected, 1); 
                 if(m_pressure->GetWaveSpace())
                 {
                     m_pressure->HomogeneousFwdTrans(F_corrected, F_corrected);
@@ -501,7 +521,8 @@ namespace Nektar
                 // p_i,i - J*div(G(p))
                 Vmath::Neg(physTot, F_corrected, 1);           
                 // alpha*F -  alpha*J*div(G(p)) + p_i,i
-                Vmath::Smul(physTot, m_pressureRelaxation, Forcing, 1, wk1[0], 1);
+                Vmath::Smul(physTot, m_pressureRelaxation, Forcing, 1, 
+                                                            wk1[0], 1);
                 Vmath::Vadd(physTot, wk1[0], 1, F_corrected, 1, F_corrected, 1);
 
                 //
@@ -518,7 +539,8 @@ namespace Nektar
                 error = m_pressure->L2(m_pressure->GetPhys(), previous_iter);           
                 if ( forcing_L2 != 0)
                 {
-                    if ( (error/forcing_L2 < m_pressureTolerance) && (error < m_pressureTolerance))
+                    if ( (error/forcing_L2 < m_pressureTolerance) && 
+                         (error < m_pressureTolerance) )
                     {
                         converged = true;
                     }  
@@ -580,18 +602,21 @@ namespace Nektar
 
             // Factors for Helmholtz system
             StdRegions::ConstFactorMap factors;
-            factors[StdRegions::eFactorLambda] = 1.0*m_viscousRelaxation/aii_Dt/m_kinvis;
+            factors[StdRegions::eFactorLambda] = 
+                                    1.0*m_viscousRelaxation/aii_Dt/m_kinvis;
             if(m_useSpecVanVisc)
             {
                 factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-                factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+                factors[StdRegions::eFactorSVVDiffCoeff]   = 
+                                                      m_sVVDiffCoeff/m_kinvis;
             }
 
             // Calculate L2-norm of F and set initial solution for iteration
             for(int i = 0; i < nvel; ++i)
             {
                 forcing_L2[i] = m_fields[0]->L2(Forcing[i],wk[0]);
-                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),previous_iter[i]);
+                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                        previous_iter[i]);
             }
 
             while (!converged)
@@ -608,12 +633,13 @@ namespace Nektar
                 // Calculate forcing term for next iteration
                 //
 
-                // Calculate L(U) - in this parts all components might be coupled
+                // Calculate L(U)- in this parts all components might be coupled
                 if(m_fields[0]->GetWaveSpace())
                 {
                     for (int i = 0; i < nvel; ++i)
                     {
-                        m_fields[0]->HomogeneousBwdTrans(previous_iter[i], wk[i]);
+                        m_fields[0]->HomogeneousBwdTrans(previous_iter[i], 
+                                                                    wk[i]);
                     }                    
                 }
                 else
@@ -630,14 +656,16 @@ namespace Nektar
                 {
                     for (int i = 0; i < nvel; ++i)
                     {
-                        m_fields[0]->HomogeneousFwdTrans(F_corrected[i], F_corrected[i]);
+                        m_fields[0]->HomogeneousFwdTrans(F_corrected[i], 
+                                                            F_corrected[i]);
                     }                    
                 }
                 else
                 {
                     for (int i = 0; i < nvel; ++i)
                     {
-                        Vmath::Vcopy(physTot, F_corrected[i], 1, F_corrected[i], 1);
+                        Vmath::Vcopy(physTot, F_corrected[i], 1, 
+                                                F_corrected[i], 1);
                     }                   
                 }
                 
@@ -645,27 +673,30 @@ namespace Nektar
                 for (int i = 0; i < nvel; ++i)
                 {
                     Vmath::Neg(physTot, F_corrected[i], 1);
-                    Vmath::Smul(physTot, m_viscousRelaxation, F_corrected[i], 1, F_corrected[i], 1);
+                    Vmath::Smul(physTot, m_viscousRelaxation, F_corrected[i], 1,
+                                                            F_corrected[i], 1);
                     // (-alpha*L(U^i) + U^i_jj)
                     for (int j = 0; j < nvel; ++j)
                     {
                         m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                                        previous_iter[i], wk[0]);
+                                                    previous_iter[i], wk[0]);
                         m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
                                                         wk[0], wk[0]);
                         Vmath::Vadd(physTot, F_corrected[i], 1, wk[0], 1, 
-                                                        F_corrected[i], 1);                
+                                                        F_corrected[i], 1);
                     }
                     //  F_corrected = alpha*F + (-alpha*L(U^i) + U^i_jj)
-                    Vmath::Smul(physTot, m_viscousRelaxation, Forcing[i], 1, wk[0], 1);
+                    Vmath::Smul(physTot, m_viscousRelaxation, Forcing[i], 1, 
+                                                                    wk[0], 1);
                     Vmath::Vadd(physTot, wk[0], 1, F_corrected[i], 1, 
-                                                    F_corrected[i], 1);                                 
+                                                    F_corrected[i], 1);
 
                     //
                     // Solve System
                     //
-                    m_fields[i]->HelmSolve(F_corrected[i], m_fields[i]->UpdateCoeffs(),
-                                       NullFlagList, factors); 
+                    m_fields[i]->HelmSolve(F_corrected[i], 
+                                    m_fields[i]->UpdateCoeffs(),
+                                    NullFlagList, factors); 
                     m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 
                     //
@@ -675,18 +706,19 @@ namespace Nektar
 
                     if ( forcing_L2[i] != 0)
                     {
-                        if ( (error/forcing_L2[i] >= m_viscousTolerance) || (error >= m_viscousTolerance) )
+                        if ( (error/forcing_L2[i] >= m_viscousTolerance) || 
+                             (error >= m_viscousTolerance) )
                         {
                             converged = false;
-                        }  
+                        }
                     }
                     else
                     {
                         if ( error >= m_viscousTolerance)
                         {
                             converged = false;
-                        }                
-                    }         
+                        }
+                    }
                     if (error > max_error)
                     {
                         max_error = error;
@@ -711,10 +743,10 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >          &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
-        Array<OneD, Array<OneD, NekDouble> >          vel(m_nConvectiveFields);
-        Array<OneD, Array<OneD, NekDouble> >          velPhys(m_nConvectiveFields);
-        Array<OneD, Array<OneD, NekDouble> >          Forcing(m_nConvectiveFields);
-        Array<OneD, Array<OneD, NekDouble> >          tmp(m_nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> >       vel(m_nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> >       velPhys(m_nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> >       Forcing(m_nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> >       tmp(m_nConvectiveFields);
         for (int i = 0; i < m_nConvectiveFields; ++i)
         {
             velPhys[i] = Array<OneD, NekDouble> (physTot, 0.0);
@@ -858,7 +890,8 @@ namespace Nektar
                         }
                     }
 
-                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1); 
+                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,
+                                                        wk[i*nvel+j], 1); 
                     
                     Vmath::Vvtvp(physTot, coordVel[j], 1, wk[i*nvel+j], 1,
                                           outarray[i], 1, outarray[i], 1);
@@ -875,17 +908,18 @@ namespace Nektar
             {
                 for (int j=0; j< nvel; j++)
                 {
-                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],coordVel[i],
-                                            tmp[0]);
+                    m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],
+                                            coordVel[i], tmp[0]);
 
-                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,wk[i*nvel+j], 1);
+                    Vmath::Vadd(physTot,wk[i*nvel+j],1,tmp[0],1,
+                                                        wk[i*nvel+j], 1);
                     Vmath::Neg(physTot, wk[i*nvel+j], 1);
                     
                     Vmath::Vvtvp(physTot, velPhys[j], 1, wk[i*nvel+j], 1,
                                           outarray[i], 1, outarray[i], 1);
                 }
             }
-            
+
             // Restore value of wavespace 
             m_fields[0]->SetWaveSpace(wavespace);
         }
@@ -930,11 +964,11 @@ namespace Nektar
                         m_fields[0]->HomogeneousBwdTrans(wk[i],wk[i]);
                     }
                 }
-            }                                      
-                 
+            }
+
             // Multiply by g^(ij)
             m_mapping->RaiseIndex(wk, outarray);
-            
+
             // Calculate correction = (nabla p)/J - g^(ij)p_,j
             // (Jac is not required if it is constant)
             if ( !m_mapping->HasConstantJacobian())
@@ -960,7 +994,7 @@ namespace Nektar
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_nConvectiveFields;
             Array<OneD, NekDouble> tmp (physTot, 0.0);
-            
+
             m_mapping->VelocityLaplacian(velPhys, outarray);  // L(U)
             for (int i = 0; i < nvel; ++i)
             {
@@ -984,9 +1018,10 @@ namespace Nektar
                             m_fields[0]->HomogeneousBwdTrans(tmp,tmp);
                         }
                     }
-                    Vmath::Vsub(physTot, outarray[i], 1, tmp, 1, outarray[i], 1);                
+                    Vmath::Vsub(physTot, outarray[i], 1, tmp, 1, 
+                                                        outarray[i], 1);
                 }
             }
         }
-    
+
 } //end of namespace

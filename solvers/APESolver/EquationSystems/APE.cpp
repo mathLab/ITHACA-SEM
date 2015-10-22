@@ -453,8 +453,8 @@ void APE::UpdateBasefield()
 
     if (m_time > last_update)
     {
-        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
         last_update = m_time;
+        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
     }
 }
 

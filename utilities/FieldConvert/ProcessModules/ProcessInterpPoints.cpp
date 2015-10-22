@@ -117,7 +117,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                         m_config["line"].as<string>().c_str(),values),
                      "Failed to interpret line string");
 
-            ASSERTL0(values.size() > 3,
+            ASSERTL0(values.size() > 2,
                      "line string should contain 2Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
@@ -162,11 +162,17 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                              m_config["plane"].as<string>().c_str(),values),
                      "Failed to interpret plane string");
 
-            ASSERTL0(values.size() > 10,
-                     "line string should contain 2Dim+1 values "
+            ASSERTL0(values.size() > 9,
+                     "plane string should contain 4Dim+2 values "
                      "N1,N2,x0,y0,x1,y1,x2,y2,x3,y3");
 
-
+            double tmp;
+            ASSERTL0(std::modf(values[0], tmp) == 0.0, "N1 is not an integer");
+            ASSERTL0(std::modf(values[1], tmp) == 0.0, "N2 is not an integer");
+            
+            ASSERTL0(values[0] > 1), "N1 is not a valid number");
+            ASSERTL0(values[1] > 1), "N2 is not a valid number");
+            
             int dim = (values.size()-2)/4;
 
             int npts1 = values[0];

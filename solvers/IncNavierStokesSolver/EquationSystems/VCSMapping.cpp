@@ -113,6 +113,12 @@ namespace Nektar
         // Flags determining if pressure/viscous terms should be treated implicitly
         m_session->MatchSolverInfo("MappingImplicitPressure","True",m_implicitPressure,false);
         m_session->MatchSolverInfo("MappingImplicitViscous","True",m_implicitViscous,false);
+        m_session->MatchSolverInfo("MappingNeglectViscous","True",m_neglectViscous,false);
+        
+        if (m_neglectViscous)
+        {
+            m_implicitViscous = false;
+        }
         
         // Tolerances and relaxation parameters for implicit terms
         m_session->LoadParameter("MappingPressureTolerance",m_pressureTolerance,1e-12);
@@ -755,7 +761,7 @@ namespace Nektar
             }            
         }   
         // Viscous contribution
-        if (!m_implicitViscous)
+        if ( (!m_implicitViscous) && (!m_neglectViscous))
         {
             MappingViscousCorrection(vel, tmp);
             for (int i = 0; i < m_nConvectiveFields; ++i)

@@ -786,22 +786,26 @@ be mapped into a geometry with a homogeneous direction, which can be treated
 using a quasi-3D method. It is also useful for problems with a moving body,
  where otherwise a moving mesh would have to be employed.
  
-\subsubsection{Solver Info}
+\subsection{Solver Info}
 
 To activate the mapping technique, \inltt{SolverType} needs to be set as:
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SolverType" VALUE="VCSMapping" />
 \end{lstlisting}
-Also, there are other two optional properties in the \inltt{SolverInfo} section:
+Also, there are other optional properties in the \inltt{SolverInfo} section:
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> <!-- Default = FALSE -->
 <I PROPERTY="MappingImplicitViscous" VALUE="TRUE"/>  <!-- Default = FALSE -->
+
+<I PROPERTY="MappingNeglectViscous" VALUE="FALSE"/>  <!-- Default = FALSE -->
 \end{lstlisting}
-these options determine if the pressure and viscous terms resulting from the
-coordinate transformation are treated implicitly using an iterative procedure.
- By default, all mapping terms are treated explicitly.
+the first two options determine if the pressure and viscous terms resulting from the
+coordinate transformation are treated implicitly using an iterative procedure. If the last
+option is set to true, the viscous terms in the mapping are not computed. This leads to a
+faster solution, but the effect on the results need to be determined for the specific case. 
+ By default, all mapping terms are computed and treated explicitly.
  
-\subsubsection{Parameters}
+\subsection{Parameters}
 
 When treating the mapping terms implicitly, the following parameters can be set:
 \begin{lstlisting}[style=XMLStyle]

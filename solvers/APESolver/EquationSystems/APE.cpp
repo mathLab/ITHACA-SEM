@@ -146,15 +146,6 @@ APE::~APE()
 
 
 /**
- *
- */
-void APE::v_DoInitialise()
-{
-    SetInitialConditions();
-}
-
-
-/**
  * @brief Return the flux vector for the APE equations.
  *
  * @param physfield   Fields.

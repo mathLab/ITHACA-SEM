@@ -105,15 +105,17 @@ void FaceMesh::Mesh()
         {
             break;
         }
+        m_connec.clear();
         pplanemesh->AssignStiener(m_stienerpoints);
         pplanemesh->Mesh();
         pplanemesh->Extract(intconnec);
         for(int i = 0; i < intconnec.size(); i++)
         {
             vector<NodeSharedPtr> tri(3);
-            tri[0] = m_mesh->m_meshnode[intconnec[i][0]];
-            tri[1] = m_mesh->m_meshnode[intconnec[i][1]];
-            tri[2] = m_mesh->m_meshnode[intconnec[i][2]];
+            for(int j = 0; j < 3; j++)
+            {
+                tri[j] = m_mesh->m_meshnode[intconnec[i][j]];
+            }
             m_connec.push_back(tri);
         }
         meshcounter++;
@@ -137,10 +139,11 @@ void FaceMesh::Report()
     /*int edgec = 0;
     for(int i = 0; i < m_cadsurf->GetEdges().size(); i++)
     {
-        edgec+=m_cadsurf->GetEdges()[i].size();
+        edgec+=m_cadsurf->GetEdges()[i].edges.size();
     }
     cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tEdges: " << nume << "\tCAD Edges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
-*/}
+    */
+}
 
 void FaceMesh::Stretching()
 {
@@ -333,7 +336,33 @@ void FaceMesh::OrientateCurves()
 
     //loops made need to orientate on which is biggest and define holes
 
-    vector<NekDouble> areas;
+    for(int i = 0; i < orderedLoops.size(); i++)
+    {
+        int half = int(orderedLoops[i].size()/2) - 1;
+
+        NodeSharedPtr n1,n2,nh;
+
+        n1 = orderedLoops[i][0];
+        n2 = orderedLoops[i][1];
+        nh = orderedLoops[i][half];
+
+        Array<OneD,NekDouble> n1info,n2info,nhinfo;
+        n1info = n1->GetCADSurf(m_id);
+        n2info = n2->GetCADSurf(m_id);
+        nhinfo = nh->GetCADSurf(m_id);
+
+        NekDouble ua = (100.0*n1info[0]+
+                        100.0*n2info[0]+
+                        1.0* nhinfo[0])/201.0 ;
+        NekDouble va = (100.0*n1info[1]+
+                        100.0*n2info[1]+
+                        1.0* nhinfo[1])/201.0 ;
+
+        Array<OneD, NekDouble> tmp(2);
+        tmp[0]=ua;
+        tmp[1]=va;
+        m_edgeloops[i].center=tmp;
+    }
 
     for(int i = 0; i < orderedLoops.size(); i++)
     {
@@ -376,7 +405,7 @@ void FaceMesh::OrientateCurves()
 
     }while(ct>0);
 
-    if(areas[0]<0) //reverse the first uvLoop
+    if(m_edgeloops[0].area<0) //reverse the first uvLoop
     {
         vector<NodeSharedPtr> tmp = orderedLoops[0];
         reverse(tmp.begin(), tmp.end());
@@ -385,7 +414,7 @@ void FaceMesh::OrientateCurves()
 
     for(int i = 1; i < orderedLoops.size(); i++)
     {
-        if(areas[i]>0) //reverse the loop
+        if(m_edgeloops[i].area>0) //reverse the loop
         {
             vector<NodeSharedPtr> tmp = orderedLoops[i];
             reverse(tmp.begin(), tmp.end());

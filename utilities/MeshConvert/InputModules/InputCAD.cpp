@@ -122,6 +122,12 @@ void InputCAD::Process()
 
     m_surfacemesh->Mesh();
 
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
+    ProcessComposites();
+
     //m_surfacemeshing->HOSurf();
     /*
     //create tet mesh

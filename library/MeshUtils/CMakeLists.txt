@@ -6,7 +6,7 @@ IF(NEKTAR_USE_MESH)
         SurfaceMeshing/CurveMesh.cpp
         Octree/Octant.cpp
         Octree/Octree.cpp
-        SurfaceMeshing/SurfaceMeshMesh.cpp
+        SurfaceMeshing/SurfaceMesh.cpp
 #        SurfaceMeshing/SurfaceMeshHOMesh.cpp
         SurfaceMeshing/FaceMesh.cpp
 #        SurfaceMeshing/OptimiseFunctions.cpp

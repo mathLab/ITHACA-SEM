@@ -70,6 +70,7 @@ public:
         TopLoc_Location mv(transform);
         in.Move(mv);
 
+        m_ID = i;
         m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
     }
 

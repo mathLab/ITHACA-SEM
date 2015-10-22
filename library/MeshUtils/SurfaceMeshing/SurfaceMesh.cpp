@@ -57,7 +57,7 @@ void SurfaceMesh::Mesh()
     {
         Array<OneD, NekDouble> loc = itv->second->GetLoc();
         NodeSharedPtr n = boost::shared_ptr<Node>(
-                          new Node(itv->first-1, loc[0], loc[1], loc[2]));
+                          new Node(m_mesh->m_meshnode.size(), loc[0], loc[1], loc[2]));
         m_mesh->m_meshnode.push_back(n);
     }
 
@@ -89,7 +89,7 @@ void SurfaceMesh::Mesh()
             vector<CADSurfSharedPtr> s = m_cad->GetCurve(cs[j])->GetAdjSurf();
             for(int k = 0; k < s.size(); k++)
             {
-                l.push_back(s[i]->GetId());
+                l.push_back(s[k]->GetId());
             }
         }
         l.sort(); l.unique();
@@ -221,6 +221,9 @@ void SurfaceMesh::Mesh()
         m_facemeshes[i]->Mesh();
 
     }
+
+
+}
     /*
     Validate();
 
@@ -380,6 +383,16 @@ void SurfaceMesh::Mesh()
         }
     }
 
+    if(m_mesh->m_verbose)
+    {
+        cout << endl << "\tSurface mesh stats:" << endl;
+        for(int i = 1; i <= m_cad->GetNumSurf(); i++)
+        {
+            cout << "\t\tSurface: " << i;
+            m_facemeshes[i]->Report();
+        }
+    }
+    
     Optimise();
 
     if(m_verbose)
@@ -405,7 +418,7 @@ void SurfaceMesh::Mesh()
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
 */
-}
+
 
 }
 }

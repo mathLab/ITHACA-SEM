@@ -158,6 +158,13 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         out.pointlist[i*2+0] = out.pointlist[i*2+0]/m_str;
     }
 
+    //verify the mesh a bit
+    if(out.numberofpoints-out.numberofedges+out.numberoftriangles != 2 - m_centers.size())
+    {
+        cout << endl << "epc wrong" << endl;
+        cout << out.numberofpoints-out.numberofedges+out.numberoftriangles << " " << m_centers.size() << " " << sid << endl;
+    }
+
 }
 
 void TriangleInterface::Extract(std::vector<Array<OneD, int> > &Connec)

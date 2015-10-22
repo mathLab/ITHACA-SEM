@@ -53,6 +53,9 @@
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
 
+#include <LibUtilities/Foundations/Foundations.hpp>
+
+
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
@@ -315,16 +318,13 @@ namespace Nektar
                 m_isCompressed = true;
                 // Extract the vertex body
                 TiXmlNode* vertexChild = vSubElement->FirstChild();
-                ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
+                ASSERTL0(vertexChild, "Unable to extract the data "
+                         "from the compressed vertex tag.");
                 
                 std::string vertexStr;
-                while(vertexChild)
+                if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
-                    {
-                        vertexStr += vertexChild->ToText()->ValueStr();
-                    }
-                    vertexChild = vertexChild->NextSibling();
+                    vertexStr += vertexChild->ToText()->ValueStr();
                 }
                 
                 std::vector<MeshVertex> vertData;
@@ -539,7 +539,7 @@ namespace Nektar
                             {
                                 MeshEntity e;
                                 e.id = data[i].id;
-                                e.type = 'T';
+                                e.type = 'S';
                                 e.list.push_back(data[i].v0);
                                 e.list.push_back(data[i].v1);
                                 m_meshElements[e.id] = e;
@@ -582,6 +582,7 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
+                        break;
                     case 'A':
                         {
                             std::vector<MeshTet> data;
@@ -599,6 +600,7 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
+                        break;
                     case 'P':
                         {
                             std::vector<MeshPyr> data;
@@ -616,6 +618,7 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
+                        break;
                     case 'R':
                         {
                             std::vector<MeshPrism> data;
@@ -625,7 +628,7 @@ namespace Nektar
                             {
                                 MeshEntity f;
                                 f.id = data[i].id;
-                                f.type = 'Q';
+                                f.type = 'R';
                                 for (int j = 0; j < 5; ++j)
                                 {
                                     f.list.push_back(data[i].f[j]);
@@ -633,6 +636,7 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
+                        break;
                     case 'H':
                         {
                             std::vector<MeshHex> data;
@@ -642,7 +646,7 @@ namespace Nektar
                             {
                                 MeshEntity f;
                                 f.id = data[i].id;
-                                f.type = 'Q';
+                                f.type = 'H';
                                 for (int j = 0; j < 6; ++j)
                                 {
                                     f.list.push_back(data[i].f[j]);
@@ -650,6 +654,7 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
+                        break;
                     default:
                         ASSERTL0(false,"Unrecognised element tag");
                     }
@@ -677,35 +682,122 @@ namespace Nektar
             if (pSession->DefinesElement("Nektar/Geometry/Curved"))
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
+
+                // check to see if compressed
+                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
                 x = vSubElement->FirstChildElement();
                 while(x)
                 {
-                    MeshCurved c;
-                    ASSERTL0(x->Attribute("ID", &c.id),
-                             "Failed to get attribute ID");
-                    c.type = std::string(x->Attribute("TYPE"));
-                    ASSERTL0(!c.type.empty(),
-                             "Failed to get attribute TYPE");
-                    ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
-                             "Failed to get attribute NUMPOINTS");
-                    c.data = x->FirstChild()->ToText()->Value();
-                    c.entitytype = x->Value()[0];
-                    if (c.entitytype == "E")
+                    if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
                     {
-                        ASSERTL0(x->Attribute("EDGEID", &c.entityid),
-                             "Failed to get attribute EDGEID");
-                    }
-                    else if (c.entitytype == "F")
-                    {
-                        ASSERTL0(x->Attribute("FACEID", &c.entityid),
-                             "Failed to get attribute FACEID");
+                        m_isCompressed = true;                        
+
+                        const char *entitytype = x->Value();
+                 
+                        // read in edge or face info
+                        if(boost::iequals(entitytype,"E")||
+                           boost::iequals(entitytype,"F"))
+                        {
+                            // read in data
+                            std::string elmtStr;             
+                            TiXmlNode* child = x->FirstChild();
+                            
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+                            
+                            std::vector<MeshCurvedInfo> cinfo;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,cinfo);                            
+                            // unpack list of curved edge or faces
+                            for(int i = 0; i < cinfo.size(); ++i)
+                            {
+                                MeshCurved c;
+                                c.id         = cinfo[i].id;
+                                c.entitytype = entitytype[0];
+                                c.entityid   = cinfo[i].entityid;
+                                c.npoints    = cinfo[i].npoints;
+                                c.type       = kPointsTypeStr[cinfo[i].ptype];
+                                c.ptoffset   = cinfo[i].ptoffset;
+                                m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
+                            }
+                        }
+                        else  if(boost::iequals(entitytype,"DATAPOINTS"))
+                        {
+                            MeshCurvedPts cpts; 
+                            
+                            ASSERTL0(x->Attribute("ID", &cpts.id),
+                                     "Failed to get ID from PTS section");
+
+                            // read in data
+                            std::string elmtStr;             
+
+                            TiXmlElement* DataIdx = 
+                                x->FirstChildElement("INDEX");
+                            ASSERTL0(DataIdx, "Cannot read data index tag in compressed curved section");
+
+                            TiXmlNode* child = DataIdx->FirstChild();
+                            
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+                            
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,cpts.index);
+
+                            TiXmlElement* DataPts = x->FirstChildElement("POINTS");
+                            ASSERTL0(DataPts, "Cannot read data pts tag in compressed curved section");
+
+
+                            child = DataPts->FirstChild();
+                            
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+                            
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,cpts.pts);
+
+                            m_meshCurvedPts[cpts.id] = cpts; 
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"Unknown tag in curved section");
+                        }
+                        
+                        x = x->NextSiblingElement();
                     }
                     else
                     {
-                        ASSERTL0(false, "Unknown curve type.");
+                        MeshCurved c;
+                        ASSERTL0(x->Attribute("ID", &c.id),
+                                 "Failed to get attribute ID");
+                        c.type = std::string(x->Attribute("TYPE"));
+                        ASSERTL0(!c.type.empty(),
+                                 "Failed to get attribute TYPE");
+                        ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
+                                 "Failed to get attribute NUMPOINTS");
+                        c.data = x->FirstChild()->ToText()->Value();
+                        c.entitytype = x->Value()[0];
+
+                        if (c.entitytype == "E")
+                        {
+                            ASSERTL0(x->Attribute("EDGEID", &c.entityid),
+                                     "Failed to get attribute EDGEID");
+                        }
+                        else if (c.entitytype == "F")
+                        {
+                            ASSERTL0(x->Attribute("FACEID", &c.entityid),
+                                     "Failed to get attribute FACEID");
+                        }
+                        else
+                        {
+                            ASSERTL0(false, "Unknown curve type.");
+                        }
+
+                        m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
+                        x = x->NextSiblingElement();
                     }
-                    m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
-                    x = x->NextSiblingElement();
                 }
             }
 
@@ -1571,30 +1663,151 @@ namespace Nektar
             if (m_dim >= 2)
             {
                 std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
-                for (vItCurve  = m_meshCurved.begin(); 
-                     vItCurve != m_meshCurved.end(); 
-                     ++vItCurve)
+
+                if(m_isCompressed)
                 {
-                    MeshCurved c = vItCurve->second;
+                    std::vector<MeshCurvedInfo> edgeinfo;
+                    std::vector<MeshCurvedInfo> faceinfo;
+                    MeshCurvedPts  curvedpts; 
+                    curvedpts.id = 0; // assume all points are going in here
+                    int ptoffset = 0; 
+                    int newidx   = 0;
+                    std::map<int,int> idxmap;
                     
-                    if (vEdges.find(c.entityid) != vEdges.end() || 
-                        vFaces.find(c.entityid) != vFaces.end())
+
+                    for (vItCurve  = m_meshCurved.begin(); 
+                         vItCurve != m_meshCurved.end(); 
+                         ++vItCurve)
                     {
-                        x = new TiXmlElement(c.entitytype);
-                        x->SetAttribute("ID", c.id);
-                        if (c.entitytype == "E")
+                        MeshCurved c = vItCurve->second;
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end())) 
                         {
-                            x->SetAttribute("EDGEID", c.entityid);
+                            MeshCurvedInfo cinfo; 
+                            // add in
+                            cinfo.id       = c.id;
+                            cinfo.entityid = c.entityid;
+                            cinfo.npoints  = c.npoints;
+                            for(int i = 0; i < SIZE_PointsType; ++i)
+                            {
+                                if(c.type.compare(kPointsTypeStr[i]) == 0)
+                                {
+                                    cinfo.ptype = (PointsType) i;
+                                    break;
+                                }
+                            }
+                            cinfo.ptid   = 0; // set to just one point set
+                            cinfo.ptoffset = ptoffset; 
+                            ptoffset += c.npoints; 
+                            
+                            if (IsEdge)
+                            {
+                                edgeinfo.push_back(cinfo);
+                            }
+                            else 
+                            {
+                                faceinfo.push_back(cinfo);
+                            }
+
+                            // fill in points to list. 
+                            for(int i =0; i < c.npoints; ++i)
+                            {
+                                // get index from full list; 
+                                int idx = m_meshCurvedPts[c.ptid].index[c.ptoffset+i];
+                                // if index is not already in curved
+                                // points add it or set index to location
+                                if(idxmap.count(idx) == 0)
+                                {
+                                    idxmap[idx] = newidx; 
+                                    curvedpts.index.push_back(newidx);
+                                    curvedpts.pts.push_back(m_meshCurvedPts[c.ptid].pts[idx]);
+                                    newidx++; 
+                                }
+                                else
+                                {
+                                    curvedpts.index.push_back(idxmap[idx]);
+                                }
+                            }
                         }
-                        else
-                        {
-                            x->SetAttribute("FACEID", c.entityid);
-                        }
-                        x->SetAttribute("TYPE", c.type);
-                        x->SetAttribute("NUMPOINTS", c.npoints);
-                        y = new TiXmlText(c.data);
-                        x->LinkEndChild(y);
+                    }
+
+                    // add xml information
+                    if(edgeinfo.size())
+                    {
+                        vCurved->SetAttribute("COMPRESSED","B64Z");
+
+                        x = new TiXmlElement("E");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
+                        x->LinkEndChild(new TiXmlText(dataStr));
                         vCurved->LinkEndChild(x);
+                    }
+
+                    if(faceinfo.size())
+                    {
+                        vCurved->SetAttribute("COMPRESSED","B64Z");
+
+                        x = new TiXmlElement("F");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
+                        x->LinkEndChild(new TiXmlText(dataStr));
+                        vCurved->LinkEndChild(x);
+                    }
+
+                    if(edgeinfo.size()||faceinfo.size())
+                    {
+                        x = new TiXmlElement("DATAPOINTS");
+                        x->SetAttribute("ID", curvedpts.id);
+                        
+                        TiXmlElement *subx = new TiXmlElement("INDEX");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(curvedpts.index,dataStr);
+                        subx->LinkEndChild(new TiXmlText(dataStr));
+                        x->LinkEndChild(subx);
+
+                        subx = new TiXmlElement("POINTS");
+                        CompressData::ZlibEncodeToBase64Str(curvedpts.pts,dataStr);
+                        subx->LinkEndChild(new TiXmlText(dataStr));
+                        x->LinkEndChild(subx);
+
+                        vCurved->LinkEndChild(x);
+                    }
+                }
+                else
+                {
+                    for (vItCurve  = m_meshCurved.begin(); 
+                         vItCurve != m_meshCurved.end(); 
+                         ++vItCurve)
+                    {
+                        MeshCurved c = vItCurve->second;
+                        
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        {
+                            x = new TiXmlElement(c.entitytype);
+                            x->SetAttribute("ID", c.id);
+                            if (IsEdge)
+                            {
+                                x->SetAttribute("EDGEID", c.entityid);
+                            }
+                            else
+                            {
+                                x->SetAttribute("FACEID", c.entityid);
+                            }
+                            x->SetAttribute("TYPE", c.type);
+                            x->SetAttribute("NUMPOINTS", c.npoints);
+                            y = new TiXmlText(c.data);
+                            x->LinkEndChild(y);
+                            vCurved->LinkEndChild(x);
+                        }
                     }
                 }
             }

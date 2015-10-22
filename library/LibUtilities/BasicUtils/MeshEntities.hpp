@@ -35,6 +35,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIBUTILITIES_BASICUTILS_MESHENTITIES_HPP
 #define NEKTAR_LIBUTILITIES_BASICUTILS_MESHENTITIES_HPP
+
+#include <LibUtilities/Foundations/PointsType.h>
 namespace Nektar
 {
     namespace LibUtilities
@@ -91,6 +93,23 @@ namespace Nektar
             int f[6];
         };
         
+        struct MeshCurvedInfo
+        {
+            int        id;
+            int        entityid;
+            int        npoints;
+            PointsType ptype;     
+            int        ptid;     // id of point data map
+            int        ptoffset; // pffset of data entry for this curve
+        };
+        
+        struct MeshCurvedPts
+        {
+            int id;
+            std::vector<int>       index;
+            std::vector<MeshVertex> pts; 
+        };
+            
     }
 }
 #endif

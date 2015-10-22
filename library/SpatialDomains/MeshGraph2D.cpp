@@ -87,8 +87,8 @@ namespace Nektar
 
             ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
             
-            ReadEdges(doc);
             ReadCurves(doc);
+            ReadEdges(doc);
             ReadElements(doc);
             ReadComposites(doc);
             ReadDomain(doc);

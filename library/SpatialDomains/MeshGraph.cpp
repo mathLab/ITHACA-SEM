@@ -1335,17 +1335,9 @@ namespace Nektar
                 {
                     int edgeid = edginfo[i].entityid;
 
-                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, 
-                                                                                 edginfo[i].ptype));
+                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, edginfo[i].ptype));
 
-                    // get edge
-                    ASSERTL1(m_segGeoms.count(edgeid) != 0,"Could not find segement id");
-                    SegGeomSharedPtr seg = m_segGeoms[edgeid];
-                    
-                    // load first vertex
-                    curve->m_points.push_back(seg->GetVertex(0));
-
-                    // load centre points
+                    // load points
                     int offset = edginfo[i].ptoffset;
                     for(int j = 0; j < edginfo[i].npoints; ++j)
                     {
@@ -1355,133 +1347,30 @@ namespace Nektar
                         curve->m_points.push_back(vert);
                     }
 
-                    // load last vertex 
-                    curve->m_points.push_back(seg->GetVertex(1));
-                    
                     m_curvedEdges[edgeid] = curve;
                 }
 
 
                 for(int i = 0; i < facinfo.size(); ++i)
                 {
-                    Geometry2DSharedPtr fac;
                     int faceid = facinfo[i].entityid;
                     
-                    LibUtilities::PointsType ptype = facinfo[i].ptype;
-                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid, ptype));
-                                                                                 
-                    // get face
-                    if(m_triGeoms.count(faceid) != 0)
-                    {
-                        fac = m_triGeoms[faceid];
+                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid,
+                                                                          facinfo[i].ptype)); 
 
-                        // load first vertices
-                        for(int i = 0; i < fac->GetNumVerts(); ++i)
-                        {
-                            curve->m_points.push_back(fac->GetVertex(i));
-                        }
-                        
-                        // load up edges; 
-                        for(int i = 0;  i < 3; ++i)
-                        {
-                            Geometry1DSharedPtr     edg     = fac->GetEdge(i);
-                            StdRegions::Orientation eorient = fac->GetEorient(i);
-                            CurveSharedPtr edcur = m_curvedEdges[edg->GetEid()];
-                            if(eorient == StdRegions::eForwards)
-                            {
-                                for(int j = 1; j < edcur->m_points.size()-1; ++j)
-                                {
-                                    curve->m_points.push_back(edcur->m_points[j]);
-                                }
-                            }
-                            else
-                            {
-                                for(int j = edcur->m_points.size()-1; j > 0; --j)
-                                {
-                                    curve->m_points.push_back(edcur->m_points[j]);
-                                }
-                            }
-                        }
-                        
-                        // load centre points
-                        int offset = facinfo[i].ptoffset;
-                        for(int j = 0; j < facinfo[i].npoints; ++j)
-                        {
-                            int idx = cpts.index[offset+j];
+                    int offset = facinfo[i].ptoffset;
+                    for(int j = 0; j < facinfo[i].npoints; ++j)
+                    {
+                        int idx = cpts.index[offset+j];
                             
-                            PointGeomSharedPtr vert(MemoryManager<PointGeom>::
-                                                    AllocateSharedPtr(m_meshDimension, facinfo[i].id, 
-                                                                      cpts.pts[idx].x, cpts.pts[idx].y, 
-                                                                      cpts.pts[idx].z));
-                            curve->m_points.push_back(vert);
-                        }
-
+                        PointGeomSharedPtr vert(MemoryManager<PointGeom>::
+                                                AllocateSharedPtr(m_meshDimension, 
+                                                                  facinfo[i].id, 
+                                                                  cpts.pts[idx].x, 
+                                                                  cpts.pts[idx].y, 
+                                                                  cpts.pts[idx].z));
+                        curve->m_points.push_back(vert);
                     }
-                    else if(m_quadGeoms.count(faceid) != 0)
-                    {
-                        
-                        fac = m_quadGeoms[faceid];
-
-                        // not sure if always have square number of points
-                        // however not provided with any other data so seems likely. 
-                        int n = sqrt(facinfo[i].npoints)+2; 
-                        
-                        curve->m_points.resize(n*n);
-                        
-                        // load first vertices
-                        curve->m_points[0]       = fac->GetVertex(0);
-                        curve->m_points[n-1]     = fac->GetVertex(1);
-                        curve->m_points[n*n-1]   = fac->GetVertex(2);
-                        curve->m_points[n*(n-1)] = fac->GetVertex(3);
-                        
-                        // load up edges - interior; 
-                        int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
-                        for(int i = 0;  i < 4; ++i)
-                        {
-                            Geometry1DSharedPtr     edg     = fac->GetEdge(i);
-                            StdRegions::Orientation eorient = fac->GetEorient(i);
-                            CurveSharedPtr edcur = m_curvedEdges[edg->GetEid()];
-                            if(eorient == StdRegions::eForwards)
-                            {
-                                for (int j = 1; j < n-1; ++j)
-                                {
-                                    curve->m_points[skips[i][0] + j*skips[i][1]] = 
-                                        edcur->m_points[n-2-j];
-                                }
-                            }
-                            else
-                            {
-                                for (int j = 1; j < n-1; ++j)
-                                {
-                                    curve->m_points[skips[i][0] + j*skips[i][1]] = 
-                                        edcur->m_points[j-1];
-                                }
-
-                            }
-                        }
-                        
-                        // load  interior
-                        int offset = facinfo[i].ptoffset;
-                        for (int i = 1; i < n-1; ++i)
-                        {
-                            for (int j = 1; j < n-1; ++j)
-                            {
-                                int idx = cpts.index[offset+(i-1)*(n-2)+(j-1)];
-                                
-                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::
-                                                    AllocateSharedPtr(m_meshDimension, facinfo[i].id, 
-                                                                      cpts.pts[idx].x, cpts.pts[idx].y, 
-                                                                      cpts.pts[idx].z));
-
-                                curve->m_points[i*n+j] = vert; 
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"Failed to find face in tri or quad geoms");
-                    }
-                    
                     
                     m_curvedFaces[faceid] = curve;
                 }

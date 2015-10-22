@@ -579,7 +579,6 @@ namespace Nektar
 
                 int facecnt = 0;
                 
-                // 2D elements in 3-space, output face curvature information
                 if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
                 {
                     vector<ElementSharedPtr>::iterator it;
@@ -602,6 +601,7 @@ namespace Nektar
                         }
                     }
                 }
+                // 2D elements in 3-space, output face curvature information
                 else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
                 {
                     vector<ElementSharedPtr>::iterator it;
@@ -656,24 +656,27 @@ namespace Nektar
 
                 for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); ++it)
                 {
+                    
                     if ((*it)->m_edgeNodes.size() > 0)
                     {
                         LibUtilities::MeshCurvedInfo cinfo; 
                         cinfo.id       = edgecnt++;
                         cinfo.entityid = (*it)->m_id;
-                        cinfo.npoints  = (*it)->m_edgeNodes.size(); // just interior nodes
+                        cinfo.npoints  = (*it)->m_edgeNodes.size()+2; 
                         cinfo.ptype    = (*it)->m_curveType;
                         cinfo.ptid     = 0; // set to just one point set
                         cinfo.ptoffset = ptoffset; 
 
                         edgeinfo.push_back(cinfo);
                         
-                        // fill in points -- currently put in all
-                        // interior points
-                        for(int i =0; i < (*it)->m_edgeNodes.size(); ++i)
+                        std::vector<NodeSharedPtr> nodeList;
+                        (*it)->GetCurvedNodes(nodeList);
+
+                        // fill in points 
+                        for(int i =0; i < nodeList.size(); ++i)
                         {
                             pair<NodeSet::iterator,bool> testIns =
-                                cvertlist.insert((*it)->m_edgeNodes[i]);
+                                cvertlist.insert(nodeList[i]);
                             
                             if(testIns.second) // have inserted node
                             {
@@ -681,22 +684,24 @@ namespace Nektar
 
                                 LibUtilities::MeshVertex v;
                                 v.id = newidx;
-                                v.x  = (*it)->m_edgeNodes[i]->m_x;
-                                v.y  = (*it)->m_edgeNodes[i]->m_y;
-                                v.z  = (*it)->m_edgeNodes[i]->m_z;
+                                v.x  = nodeList[i]->m_x;
+                                v.y  = nodeList[i]->m_y;
+                                v.z  = nodeList[i]->m_z;
                                 curvedpts.pts.push_back(v);
                                 newidx++;
                             }
+
                             curvedpts.index.push_back(
                                            (*(testIns.first))->m_id);
                         }
+
                         ptoffset += cinfo.npoints; 
                     }
                 }
 
                 int facecnt = 0;
                 
-                // 2D elements in 3-space, output face curvature information
+                // 1D element in 2 or 3 space
                 if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
                 {
                     vector<ElementSharedPtr>::iterator it;
@@ -709,42 +714,42 @@ namespace Nektar
                             LibUtilities::MeshCurvedInfo cinfo; 
                             cinfo.id       = facecnt++;
                             cinfo.entityid = (*it)->GetId();
-                            cinfo.npoints  = (*it)->GetVolumeNodes().size(); // just interior nodes
+                            cinfo.npoints  = (*it)->GetNodeCount();
                             cinfo.ptype    = (*it)->GetCurveType();
                             cinfo.ptid     = 0; // set to just one point set
                             cinfo.ptoffset = ptoffset; 
                             
                             edgeinfo.push_back(cinfo);
 
-                            // fill in points -- currently put in all
-                            // interior points
-                            
-                            for(int i =0; i < cinfo.npoints; ++i)
+                            // fill in points 
+                            vector<NodeSharedPtr> tmp;
+                            (*it)->GetCurvedNodes(tmp);
+
+                            for(int i =0; i < tmp.size(); ++i)
                             {
-                                
                                 pair<NodeSet::iterator,bool> testIns =
-                                    cvertlist.insert((*it)->GetVolumeNodes()[i]);
-                            
+                                    cvertlist.insert(tmp[i]);
+                                
                                 if(testIns.second) // have inserted node
                                 {
                                     (*(testIns.first))->m_id = newidx;
-                                
+                                    
                                     LibUtilities::MeshVertex v;
                                     v.id = newidx;
-                                    v.x  = (*it)->GetVolumeNodes()[i]->m_x;
-                                    v.y  = (*it)->GetVolumeNodes()[i]->m_y;
-                                    v.z  = (*it)->GetVolumeNodes()[i]->m_z;
+                                    v.x  = tmp[i]->m_x;
+                                    v.y  = tmp[i]->m_y;
+                                    v.z  = tmp[i]->m_z;
                                     curvedpts.pts.push_back(v);
                                     newidx++;
                                 }
-
-                                curvedpts.index.push_back(
-                                          (*(testIns.first))->m_id);
+                                curvedpts.index.push_back((*(testIns.first))->m_id);
                             }
+                            
                             ptoffset += cinfo.npoints; 
                         }
                     }
                 }
+                // 2D elements in 3-space, output face curvature information
                 else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
                 {
                     vector<ElementSharedPtr>::iterator it;
@@ -757,27 +762,35 @@ namespace Nektar
                             LibUtilities::MeshCurvedInfo cinfo; 
                             cinfo.id       = facecnt++;
                             cinfo.entityid = (*it)->GetId();
-                            cinfo.npoints  = (*it)->GetVolumeNodes().size(); // just interior nodes
+                            cinfo.npoints  = (*it)->GetNodeCount();
                             cinfo.ptype    = (*it)->GetCurveType();
                             cinfo.ptid     = 0; // set to just one point set
                             cinfo.ptoffset = ptoffset; 
                             
                             faceinfo.push_back(cinfo);
 
-                            // fill in points -- currently put in all
-                            // interior points
-                            
-                            for(int i =0; i < cinfo.npoints; ++i)
+                            // fill in points 
+                            vector<NodeSharedPtr> tmp;
+                            (*it)->GetCurvedNodes(tmp);
+
+                            for(int i =0; i < tmp.size(); ++i)
                             {
-                                LibUtilities::MeshVertex v;
-                                v.id = newidx;
-                                v.x  = (*it)->GetVolumeNodes()[i]->m_x;
-                                v.y  = (*it)->GetVolumeNodes()[i]->m_y;
-                                v.z  = (*it)->GetVolumeNodes()[i]->m_z;
-                                curvedpts.pts.push_back(v);
+                                pair<NodeSet::iterator,bool> testIns =
+                                    cvertlist.insert(tmp[i]);
                                 
-                                curvedpts.index.push_back(newidx);
-                                newidx++;
+                                if(testIns.second) // have inserted node
+                                {
+                                    (*(testIns.first))->m_id = newidx;
+                                    
+                                    LibUtilities::MeshVertex v;
+                                    v.id = newidx;
+                                    v.x  = tmp[i]->m_x;
+                                    v.y  = tmp[i]->m_y;
+                                    v.z  = tmp[i]->m_z;
+                                    curvedpts.pts.push_back(v);
+                                    newidx++;
+                                }
+                                curvedpts.index.push_back((*(testIns.first))->m_id);
                             }
                             ptoffset += cinfo.npoints; 
                         }
@@ -800,22 +813,31 @@ namespace Nektar
                             
                             faceinfo.push_back(cinfo);
 
-                            // fill in points -- currently put in all
-                            // interior points
+
+                            // fill in points 
+                            vector<NodeSharedPtr> tmp;
+                            (*it2)->GetCurvedNodes(tmp);
                             
-                            for(int i =0; i < cinfo.npoints; ++i)
+                            for(int i =0; i < tmp.size(); ++i)
                             {
-
-                                LibUtilities::MeshVertex v;
-                                v.id = newidx;
-                                v.x  = (*it2)->m_faceNodes[i]->m_x;
-                                v.y  = (*it2)->m_faceNodes[i]->m_y;
-                                v.z  = (*it2)->m_faceNodes[i]->m_z;
-                                curvedpts.pts.push_back(v);
-
-                                curvedpts.index.push_back(newidx);
-                                newidx++;
+                                pair<NodeSet::iterator,bool> testIns =
+                                    cvertlist.insert(tmp[i]);
+                                
+                                if(testIns.second) // have inserted node
+                                {
+                                    (*(testIns.first))->m_id = newidx;
+                                    
+                                    LibUtilities::MeshVertex v;
+                                    v.id = newidx;
+                                    v.x  = tmp[i]->m_x;
+                                    v.y  = tmp[i]->m_y;
+                                    v.z  = tmp[i]->m_z;
+                                    curvedpts.pts.push_back(v);
+                                    newidx++;
+                                }
+                                curvedpts.index.push_back((*(testIns.first))->m_id);
                             }
+
                             ptoffset += cinfo.npoints; 
                         }
                     }

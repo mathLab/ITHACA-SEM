@@ -705,7 +705,7 @@ namespace Nektar
                             
                             if (child->Type() == TiXmlNode::TINYXML_TEXT)
                             {
-                                elmtStr += child->ToText()->ValueStr();
+                                elmtStr = child->ToText()->ValueStr();
                             }
                             
                             std::vector<MeshCurvedInfo> cinfo;
@@ -727,6 +727,9 @@ namespace Nektar
                         {
                             MeshCurvedPts cpts; 
                             
+                            ASSERTL0(x->Attribute("ID", &cpts.id),
+                                     "Failed to get ID from PTS section");
+
                             // read in data
                             std::string elmtStr;             
 
@@ -738,23 +741,20 @@ namespace Nektar
                             
                             if (child->Type() == TiXmlNode::TINYXML_TEXT)
                             {
-                                elmtStr += child->ToText()->ValueStr();
+                                elmtStr = child->ToText()->ValueStr();
                             }
                             
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,cpts.index);
 
-                            TiXmlElement* DataPts = 
-                                x->FirstChildElement("POINTS");
+                            TiXmlElement* DataPts = x->FirstChildElement("POINTS");
                             ASSERTL0(DataPts, "Cannot read data pts tag in compressed curved section");
 
-                            ASSERTL0(DataPts->Attribute("ID", &cpts.id),
-                                     "Failed to get ID from PTS section");
 
                             child = DataPts->FirstChild();
                             
                             if (child->Type() == TiXmlNode::TINYXML_TEXT)
                             {
-                                elmtStr += child->ToText()->ValueStr();
+                                elmtStr = child->ToText()->ValueStr();
                             }
                             
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,cpts.pts);
@@ -1349,7 +1349,7 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                if(m_isCompressed)
+                if(m_isCompressed&&0)
                 {
                     std::vector<MeshEdge> edgeInfo;
                     for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
@@ -1665,7 +1665,6 @@ namespace Nektar
             {
                 std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
 
-
                 if(m_isCompressed)
                 {
                     std::vector<MeshCurvedInfo> edgeinfo;
@@ -1675,13 +1674,19 @@ namespace Nektar
                     int ptoffset = 0; 
                     int newidx   = 0;
                     std::map<int,int> idxmap;
+                    
 
                     for (vItCurve  = m_meshCurved.begin(); 
                          vItCurve != m_meshCurved.end(); 
                          ++vItCurve)
                     {
                         MeshCurved c = vItCurve->second;
-                        if (vEdges.find(c.entityid) != vEdges.end())
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end())) 
                         {
                             MeshCurvedInfo cinfo; 
                             // add in
@@ -1700,7 +1705,14 @@ namespace Nektar
                             cinfo.ptoffset = ptoffset; 
                             ptoffset += c.npoints; 
                             
-                            edgeinfo.push_back(cinfo);
+                            if (IsEdge)
+                            {
+                                edgeinfo.push_back(cinfo);
+                            }
+                            else 
+                            {
+                                faceinfo.push_back(cinfo);
+                            }
 
                             // fill in points to list. 
                             for(int i =0; i < c.npoints; ++i)
@@ -1722,56 +1734,9 @@ namespace Nektar
                                 }
                             }
                         }
-                        
-
-                        // repeat process with faces so can identify
-                        // if curved faces present in file
-                        if(vFaces.find(c.entityid) != vFaces.end())
-                        {
-                            MeshCurvedInfo cinfo; 
-                            // add in
-                            cinfo.id = c.id;
-                            cinfo.entityid = c.entityid;
-                            cinfo.npoints = c.npoints;
-                            for(int i = 0; i < SIZE_PointsType; ++i)
-                            {
-                                if(c.type.compare(kPointsTypeStr[i]) == 0)
-                                {
-                                    cinfo.ptype = (PointsType)i;
-                                    break;
-                                }
-                            }
-
-                            cinfo.ptid   = 0; // set to just one point set
-                            cinfo.ptoffset = ptoffset; 
-                            
-                            faceinfo.push_back(cinfo);
-
-                            ptoffset += c.npoints; 
-                            
-                            // fill in points to list. 
-                            for(int i =0; i < c.npoints; ++i)
-                            {
-                                // get index from full list; 
-                                int idx = m_meshCurvedPts[c.ptid].index[c.ptoffset+i];
-                                // if index is not already in curved
-                                // points add it or set index to location
-                                if(idxmap.count(idx) == 0)
-                                {
-                                    idxmap[idx] = newidx; 
-                                    curvedpts.index.push_back(newidx);
-                                    curvedpts.pts.push_back(m_meshCurvedPts[c.ptid].pts[idx]);
-                                    newidx = 0; 
-                                }
-                                else
-                                {
-                                    curvedpts.index.push_back(idxmap[idx]);
-                                }
-                            }
-                        }
                     }
-                    // add xml information
 
+                    // add xml information
                     if(edgeinfo.size())
                     {
                         vCurved->SetAttribute("COMPRESSED","B64Z");
@@ -1821,12 +1786,16 @@ namespace Nektar
                     {
                         MeshCurved c = vItCurve->second;
                         
-                        if (vEdges.find(c.entityid) != vEdges.end() || 
-                            vFaces.find(c.entityid) != vFaces.end())
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                         {
                             x = new TiXmlElement(c.entitytype);
                             x->SetAttribute("ID", c.id);
-                            if (c.entitytype == "E")
+                            if (IsEdge)
                             {
                                 x->SetAttribute("EDGEID", c.entityid);
                             }

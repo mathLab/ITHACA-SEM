@@ -219,10 +219,10 @@ namespace Nektar
             m_fields[0] = m_vessels[2*omega];
             
             m_beta[omega] = Array<OneD, NekDouble>(nq);
-            EvaluateFunction("beta", m_beta[omega],"MaterialProperties",0.0,omega);
+            EvaluateFunction("beta", m_beta[omega], "MaterialProperties", m_time, omega);
 
             m_A_0[omega] = Array<OneD, NekDouble>(nq); 
-            EvaluateFunction("A_0", m_A_0[omega],"A_0",0.0,omega);
+            EvaluateFunction("A_0", m_A_0[omega], "A_0", m_time, omega);
 
             int nqTrace = GetTraceTotPoints();
 

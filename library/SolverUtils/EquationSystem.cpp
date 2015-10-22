@@ -1183,7 +1183,7 @@ namespace Nektar
             if (m_session->DefinesFunction("InitialConditions"))
             {
                 EvaluateFunction(m_session->GetVariables(), m_fields, 
-                                 "InitialConditions",domain);
+                                 "InitialConditions", m_time, domain);
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {

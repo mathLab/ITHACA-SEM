@@ -68,6 +68,13 @@ void PtsField::CalcWeights(
     m_weights = Array<OneD, Array<OneD, float> >(nPhysPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nPhysPts);
 
+    std::vector<value> values;
+    for (int i = 0; i < GetNpoints(); ++i)
+    {
+        values.push_back(value(point(m_pts[0][i], m_pts[1][i] ,m_pts[2][i]), i));
+    }
+    m_rtree.insert(values.begin(), values.end());
+
     // interpolate points and transform
     for (int i = 0; i < nPhysPts; ++i)
     {
@@ -700,27 +707,38 @@ void PtsField::FindNeighbours(const Array<OneD, NekDouble> &physPt,
                               vector<PtsPoint> &neighbourPts,
                               const NekDouble dist)
 {
-    int npts = m_pts[0].num_elements();
-    NekDouble ddist = dist * dist;
+    box bbox(point(physPt[0] - dist, physPt[1] - dist, physPt[2] - dist),
+             point(physPt[0] + dist, physPt[1] + dist, physPt[2] + dist));
 
-    // generate and iterate over all intPts
-    for (int i = 0; i < npts; ++i)
+    // find points within the distance box
+    std::vector<value> result_n;
+    m_rtree.query(bgi::within(bbox), std::back_inserter(result_n));
+
+    // massage into or own format
+    //TODO: just use the boost containers instead of our own
+    for (int i = 0; i < result_n.size(); ++i)
     {
+        int idx = result_n[i].second;
         Array<OneD, NekDouble> coords(m_dim);
         for (int j = 0; j < m_dim; ++j)
         {
-            coords[j] = m_pts[j][i];
+            coords[j] = m_pts[j][idx];
         }
-        NekDouble d = DistSq(physPt, coords);
+        PtsPoint intPt = PtsPoint(idx, coords, DistSq(physPt, coords));
+        neighbourPts.push_back(intPt);
+    }
 
-        if (d < ddist)
+    sort(neighbourPts.begin(), neighbourPts.end());
+
+    // remove everythind beyond the distance
+    for (int i = 0; i < neighbourPts.size(); ++i)
+    {
+        if (neighbourPts[i].m_distSq > dist * dist)
         {
-            // create new point struct
-            PtsPoint intPt = PtsPoint(i, coords, d);
-            neighbourPts.push_back(intPt);
+            neighbourPts.erase(neighbourPts.begin() + i, neighbourPts.end());
+            break;
         }
     }
-    sort(neighbourPts.begin(), neighbourPts.end());
 }
 
 

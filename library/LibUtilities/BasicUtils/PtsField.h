@@ -42,9 +42,17 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 using namespace std;
 
@@ -52,6 +60,11 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> point;
+typedef bg::model::box<point> box;
+typedef std::pair<point, unsigned> value;
+
 
 enum PtsType{
     ePtsFile,
@@ -211,6 +224,10 @@ class PtsField
         vector<Array<OneD, int> >               m_ptsConn;
         /// Type of the PtsField
         PtsType                                 m_ptsType;
+        /// A tree structure to speed up the neighbour search.
+        /// Note that we fill it with an iterator, so instead of rstar, the
+        /// packing algorithm is used.
+        bgi::rtree< value, bgi::rstar<16> >     m_rtree;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >        m_weights;

@@ -444,7 +444,7 @@ namespace Nektar
                              "for quadrilaterals.");
                     
                     int n = (int)sqrt((NekDouble)GetNodeCount());
-                    std::vector<NodeSharedPtr> nodeList(n*n);
+                    nodeList.resize(n*n);
                     
                     ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");
                     

@@ -236,6 +236,11 @@ class PtsField
         LIB_UTILITIES_EXPORT void FindNeighbours(const Array<OneD, NekDouble>
                 &physPtCoords,
                 vector<PtsPoint> &neighbourPts,
+                const NekDouble dist);
+
+        LIB_UTILITIES_EXPORT void FindNNeighbours(const Array<OneD, NekDouble>
+                &physPtCoords,
+                vector<PtsPoint> &neighbourPts,
                 const unsigned int numPts = 1);
 
 };

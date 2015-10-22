@@ -439,7 +439,7 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
     vector<PtsPoint> neighbourPts;
     int numPts = pow(float(2), m_dim);
     numPts = min(numPts, int(m_pts[0].num_elements() / 2));
-    FindNeighbours(physPt, neighbourPts, numPts);
+    FindNNeighbours(physPt, neighbourPts, numPts);
 
     m_neighInds[physPtIdx] = Array<OneD, unsigned int> (numPts);
     for (int i = 0; i < numPts; i++)
@@ -586,7 +586,7 @@ NekDouble PtsField::DistSq(const Array< OneD, NekDouble > &point1,
  * and chooses the numPts closest points. Thus, its very expensive and
  * inefficient.
  */
-void PtsField::FindNeighbours(const Array< OneD, NekDouble > &physPt,
+void PtsField::FindNNeighbours(const Array< OneD, NekDouble > &physPt,
                               vector< PtsPoint > &neighbourPts,
                               const unsigned int numPts)
 {
@@ -621,6 +621,46 @@ void PtsField::FindNeighbours(const Array< OneD, NekDouble > &physPt,
             neighbourPts.pop_back();
         }
     }
+}
+
+
+/**
+ * @brief Find nearest neighbours using a brute-force "algorithm".
+ *
+ * @param physPt              Coordinates of the physical point its neighbours
+ * we are looking for
+ * @param neighbourPts        The points we found
+ * @param dist                The max distance of a neighbour point
+ *
+ * This iterates over all points, computes the (squared) euclidean distance
+ * and chooses the points within the defined distance. Thus, its very expensive
+ * and inefficient.
+ */
+void PtsField::FindNeighbours(const Array<OneD, NekDouble> &physPt,
+                              vector<PtsPoint> &neighbourPts,
+                              const NekDouble dist)
+{
+    int npts = m_pts[0].num_elements();
+    NekDouble ddist = dist * dist;
+
+    // generate and iterate over all intPts
+    for (int i = 0; i < npts; ++i)
+    {
+        Array<OneD, NekDouble> coords(m_dim);
+        for (int j = 0; j < m_dim; ++j)
+        {
+            coords[j] = m_pts[j][i];
+        }
+        NekDouble d = DistSq(physPt, coords);
+
+        if (d < ddist)
+        {
+            // create new point struct
+            PtsPoint intPt = PtsPoint(i, coords, d);
+            neighbourPts.push_back(intPt);
+        }
+    }
+    sort(neighbourPts.begin(), neighbourPts.end());
 }
 
 

@@ -1349,7 +1349,7 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                if(m_isCompressed&&0)
+                if(m_isCompressed)
                 {
                     std::vector<MeshEdge> edgeInfo;
                     for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)

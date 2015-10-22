@@ -237,6 +237,7 @@ namespace Nektar
                 else // quad face.
                 {
                     int N    = (int)sqrt((double)Ntot);
+
                     for(int j = 1; j < N-1; ++j)
                     {
                         for(int k = 1; k < N-1; ++k)
@@ -250,14 +251,12 @@ namespace Nektar
                     }
                 }
             }
-
+            
             // Get hold of mesh composites and set up m_mesh->m_elements
-
             SpatialDomains::CompositeMap       GraphComps= graph->GetComposites();
             SpatialDomains::CompositeMapIter   compIt;
             SpatialDomains::GeometryVectorIter geomIt;
-
-
+            
             // loop over all composites and set up elements with edges
             // and faces from the maps above.
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
@@ -288,6 +287,12 @@ namespace Nektar
                     E->SetId((*geomIt)->GetGlobalID());
                     m_mesh->m_element[dim].push_back(E);
                     
+                    if(dim == 1)
+                    {
+                        EdgeSharedPtr edg = eIdMap[(*geomIt)->GetGlobalID()];
+                        E->SetVolumeNodes(edg->m_edgeNodes);
+                    }
+
                     if(dim > 1)
                     {
                         // reset edges 
@@ -298,6 +303,12 @@ namespace Nektar
                             // set up link back to this element
                             edg->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
+                        
+                        if(dim == 2)
+                        {
+                            FaceSharedPtr fac = fIdMap[(*geomIt)->GetGlobalID()];
+                            E->SetVolumeNodes(fac->m_faceNodes);
+                        }
                     }
                     
                     if(dim  == 3)
@@ -305,7 +316,7 @@ namespace Nektar
                         // reset faces 
                         for (int i = 0; i < (*geomIt)->GetNumFaces(); ++i)
                         {
-                            FaceSharedPtr fac = fIdMap[(*geomIt)->GetFid(i)];
+                            FaceSharedPtr fac = fIdMap[(*geomIt)->GetFid(0)];
                             E->SetFace(i,fac);
                             // set up link back to this slement
                             fac->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));

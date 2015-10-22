@@ -118,30 +118,34 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >    m_presForcingCorrection;
         
         // Correction needed for convective terms = N(u) - ( -(u \nabla) u)
-        //     inarray is the velocity field
+        //     velPhys is the velocity field (transformed for physical space)
         void MappingAdvectionCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         // Correction needed for time-derivative terms 
         //     = U_coord^j u^i_,j - u^j U_coord^i_,j
-        //     inarray is the velocity field
+        //     vel     is the velocity field (can be in wavespace)
+        //     velPhys is the velocity field (transformed for physical space)
         void MappingAccelerationCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &vel,
+            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         // Correction needed for pressure terms   
         //     = -g^(ij)p_j + (\nabla p)/J for variable Jacobian
         //     = -g^(ij)p_j + (\nabla p)   for constant Jacobian
-        //         inarray is the pressure field
+        //         the pressure field can be in wavespace
         void MappingPressureCorrection(
-            const Array<OneD, NekDouble>                      &inarray,
+            const Array<OneD, NekDouble>                      &pressure,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         // Correction needed for viscous terms = g^jk u^i_{,jk}-(\nabla^2 u)
-        //     inarray is the velocity field
+        //     vel     is the velocity field (can be in wavespace)
+        //     velPhys is the velocity field (transformed for physical space)
         void MappingViscousCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &vel,
+            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
         
     };

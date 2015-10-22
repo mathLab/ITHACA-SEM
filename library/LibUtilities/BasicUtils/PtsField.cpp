@@ -404,6 +404,15 @@ void PtsField::CalcW_Gauss(const int physPtIdx,
     FindNeighbours(physPt, neighbourPts, 1.96 * sigma);
     int numPts = min( (int) neighbourPts.size(), maxPts);
 
+    // handle the case that there was no point within 1.96 * sigma
+    if (numPts == 0)
+    {
+        m_neighInds[physPtIdx] = Array<OneD, unsigned int> (1, 1);
+        m_weights[physPtIdx] = Array<OneD, float> (1, 0.0);
+
+        return;
+    }
+
     m_neighInds[physPtIdx] = Array<OneD, unsigned int> (numPts);
     for (int i = 0; i < numPts; i++)
     {

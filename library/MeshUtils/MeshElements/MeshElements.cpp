@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <loki/Singleton.h>
+#include <list>
 
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdNodalTetExp.h>
@@ -145,6 +146,18 @@ namespace Nektar
                 if (ids1[i] != ids2[i])
                     return false;
             }
+
+            return true;
+        }
+
+        bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2)
+        {
+            if(e1->GetVertexCount() != e2->GetVertexCount())
+                return false;
+
+
+            if(e1->GetId() != e2->GetId())
+                return false;
 
             return true;
         }

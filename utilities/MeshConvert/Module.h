@@ -183,6 +183,8 @@ namespace Nektar
             /// Generate composites
             virtual void ProcessComposites();
 
+            virtual void ClearElementLinks();
+
             void ReorderPrisms(PerMap                   &perFaces);
             void PrismLines   (int                       prism,
                                PerMap                   &perFaces,

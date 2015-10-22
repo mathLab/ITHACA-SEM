@@ -158,6 +158,8 @@ void Module::ProcessEdges(bool ReprocessEdges)
 
         m_mesh->m_edgeSet.clear();
 
+        // Clear all edge links
+
         // Scan all elements and generate list of unique edges
         for (int i = 0, eid = 0; i < elmt.size(); ++i)
         {
@@ -169,7 +171,10 @@ void Module::ProcessEdges(bool ReprocessEdges)
 
                 if (testIns.second)
                 {
-                    (*(testIns.first))->m_id = eid++;
+                    EdgeSharedPtr ed2 = *testIns.first;
+                    ed2->m_id = eid++;
+                    ed2->m_elLink.push_back(
+                        pair<ElementSharedPtr,int>(elmt[i],j));
                 }
                 else
                 {
@@ -189,9 +194,18 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-                    // Update edge to element map.
-                    (*(testIns.first))->m_elLink.push_back(
-                        pair<ElementSharedPtr,int>(elmt[i],j));
+                    //bool makelink = true;
+                    //for(int k = 0; k < (*(testIns.first))->m_elLink.size(); k++)
+                    //{
+                    //    if((*(testIns.first))->m_elLink[k].first == elmt[i])
+                    //        makelink = false;
+                    //}
+                    //if(makelink)
+                    //{
+                        // Update edge to element map.
+                        (*(testIns.first))->m_elLink.push_back(
+                            pair<ElementSharedPtr,int>(elmt[i],j));
+                    //}
                 }
             }
         }
@@ -374,6 +388,26 @@ void Module::ProcessComposites()
             }
             it->second->m_items.push_back(elmt[i]);
         }
+    }
+}
+
+/**
+ * clear all element link information from mesh entities to be able to reprocess new mesh
+ */
+void Module::ClearElementLinks()
+{
+    EdgeSet::iterator eit;
+
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        (*eit)->m_elLink.clear();
+    }
+
+    FaceSet::iterator fit;
+
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+    {
+        (*fit)->m_elLink.clear();
     }
 }
 

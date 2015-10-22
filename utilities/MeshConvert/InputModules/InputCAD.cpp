@@ -126,7 +126,19 @@ void InputCAD::Process()
     ProcessEdges     ();
     ProcessFaces     ();
     ProcessElements  ();
+    //ProcessComposites();
+
+    m_surfacemesh->Validate();
+
+    ClearElementLinks();
+
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
     ProcessComposites();
+
+    m_surfacemesh->Validate();
 
     //m_surfacemeshing->HOSurf();
     /*

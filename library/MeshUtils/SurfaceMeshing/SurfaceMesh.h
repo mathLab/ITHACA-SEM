@@ -79,6 +79,17 @@ class SurfaceMesh
          */
         void HOSurf();
 
+        /**
+         * @brief Validate the linear surface mesh
+         */
+        void Validate();
+
+        /**
+         * @brief Optimise the linear surface mesh using spring relaxation
+         * and edge swapping
+         */
+        void Optimise();
+
     private:
 
         /**
@@ -136,17 +147,6 @@ class SurfaceMesh
                             NekDouble, NekDouble,
                             std::vector<Array<OneD,NekDouble> >,
                             std::vector<NekDouble>, int, bool &));
-
-        /**
-         * @brief Validate the linear surface mesh
-         */
-        void Validate();
-
-        /**
-         * @brief Optimise the linear surface mesh using spring relaxation
-         * and edge swapping
-         */
-        void Optimise();
 
         /// mesh object
         MeshSharedPtr m_mesh;

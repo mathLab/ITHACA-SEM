@@ -135,7 +135,7 @@ void PtsField::Interpolate(Array<OneD, Array<OneD, NekDouble> > &intFields)
 {
     ASSERTL1(m_weights[0].num_elements() == m_neighInds[0].num_elements(),
              "weights / neighInds mismatch")
-    int nFields = m_fieldNames.size();
+    int nFields = GetNFields();
     int nPhysPts = m_weights.num_elements();
 
     // interpolate points and transform
@@ -252,7 +252,7 @@ int PtsField::GetDim() const
 
 int PtsField::GetNFields() const
 {
-    return m_fieldNames.size();
+    return m_pts.num_elements() - m_dim;
 }
 
 

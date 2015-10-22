@@ -133,13 +133,17 @@ namespace Nektar
             {
                 case LibUtilities::eForwardEuler:
                 case LibUtilities::eClassicalRungeKutta4:
+                case LibUtilities::eRungeKutta4:
                 {
                     TimeStability = 2.784;
                     break;
                 }
                 case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eRungeKutta2_ModifiedEuler:
+                case LibUtilities::eMidpoint:
+                case LibUtilities::eRungeKutta2:
                 case LibUtilities::eRungeKutta2_ImprovedEuler:
+                case LibUtilities::eRungeKutta2_SSP:
+                case LibUtilities::eRungeKutta3_SSP:
                 {
                     TimeStability = 2.0;
                     break;
@@ -317,6 +321,24 @@ namespace Nektar
 
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
+                {
+                    break;
+                }
+
+                // search for NaN and quit if found
+                bool nanFound = false;
+                for (i = 0; i < nvariables; ++i)
+                {
+                    if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
+                    {
+                        cout << "NaN found in variable \""
+                             << m_session->GetVariable(i)
+                             << "\", terminating" << endl;
+                        nanFound = true;
+                    }
+                }
+
+                if (nanFound)
                 {
                     break;
                 }

@@ -19,7 +19,9 @@ Here is an example \inltt{FILTER}:
 A filter has a name -- in this case, \inltt{FilterName} -- together with
 parameters which are set to user-defined values. Each filter expects different
 parameter inputs, although where functionality is similar, the same parameter
-names are shared between filter types for consistency.
+names are shared between filter types for consistency. Numerical filter
+parameters may be expressions and so may include session parameters defined in
+the \inltt{PARAMETERS} section.
 
 In the following we document the filters implemented. Note that some filters are
 solver-specific and will therefore only work for a given subset of the available

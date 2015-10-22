@@ -41,6 +41,10 @@
 #include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+#ifndef _WIN32
+#include <execinfo.h>
+#endif
+
 namespace ErrorUtil
 {
     static boost::optional<std::ostream&> outStream;
@@ -82,27 +86,49 @@ namespace ErrorUtil
 #endif
             msg;
 
+        std::string btMessage("");
+#if defined(NEKTAR_FULLDEBUG)
+#ifndef _WIN32
+        void *btArray[40];
+        int btSize;
+        char **btStrings;
+
+        btSize = backtrace(btArray, 40);
+        btStrings = backtrace_symbols(btArray, btSize);
+
+        for (int i = 0 ; i < btSize ; ++i)
+        {
+            btMessage +=  std::string(btStrings[i]) + "\n";
+        }
+        free(btStrings);
+#endif
+#endif
         switch(type)
         {
             case efatal:
                 if( outStream )
                 {
+                    (*outStream) << btMessage;
                     (*outStream) << "Fatal   : " << baseMsg << std::endl;
                 }
                 else
                 {
+                    std::cerr << btMessage;
                     std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
                 }
+
                 throw NekError(baseMsg);
                 break;
 
             case ewarning:
                 if( outStream )
                 {
+                    (*outStream) << btMessage;
                     (*outStream) << "Warning: " << baseMsg << std::endl;
                 }
                 else
                 {
+                    std::cerr << btMessage;
                     std::cerr << "Warning: " << baseMsg << std::endl;
                 }
                 break;

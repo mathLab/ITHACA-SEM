@@ -41,19 +41,18 @@
 
 namespace Nektar
 {
-namespace SolverUtils
-{
 
-class FilterCellHistoryPoints : public FilterHistoryPoints
+class FilterCellHistoryPoints : public SolverUtils::FilterHistoryPoints
 {
     public:
         friend class MemoryManager<FilterCellHistoryPoints>;
 
         /// Creates an instance of this class
-        static FilterSharedPtr create(
+        static SolverUtils::FilterSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) {
-            FilterSharedPtr p = MemoryManager<FilterCellHistoryPoints>
+            const ParamMap &pParams) {
+            SolverUtils::FilterSharedPtr p
+                            = MemoryManager<FilterCellHistoryPoints>
                                     ::AllocateSharedPtr(pSession, pParams);
             return p;
         }
@@ -63,7 +62,7 @@ class FilterCellHistoryPoints : public FilterHistoryPoints
 
         FilterCellHistoryPoints(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams);
+            const ParamMap &pParams);
         ~FilterCellHistoryPoints();
 
         void SetCellModel(CellModelSharedPtr &pCellModel)
@@ -80,7 +79,6 @@ class FilterCellHistoryPoints : public FilterHistoryPoints
 
 };
 
-}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

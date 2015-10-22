@@ -121,6 +121,10 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "line string should contain 2Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N is not an integer");
+            ASSERTL0(values[0] > 1, "N is not a valid number");
+           
             int dim = (values.size()-1)/2;
             int npts = values[0];
             Array<OneD, Array<OneD, NekDouble> > pts(dim);
@@ -167,11 +171,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "N1,N2,x0,y0,x1,y1,x2,y2,x3,y3");
 
             double tmp;
-            ASSERTL0(std::modf(values[0], tmp) == 0.0, "N1 is not an integer");
-            ASSERTL0(std::modf(values[1], tmp) == 0.0, "N2 is not an integer");
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N1 is not an integer");
+            ASSERTL0(std::modf(values[1], &tmp) == 0.0, "N2 is not an integer");
             
-            ASSERTL0(values[0] > 1), "N1 is not a valid number");
-            ASSERTL0(values[1] > 1), "N2 is not a valid number");
+            ASSERTL0(values[0] > 1, "N1 is not a valid number");
+            ASSERTL0(values[1] > 1, "N2 is not a valid number");
             
             int dim = (values.size()-2)/4;
 

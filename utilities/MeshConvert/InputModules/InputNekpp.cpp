@@ -316,7 +316,7 @@ namespace Nektar
                         // reset faces 
                         for (int i = 0; i < (*geomIt)->GetNumFaces(); ++i)
                         {
-                            FaceSharedPtr fac = fIdMap[(*geomIt)->GetFid(0)];
+                            FaceSharedPtr fac = fIdMap[(*geomIt)->GetFid(i)];
                             E->SetFace(i,fac);
                             // set up link back to this slement
                             fac->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));

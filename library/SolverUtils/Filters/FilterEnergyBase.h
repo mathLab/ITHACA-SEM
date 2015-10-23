@@ -40,48 +40,48 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterEnergyBase : public Filter
-        {
-        public:
-            SOLVER_UTILS_EXPORT FilterEnergyBase(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string>   &pParams,
-                const bool pConstDensity = true);
-            SOLVER_UTILS_EXPORT ~FilterEnergyBase();
+namespace SolverUtils
+{
+class FilterEnergyBase : public Filter
+{
+public:
+    SOLVER_UTILS_EXPORT FilterEnergyBase(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap                             &pParams,
+        const bool pConstDensity = true);
+    SOLVER_UTILS_EXPORT ~FilterEnergyBase();
 
-        protected:
-            SOLVER_UTILS_EXPORT virtual void v_Initialise(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const NekDouble &time);
-            SOLVER_UTILS_EXPORT virtual void v_Update(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const NekDouble &time);
-            SOLVER_UTILS_EXPORT virtual void v_Finalise(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const NekDouble &time);
-            SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
+protected:
+    SOLVER_UTILS_EXPORT virtual void v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const NekDouble &time);
+    SOLVER_UTILS_EXPORT virtual void v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const NekDouble &time);
+    SOLVER_UTILS_EXPORT virtual void v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const NekDouble &time);
+    SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
 
-            SOLVER_UTILS_EXPORT virtual void v_GetVelocity(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
-                const int i,
-                Array<OneD, NekDouble> &velocity);
-            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetDensity(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFld);
+    SOLVER_UTILS_EXPORT virtual void v_GetVelocity(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+        const int i,
+        Array<OneD, NekDouble> &velocity);
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetDensity(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFld);
 
-        private:
-            unsigned int                m_index;
-            unsigned int                m_outputFrequency;
-            std::ofstream               m_outFile;
-            bool                        m_homogeneous;
-            NekDouble                   m_homogeneousLength;
-            NekDouble                   m_area;
-            LibUtilities::CommSharedPtr m_comm;
-            Array<OneD, unsigned int>   m_planes;
-            bool                        m_constDensity;
-        };
-    }
+private:
+    unsigned int                m_index;
+    unsigned int                m_outputFrequency;
+    std::ofstream               m_outFile;
+    bool                        m_homogeneous;
+    NekDouble                   m_homogeneousLength;
+    NekDouble                   m_area;
+    LibUtilities::CommSharedPtr m_comm;
+    Array<OneD, unsigned int>   m_planes;
+    bool                        m_constDensity;
+};
+}
 }
 
 #endif

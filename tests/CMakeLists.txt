@@ -3,9 +3,11 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/Tester.cpp.in
 	       @ONLY)
 SET(TESTER_SOURCES
   Metric.cpp
+  MetricEigenvalue.cpp
   MetricFile.cpp
   MetricL2.cpp
   MetricLInf.cpp
+  MetricPrecon.cpp
   MetricRegex.cpp
   TestData.cpp
   ${CMAKE_BINARY_DIR}/tests/Tester.cpp
@@ -14,9 +16,11 @@ SET(TESTER_SOURCES
 
 SET(TESTER_HEADERS
   Metric.h
+  MetricEigenvalue.h
   MetricFile.h
   MetricL2.h
   MetricLInf.h
+  MetricPrecon.h
   MetricRegex.h
   TestData.h
   Tester.h

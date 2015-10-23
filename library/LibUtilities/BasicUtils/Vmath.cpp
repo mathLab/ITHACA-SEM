@@ -865,6 +865,28 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Vmin( int n, const Nektar::NekDouble *x, const int incx);
     template LIB_UTILITIES_EXPORT int Vmin( int n, const int *x, const int incx);
 
+   /// \brief Return number of NaN elements of x
+    template<class T>  int Nnan(int n, const T *x, const int incx)
+    {
+
+        int nNan = 0;
+
+        while (n--)
+        {
+            if (*x != *x)
+            {
+                nNan++;
+            }
+            x += incx;
+        }
+
+        return nNan;
+    }
+
+    template LIB_UTILITIES_EXPORT int Nnan(int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Nnan(int n, const float *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Nnan(int n, const int *x, const int incx);
+
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> T Dot(     int n,
                                  const T   *w,

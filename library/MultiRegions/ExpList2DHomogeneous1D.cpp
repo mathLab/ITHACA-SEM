@@ -362,7 +362,8 @@ namespace Nektar
 
         void ExpList2DHomogeneous1D::v_WriteVtkPieceHeader(
             std::ostream &outfile,
-            int expansion)
+            int expansion,
+            int istrip)
         {
             int i, j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

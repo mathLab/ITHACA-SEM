@@ -82,11 +82,12 @@ namespace Nektar
 
             // Copy vertices.
             map<int, NodeSharedPtr> vIdMap;
-            int nVerts = graph->GetNvertices();
-            for (int i = 0; i < nVerts; ++i)
+            const SpatialDomains::PointGeomMap vertset = graph->GetVertSet();
+            SpatialDomains::PointGeomMap::const_iterator vit;
+
+            for(vit=vertset.begin(); vit != vertset.end(); ++vit)
             {
-                SpatialDomains::PointGeomSharedPtr vert =
-                    graph->GetVertex(i);
+                SpatialDomains::PointGeomSharedPtr vert = vit->second;
                 NodeSharedPtr n(new Node(vert->GetVid(),
                     (*vert)(0), (*vert)(1), (*vert)(2)));
                 m_mesh->m_vertexSet.insert(n);

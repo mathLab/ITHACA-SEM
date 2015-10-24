@@ -115,7 +115,6 @@ void InputXml::Process(po::variables_map &vm)
     string xml_ending = "xml";
     string xml_gz_ending = "xml.gz";
 
-
     std::vector<std::string> files;
     // load .xml ending
     for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
@@ -206,26 +205,47 @@ void InputXml::Process(po::variables_map &vm)
                  "argument");
     }
 
-
     if(m_f->m_verbose)
     {
         string firstarg = "FieldConvert";
         string verbose = "-v";
+        int argc = 2;
         char **argv;
-        argv = (char**)malloc(2*sizeof(char*));
+        argv = (char**)malloc(3*sizeof(char*));
         argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
         argv[1] = (char *)malloc(verbose.size()*sizeof(char));
 
         sprintf(argv[0],"%s",firstarg.c_str());
         sprintf(argv[1],"%s",verbose.c_str());
 
+        if(vm.count("shared-fileystem"))
+        {
+            argc ++;
+            string sharedfs = "shared-filesystem";
+            argv[2] = (char *)malloc(sharedfs.size()*sizeof(char));
+            sprintf(argv[2],"%s",sharedfs.c_str());
+        }
+
+        
         m_f->m_session = LibUtilities::SessionReader::
-            CreateInstance(2, (char **)argv, files, m_f->m_comm);
+            CreateInstance(argc, (char **)argv, files, m_f->m_comm);
     }
     else
     {
+        int argc = 0;
+        char **argv;
+        argv = (char**)malloc(3*sizeof(char*));
+
+        if(vm.count("shared-fileystem"))
+        {
+            argc++;
+            string sharedfs = "shared-filesystem";
+            argv[0] = (char *)malloc(sharedfs.size()*sizeof(char));
+            sprintf(argv[0],"%s",sharedfs.c_str());
+        }
+
         m_f->m_session = LibUtilities::SessionReader::
-            CreateInstance(0, 0, files, m_f->m_comm);
+            CreateInstance(argc, (char **) argv, files, m_f->m_comm);
     }
 
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);

@@ -114,67 +114,98 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
         m_f->m_exp[i] = m_f->AppendExpList(0);
     }
 
-    int totpoints = m_f->m_exp[0]->GetTotPoints();
-    Array< OneD, Array<OneD, NekDouble> > coords(3);
-
-    coords[0] = Array<OneD,NekDouble>(totpoints);
-    coords[1] = Array<OneD,NekDouble>(totpoints);
-    coords[2] = Array<OneD,NekDouble>(totpoints);
-
-    m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
-
-
-    // load points into field
     Array<OneD, Array<OneD, NekDouble> > pts;
     m_f->m_fieldPts->GetPts(pts);
 
-    if(pts[0].num_elements() != totpoints)
+    // set any nan values to default value if requested 
+    if(setnantovalue)
     {
-        WARNINGL0(false,"length of points in .pts file is different to the number of quadrature points in xml file");
-        totpoints = min(totpoints,(int)pts[0].num_elements());
-    }
-    
-    int mismatch = 0; 
-    for(i = 0; i < totpoints; ++i)
-    {
-        for(j = 0; j < dim; ++j)
+        for(int i = 0; i < pts[0].num_elements(); ++i)
         {
-            if(fabs(coords[j][i]-pts[j][i]) > 1e-4)
-            {
-                string outstring = "Coordinates do not match within 1e-4: " 
-                    + boost::lexical_cast<string>(coords[j][i])
-                    + " versus "
-                    + boost::lexical_cast<string>(pts[j][i])
-                    + " diff " + boost::lexical_cast<string>(fabs(coords[j][i]-pts[j][i]));;
-                WARNINGL0(false,outstring);
-                mismatch +=1;
-            }
-        }
-        NekDouble value; 
-        for(j = 0;j < nFields; ++j)
-        {
-            value = pts[j+dim][i];
-            if(setnantovalue)
+            for(int j = 0; j < nFields; ++j)
             {
                 if ((boost::math::isnan)(pts[j+dim][i]))
                 {
-                    value = defvalue; 
+                    pts[j+dim][i] = defvalue; 
                 }
             }
-            m_f->m_exp[j]->SetPhys(i, value);
         }
     }
 
-    if(m_f->m_session->GetComm()->GetRank() == 0)
+    if(m_f->m_fieldPts->m_ptsInfo.count(LibUtilities::eIsEquiSpacedData) != 0)
     {
-        cout << endl;
+        int totcoeffs = m_f->m_exp[0]->GetNcoeffs();
+        
+        ASSERTL0(pts[0].num_elements() != totcoeffs,"length of points in .pts file is different "
+                 "to the number of coefficients in expansion ");
+        
+        for(int i = 0; i < nFields; ++i)
+        {
+            Array<OneD, NekDouble> coeffs = m_f->m_exp[i]->UpdateCoeffs(), tmp;
+            int cnt = 0; 
+            for(int e = 0; e < m_f->m_exp[0]->GetNumElmts(); ++e)
+            {
+                int ncoeffs = m_f->m_exp[i]->GetExp(e)->GetNcoeffs(); 
+                int offset = m_f->m_exp[i]->GetCoeff_Offset(e);
+                Vmath::Vcopy(ncoeffs,&pts[i+dim][cnt],1,&coeffs[offset],1);
+                
+                m_f->m_exp[i]->GetExp(e)->EquiSpacedToCoeffs(coeffs+offset,tmp = coeffs+offset);
+                cnt += ncoeffs; 
+            }
+        }
     }
-
-    // forward transform fields
-    for(i = 0; i < nFields; ++i)
+    else
     {
-        m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
-                                           m_f->m_exp[i]->UpdateCoeffs());
+        int totpoints = m_f->m_exp[0]->GetTotPoints();
+        Array< OneD, Array<OneD, NekDouble> > coords(3);
+        
+        coords[0] = Array<OneD,NekDouble>(totpoints);
+        coords[1] = Array<OneD,NekDouble>(totpoints);
+        coords[2] = Array<OneD,NekDouble>(totpoints);
+        
+        m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
+        
+        
+        if(pts[0].num_elements() != totpoints)
+        {
+            WARNINGL0(false,"length of points in .pts file is different to the number of quadrature points in xml file");
+            totpoints = min(totpoints,(int)pts[0].num_elements());
+        }
+        
+        int mismatch = 0; 
+        for(i = 0; i < totpoints; ++i)
+        {
+            for(j = 0; j < dim; ++j)
+            {
+                if(fabs(coords[j][i]-pts[j][i]) > 1e-4)
+                {
+                    string outstring = "Coordinates do not match within 1e-4: " 
+                        + boost::lexical_cast<string>(coords[j][i])
+                        + " versus "
+                        + boost::lexical_cast<string>(pts[j][i])
+                        + " diff " + boost::lexical_cast<string>(fabs(coords[j][i]-pts[j][i]));;
+                    WARNINGL0(false,outstring);
+                    mismatch +=1;
+                }
+            }
+
+            for(j = 0;j < nFields; ++j)
+            {
+                m_f->m_exp[j]->SetPhys(i, pts[j+dim][i]);
+            }
+        }
+        
+        if(m_f->m_session->GetComm()->GetRank() == 0)
+        {
+            cout << endl;
+        }
+        
+        // forward transform fields
+        for(i = 0; i < nFields; ++i)
+        {
+            m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
+                                               m_f->m_exp[i]->UpdateCoeffs());
+        }
     }
 
     // set up output fld file.

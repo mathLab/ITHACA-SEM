@@ -34,6 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
 namespace Nektar
@@ -84,6 +85,21 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
                  "Unable to process list of field variable in  FIELDS attribute:  " + fields);
     }
 
+    map<PtsInfo,int>  ptsInfo = NullPtsInfoMap;
+
+    std::string ptinfo = points->Attribute("PTSINFO");
+    if(boost::iequals(ptinfo,"EquiSpaced"))
+    {
+        ptsInfo[eIsEquiSpacedData] = 1;
+    }
+
+    int np;
+    err = points->QueryIntAttribute("PTSPERELMTEDGE",&np);
+    if(err == TIXML_SUCCESS)
+    {
+        ptsInfo[ePtsPerElmtEdge] = np; 
+    }
+
     int nfields = fieldNames.size();
     int totvars = dim + nfields;
 
@@ -124,7 +140,7 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
         }
     }
 
-    ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
+    ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts, ptsInfo);
 }
 
 

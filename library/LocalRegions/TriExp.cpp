@@ -576,8 +576,8 @@ namespace Nektar
         {
             
             return MemoryManager<StdRegions::StdTriExp>
-                    ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
-                                        m_base[1]->GetBasisKey());
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey());
         }
 
         void TriExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,

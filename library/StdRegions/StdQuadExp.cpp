@@ -1331,7 +1331,18 @@ namespace Nektar
                 {
                     int nq0 = m_base[0]->GetNumPoints();
                     int nq1 = m_base[1]->GetNumPoints();
-                    int nq = max(nq0,nq1);
+                    int nq;
+
+                    // take definition from key 
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+                    else
+                    {
+                        nq = max(nq0,nq1);
+                    }
+
                     int neq = LibUtilities::StdQuadData::
                                                 getNumberOfCoefficients(nq, nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);

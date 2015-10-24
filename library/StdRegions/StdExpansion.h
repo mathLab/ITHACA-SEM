@@ -1352,7 +1352,8 @@ namespace Nektar
              */
             STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD, NekDouble>       &outarray);
+                Array<OneD, NekDouble>       &outarray,
+                int npset = -1);
 
             /** \brief This function provides the connectivity of
              *   local simplices (triangles or tets) to connect the
@@ -1368,6 +1369,19 @@ namespace Nektar
             {
                 v_GetSimplexEquiSpacedConnectivity(conn,standard);
             }
+
+            /** \brief This function performs a
+             * projection/interpolation from the equispaced points
+             * sometimes used in post-processing onto the coefficient
+             * space 
+             *
+             * This is primarily used for output purposes to use a
+             * more even distribution of points more suitable for alot of
+             * postprocessing
+             */
+            void EquiSpacedToCoeffs(
+                           const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD, NekDouble>       &outarray);
 
             template<class T>
             boost::shared_ptr<T> as()

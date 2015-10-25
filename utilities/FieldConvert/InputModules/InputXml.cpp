@@ -84,11 +84,25 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
+    Timer timer, timerpart;
+
+    //check for multiple calls to inputXml due to split xml
+    //files. If so just return
+    if(m_f->m_exp.size() != 0)
+    {
+        return; 
+    }
 
     if(m_f->m_verbose)
     {
-        cout << "Processing input xml file" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Processing input xml file" << endl;
+            timer.Start();
+            timerpart.Start();
+        }
     }
+
     // check to see if fld file defined so can use in
     // expansion defintion if required
     string fldending;
@@ -229,6 +243,19 @@ void InputXml::Process(po::variables_map &vm)
         
         m_f->m_session = LibUtilities::SessionReader::
             CreateInstance(argc, (char **)argv, files, m_f->m_comm);
+
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml session reader CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+
     }
     else
     {
@@ -248,9 +275,25 @@ void InputXml::Process(po::variables_map &vm)
             CreateInstance(argc, (char **) argv, files, m_f->m_comm);
     }
 
+
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
     m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml mesh graph setup  CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+    }
 
     // currently load all field (possibly could read data from
     // expansion list but it is re-arranged in expansion)
@@ -311,7 +354,51 @@ void InputXml::Process(po::variables_map &vm)
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
     }
 
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+    }
+
     m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
+
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss1;
+
+            ss1 << cpuTime << "s";
+            cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
+                 << ss1.str() << endl;
+
+            
+            timer.Stop();
+            cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "InputXml  CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+
+        }
+        
+    }
+
 }
 
 }

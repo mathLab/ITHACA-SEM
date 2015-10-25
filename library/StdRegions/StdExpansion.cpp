@@ -1752,10 +1752,10 @@ namespace Nektar
             DNekMatSharedPtr  intmat;
 
             int nqtot = GetTotPoints(); 
-            int np;
+            int np = 0;
             if(npset == -1) // use values from basis num points()
             {
-                int nqbase;;
+                int nqbase;
                 for(int i = 0; i < m_base.num_elements(); ++i)
                 {
                     nqbase = m_base[i]->GetNumPoints();

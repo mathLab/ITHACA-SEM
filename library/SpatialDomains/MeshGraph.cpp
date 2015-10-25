@@ -2351,39 +2351,36 @@ namespace Nektar
                         expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
                         m_expansionMapShPtrMap[field] = expansionMap;
 
-                        // check to see if DefaultVar also not set and if so assign it to this expansion
+                        // check to see if DefaultVar also not set and
+                        // if so assign it to this expansion
                         if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
-                    }
-
-                    // loop over all elements in partition and set expansion
-                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                    LibUtilities::BasisKeyVector def;
-
-                    for(int d = 0; d < m_domain.size(); ++d)
-                    {
-                        CompositeMap::const_iterator compIter;
-
-                        for (compIter = m_domain[d].begin();
-                             compIter != m_domain[d].end(); ++compIter)
+                        
+                        // loop over all elements and set expansion
+                        for(k = 0; k < fielddef.size(); ++k)
                         {
-                            GeometryVector::const_iterator x;
-                            for (x = compIter->second->begin();
-                                 x != compIter->second->end(); ++x)
+                            for(int h = 0; h < fielddef[k]->m_fields.size(); ++h)
                             {
-                                ExpansionShPtr expansionElementShPtr =
-                                            MemoryManager<Expansion>::
-                                                    AllocateSharedPtr(*x, def);
-                                int id = (*x)->GetGlobalID();
-                                (*expansionMap)[id] = expansionElementShPtr;
+                                if(fielddef[k]->m_fields[h] == field)
+                                {
+                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
+                                    LibUtilities::BasisKeyVector def;
+
+                                    for(int g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
+                                    {
+                                        ExpansionShPtr tmpexp =
+                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-
+        
             // loop over all elements find the geometry shared ptr and
             // set up basiskey vector
             for(i = 0; i < fielddef.size(); ++i)
@@ -2401,37 +2398,15 @@ namespace Nektar
 
                 bool UniOrder =  fielddef[i]->m_uniOrder;
 
-                int check = 0;
-                for (j=0; j< basis.size(); ++j)
+                for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
-                    if ( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
+                    
+                    LibUtilities::BasisKeyVector bkeyvec;
+                    id = fielddef[i]->m_elementIDs[j];
+                    
+                    switch (fielddef[i]->m_shapeType)
                     {
-                        check++;
-                    }
-                }
-
-                if (check==basis.size())
-                {
-                    for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
-                    {
-
-                        LibUtilities::BasisKeyVector bkeyvec;
-                        id = fielddef[i]->m_elementIDs[j];
-
-                        switch (fielddef[i]->m_shapeType)
-                        {
-                        case LibUtilities::eSegment:
+                    case LibUtilities::eSegment:
                         {
                             if(m_segGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
@@ -2467,7 +2442,7 @@ namespace Nektar
                             bkeyvec.push_back(bkey);
                         }
                         break;
-                        case LibUtilities::eTriangle:
+                    case LibUtilities::eTriangle:
                         {
                             if(m_triGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
@@ -2521,7 +2496,7 @@ namespace Nektar
                             }
                         }
                         break;
-                        case LibUtilities::eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                         {
                             if(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
@@ -2818,7 +2793,7 @@ namespace Nektar
                             ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
                             break;
                         }
-
+                    
                         for(k = 0; k < fields.size(); ++k)
                         {
                             expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
@@ -2828,11 +2803,6 @@ namespace Nektar
                                 (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
                             }
                         }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"Need to set up for non Modified basis");
                 }
             }
         }
@@ -2862,12 +2832,13 @@ namespace Nektar
                         expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
                         m_expansionMapShPtrMap[field] = expansionMap;
 
-                        // check to see if DefaultVar also not set and if so assign it to this expansion
+                        // check to see if DefaultVar also not set and
+                        // if so assign it to this expansion
                         if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
-
+                    
                         // loop over all elements and set expansion
                         for(k = 0; k < fielddef.size(); ++k)
                         {
@@ -2901,10 +2872,9 @@ namespace Nektar
                 std::vector<unsigned int> nmodes = fielddef[i]->m_numModes;
                 std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_basis;
                 bool UniOrder =  fielddef[i]->m_uniOrder;
-
+                
                 for(j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
-
                     LibUtilities::BasisKeyVector bkeyvec;
                     id = fielddef[i]->m_elementIDs[j];
 

@@ -2398,7 +2398,7 @@ namespace Nektar
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
-                        
+
                         // loop over all elements and set expansion
                         for(k = 0; k < fielddef.size(); ++k)
                         {
@@ -2454,7 +2454,7 @@ namespace Nektar
                                 // skip element likely from parallel read
                                 continue;
                             }
-                            geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
+j                            geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
 
                             LibUtilities::PointsKey pkey(nmodes[cnt]+1, LibUtilities::eGaussLobattoLegendre);
 

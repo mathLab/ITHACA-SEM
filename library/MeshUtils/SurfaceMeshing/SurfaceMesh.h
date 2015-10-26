@@ -90,6 +90,8 @@ class SurfaceMesh
          */
         void Optimise();
 
+        void Report();
+
     private:
 
         /**

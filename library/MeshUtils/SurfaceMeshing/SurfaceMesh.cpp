@@ -877,161 +877,8 @@ void SurfaceMesh::Optimise()
     }
 }
 
-    /*
-    repeat = true;
-    while(repeat)
-    {
-        repeat = false;
-        for(eit = Edges.begin(); eit != Edges.end(); eit++)
-        {
-            Array<OneD, int> n = eit->second->GetN();
-            int c = eit->second->GetCurve();
-            if(c != -1) continue;
-
-            int s = eit->second->GetSurf();
-
-            Array<OneD, NekDouble> uv1,uv2;
-            uv1 = Nodes[n[0]]->GetS(s);
-            uv2 = Nodes[n[1]]->GetS(s);
-            Array<OneD, NekDouble> N1,N2;
-            N1 = m_cad->GetSurf(s)->N(uv1);
-            N2 = m_cad->GetSurf(s)->N(uv2);
-            NekDouble ang = N1[0]*N2[0] + N1[1]*N2[1] +N1[2]*N2[2];
-            ang /= sqrt(N1[0]*N1[0] + N1[1]*N1[1] + N1[1]*N1[1]);
-            ang /= sqrt(N2[0]*N2[0] + N2[1]*N2[1] + N2[1]*N2[1]);
-            if(ang < 0.12 )
-            {
-                cout << "edge needs to split" << endl;
-                vector<int> ts = eit->second->GetTri();
-                ASSERTL0(ts.size() == 2, "wrong amount of edges");
-                Array<OneD, int> t1n = Tris[ts[0]]->GetN();
-                Array<OneD, int> t2n = Tris[ts[1]]->GetN();
-
-
-                int tn1, tn2;
-                tn1 = -1; tn2 = -1;
-                for(int i = 0; i < 3; i++)
-                {
-                    if(t1n[i] == n[0])
-                        continue;
-                    if(t1n[i] == n[1])
-                        continue;
-                    tn1 = t1n[i];
-                    break;
-                }
-                for(int i = 0; i < 3; i++)
-                {
-                    if(t2n[i] == n[0])
-                        continue;
-                    if(t2n[i] == n[1])
-                        continue;
-                    tn2 = t2n[i];
-                    break;
-                }
-
-                ASSERTL0(tn1 != -1 && tn2 != -1, "failed to sort nodes");
-
-                Nodes[n[1]]->RemoveTri(ts[0]); Nodes[n[1]]->RemoveTri(ts[1]);
-
-                Nodes[n[1]]->RemoveEdge(eit->first);
-
-                //find other edges
-                int oe1, oe2, oe3, oe4;
-                oe1 = Nodes[tn1]->EdgeInCommon(Nodes[n[0]]);
-                oe2 = Nodes[n[0]]->EdgeInCommon(Nodes[tn2]);
-                oe3 = Nodes[tn1]->EdgeInCommon(Nodes[n[1]]);
-                oe4 = Nodes[n[1]]->EdgeInCommon(Nodes[tn2]);
-
-                ASSERTL0(oe1 != -1 && oe2 != -1 && oe3 != -1 && oe4 != -1,
-                        "faild to find outer edge");
-
-                Array<OneD, NekDouble> uvn(2);
-                uvn[0] = (uv1[0] + uv2[0])/2.0;
-                uvn[1] = (uv1[1] + uv2[1])/2.0;
-
-                //putting it in the mid point in the parameter plane is stupid this should be opitmised in some way to be the true center
-
-                Array<OneD, NekDouble> loc = m_cad->GetSurf(s)->P(uvn);
-                MeshNodeSharedPtr nsp = boost::shared_ptr<MeshNode>(
-                                    new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
-                nsp->SetSurf(s, uvn);
-                int nn = Nodes.size();
-                Nodes[Nodes.size()] = nsp;
-
-                int ne1, ne2, ne3;
-
-                MeshEdgeSharedPtr e1 = MemoryManager<MeshEdge>::AllocateSharedPtr(Edges.size(), tn1, nn);
-                ne1 = Edges.size();
-                Edges[Edges.size()] = e1;
-                MeshEdgeSharedPtr e2 = MemoryManager<MeshEdge>::AllocateSharedPtr(Edges.size(), nn, tn2);
-                ne2 = Edges.size();
-                Edges[Edges.size()] = e2;
-                MeshEdgeSharedPtr e3 = MemoryManager<MeshEdge>::AllocateSharedPtr(Edges.size(), nn, n[1]);
-                ne3 = Edges.size();
-                Edges[Edges.size()] = e3;
-
-                int nt3,nt4;
-
-                MeshTriSharedPtr t3 = boost::shared_ptr<MeshTri>(
-                                new MeshTri(Tris.size(),tn1,n[1],nn,oe3,
-                                            ne3,ne1,s));
-                nt3 = Tris.size();
-                Tris[Tris.size()] = t3;
-
-                MeshTriSharedPtr t4 = boost::shared_ptr<MeshTri>(
-                                new MeshTri(Tris.size(),n[1],tn2,nn,oe4,
-                                            ne2,ne3,s));
-                nt4 = Tris.size();
-                Tris[Tris.size()] = t4;
-
-                Tris[ts[0]]->Swap(tn1,nn,n[0]);
-                Tris[ts[0]]->ResetEdges(ne1,eit->first,oe1);
-
-                Tris[ts[1]]->Swap(nn,tn2,n[0]);
-                Tris[ts[1]]->ResetEdges(ne2,oe2,eit->first);
-
-                eit->second->ModifyNodes(n[0],nn);
-
-                Edges[oe3]->RemoveTri(ts[0]);
-                Edges[oe3]->SetTri(nt3);
-
-                Edges[oe4]->RemoveTri(ts[1]);
-                Edges[oe4]->SetTri(nt4);
-
-                Nodes[tn1]->SetEdge(ne1);
-                Nodes[tn1]->SetTri(nt3);
-                Nodes[tn2]->SetEdge(ne2);
-                Nodes[tn2]->SetTri(nt4);
-                Nodes[n[1]]->SetEdge(ne3);
-                Nodes[n[1]]->SetTri(nt3);
-                Nodes[n[1]]->SetTri(nt4);
-
-                Nodes[nn]->SetEdge(eit->first);
-                Nodes[nn]->SetEdge(ne1);
-                Nodes[nn]->SetEdge(ne2);
-                Nodes[nn]->SetEdge(ne3);
-                Nodes[nn]->SetTri(ts[0]);
-                Nodes[nn]->SetTri(ts[1]);
-                Nodes[nn]->SetTri(nt3);
-                Nodes[nn]->SetTri(nt4);
-
-                Edges[ne1]->SetTri(ts[0]);
-                Edges[ne1]->SetTri(nt3);
-                Edges[ne2]->SetTri(ts[1]);
-                Edges[ne2]->SetTri(nt4);
-                Edges[ne3]->SetTri(nt4);
-                Edges[ne3]->SetTri(nt3);
-
-                Edges[ne1]->SetSurf(s);
-                Edges[ne2]->SetSurf(s);
-                Edges[ne3]->SetSurf(s);
-
-                repeat = true;
-                break;
-            }
-        }
-    }
-
+void SurfaceMesh::Report()
+{
     if(m_mesh->m_verbose)
     {
         cout << endl << "\tSurface mesh stats:" << endl;
@@ -1042,23 +889,11 @@ void SurfaceMesh::Optimise()
         }
     }
 
-    Optimise();
-
-    if(m_verbose)
-    {
-        cout << endl << "\tSurface mesh stats:" << endl;
-        for(int i = 1; i <= m_cad->GetNumSurf(); i++)
-        {
-            cout << "\t\tSurface: " << i;
-            m_surfacemeshes[i]->Report();
-        }
-    }
-
     if(m_mesh->m_verbose)
     {
-        int ns = Nodes.size();
-        int es = Edges.size();
-        int ts = Tris.size();
+        int ns = m_mesh->m_vertexSet.size();
+        int es = m_mesh->m_edgeSet.size();
+        int ts = m_mesh->m_element[2].size();
         int ep = ns - es + ts;
         cout << endl << "\tSurface mesh statistics" << endl;
         cout << "\t\tNodes: " << ns << endl;
@@ -1066,7 +901,7 @@ void SurfaceMesh::Optimise()
         cout << "\t\tTriangles " << ts << endl;
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
-*/
+}
 
 
 }

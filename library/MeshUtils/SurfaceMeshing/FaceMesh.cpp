@@ -137,13 +137,20 @@ void FaceMesh::Mesh()
 
 void FaceMesh::Report()
 {
-    /*int edgec = 0;
-    for(int i = 0; i < m_cadsurf->GetEdges().size(); i++)
+    int edgec = 0;
+    for(int i = 0; i < m_edgeloops.size(); i++)
     {
-        edgec+=m_cadsurf->GetEdges()[i].edges.size();
+        edgec+=m_edgeloops[i].edges.size();
     }
-    cout << scientific << "\tPoints: " << nump << "\tTris: " << numtri << "\tEdges: " << nume << "\tCAD Edges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
-    */
+    int nump = 0;
+    for(int i = 0; i < orderedLoops.size(); i++)
+    {
+        nump+=orderedLoops[i].size();
+    }
+    nump+=m_stienerpoints.size();
+
+    cout << scientific << "\tPoints: " << nump << "\tTris: " << m_connec.size() << "\tCAD Edges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
+
 }
 
 void FaceMesh::Stretching()

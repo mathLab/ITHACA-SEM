@@ -128,12 +128,13 @@ void InputCAD::Process()
     ProcessElements  ();
     //ProcessComposites();
 
+    m_surfacemesh->Report();
+
     m_surfacemesh->Validate();
 
     m_surfacemesh->Optimise();
 
-    ClearElementLinks();
-
+    ClearElementLinks(); //mesh needs reprocessing to clean element and edge lists, easiest way to do it
     ProcessVertices  ();
     ProcessEdges     ();
     ProcessFaces     ();

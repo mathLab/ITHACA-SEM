@@ -297,33 +297,33 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 
 void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int coordId)
 {
-//     int npts = m_pts[0].num_elements();
-//     int i;
-//
-//     NekDouble coord = searchPt.coords[coordId];
-//
-//     int numPts = 2;
-//     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
-//     m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
-//
-//     for (i = 0; i < npts - 1; ++i)
-//     {
-//         if ((m_pts[0][i] <= coord) && (coord <= m_pts[0][i + 1]))
-//         {
-//             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
-//
-//             m_neighInds[searchPt.idx][0] = i;
-//             m_neighInds[searchPt.idx][1] = i + 1;
-//
-//             m_weights[searchPt.idx][0] = (m_pts[0][i + 1] - coord) / pdiff;
-//             m_weights[searchPt.idx][1] = (coord - m_pts[0][i]) / pdiff;
-//
-//             break;
-//         }
-//     }
-//     ASSERTL0(i != npts - 1, "Failed to find coordinate " +
-//              boost::lexical_cast<string>(coord) +
-//              " within provided input points");
+    int npts = m_inField->GetNpoints();
+    int i;
+
+    NekDouble coord = searchPt.coords[coordId];
+
+    int numPts = 2;
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+
+    for (i = 0; i < npts - 1; ++i)
+    {
+        if ((m_inField->GetPointVal(0,i) <= coord) && (coord <= m_inField->GetPointVal(0,i + 1)))
+        {
+            NekDouble pdiff = m_inField->GetPointVal(0,i+1) - m_inField->GetPointVal(0,i);
+
+            m_neighInds[searchPt.idx][0] = i;
+            m_neighInds[searchPt.idx][1] = i + 1;
+
+            m_weights[searchPt.idx][0] = (m_inField->GetPointVal(0,i+1) - coord) / pdiff;
+            m_weights[searchPt.idx][1] = (coord - m_inField->GetPointVal(0,i)) / pdiff;
+
+            break;
+        }
+    }
+    ASSERTL0(i != npts - 1, "Failed to find coordinate " +
+             boost::lexical_cast<string>(coord) +
+             " within provided input points");
 };
 
 
@@ -404,72 +404,72 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 
 void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
 {
-//     int npts = m_pts[0].num_elements();
-//     int i;
-//
-//     NekDouble coord = searchPt.coords[coordId];
-//
-//     int numPts = 3;
-//     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
-//     m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
-//
-//     for (i = 0; i < npts - 1; ++i)
-//     {
-//         if ((m_pts[0][i] <= coord) && (coord <= m_pts[0][i + 1]))
-//         {
-//             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
-//             NekDouble h1, h2, h3;
-//
-//             if (i < npts - 2)
-//             {
-//                 // forwards stencil
-//                 NekDouble pdiff2 = m_pts[0][i + 2] - m_pts[0][i + 1];
-//
-//                 h1 = (m_pts[0][i + 1] - coord)
-//                      * (m_pts[0][i + 2] - coord)
-//                      / (pdiff * (pdiff + pdiff2));
-//                 h2 = (coord - m_pts[0][i])
-//                      * (m_pts[0][i + 2] - coord)
-//                      / (pdiff * pdiff2);
-//                 h3 = (coord - m_pts[0][i])
-//                      * (coord - m_pts[0][i + 1])
-//                      / ((pdiff + pdiff2) * pdiff2);
-//
-//                 m_neighInds[searchPt.idx][0] = i;
-//                 m_neighInds[searchPt.idx][1] = i + 1;
-//                 m_neighInds[searchPt.idx][2] = i + 2;
-//             }
-//             else
-//             {
-//                 // backwards stencil
-//                 NekDouble pdiff2 = m_pts[0][i] - m_pts[0][i - 1];
-//
-//                 h1 = (m_pts[0][i + 1] - coord)
-//                      * (coord - m_pts[0][i - 1])
-//                      / (pdiff * pdiff2);
-//                 h2 = (coord - m_pts[0][i])
-//                      * (coord - m_pts[0][i - 1])
-//                      / (pdiff * (pdiff + pdiff2));
-//                 h3 = (m_pts[0][i] - coord)
-//                      * (m_pts[0][i + 1] - coord)
-//                      / ((pdiff + pdiff2) * pdiff);
-//
-//                 m_neighInds[searchPt.idx][0] = i;
-//                 m_neighInds[searchPt.idx][1] = i + 1;
-//                 m_neighInds[searchPt.idx][2] = i - 1;
-//             }
-//
-//
-//             m_weights[searchPt.idx][0] = h1;
-//             m_weights[searchPt.idx][1] = h2;
-//             m_weights[searchPt.idx][2] = h3;
-//
-//             break;
-//         }
-//     }
-//     ASSERTL0(i != npts - 1, "Failed to find coordinate " +
-//              boost::lexical_cast<string>(coord) +
-//              " within provided input points");
+    int npts = m_inField->GetNpoints();
+    int i;
+
+    NekDouble coord = searchPt.coords[coordId];
+
+    int numPts = 3;
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+
+    for (i = 0; i < npts - 1; ++i)
+    {
+        if ((m_inField->GetPointVal(0,i) <= coord) && (coord <= m_inField->GetPointVal(0,i+1)))
+        {
+            NekDouble pdiff = m_inField->GetPointVal(0,i+1) - m_inField->GetPointVal(0,i);
+            NekDouble h1, h2, h3;
+
+            if (i < npts - 2)
+            {
+                // forwards stencil
+                NekDouble pdiff2 = m_inField->GetPointVal(0,i+2) - m_inField->GetPointVal(0,i+1);
+
+                h1 = (m_inField->GetPointVal(0,i+1) - coord)
+                     * (m_inField->GetPointVal(0,i+2) - coord)
+                     / (pdiff * (pdiff + pdiff2));
+                h2 = (coord - m_inField->GetPointVal(0,i))
+                     * (m_inField->GetPointVal(0,i+2) - coord)
+                     / (pdiff * pdiff2);
+                h3 = (coord - m_inField->GetPointVal(0,i))
+                     * (coord - m_inField->GetPointVal(0,i+1))
+                     / ((pdiff + pdiff2) * pdiff2);
+
+                m_neighInds[searchPt.idx][0] = i;
+                m_neighInds[searchPt.idx][1] = i + 1;
+                m_neighInds[searchPt.idx][2] = i + 2;
+            }
+            else
+            {
+                // backwards stencil
+                NekDouble pdiff2 = m_inField->GetPointVal(0,i) - m_inField->GetPointVal(0,i-1);
+
+                h1 = (m_inField->GetPointVal(0,i+1) - coord)
+                     * (coord - m_inField->GetPointVal(0,i-1))
+                     / (pdiff * pdiff2);
+                h2 = (coord - m_inField->GetPointVal(0,i))
+                     * (coord - m_inField->GetPointVal(0,i-1))
+                     / (pdiff * (pdiff + pdiff2));
+                h3 = (m_inField->GetPointVal(0,i) - coord)
+                     * (m_inField->GetPointVal(0,i+1) - coord)
+                     / ((pdiff + pdiff2) * pdiff);
+
+                m_neighInds[searchPt.idx][0] = i;
+                m_neighInds[searchPt.idx][1] = i + 1;
+                m_neighInds[searchPt.idx][2] = i - 1;
+            }
+
+
+            m_weights[searchPt.idx][0] = h1;
+            m_weights[searchPt.idx][1] = h2;
+            m_weights[searchPt.idx][2] = h3;
+
+            break;
+        }
+    }
+    ASSERTL0(i != npts - 1, "Failed to find coordinate " +
+             boost::lexical_cast<string>(coord) +
+             " within provided input points");
 };
 
 

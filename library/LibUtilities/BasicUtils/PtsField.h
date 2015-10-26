@@ -121,6 +121,8 @@ class PtsField
 
         LIB_UTILITIES_EXPORT NekDouble GetPointVal(const int fieldInd, const int ptInd) const;
 
+        LIB_UTILITIES_EXPORT void SetPointVal(const int fieldInd, const int ptInd, const NekDouble val);
+
         LIB_UTILITIES_EXPORT void GetPts(
             Array<OneD, Array<OneD, NekDouble> > &pts) const;
 

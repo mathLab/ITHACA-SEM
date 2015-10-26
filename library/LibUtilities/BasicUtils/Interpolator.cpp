@@ -41,6 +41,14 @@ namespace Nektar
 namespace LibUtilities
 {
 
+Interpolator::Interpolator(const PtsField &inField, PtsField &outField) :
+            m_inField(inField),
+            m_outField(outField),
+            m_method(ePtsNoMethod),
+            m_dim(3)
+{
+    ASSERTL0(inField.GetNFields() == outField.GetNFields(), "number of fields does not match");
+}
 
 
 /**
@@ -52,7 +60,6 @@ namespace LibUtilities
  * Set coord_id to -1 to use n-D interpolation for an n-dimensional field.
  * The most suitable algorithm is chosen automatically.
  */
-
 void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDouble width)
 {
     int nOutPts = m_outField.GetNpoints();
@@ -70,8 +77,8 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
     std::vector<PtsPoint > inPoints;
     for (int i = 0; i < m_inField.GetNpoints(); ++i)
     {
-        Array<OneD, NekDouble> coords(3);
-        for (int j = 0; j < 3; ++j)
+        Array<OneD, NekDouble> coords(m_dim);
+        for (int j = 0; j < m_dim; ++j)
         {
             coords[j] = m_inField.GetPointVal(j,i);
         }
@@ -82,16 +89,16 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
     // interpolate points and transform
     for (int i = 0; i < nOutPts; ++i)
     {
-        Array<OneD, NekDouble> tmp(3);
-        for (int j = 0; j < 3; ++j)
+        Array<OneD, NekDouble> tmp(m_dim);
+        for (int j = 0; j < m_dim; ++j)
         {
             tmp[j] = m_outField.GetPointVal(j,i);
         }
         PtsPoint searchPt(i, tmp, 1E30);
 
-        if ((3 == 1 || coordId >= 0) && ! (method == ePtsGauss || method == ePtsShepard))
+        if ((m_dim == 1 || coordId >= 0) && ! (method == ePtsGauss || method == ePtsShepard))
         {
-            if (3 == 1)
+            if (m_dim == 1)
             {
                 coordId = 0;
             }
@@ -139,26 +146,33 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
  * The weights must have already been computed by @CalcWeights or set by
  * @SetWeights.
  */
-
 void Interpolator::Interpolate(
             Nektar::LibUtilities::PtsInterpMethod method, short int coordId, Nektar::NekDouble width)
 {
+    if ( m_weights.num_elements() == 0)
+    {
+        CalcWeights(method, coordId, width);
+    }
+
     ASSERTL1(m_weights[0].num_elements() == m_neighInds[0].num_elements(),
              "weights / neighInds mismatch")
     int nFields = m_outField.GetNFields();
     int nOutPts = m_outField.GetNpoints();
+    int inDim = m_inField.GetDim();
 
     // interpolate points and transform
     for (int i = 0; i < nFields; ++i)
     {
         for (int j = 0; j < nOutPts; ++j)
         {
+            NekDouble val = 0.0;
             int nPts = m_weights[j].num_elements();
             for (int k = 0; k < nPts; ++k)
             {
                 unsigned int nIdx = m_neighInds[j][k];
-//                 intFields[i][j] += m_weights[j][k] * m_pts[3 + i][nIdx];
+                val += m_weights[j][k] * m_inField.GetPointVal(inDim + i, nIdx);
             }
+            m_outField.SetPointVal(i,j, val);
         }
     }
 }
@@ -166,16 +180,14 @@ void Interpolator::Interpolate(
 
 int Interpolator::GetDim() const
 {
-    return 3;
+    return m_dim;
 }
-
 
 
 void Interpolator::GetInField(PtsField &inField) const
 {
     inField = m_inField;
 }
-
 
 
 void Interpolator::GetOutField(PtsField &outField) const
@@ -192,7 +204,6 @@ void Interpolator::GetOutField(PtsField &outField) const
  * @param neighbourInds Indices of the relevant neighbours for each physical point.
  * Structure: m_neighInds[ptIdx][neighbourIdx]
  */
-
 void Interpolator::GetWeights(
             Array<OneD, Array<OneD, float> > &weights,
             Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const
@@ -210,7 +221,6 @@ void Interpolator::GetWeights(
  * @param neighbourInds Indices of the relevant neighbours for each physical point.
  * Structure: m_neighInds[ptIdx][neighbourIdx]
  */
-
 void Interpolator::SetWeights(const Array<OneD, Array<OneD, float> >
          &weights,
          const Array<OneD, Array<OneD, unsigned int> > &neighbourInds)
@@ -231,12 +241,11 @@ void Interpolator::SetWeights(const Array<OneD, Array<OneD, float> >
  * @param physPt            The coordinates of the physical point
  *
  */
-
 void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 {
     NekDouble ts2 = 2 * sigma * sigma;
     NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
-    fac = pow(fac, 3);
+    fac = pow(fac, m_dim);
 
     // find nearest neighbours
     int maxPts = 500;
@@ -342,45 +351,45 @@ void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt, int coordId)
 
 void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 {
-//     // find nearest neighbours
-//     vector<PtsPoint > neighbourPts;
-//     int numPts = pow(float(2), 3);
-//     numPts = min(numPts, int(m_pts[0].num_elements() / 2));
-//     FindNNeighbours(searchPt, neighbourPts, numPts);
-//
-//     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
-//     for (int i = 0; i < numPts; i++)
-//     {
-//         m_neighInds[searchPt.idx][i] = neighbourPts.at(i).idx;
-//     }
-//
-//     m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
-//
-//     // In case d < kVertexTheSameDouble ( d^2 < kNekSqrtTol), use the exact
-//     // point and return
-//     for (int i = 0; i < numPts; ++i)
-//     {
-//         if (neighbourPts[i].dist <= NekConstants::kNekZeroTol)
-//         {
-//             m_weights[searchPt.idx][i] = 1.0;
-//             return;
-//         }
-//     }
-//
-//     NekDouble wSum = 0.0;
-//     for (int i = 0; i < numPts; ++i)
-//     {
-//         m_weights[searchPt.idx][i] = 1 / pow(double(neighbourPts[i].dist),
-//                                           double(3));
-//         wSum += m_weights[searchPt.idx][i];
-//     }
-//
-//     for (int i = 0; i < numPts; ++i)
-//     {
-//         m_weights[searchPt.idx][i] = m_weights[searchPt.idx][i] / wSum;
-//     }
-//
-//     ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
+    // find nearest neighbours
+    vector<PtsPoint > neighbourPts;
+    int numPts = pow(float(2), m_dim);
+    numPts = min(numPts, int(m_inField.GetNpoints() / 2));
+    FindNNeighbours(searchPt, neighbourPts, numPts);
+
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    for (int i = 0; i < numPts; i++)
+    {
+        m_neighInds[searchPt.idx][i] = neighbourPts.at(i).idx;
+    }
+
+    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+
+    // In case d < kVertexTheSameDouble ( d^2 < kNekSqrtTol), use the exact
+    // point and return
+    for (int i = 0; i < numPts; ++i)
+    {
+        if (neighbourPts[i].dist <= NekConstants::kNekZeroTol)
+        {
+            m_weights[searchPt.idx][i] = 1.0;
+            return;
+        }
+    }
+
+    NekDouble wSum = 0.0;
+    for (int i = 0; i < numPts; ++i)
+    {
+        m_weights[searchPt.idx][i] = 1 / pow(double(neighbourPts[i].dist),
+                                          double(3)); //TODO: 3 or m_dim?
+        wSum += m_weights[searchPt.idx][i];
+    }
+
+    for (int i = 0; i < numPts; ++i)
+    {
+        m_weights[searchPt.idx][i] = m_weights[searchPt.idx][i] / wSum;
+    }
+
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
 
 }
 

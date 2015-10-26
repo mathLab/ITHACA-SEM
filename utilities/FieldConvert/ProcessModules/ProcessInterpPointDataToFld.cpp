@@ -91,35 +91,31 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     }
 
     int totpoints = m_f->m_exp[0]->GetTotPoints();
-    Array< OneD, Array<OneD, NekDouble> > coords(3);
-
-    coords[0] = Array<OneD,NekDouble>(totpoints);
-    coords[1] = Array<OneD,NekDouble>(totpoints);
-    coords[2] = Array<OneD,NekDouble>(totpoints);
-
-    m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
+    Array<OneD, Array<OneD, NekDouble> > intFields(3 + nFields);
+    for (int i = 0; i < 3 + nFields; ++i)
+    {
+        intFields[i] = Array<OneD,  NekDouble>(totpoints);
+    }
+    m_f->m_exp[0]->GetCoords(intFields[0],intFields[1],intFields[2]);
+    LibUtilities::PtsField outPts(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
         "interpcoord is bigger than the Pts files dimension");
 
     // interpolate points and transform
-//     Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
-//     for (int i = 0; i < nFields; ++i)
-//     {
-//         intFields[i] = Array<OneD,  NekDouble>(totpoints);
-//     }
     if (m_f->m_session->GetComm()->GetRank() == 0)
     {
         m_f->m_fieldPts->setProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
         cout << "Interpolating:       ";
     }
-//     m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
-    LibUtilities::PtsField outPts(3, coords);
+
     LibUtilities::PtsField inPts = *(m_f->m_fieldPts);
     LibUtilities::Interpolator Interp(inPts, outPts);
-    Interp.GetDim();
+    Interp.Interpolate(Nektar::LibUtilities::ePtsShepard, coord_id, 0.0);
+
+    cout << " done" << endl;
 
     for(i = 0; i < totpoints; ++i)
     {

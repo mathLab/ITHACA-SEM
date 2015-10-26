@@ -130,12 +130,7 @@ class Interpolator
 {
     public:
 
-        LIB_UTILITIES_EXPORT Interpolator(const PtsField &inField, PtsField &outField) :
-            m_inField(inField),
-            m_outField(outField),
-            m_method(ePtsNoMethod)
-        {
-        };
+        LIB_UTILITIES_EXPORT Interpolator(const PtsField &inField, PtsField &outField);
 
         LIB_UTILITIES_EXPORT void CalcWeights(
             PtsInterpMethod method,
@@ -174,6 +169,7 @@ class Interpolator
 
         PtsField                                    m_inField;
         PtsField                                    m_outField;
+        int                                         m_dim;
 
         /// Interpolation Method
         PtsInterpMethod                             m_method;

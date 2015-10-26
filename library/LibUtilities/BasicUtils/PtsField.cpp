@@ -158,6 +158,13 @@ NekDouble PtsField::GetPointVal(const int fieldInd, const int ptInd) const
 }
 
 
+void PtsField::SetPointVal(const int fieldInd, const int ptInd, const NekDouble val)
+{
+    m_pts[fieldInd][ptInd] = val;
+}
+
+
+
 void PtsField::GetPts(Array< OneD, Array< OneD, NekDouble > > &pts) const
 {
     pts = m_pts;

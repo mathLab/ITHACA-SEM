@@ -72,8 +72,7 @@ namespace LibUtilities
 
 
 
-    template<std::size_t DIM>
-        class PtsPoint : public bg::model::point<NekDouble, DIM,  bg::cs::cartesian>{
+        class PtsPoint : public bg::model::point<NekDouble, 3,  bg::cs::cartesian>{
             public:
 
                 int                                         idx;
@@ -82,7 +81,7 @@ namespace LibUtilities
 
                 LIB_UTILITIES_EXPORT PtsPoint():
                     idx(-1),
-                    coords(Array<OneD, NekDouble>(DIM)),
+                    coords(Array<OneD, NekDouble>(3)),
                     dist(1E30)
                 {
                 };
@@ -101,17 +100,19 @@ namespace LibUtilities
                 };
         };
 
-        typedef bg::model::box<PtsPoint<3> > PtsBox;
+        typedef bg::model::box<PtsPoint > PtsBox;
 
 
 
 
 
-
-
-
-
-
+}
+}
+BOOST_GEOMETRY_REGISTER_POINT_3D(Nektar::LibUtilities::PtsPoint, Nektar::NekDouble, cs::cartesian, coords[0], coords[1], coords[2])
+namespace Nektar
+{
+namespace LibUtilities
+{
 
 
 
@@ -125,7 +126,6 @@ enum PtsInterpMethod{
     ePtsGauss,
 };
 
-template<std::size_t DIM>
 class Interpolator
 {
     public:
@@ -180,7 +180,7 @@ class Interpolator
         /// A tree structure to speed up the neighbour search.
         /// Note that we fill it with an iterator, so instead of rstar, the
         /// packing algorithm is used.
-        bgi::rtree< PtsPoint<DIM>, bgi::rstar<16> > m_rtree;
+        bgi::rtree< PtsPoint, bgi::rstar<16> > m_rtree;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >            m_weights;
@@ -191,23 +191,23 @@ class Interpolator
         boost::function<void (const int position, const int goal)> m_progressCallback;
 
         LIB_UTILITIES_EXPORT void CalcW_Gauss(
-            const PtsPoint<DIM> &searchPt,
+            const PtsPoint &searchPt,
             const NekDouble sigma);
 
-        LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint<DIM> &searchPt, int coordId);
+        LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint &searchPt, int coordId);
 
-        LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint<DIM> &searchPt, int coordId);
+        LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt, int coordId);
 
-        LIB_UTILITIES_EXPORT void CalcW_Shepard(const PtsPoint<DIM> &searchPt);
+        LIB_UTILITIES_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
 
-        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint<DIM> &searchPt, int coordId);
+        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt, int coordId);
 
-        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint<DIM> &searchPt,
-                vector<PtsPoint<DIM> > &neighbourPts,
+        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &searchPt,
+                vector<PtsPoint > &neighbourPts,
                 const NekDouble dist);
 
-        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint<DIM> &searchPt,
-                vector<PtsPoint<DIM> > &neighbourPts,
+        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint &searchPt,
+                vector<PtsPoint > &neighbourPts,
                 const unsigned int numPts = 1);
 };
 
@@ -218,13 +218,7 @@ class Interpolator
 }
 }
 
-// no idea why boost doesnt have a macro for 1d...
-namespace boost { namespace geometry { namespace traits {
-    BOOST_GEOMETRY_DETAIL_SPECIALIZE_POINT_TRAITS(Nektar::LibUtilities::PtsPoint<1>, 1, Nektar::NekDouble, cs::cartesian)
-    BOOST_GEOMETRY_DETAIL_SPECIALIZE_POINT_ACCESS(Nektar::LibUtilities::PtsPoint<1>, 0, Nektar::NekDouble, coords[0], coords[0])
-}}}
-BOOST_GEOMETRY_REGISTER_POINT_2D(Nektar::LibUtilities::PtsPoint<2>, Nektar::NekDouble, cs::cartesian, coords[0], coords[1])
-BOOST_GEOMETRY_REGISTER_POINT_3D(Nektar::LibUtilities::PtsPoint<3>, Nektar::NekDouble, cs::cartesian, coords[0], coords[1], coords[2])
+
 
 #endif
 

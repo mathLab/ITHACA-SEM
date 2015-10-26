@@ -116,10 +116,10 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         cout << "Interpolating:       ";
     }
 //     m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
-//     LibUtilities::PtsField outPts(3, coords);
-//     LibUtilities::PtsField inPts = *(m_f->m_fieldPts);
-//     LibUtilities::Interpolator<3> Interp(inPts, outPts);
-//     Interp.GetDim();
+    LibUtilities::PtsField outPts(3, coords);
+    LibUtilities::PtsField inPts = *(m_f->m_fieldPts);
+    LibUtilities::Interpolator Interp(inPts, outPts);
+    Interp.GetDim();
 
     for(i = 0; i < totpoints; ++i)
     {

@@ -52,8 +52,8 @@ namespace LibUtilities
  * Set coord_id to -1 to use n-D interpolation for an n-dimensional field.
  * The most suitable algorithm is chosen automatically.
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::CalcWeights(PtsInterpMethod method, short int coordId, NekDouble width)
+
+void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDouble width)
 {
     int nOutPts = m_outField.GetNpoints();
     int lastProg = 0;
@@ -67,31 +67,31 @@ void Interpolator<DIM>::CalcWeights(PtsInterpMethod method, short int coordId, N
     m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
-    std::vector<PtsPoint<DIM> > inPoints;
+    std::vector<PtsPoint > inPoints;
     for (int i = 0; i < m_inField.GetNpoints(); ++i)
     {
-        Array<OneD, NekDouble> coords(DIM);
-        for (int j = 0; j < DIM; ++j)
+        Array<OneD, NekDouble> coords(3);
+        for (int j = 0; j < 3; ++j)
         {
             coords[j] = m_inField.GetPointVal(j,i);
         }
-        inPoints.push_back(PtsPoint<DIM>(i, coords, 1E30));
+        inPoints.push_back(PtsPoint(i, coords, 1E30));
     }
     m_rtree.insert(inPoints.begin(), inPoints.end());
 
     // interpolate points and transform
     for (int i = 0; i < nOutPts; ++i)
     {
-        Array<OneD, NekDouble> tmp(DIM);
-        for (int j = 0; j < DIM; ++j)
+        Array<OneD, NekDouble> tmp(3);
+        for (int j = 0; j < 3; ++j)
         {
             tmp[j] = m_outField.GetPointVal(j,i);
         }
-        PtsPoint<DIM> searchPt(i, tmp, 1E30);
+        PtsPoint searchPt(i, tmp, 1E30);
 
-        if ((DIM == 1 || coordId >= 0) && ! (method == ePtsGauss || method == ePtsShepard))
+        if ((3 == 1 || coordId >= 0) && ! (method == ePtsGauss || method == ePtsShepard))
         {
-            if (DIM == 1)
+            if (3 == 1)
             {
                 coordId = 0;
             }
@@ -139,8 +139,8 @@ void Interpolator<DIM>::CalcWeights(PtsInterpMethod method, short int coordId, N
  * The weights must have already been computed by @CalcWeights or set by
  * @SetWeights.
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::Interpolate(
+
+void Interpolator::Interpolate(
             Nektar::LibUtilities::PtsInterpMethod method, short int coordId, Nektar::NekDouble width)
 {
     ASSERTL1(m_weights[0].num_elements() == m_neighInds[0].num_elements(),
@@ -157,28 +157,28 @@ void Interpolator<DIM>::Interpolate(
             for (int k = 0; k < nPts; ++k)
             {
                 unsigned int nIdx = m_neighInds[j][k];
-//                 intFields[i][j] += m_weights[j][k] * m_pts[DIM + i][nIdx];
+//                 intFields[i][j] += m_weights[j][k] * m_pts[3 + i][nIdx];
             }
         }
     }
 }
 
-template<std::size_t DIM>
-int Interpolator<DIM>::GetDim() const
+
+int Interpolator::GetDim() const
 {
-    return DIM;
+    return 3;
 }
 
 
-template<std::size_t DIM>
-void Interpolator<DIM>::GetInField(PtsField &inField) const
+
+void Interpolator::GetInField(PtsField &inField) const
 {
     inField = m_inField;
 }
 
 
-template<std::size_t DIM>
-void Interpolator<DIM>::GetOutField(PtsField &outField) const
+
+void Interpolator::GetOutField(PtsField &outField) const
 {
     outField = m_outField;
 }
@@ -192,8 +192,8 @@ void Interpolator<DIM>::GetOutField(PtsField &outField) const
  * @param neighbourInds Indices of the relevant neighbours for each physical point.
  * Structure: m_neighInds[ptIdx][neighbourIdx]
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::GetWeights(
+
+void Interpolator::GetWeights(
             Array<OneD, Array<OneD, float> > &weights,
             Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const
 {
@@ -210,8 +210,8 @@ void Interpolator<DIM>::GetWeights(
  * @param neighbourInds Indices of the relevant neighbours for each physical point.
  * Structure: m_neighInds[ptIdx][neighbourIdx]
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::SetWeights(const Array<OneD, Array<OneD, float> >
+
+void Interpolator::SetWeights(const Array<OneD, Array<OneD, float> >
          &weights,
          const Array<OneD, Array<OneD, unsigned int> > &neighbourInds)
 {
@@ -231,16 +231,16 @@ void Interpolator<DIM>::SetWeights(const Array<OneD, Array<OneD, float> >
  * @param physPt            The coordinates of the physical point
  *
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::CalcW_Gauss(const PtsPoint<DIM> &searchPt, const NekDouble sigma)
+
+void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 {
     NekDouble ts2 = 2 * sigma * sigma;
     NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
-    fac = pow(fac, DIM);
+    fac = pow(fac, 3);
 
     // find nearest neighbours
     int maxPts = 500;
-    vector<PtsPoint<DIM> > neighbourPts;
+    vector<PtsPoint > neighbourPts;
     FindNeighbours(searchPt, neighbourPts, 1.96 * sigma);
     int numPts = min( (int) neighbourPts.size(), maxPts);
 
@@ -284,8 +284,8 @@ void Interpolator<DIM>::CalcW_Gauss(const PtsPoint<DIM> &searchPt, const NekDoub
  * @param physPtIdx         The index of the physical point in its storage array
  * @param coord             The coordinate of the physical point
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::CalcW_Linear(const PtsPoint<DIM> &searchPt, int coordId)
+
+void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int coordId)
 {
 //     int npts = m_pts[0].num_elements();
 //     int i;
@@ -317,8 +317,8 @@ void Interpolator<DIM>::CalcW_Linear(const PtsPoint<DIM> &searchPt, int coordId)
 };
 
 
-template<std::size_t DIM>
-void Interpolator<DIM>::CalcW_NNeighbour(const PtsPoint< DIM > &searchPt, int coordId)
+
+void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt, int coordId)
 {
     ASSERTL0(false, "not implemented");
 }
@@ -339,12 +339,12 @@ void Interpolator<DIM>::CalcW_NNeighbour(const PtsPoint< DIM > &searchPt, int co
  * Contrary to Shepard, we use a fixed number of points with fixed weighting
  * factors 1/d^n.
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::CalcW_Shepard(const PtsPoint<DIM> &searchPt)
+
+void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 {
 //     // find nearest neighbours
-//     vector<PtsPoint<DIM> > neighbourPts;
-//     int numPts = pow(float(2), DIM);
+//     vector<PtsPoint > neighbourPts;
+//     int numPts = pow(float(2), 3);
 //     numPts = min(numPts, int(m_pts[0].num_elements() / 2));
 //     FindNNeighbours(searchPt, neighbourPts, numPts);
 //
@@ -371,7 +371,7 @@ void Interpolator<DIM>::CalcW_Shepard(const PtsPoint<DIM> &searchPt)
 //     for (int i = 0; i < numPts; ++i)
 //     {
 //         m_weights[searchPt.idx][i] = 1 / pow(double(neighbourPts[i].dist),
-//                                           double(DIM));
+//                                           double(3));
 //         wSum += m_weights[searchPt.idx][i];
 //     }
 //
@@ -391,8 +391,8 @@ void Interpolator<DIM>::CalcW_Shepard(const PtsPoint<DIM> &searchPt)
 * @param physPtIdx         The index of the physical point in its storage array
 * @param coord             The coordinate of the physical point
 */
-template<std::size_t DIM>
-void Interpolator<DIM>::CalcW_Quadratic(const PtsPoint<DIM> &searchPt, int coordId)
+
+void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
 {
 //     int npts = m_pts[0].num_elements();
 //     int i;
@@ -475,15 +475,15 @@ void Interpolator<DIM>::CalcW_Quadratic(const PtsPoint<DIM> &searchPt, int coord
  * and chooses the numPts closest points. Thus, its very expensive and
  * inefficient.
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::FindNNeighbours(const PtsPoint<DIM> &searchPt,
-                               vector< PtsPoint<DIM> > &neighbourPts,
+
+void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
+                               vector< PtsPoint > &neighbourPts,
                                const unsigned int numPts)
 {
     // find points within the distance box
     m_rtree.query(bgi::nearest(searchPt, numPts), std::back_inserter(neighbourPts));
 
-    for(typename vector<PtsPoint<DIM> >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    for(typename vector<PtsPoint >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
         it->dist = bg::distance(searchPt, *it);
     }
@@ -504,14 +504,14 @@ void Interpolator<DIM>::FindNNeighbours(const PtsPoint<DIM> &searchPt,
  * and chooses the points within the defined distance. Thus, its very expensive
  * and inefficient.
  */
-template<std::size_t DIM>
-void Interpolator<DIM>::FindNeighbours(const PtsPoint<DIM> &searchPt,
-                              vector<PtsPoint<DIM> > &neighbourPts,
+
+void Interpolator::FindNeighbours(const PtsPoint &searchPt,
+                              vector<PtsPoint > &neighbourPts,
                               const NekDouble dist)
 {
-    PtsPoint<DIM> bbMin, bbMax;
-    bg::strategy::transform::translate_transformer<PtsPoint<DIM>, PtsPoint<DIM> > t1(- dist, - dist, - dist);
-    bg::strategy::transform::translate_transformer<PtsPoint<DIM>, PtsPoint<DIM> > t2(dist, dist, dist);
+    PtsPoint bbMin, bbMax;
+    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint > t1(- dist, - dist, - dist);
+    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint > t2(dist, dist, dist);
     bg::transform(searchPt, bbMin, t1);
     bg::transform(searchPt, bbMax, t2);
     PtsBox bbox(bbMin, bbMax);
@@ -519,7 +519,7 @@ void Interpolator<DIM>::FindNeighbours(const PtsPoint<DIM> &searchPt,
     // find points within the distance box
     m_rtree.query(bgi::within(bbox), std::back_inserter(neighbourPts));
 
-    for(typename vector<PtsPoint<DIM> >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    for(typename vector<PtsPoint >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
         it->dist = bg::distance(searchPt, *it);
     }
@@ -527,7 +527,7 @@ void Interpolator<DIM>::FindNeighbours(const PtsPoint<DIM> &searchPt,
     sort(neighbourPts.begin(), neighbourPts.end());
 
     // remove everything beyond the distance
-    for(typename vector<PtsPoint<DIM> >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    for(typename vector<PtsPoint >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
     {
         if (it->dist > dist)
         {

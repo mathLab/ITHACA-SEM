@@ -40,6 +40,8 @@ using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
 
+#include <LibUtilities/BasicUtils/Interpolator.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -102,24 +104,28 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         "interpcoord is bigger than the Pts files dimension");
 
     // interpolate points and transform
-    Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
-    for (int i = 0; i < nFields; ++i)
-    {
-        intFields[i] = Array<OneD,  NekDouble>(totpoints);
-    }
+//     Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
+//     for (int i = 0; i < nFields; ++i)
+//     {
+//         intFields[i] = Array<OneD,  NekDouble>(totpoints);
+//     }
     if (m_f->m_session->GetComm()->GetRank() == 0)
     {
         m_f->m_fieldPts->setProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
         cout << "Interpolating:       ";
     }
-    m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
+//     m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
+//     LibUtilities::PtsField outPts(3, coords);
+//     LibUtilities::PtsField inPts = *(m_f->m_fieldPts);
+//     LibUtilities::Interpolator<3> Interp(inPts, outPts);
+//     Interp.GetDim();
 
     for(i = 0; i < totpoints; ++i)
     {
         for(j = 0; j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, intFields[j][i]);
+            m_f->m_exp[j]->SetPhys(i, outPts.GetPointVal(j,i));
         }
     }
 

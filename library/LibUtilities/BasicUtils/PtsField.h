@@ -42,18 +42,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
-namespace bg = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 using namespace std;
 
@@ -68,61 +60,6 @@ enum PtsType{
     ePtsPlane,
     ePtsTriBlock,
     ePtsTetBlock
-};
-
-template<std::size_t DimensionCount>
-class PtsPoint : public bg::model::point<NekDouble, DimensionCount,  bg::cs::cartesian>{
-    public:
-
-        int                                         idx;
-        Array<OneD, NekDouble>                      coords;
-        NekDouble                                   dist;
-
-        LIB_UTILITIES_EXPORT PtsPoint():
-            idx(-1),
-            coords(Array<OneD, NekDouble>(DimensionCount)),
-            dist(1E30)
-        {
-        };
-
-        LIB_UTILITIES_EXPORT PtsPoint(int idx, Array<OneD, NekDouble> coords,
-                                      NekDouble dist):
-            idx(idx),
-            coords(coords),
-            dist(dist)
-        {
-        };
-
-        LIB_UTILITIES_EXPORT bool operator < (const PtsPoint &comp) const
-        {
-            return (dist < comp.dist);
-        };
-};
-
-}
-}
-
-// no idea why boost doesnt have a macro for 1d...
-namespace boost { namespace geometry { namespace traits {
-    BOOST_GEOMETRY_DETAIL_SPECIALIZE_POINT_TRAITS(Nektar::LibUtilities::PtsPoint<1>, 1, Nektar::NekDouble, cs::cartesian)
-    BOOST_GEOMETRY_DETAIL_SPECIALIZE_POINT_ACCESS(Nektar::LibUtilities::PtsPoint<1>, 0, Nektar::NekDouble, coords[0], coords[0])
-}}}
-BOOST_GEOMETRY_REGISTER_POINT_2D(Nektar::LibUtilities::PtsPoint<2>, Nektar::NekDouble, cs::cartesian, coords[0], coords[1])
-BOOST_GEOMETRY_REGISTER_POINT_3D(Nektar::LibUtilities::PtsPoint<3>, Nektar::NekDouble, cs::cartesian, coords[0], coords[1], coords[2])
-
-namespace Nektar
-{
-namespace LibUtilities
-{
-
-typedef bg::model::box<PtsPoint<3> > PtsBox;
-
-
-enum PtsInterpMethod{
-    ePtsNoMethod,
-    ePtsQuadratic,
-    ePtsShepard,
-    ePtsGauss,
 };
 
 
@@ -159,30 +96,6 @@ class PtsField
             m_neighInds(neighInds)
         {
         };
-
-        LIB_UTILITIES_EXPORT void CalcWeights(
-            const Array< OneD, Array< OneD, NekDouble > > &physCoords,
-            short int coordId = -1,
-            NekDouble width = 0.0,
-            PtsInterpMethod method = ePtsShepard);
-
-        LIB_UTILITIES_EXPORT void Interpolate(
-            const Array< OneD, Array< OneD, NekDouble > > &physCoords,
-            Array<OneD, Array<OneD, NekDouble> > &intFields,
-            short int coordId = -1);
-
-        LIB_UTILITIES_EXPORT void Interpolate(
-            Array<OneD, Array<OneD, NekDouble> >
-            &intFields);
-
-        LIB_UTILITIES_EXPORT void SetWeights
-        (const Array<OneD, Array<OneD, float> >
-         &weights,
-         const Array<OneD, Array<OneD, unsigned int> > &neighbourInds);
-
-        LIB_UTILITIES_EXPORT void GetWeights(
-            Array<OneD, Array<OneD, float> > &weights,
-            Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const;
 
         LIB_UTILITIES_EXPORT void GetConnectivity(vector<Array<OneD, int> > &conn) const;
 
@@ -251,10 +164,6 @@ class PtsField
         vector<Array<OneD, int> >               m_ptsConn;
         /// Type of the PtsField
         PtsType                                 m_ptsType;
-        /// A tree structure to speed up the neighbour search.
-        /// Note that we fill it with an iterator, so instead of rstar, the
-        /// packing algorithm is used.
-        bgi::rtree< PtsPoint<3>, bgi::rstar<16> >  m_rtree;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >        m_weights;
@@ -263,25 +172,6 @@ class PtsField
         Array<OneD, Array<OneD, unsigned int> > m_neighInds;
 
         boost::function<void (const int position, const int goal)> m_progressCallback;
-
-        LIB_UTILITIES_EXPORT void CalcW_Gauss(
-            const PtsPoint<3> &searchPt,
-            const NekDouble sigma);
-
-        LIB_UTILITIES_EXPORT void CalcW_Linear(const Nektar::LibUtilities::PtsPoint<3> &searchPt, int coordId);
-
-        LIB_UTILITIES_EXPORT void CalcW_Shepard(
-            const Nektar::LibUtilities::PtsPoint<3> &searchPt);
-
-        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const Nektar::LibUtilities::PtsPoint<3> &searchPt, int coordId);
-
-        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint<3> &searchPt,
-                vector<PtsPoint<3> > &neighbourPts,
-                const NekDouble dist);
-
-        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint<3> &searchPt,
-                vector<PtsPoint<3> > &neighbourPts,
-                const unsigned int numPts = 1);
 
 };
 

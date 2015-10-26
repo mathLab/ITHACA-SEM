@@ -896,21 +896,21 @@ namespace Nektar
                     if (m_interpWeights.count(weightsKey) != 0)
                     {
                         //  found, re-use
-                        ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+//                         ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
                     else
                     {
                         if (m_session->GetComm()->GetRank() == 0)
                         {
-                            ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
+//                             ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
                             cout << "Interpolating:       ";
                         }
-                        ptsField->CalcWeights(coords);
+//                         ptsField->CalcWeights(coords);
                         if (m_session->GetComm()->GetRank() == 0)
                         {
                             cout << endl;
                         }
-                        ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+//                         ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
 
                     Array<OneD,  Array<OneD,  NekDouble> > intFields(ptsField->GetNFields());
@@ -918,7 +918,7 @@ namespace Nektar
                     {
                         intFields[i] = Array<OneD,  NekDouble>(ptsField->GetNpoints());
                     }
-                    ptsField->Interpolate(intFields);
+//                     ptsField->Interpolate(intFields);
 
                     int fieldInd;
                     vector<string> fieldNames = ptsField->GetFieldNames();

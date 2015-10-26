@@ -13,6 +13,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
     ./BasicUtils/FileSystem.h
+    ./BasicUtils/Interpolator.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/MeshPartitionMetis.h
@@ -42,6 +43,7 @@ SET(BasicUtilsSources
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FileSystem.cpp
+    ./BasicUtils/Interpolator.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
     ./BasicUtils/PtsField.cpp

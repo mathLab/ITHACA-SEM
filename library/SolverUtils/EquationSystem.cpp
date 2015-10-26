@@ -710,6 +710,7 @@ namespace Nektar
             std::vector<std::string> pFieldNames,
             Array<OneD, Array<OneD, NekDouble> > &pFields,
             const std::string& pFunctionName,
+            const NekDouble& pTime,
             const int domain)
         {
             ASSERTL1(pFieldNames.size() == pFields.num_elements(),
@@ -720,7 +721,7 @@ namespace Nektar
 
             for(int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName,0.0,domain);
+                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName, pTime, domain);
             }
         }
 
@@ -733,6 +734,7 @@ namespace Nektar
             std::vector<std::string> pFieldNames,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const std::string& pFunctionName,
+            const NekDouble& pTime,
             const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
@@ -743,7 +745,7 @@ namespace Nektar
             for(int i = 0; i < pFieldNames.size(); i++)
             {
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(),
-                                 pFunctionName, 0.0, domain);
+                                 pFunctionName, pTime, domain);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(),
                                                 pFields[i]->UpdateCoeffs());
             }
@@ -786,6 +788,16 @@ namespace Nektar
             else if (vType == LibUtilities::eFunctionTypeFile ||
                      vType == LibUtilities::eFunctionTypeTransientFile)
             {
+                // check if we already read this pFunctionName + pFieldName
+                // combination and stop processing if we are dealing with
+                // a non-timedependent file
+                std::string loadedKey = pFunctionName + pFieldName;
+                if (m_loadedFields.count(loadedKey) != 0 && vType == LibUtilities::eFunctionTypeFile)
+                {
+                    return;
+                }
+                m_loadedFields.insert(loadedKey);
+
                 std::string filename = m_session->GetFunctionFilename(
                     pFunctionName, pFieldName, domain);
                 std::string fileVar = m_session->GetFunctionFilenameVariable(
@@ -883,9 +895,7 @@ namespace Nektar
 
                     //  check if we already computed this funcKey combination
                     std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    map<std::string, Array<OneD, Array<OneD,  float> > >::iterator it
-                        = m_interpWeights.find(weightsKey);
-                    if (it != m_interpWeights.end())
+                    if (m_interpWeights.count(weightsKey) != 0)
                     {
                         //  found, re-use
                         ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
@@ -1175,7 +1185,7 @@ namespace Nektar
             if (m_session->DefinesFunction("InitialConditions"))
             {
                 EvaluateFunction(m_session->GetVariables(), m_fields, 
-                                 "InitialConditions",domain);
+                                 "InitialConditions", m_time, domain);
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {

@@ -2287,6 +2287,7 @@ namespace Nektar
                             if(!UniOrder)
                             {
                                 cnt++;
+                                cnt += fielddef[i]->m_numHomogeneousDir;
                             }
                             bkeyvec.push_back(bkey);
                         }
@@ -2342,6 +2343,7 @@ namespace Nektar
                             if(!UniOrder)
                             {
                                 cnt += 2;
+                                cnt += fielddef[i]->m_numHomogeneousDir;
                             }
                         }
                         break;
@@ -2381,6 +2383,7 @@ namespace Nektar
                             if(!UniOrder)
                             {
                                 cnt += 2;
+                                cnt += fielddef[i]->m_numHomogeneousDir;
                             }
                         }
                         break;

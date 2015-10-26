@@ -800,7 +800,7 @@ namespace Nektar
                             (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes,modes_offset,&coeffs[m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane]);
                         }
                     }
-                    modes_offset += (*m_exp)[0]->GetNumBases();
+                    modes_offset += (*m_exp)[0]->GetNumBases() + fielddef->m_numHomogeneousDir;
                 }
             }
         }

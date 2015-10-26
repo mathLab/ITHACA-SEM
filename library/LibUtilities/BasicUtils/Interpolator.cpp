@@ -41,14 +41,15 @@ namespace Nektar
 namespace LibUtilities
 {
 
-Interpolator::Interpolator(const PtsField &inField, PtsField &outField) :
+Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField) :
             m_inField(inField),
             m_outField(outField),
             m_method(ePtsNoMethod),
             m_dim(3)
 {
-    ASSERTL0(inField.GetNFields() == outField.GetNFields(), "number of fields does not match");
+    ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
 }
+
 
 
 /**
@@ -62,7 +63,7 @@ Interpolator::Interpolator(const PtsField &inField, PtsField &outField) :
  */
 void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDouble width)
 {
-    int nOutPts = m_outField.GetNpoints();
+    int nOutPts = m_outField->GetNpoints();
     int lastProg = 0;
 
     NekDouble sigma = width * 0.4246609001;;
@@ -75,12 +76,12 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
     std::vector<PtsPoint > inPoints;
-    for (int i = 0; i < m_inField.GetNpoints(); ++i)
+    for (int i = 0; i < m_inField->GetNpoints(); ++i)
     {
         Array<OneD, NekDouble> coords(m_dim);
         for (int j = 0; j < m_dim; ++j)
         {
-            coords[j] = m_inField.GetPointVal(j,i);
+            coords[j] = m_inField->GetPointVal(j,i);
         }
         inPoints.push_back(PtsPoint(i, coords, 1E30));
     }
@@ -92,7 +93,7 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
         Array<OneD, NekDouble> tmp(m_dim);
         for (int j = 0; j < m_dim; ++j)
         {
-            tmp[j] = m_outField.GetPointVal(j,i);
+            tmp[j] = m_outField->GetPointVal(j,i);
         }
         PtsPoint searchPt(i, tmp, 1E30);
 
@@ -103,7 +104,7 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
                 coordId = 0;
             }
 
-            if (m_outField.GetNpoints() <= 2)
+            if (m_outField->GetNpoints() <= 2)
             {
                 CalcW_Linear(searchPt, coordId);
             }
@@ -156,9 +157,9 @@ void Interpolator::Interpolate(
 
     ASSERTL1(m_weights[0].num_elements() == m_neighInds[0].num_elements(),
              "weights / neighInds mismatch")
-    int nFields = m_outField.GetNFields();
-    int nOutPts = m_outField.GetNpoints();
-    int inDim = m_inField.GetDim();
+    int nFields = m_outField->GetNFields();
+    int nOutPts = m_outField->GetNpoints();
+    int inDim = m_inField->GetDim();
 
     // interpolate points and transform
     for (int i = 0; i < nFields; ++i)
@@ -170,9 +171,9 @@ void Interpolator::Interpolate(
             for (int k = 0; k < nPts; ++k)
             {
                 unsigned int nIdx = m_neighInds[j][k];
-                val += m_weights[j][k] * m_inField.GetPointVal(inDim + i, nIdx);
+                val += m_weights[j][k] * m_inField->GetPointVal(inDim + i, nIdx);
             }
-            m_outField.SetPointVal(i,j, val);
+            m_outField->SetPointVal(i,j, val);
         }
     }
 }
@@ -184,15 +185,15 @@ int Interpolator::GetDim() const
 }
 
 
-void Interpolator::GetInField(PtsField &inField) const
+PtsFieldSharedPtr Interpolator::GetInField() const
 {
-    inField = m_inField;
+    return m_inField;
 }
 
 
-void Interpolator::GetOutField(PtsField &outField) const
+PtsFieldSharedPtr Interpolator::GetOutField() const
 {
-    outField = m_outField;
+    return m_outField;
 }
 
 
@@ -354,7 +355,7 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
     // find nearest neighbours
     vector<PtsPoint > neighbourPts;
     int numPts = pow(float(2), m_dim);
-    numPts = min(numPts, int(m_inField.GetNpoints() / 2));
+    numPts = min(numPts, int(m_inField->GetNpoints() / 2));
     FindNNeighbours(searchPt, neighbourPts, numPts);
 
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);

@@ -97,7 +97,9 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         intFields[i] = Array<OneD,  NekDouble>(totpoints);
     }
     m_f->m_exp[0]->GetCoords(intFields[0],intFields[1],intFields[2]);
-    LibUtilities::PtsField outPts(3, intFields);
+    LibUtilities::PtsFieldSharedPtr outPts =
+            MemoryManager<LibUtilities::PtsField>::
+            AllocateSharedPtr(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
@@ -111,8 +113,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         cout << "Interpolating:       ";
     }
 
-    LibUtilities::PtsField inPts = *(m_f->m_fieldPts);
-    LibUtilities::Interpolator Interp(inPts, outPts);
+    LibUtilities::Interpolator Interp(m_f->m_fieldPts, outPts);
     Interp.Interpolate(Nektar::LibUtilities::ePtsShepard, coord_id, 0.0);
 
     cout << " done" << endl;
@@ -121,7 +122,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     {
         for(j = 0; j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, outPts.GetPointVal(j,i));
+            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j,i));
         }
     }
 

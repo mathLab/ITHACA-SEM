@@ -130,7 +130,7 @@ class Interpolator
 {
     public:
 
-        LIB_UTILITIES_EXPORT Interpolator(const PtsField &inField, PtsField &outField);
+        LIB_UTILITIES_EXPORT Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT void CalcWeights(
             PtsInterpMethod method,
@@ -144,9 +144,9 @@ class Interpolator
 
         LIB_UTILITIES_EXPORT int GetDim() const;
 
-        LIB_UTILITIES_EXPORT void GetInField(PtsField &inField) const;
+        LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetInField() const;
 
-        LIB_UTILITIES_EXPORT void GetOutField(PtsField &outField) const;
+        LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetOutField() const;
 
         LIB_UTILITIES_EXPORT void GetWeights(
             Array<OneD, Array<OneD, float> > &weights,
@@ -167,8 +167,8 @@ class Interpolator
 
     private:
 
-        PtsField                                    m_inField;
-        PtsField                                    m_outField;
+        PtsFieldSharedPtr                           m_inField;
+        PtsFieldSharedPtr                           m_outField;
         int                                         m_dim;
 
         /// Interpolation Method
@@ -207,8 +207,8 @@ class Interpolator
                 const unsigned int numPts = 1);
 };
 
-// typedef boost::shared_ptr<Interpolator> InterpolatorSharedPtr;
-// static InterpolatorSharedPtr NullInterpolator;
+typedef boost::shared_ptr<Interpolator> InterpolatorSharedPtr;
+static InterpolatorSharedPtr NullInterpolator;
 
 
 }

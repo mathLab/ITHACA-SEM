@@ -130,6 +130,7 @@ void FaceMesh::Mesh()
         tags.push_back(m_id);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                                 LibUtilities::eTriangle, conf, m_connec[i], tags);
+        E->SetCADSurf(m_id);
         m_mesh->m_element[m_mesh->m_expDim].push_back(E);
     }
 }

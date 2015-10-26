@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <list>
 #include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -249,7 +248,7 @@ void SurfaceMesh::Validate()
 
 void SurfaceMesh::Optimise()
 {
-    /*if(m_mesh->m_verbose)
+    if(m_mesh->m_verbose)
         cout << endl << "\tOptimising linear mesh" << endl;
 
     //perform two runs of edge swapping based on node connection defect
@@ -258,332 +257,602 @@ void SurfaceMesh::Optimise()
         if(m_mesh->m_verbose)
             cout << "\t\t Edge swap defect run: " << q+1 << endl;
 
-        map<int, MeshEdgeSharedPtr>::iterator it;
-        for(it = Edges.begin(); it != Edges.end(); it++)
+        int deletedEdges = 0;
+
+        //loop over all the elements and count the connections to nodes to work out node defect
+        NodeSet::iterator nit;
+        for(nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); nit++)
         {
-            if(it->second->GetCurve() != -1)
-                continue;
-
-            vector<int> t = it->second->GetTri();
-            ASSERTL0(t.size() == 2, "each edge should have two tri");
-            Array<OneD, int> n = it->second->GetN();
-            Array<OneD, int> nt = Tris[t[0]]->GetN();
-            int nodecheck = 0;
-            for(int i = 0; i < 3; i++)
-            {
-                for(int j = 0; j < 2; j++)
-                {
-                    if(n[j] == nt[i])
-                    {
-                        nodecheck++;
-                    }
-                }
-            }
-            ASSERTL0(nodecheck == 2, "edge and tri should have 2 n in commom");
-
-            //identify node a,b,c,d of the swapping
-            int A,B,C,D;
-            if(nt[0] != n[0] && nt[0] != n[1])
-            {
-                C = nt[0];
-                B = nt[1];
-                A = nt[2];
-            }
-            else if(nt[1] != n[0] && nt[1] != n[1])
-            {
-                C = nt[1];
-                B = nt[2];
-                A = nt[0];
-            }
-            else if(nt[2] != n[0] && nt[2] != n[1])
-            {
-                C = nt[2];
-                B = nt[0];
-                A = nt[1];
-            }
-
-            nt = Tris[t[1]]->GetN();
-            nodecheck = 0;
-            for(int i = 0; i < 3; i++)
-            {
-                for(int j = 0; j < 2; j++)
-                {
-                    if(n[j] == nt[i])
-                    {
-                        nodecheck++;
-                    }
-                }
-            }
-            ASSERTL0(nodecheck == 2, "edge and tri should have 2 n in commom");
-
-            if(nt[0] != n[0] && nt[0] != n[1])
-            {
-                D = nt[0];
-            }
-            else if(nt[1] != n[0] && nt[1] != n[1])
-            {
-                D = nt[1];
-            }
-            else if(nt[2] != n[0] && nt[2] != n[1])
-            {
-                D = nt[2];
-            }
-
-            //determine signed area of alternate config
-            Array<OneD, NekDouble> ai,bi,ci,di;
-            ai = Nodes[A]->GetS(it->second->GetSurf());
-            bi = Nodes[B]->GetS(it->second->GetSurf());
-            ci = Nodes[C]->GetS(it->second->GetSurf());
-            di = Nodes[D]->GetS(it->second->GetSurf());
-
-            NekDouble CDA, CBD;
-
-            CDA = (ci[0]*di[1] + ci[1]*ai[0] + di[0]*ai[1]) -
-                  (ai[0]*di[1] + ai[1]*ci[0] + di[0]*ci[1]);
-
-            CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
-                  (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
-
-            //if signed area of the swapping triangles is less than zero
-            //that configuration is invalid and swap cannot be performed
-            if(CDA < 0.0 || CBD < 0.0)
-                continue;
-
-
-            int nodedefectbefore = 0;
-            nodedefectbefore += Nodes[A]->GetEdges().size() > 6 ?
-                                Nodes[A]->GetEdges().size() - 6 :
-                                6 - Nodes[A]->GetEdges().size();
-            nodedefectbefore += Nodes[B]->GetEdges().size() > 6 ?
-                                Nodes[B]->GetEdges().size() - 6 :
-                                6 - Nodes[B]->GetEdges().size();
-            nodedefectbefore += Nodes[C]->GetEdges().size() > 6 ?
-                                Nodes[C]->GetEdges().size() - 6 :
-                                6 - Nodes[C]->GetEdges().size();
-            nodedefectbefore += Nodes[D]->GetEdges().size() > 6 ?
-                                Nodes[D]->GetEdges().size() - 6 :
-                                6 - Nodes[D]->GetEdges().size();
-
-
-
-            int nodedefectafter = 0;
-            nodedefectafter  += Nodes[A]->GetEdges().size() - 1 > 6 ?
-                                Nodes[A]->GetEdges().size() - 1 - 6 :
-                                6 - (Nodes[A]->GetEdges().size() - 1);
-            nodedefectafter  += Nodes[B]->GetEdges().size() - 1 > 6 ?
-                                Nodes[B]->GetEdges().size() - 1 - 6 :
-                                6 - (Nodes[B]->GetEdges().size() - 1);
-            nodedefectafter  += Nodes[C]->GetEdges().size() + 1 > 6 ?
-                                Nodes[C]->GetEdges().size() + 1 - 6 :
-                                6 - (Nodes[C]->GetEdges().size() + 1);
-            nodedefectafter  += Nodes[D]->GetEdges().size() + 1 > 6 ?
-                                Nodes[D]->GetEdges().size() + 1 - 6 :
-                                6 - (Nodes[D]->GetEdges().size() + 1);
-
-            //if the node defect of the two triangles will be imrpoved by the
-            //swap perfrom the swap
-            if(nodedefectafter < nodedefectbefore)
-            {
-                Edges[it->first]->Swap(C,D);
-                Nodes[C]->SetEdge(it->first);
-                Nodes[D]->SetEdge(it->first);
-                Nodes[A]->RemoveEdge(it->first);
-                Nodes[B]->RemoveEdge(it->first);
-                Nodes[C]->SetTri(t[1]);
-                Nodes[B]->RemoveTri(t[1]);
-                Nodes[D]->SetTri(t[0]);
-                Nodes[A]->RemoveTri(t[0]);
-
-                int e1, e2, e3;
-                e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
-                e2 = Nodes[B]->EdgeInCommon(Nodes[D]);
-                Edges[e2]->RemoveTri(t[1]);
-                Edges[e2]->SetTri(t[0]);
-                e3 = it->first;
-                ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
-                Tris[t[0]]->Swap(C,B,D);
-                Tris[t[0]]->ResetEdges(e1, e2, e3);
-
-                Tris[t[1]]->Swap(C,D,A);
-                e1 = it->first;
-                e2 = Nodes[D]->EdgeInCommon(Nodes[A]);
-                e3 = Nodes[A]->EdgeInCommon(Nodes[C]);
-                Edges[e3]->RemoveTri(t[0]);
-                Edges[e3]->SetTri(t[1]);
-                ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
-                Tris[t[1]]->ResetEdges(e1, e2 ,e3);
-            }
+            (*nit)->m_elCount = 0;
         }
+        EdgeSet::iterator it;
+        for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+        {
+            (*it)->m_n1->m_elCount++;
+            (*it)->m_n2->m_elCount++;
+        }
+
+        for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+        {
+            if((*it)->m_elLink.size() != 2)
+                continue;
+
+            ElementSharedPtr tri1 = (*it)->m_elLink[0].first;
+            ElementSharedPtr tri2 = (*it)->m_elLink[1].first;
+
+            //if the triangles are not on the same surface then the edge is on a curve
+            //therefore cannot edge swap
+            if(tri1->GetCADSurf() == tri2->GetCADSurf())
+            {
+                NodeSharedPtr n1 = (*it)->m_n1;
+                NodeSharedPtr n2 = (*it)->m_n2;
+
+                vector<NodeSharedPtr> nt = tri1->GetVertexList();
+
+                //identify node a,b,c,d of the swapping
+                NodeSharedPtr A,B,C,D;
+                if(nt[0] != n1 && nt[0] != n2)
+                {
+                    C = nt[0];
+                    B = nt[1];
+                    A = nt[2];
+                }
+                else if(nt[1] != n1 && nt[1] != n2)
+                {
+                    C = nt[1];
+                    B = nt[2];
+                    A = nt[0];
+                }
+                else if(nt[2] != n1 && nt[2] != n2)
+                {
+                    C = nt[2];
+                    B = nt[0];
+                    A = nt[1];
+                }
+
+                nt = tri2->GetVertexList();
+
+                if(nt[0] != n1 && nt[0] != n2)
+                {
+                    D = nt[0];
+                }
+                else if(nt[1] != n1 && nt[1] != n2)
+                {
+                    D = nt[1];
+                }
+                else if(nt[2] != n1 && nt[2] != n2)
+                {
+                    D = nt[2];
+                }
+
+                NekDouble CBA, BDA;
+
+                //determine signed area of alternate config
+                Array<OneD, NekDouble> ai,bi,ci,di;
+                ai = A->GetCADSurf(tri1->GetCADSurf());
+                bi = B->GetCADSurf(tri1->GetCADSurf());
+                ci = C->GetCADSurf(tri1->GetCADSurf());
+                di = D->GetCADSurf(tri1->GetCADSurf());
+
+                CBA = (ci[0]*bi[1] + ci[1]*ai[0] + bi[0]*ai[1]) -
+                      (ai[0]*bi[1] + ai[1]*ci[0] + bi[0]*ci[1]);
+
+                BDA = (bi[0]*di[1] + bi[1]*ai[0] + di[0]*ai[1]) -
+                      (ai[0]*di[1] + ai[1]*bi[0] + di[0]*bi[1]);
+
+                //logic of the next step wont work if this is incorrect so assert it
+                if(!(CBA > 0 && BDA > 0))
+                    cout << CBA << " " << BDA << endl;
+                ASSERTL0(CBA > 0 && BDA > 0, "inverted triangle")
+
+                NekDouble CDA, CBD;
+
+                CDA = (ci[0]*di[1] + ci[1]*ai[0] + di[0]*ai[1]) -
+                      (ai[0]*di[1] + ai[1]*ci[0] + di[0]*ci[1]);
+
+                CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
+                      (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
+
+                //if signed area of the swapping triangles is less than zero
+                //that configuration is invalid and swap cannot be performed
+                if(CDA > 0.0 && CBD > 0.0)
+                {
+                    int nodedefectbefore = 0;
+                    nodedefectbefore += A->m_elCount > 6 ? A->m_elCount - 6 :
+                                                           6 - A->m_elCount;
+                    nodedefectbefore += B->m_elCount > 6 ? B->m_elCount - 6 :
+                                                           6 - B->m_elCount;
+                    nodedefectbefore += C->m_elCount > 6 ? C->m_elCount - 6 :
+                                                           6 - C->m_elCount;
+                    nodedefectbefore += D->m_elCount > 6 ? D->m_elCount - 6 :
+                                                           6 - D->m_elCount;
+
+                    int nodedefectafter = 0;
+                    nodedefectafter  += A->m_elCount - 1 > 6 ? A->m_elCount - 1 - 6 :
+                                                               6 - (A->m_elCount - 1);
+                    nodedefectafter  += B->m_elCount - 1 > 6 ? B->m_elCount - 1 - 6 :
+                                                               6 - (B->m_elCount - 1);
+                    nodedefectafter  += C->m_elCount + 1 > 6 ? C->m_elCount + 1 - 6 :
+                                                               6 - (C->m_elCount + 1);
+                    nodedefectafter  += D->m_elCount + 1 > 6 ? D->m_elCount + 1 - 6 :
+                                                               6 - (D->m_elCount + 1);
+
+                    //if the node defect of the two triangles will be imrpoved by the
+                    //swap perfrom the swap
+                    if(nodedefectafter < nodedefectbefore)
+                    {
+                        //make the 4 other edges
+                        EdgeSharedPtr CA, AD, DB, BC, CAt, ADt, DBt, BCt;
+                        CAt = boost::shared_ptr<Edge>(new Edge(C,A));
+                        ADt = boost::shared_ptr<Edge>(new Edge(A,D));
+                        DBt = boost::shared_ptr<Edge>(new Edge(D,B));
+                        BCt = boost::shared_ptr<Edge>(new Edge(B,C));
+
+                        for(int i = 0; i < 3; i++)
+                        {
+                            if(tri1->GetEdge(i) == CAt)
+                            {
+                                CA = tri1->GetEdge(i);
+                            }
+                            else if(tri1->GetEdge(i) == BCt)
+                            {
+                                BC = tri1->GetEdge(i);
+                            }
+
+                            if(tri2->GetEdge(i) == ADt)
+                            {
+                                AD = tri2->GetEdge(i);
+                            }
+                            else if(tri2->GetEdge(i) == DBt)
+                            {
+                                DB = tri2->GetEdge(i);
+                            }
+                        }
+
+                        //now sort out links for the 4 edges surrounding the patch
+                        vector<pair<ElementSharedPtr, int> > links;
+
+                        links = CA->m_elLink;
+                        CA->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri1)
+                                continue;
+                            CA->m_elLink.push_back(links[i]);
+                        }
+
+                        links = BC->m_elLink;
+                        BC->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri1)
+                                continue;
+                            BC->m_elLink.push_back(links[i]);
+                        }
+
+                        links = AD->m_elLink;
+                        AD->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri2)
+                                continue;
+                            AD->m_elLink.push_back(links[i]);
+                        }
+
+                        links = DB->m_elLink;
+                        DB->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri2)
+                                continue;
+                            DB->m_elLink.push_back(links[i]);
+                        }
+
+                        vector<NodeSharedPtr> t1,t2;
+                        t1.push_back(B); t1.push_back(D); t1.push_back(C);
+                        t2.push_back(A); t2.push_back(C); t2.push_back(D);
+
+                        ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                        vector<int> tags;
+                        tags.push_back(tri1->GetCADSurf());
+
+                        int id1 = tri1->GetId();
+                        int id2 = tri2->GetId();
+
+                        tri1 = GetElementFactory().
+                                    CreateInstance(LibUtilities::eTriangle,
+                                                   conf,t1,tags);
+                        tri2 = GetElementFactory().
+                                    CreateInstance(LibUtilities::eTriangle,
+                                                   conf,t2,tags);
+                        tri1->SetCADSurf(tags[0]);
+                        tri2->SetCADSurf(tags[0]);
+                        tri1->SetId(id1);
+                        tri2->SetId(id2);
+
+                        (*it)->m_elLink.clear(); //with no element links the code will know to avoid it
+
+                        deletedEdges++;
+
+                        for(int i = 0; i < 3; i++)
+                        {
+                            EdgeSharedPtr e = tri1->GetEdge(i);
+                            pair<EdgeSet::iterator,bool> testIns;
+                            testIns = m_mesh->m_edgeSet.insert(e);
+
+                            if(testIns.second)
+                            {
+                                EdgeSharedPtr ed2 = *testIns.first;
+                                ed2->m_id = (*it)->m_id;
+                                ed2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri1,i));
+                            }
+                            else
+                            {
+                                EdgeSharedPtr e2 = *testIns.first;
+                                tri1->SetEdge(i, e2);
+                                e2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri1,i));
+                            }
+                        }
+
+                        for(int i = 0; i < 3; i++)
+                        {
+                            EdgeSharedPtr e = tri2->GetEdge(i);
+                            pair<EdgeSet::iterator,bool> testIns;
+                            testIns = m_mesh->m_edgeSet.insert(e);
+
+                            if(testIns.second)
+                            {
+                                EdgeSharedPtr ed2 = *testIns.first;
+                                ed2->m_id = (*it)->m_id;
+                                ed2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri2,i));
+                            }
+                            else
+                            {
+
+                                EdgeSharedPtr e2 = *testIns.first;
+                                tri2->SetEdge(i, e2);
+                                e2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri2,i));
+                            }
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        if(m_mesh->m_verbose)
+            cout << "\t\t\tEdges swapped: " << deletedEdges << endl;
+
     }
-    /*
-    //perform 2 runs of edge swapping based on maximising smallest angle
+
+    //perform two runs of edge swapping based on node connection defect
     for(int q = 0; q <2; q++)
     {
-        if(m_verbose)
+        if(m_mesh->m_verbose)
             cout << "\t\t Edge swap angle run: " << q+1 << endl;
 
-        map<int, MeshEdgeSharedPtr>::iterator it;
-        for(it = Edges.begin(); it != Edges.end(); it++)
+        int deletedEdges = 0;
+
+        EdgeSet::iterator it;
+
+        for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
         {
-            if(it->second->GetCurve() != -1)
+            if((*it)->m_elLink.size() != 2)
                 continue;
 
-            vector<int> t = it->second->GetTri();
-            ASSERTL0(t.size() == 2, "each edge should have two tri");
-            Array<OneD, int> n = it->second->GetN();
-            Array<OneD, int> nt = Tris[t[0]]->GetN();
+            ElementSharedPtr tri1 = (*it)->m_elLink[0].first;
+            ElementSharedPtr tri2 = (*it)->m_elLink[1].first;
 
-            int A,B,C,D;
-            if(nt[0] != n[0] && nt[0] != n[1])
+            //if the triangles are not on the same surface then the edge is on a curve
+            //therefore cannot edge swap
+            if(tri1->GetCADSurf() == tri2->GetCADSurf())
             {
-                C = nt[0];
-                B = nt[1];
-                A = nt[2];
+                NodeSharedPtr n1 = (*it)->m_n1;
+                NodeSharedPtr n2 = (*it)->m_n2;
+
+                vector<NodeSharedPtr> nt = tri1->GetVertexList();
+
+                //identify node a,b,c,d of the swapping
+                NodeSharedPtr A,B,C,D;
+                if(nt[0] != n1 && nt[0] != n2)
+                {
+                    C = nt[0];
+                    B = nt[1];
+                    A = nt[2];
+                }
+                else if(nt[1] != n1 && nt[1] != n2)
+                {
+                    C = nt[1];
+                    B = nt[2];
+                    A = nt[0];
+                }
+                else if(nt[2] != n1 && nt[2] != n2)
+                {
+                    C = nt[2];
+                    B = nt[0];
+                    A = nt[1];
+                }
+
+                nt = tri2->GetVertexList();
+
+                if(nt[0] != n1 && nt[0] != n2)
+                {
+                    D = nt[0];
+                }
+                else if(nt[1] != n1 && nt[1] != n2)
+                {
+                    D = nt[1];
+                }
+                else if(nt[2] != n1 && nt[2] != n2)
+                {
+                    D = nt[2];
+                }
+
+                NekDouble CBA, BDA;
+
+                //determine signed area of alternate config
+                Array<OneD, NekDouble> ai,bi,ci,di;
+                ai = A->GetCADSurf(tri1->GetCADSurf());
+                bi = B->GetCADSurf(tri1->GetCADSurf());
+                ci = C->GetCADSurf(tri1->GetCADSurf());
+                di = D->GetCADSurf(tri1->GetCADSurf());
+
+                CBA = (ci[0]*bi[1] + ci[1]*ai[0] + bi[0]*ai[1]) -
+                      (ai[0]*bi[1] + ai[1]*ci[0] + bi[0]*ci[1]);
+
+                BDA = (bi[0]*di[1] + bi[1]*ai[0] + di[0]*ai[1]) -
+                      (ai[0]*di[1] + ai[1]*bi[0] + di[0]*bi[1]);
+
+                //logic of the next step wont work if this is incorrect so assert it
+                if(!(CBA > 0 && BDA > 0))
+                    cout << CBA << " " << BDA << endl;
+                ASSERTL0(CBA > 0 && BDA > 0, "inverted triangle")
+
+                NekDouble CDA, CBD;
+
+                CDA = (ci[0]*di[1] + ci[1]*ai[0] + di[0]*ai[1]) -
+                      (ai[0]*di[1] + ai[1]*ci[0] + di[0]*ci[1]);
+
+                CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
+                      (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
+
+                //if signed area of the swapping triangles is less than zero
+                //that configuration is invalid and swap cannot be performed
+                if(CDA > 0.0 && CBD > 0.0)
+                {
+                    NekDouble minangleb = C->Angle(A,B);
+                    minangleb = min(minangleb,B->Angle(C,A));
+                    minangleb = min(minangleb,A->Angle(B,C));
+
+                    minangleb = min(minangleb,B->Angle(A,D));
+                    minangleb = min(minangleb,D->Angle(B,A));
+                    minangleb = min(minangleb,A->Angle(D,B));
+
+                    NekDouble minanglea = C->Angle(D,B);
+                    minanglea = min(minanglea,B->Angle(C,D));
+                    minanglea = min(minanglea,D->Angle(B,C));
+
+                    minanglea = min(minanglea,C->Angle(A,D));
+                    minanglea = min(minanglea,D->Angle(C,A));
+                    minanglea = min(minanglea,A->Angle(D,C));
+
+                    //if the node defect of the two triangles will be imrpoved by the
+                    //swap perfrom the swap
+                    if(minanglea > minangleb)
+                    {
+                        //make the 4 other edges
+                        EdgeSharedPtr CA, AD, DB, BC, CAt, ADt, DBt, BCt;
+                        CAt = boost::shared_ptr<Edge>(new Edge(C,A));
+                        ADt = boost::shared_ptr<Edge>(new Edge(A,D));
+                        DBt = boost::shared_ptr<Edge>(new Edge(D,B));
+                        BCt = boost::shared_ptr<Edge>(new Edge(B,C));
+
+                        for(int i = 0; i < 3; i++)
+                        {
+                            if(tri1->GetEdge(i) == CAt)
+                            {
+                                CA = tri1->GetEdge(i);
+                            }
+                            else if(tri1->GetEdge(i) == BCt)
+                            {
+                                BC = tri1->GetEdge(i);
+                            }
+
+                            if(tri2->GetEdge(i) == ADt)
+                            {
+                                AD = tri2->GetEdge(i);
+                            }
+                            else if(tri2->GetEdge(i) == DBt)
+                            {
+                                DB = tri2->GetEdge(i);
+                            }
+                        }
+
+                        //now sort out links for the 4 edges surrounding the patch
+                        vector<pair<ElementSharedPtr, int> > links;
+
+                        links = CA->m_elLink;
+                        CA->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri1)
+                                continue;
+                            CA->m_elLink.push_back(links[i]);
+                        }
+
+                        links = BC->m_elLink;
+                        BC->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri1)
+                                continue;
+                            BC->m_elLink.push_back(links[i]);
+                        }
+
+                        links = AD->m_elLink;
+                        AD->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri2)
+                                continue;
+                            AD->m_elLink.push_back(links[i]);
+                        }
+
+                        links = DB->m_elLink;
+                        DB->m_elLink.clear();
+                        for(int i = 0; i < 2; i++)
+                        {
+                            if(links[i].first == tri2)
+                                continue;
+                            DB->m_elLink.push_back(links[i]);
+                        }
+
+                        vector<NodeSharedPtr> t1,t2;
+                        t1.push_back(B); t1.push_back(D); t1.push_back(C);
+                        t2.push_back(A); t2.push_back(C); t2.push_back(D);
+
+                        ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                        vector<int> tags;
+                        tags.push_back(tri1->GetCADSurf());
+
+                        int id1 = tri1->GetId();
+                        int id2 = tri2->GetId();
+
+                        tri1 = GetElementFactory().
+                                    CreateInstance(LibUtilities::eTriangle,
+                                                   conf,t1,tags);
+                        tri2 = GetElementFactory().
+                                    CreateInstance(LibUtilities::eTriangle,
+                                                   conf,t2,tags);
+                        tri1->SetCADSurf(tags[0]);
+                        tri2->SetCADSurf(tags[0]);
+                        tri1->SetId(id1);
+                        tri2->SetId(id2);
+
+                        (*it)->m_elLink.clear(); //with no element links the code will know to avoid it
+
+                        deletedEdges++;
+
+                        for(int i = 0; i < 3; i++)
+                        {
+                            EdgeSharedPtr e = tri1->GetEdge(i);
+                            pair<EdgeSet::iterator,bool> testIns;
+                            testIns = m_mesh->m_edgeSet.insert(e);
+
+                            if(testIns.second)
+                            {
+                                EdgeSharedPtr ed2 = *testIns.first;
+                                ed2->m_id = (*it)->m_id;
+                                ed2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri1,i));
+                            }
+                            else
+                            {
+                                EdgeSharedPtr e2 = *testIns.first;
+                                tri1->SetEdge(i, e2);
+                                e2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri1,i));
+                            }
+                        }
+
+                        for(int i = 0; i < 3; i++)
+                        {
+                            EdgeSharedPtr e = tri2->GetEdge(i);
+                            pair<EdgeSet::iterator,bool> testIns;
+                            testIns = m_mesh->m_edgeSet.insert(e);
+
+                            if(testIns.second)
+                            {
+                                EdgeSharedPtr ed2 = *testIns.first;
+                                ed2->m_id = (*it)->m_id;
+                                ed2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri2,i));
+                            }
+                            else
+                            {
+
+                                EdgeSharedPtr e2 = *testIns.first;
+                                tri2->SetEdge(i, e2);
+                                e2->m_elLink.push_back(
+                                    pair<ElementSharedPtr,int>(tri2,i));
+                            }
+                        }
+
+                    }
+
+                }
+
             }
-            else if(nt[1] != n[0] && nt[1] != n[1])
-            {
-                C = nt[1];
-                B = nt[2];
-                A = nt[0];
-            }
-            else if(nt[2] != n[0] && nt[2] != n[1])
-            {
-                C = nt[2];
-                B = nt[0];
-                A = nt[1];
-            }
 
-            nt = Tris[t[1]]->GetN();
-
-            if(nt[0] != n[0] && nt[0] != n[1])
-            {
-                D = nt[0];
-            }
-            else if(nt[1] != n[0] && nt[1] != n[1])
-            {
-                D = nt[1];
-            }
-            else if(nt[2] != n[0] && nt[2] != n[1])
-            {
-                D = nt[2];
-            }
-
-            //determine signed area of alternate config
-            Array<OneD, NekDouble> ai,bi,ci,di;
-            ai = Nodes[A]->GetS(it->second->GetSurf());
-            bi = Nodes[B]->GetS(it->second->GetSurf());
-            ci = Nodes[C]->GetS(it->second->GetSurf());
-            di = Nodes[D]->GetS(it->second->GetSurf());
-
-            NekDouble CDA, CBD;
-
-            CDA = (ci[0]*di[1] + ci[1]*ai[0] + di[0]*ai[1]) -
-                  (ai[0]*di[1] + ai[1]*ci[0] + di[0]*ci[1]);
-
-            CBD = (ci[0]*bi[1] + ci[1]*di[0] + bi[0]*di[1]) -
-                  (di[0]*bi[1] + di[1]*ci[0] + bi[0]*ci[1]);
-
-            if(CDA < 0.0 || CBD < 0.0)
-                continue;
-
-
-            NekDouble minangleb = Nodes[C]->Angle(Nodes[A],Nodes[B]);
-            minangleb = min(minangleb,Nodes[B]->Angle(Nodes[C],Nodes[A]));
-            minangleb = min(minangleb,Nodes[A]->Angle(Nodes[B],Nodes[C]));
-
-            minangleb = min(minangleb,Nodes[B]->Angle(Nodes[A],Nodes[D]));
-            minangleb = min(minangleb,Nodes[D]->Angle(Nodes[B],Nodes[A]));
-            minangleb = min(minangleb,Nodes[A]->Angle(Nodes[D],Nodes[B]));
-
-            NekDouble minanglea = Nodes[C]->Angle(Nodes[D],Nodes[B]);
-            minanglea = min(minanglea,Nodes[B]->Angle(Nodes[C],Nodes[D]));
-            minanglea = min(minanglea,Nodes[D]->Angle(Nodes[B],Nodes[C]));
-
-            minanglea = min(minanglea,Nodes[C]->Angle(Nodes[A],Nodes[D]));
-            minanglea = min(minanglea,Nodes[D]->Angle(Nodes[C],Nodes[A]));
-            minanglea = min(minanglea,Nodes[A]->Angle(Nodes[D],Nodes[C]));
-
-            if(minanglea > minangleb)
-            {
-                Edges[it->first]->Swap(C,D);
-                Nodes[C]->SetEdge(it->first);
-                Nodes[D]->SetEdge(it->first);
-                Nodes[A]->RemoveEdge(it->first);
-                Nodes[B]->RemoveEdge(it->first);
-                Nodes[C]->SetTri(t[1]);
-                Nodes[B]->RemoveTri(t[1]);
-                Nodes[D]->SetTri(t[0]);
-                Nodes[A]->RemoveTri(t[0]);
-
-
-                int e1, e2, e3;
-                e1 = Nodes[C]->EdgeInCommon(Nodes[B]);
-                e2 = Nodes[B]->EdgeInCommon(Nodes[D]);
-                Edges[e2]->RemoveTri(t[1]);
-                Edges[e2]->SetTri(t[0]);
-                e3 = it->first;
-                ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
-                Tris[t[0]]->Swap(C,B,D);
-                Tris[t[0]]->ResetEdges(e1, e2, e3);
-
-                Tris[t[1]]->Swap(C,D,A);
-                e1 = it->first;
-                e2 = Nodes[D]->EdgeInCommon(Nodes[A]);
-                e3 = Nodes[A]->EdgeInCommon(Nodes[C]);
-                Edges[e3]->RemoveTri(t[0]);
-                Edges[e3]->SetTri(t[1]);
-                ASSERTL0(e1 != -1 && e2 != -1 && e3 != -1,"no edge in common");
-                Tris[t[1]]->ResetEdges(e1, e2 ,e3);
-
-            }
         }
+
+        if(m_mesh->m_verbose)
+            cout << "\t\t\tEdges swapped: " << deletedEdges << endl;
+
+    }
+
+    map<int, vector<NodeSharedPtr> > conectingNodes;
+    NodeSet::iterator nit;
+    for(nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); nit++)
+    {
+        conectingNodes[(*nit)->m_id] = vector<NodeSharedPtr>();
+    }
+    EdgeSet::iterator eit;
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        if((*eit)->m_elLink.size() !=2)
+            continue;
+
+        conectingNodes[(*eit)->m_n1->m_id].push_back((*eit)->m_n2);
+        conectingNodes[(*eit)->m_n2->m_id].push_back((*eit)->m_n1);
     }
 
     //perform 4 runs of elastic relaxation based on the octree
     for(int q = 0; q < 4; q++)
     {
-        if(m_verbose)
+        if(m_mesh->m_verbose)
             cout << "\t\t Elastic relaxation run: " << q+1 << endl;
 
-        map<int, MeshNodeSharedPtr>::iterator it;
-        for(it = Nodes.begin(); it!=Nodes.end(); it++)
+        for(nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); nit++)
         {
-            if(it->second->IsOnACurve())
+            vector<int> c = (*nit)->GetListCADCurve();
+            if(c.size()>0) //node is on curve so skip
                 continue;
 
-            NekDouble d = m_octree->Query(it->second->GetLoc());
+            NekDouble d = m_octree->Query((*nit)->GetLoc());
 
-            map<int, Array<OneD, NekDouble> > surf = it->second->GetSurfMap();
-            ASSERTL0(surf.size()==1,
+            vector<int> surfs = (*nit)->GetListCADSurf();
+            ASSERTL0(surfs.size()==1, //idiot checking
                         "node should be interior and only be on one surface");
 
-            map<int, Array<OneD, NekDouble> >::iterator sit = surf.begin();
-            int surface = sit->first;
-            Array<OneD, NekDouble> uvi = sit->second;
+            Array<OneD, NekDouble> uvi = (*nit)->GetCADSurf(surfs[0]);
 
-            vector<int> es = it->second->GetEdges();
-            vector<int> connodes;
-            for(int i = 0; i < es.size(); i++)
-            {
-                connodes.push_back(Edges[es[i]]->OtherNode(it->first));
-            }
+            vector<NodeSharedPtr> connodes;
+            connodes = conectingNodes[(*nit)->m_id];
 
             vector<NekDouble> om;
             for(int i = 0; i < connodes.size(); i++)
             {
-                om.push_back(it->second->Distance(Nodes[connodes[i]]) - d);
+                om.push_back((*nit)->Distance(connodes[i]) - d);
             }
 
             NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
             for(int i = 0; i < connodes.size(); i++)
             {
-                Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
+                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(surfs[0]);
                 u0+=uvj[0]/connodes.size();
                 v0+=uvj[1]/connodes.size();
             }
             for(int i = 0; i < connodes.size();i++)
             {
-                Array<OneD, NekDouble> uvj = Nodes[connodes[i]]->GetS(surface);
+                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(surfs[0]);
                 NekDouble sqr = sqrt((uvj[0]-u0)*(uvj[0]-u0) +
                                      (uvj[1]-v0)*(uvj[1]-v0));
                 fu+=om[i]*(uvj[0]-u0)/sqr;
@@ -594,18 +863,18 @@ void SurfaceMesh::Optimise()
                                     (uvj[0]-u0)*(uvj[0]-u0));
             }
             Array<OneD, NekDouble> uv(2);
-            Array<OneD, NekDouble> bounds = m_cad->GetSurf(surface)->GetBounds();
+            Array<OneD, NekDouble> bounds = m_cad->GetSurf(surfs[0])->GetBounds();
             uv[0] = u0-fu/dfu; uv[1] = v0-fv/dfv;
             if(!(uv[0] < bounds[0] ||
                        uv[0] > bounds[1] ||
                        uv[1] < bounds[2] ||
                        uv[1] > bounds[3]))
             {
-                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surface)->P(uv);
-                Nodes[it->first]->Move(l2,uv);
+                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surfs[0])->P(uv);
+                (*nit)->Move(l2,surfs[0],uv);
             }
         }
-    }*/
+    }
 }
 
     /*

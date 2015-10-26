@@ -201,10 +201,53 @@ namespace MeshUtils
             return list;
         }
 
+        std::vector<int> GetListCADSurf()
+        {
+            std::vector<int> list;
+            std::map<int, Array<OneD, NekDouble> >::iterator s;
+            for(s = CADSurf.begin(); s != CADSurf.end(); s++)
+            {
+                list.push_back(s->first);
+            }
+            return list;
+        }
+
         NekDouble Distance(NodeSharedPtr p)
         {
             return sqrt((m_x-p->m_x)*(m_x-p->m_x)+(m_y-p->m_y)*(m_y-p->m_y)
                         +(m_z-p->m_z)*(m_z-p->m_z));
+        }
+
+        NekDouble Angle(NodeSharedPtr a, NodeSharedPtr b)
+        {
+            Array<OneD,NekDouble> la = a->GetLoc();
+            Array<OneD,NekDouble> lb = b->GetLoc();
+            Array<OneD,NekDouble> va(3),vb(3);
+            va[0] = la[0] - m_x;
+            va[1] = la[1] - m_y;
+            va[2] = la[2] - m_z;
+            vb[0] = lb[0] - m_x;
+            vb[1] = lb[1] - m_y;
+            vb[2] = lb[2] - m_z;
+
+            NekDouble ca = va[0]*vb[0] + va[1]*vb[1] + va[2]*vb[2];
+            ca /= sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
+            ca /= sqrt(vb[0]*vb[0] + vb[1]*vb[1] + vb[2]*vb[2]);
+
+            if(ca < 0)
+            {
+                return 3.142 + acos(ca);
+            }
+            else
+            {
+                return acos(ca);
+            }
+        }
+
+        void Move(Array<OneD, NekDouble> l, int s, Array<OneD, NekDouble> uv)
+        {
+            m_x = l[0]; m_y = l[1]; m_z = l[2];
+            CADSurf[s] = uv;
         }
 
         /// Generate a %SpatialDomains::PointGeom for this node.
@@ -229,6 +272,8 @@ namespace MeshUtils
         std::map<int, NekDouble> CADCurve;
         ///list of cadsurfs the node lies on
         std::map<int, Array<OneD, NekDouble> > CADSurf;
+        ///edge link count;
+        int m_elCount;
 
     private:
         SpatialDomains::PointGeomSharedPtr m_geom;
@@ -237,6 +282,7 @@ namespace MeshUtils
 
     bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
     bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
     std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
 
     /**

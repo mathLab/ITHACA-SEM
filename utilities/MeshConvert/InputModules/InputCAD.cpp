@@ -130,6 +130,8 @@ void InputCAD::Process()
 
     m_surfacemesh->Validate();
 
+    m_surfacemesh->Optimise();
+
     ClearElementLinks();
 
     ProcessVertices  ();

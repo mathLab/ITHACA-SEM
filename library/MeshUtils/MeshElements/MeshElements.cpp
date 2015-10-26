@@ -199,6 +199,18 @@ namespace Nektar
             return *p1 == *p2;
         }
 
+        bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
+        {
+            if(p1->m_id != p2->m_id)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /**
          * @brief Defines ordering between two #NodeSharedPtr objects.
          */

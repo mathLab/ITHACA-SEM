@@ -126,10 +126,10 @@ namespace MeshUtils
         }
         /// returns id of the Tri which this elemnt was created from in
         /// mesh utils, only applys to surface elements
-        int GetTriID() const {
+        int GetCADSurf() const {
             return m_meshtriID;
         }
-        void SetTriID(int i) {
+        void SetCADSurf(int i) {
             m_meshtriID = i;
         }
         /// Returns the expansion dimension of the element.

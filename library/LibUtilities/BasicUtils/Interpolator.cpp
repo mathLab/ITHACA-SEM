@@ -327,10 +327,16 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int coordId)
 };
 
 
-
 void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt, int coordId)
 {
-    ASSERTL0(false, "not implemented");
+    // find nearest neighbours
+    vector<PtsPoint > neighbourPts;
+    FindNNeighbours(searchPt, neighbourPts, 1);
+
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (1, neighbourPts.at(0).idx);
+    m_weights[searchPt.idx] = Array<OneD, float> (1, 1.0);
+
+    ASSERTL0(Vmath::Nnan(1, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
 }
 
 

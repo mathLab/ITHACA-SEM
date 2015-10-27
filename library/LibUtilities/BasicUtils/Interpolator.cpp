@@ -141,7 +141,7 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
                 PtsPoint searchPt(i, tmp, 1E30);
 
 
-                if (m_outField->GetNpoints() <= 2) //TODO: outField or inField?
+                if (m_inField->GetNpoints() <= 2)
                 {
                     CalcW_Linear(searchPt, coordId);
                 }
@@ -466,7 +466,7 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
     for (int i = 0; i < numPts; ++i)
     {
         m_weights[searchPt.idx][i] = 1 / pow(double(neighbourPts[i].dist),
-                                          double(3)); //TODO: 3 or m_dim?
+                                          double(m_inField->GetDim()));
         wSum += m_weights[searchPt.idx][i];
     }
 

@@ -49,6 +49,8 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
+#include <LibUtilities/BasicUtils/Interpolator.h>
+
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
@@ -885,40 +887,40 @@ namespace Nektar
                     LibUtilities::PtsIO ptsIO(m_session->GetComm());
                     ptsIO.Import(filename, ptsField);
 
-                    Array <OneD,  Array<OneD,  NekDouble> > coords(3);
-                    coords[0] = Array<OneD, NekDouble>(nq);
-                    coords[1] = Array<OneD, NekDouble>(nq);
-                    coords[2] = Array<OneD, NekDouble>(nq);
-                    m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
+                    Array<OneD, Array<OneD, NekDouble> > pts(3 + ptsField->GetNFields());
+                    for (int i = 0; i < 3 + ptsField->GetNFields(); ++i)
+                    {
+                        pts[i] = Array<OneD,  NekDouble>(nq);
+                    }
+                    m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
+                    LibUtilities::PtsFieldSharedPtr outPts =
+                            MemoryManager<LibUtilities::PtsField>::
+                            AllocateSharedPtr(3, pts);
+
+                    LibUtilities::Interpolator interp(ptsField, outPts);
 
                     //  check if we already computed this funcKey combination
                     std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
                     if (m_interpWeights.count(weightsKey) != 0)
                     {
                         //  found, re-use
-//                         ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+                        interp.SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
                     else
                     {
                         if (m_session->GetComm()->GetRank() == 0)
                         {
-//                             ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
+                            interp.SetProgressCallback(&EquationSystem::PrintProgressbar, this);
                             cout << "Interpolating:       ";
                         }
-//                         ptsField->CalcWeights(coords);
+                        interp.CalcWeights(Nektar::LibUtilities::eShepard);
                         if (m_session->GetComm()->GetRank() == 0)
                         {
                             cout << endl;
                         }
-//                         ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+                        interp.GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
-
-                    Array<OneD,  Array<OneD,  NekDouble> > intFields(ptsField->GetNFields());
-                    for (int i = 0; i < ptsField->GetNFields(); ++i)
-                    {
-                        intFields[i] = Array<OneD,  NekDouble>(ptsField->GetNpoints());
-                    }
-//                     ptsField->Interpolate(intFields);
+                    interp.Interpolate();
 
                     int fieldInd;
                     vector<string> fieldNames = ptsField->GetFieldNames();
@@ -931,7 +933,7 @@ namespace Nektar
                     }
                     ASSERTL0(fieldInd != fieldNames.size(),  "field not found");
 
-                    pArray = intFields[fieldInd];
+                    pArray = pts[fieldInd];
                 }
             }
         }

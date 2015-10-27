@@ -77,7 +77,7 @@ class Interpolator
         LIB_UTILITIES_EXPORT Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT void CalcWeights(
-            InterpMethod method,
+            InterpMethod method = eNoMethod,
             short int coordId = -1,
             NekDouble width = 0.0);
 

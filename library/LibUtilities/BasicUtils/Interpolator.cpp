@@ -41,18 +41,6 @@ namespace Nektar
 namespace LibUtilities
 {
 
-Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField) :
-            m_inField(inField),
-            m_outField(outField),
-            m_method(eNoMethod)
-{
-    ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
-    ASSERTL0(inField->GetDim() <= m_dim, "too many dimesions in inField");
-    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
-}
-
-
-
 /**
  * @brief Compute the weights for an interpolation of the field values to physical points
  *
@@ -62,8 +50,17 @@ Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &o
  * Set coord_id to -1 to use n-D interpolation for an n-dimensional field.
  * The most suitable algorithm is chosen automatically.
  */
-void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble width)
+void Interpolator::CalcWeights(
+            const PtsFieldSharedPtr inField,
+            PtsFieldSharedPtr &outField)
 {
+    ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
+    ASSERTL0(inField->GetDim() <= m_dim, "too many dimesions in inField");
+    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
+
+    m_inField = inField;
+    m_outField = outField;
+
     int nOutPts = m_outField->GetNpoints();
     int lastProg = 0;
 
@@ -84,19 +81,19 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
     m_rtree->insert(inPoints.begin(), inPoints.end());
 
     // set a default method
-    if(method == eNoMethod)
+    if(m_method == eNoMethod)
     {
-        if (m_inField->GetDim() == 1 || coordId >= 0)
+        if (m_inField->GetDim() == 1 || m_coordId >= 0)
         {
-            method = eQuadratic;
+            m_method = eQuadratic;
         }
         else
         {
-            method = eShepard;
+            m_method = eShepard;
         }
     }
 
-    switch (method)
+    switch (m_method)
     {
         case eNearestNeighbour:
         {
@@ -124,11 +121,11 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
 
         case eQuadratic:
         {
-            ASSERTL0(m_inField->GetDim() == 1 || coordId >= 0, "not implemented");
+            ASSERTL0(m_inField->GetDim() == 1 || m_coordId >= 0, "not implemented");
 
             if (m_inField->GetDim() == 1)
             {
-                coordId = 0;
+                m_coordId = 0;
             }
 
             for (int i = 0; i < nOutPts; ++i)
@@ -143,11 +140,11 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
 
                 if (m_inField->GetNpoints() <= 2)
                 {
-                    CalcW_Linear(searchPt, coordId);
+                    CalcW_Linear(searchPt, m_coordId);
                 }
                 else
                 {
-                    CalcW_Quadratic(searchPt, coordId);
+                    CalcW_Quadratic(searchPt, m_coordId);
                 }
 
                 int progress = int(100 * i / nOutPts);
@@ -187,8 +184,8 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
 
         case eGauss:
         {
-            NekDouble sigma = width * 0.4246609001;
-            ASSERTL0(width > NekConstants::kNekZeroTol, "No filter width set");
+            ASSERTL0(m_filtWidth > NekConstants::kNekZeroTol, "No filter width set");
+            NekDouble sigma = m_filtWidth * 0.4246609001;
 
             for (int i = 0; i < nOutPts; ++i)
             {
@@ -213,7 +210,7 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
         }
 
         default:
-            ASSERTL0(false, "Invalid interpolation method");
+            ASSERTL0(false, "Invalid interpolation m_method");
             break;
     }
 }
@@ -228,16 +225,23 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
  * @SetWeights.
  */
 void Interpolator::Interpolate(
-            Nektar::LibUtilities::InterpMethod method, short int coordId, Nektar::NekDouble width)
+            const PtsFieldSharedPtr inField,
+            PtsFieldSharedPtr &outField)
 {
-    // TODO: check state first?
+    ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
+    ASSERTL0(inField->GetDim() <= m_dim, "too many dimesions in inField");
+    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
+
+    m_inField = inField;
+    m_outField = outField;
+
     if ( m_weights.num_elements() == 0)
     {
-        CalcWeights(method, coordId, width);
+        CalcWeights(inField, outField);
     }
 
-    ASSERTL1(m_weights[0].num_elements() == m_neighInds[0].num_elements(),
-             "weights / neighInds mismatch")
+    ASSERTL0(m_weights.num_elements() == m_outField->GetNpoints(), "weights dimension mismatch");
+
     int nFields = m_outField->GetNFields();
     int nOutPts = m_outField->GetNpoints();
     int inDim = m_inField->GetDim();
@@ -376,12 +380,12 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
  * @param coord             The coordinate of the physical point
  */
 
-void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int coordId)
+void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
 {
     int npts = m_inField->GetNpoints();
     int i;
 
-    NekDouble coord = searchPt.coords[coordId];
+    NekDouble coord = searchPt.coords[m_coordId];
 
     int numPts = 2;
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
@@ -487,12 +491,12 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 * @param coord             The coordinate of the physical point
 */
 
-void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int coordId)
+void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
 {
     int npts = m_inField->GetNpoints();
     int i;
 
-    NekDouble coord = searchPt.coords[coordId];
+    NekDouble coord = searchPt.coords[m_coordId];
 
     int numPts = 3;
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);

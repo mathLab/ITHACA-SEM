@@ -113,8 +113,8 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         cout << "Interpolating:       ";
     }
 
-    LibUtilities::Interpolator Interp(m_f->m_fieldPts, outPts);
-    Interp.Interpolate(Nektar::LibUtilities::eNoMethod, coord_id, 0.0);
+    LibUtilities::Interpolator Interp(Nektar::LibUtilities::eNoMethod, coord_id);
+    Interp.Interpolate(m_f->m_fieldPts, outPts);
 
     cout << " done" << endl;
 

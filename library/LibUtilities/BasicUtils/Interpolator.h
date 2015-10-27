@@ -74,17 +74,23 @@ class Interpolator
 {
     public:
 
-        LIB_UTILITIES_EXPORT Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField);
+        LIB_UTILITIES_EXPORT Interpolator(
+            InterpMethod method,
+            short int coordId = -1,
+            NekDouble filtWidth = 0.0):
+            m_method(method),
+            m_filtWidth(filtWidth),
+            m_coordId(coordId)
+        {
+        };
 
         LIB_UTILITIES_EXPORT void CalcWeights(
-            InterpMethod method = eNoMethod,
-            short int coordId = -1,
-            NekDouble width = 0.0);
+            const PtsFieldSharedPtr inField,
+            PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT void Interpolate(
-            InterpMethod method = eNoMethod,
-            short int coordId = -1,
-            NekDouble width = 0.0);
+            const PtsFieldSharedPtr inField,
+            PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT int GetDim() const;
 
@@ -160,6 +166,8 @@ class Interpolator
         /// Indices of the relevant neighbours for each physical point.
         /// Structure: m_neighInds[ptIdx][neighbourIdx]
         Array<OneD, Array<OneD, unsigned int> >     m_neighInds;
+        NekDouble                                   m_filtWidth;
+        short int                                   m_coordId;
 
         boost::function<void (const int position, const int goal)> m_progressCallback;
 

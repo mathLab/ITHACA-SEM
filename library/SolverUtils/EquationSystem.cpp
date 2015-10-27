@@ -897,7 +897,7 @@ namespace Nektar
                             MemoryManager<LibUtilities::PtsField>::
                             AllocateSharedPtr(3, pts);
 
-                    LibUtilities::Interpolator interp(ptsField, outPts);
+                    LibUtilities::Interpolator interp(Nektar::LibUtilities::eShepard);
 
                     //  check if we already computed this funcKey combination
                     std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
@@ -913,14 +913,14 @@ namespace Nektar
                             interp.SetProgressCallback(&EquationSystem::PrintProgressbar, this);
                             cout << "Interpolating:       ";
                         }
-                        interp.CalcWeights(Nektar::LibUtilities::eShepard);
+                        interp.CalcWeights(ptsField, outPts);
                         if (m_session->GetComm()->GetRank() == 0)
                         {
                             cout << endl;
                         }
                         interp.GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
-                    interp.Interpolate();
+                    interp.Interpolate(ptsField, outPts);
 
                     int fieldInd;
                     vector<string> fieldNames = ptsField->GetFieldNames();

@@ -103,7 +103,7 @@ class Interpolator
 
 
         template<typename FuncPointerT, typename ObjectPointerT>
-        void setProgressCallback(FuncPointerT func,
+        void SetProgressCallback(FuncPointerT func,
                 ObjectPointerT obj)
         {
             m_progressCallback = boost::bind(func, obj, _1, _2);

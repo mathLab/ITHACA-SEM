@@ -44,8 +44,8 @@ namespace LibUtilities
 Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField) :
             m_inField(inField),
             m_outField(outField),
-            m_method(ePtsNoMethod),
-            m_dim(3)
+            m_dim(3),
+            m_method(ePtsNoMethod)
 {
     ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
 }
@@ -66,12 +66,6 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
     int nOutPts = m_outField->GetNpoints();
     int lastProg = 0;
 
-    NekDouble sigma = width * 0.4246609001;;
-    if (method == ePtsGauss)
-    {
-        ASSERTL0(width > NekConstants::kNekZeroTol, "No filter width set");
-    }
-
     m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
@@ -87,54 +81,138 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
     }
     m_rtree.insert(inPoints.begin(), inPoints.end());
 
-    // interpolate points and transform
-    for (int i = 0; i < nOutPts; ++i)
+    // set a default method
+    if(method == ePtsNoMethod)
     {
-        Array<OneD, NekDouble> tmp(m_dim);
-        for (int j = 0; j < m_dim; ++j)
+        if (m_dim == 1 || coordId >= 0)
         {
-            tmp[j] = m_outField->GetPointVal(j,i);
+            method = ePtsQuadratic;
         }
-        PtsPoint searchPt(i, tmp, 1E30);
-
-        if ((m_dim == 1 || coordId >= 0) && ! (method == ePtsGauss || method == ePtsShepard))
+        else
         {
+            method = ePtsShepard;
+        }
+    }
+
+    switch (method)
+    {
+        case ePtsNearestNeighbour:
+        {
+            for (int i = 0; i < nOutPts; ++i)
+            {
+                Array<OneD, NekDouble> tmp(m_dim);
+                for (int j = 0; j < m_dim; ++j)
+                {
+                    tmp[j] = m_outField->GetPointVal(j,i);
+                }
+                PtsPoint searchPt(i, tmp, 1E30);
+
+                CalcW_NNeighbour(searchPt);
+
+                int progress = int(100 * i / nOutPts);
+                if (m_progressCallback && progress > lastProg)
+                {
+                    m_progressCallback(i, nOutPts);
+                    lastProg = progress;
+                }
+            }
+
+            break;
+        }
+
+        case ePtsQuadratic:
+        {
+            ASSERTL0(m_dim == 1 || coordId >= 0, "not implemented");
+
             if (m_dim == 1)
             {
                 coordId = 0;
             }
 
-            if (m_outField->GetNpoints() <= 2)
+            for (int i = 0; i < nOutPts; ++i)
             {
-                CalcW_Linear(searchPt, coordId);
+                Array<OneD, NekDouble> tmp(m_dim);
+                for (int j = 0; j < m_dim; ++j)
+                {
+                    tmp[j] = m_outField->GetPointVal(j,i);
+                }
+                PtsPoint searchPt(i, tmp, 1E30);
+
+
+                if (m_outField->GetNpoints() <= 2) //TODO: outField or inField?
+                {
+                    CalcW_Linear(searchPt, coordId);
+                }
+                else
+                {
+                    CalcW_Quadratic(searchPt, coordId);
+                }
+
+                int progress = int(100 * i / nOutPts);
+                if (m_progressCallback && progress > lastProg)
+                {
+                    m_progressCallback(i, nOutPts);
+                    lastProg = progress;
+                }
             }
-            else
-            {
-                CalcW_Quadratic(searchPt, coordId);
-            }
-        }
-        else
-        {
-            ASSERTL0(method == ePtsGauss || method == ePtsShepard, "interpolation method not implemented for this dimension");
-            switch ( method )
-            {
-                case ePtsGauss:
-                    CalcW_Gauss(searchPt, sigma);
-                    break;
-                case ePtsShepard:
-                    CalcW_Shepard(searchPt);
-                    break;
-                default:
-                    ASSERTL0(false, "unknown interpolation method");
-            }
+
+            break;
         }
 
-        int progress = int(100 * i / nOutPts);
-        if (m_progressCallback && progress > lastProg)
+        case ePtsShepard:
         {
-            m_progressCallback(i, nOutPts);
-            lastProg = progress;
+            for (int i = 0; i < nOutPts; ++i)
+            {
+                Array<OneD, NekDouble> tmp(m_dim);
+                for (int j = 0; j < m_dim; ++j)
+                {
+                    tmp[j] = m_outField->GetPointVal(j,i);
+                }
+                PtsPoint searchPt(i, tmp, 1E30);
+
+                CalcW_Shepard(searchPt);
+
+                int progress = int(100 * i / nOutPts);
+                if (m_progressCallback && progress > lastProg)
+                {
+                    m_progressCallback(i, nOutPts);
+                    lastProg = progress;
+                }
+            }
+
+            break;
         }
+
+        case ePtsGauss:
+        {
+            NekDouble sigma = width * 0.4246609001;
+            ASSERTL0(width > NekConstants::kNekZeroTol, "No filter width set");
+
+            for (int i = 0; i < nOutPts; ++i)
+            {
+                Array<OneD, NekDouble> tmp(m_dim);
+                for (int j = 0; j < m_dim; ++j)
+                {
+                    tmp[j] = m_outField->GetPointVal(j,i);
+                }
+                PtsPoint searchPt(i, tmp, 1E30);
+
+                CalcW_Gauss(searchPt, sigma);
+
+                int progress = int(100 * i / nOutPts);
+                if (m_progressCallback && progress > lastProg)
+                {
+                    m_progressCallback(i, nOutPts);
+                    lastProg = progress;
+                }
+            }
+
+            break;
+        }
+
+        default:
+            ASSERTL0(false, "Invalid interpolation method");
+            break;
     }
 }
 
@@ -327,7 +405,7 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int coordId)
 };
 
 
-void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt, int coordId)
+void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt)
 {
     // find nearest neighbours
     vector<PtsPoint > neighbourPts;
@@ -335,8 +413,6 @@ void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt, int coordId)
 
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (1, neighbourPts.at(0).idx);
     m_weights[searchPt.idx] = Array<OneD, float> (1, 1.0);
-
-    ASSERTL0(Vmath::Nnan(1, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
 }
 
 

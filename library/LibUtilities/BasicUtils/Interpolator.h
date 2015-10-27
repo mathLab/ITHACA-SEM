@@ -192,7 +192,7 @@ class Interpolator
 
         LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint &searchPt, int coordId);
 
-        LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt, int coordId);
+        LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
 
         LIB_UTILITIES_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
 

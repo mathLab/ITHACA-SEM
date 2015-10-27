@@ -72,7 +72,7 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
     std::vector<PtsPointPair> inPoints;
     for (int i = 0; i < m_inField->GetNpoints(); ++i)
     {
-        Array<OneD, NekDouble> coords(m_dim);
+        Array<OneD, NekDouble> coords(m_dim, 0.0);
         for (int j = 0; j < m_inField->GetDim(); ++j)
         {
             coords[j] = m_inField->GetPointVal(j,i);
@@ -85,7 +85,7 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
     // set a default method
     if(method == eNoMethod)
     {
-        if (m_dim == 1 || coordId >= 0)
+        if (m_inField->GetDim() == 1 || coordId >= 0)
         {
             method = eQuadratic;
         }
@@ -101,8 +101,8 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
         {
             for (int i = 0; i < nOutPts; ++i)
             {
-                Array<OneD, NekDouble> tmp(m_dim);
-                for (int j = 0; j < m_dim; ++j)
+                Array<OneD, NekDouble> tmp(m_dim, 0.0);
+                for (int j = 0; j < m_outField->GetDim(); ++j)
                 {
                     tmp[j] = m_outField->GetPointVal(j,i);
                 }
@@ -123,17 +123,17 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
 
         case eQuadratic:
         {
-            ASSERTL0(m_dim == 1 || coordId >= 0, "not implemented");
+            ASSERTL0(m_inField->GetDim() == 1 || coordId >= 0, "not implemented");
 
-            if (m_dim == 1)
+            if (m_inField->GetDim() == 1)
             {
                 coordId = 0;
             }
 
             for (int i = 0; i < nOutPts; ++i)
             {
-                Array<OneD, NekDouble> tmp(m_dim);
-                for (int j = 0; j < m_dim; ++j)
+                Array<OneD, NekDouble> tmp(m_dim, 0.0);
+                for (int j = 0; j < m_outField->GetDim(); ++j)
                 {
                     tmp[j] = m_outField->GetPointVal(j,i);
                 }
@@ -164,8 +164,8 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
         {
             for (int i = 0; i < nOutPts; ++i)
             {
-                Array<OneD, NekDouble> tmp(m_dim);
-                for (int j = 0; j < m_dim; ++j)
+                Array<OneD, NekDouble> tmp(m_dim, 0.0);
+                for (int j = 0; j < m_outField->GetDim(); ++j)
                 {
                     tmp[j] = m_outField->GetPointVal(j,i);
                 }
@@ -191,8 +191,8 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
 
             for (int i = 0; i < nOutPts; ++i)
             {
-                Array<OneD, NekDouble> tmp(m_dim);
-                for (int j = 0; j < m_dim; ++j)
+                Array<OneD, NekDouble> tmp(m_dim, 0.0);
+                for (int j = 0; j < m_outField->GetDim(); ++j)
                 {
                     tmp[j] = m_outField->GetPointVal(j,i);
                 }
@@ -325,7 +325,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 {
     NekDouble ts2 = 2 * sigma * sigma;
     NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
-    fac = pow(fac, m_dim);
+    fac = pow(fac, m_inField->GetDim());
 
     // find nearest neighbours
     int maxPts = 500;
@@ -437,7 +437,7 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 {
     // find nearest neighbours
     vector<PtsPoint > neighbourPts;
-    int numPts = pow(float(2), m_dim);
+    int numPts = pow(float(2), m_inField->GetDim());
     numPts = min(numPts, int(m_inField->GetNpoints() / 2));
     FindNNeighbours(searchPt, neighbourPts, numPts);
 
@@ -581,7 +581,7 @@ void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
     for(typename vector<PtsPointPair>::iterator it = result.begin(); it != result.end(); ++it)
     {
         int idx = it->second;
-        Array<OneD, NekDouble> coords(m_dim);
+        Array<OneD, NekDouble> coords(m_dim, 0.0);
         for (int j = 0; j < m_inField->GetDim(); ++j)
         {
             coords[j] = m_inField->GetPointVal(j, idx);
@@ -624,7 +624,7 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
     for(typename vector<PtsPointPair>::iterator it = result.begin(); it != result.end(); ++it)
     {
         int idx = it->second;
-        Array<OneD, NekDouble> coords(m_dim);
+        Array<OneD, NekDouble> coords(m_dim, 0.0);
         for (int j = 0; j < m_inField->GetDim(); ++j)
         {
             coords[j] = m_inField->GetPointVal(j, idx);

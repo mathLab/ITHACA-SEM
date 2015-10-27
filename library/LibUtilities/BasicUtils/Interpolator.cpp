@@ -45,7 +45,7 @@ Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &o
             m_inField(inField),
             m_outField(outField),
             m_dim(3),
-            m_method(ePtsNoMethod)
+            m_method(eNoMethod)
 {
     ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
 }
@@ -61,7 +61,7 @@ Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &o
  * Set coord_id to -1 to use n-D interpolation for an n-dimensional field.
  * The most suitable algorithm is chosen automatically.
  */
-void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDouble width)
+void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble width)
 {
     int nOutPts = m_outField->GetNpoints();
     int lastProg = 0;
@@ -82,21 +82,21 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
     m_rtree.insert(inPoints.begin(), inPoints.end());
 
     // set a default method
-    if(method == ePtsNoMethod)
+    if(method == eNoMethod)
     {
         if (m_dim == 1 || coordId >= 0)
         {
-            method = ePtsQuadratic;
+            method = eQuadratic;
         }
         else
         {
-            method = ePtsShepard;
+            method = eShepard;
         }
     }
 
     switch (method)
     {
-        case ePtsNearestNeighbour:
+        case eNearestNeighbour:
         {
             for (int i = 0; i < nOutPts; ++i)
             {
@@ -120,7 +120,7 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
             break;
         }
 
-        case ePtsQuadratic:
+        case eQuadratic:
         {
             ASSERTL0(m_dim == 1 || coordId >= 0, "not implemented");
 
@@ -159,7 +159,7 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
             break;
         }
 
-        case ePtsShepard:
+        case eShepard:
         {
             for (int i = 0; i < nOutPts; ++i)
             {
@@ -183,7 +183,7 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
             break;
         }
 
-        case ePtsGauss:
+        case eGauss:
         {
             NekDouble sigma = width * 0.4246609001;
             ASSERTL0(width > NekConstants::kNekZeroTol, "No filter width set");
@@ -226,7 +226,7 @@ void Interpolator::CalcWeights(PtsInterpMethod method, short int coordId, NekDou
  * @SetWeights.
  */
 void Interpolator::Interpolate(
-            Nektar::LibUtilities::PtsInterpMethod method, short int coordId, Nektar::NekDouble width)
+            Nektar::LibUtilities::InterpMethod method, short int coordId, Nektar::NekDouble width)
 {
     if ( m_weights.num_elements() == 0)
     {

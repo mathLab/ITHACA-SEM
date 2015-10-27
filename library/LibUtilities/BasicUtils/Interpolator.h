@@ -118,12 +118,12 @@ namespace LibUtilities
 
 
 
-enum PtsInterpMethod{
-    ePtsNoMethod,
-    ePtsNearestNeighbour,
-    ePtsQuadratic,
-    ePtsShepard,
-    ePtsGauss,
+enum InterpMethod{
+    eNoMethod,
+    eNearestNeighbour,
+    eQuadratic,
+    eShepard,
+    eGauss,
 };
 
 class Interpolator
@@ -133,12 +133,12 @@ class Interpolator
         LIB_UTILITIES_EXPORT Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT void CalcWeights(
-            PtsInterpMethod method,
+            InterpMethod method,
             short int coordId = -1,
             NekDouble width = 0.0);
 
         LIB_UTILITIES_EXPORT void Interpolate(
-            PtsInterpMethod method = ePtsNoMethod,
+            InterpMethod method = eNoMethod,
             short int coordId = -1,
             NekDouble width = 0.0);
 
@@ -172,11 +172,11 @@ class Interpolator
         int                                         m_dim;
 
         /// Interpolation Method
-        PtsInterpMethod                             m_method;
+        InterpMethod                                m_method;
         /// A tree structure to speed up the neighbour search.
         /// Note that we fill it with an iterator, so instead of rstar, the
         /// packing algorithm is used.
-        bgi::rtree< PtsPoint, bgi::rstar<16> > m_rtree;
+        bgi::rtree< PtsPoint, bgi::rstar<16> >      m_rtree;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >            m_weights;

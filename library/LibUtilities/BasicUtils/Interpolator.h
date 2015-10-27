@@ -140,13 +140,13 @@ class Interpolator
                 };
         };
 
-        typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BPoint;
-        typedef std::pair<BPoint, unsigned int> PtsPointPair;
-        typedef bgi::rtree< PtsPointPair, bgi::rstar<16> > PtsRtree;
+        static const int                            m_dim = 3;
+        typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian> BPoint;
+        typedef std::pair<BPoint, unsigned int>                       PtsPointPair;
+        typedef bgi::rtree< PtsPointPair, bgi::rstar<16> >            PtsRtree;
 
         PtsFieldSharedPtr                           m_inField;
         PtsFieldSharedPtr                           m_outField;
-        int                                         m_dim;
 
         /// Interpolation Method
         InterpMethod                                m_method;

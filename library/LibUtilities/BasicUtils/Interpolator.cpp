@@ -44,10 +44,11 @@ namespace LibUtilities
 Interpolator::Interpolator(const PtsFieldSharedPtr inField, PtsFieldSharedPtr &outField) :
             m_inField(inField),
             m_outField(outField),
-            m_dim(3),
             m_method(eNoMethod)
 {
     ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
+    ASSERTL0(inField->GetDim() <= m_dim, "too many dimesions in inField");
+    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
 }
 
 
@@ -229,6 +230,7 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
 void Interpolator::Interpolate(
             Nektar::LibUtilities::InterpMethod method, short int coordId, Nektar::NekDouble width)
 {
+    // TODO: check state first?
     if ( m_weights.num_elements() == 0)
     {
         CalcWeights(method, coordId, width);

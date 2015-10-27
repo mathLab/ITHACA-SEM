@@ -94,6 +94,12 @@ class Interpolator
 
         LIB_UTILITIES_EXPORT int GetDim() const;
 
+        LIB_UTILITIES_EXPORT NekDouble GetFiltWidth() const;
+
+        LIB_UTILITIES_EXPORT int GetCoordId() const;
+
+        LIB_UTILITIES_EXPORT InterpMethod GetInterpMethod() const;
+
         LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetInField() const;
 
         LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetOutField() const;

@@ -269,6 +269,23 @@ int Interpolator::GetDim() const
     return m_dim;
 }
 
+int Interpolator::GetCoordId() const
+{
+    return m_coordId;
+}
+
+
+NekDouble Interpolator::GetFiltWidth() const
+{
+    return m_filtWidth;
+}
+
+
+InterpMethod Interpolator::GetInterpMethod() const
+{
+    return m_method;
+}
+
 
 PtsFieldSharedPtr Interpolator::GetInField() const
 {

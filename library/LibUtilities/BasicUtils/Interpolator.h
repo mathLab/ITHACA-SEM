@@ -44,7 +44,6 @@
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
@@ -62,61 +61,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-
-
-
-
-
-
-
-
-
-
-        class PtsPoint : public bg::model::point<NekDouble, 3,  bg::cs::cartesian>{
-            public:
-
-                int                                         idx;
-                Array<OneD, NekDouble>                      coords;
-                NekDouble                                   dist;
-
-                LIB_UTILITIES_EXPORT PtsPoint():
-                    idx(-1),
-                    coords(Array<OneD, NekDouble>(3)),
-                    dist(1E30)
-                {
-                };
-
-                LIB_UTILITIES_EXPORT PtsPoint(int idx, Array<OneD, NekDouble> coords,
-                                            NekDouble dist):
-                    idx(idx),
-                    coords(coords),
-                    dist(dist)
-                {
-                };
-
-                LIB_UTILITIES_EXPORT bool operator < (const PtsPoint &comp) const
-                {
-                    return (dist < comp.dist);
-                };
-        };
-
-        typedef bg::model::box<PtsPoint > PtsBox;
-
-
-
-
-
-}
-}
-BOOST_GEOMETRY_REGISTER_POINT_3D(Nektar::LibUtilities::PtsPoint, Nektar::NekDouble, cs::cartesian, coords[0], coords[1], coords[2])
-namespace Nektar
-{
-namespace LibUtilities
-{
-
-
-
-
 
 enum InterpMethod{
     eNoMethod,
@@ -167,6 +111,39 @@ class Interpolator
 
     private:
 
+        class PtsPoint
+        {
+            public:
+
+                int                                         idx;
+                Array<OneD, NekDouble>                      coords;
+                NekDouble                                   dist;
+
+                LIB_UTILITIES_EXPORT PtsPoint():
+                    idx(-1),
+                    coords(Array<OneD, NekDouble>(3)),
+                    dist(1E30)
+                {
+                };
+
+                LIB_UTILITIES_EXPORT PtsPoint(int idx, Array<OneD, NekDouble> coords,
+                                            NekDouble dist):
+                    idx(idx),
+                    coords(coords),
+                    dist(dist)
+                {
+                };
+
+                LIB_UTILITIES_EXPORT bool operator < (const PtsPoint &comp) const
+                {
+                    return (dist < comp.dist);
+                };
+        };
+
+        typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BPoint;
+        typedef std::pair<BPoint, unsigned int> PtsPointPair;
+        typedef bgi::rtree< PtsPointPair, bgi::rstar<16> > PtsRtree;
+
         PtsFieldSharedPtr                           m_inField;
         PtsFieldSharedPtr                           m_outField;
         int                                         m_dim;
@@ -176,7 +153,7 @@ class Interpolator
         /// A tree structure to speed up the neighbour search.
         /// Note that we fill it with an iterator, so instead of rstar, the
         /// packing algorithm is used.
-        bgi::rtree< PtsPoint, bgi::rstar<16> >      m_rtree;
+        boost::shared_ptr<PtsRtree>                 m_rtree;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >            m_weights;

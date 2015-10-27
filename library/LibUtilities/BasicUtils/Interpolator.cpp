@@ -69,17 +69,18 @@ void Interpolator::CalcWeights(InterpMethod method, short int coordId, NekDouble
     m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
-    std::vector<PtsPoint > inPoints;
+    std::vector<PtsPointPair> inPoints;
     for (int i = 0; i < m_inField->GetNpoints(); ++i)
     {
         Array<OneD, NekDouble> coords(m_dim);
-        for (int j = 0; j < m_dim; ++j)
+        for (int j = 0; j < m_inField->GetDim(); ++j)
         {
             coords[j] = m_inField->GetPointVal(j,i);
         }
-        inPoints.push_back(PtsPoint(i, coords, 1E30));
+        inPoints.push_back(PtsPointPair(BPoint(coords[0], coords[1], coords[2]), i));
     }
-    m_rtree.insert(inPoints.begin(), inPoints.end());
+    m_rtree = MemoryManager<PtsRtree>::AllocateSharedPtr();
+    m_rtree->insert(inPoints.begin(), inPoints.end());
 
     // set a default method
     if(method == eNoMethod)
@@ -572,12 +573,21 @@ void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
                                vector< PtsPoint > &neighbourPts,
                                const unsigned int numPts)
 {
-    // find points within the distance box
-    m_rtree.query(bgi::nearest(searchPt, numPts), std::back_inserter(neighbourPts));
+    std::vector<PtsPointPair> result;
+    BPoint searchBPoint(searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
+    m_rtree->query(bgi::nearest(searchBPoint, numPts), std::back_inserter(result));
 
-    for(typename vector<PtsPoint >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    // massage into or own format
+    for(typename vector<PtsPointPair>::iterator it = result.begin(); it != result.end(); ++it)
     {
-        it->dist = bg::distance(searchPt, *it);
+        int idx = it->second;
+        Array<OneD, NekDouble> coords(m_dim);
+        for (int j = 0; j < m_inField->GetDim(); ++j)
+        {
+            coords[j] = m_inField->GetPointVal(j, idx);
+        }
+        NekDouble d = bg::distance(searchBPoint, it->first);
+        neighbourPts.push_back(PtsPoint(idx, coords, d));
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
@@ -601,32 +611,34 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
                               vector<PtsPoint > &neighbourPts,
                               const NekDouble dist)
 {
-    PtsPoint bbMin, bbMax;
-    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint > t1(- dist, - dist, - dist);
-    bg::strategy::transform::translate_transformer<PtsPoint, PtsPoint > t2(dist, dist, dist);
-    bg::transform(searchPt, bbMin, t1);
-    bg::transform(searchPt, bbMax, t2);
-    PtsBox bbox(bbMin, bbMax);
+    BPoint searchBPoint(searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
+    BPoint bbMin(searchPt.coords[0] - dist, searchPt.coords[1] - dist, searchPt.coords[2] - dist);
+    BPoint bbMax(searchPt.coords[0] + dist, searchPt.coords[1] + dist, searchPt.coords[2] + dist);
+    bg::model::box<BPoint> bbox(bbMin, bbMax);
 
     // find points within the distance box
-    m_rtree.query(bgi::within(bbox), std::back_inserter(neighbourPts));
+    std::vector<PtsPointPair> result;
+    m_rtree->query(bgi::within(bbox), std::back_inserter(result));
 
-    for(typename vector<PtsPoint >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
+    // massage into or own format
+    for(typename vector<PtsPointPair>::iterator it = result.begin(); it != result.end(); ++it)
     {
-        it->dist = bg::distance(searchPt, *it);
+        int idx = it->second;
+        Array<OneD, NekDouble> coords(m_dim);
+        for (int j = 0; j < m_inField->GetDim(); ++j)
+        {
+            coords[j] = m_inField->GetPointVal(j, idx);
+        }
+        NekDouble d = bg::distance(searchBPoint, it->first);
+
+        // discard points beyonf dist
+        if (d <= dist)
+        {
+            neighbourPts.push_back(PtsPoint(idx, coords, dist));
+        }
     }
 
     sort(neighbourPts.begin(), neighbourPts.end());
-
-    // remove everything beyond the distance
-    for(typename vector<PtsPoint >::iterator it = neighbourPts.begin(); it != neighbourPts.end(); ++it)
-    {
-        if (it->dist > dist)
-        {
-            neighbourPts.erase(it, neighbourPts.end());
-            break;
-        }
-    }
 }
 
 

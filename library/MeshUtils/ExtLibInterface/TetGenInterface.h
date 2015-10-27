@@ -44,10 +44,13 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include <MeshUtils/MeshElem.hpp>
 
-namespace Nektar{
-namespace MeshUtils{
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 class TetGenInterface
 {
@@ -64,10 +67,8 @@ class TetGenInterface
         /**
          * @brief assign parameters for meshing
          */
-        void InitialMesh(const std::vector<int> &nis,
-                         const std::vector<int> &nsti,
-                         std::map<int, MeshTriSharedPtr> &Tris,
-                         std::map<int, MeshNodeSharedPtr> &Nodes);
+        void InitialMesh(std::map<int, NodeSharedPtr> nis,
+                         std::vector<ElementSharedPtr> tri);
 
         /**
          * @brief gets the locations of the stiener points added by tetgen
@@ -77,20 +78,9 @@ class TetGenInterface
         /**
          * @brief refines a previously made tetmesh with node delta information from the Octree
          */
-        void RefineMesh(int num,
-                        const std::vector<NekDouble> &ndel,
-                        std::map<int, MeshTriSharedPtr> &Tris,
-                        std::map<int, MeshNodeSharedPtr> &Nodes,
-                        const std::vector<NekDouble> &newndel);
-        /**
-         * @brief extract mesh information
-         */
-        void Extract(int &numtet, Array<OneD, Array<OneD, int> > &tetconnect);
+        void RefineMesh(std::map<int, NekDouble> delta);
 
-        /**
-         * @brief from the list of stiener points creates new mesh node objects
-         */
-        void AddNodes(int num, std::map<int, MeshNodeSharedPtr> &Nodes);
+        std::vector<Array<OneD, int> > Extract();
 
         /**
          * @brief clear previous mesh
@@ -101,10 +91,6 @@ class TetGenInterface
 
         ///tetgen objects
         tetgenio surface, output, input, additional;
-        /// map from meshconvert id to tetgen id
-        std::map<int, int> nodemap;
-        /// map in reverse
-        std::map<int, int> nodemapr;
 };
 
 typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;

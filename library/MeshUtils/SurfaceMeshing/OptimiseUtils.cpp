@@ -33,13 +33,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
 using namespace std;
-namespace Nektar{
-namespace MeshUtils{
+namespace Nektar
+{
+namespace MeshUtils
+{
 
-NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
+NekDouble SurfaceMesh::BrentOpti(NekDouble ax, NekDouble bx,
                                     NekDouble cx, NekDouble &fx,
                                     NekDouble tol, int surf,
                                     Array<OneD, NekDouble> uvi,
@@ -47,7 +49,7 @@ NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
                                     Array<OneD, NekDouble> bounds,
                                     std::vector<Array<OneD,NekDouble> > bcs,
                                     std::vector<NekDouble> weights,
-                                    NekDouble (SurfaceMeshing::*GetF)(
+                                    NekDouble (SurfaceMesh::*GetF)(
                                         NekDouble, NekDouble,
                                         std::vector<Array<OneD,NekDouble> >,
                                         std::vector<NekDouble>, int, bool &))
@@ -139,7 +141,7 @@ NekDouble SurfaceMeshing::BrentOpti(NekDouble ax, NekDouble bx,
     return xmin;
 }
 
-void SurfaceMeshing::Find1DBounds(NekDouble &a, NekDouble &b,
+void SurfaceMesh::Find1DBounds(NekDouble &a, NekDouble &b,
                                   Array<OneD, NekDouble> uvi,
                                   Array<OneD, NekDouble> df,
                                   Array<OneD, NekDouble> bounds)

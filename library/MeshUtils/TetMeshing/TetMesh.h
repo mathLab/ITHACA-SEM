@@ -41,9 +41,10 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <MeshUtils/MeshElements/MeshElements.h>
 #include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
-#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
 #include <MeshUtils/MeshElem.hpp>
 
 namespace Nektar{
@@ -51,62 +52,40 @@ namespace MeshUtils{
 
 class TetMesh
 {
-    public:
-        friend class MemoryManager<TetMesh>;
+public:
+    friend class MemoryManager<TetMesh>;
 
-        /**
-         *@brief default constructor
-         */
-        TetMesh(const bool verb,
-                const LibUtilities::CADSystemSharedPtr &cad,
-                const OctreeSharedPtr &oct,
-                const SurfaceMeshingSharedPtr &sm)
-                    : m_verbose(verb), m_cad(cad), m_octree(oct),
-                      m_surfacemesh(sm)
-        {
-        };
+    /**
+     *@brief default constructor
+     */
+    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct)
+                : m_mesh(m), m_octree(oct)
+    {
+    };
 
-        /**
-         *@brief execute tet meshing
-         */
-        void Mesh();
+    /**
+     *@brief execute tet meshing
+     */
+    void Mesh();
 
-        /**
-         *@brief extract finished mesh
-         */
-        void Get(std::map<int, MeshNodeSharedPtr> &n,
-                 std::map<int, MeshEdgeSharedPtr> &e,
-                 std::map<int, MeshTriSharedPtr> &ti,
-                 std::map<int, MeshTetSharedPtr> &te)
-        {
-            n = Nodes;
-            e = Edges;
-            ti = Tris;
-            te = Tets;
-        }
+private:
 
-    private:
-
-        /// print stuff to screen?
-        bool m_verbose;
-        ///cad object
-        LibUtilities::CADSystemSharedPtr m_cad;
-        /// octree object
-        OctreeSharedPtr m_octree;
-        /// surfacemeshing object
-        SurfaceMeshingSharedPtr m_surfacemesh;
-        /// number of tetrahedra
-        int numtet;
-        /// conncetivity of the tets from the interface
-        Array<OneD, Array<OneD, int> > tetconnect;
-        /// list of all nodes
-        std::map<int, MeshNodeSharedPtr> Nodes;
-        /// list of all surface edges
-        std::map<int, MeshEdgeSharedPtr> Edges;
-        /// list of all surface triangles
-        std::map<int, MeshTriSharedPtr> Tris;
-        /// list of all tets
-        std::map<int, MeshTetSharedPtr> Tets;
+    /// print stuff to screen?
+    MeshSharedPtr m_mesh;
+    /// octree object
+    OctreeSharedPtr m_octree;
+    /// number of tetrahedra
+    int numtet;
+    /// conncetivity of the tets from the interface
+    std::vector<Array<OneD, int> > tetconnect;
+    /// list of all nodes
+    std::map<int, MeshNodeSharedPtr> Nodes;
+    /// list of all surface edges
+    std::map<int, MeshEdgeSharedPtr> Edges;
+    /// list of all surface triangles
+    std::map<int, MeshTriSharedPtr> Tris;
+    /// list of all tets
+    std::map<int, MeshTetSharedPtr> Tets;
 };
 
 typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

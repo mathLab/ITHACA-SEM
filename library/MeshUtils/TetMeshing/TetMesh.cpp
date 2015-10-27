@@ -37,76 +37,34 @@
 #include <MeshUtils/ExtLibInterface/TetGenInterface.h>
 
 using namespace std;
-namespace Nektar{
-namespace MeshUtils{
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 void TetMesh::Mesh()
 {
-    if(m_verbose)
+    if(m_mesh->m_verbose)
         cout << endl << endl << "Tetrahdral mesh generation" << endl;
 
     TetGenInterfaceSharedPtr tetgen =
         MemoryManager<TetGenInterface>::AllocateSharedPtr();
 
-    //extract the surface mesh
-    m_surfacemesh->Get(Nodes,Edges,Tris);
+    //build sequentially ordered maps of nodes that exist and there delta value in the octree
+    map<int, NodeSharedPtr> nodesintris;
+    map<int, NekDouble> nodedelta;
 
-    vector<int> nodesintris;
-    vector<NekDouble> nodedelta;
-
-    map<int, MeshNodeSharedPtr>::iterator nit;
-    for(nit = Nodes.begin(); nit != Nodes.end(); nit++)
+    NodeSet::iterator nit;
+    for(nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); nit++)
     {
-        vector<int> t = nit->second->GetTris();
-        vector<int> e = nit->second->GetEdges();
-        if(t.size() > 0 && e.size() > 1)
-        {
-            nodesintris.push_back(nit->first);
-            nodedelta.push_back(m_octree->Query(nit->second->GetLoc()));
-        }
+        nodesintris[(*nit)->m_id] = *(nit);
+        nodedelta[(*nit)->m_id] = m_octree->Query((*nit)->GetLoc());
     }
 
-    vector<int> stiener;
+    cout << nodesintris.size() << endl;
 
-    /*map<int, MeshTriSharedPtr>::iterator trit;
-    for(trit = Tris.begin(); trit != Tris.end(); trit++)
-    {
-        int s = trit->second->Getcid();
-        Array<OneD, int> ns = trit->second->GetN();
-        Array<OneD, NekDouble> uva(2); uva[0] = 0.0; uva[1] = 0.0;
-        for(int i = 0; i < 3; i++)
-        {
-            Array<OneD, NekDouble> uv = Nodes[ns[i]]->GetS(s);
-            uva[0] += uv[0]/3.0;
-            uva[1] += uv[1]/3.0;
-        }
+    tetgen->InitialMesh(nodesintris, m_mesh->m_element[2]);
 
-        Array<OneD, NekDouble> P = m_cad->GetSurf(s)->P(uva);
-        Array<OneD, NekDouble> N = m_cad->GetSurf(s)->N(uva);
-        Array<OneD, NekDouble> NP(3);
-        NekDouble d = m_octree->Query(P);
-        NP[0] = P[0] + N[0]*d*1.41;
-        NP[1] = P[1] + N[1]*d*1.41;
-        NP[2] = P[2] + N[2]*d*1.41;
-
-        while(!m_cad->InsideShape(NP))
-        {
-            NP[0] += N[0]*d*0.5;
-            NP[1] += N[1]*d*0.5;
-            NP[2] += N[2]*d*0.5;
-        }
-
-        MeshNodeSharedPtr n = MemoryManager<MeshNode>::AllocateSharedPtr(
-            Nodes.size(), NP[0], NP[1], NP[2]);
-        stiener.push_back(Nodes.size());
-        Nodes[Nodes.size()]=n;
-
-        nodedelta.push_back(m_octree->Query(NP));
-    }*/
-
-    tetgen->InitialMesh(nodesintris, stiener, Tris, Nodes);
-
-    int c = 1;
     int newpb = 20;
 
     vector<Array<OneD, NekDouble> > newp;
@@ -115,40 +73,47 @@ void TetMesh::Mesh()
     {
         newpb = newp.size();
         newp.clear();
-        tetgen->GetNewPoints(nodesintris.size() + stiener.size(), newp);
-
-        vector<NekDouble> newpointdelta;
+        tetgen->GetNewPoints(nodesintris.size(), newp);
         for(int i = 0; i < newp.size(); i++)
         {
             NekDouble d = m_octree->Query(newp[i]);
-            newpointdelta.push_back(d);
+            nodedelta[nodesintris.size() + i] = d;
         }
-
-        tetgen->RefineMesh(nodesintris.size() + stiener.size(), nodedelta, Tris, Nodes, newpointdelta);
-        c++;
+        tetgen->RefineMesh(nodedelta);
     }
 
-    tetgen->AddNodes(nodesintris.size() + stiener.size(), Nodes);
+    //make new map of all nodes to build tets.
+    map<int, NodeSharedPtr> nodes = nodesintris;
+    for(int i = 0; i < newp.size(); i++)
+    {
+        NodeSharedPtr n = boost::shared_ptr<Node>(new Node(nodesintris.size() + i,
+                                                    newp[i][0],newp[i][1],newp[i][2]));
+        nodes[nodesintris.size() + i] = n;
+    }
 
-    tetgen->Extract(numtet, tetconnect);
+    tetconnect = tetgen->Extract();
 
     //tetgen->freetet();
 
     //create tets
-    for(int i = 0; i < numtet; i++)
+    for(int i = 0; i < tetconnect.size(); i++)
     {
-        MeshTetSharedPtr t = MemoryManager<MeshTet>::AllocateSharedPtr(
-            Tets.size(),tetconnect[i][0],tetconnect[i][1],tetconnect[i][2],
-            tetconnect[i][3]);
-        Nodes[tetconnect[i][0]]->SetTet(Tets.size());
-        Nodes[tetconnect[i][1]]->SetTet(Tets.size());
-        Nodes[tetconnect[i][2]]->SetTet(Tets.size());
-        Nodes[tetconnect[i][3]]->SetTet(Tets.size());
-        Tets[Tets.size()] = t;
+        vector<NodeSharedPtr> n;
+        n.push_back(nodes[tetconnect[i][0]]);
+        n.push_back(nodes[tetconnect[i][1]]);
+        n.push_back(nodes[tetconnect[i][2]]);
+        n.push_back(nodes[tetconnect[i][3]]);
+        ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
+        vector<int> tags;
+        tags.push_back(0);
+        ElementSharedPtr E = GetElementFactory().
+                    CreateInstance(LibUtilities::eTetrahedron, conf, n, tags);
+
+        m_mesh->m_element[3].push_back(E);
     }
 
-    if(m_verbose)
-        cout << "\tTets :" << numtet << endl;
+    if(m_mesh->m_verbose)
+        cout << "\tTets :" << tetconnect.size() << endl;
 }
 
 }

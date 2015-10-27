@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <list>
+#include <algorithm>
 #include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -51,99 +52,149 @@ namespace MeshUtils
  * needed because OCC curves are not distorted, but should be included for
  * completness
  */
-void SurfaceMeshing::HOSurf()
+void SurfaceMesh::HOSurf()
 {
-    if(m_verbose)
+    if(m_mesh->m_verbose)
         cout << endl << "\tHigh-Order Surface meshing" << endl;
 
-    map<int, MeshEdgeSharedPtr>::iterator eit;
+    EdgeSet::iterator eit;
     int counter = 0;
 
-    LibUtilities::PointsKey ekey(m_order+1,
+    LibUtilities::PointsKey ekey(m_mesh->m_nummode,
                                  LibUtilities::eGaussLobattoLegendre);
     Array<OneD, NekDouble> gll;
 
     LibUtilities::PointsManager()[ekey]->GetPoints(gll);
 
     //loop over all edges in the surface
-    for(eit = Edges.begin(); eit != Edges.end(); eit++)
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
-        if(m_verbose)
+        if(m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(counter,Edges.size(),
+            LibUtilities::PrintProgressbar(counter,m_mesh->m_edgeSet.size(),
                                            "\t\tEdges");
         }
         counter++;
 
-        MeshEdgeSharedPtr e = eit->second;
-        Array<OneD, int> n = e->GetN();
+        if((*eit)->m_n1->GetListCADCurve().size() > 0 && (*eit)->m_n2->GetListCADCurve().size() > 0)
+        {
+            vector<int> clist1, clist2, c;
+            clist1 = (*eit)->m_n1->GetListCADCurve();
+            clist2 = (*eit)->m_n2->GetListCADCurve();
+            sort(clist1.begin(), clist1.end());
+            sort(clist2.begin(), clist2.end());
+
+            set_intersection(clist1.begin(), clist1.end(),
+                             clist2.begin(), clist2.end(),
+                             back_inserter(c));
+
+            if(c.size() > 0)
+            {
+                (*eit)->CADCurveID = c[0];
+            }
+            else
+            {
+                vector<int> slist1, slist2, s;
+                slist1 = (*eit)->m_n1->GetListCADSurf();
+                slist2 = (*eit)->m_n2->GetListCADSurf();
+                sort(slist1.begin(), slist1.end());
+                sort(slist2.begin(), slist2.end());
+
+                set_intersection(slist1.begin(), slist1.end(),
+                                 slist2.begin(), slist2.end(),
+                                 back_inserter(s));
+                if(s.size()>0)
+                {
+                    (*eit)->CADSurfID = s[0];
+                }
+                else
+                {
+                    ASSERTL0(false,"failed to identify location of edge");
+                }
+            }
+        }
+        else
+        {
+            vector<int> slist1, slist2, s;
+            slist1 = (*eit)->m_n1->GetListCADSurf();
+            slist2 = (*eit)->m_n2->GetListCADSurf();
+            sort(slist1.begin(), slist1.end());
+            sort(slist2.begin(), slist2.end());
+
+            set_intersection(slist1.begin(), slist1.end(),
+                             slist2.begin(), slist2.end(),
+                             back_inserter(s));
+            if(s.size()>0)
+            {
+                (*eit)->CADSurfID = s[0];
+            }
+            else
+            {
+                ASSERTL0(false,"failed to identify location of edge");
+            }
+        }
 
         //check if edge in on a surface or curve
-        if(e->GetCurve() != -1)
+        if((*eit)->CADCurveID != -1)
         {
-            LibUtilities::CADCurveSharedPtr c = m_cad->GetCurve(
-                        e->GetCurve());
+            int cid = (*eit)->CADCurveID;
+            CADCurveSharedPtr c = m_cad->GetCurve(cid);
             //edge is on curve and needs hoing that way
-            NekDouble tb = Nodes[n[0]]->GetC(e->GetCurve());
-            NekDouble te = Nodes[n[1]]->GetC(e->GetCurve());
+            NekDouble tb = (*eit)->m_n1->GetCADCurve(cid);
+            NekDouble te = (*eit)->m_n2->GetCADCurve(cid);
 
-            Array<OneD, NekDouble> ti(m_order+1);
+            Array<OneD, NekDouble> ti(m_mesh->m_nummode);
 
-            for(int i = 0; i < m_order+1; i++)
+            for(int i = 0; i < m_mesh->m_nummode; i++)
             {
                 ti[i] = tb*(1.0 -  gll[i])/2.0 +
                         te*(1.0 +  gll[i])/2.0;
             }
-            vector<int> Surfs = c->GetAdjSurf();
+            vector<CADSurfSharedPtr> s = c->GetAdjSurf();
 
-            ASSERTL0(Surfs.size() == 2, "Number of common surfs should be 2");
+            ASSERTL0(s.size() == 2, "Number of common surfs should be 2");
 
-            vector<int> honodes(m_order-1);
+            vector<NodeSharedPtr> honodes(m_mesh->m_nummode-2);
 
-            LibUtilities::CADSurfSharedPtr s1,s2;
-            s1 = m_cad->GetSurf(Surfs[0]);
-            s2 = m_cad->GetSurf(Surfs[1]);
-
-            for(int i = 1; i < m_order +1 -1; i++)
+            for(int i = 1; i < m_mesh->m_nummode -1; i++)
             {
                 Array<OneD, NekDouble> loc = c->P(ti[i]);
-                MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
-                        AllocateSharedPtr(Nodes.size(),loc[0],
-                                          loc[1],loc[2]);
-                nn->SetCurve(c->GetID(),ti[i]);
-                Array<OneD, NekDouble> uv = s1->locuv(loc);
-                nn->SetSurf(Surfs[0],uv);
-                uv = s2->locuv(loc);
-                nn->SetSurf(Surfs[1],uv);
-                honodes[i-1] = Nodes.size();
-                Nodes[Nodes.size()] = nn;
+                NodeSharedPtr nn = MemoryManager<Node>::
+                            AllocateSharedPtr(-1,loc[0],loc[1],loc[2]);
+
+                nn->SetCADCurve(cid,ti[i]);
+                Array<OneD, NekDouble> uv = s[0]->locuv(loc);
+                nn->SetCADSurf(s[0]->GetId(),uv);
+                uv = s[1]->locuv(loc);
+                nn->SetCADSurf(s[1]->GetId(),uv);
+                honodes[i-1] = nn;
             }
 
-            e->SetHONodes(honodes);
+            (*eit)->m_edgeNodes = honodes;
+            (*eit)->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
         else
         {
             //edge is on surface and needs 2d optimisation
-            LibUtilities::CADSurfSharedPtr s = m_cad->GetSurf(e->GetSurf());
+            int sid = (*eit)->CADSurfID;
+            CADSurfSharedPtr s = m_cad->GetSurf(sid);
             Array<OneD, NekDouble> uvb,uve;
-            uvb = Nodes[n[0]]->GetS(e->GetSurf());
-            uve = Nodes[n[1]]->GetS(e->GetSurf());
+            uvb = (*eit)->m_n1->GetCADSurf(sid);
+            uve = (*eit)->m_n1->GetCADSurf(sid);
 
-            vector<int> honodes(m_order-1);
-            vector<NekDouble> gllint(m_order-1);
-            for(int i = 1; i < m_order+1 -1; i++)
+            vector<NodeSharedPtr> honodes(m_mesh->m_nummode-2);
+            vector<NekDouble> gllint(m_mesh->m_nummode-2);
+            for(int i = 1; i < m_mesh->m_nummode -1; i++)
             {
                 Array<OneD, NekDouble> loc;
                 Array<OneD, NekDouble> uv(2);
                 uv[0] = uvb[0]*(1.0 - gll[i])/2.0 + uve[0]*(1.0 + gll[i])/2.0;
                 uv[1] = uvb[1]*(1.0 - gll[i])/2.0 + uve[1]*(1.0 + gll[i])/2.0;
                 loc = s->P(uv);
-                MeshNodeSharedPtr nn = MemoryManager<MeshNode>::
-                        AllocateSharedPtr(Nodes.size(),loc[0],
-                                            loc[1],loc[2]);
-                nn->SetSurf(e->GetSurf(),uv);
-                honodes[i-1] = Nodes.size();
-                Nodes[Nodes.size()] = nn;
+                NodeSharedPtr nn = MemoryManager<Node>::
+                                AllocateSharedPtr(-1,loc[0],loc[1],loc[2]);
+                nn->SetCADSurf(sid,uv);
+                honodes[i-1] = nn;
                 gllint[i-1] = gll[i];
             }
 
@@ -173,7 +224,7 @@ void SurfaceMeshing::HOSurf()
                     }
                     else
                     {
-                        bcs.push_back(Nodes[honodes[i-1]]->GetS(e->GetSurf()));
+                        bcs.push_back(honodes[i-1]->GetCADSurf(sid));
                         za = gllint[i-1];
                     }
                     if(i==honodes.size()-1)
@@ -183,7 +234,7 @@ void SurfaceMeshing::HOSurf()
                     }
                     else
                     {
-                        bcs.push_back(Nodes[honodes[i+1]]->GetS(e->GetSurf()));
+                        bcs.push_back(honodes[i+1]->GetCADSurf(sid));
                         zb = gllint[i+1];
                     }
 
@@ -193,11 +244,11 @@ void SurfaceMeshing::HOSurf()
                     weights[0] = 1.0/(zb - zm);
                     weights[1] = 1.0 /(zm - za);
 
-                    uvi = Nodes[honodes[i]]->GetS(e->GetSurf());
+                    uvi = honodes[i]->GetCADSurf(sid);
 
                     bool valid;
                     Array<OneD, NekDouble> df = EdgeGrad(uvi[0],uvi[1],bcs,
-                                                         weights,e->GetSurf(),
+                                                         weights,sid,
                                                          valid);
                     if(!valid)
                     {
@@ -210,12 +261,12 @@ void SurfaceMeshing::HOSurf()
                     Find1DBounds(a,b,uvi,df,bounds);
 
                     NekDouble fxi = EdgeF(uvi[0],uvi[1],bcs,weights,
-                                          e->GetSurf(),valid);
+                                          sid,valid);
                     NekDouble fx= fxi;
 
-                    NekDouble xmin = BrentOpti(a,0,b,fx,tol,e->GetSurf(),
+                    NekDouble xmin = BrentOpti(a,0,b,fx,tol,sid,
                                                uvi,df,bounds,bcs,weights,
-                                               &SurfaceMeshing::EdgeF);
+                                               &SurfaceMesh::EdgeF);
 
                     if(fabs(fx - fxi) < tol)
                     {
@@ -225,7 +276,7 @@ void SurfaceMeshing::HOSurf()
                     {
                         uvi[0]+=xmin*df[0]; uvi[1]+=xmin*df[1];
                         Array<OneD, NekDouble> loc = s->P(uvi);
-                        Nodes[honodes[i]]->Move(loc,uvi);
+                        honodes[i]->Move(loc,sid,uvi);
                     }
                 }
                 if(converged == honodes.size())
@@ -233,24 +284,23 @@ void SurfaceMeshing::HOSurf()
                     repeatoverallnodes = false;
                 }
             }
-            e->SetHONodes(honodes);
+            (*eit)->m_edgeNodes = honodes;
+            (*eit)->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
     }
 
-    if(m_verbose)
+    if(m_mesh->m_verbose)
         cout << endl;
-
-    map<int, MeshTriSharedPtr>::iterator trit;
 
     //this section of code sets up the standard ho triangle and sorts out
     //node numbering for the optimsation scheme
-    LibUtilities::PointsKey pkey(m_order+1,
+    LibUtilities::PointsKey pkey(m_mesh->m_nummode,
                                  LibUtilities::eNodalTriFekete);
     Array<OneD, NekDouble> u,v;
 
     int TotNumPoints = LibUtilities::PointsManager()[pkey]->
                                                     GetTotNumPoints();
-    int numInteriorPoints = (m_order-2)*(m_order-1)/2;
+    int numInteriorPoints = (m_mesh->m_nummode-3)*(m_mesh->m_nummode-2)/2;
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
 
@@ -279,39 +329,39 @@ void SurfaceMeshing::HOSurf()
     id.first = 1;
     id.second  = 1;
     nodeorder[id] = 0;
-    id.first = m_order + 1;
+    id.first = m_mesh->m_nummode;
     id.second  = 1;
     nodeorder[id] = 1;
     id.first = 1;
-    id.second  = m_order + 1;
+    id.second  = m_mesh->m_nummode;
     nodeorder[id] = 2;
 
-    for(int i = 1; i < m_order+1 -1; i++)
+    for(int i = 1; i < m_mesh->m_nummode -1; i++)
     {
         id.second = 1;
         id.first  = i+1;
         nodeorder[id] = i+2;
     }
-    for(int i = 0; i < m_order-1; i++)
+    for(int i = 0; i < m_mesh->m_nummode-2; i++)
     {
-        id.first = m_order - i;
+        id.first = m_mesh->m_nummode-1 - i;
         id.second = 2 + i;
-        nodeorder[id] = m_order + 1 + 1 + i;
+        nodeorder[id] = m_mesh->m_nummode + 1 + i;
     }
-    for(int i = 0; i < m_order-1; i++)
+    for(int i = 0; i < m_mesh->m_nummode-2; i++)
     {
         id.first = 1;
-        id.second = m_order - i;
-        nodeorder[id] = m_order+1 + m_order + i;
+        id.second = m_mesh->m_nummode-1 - i;
+        nodeorder[id] = m_mesh->m_nummode + m_mesh->m_nummode-1 + i;
     }
     int i = 2;
     int j = 2;
-    int limit = m_order - 1;
+    int limit = m_mesh->m_nummode-1 - 1;
     for(int k = 0; k < numInteriorPoints; k++)
     {
         id.first = i;
         id.second = j;
-        nodeorder[id] = 3*m_order + k;
+        nodeorder[id] = 3*(m_mesh->m_nummode-1) + k;
         i++;
         if(i > limit)
         {
@@ -324,9 +374,9 @@ void SurfaceMeshing::HOSurf()
     map<pair<int,int>, vector<NekDouble> > nodeweight;
 
     //calculates spring weights from the standard triangle
-    for(j = 2; j <= m_order-1; j++)
+    for(j = 2; j <= m_mesh->m_nummode-1-1; j++)
     {
-        for(i = 2; i <= m_order + 1 -j; i++)
+        for(i = 2; i <= m_mesh->m_nummode -j; i++)
         {
             NekDouble Zu,Zv,Z1u,Z1v,Z2u,Z2v,Z3u,Z3v;
 
@@ -360,7 +410,7 @@ void SurfaceMeshing::HOSurf()
         }
     }
 
-    counter = 0;
+/*    counter = 0;
 
     for(trit = Tris.begin(); trit != Tris.end(); trit++)
     {
@@ -529,7 +579,7 @@ void SurfaceMeshing::HOSurf()
             ASSERTL0(ct<10000,"falid to optismise face");
         }
         t->SetHONodes(honodes);
-    }
+    }*/
 }
 
 

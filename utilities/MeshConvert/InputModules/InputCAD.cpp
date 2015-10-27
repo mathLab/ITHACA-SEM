@@ -38,7 +38,7 @@
 #include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
-//#include <MeshUtils/TetMeshing/TetMesh.h>
+#include <MeshUtils/TetMeshing/TetMesh.h>
 //#include <MeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -143,26 +143,29 @@ void InputCAD::Process()
 
     m_surfacemesh->Validate();
 
-    //m_surfacemeshing->HOSurf();
-    /*
-    //create tet mesh
-    MeshUtils::TetMeshSharedPtr m_tet =
-        MemoryManager<MeshUtils::TetMesh>::AllocateSharedPtr(
-            m_mesh->m_verbose, m_cad, m_octree, m_surfacemeshing);
-
-    m_tet->Mesh();
-
-    if(m_mesh->m_verbose)
-        cout << "Processing mesh elements" << endl;
+    //m_surfacemesh->HOSurf();
 
     m_mesh->m_expDim = 3;
-    m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = m_order+1;
-
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");
     m_mesh->m_fields.push_back("w");
     m_mesh->m_fields.push_back("p");
+
+    //create tet mesh
+    TetMeshSharedPtr m_tet =
+                MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
+
+    m_tet->Mesh();
+
+    ClearElementLinks();
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
+    ProcessComposites();
+
+    /*if(m_mesh->m_verbose)
+        cout << "Processing mesh elements" << endl;
 
     map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
     map<int, MeshUtils::MeshEdgeSharedPtr> Edges;

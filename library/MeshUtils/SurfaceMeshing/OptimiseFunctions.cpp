@@ -33,13 +33,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <MeshUtils/SurfaceMeshing/SurfaceMeshing.h>
+#include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
 using namespace std;
-namespace Nektar{
-namespace MeshUtils{
+namespace Nektar
+{
+namespace MeshUtils
+{
 
-Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(NekDouble ux, NekDouble vx,
+Array<OneD, NekDouble> SurfaceMesh::EdgeGrad(NekDouble ux, NekDouble vx,
                                                 vector<Array<OneD,NekDouble> > bcs,
                                                 vector<NekDouble> weights,
                                                 int surf, bool &valid)
@@ -88,7 +90,7 @@ Array<OneD, NekDouble> SurfaceMeshing::EdgeGrad(NekDouble ux, NekDouble vx,
     return df;
 }
 
-NekDouble SurfaceMeshing::EdgeF(NekDouble ux, NekDouble vx,
+NekDouble SurfaceMesh::EdgeF(NekDouble ux, NekDouble vx,
                                 vector<Array<OneD,NekDouble> > bcs,
                                 vector<NekDouble> weights,
                                 int surf, bool &valid)
@@ -115,7 +117,7 @@ NekDouble SurfaceMeshing::EdgeF(NekDouble ux, NekDouble vx,
 
 }
 
-Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(NekDouble ux, NekDouble vx,
+Array<OneD, NekDouble> SurfaceMesh::FaceGrad(NekDouble ux, NekDouble vx,
                                                 vector<Array<OneD,NekDouble> > bcs,
                                                 vector<NekDouble> weights,
                                                 int surf, bool &valid)
@@ -172,7 +174,7 @@ Array<OneD, NekDouble> SurfaceMeshing::FaceGrad(NekDouble ux, NekDouble vx,
     return df;
 }
 
-NekDouble SurfaceMeshing::FaceF(NekDouble ux, NekDouble vx,
+NekDouble SurfaceMesh::FaceF(NekDouble ux, NekDouble vx,
                                 vector<Array<OneD,NekDouble> > bcs,
                                 vector<NekDouble> weights,
                                 int surf, bool &valid)

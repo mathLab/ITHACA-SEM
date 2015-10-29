@@ -71,14 +71,18 @@ void ProcessLinear::Process()
         (*eit)->m_edgeNodes.clear();
     }
 
-    if(m_mesh->m_expDim == 3)
+    FaceSet::iterator fit;
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
     {
-        FaceSet::iterator fit;
-        for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
-        {
-            (*fit)->m_faceNodes.clear();
-        }
+        (*fit)->m_faceNodes.clear();
     }
+
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        vector<NodeSharedPtr> empty;
+        m_mesh->m_element[m_mesh->m_expDim][i]->SetVolumeNodes(empty);
+    }
+
 }
 
 }

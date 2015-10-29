@@ -91,12 +91,12 @@ void OutputTecplot::Process(po::variables_map &vm)
     string filename = m_config["outfile"].as<string>();
 
     // Amend for parallel output if required
-    if(m_f->m_session->GetComm()->GetSize() != 1)
+    if(m_f->m_comm->GetSize() != 1)
     {
         int    dot = filename.find_last_of('.');
         string ext = filename.substr(dot,filename.length()-dot);
         string procId = "_P" + boost::lexical_cast<std::string>(
-                                 m_f->m_session->GetComm()->GetRank());
+                                 m_f->m_comm->GetRank());
         string start = filename.substr(0,dot);
         filename = start + procId + ext;
     }
@@ -341,7 +341,7 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
             {
                 NekDouble l2err;
                 std::string coordval[] = {"x","y","z"};
-                int rank = m_f->m_session->GetComm()->GetRank();
+                int rank = m_f->m_comm->GetRank();
 
                 for(int i = 0; i < coordim; ++i)
                 {
@@ -473,7 +473,7 @@ void OutputTecplot::WriteTecplotField(const int field,
         {
             NekDouble l2err = m_f->m_exp[0]->L2(m_f->m_exp[field]->UpdatePhys());
 
-            if(m_f->m_session->GetComm()->GetRank() == 0)
+            if(m_f->m_comm->GetRank() == 0)
             {
                 cout << "L 2 error (variable "
                      << m_f->m_fielddef[0]->m_fields[field]  << ") : "

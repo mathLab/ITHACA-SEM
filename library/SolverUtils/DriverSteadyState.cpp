@@ -163,7 +163,7 @@ void DriverSteadyState::v_Execute(ostream &out)
 
     for(int i = 0; i < NumVar_SFD; ++i)
     {
-        q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ-1]->GetTotPoints(), 
+        q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ-1]->GetTotPoints(),
                                         0.0); //q0 is initialised
         qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ-1]->GetTotPoints(),
                                         0.0);
@@ -248,13 +248,13 @@ void DriverSteadyState::v_Execute(ostream &out)
 
                     FlowPartiallyConverged = true;
                 }
-                else if (m_NonConvergingStepsCounter * m_dt * m_infosteps 
+                else if (m_NonConvergingStepsCounter * m_dt * m_infosteps
                             >= AdaptiveTime)
                 {
                     if (m_comm->GetRank() == 0)
                     {
                         cout << "\n\t We compute stability analysis using"
-                             << " the current flow field as base flow:\n" 
+                             << " the current flow field as base flow:\n"
                              << endl;
                     }
 
@@ -296,7 +296,7 @@ void DriverSteadyState::v_Execute(ostream &out)
     }
 
     m_file.close();
-    
+
     ///We save the final solution into a .fld file
     m_equ[m_nequ - 1]->Output();
 
@@ -512,28 +512,25 @@ void DriverSteadyState::ReadEVfile(
 {
     // This routine reads the .evl file written by the Arnoldi algorithm
     // (written in September 2014)
-    std::string EVfileName = m_session->GetSessionName() +  ".evl";
+    std::string   line;
+    int           NumLinesInFile = 0;
+    std::string   EVfileName = m_session->GetSessionName() +  ".evl";
     std::ifstream EVfile(EVfileName.c_str());
-
-    int NumLinesInFile(0);
-    NekDouble NonReleventNumber(0.0);
+    ASSERTL0(EVfile.good(), "Cannot open .evl file.");
 
     if(EVfile)
     {
-        std::string line;
-
         // This block counts the total number of lines of the .evl file
         // We keep going util we reach the end of the file
         while(getline(EVfile, line))
         {
-            NumLinesInFile += 1;
+            ++NumLinesInFile;
         }
-        EVfile.close();
 
         // It may happen that the Stability method that have produced the .elv
         // file converges in less than m_kdim iterations. In this case,
         // KrylovSubspaceDim has to be changed here
-        if(NumLinesInFile < KrylovSubspaceDim*2.0 
+        if(NumLinesInFile < KrylovSubspaceDim*2.0
                                 + KrylovSubspaceDim*(KrylovSubspaceDim+1.0)/2.0)
         {
             for(int i = 1; i <= KrylovSubspaceDim; ++i)
@@ -546,28 +543,31 @@ void DriverSteadyState::ReadEVfile(
         }
 
         // go back to the beginning of the file
-        std::ifstream EVfile(EVfileName.c_str()); 
+        EVfile.clear();
+        EVfile.seekg(0, ios::beg);
 
         // We now want to go to the line where the most unstable eigenlavue was
         // written
         for(int i = 0; i < (NumLinesInFile - KrylovSubspaceDim); ++i)
         {
             std::getline(EVfile, line);
+            cout << "Discard line: " << line << endl;
         }
 
-        // Then we read this line by skipping the first three values written
-        EVfile >> NonReleventNumber;
-        EVfile >> NonReleventNumber;
-        EVfile >> NonReleventNumber;
+        std::vector<std::string> tokens;
+        std::getline(EVfile, line);
+        boost::algorithm::split(tokens, line,
+                boost::is_any_of("\t "),boost::token_compress_on);
 
-        // The growth rate and the frequency of the EV are at the 4th and 5th
-        // colums of the .evl file
-        EVfile >> growthEV;
-        EVfile >> frequencyEV;
+        ASSERTL0(tokens.size() >= 5,
+                 "Unexpected formatting of .evl file while reading line:\n"
+                 + line);
+        growthEV = boost::lexical_cast<NekDouble>(tokens[4]);
+        frequencyEV = boost::lexical_cast<NekDouble>(tokens[5]);
     }
     else
     {
-        cout << "An error occured when openning the .evl file" << endl;
+        cout << "An error occurred when opening the .evl file" << endl;
     }
     EVfile.close();
 }
@@ -643,9 +643,9 @@ void DriverSteadyState::PrintSummarySFD()
     if (m_EvolutionOperator == eAdaptiveSFD)
     {
         cout << "\nWe use the adaptive SFD method:" << endl;
-        cout << "  The parameters are updated every " << AdaptiveTime 
+        cout << "  The parameters are updated every " << AdaptiveTime
              << " time units;" << endl;
-        cout << "  until |q-qBar|inf becomes smaller than " << AdaptiveTOL 
+        cout << "  until |q-qBar|inf becomes smaller than " << AdaptiveTOL
              << endl;
     }
     cout << "====================================="

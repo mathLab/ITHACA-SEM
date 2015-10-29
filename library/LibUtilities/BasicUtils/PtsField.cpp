@@ -348,7 +348,7 @@ void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
         totPts = totPts * nPtsPerEdge.at(i);
     }
 
-    ASSERTL0(totPts == m_pts.num_elements(),
+    ASSERTL0(totPts == m_pts[0].num_elements(),
              "nPtsPerEdge does not match total number of points");
 
     m_nPtsPerEdge = nPtsPerEdge;
@@ -436,10 +436,11 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
 
     m_weights[physPtIdx] = Array<OneD, float> (numPts, 0.0);
 
-    // In case of an exact match, use the exact point and return
+    // In case d < kVertexTheSameDouble ( d^2 < kNekSqrtTol), use the exact
+    // point and return
     for (int i = 0; i < numPts; ++i)
     {
-        if (neighbourPts[i].m_distSq == 0.0)
+        if (neighbourPts[i].m_distSq <= NekConstants::kNekSqrtTol)
         {
             m_weights[physPtIdx][i] = 1.0;
             return;
@@ -458,6 +459,8 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
     {
         m_weights[physPtIdx][i] = m_weights[physPtIdx][i] / wSum;
     }
+
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[physPtIdx], 1) == 0, "NaN found in weights");
 
 }
 

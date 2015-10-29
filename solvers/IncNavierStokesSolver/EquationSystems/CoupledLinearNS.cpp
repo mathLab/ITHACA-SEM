@@ -57,7 +57,6 @@ namespace Nektar
     CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
         UnsteadySystem(pSession),
         IncNavierStokes(pSession),
-        m_singleMode(false),
         m_zeroMode(false)
     {
     }
@@ -109,11 +108,10 @@ namespace Nektar
             // Set up Array of mappings
             m_locToGloMap = Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> (nz);
 
-            if(m_session->DefinesSolverInfo("SingleMode"))
+            if(m_singleMode)
             {
 
                 ASSERTL0(nz <=2 ,"For single mode calculation can only have  nz <= 2");
-                m_singleMode = true;
                 if(m_session->DefinesSolverInfo("BetaZero"))
                 {
                     m_zeroMode = true;
@@ -186,11 +184,10 @@ namespace Nektar
             
             NekDouble lambda_imag; 
             
-            // load imaginary componont of any potential shift
+            // load imaginary component of any potential shift
             // Probably should be called from DriverArpack but not yet
             // clear how to do this
             m_session->LoadParameter("imagShift",lambda_imag,NekConstants::kNekUnsetDouble);
-            
             nz = 1;
             m_mat  = Array<OneD, CoupledSolverMatrices> (nz);
             
@@ -1239,68 +1236,68 @@ namespace Nektar
                 SetInitialConditions(0.0);
                 
             }
-                    case eSteadyStokes:
-                        SetUpCoupledMatrix(0.0);
-                        break;
-                    case eSteadyOseen:
+        case eSteadyStokes:
+            SetUpCoupledMatrix(0.0);
+            break;
+        case eSteadyOseen:
+            {
+                Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                }
+                
+                ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+                         "Advection Velocity section must be defined in "
+                         "session file.");
+                
+                std::vector<std::string> fieldStr;
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                }
+                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                
+                SetUpCoupledMatrix(0.0,AdvField,false);
+            }
+            break;
+        case eSteadyNavierStokes:
+            {				
+                m_session->LoadParameter("KinvisMin", m_kinvisMin);
+                m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
+                m_session->LoadParameter("Tolerence", m_tol);
+                m_session->LoadParameter("MaxIteration", m_maxIt);
+                m_session->LoadParameter("MatrixSetUpStep", m_MatrixSetUpStep);
+                m_session->LoadParameter("Restart", m_Restart);
+                
+                
+                DefineForcingTerm();
+                
+                if (m_Restart == 1)
+                {
+                    ASSERTL0(m_session->DefinesFunction("Restart"),
+                             "Restart section must be defined in session file.");
+                    
+                    Array<OneD, Array<OneD, NekDouble> > Restart(m_velocity.num_elements());
+                    for(int i = 0; i < m_velocity.num_elements(); ++i)
                     {
-                        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
-                        for(int i = 0; i < m_velocity.num_elements(); ++i)
-                        {
-                            AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                        }
-                        
-                        ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-                        "Advection Velocity section must be defined in "
-                        "session file.");
-                        
-                        std::vector<std::string> fieldStr;
-                        for(int i = 0; i < m_velocity.num_elements(); ++i)
-                        {
-                            fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                        }
-                        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
-                        
-                        SetUpCoupledMatrix(0.0,AdvField,false);
+                        Restart[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                     }
-                    break;
-                    case eSteadyNavierStokes:
-                    {				
-                        m_session->LoadParameter("KinvisMin", m_kinvisMin);
-                        m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
-                        m_session->LoadParameter("Tolerence", m_tol);
-                        m_session->LoadParameter("MaxIteration", m_maxIt);
-                        m_session->LoadParameter("MatrixSetUpStep", m_MatrixSetUpStep);
-                        m_session->LoadParameter("Restart", m_Restart);
-                        
-                        
-                        DefineForcingTerm();
-                        
-                        if (m_Restart == 1)
-                        {
-                            ASSERTL0(m_session->DefinesFunction("Restart"),
-                                     "Restart section must be defined in session file.");
-                            
-                            Array<OneD, Array<OneD, NekDouble> > Restart(m_velocity.num_elements());
-                            for(int i = 0; i < m_velocity.num_elements(); ++i)
-                            {
-                                Restart[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                            }
-                            std::vector<std::string> fieldStr;
-                            for(int i = 0; i < m_velocity.num_elements(); ++i)
-                            {
-                                fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                            }
-                            EvaluateFunction(fieldStr, Restart, "Restart");
-                            
-                            for(int i = 0; i < m_velocity.num_elements(); ++i)
-                            {
-                                m_fields[m_velocity[i]]->FwdTrans_IterPerExp(Restart[i], m_fields[m_velocity[i]]->UpdateCoeffs());
-                            }
-                            cout << "Saving the RESTART file for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
-                        }
-                        else //We solve the Stokes Problem
-				{
+                    std::vector<std::string> fieldStr;
+                    for(int i = 0; i < m_velocity.num_elements(); ++i)
+                    {
+                        fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                    }
+                    EvaluateFunction(fieldStr, Restart, "Restart");
+                    
+                    for(int i = 0; i < m_velocity.num_elements(); ++i)
+                    {
+                        m_fields[m_velocity[i]]->FwdTrans_IterPerExp(Restart[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+                    }
+                    cout << "Saving the RESTART file for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
+                }
+                else //We solve the Stokes Problem
+                {
                     
                     /*Array<OneD, Array<OneD, NekDouble> >ZERO(m_velocity.num_elements());
                      *					
@@ -1318,35 +1315,35 @@ namespace Nektar
                     m_initialStep = false;
                     cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
                 }
-                    }
-                    break;
-                    case eSteadyLinearisedNS:
-                    {                
-                        SetInitialConditions(0.0);
-                        
-                        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
-                        for(int i = 0; i < m_velocity.num_elements(); ++i)
-                        {
-                            AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                        }
-                        
-                        ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-                        "Advection Velocity section must be defined in "
-                        "session file.");
-                        
-                        std::vector<std::string> fieldStr;
-                        for(int i = 0; i < m_velocity.num_elements(); ++i)
-                        {
-                            fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                        }
-                        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
-                        
-                        SetUpCoupledMatrix(m_lambda,AdvField,true);
-                    }
-                    break;
-                    case eNoEquationType:
-                    default:
-                        ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
+            }
+            break;
+        case eSteadyLinearisedNS:
+            {                
+                SetInitialConditions(0.0);
+                
+                Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                }
+                
+                ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+                         "Advection Velocity section must be defined in "
+                         "session file.");
+                
+                std::vector<std::string> fieldStr;
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                }
+                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                
+                SetUpCoupledMatrix(m_lambda,AdvField,true);
+            }
+            break;
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
     
@@ -1354,7 +1351,7 @@ namespace Nektar
                                             Array<OneD, Array<OneD, NekDouble> > &outarray,
                                             const NekDouble time)
     {  	    
-        // evaluate convectioln terms
+        // evaluate convection terms
         EvaluateAdvectionTerms(inarray,outarray);
 
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
@@ -1491,6 +1488,15 @@ namespace Nektar
     }
     
     
+    /** Virtual function to define if operator in DoSolve is negated
+     * with regard to the strong form. This is currently only used in
+     * Arnoldi solves. For Coupledd solver this is true since Stokes
+     * operator is set up as a LHS rather than RHS operation
+     */
+    bool CoupledLinearNS::v_NegatedOp(void)
+    {
+        return true; 
+    }
     
     void CoupledLinearNS::Solve(void)
     {
@@ -1573,65 +1579,68 @@ namespace Nektar
         //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)
         while(max(L2_norm[0], L2_norm[1]) > m_tol)
         {
-            if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
-				               //Or the solution of the .rst file (if Restart=1 in input file) 
-				               {				
-                                   for(int i = 0; i < m_velocity.num_elements(); ++i)
-                                   {
-                                       RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
-                                       RHS_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                                   }
-                                   
-                                   for(int i = 0; i < m_velocity.num_elements(); ++i)
-                                   {
-                                       m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
-                                   }
-                                   
-                                   m_initialStep = true; 
-                                   EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
-                                   SetUpCoupledMatrix(0.0, Velocity_Phys, true);
-                                   SolveLinearNS(RHS_Coeffs);
-                                   m_initialStep = false; 
-                               }
-                               if(m_counter > 1)
-                               {
-                                   EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
-                                   
-                                   if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
-				{
+            if(m_counter == 1) 
+                //At the first Newton step, we use the solution of the
+                //Stokes problem (if Restart=0 in input file) Or the
+                //solution of the .rst file (if Restart=1 in input
+                //file)
+            {				
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
+                    RHS_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                }
+                
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
+                }
+                
+                m_initialStep = true; 
+                EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+                SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+                SolveLinearNS(RHS_Coeffs);
+                m_initialStep = false; 
+            }
+            if(m_counter > 1)
+            {
+                EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+                
+                if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
+                {
                     SetUpCoupledMatrix(0.0, Velocity_Phys, true);
                 }
                 SolveLinearNS(RHS_Coeffs);
-                               }
-                               
-                               for(int i = 0; i < m_velocity.num_elements(); ++i)
-                               {
-                                   m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
-                                   m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
-                               }
-                               
-                               for(int i = 0; i < m_velocity.num_elements(); ++i)
-                               {
-                                   Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
-                                               Velocity_Phys[i], 1);
-                               }	
-                               
-                               //InfNorm(delta_velocity_Phys, Inf_norm);
-                               L2Norm(delta_velocity_Phys, L2_norm);
-                               
-                               if(max(Inf_norm[0], Inf_norm[1]) > 100)
-                               {
-                                   cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
-                                   ASSERTL0(0, "The Newton method has failed... \n");
-                               }
-                               
-                               
-                               cout << "\n";
-                               m_counter++;
+            }
+            
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
+                m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
+            }
+            
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
+                            Velocity_Phys[i], 1);
+            }	
+            
+            //InfNorm(delta_velocity_Phys, Inf_norm);
+            L2Norm(delta_velocity_Phys, L2_norm);
+            
+            if(max(Inf_norm[0], Inf_norm[1]) > 100)
+            {
+                cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
+                ASSERTL0(0, "The Newton method has failed... \n");
+            }
+            
+            
+            cout << "\n";
+            m_counter++;
         }	
         
         if (m_counter > 1) //We save u:=u+\delta u in u->Coeffs
-		{
+        {
             for(int i = 0; i < m_velocity.num_elements(); ++i)
             {			
                 m_fields[m_velocity[i]]->FwdTrans(Velocity_Phys[i], m_fields[m_velocity[i]]->UpdateCoeffs());

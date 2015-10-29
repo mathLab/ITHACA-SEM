@@ -14,6 +14,7 @@ SET(MeshConvertHeaders
     ProcessModules/ProcessCyl.h
     ProcessModules/ProcessDetectSurf.h
     ProcessModules/ProcessExtractSurf.h
+    ProcessModules/ProcessExtractTetPrismInterface.h
     ProcessModules/ProcessJac.h
     ProcessModules/ProcessLinear.h
     ProcessModules/ProcessPerAlign.h
@@ -39,6 +40,7 @@ SET(MeshConvertSources
     ProcessModules/ProcessCyl.cpp
     ProcessModules/ProcessDetectSurf.cpp
     ProcessModules/ProcessExtractSurf.cpp
+    ProcessModules/ProcessExtractTetPrismInterface.cpp
     ProcessModules/ProcessJac.cpp
     ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp

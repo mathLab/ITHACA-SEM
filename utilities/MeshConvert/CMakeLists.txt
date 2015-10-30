@@ -76,8 +76,8 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-#face curvature test
-ADD_NEKTAR_TEST        (invalid_tet_face)
+# Nektar++
+ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)

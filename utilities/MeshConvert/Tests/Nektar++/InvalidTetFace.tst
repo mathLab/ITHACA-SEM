@@ -2,9 +2,9 @@
 <test>
     <description>Tet with an invalid face curvature</description>
     <executable>MeshConvert</executable>
-    <parameters>-m jac:list invalid_tet_face.xml tet_Face.xml:xml:test</parameters>
+    <parameters>-m jac:list InvalidTetFace.xml InvalidTetFace.xml:xml:test</parameters>
     <files>
-        <file description="Input File">invalid_tet_face.xml</file>
+        <file description="Input File">InvalidTetFace.xml</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

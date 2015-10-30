@@ -80,7 +80,7 @@ ENDIF (NEKTAR_USE_VTK)
 ADD_NEKTAR_TEST        (invalid_tet_face)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
-#ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubeHex)
 ADD_NEKTAR_TEST        (Gmsh/CubePrism)
 ADD_NEKTAR_TEST        (Gmsh/CubeTet)
 IF (WIN32)

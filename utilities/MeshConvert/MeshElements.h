@@ -513,8 +513,8 @@ namespace Nektar
 
                 for (int i = 0; i < nEdge; ++i)
                 {
-                    edgeo[i] = SpatialDomains::SegGeom::GetEdgeOrientation(
-                        *edges[i], *edges[(i+1) % nEdge]);
+                    edgeo[i] = m_edgeList[i]->m_n1 == m_vertexList[i] ?
+                        StdRegions::eForwards : StdRegions::eBackwards;
                 }
 
                 if(m_faceNodes.size() > 0)
@@ -582,7 +582,7 @@ namespace Nektar
                         {
                             bool reverseEdge = edgeo[i] == StdRegions::eBackwards;
 
-                            if (!reverseEdge)
+                            if (reverseEdge)
                             {
                                 for (int j = 1; j < n-1; ++j)
                                 {

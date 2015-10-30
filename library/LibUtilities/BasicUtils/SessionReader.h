@@ -110,17 +110,17 @@ namespace Nektar
             EquationSharedPtr m_expression;
             std::string       m_fileVariable;
         };
-        
-        typedef std::map<std::pair<std::string,int>, FunctionVariableDefinition>  
+
+        typedef std::map<std::pair<std::string,int>, FunctionVariableDefinition>
             FunctionVariableMap;
-        typedef std::map<std::string, FunctionVariableMap > 
+        typedef std::map<std::string, FunctionVariableMap >
             FunctionMap;
 
         class SessionReader;
         typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
         /// Reads and parses information from a Nektar++ XML session file.
-        class SessionReader : 
+        class SessionReader :
             public boost::enable_shared_from_this<SessionReader>
         {
         public:
@@ -157,9 +157,9 @@ namespace Nektar
              * of the object.
              */
             LIB_UTILITIES_EXPORT static SessionReaderSharedPtr CreateInstance(
-                int                       argc, 
-                char                     *argv[], 
-                std::vector<std::string> &pFilenames, 
+                int                       argc,
+                char                     *argv[],
+                std::vector<std::string> &pFilenames,
                 const CommSharedPtr      &pComm = CommSharedPtr())
             {
                 SessionReaderSharedPtr p = MemoryManager<
@@ -170,9 +170,9 @@ namespace Nektar
             }
 
             LIB_UTILITIES_EXPORT SessionReader(
-                int                             argc, 
-                char                           *argv[], 
-                const std::vector<std::string> &pFilenames, 
+                int                             argc,
+                char                           *argv[],
+                const std::vector<std::string> &pFilenames,
                 const CommSharedPtr            &pComm);
 
             /// Destructor
@@ -207,29 +207,29 @@ namespace Nektar
                 const std::string &pName) const;
             /// Load an integer parameter
             LIB_UTILITIES_EXPORT void LoadParameter(
-                const std::string &name, 
+                const std::string &name,
                 int               &var) const;
             /// Check for and load an integer parameter.
             LIB_UTILITIES_EXPORT void LoadParameter(
-                const std::string &name, 
-                int               &var, 
+                const std::string &name,
+                int               &var,
                 const int         &def) const;
             /// Load a double precision parameter
             LIB_UTILITIES_EXPORT void LoadParameter(
-                const std::string &name, 
+                const std::string &name,
                 NekDouble         &var) const;
             /// Check for and load a double-precision parameter.
             LIB_UTILITIES_EXPORT void LoadParameter(
-                const std::string &name, 
-                NekDouble         &var, 
+                const std::string &name,
+                NekDouble         &var,
                 const NekDouble   &def) const;
             /// Set an integer parameter
             LIB_UTILITIES_EXPORT void SetParameter(
-                const std::string &name, 
+                const std::string &name,
                 int               &var);
             /// Set a double precision parameter
             LIB_UTILITIES_EXPORT void SetParameter(
-                const std::string &name, 
+                const std::string &name,
                 NekDouble         &var);
 
 
@@ -252,35 +252,35 @@ namespace Nektar
                                           const std::string &vValue) const;
             /// Check for and load a solver info property.
             LIB_UTILITIES_EXPORT void LoadSolverInfo(
-                const std::string &name, 
-                      std::string &var, 
+                const std::string &name,
+                      std::string &var,
                 const std::string &def = "") const;
             /// Check if the value of a solver info property matches.
             LIB_UTILITIES_EXPORT void MatchSolverInfo(
-                const std::string &name, 
-                const std::string &trueval, 
-                      bool        &var, 
+                const std::string &name,
+                const std::string &trueval,
+                      bool        &var,
                 const bool        &def = false) const;
             /// Check if the value of a solver info property matches.
             LIB_UTILITIES_EXPORT bool MatchSolverInfo(
-                const std::string &name, 
+                const std::string &name,
                 const std::string &trueval) const;
             /// Check if the value of a solver info property matches.
             template<typename T>
             inline bool MatchSolverInfoAsEnum(
-                const std::string &name, 
+                const std::string &name,
                 const T           &trueval) const;
             /// Registers an enumeration value.
             LIB_UTILITIES_EXPORT inline static std::string RegisterEnumValue(
-                std::string pEnum, 
-                std::string pString, 
+                std::string pEnum,
+                std::string pString,
                 int         pEnumValue);
             /// Registers the default string value of a solver info property.
-            LIB_UTILITIES_EXPORT inline static std::string 
+            LIB_UTILITIES_EXPORT inline static std::string
                 RegisterDefaultSolverInfo(
-                const std::string &pName, 
+                const std::string &pName,
                 const std::string &pValue);
-        
+
             /* ----GlobalSysSolnInfo ----- */
 
             LIB_UTILITIES_EXPORT bool DefinesGlobalSysSolnInfo(
@@ -298,24 +298,24 @@ namespace Nektar
                 const std::string &name) const;
             /// Checks for and load a geometric info string property.
             LIB_UTILITIES_EXPORT void LoadGeometricInfo(
-                const std::string &name, 
-                      std::string &var, 
+                const std::string &name,
+                      std::string &var,
                 const std::string &def = "") const;
             /// Checks for and loads a geometric info boolean property.
             LIB_UTILITIES_EXPORT void LoadGeometricInfo(
-                const std::string &name, 
-                      bool        &var, 
+                const std::string &name,
+                      bool        &var,
                 const bool        &def = false) const;
             /// Checks for and loads a geometric info double-precision property.
             LIB_UTILITIES_EXPORT void LoadGeometricInfo(
-                const std::string &name, 
-                      NekDouble   &var, 
+                const std::string &name,
+                      NekDouble   &var,
                 const NekDouble   &def = 0.0) const;
             /// Check if the value of a geometric info string property matches.
             LIB_UTILITIES_EXPORT void MatchGeometricInfo(
-                const std::string &name, 
-                const std::string &trueval, 
-                      bool        &var, 
+                const std::string &name,
+                const std::string &trueval,
+                      bool        &var,
                 const bool        &def = false) const;
 
             /* ------ VARIABLES ------ */
@@ -335,37 +335,37 @@ namespace Nektar
                 const std::string &name) const;
             /// Checks if a specified function has a given variable defined.
             LIB_UTILITIES_EXPORT bool DefinesFunction(
-                const std::string &name, 
+                const std::string &name,
                 const std::string &variable,
                 const int pDomain = 0) const;
             /// Returns an EquationSharedPtr to a given function variable.
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(
-                const std::string &name, 
+                const std::string &name,
                 const std::string &variable,
                 const int pDomain = 0) const;
             /// Returns an EquationSharedPtr to a given function variable index.
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(
-                const std::string  &name, 
+                const std::string  &name,
                 const unsigned int &var,
                 const int pDomain = 0) const;
             /// Returns the type of a given function variable.
             LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(
-                const std::string &name, 
+                const std::string &name,
                 const std::string &variable,
                 const int pDomain = 0) const;
             /// Returns the type of a given function variable index.
             LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(
-                const std::string  &pName, 
+                const std::string  &pName,
                 const unsigned int &pVar,
                 const int pDomain = 0) const;
             /// Returns the filename to be loaded for a given variable.
             LIB_UTILITIES_EXPORT std::string GetFunctionFilename(
-                const std::string &name, 
+                const std::string &name,
                 const std::string &variable,
                 const int pDomain = 0) const;
             /// Returns the filename to be loaded for a given variable index.
             LIB_UTILITIES_EXPORT std::string GetFunctionFilename(
-                const std::string  &name, 
+                const std::string  &name,
                 const unsigned int &var,
                 const int pDomain = 0) const;
             /// Returns the filename variable to be loaded for a given variable
@@ -377,7 +377,7 @@ namespace Nektar
 
             /// Returns the instance of AnalyticExpressionEvaluator specific to
             /// this session.
-            LIB_UTILITIES_EXPORT AnalyticExpressionEvaluator& 
+            LIB_UTILITIES_EXPORT AnalyticExpressionEvaluator&
                 GetExpressionEvaluator();
 
             /* ------ TAGS ------ */
@@ -386,7 +386,7 @@ namespace Nektar
                 const std::string& pName) const;
             /// Sets a specified tag.
             LIB_UTILITIES_EXPORT void SetTag(
-                const std::string& pName, 
+                const std::string& pName,
                 const std::string& pValue);
             /// Returns the value of a specified tag.
             LIB_UTILITIES_EXPORT const std::string &GetTag(
@@ -407,10 +407,10 @@ namespace Nektar
                 return m_cmdLineOptions.find(pName)->second.as<T>();
             }
             /// Registers a command-line argument with the session reader.
-            LIB_UTILITIES_EXPORT inline static std::string 
+            LIB_UTILITIES_EXPORT inline static std::string
               RegisterCmdLineArgument(
-                const std::string &pName, 
-                const std::string &pShortName, 
+                const std::string &pName,
+                const std::string &pShortName,
                 const std::string &pDescription);
             /// Registers a command-line flag with the session reader.
             LIB_UTILITIES_EXPORT inline static std::string
@@ -462,7 +462,7 @@ namespace Nektar
             /// Map of original boundary region ordering for parallel periodic
             /// bcs.
             BndRegionOrdering                         m_bndRegOrder;
-            /// String to enumeration map for Solver Info parameters. 
+            /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList&  GetSolverInfoEnums();
             /// Default solver info options.
             LIB_UTILITIES_EXPORT static SolverInfoMap& GetSolverInfoDefaults();
@@ -473,7 +473,7 @@ namespace Nektar
 
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(
-                int                             argc, 
+                int                             argc,
                 char                           *argv[]);
 
             LIB_UTILITIES_EXPORT void InitSession();
@@ -500,7 +500,7 @@ namespace Nektar
             /// Loads the given XML document and instantiates an appropriate
             /// communication object.
             LIB_UTILITIES_EXPORT void CreateComm(
-                int               &argc, 
+                int               &argc,
                 char*              argv[]);
 
             /// Partitions the mesh when running in parallel.
@@ -525,6 +525,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void ReadFilters(TiXmlElement *filters);
             /// Enforce parameters from command line arguments.
             LIB_UTILITIES_EXPORT void CmdLineOverride();
+            /// Check values of solver info options are valid.
+            LIB_UTILITIES_EXPORT void VerifySolverInfo();
 
             /// Parse a string in the form lhs = rhs.
             LIB_UTILITIES_EXPORT void ParseEquals(
@@ -617,7 +619,7 @@ namespace Nektar
          * @param   pString     A valid value for the property.
          * @param   pEnumValue  An enumeration value corresponding to this
          *                      value.
-         * 
+         *
          * @return The value for the property provided by #pString.
          */
         inline std::string SessionReader::RegisterEnumValue(
@@ -641,7 +643,7 @@ namespace Nektar
          * using this function. The property will take this value until it is
          * overwritten by a value specified in the XML document, or specified
          * as a command-line argument. Usage has the form:
-         * 
+         *
          * @code
          * std::string GlobalLinSys::def
          *     = LibUtilities::SessionReader::RegisterDefaultSolverInfo(
@@ -650,11 +652,11 @@ namespace Nektar
          *
          * @param   pName       The name of the property.
          * @param   pValue      The default value of the property.
-         * 
+         *
          * @return The default value of the property provided by #pValue.
          */
         inline std::string SessionReader::RegisterDefaultSolverInfo(
-            const std::string &pName, 
+            const std::string &pName,
             const std::string &pValue)
         {
             std::string vName = boost::to_upper_copy(pName);
@@ -667,8 +669,8 @@ namespace Nektar
          *
          */
         inline std::string SessionReader::RegisterCmdLineArgument(
-            const std::string &pName, 
-            const std::string &pShortName, 
+            const std::string &pName,
+            const std::string &pShortName,
             const std::string &pDescription)
         {
             ASSERTL0(!pName.empty(), "Empty name for cmdline argument.");

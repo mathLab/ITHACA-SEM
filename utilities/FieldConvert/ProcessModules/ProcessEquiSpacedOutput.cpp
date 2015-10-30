@@ -95,7 +95,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     int nel = m_f->m_exp[0]->GetExpSize();
 
     // set up the number of points in each element
-    int newpoints;
+    int newpoints = 0;
     int newtotpoints = 0;
 
     Array<OneD,int> conn;
@@ -191,9 +191,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
             }
         }
 
-        ppe.push_back(newpoints);
-        newtotpoints += newpoints;
-
         switch(e->DetShapeType())
         {
         case LibUtilities::eSegment:
@@ -272,6 +269,10 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 ASSERTL0(false,"Points not known");
             }
         }
+
+        ppe.push_back(newpoints);
+        newtotpoints += newpoints;
+
 
         if(e->DetShapeType() == LibUtilities::ePrism)
         {

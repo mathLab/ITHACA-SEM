@@ -1,4 +1,4 @@
-SET(MeshConvertHeaders 
+SET(MeshConvertHeaders
     InputModules/InputGmsh.h
     InputModules/InputNek.h
     InputModules/InputNekpp.h
@@ -22,7 +22,7 @@ SET(MeshConvertHeaders
     ProcessModules/ProcessTetSplit.h
 )
 
-SET(MeshConvertSources 
+SET(MeshConvertSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
     InputModules/InputNekpp.cpp
@@ -65,7 +65,7 @@ IF (NEKTAR_USE_CCM)
    SET_TARGET_PROPERTIES(MeshConvert PROPERTIES
     IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
    INCLUDE_DIRECTORIES(MeshConvert ${CCMIO_INCLUDE_DIR})
-   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})        
+   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
@@ -76,7 +76,8 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-
+# Nektar++
+ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)

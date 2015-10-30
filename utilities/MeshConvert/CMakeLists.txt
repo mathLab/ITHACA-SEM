@@ -78,7 +78,8 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-
+# Nektar++
+ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)

@@ -83,6 +83,7 @@ ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubeHexLinearise)
 ADD_NEKTAR_TEST        (Gmsh/CubePrism)
 ADD_NEKTAR_TEST        (Gmsh/CubeTet)
 IF (WIN32)

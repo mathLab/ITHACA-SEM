@@ -202,7 +202,6 @@ void SurfaceMesh::HOSurf()
         int surf = m_mesh->m_element[2][i]->GetTagList()[0];
 
         vector<EdgeSharedPtr> egs = f->m_edgeList;
-
         for(int j = 0; j < egs.size(); j++)
         {
             //test insert the edge into completedEdges
@@ -215,6 +214,51 @@ void SurfaceMesh::HOSurf()
                 //insertion was sucsesful create high-order info
                 EdgeSharedPtr e = *testIns.first;
 
+                //figure out surfaces and curves this edge is on
+                if(e->m_n1->GetListCADCurve().size() > 0 && e->m_n2->GetListCADCurve().size() > 0)
+                {
+                    vector<int> clist1, clist2, c;
+                    clist1 = e->m_n1->GetListCADCurve();
+                    clist2 = e->m_n2->GetListCADCurve();
+                    sort(clist1.begin(), clist1.end());
+                    sort(clist2.begin(), clist2.end());
+
+                    set_intersection(clist1.begin(), clist1.end(),
+                                     clist2.begin(), clist2.end(),
+                                     back_inserter(c));
+                    //this is a bit hacky, if the edge can identify two curves, it chooses the shortest
+                    if(c.size() > 0)
+                    {
+                        if(c.size() > 1)
+                        {
+                            if(m_curvemeshes[c[0]]->GetLength() >
+                               m_curvemeshes[c[1]]->GetLength())
+                            {
+                                e->CADCurveID = c[1];
+                            }
+                            else
+                            {
+                                e->CADCurveID = c[0];
+                            }
+                        }
+                        else
+                        {
+                            e->CADCurveID = c[0];
+                        }
+                    }
+                    else
+                    {
+                        e->CADCurveID = -1;
+                        e->CADSurfID = m_mesh->m_element[2][i]->GetTagList()[0];
+                    }
+                }
+                else
+                {
+                    e->CADCurveID = -1;
+                    e->CADSurfID = m_mesh->m_element[2][i]->GetTagList()[0];
+                }
+
+                //if we are here the edge needs to be high-ordered
                 if(e->CADCurveID != -1)
                 {
                     int cid = e->CADCurveID;
@@ -369,15 +413,13 @@ void SurfaceMesh::HOSurf()
             //else already completed move on
         }
 
-        /*if(egs[0]->m_edgeNodes.size() == 0 &&
+        if(egs[0]->m_edgeNodes.size() == 0 &&
            egs[1]->m_edgeNodes.size() == 0 &&
            egs[2]->m_edgeNodes.size() == 0)
         {
             //none of the edges in the face are curved, therefore completly planar, skip
             continue;
         }
-
-        cout << surf << endl;
 
         vector<NodeSharedPtr> vertices = f->m_vertexList;
         Array<OneD, NekDouble> uv1,uv2,uv3;
@@ -419,9 +461,8 @@ void SurfaceMesh::HOSurf()
         {
             vector<NodeSharedPtr> hon = egs[j]->m_edgeNodes;
             if(egs[j]->m_n1 != vertices[j])
-            {
                 reverse(hon.begin(),hon.end());
-            }
+
             for(int k = 0; k < hon.size(); k++)
             {
                 uvList.push_back(hon[k]->GetCADSurf(surf));
@@ -432,17 +473,14 @@ void SurfaceMesh::HOSurf()
             uvList.push_back(honodes[j]->GetCADSurf(surf));
         }
 
-        /*CADSurfSharedPtr s = m_cad->GetSurf(surf);
+        CADSurfSharedPtr s = m_cad->GetSurf(surf);
 
         bool repeatoverallnodes = true;
 
         NekDouble tol = 1E-10;
 
-        int ct = 0;
-
         while(repeatoverallnodes)
         {
-            ct++;
             int converged = 0;
 
             Array<OneD, NekDouble> uvi;
@@ -451,7 +489,7 @@ void SurfaceMesh::HOSurf()
             int node;
             int hocnt = 0;
 
-            for(int j = 2; j <= m_mesh->m_nummode-1-1; j++)
+            for(int j = 2; j <= m_mesh->m_nummode-1 -1; j++)
             {
                 for(int i = 2; i <= m_mesh->m_nummode -j; i++)
                 {
@@ -531,16 +569,14 @@ void SurfaceMesh::HOSurf()
             {
                 repeatoverallnodes = false;
             }
-            ASSERTL0(ct<10000,"falid to optismise face");
-        }*/
+        }
 
-        //f->m_faceNodes = honodes;
-        //f->m_curveType = LibUtilities::eNodalTriFekete;
+        f->m_faceNodes = honodes;
+        f->m_curveType = LibUtilities::eNodalTriFekete;
     }
 
     if(m_mesh->m_verbose)
         cout << endl;
-
 }
 
 }

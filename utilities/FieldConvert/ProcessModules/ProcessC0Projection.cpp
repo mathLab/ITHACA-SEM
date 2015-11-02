@@ -55,6 +55,7 @@ GetModuleFactory().RegisterCreatorFunction(
 ProcessC0Projection::ProcessC0Projection(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["fields"] = ConfigOption(false,"All","Start field to project");
+    m_config["localtoglobalmap"] = ConfigOption(true,"0","Just perform a local to global mapping and back"); 
 }
 
 ProcessC0Projection::~ProcessC0Projection()
@@ -63,10 +64,16 @@ ProcessC0Projection::~ProcessC0Projection()
 
 void ProcessC0Projection::Process(po::variables_map &vm)
 {
+    Timer timer;
+
     if (m_f->m_verbose)
     {
-        cout << "ProcessC0Projection: Projecting field into C0 space..."
-             << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessC0Projection: Projecting field into C0 space..."
+                 << endl;
+            timer.Start();
+        }
     }
 
     // ensure not using diagonal preconditioner since tends not to converge fo
@@ -89,11 +96,14 @@ void ProcessC0Projection::Process(po::variables_map &vm)
             
             if(m_f->m_verbose)
             {
-                cout << "Resetting diagonal precondition to low energy block " << endl;;
+                if(m_f->m_comm->GetRank() == 0)
+                {
+                    cout << "Resetting diagonal precondition to low energy block " << endl;
+                }
             }
         }
     }
-    
+    bool JustPerformLocToGloMap = m_config["localtoglobalmap"].as<bool>();
 
     // generate an C0 expansion field with no boundary conditions.
     bool savedef = m_f->m_declareExpansionAsContField;
@@ -130,12 +140,29 @@ void ProcessC0Projection::Process(po::variables_map &vm)
 
         if (m_f->m_verbose)
         {
-            cout << "\t Processing field: " << processFields[i] << endl;
+            if(m_f->m_comm->GetRank() == 0)
+            {
+                cout << "\t Processing field: " << processFields[i] << endl;
+            }
         }
-        C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
-                                 m_f->m_exp[processFields[i]]->UpdatePhys());
-        C0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
-                                 m_f->m_exp[processFields[i]]->UpdateCoeffs());
+
+        if(JustPerformLocToGloMap)
+        {
+            int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
+            Vmath::Vcopy(ncoeffs,m_f->m_exp[processFields[i]]->GetCoeffs(),1,
+                         C0ProjectExp->UpdateCoeffs(),1);
+            C0ProjectExp->LocalToGlobal();
+            C0ProjectExp->GlobalToLocal();
+            Vmath::Vcopy(ncoeffs,C0ProjectExp->GetCoeffs(),1,
+                         m_f->m_exp[processFields[i]]->UpdateCoeffs(),1);
+        }
+        else
+        {
+            C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+                                   m_f->m_exp[processFields[i]]->UpdatePhys());
+            C0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
+                                   m_f->m_exp[processFields[i]]->UpdateCoeffs());
+        }
     }
 
     // reset FieldDef in case of serial input and parallel output
@@ -152,10 +179,24 @@ void ProcessC0Projection::Process(po::variables_map &vm)
             m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
         }
     }
-
+    
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
-}
 
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "C0 Projection CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
+    }
+}
 }
 }

@@ -87,8 +87,8 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
 
     map<PtsInfo,int>  ptsInfo = NullPtsInfoMap;
 
-    std::string ptinfo = points->Attribute("PTSINFO");
-    if(boost::iequals(ptinfo,"EquiSpaced"))
+    const char *ptinfo = points->Attribute("PTSINFO");
+    if(ptinfo&&boost::iequals(ptinfo,"EquiSpaced"))
     {
         ptsInfo[eIsEquiSpacedData] = 1;
     }

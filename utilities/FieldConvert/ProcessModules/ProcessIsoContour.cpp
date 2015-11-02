@@ -68,6 +68,7 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
 
     m_config["fieldid"]            = ConfigOption(false, "NotSet",
                                         "field id to extract");
+
     m_config["fieldvalue"]         = ConfigOption(false, "NotSet",
                                         "field value to extract");
 
@@ -78,19 +79,22 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
     m_config["smooth"]             = ConfigOption(true, "NotSet",
                                         "Smooth isocontour (implies global "
                                         "condense)");
+
     m_config["smoothiter"]         = ConfigOption(false, "100",
                                         "Number of smoothing cycle, default = "
                                         "100");
+
     m_config["smoothposdiffusion"] = ConfigOption(false,"0.5",
                                         "Postive diffusion coefficient "
                                         "(0 < lambda < 1), default = 0.5");
+
     m_config["smoothnegdiffusion"] = ConfigOption(false,"0.495",
                                         "Negative diffusion coefficient "
                                         "(0 < mu < 1), default = 0.495");
 
     m_config["removesmallcontour"] = ConfigOption(false,"0",
                                         "Remove contours with less than specified number of triangles."
-                                                    "Only valid with GlobalCondense or Smooth options.");
+                                         "Only valid with GlobalCondense or Smooth options.");
 
 
 }
@@ -523,6 +527,93 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
     }
     m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
+
+#if 0 
+// reset m_fieldPts with values from iso;
+void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &iso)
+{
+    int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
+
+    ASSERTL0(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTriBlock,
+             "Assume input is from ePtsTriBlock");
+
+    Array<OneD, Array<OneD, NekDouble> > newfields(nfields);
+
+#if 1
+    IsoSharedPtr iso;
+    iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
+
+    vector<Array<OneD, int> > ptsConn;
+
+    newfields = m_f->m_fieldPts->GetPts(); 
+    
+    ptsConn = m_f->m_fieldPts->GetConnectivity(ptsConn);
+    
+
+#else 
+
+    // count up number of points
+    int npts = 0;
+    for(int i =0; i < iso.size(); ++i)
+    {
+        npts += iso[i]->get_nvert();
+    }
+
+    // set up coordinate in new field
+    newfields[0] = Array<OneD, NekDouble>(npts);
+    newfields[1] = Array<OneD, NekDouble>(npts);
+    newfields[2] = Array<OneD, NekDouble>(npts);
+
+    int cnt = 0;
+    for(int i =0; i < iso.size(); ++i)
+    {
+        for(int j = 0; j < iso[i]->get_nvert(); ++j,++cnt)
+        {
+            newfields[0][cnt] = iso[i]->get_x(j);
+            newfields[1][cnt] = iso[i]->get_y(j);
+            newfields[2][cnt] = iso[i]->get_z(j);
+        }
+    }
+
+    // set up fields
+    for(int f = 0; f < nfields-3; ++f)
+    {
+        newfields[f+3] = Array<OneD, NekDouble>(npts);
+
+        cnt = 0;
+        for(int i =0; i < iso.size(); ++i)
+        {
+            for(int j = 0; j < iso[i]->get_nvert(); ++j,++cnt)
+            {
+                newfields[f+3][cnt] = iso[i]->get_fields(f,j);
+            }
+        }
+    }
+
+    m_f->m_fieldPts->SetPts(newfields);
+
+    // set up connectivity data.
+    vector<Array<OneD, int> > ptsConn;
+    m_f->m_fieldPts->GetConnectivity(ptsConn);
+    cnt = 0;
+    ptsConn.clear();
+    for(int i =0; i < iso.size(); ++i)
+    {
+        int ntris = iso[i]->get_ntris();
+        Array<OneD, int> conn(ntris*3);
+
+        for(int j = 0; j < 3*ntris; ++j)
+        {
+            conn[j] = cnt + iso[i]->get_vid(j);
+        }
+        ptsConn.push_back(conn);
+        cnt += iso[i]->get_nvert();
+    }
+    m_f->m_fieldPts->SetConnectivity(ptsConn);
+#endif
+
+}
+#endif
 
 void Iso::condense(void)
 {

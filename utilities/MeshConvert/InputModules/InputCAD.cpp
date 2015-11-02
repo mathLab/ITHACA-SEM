@@ -126,7 +126,7 @@ void InputCAD::Process()
     ProcessEdges     ();
     ProcessFaces     ();
     ProcessElements  ();
-    //ProcessComposites();
+    ProcessComposites();
 
     m_surfacemesh->Report();
 
@@ -142,8 +142,6 @@ void InputCAD::Process()
     ProcessComposites();
 
     m_surfacemesh->Validate();
-
-    //m_surfacemesh->HOSurf();
 
     m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
@@ -164,94 +162,9 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    /*if(m_mesh->m_verbose)
-        cout << "Processing mesh elements" << endl;
+    m_surfacemesh->HOSurf();
 
-    map<int, MeshUtils::MeshNodeSharedPtr> Nodes;
-    map<int, MeshUtils::MeshEdgeSharedPtr> Edges;
-    map<int, MeshUtils::MeshTriSharedPtr> Tris;
-    map<int, MeshUtils::MeshTetSharedPtr> Tets;
-
-    m_tet->Get(Nodes,Edges,Tris,Tets);
-
-    map<int, MeshUtils::MeshNodeSharedPtr>::iterator nit;
-    map<int, NodeSharedPtr> allnodes;
-
-    //extract all nodes and make mesh convert nodes
-    for(nit = Nodes.begin(); nit != Nodes.end(); nit++)
-    {
-        Array<OneD, NekDouble> loc = nit->second->GetLoc();
-        NodeSharedPtr nn =
-                boost::shared_ptr<Node>(
-                            new Node(nit->second->GetId(),loc[0],
-                                     loc[1],loc[2]));
-        nn->m_mid = nit->second->GetId();
-        allnodes[nit->second->GetId()] = nn;
-    }
-
-    map<int, MeshUtils::MeshTetSharedPtr>::iterator tetit;
-    //extract all tets and make mesh convert tets
-    for(tetit = Tets.begin(); tetit != Tets.end(); tetit++)
-    {
-        Array<OneD, int> n = tetit->second->GetN();
-
-        vector<NodeSharedPtr> localnode;
-
-        for(int j = 0; j < 4; j++)
-        {
-            localnode.push_back(allnodes[n[j]]);
-        }
-
-
-        ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
-        vector<int> tags;
-        tags.push_back(0);
-        ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(LibUtilities::eTetrahedron,
-                                   conf,localnode,tags);
-        m_mesh->m_element[m_mesh->m_expDim].push_back(E);
-    }
-
-    map<int, MeshUtils::MeshTriSharedPtr>::iterator trit;
-    //extract all triagnles and make mesh covnert surfaces
-    for(trit = Tris.begin(); trit != Tris.end(); trit++)
-    {
-        Array<OneD, int> n = trit->second->GetN();
-
-        vector<NodeSharedPtr> localnode;
-        for(int j = 0; j < 3; j++)
-        {
-            localnode.push_back(allnodes[n[j]]);
-        }
-
-        Array<OneD, int> eg = trit->second->GetE();
-        for(int j = 0; j < 3; j++)
-        {
-            MeshUtils::MeshEdgeSharedPtr e;
-            e = Edges[eg[j]];
-            vector<int> hon = e->GetHONodes(n[j]);
-            for(int k = 0; k < hon.size(); k++)
-            {
-                localnode.push_back(allnodes[hon[k]]);
-            }
-        }
-
-        ElmtConfig conf(LibUtilities::eTriangle,m_order,false,false,false);
-
-        vector<int> tags;
-        tags.push_back(trit->second->Getcid());
-        ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(LibUtilities::eTriangle,
-                                   conf,localnode,tags);
-        E->SetTriID(trit->first);
-        m_mesh->m_element[m_mesh->m_expDim-1].push_back(E); //needs to be set to -1
-    }
-
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
+    /*
 
     //look over all surface elements
     //get the face between it and the tet
@@ -320,10 +233,10 @@ void InputCAD::Process()
         }
         //f->m_faceNodes.clear();
         f->m_curveType = LibUtilities::eNodalTriFekete;
-    }
+    }*/
 
     if(m_mesh->m_verbose)
-        cout << endl;*/
+        cout << endl;
 }
 
 }

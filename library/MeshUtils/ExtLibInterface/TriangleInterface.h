@@ -77,8 +77,7 @@ public:
      * @brief assign meshing paramters
      */
     void Assign(std::vector<std::vector<NodeSharedPtr> > &boundingloops,
-                std::vector<Array<OneD, NekDouble> > &centers,
-                std::vector<NodeSharedPtr> stiner, int i,
+                std::vector<Array<OneD, NekDouble> > &centers, int i,
                 NekDouble str = 1.0)
     {
         if(meshloaded)
@@ -87,7 +86,6 @@ public:
         }
         m_boundingloops = boundingloops;
         m_centers = centers;
-        m_stienerpoints = stiner;
         m_str = str;
         sid = i;
     }
@@ -114,7 +112,7 @@ public:
     /**
      * @brief extract mesh
      */
-    void Extract(std::vector<Array<OneD, int> > &Connec);
+    void Extract(std::vector<std::vector<NodeSharedPtr> > &Connec);
 
 private:
 
@@ -130,9 +128,7 @@ private:
     /// coordinates of the centers of the loops
     std::vector<Array<OneD, NekDouble> > m_centers;
     /// map from meshconvert id to triangle id
-    std::map<int, int> nodemap;
-    /// reverse map
-    std::map<int, int> nodemapr;
+    std::map<int, NodeSharedPtr> nodemap;
     /// id of the surface
     int sid;
     /// has mesh been run before

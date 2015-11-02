@@ -73,45 +73,38 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     for(int i = 0; i < m_boundingloops.size(); i++)
     {
-        for(int j = 0; j < m_boundingloops[i].size(); j++)
+        for(int j = 0; j < m_boundingloops[i].size(); j++, pointc++)
         {
-            nodemap[pointc] = m_boundingloops[i][j]->m_id;
-            nodemapr[m_boundingloops[i][j]->m_id] = pointc;
+            nodemap[pointc] = m_boundingloops[i][j];
 
             Array<OneD, NekDouble> uv = m_boundingloops[i][j]->GetCADSurf(sid);
             in.pointlist[pointc*2+0] = uv[0]*m_str;
             in.pointlist[pointc*2+1] = uv[1];
-
-            pointc++;
         }
     }
 
-    for(int i = 0; i < m_stienerpoints.size(); i++)
+    for(int i = 0; i < m_stienerpoints.size(); i++, pointc++)
     {
-        nodemap[pointc] = m_stienerpoints[i]->m_id;
-        nodemapr[m_stienerpoints[i]->m_id] = pointc;
+        nodemap[pointc] = m_stienerpoints[i];
 
         Array<OneD, NekDouble> uv = m_stienerpoints[i]->GetCADSurf(sid);
         in.pointlist[pointc*2+0] = uv[0]*m_str;
         in.pointlist[pointc*2+1] = uv[1];
-
-        pointc++;
     }
 
     in.numberofsegments = numSeg;
     in.segmentlist = (int *) malloc(in.numberofsegments*2*sizeof(int));
     pointc=0;
-    for(int i = 0; i < m_boundingloops.size(); i++)
+    for(int i = 0; i < m_boundingloops.size(); i++, pointc++)
     {
-        for(int j = 0; j < m_boundingloops[i].size()-1; j++)
+        int first = pointc;
+        for(int j = 0; j < m_boundingloops[i].size()-1; j++, pointc++)
         {
-            in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i][j]->m_id];
-            in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][j+1]->m_id];
-            pointc++;
+            in.segmentlist[pointc*2+0] = pointc;
+            in.segmentlist[pointc*2+1] = pointc+1;
         }
-        in.segmentlist[pointc*2+0] = nodemapr[m_boundingloops[i].back()->m_id];
-        in.segmentlist[pointc*2+1] = nodemapr[m_boundingloops[i][0]->m_id];
-        pointc++;
+        in.segmentlist[pointc*2+0] = pointc;
+        in.segmentlist[pointc*2+1] = first;
     }
 
     in.numberofregions = 0;
@@ -142,7 +135,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     }
     else if(Quiet && !Quality)
     {
-        triangulate("pzenQYY", &in, &out,  NULL);
+        triangulate("pzenYYQ", &in, &out,  NULL);
     }
     else if(!Quiet && Quality)
     {
@@ -151,11 +144,6 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     else if(!Quiet && !Quality)
     {
         triangulate("pzenYY", &in, &out,  NULL);
-    }
-
-    for(int i = 0; i < out.numberofpoints; i++)
-    {
-        out.pointlist[i*2+0] = out.pointlist[i*2+0]/m_str;
     }
 
     //verify the mesh a bit
@@ -167,12 +155,12 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
 }
 
-void TriangleInterface::Extract(std::vector<Array<OneD, int> > &Connec)
+void TriangleInterface::Extract(std::vector<std::vector<NodeSharedPtr> > &Connec)
 {
     Connec.clear();
     for(int i = 0; i < out.numberoftriangles; i++)
     {
-        Array<OneD, int> tri(3);
+        vector<NodeSharedPtr> tri(3);
         tri[0] = nodemap[out.trianglelist[i*3+0]];
         tri[1] = nodemap[out.trianglelist[i*3+1]];
         tri[2] = nodemap[out.trianglelist[i*3+2]];

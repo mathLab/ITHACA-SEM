@@ -111,6 +111,13 @@ void OutputModule::OpenStream()
 void Module::ProcessVertices()
 {
     vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
+    for (int i = 0; i < elmt.size(); ++i)
+    {
+        for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
+        {
+            elmt[i]->GetVertex(j)->m_elCount = 0;
+        }
+    }
 
     m_mesh->m_vertexSet.clear();
 
@@ -120,6 +127,9 @@ void Module::ProcessVertices()
         {
             pair<NodeSet::iterator,bool> testIns =
                 m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
+
+            //this vertex is connected to an element, count it.
+            (*(testIns.first))->m_elCount++;
 
             if (testIns.second)
             {
@@ -194,18 +204,9 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-                    //bool makelink = true;
-                    //for(int k = 0; k < (*(testIns.first))->m_elLink.size(); k++)
-                    //{
-                    //    if((*(testIns.first))->m_elLink[k].first == elmt[i])
-                    //        makelink = false;
-                    //}
-                    //if(makelink)
-                    //{
-                        // Update edge to element map.
-                        (*(testIns.first))->m_elLink.push_back(
-                            pair<ElementSharedPtr,int>(elmt[i],j));
-                    //}
+                    // Update edge to element map.
+                    e2->m_elLink.push_back(
+                        pair<ElementSharedPtr,int>(elmt[i],j));
                 }
             }
         }

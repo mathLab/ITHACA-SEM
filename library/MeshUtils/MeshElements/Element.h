@@ -511,8 +511,6 @@ namespace MeshUtils
         }
     };
 
-    bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2);
-
 }
 }
 

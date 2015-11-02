@@ -43,6 +43,8 @@
 
 #include <MeshUtils/CADSystem/OpenCascade.h>
 
+#include <MeshUtils/MeshElements/MeshElements.h>
+
 namespace Nektar
 {
 namespace MeshUtils
@@ -72,6 +74,10 @@ public:
 
         m_ID = i;
         m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
+
+        m_node = boost::shared_ptr<Node>(
+                new Node(0, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
+        degen = false;
     }
 
     Array<OneD, NekDouble> GetLoc()
@@ -83,11 +89,41 @@ public:
 
     int GetId(){return m_ID;}
 
+    NodeSharedPtr GetNode(){return m_node;}
+
+    void SetDegen(int s, NekDouble u, NekDouble v)
+    {
+        degen = true;
+        degensurf = s;
+        Array<OneD, NekDouble> uv(2);
+        uv[0] = u;
+        uv[1] = v;
+        m_node->SetCADSurf(s,uv);
+    }
+
+    int IsDegen()
+    {
+        if(degen)
+        {
+            return degensurf;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
 private:
     /// ID of the vert.
     int m_ID;
     /// OpenCascade object of the curve.
     gp_Pnt m_occVert;
+    /// mesh convert object of vert
+    NodeSharedPtr m_node;
+    ///degen marker
+    bool degen;
+    //degen surface
+    int degensurf;
 };
 
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;

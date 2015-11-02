@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <limits>
 
 using namespace std;
 namespace Nektar
@@ -146,104 +147,109 @@ void SurfaceMesh::Find1DBounds(NekDouble &a, NekDouble &b,
                                   Array<OneD, NekDouble> df,
                                   Array<OneD, NekDouble> bounds)
 {
-    bool aset = false; bool bset = false;
-    NekDouble K, L, inter;
+    a = -1.0*numeric_limits<double>::max();
+    b = numeric_limits<double>::max();
+    bool aset = false, bset = false;
+    NekDouble K;
     //want a to be negative, against the gradient, but properly bounded!!
 
     //check edges of bounding box one by one for intersect, because paralell
     //lines some cases can be ingnored
     //line 1 left edge;
-    if(!(fabs(df[0]) < 1E-30)) //wouldnt exist on this edge
+
+    if(!(fabs(df[0]) < 1E-15)) //wouldnt exist on this edge
     {
         K = (bounds[0] - uvi[0]) / df[0];
-        L = df[1] * K + uvi[1] - bounds[2];
-        inter = bounds[2] + L;
-        if(!(inter < bounds[2] || inter > bounds[3]))
+        if(K<0)
         {
-            //hit
-            if(K < 0)
+            //talking about a
+            if(fabs(K) < fabs(a))
             {
-                ASSERTL0(!aset, "parameter previously set");
                 a = K;
                 aset = true;
             }
-            else
+        }
+        else
+        {
+            if(fabs(K) < fabs(b))
             {
-                ASSERTL0(!bset, "parameter previously set")
                 b = K;
                 bset = true;
             }
         }
-    }
-    //line 2 right edge;
-    if(!(fabs(df[0]) < 1E-30)) //wouldnt exist on this edge
-    {
+
+        //line 2 right edge;
         K = (bounds[1] - uvi[0]) / df[0];
-        L = df[1] * K + uvi[1] - bounds[2];
-        inter = bounds[2] + L;
-        if(!(inter < bounds[2] || inter > bounds[3]))
+        if(K<0)
         {
-            //hit
-            if(K < 0)
+            //talking about a
+            if(fabs(K) < fabs(a))
             {
-                ASSERTL0(!aset, "parameter previously set");
                 a = K;
                 aset = true;
             }
-            else
+        }
+        else
+        {
+            if(fabs(K) < fabs(b))
             {
-                ASSERTL0(!bset, "parameter previously set")
                 b = K;
                 bset = true;
             }
         }
+
     }
+
+
     //line 3 bottom edge;
-    if(!(fabs(df[1]) < 1E-30)) //wouldnt exist on this edge
+    if(!(fabs(df[1]) < 1E-15)) //wouldnt exist on this edge
     {
         K = (bounds[2] - uvi[1]) / df[1];
-        L = df[0] * K + uvi[0] - bounds[0];
-        inter = bounds[0] + L;
-        if(!(inter < bounds[0] || inter > bounds[1]))
+        if(K<0)
         {
-            //hit
-            if(K < 0)
+            //talking about a
+            if(fabs(K) < fabs(a))
             {
-                ASSERTL0(!aset, "parameter previously set");
                 a = K;
                 aset = true;
             }
-            else
+        }
+        else
+        {
+            if(fabs(K) < fabs(b))
             {
-                ASSERTL0(!bset, "parameter previously set")
                 b = K;
                 bset = true;
             }
         }
-    }
-    //line 4 top edge;
-    if(!(fabs(df[1]) < 1E-30)) //wouldnt exist on this edge
-    {
+
+        //line 4 top edge;
         K = (bounds[3] - uvi[1]) / df[1];
-        L = df[0] * K + uvi[0] - bounds[0];
-        inter = bounds[0] + L;
-        if(!(inter < bounds[0] || inter > bounds[1]))
+        if(K<0)
         {
-            //hit
-            if(K < 0)
+            //talking about a
+            if(fabs(K) < fabs(a))
             {
-                ASSERTL0(!aset, "parameter previously set");
                 a = K;
                 aset = true;
             }
-            else
+        }
+        else
+        {
+            if(fabs(K) < fabs(b))
             {
-                ASSERTL0(!bset, "parameter previously set")
                 b = K;
                 bset = true;
             }
         }
     }
+
+    if(!(bset && aset))
+    {
+        cout << endl;
+        cout << df[0] << " " << df[1] << endl;
+    }
+    ASSERTL0(bset && aset, "failed to find bounds");
 }
 
 }

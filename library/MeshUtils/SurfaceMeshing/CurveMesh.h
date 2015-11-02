@@ -105,6 +105,8 @@ class CurveMesh
                        std::map<int, MeshNodeSharedPtr> &Nodes,
                        std::map<int, MeshEdgeSharedPtr> &Edges);
 
+        NekDouble GetLength(){return m_curvelength;}
+
     private:
 
         /**

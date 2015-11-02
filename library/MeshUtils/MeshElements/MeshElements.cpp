@@ -150,18 +150,6 @@ namespace Nektar
             return true;
         }
 
-        bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2)
-        {
-            if(e1->GetVertexCount() != e2->GetVertexCount())
-                return false;
-
-
-            if(e1->GetId() != e2->GetId())
-                return false;
-
-            return true;
-        }
-
         /**
          * @brief Test equality of two conditions - i.e. compare types, fields
          * and values but _not_ composite ids.

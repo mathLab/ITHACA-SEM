@@ -137,8 +137,8 @@ namespace MeshUtils
         /// Element(s) which are linked to this edge.
         vector<pair<ElementSharedPtr, int> > m_elLink;
         /// id of cad curve which edge lies on
-        unsigned int CADCurveID;
-        unsigned int CADSurfID;
+        int CADCurveID;
+        int CADSurfID;
 
     private:
         SpatialDomains::SegGeomSharedPtr m_geom;

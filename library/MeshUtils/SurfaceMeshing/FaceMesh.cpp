@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <limits>
 #include <MeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <MeshUtils/ExtLibInterface/TriangleInterface.h>
 
@@ -80,20 +81,11 @@ void FaceMesh::Mesh()
         centers.push_back(m_edgeloops[i].center);
     }
 
-    pplanemesh->Assign(orderedLoops, centers, m_stienerpoints, m_id, asr/pasr);
+    pplanemesh->Assign(orderedLoops, centers, m_id, asr/pasr);
 
     pplanemesh->Mesh();
 
-    vector<Array<OneD, int> > intconnec;
-    pplanemesh->Extract(intconnec);
-    for(int i = 0; i < intconnec.size(); i++)
-    {
-        vector<NodeSharedPtr> tri(3);
-        tri[0] = m_mesh->m_meshnode[intconnec[i][0]];
-        tri[1] = m_mesh->m_meshnode[intconnec[i][1]];
-        tri[2] = m_mesh->m_meshnode[intconnec[i][2]];
-        m_connec.push_back(tri);
-    }
+    pplanemesh->Extract(m_connec);
 
     bool repeat = true;
     int meshcounter = 1;
@@ -108,17 +100,25 @@ void FaceMesh::Mesh()
         m_connec.clear();
         pplanemesh->AssignStiener(m_stienerpoints);
         pplanemesh->Mesh();
-        pplanemesh->Extract(intconnec);
-        for(int i = 0; i < intconnec.size(); i++)
-        {
-            vector<NodeSharedPtr> tri(3);
-            for(int j = 0; j < 3; j++)
-            {
-                tri[j] = m_mesh->m_meshnode[intconnec[i][j]];
-            }
-            m_connec.push_back(tri);
-        }
+        pplanemesh->Extract(m_connec);
         meshcounter++;
+    }
+
+    NekDouble area = numeric_limits<double>::max();
+    //idiot check the elements
+    for(int i = 0; i < m_connec.size(); i++)
+    {
+        Array<OneD, NekDouble> a = m_connec[i][0]->GetCADSurf(m_id);
+        Array<OneD, NekDouble> b = m_connec[i][1]->GetCADSurf(m_id);
+        Array<OneD, NekDouble> c = m_connec[i][2]->GetCADSurf(m_id);
+
+        area = min(area, 0.5*(-b[0]*a[1] + c[0]*a[1] + a[0]*b[1] - c[0]*b[1] - a[0]*c[1] + b[0]*c[1]));
+
+        if(area <= 0)
+        {
+            cout << area << endl;
+            exit(-1);
+        }
     }
 
     //make new elements and add to list from list of nodes and connectivity from triangle
@@ -270,8 +270,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> np = m_cadsurf->P(uv);
     NekDouble npDelta = m_octree->Query(np);
 
-    NodeSharedPtr n = boost::shared_ptr<Node>(
-                        new Node(m_mesh->m_meshnode.size(),np[0],np[1],np[2]));
+    NodeSharedPtr n = boost::shared_ptr<Node>(new Node(0,np[0],np[1],np[2]));
 
     bool add = true;
 
@@ -306,7 +305,6 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
     if(add)
     {
         n->SetCADSurf(m_id,uv);
-        m_mesh->m_meshnode.push_back(n);
         m_stienerpoints.push_back(n);
     }
 }

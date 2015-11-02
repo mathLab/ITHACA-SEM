@@ -61,9 +61,9 @@ namespace MeshUtils
         Node(int pId, NekDouble pX, NekDouble pY, NekDouble pZ)
             : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
         /// Copy an existing node.
-        Node(const Node& pSrc)
-            : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y),
-              m_z(pSrc.m_z), m_geom() {}
+        //Node(const Node& pSrc)
+        //    : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y),
+        //      m_z(pSrc.m_z), m_geom() {}
         Node() : m_id(0), m_x(0.0), m_y(0.0), m_z(0.0), m_geom() {}
         ~Node() {}
 
@@ -212,36 +212,27 @@ namespace MeshUtils
             return list;
         }
 
-        NekDouble Distance(NodeSharedPtr p)
+        NekDouble Distance(NodeSharedPtr &p)
         {
             return sqrt((m_x-p->m_x)*(m_x-p->m_x)+(m_y-p->m_y)*(m_y-p->m_y)
                         +(m_z-p->m_z)*(m_z-p->m_z));
         }
 
-        NekDouble Angle(NodeSharedPtr a, NodeSharedPtr b)
+        NekDouble Angle(NodeSharedPtr &a, NodeSharedPtr &b)
         {
-            Array<OneD,NekDouble> la = a->GetLoc();
-            Array<OneD,NekDouble> lb = b->GetLoc();
             Array<OneD,NekDouble> va(3),vb(3);
-            va[0] = la[0] - m_x;
-            va[1] = la[1] - m_y;
-            va[2] = la[2] - m_z;
-            vb[0] = lb[0] - m_x;
-            vb[1] = lb[1] - m_y;
-            vb[2] = lb[2] - m_z;
+            va[0] = a->m_x - m_x;
+            va[1] = a->m_y - m_y;
+            va[2] = a->m_z - m_z;
+            vb[0] = b->m_x - m_x;
+            vb[1] = b->m_y - m_y;
+            vb[2] = b->m_z - m_z;
 
             NekDouble ca = va[0]*vb[0] + va[1]*vb[1] + va[2]*vb[2];
             ca /= sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
             ca /= sqrt(vb[0]*vb[0] + vb[1]*vb[1] + vb[2]*vb[2]);
 
-            if(ca < 0)
-            {
-                return 3.142 + acos(ca);
-            }
-            else
-            {
-                return acos(ca);
-            }
+            return acos(ca);
         }
 
         void Move(Array<OneD, NekDouble> l, int s, Array<OneD, NekDouble> uv)

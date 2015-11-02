@@ -87,8 +87,6 @@ namespace MeshUtils
         unsigned int                    m_spaceDim;
         /// a order tag to aid output, a bit of a hack
         unsigned int                    m_nummode;
-        ///list of nodes used in meshing routines before its a full mesh
-        std::vector<NodeSharedPtr>      m_meshnode;
         /// List of mesh nodes.
         std::vector<NodeSharedPtr>      m_node;
         /// Set of element vertices.

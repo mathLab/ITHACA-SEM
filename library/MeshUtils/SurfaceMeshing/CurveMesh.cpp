@@ -106,29 +106,63 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
+    vector<CADSurfSharedPtr> s = m_cadcurve->GetAdjSurf();
+    ASSERTL0(s.size() == 2, "invalid curve");
 
-    int id = verts[0]->GetId() - 1;
+    NodeSharedPtr n = verts[0]->GetNode();
     t = m_bounds[0];
-    m_mesh->m_meshnode[id]->SetCADCurve(m_id,t);
-    m_meshpoints.push_back(m_mesh->m_meshnode[id]);
+    n->SetCADCurve(m_id,t);
+    loc = n->GetLoc();
+    for(int j = 0; j < 2; j++)
+    {
+        if(verts[0]->IsDegen() == s[j]->GetId()) //if the degen has been set for this node the node already knows its corrected location
+            continue;
+
+        Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+        n->SetCADSurf(s[j]->GetId(), uv);
+    }
+    m_meshpoints.push_back(n);
 
     for(int i = 1; i < meshsvalue.size()-1; i++)
     {
         t = m_cadcurve->tAtArcLength(meshsvalue[i]);
         loc = m_cadcurve->P(t);
         NodeSharedPtr n2 = boost::shared_ptr<Node>(
-                          new Node(m_mesh->m_meshnode.size(),loc[0],loc[1],loc[2]));
+                                            new Node(0,loc[0],loc[1],loc[2]));
         n2->SetCADCurve(m_id,t);
-        m_mesh->m_meshnode.push_back(n2);
+        for(int j = 0; j < 2; j++)
+        {
+            Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+            n2->SetCADSurf(s[j]->GetId(), uv);
+        }
         m_meshpoints.push_back(n2);
     }
 
-    id = verts[1]->GetId() - 1;
+    n = verts[1]->GetNode();
     t = m_bounds[1];
-    m_mesh->m_meshnode[id]->SetCADCurve(m_id,t);
-    m_meshpoints.push_back(m_mesh->m_meshnode[id]);
+    n->SetCADCurve(m_id,t);
+    loc = n->GetLoc();
+    for(int j = 0; j < 2; j++)
+    {
+        if(verts[1]->IsDegen() == s[j]->GetId()) //if the degen has been set for this node the node already knows its corrected location
+            continue;
+
+        Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+        n->SetCADSurf(s[j]->GetId(), uv);
+    }
+    m_meshpoints.push_back(n);
 
     ASSERTL0(Ne+1 == m_meshpoints.size(),"incorrect number of points in curve mesh");
+
+    for(int i = 0; i < m_meshpoints.size(); i++)
+    {
+        Array<OneD, NekDouble> loc = m_meshpoints[i]->GetLoc();
+        for(int j = 0; j < 2; j++)
+        {
+            Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+            m_meshpoints[i]->SetCADSurf(s[j]->GetId(), uv);
+        }
+    }
 
 
 }

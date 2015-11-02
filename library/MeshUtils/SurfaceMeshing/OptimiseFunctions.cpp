@@ -79,7 +79,7 @@ Array<OneD, NekDouble> SurfaceMesh::EdgeGrad(NekDouble ux, NekDouble vx,
     NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
     df[0] = df[0]/dfmag; df[1] = df[1]/dfmag;
 
-    if(dfmag < 1E-30)
+    if(dfmag < 1E-15)
     {
         valid = false;
     }

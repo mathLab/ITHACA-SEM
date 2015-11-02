@@ -1472,7 +1472,7 @@ namespace Nektar
                             
                         }
                         
-                        ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
+                        ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list (edgeid = " + boost::lexical_cast<string>(edgeid));
 
                         m_curvedEdges[edgeid] = curve;
                         

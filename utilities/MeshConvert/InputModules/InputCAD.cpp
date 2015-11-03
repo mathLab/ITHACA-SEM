@@ -134,6 +134,8 @@ void InputCAD::Process()
 
     m_surfacemesh->Optimise();
 
+    m_surfacemesh->HOAwareness();
+
     ClearElementLinks(); //mesh needs reprocessing to clean element and edge lists, easiest way to do it
     ProcessVertices  ();
     ProcessEdges     ();

@@ -91,6 +91,8 @@ class SurfaceMesh
 
         void Report();
 
+        void HOAwareness();
+
     private:
 
         /**

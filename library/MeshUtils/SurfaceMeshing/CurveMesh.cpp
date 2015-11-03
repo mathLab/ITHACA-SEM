@@ -189,7 +189,6 @@ void CurveMesh::Mesh()
 
             if(split)
             {
-                cout << "split" << endl;
                 ct++;
                 NekDouble t1, t2;
                 t1 = m_meshpoints[i]->GetCADCurve(m_id);

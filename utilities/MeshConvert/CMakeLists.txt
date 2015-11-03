@@ -15,6 +15,7 @@ SET(MeshConvertHeaders
     ProcessModules/ProcessExtractSurf.h
     ProcessModules/ProcessExtractTetPrismInterface.h
     ProcessModules/ProcessJac.h
+    ProcessModules/ProcessLinear.h
     ProcessModules/ProcessPerAlign.h
     ProcessModules/ProcessScalar.h
     ProcessModules/ProcessSpherigon.h
@@ -39,6 +40,7 @@ SET(MeshConvertSources
     ProcessModules/ProcessExtractSurf.cpp
     ProcessModules/ProcessExtractTetPrismInterface.cpp
     ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp
     ProcessModules/ProcessScalar.cpp
     ProcessModules/ProcessSpherigon.cpp
@@ -79,10 +81,12 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-
+# Nektar++
+ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubeHexLinearise)
 ADD_NEKTAR_TEST        (Gmsh/CubePrism)
 ADD_NEKTAR_TEST        (Gmsh/CubeTet)
 IF (WIN32)

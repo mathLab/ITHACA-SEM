@@ -477,7 +477,7 @@ void SurfaceMesh::HOSurf()
 
         bool repeatoverallnodes = true;
 
-        NekDouble tol = 1E-10;
+        NekDouble tol = 1E-12;
 
         while(repeatoverallnodes)
         {

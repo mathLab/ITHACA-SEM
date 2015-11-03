@@ -107,54 +107,64 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 {
     vector<IsoSharedPtr> iso;
 
-    // extract all fields to equi-spaced
-    SetupEquiSpacedField();
-
-    int     fieldid;
-    NekDouble value;
-
-    if(m_config["fieldstr"].m_beenSet) //generate field of interest
+    if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
     {
-        fieldid = m_f->m_fieldPts->GetNFields();
-
-        Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
-
-        // evaluate new function
-        LibUtilities::AnalyticExpressionEvaluator strEval;
-        string varstr = "x y z";
-        vector<Array<OneD, const NekDouble> > interpfields;
-
-        for(int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
-        {
-            interpfields.push_back(m_f->m_fieldPts->GetPts(i));
-        }
-        for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
-        {
-            varstr += " " + m_f->m_fieldPts->GetFieldName(i);
-            interpfields.push_back(m_f->m_fieldPts->GetPts(i+3));
-        }
-
-        int ExprId  = -1;
-        std::string str = m_config["fieldstr"].as<string>();
-        ExprId = strEval.DefineFunction(varstr.c_str(), str);
-
-        strEval.Evaluate(ExprId, interpfields, pts);
-
-        // set up field name if provided otherwise called "isocon" from default
-        string fieldName = m_config["fieldname"].as<string>();
-
-        m_f->m_fieldPts->AddField(pts, fieldName);
+        SetupIsoFromFieldPts(iso);
     }
-    else
+    else // extract isocontour from field 
     {
-        ASSERTL0(m_config["fieldid"].as<string>() != "NotSet", "fieldid must be specified");
-        fieldid = m_config["fieldid"].as<int>();
+        // extract all fields to equi-spaced
+        SetupEquiSpacedField();
+        
+        int     fieldid;
+        NekDouble value;
+        
+        if(m_config["fieldstr"].m_beenSet) //generate field of interest
+        {
+            fieldid = m_f->m_fieldPts->GetNFields();
+            
+            Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
+            
+            // evaluate new function
+            LibUtilities::AnalyticExpressionEvaluator strEval;
+            string varstr = "x y z";
+            vector<Array<OneD, const NekDouble> > interpfields;
+            
+            for(int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
+            {
+                interpfields.push_back(m_f->m_fieldPts->GetPts(i));
+            }
+            for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
+            {
+                varstr += " " + m_f->m_fieldPts->GetFieldName(i);
+                interpfields.push_back(m_f->m_fieldPts->GetPts(i+3));
+            }
+            
+            int ExprId  = -1;
+            std::string str = m_config["fieldstr"].as<string>();
+            ExprId = strEval.DefineFunction(varstr.c_str(), str);
+            
+            strEval.Evaluate(ExprId, interpfields, pts);
+            
+            // set up field name if provided otherwise called "isocon" from default
+            string fieldName = m_config["fieldname"].as<string>();
+
+            m_f->m_fieldPts->AddField(pts, fieldName);
+        }
+        else
+        {
+            ASSERTL0(m_config["fieldid"].as<string>() != "NotSet", "fieldid must be specified");
+            fieldid = m_config["fieldid"].as<int>();
+        }
+        
+        ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
+        value   = m_config["fieldvalue"].as<NekDouble>();
+        
+        iso = ExtractContour(fieldid,value);
     }
 
-    ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
-    value   = m_config["fieldvalue"].as<NekDouble>();
 
-    iso = ExtractContour(fieldid,value);
+    // Process isocontour
     bool smoothing      = m_config["smooth"].m_beenSet;
     bool globalcondense = m_config["globalcondense"].m_beenSet;
     if(smoothing||globalcondense)
@@ -528,92 +538,49 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
     m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
 
-#if 0 
 // reset m_fieldPts with values from iso;
-void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &iso)
+void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
 {
-    int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
-
     ASSERTL0(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTriBlock,
              "Assume input is from ePtsTriBlock");
 
-    Array<OneD, Array<OneD, NekDouble> > newfields(nfields);
-
-#if 1
-    IsoSharedPtr iso;
-    iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
-
-    vector<Array<OneD, int> > ptsConn;
-
-    newfields = m_f->m_fieldPts->GetPts(); 
-    
-    ptsConn = m_f->m_fieldPts->GetConnectivity(ptsConn);
-    
-
-#else 
-
-    // count up number of points
-    int npts = 0;
-    for(int i =0; i < iso.size(); ++i)
-    {
-        npts += iso[i]->get_nvert();
-    }
-
-    // set up coordinate in new field
-    newfields[0] = Array<OneD, NekDouble>(npts);
-    newfields[1] = Array<OneD, NekDouble>(npts);
-    newfields[2] = Array<OneD, NekDouble>(npts);
-
-    int cnt = 0;
-    for(int i =0; i < iso.size(); ++i)
-    {
-        for(int j = 0; j < iso[i]->get_nvert(); ++j,++cnt)
-        {
-            newfields[0][cnt] = iso[i]->get_x(j);
-            newfields[1][cnt] = iso[i]->get_y(j);
-            newfields[2][cnt] = iso[i]->get_z(j);
-        }
-    }
-
-    // set up fields
-    for(int f = 0; f < nfields-3; ++f)
-    {
-        newfields[f+3] = Array<OneD, NekDouble>(npts);
-
-        cnt = 0;
-        for(int i =0; i < iso.size(); ++i)
-        {
-            for(int j = 0; j < iso[i]->get_nvert(); ++j,++cnt)
-            {
-                newfields[f+3][cnt] = iso[i]->get_fields(f,j);
-            }
-        }
-    }
-
-    m_f->m_fieldPts->SetPts(newfields);
-
-    // set up connectivity data.
+    // get information from PtsField
+    int dim     = m_f->m_fieldPts->GetDim();
+    int nfields = m_f->m_fieldPts->GetNFields() + dim;
+    Array<OneD, Array<OneD, NekDouble> > fieldpts;
+    m_f->m_fieldPts->GetPts(fieldpts); 
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
-    cnt = 0;
-    ptsConn.clear();
-    for(int i =0; i < iso.size(); ++i)
-    {
-        int ntris = iso[i]->get_ntris();
-        Array<OneD, int> conn(ntris*3);
 
-        for(int j = 0; j < 3*ntris; ++j)
-        {
-            conn[j] = cnt + iso[i]->get_vid(j);
-        }
-        ptsConn.push_back(conn);
-        cnt += iso[i]->get_nvert();
+    // set up single iso with all the information from PtsField
+    IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-dim);    
+    
+    int nelmt = ptsConn[0].num_elements()/3;
+    iso->set_ntris(nelmt);
+    iso->resize_vid(3*nelmt);
+
+    int nvert = fieldpts[0].num_elements();
+    iso->set_nvert(nvert);
+    iso->resize_fields(nvert);
+    
+    // fill in points values (including coordinates)
+    for(int i = 0; i < nvert; ++i)
+    {
+        iso->set_fields(i,fieldpts,i);
     }
-    m_f->m_fieldPts->SetConnectivity(ptsConn);
-#endif
+
+    // fill in connectivity values. 
+    for(int i = 0; i < nelmt; ++i)
+    {
+        for(int j = 0; j < 3; ++j)
+        {
+            iso->set_vid(3*i+j,ptsConn[0][3*i+j]);
+        }
+    }
+
+    isovec.push_back(iso);
 
 }
-#endif
 
 void Iso::condense(void)
 {

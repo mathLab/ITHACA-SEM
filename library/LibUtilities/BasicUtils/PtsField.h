@@ -221,7 +221,7 @@ class PtsField
         int                                     m_dim;
         /// Names of the field variables
         vector<std::string>                     m_fieldNames;
-        /// Point data. For a n-dimensional field, the first n fields are the
+        /// Point data. For a n-dimensional field, the first m_dim fields are the
         /// points spatial coordinates. Structure: m_pts[fieldIdx][ptIdx]
         Array<OneD, Array<OneD, NekDouble> >    m_pts;
         /// Number of points per edge. Empty if the point data has no

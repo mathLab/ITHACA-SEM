@@ -91,6 +91,7 @@ class Iso
         {
             return m_fields[i][j];
         }
+        
         void set_x(int loc, NekDouble val)
         {
             m_x[loc] = val;
@@ -140,9 +141,9 @@ class Iso
         {
             if(size > m_x.size()) // add 100 element to vectors
             {
-                m_x.resize(size+1000);
-                m_y.resize(size+1000);
-                m_z.resize(size+1000);;
+                m_x.resize(size+100);
+                m_y.resize(size+100);
+                m_z.resize(size+100);;
                 for(int i = 0; i < m_fields.size(); ++i)
                 {
                     m_fields[i].resize(size+100);
@@ -242,6 +243,7 @@ class ProcessIsoContour : public ProcessEquiSpacedOutput
     protected:
         ProcessIsoContour(){};
         void ResetFieldPts(vector<IsoSharedPtr> &iso);
+        void SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec);
 
     private:
 

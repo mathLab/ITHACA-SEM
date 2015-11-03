@@ -49,8 +49,62 @@ namespace MeshUtils
     public:
         Composite() : m_reorder(true) {}
 
-        /// Generate the list of IDs of elements within this composite.
-        std::string GetXmlString(bool doSort=true);
+        /**
+         * @brief Generate a Nektar++ string describing the composite.
+         *
+         * The list of composites may include individual element IDs or ranges
+         * of element IDs.
+         */
+        std::string GetXmlString(bool doSort=true)
+        {
+
+#if 0 // turn this option off since causes problem with InputNekpp.cpp
+            if (doSort)
+            {
+                element_id_less_than sortOperator;
+                sort(m_items.begin(), m_items.end(), sortOperator);
+            }
+#endif
+
+            stringstream st;
+            vector<ElementSharedPtr>::iterator it;
+            bool range = false;
+            int vId = m_items[0]->GetId();
+            int prevId = vId;
+
+            st << " " << m_tag << "[" << vId;
+
+            for (it = m_items.begin()+1; it != m_items.end(); ++it){
+                // store previous element ID and get current one
+                prevId = vId;
+                vId = (*it)->GetId();
+
+                // continue an already started range
+                if (prevId > -1 && vId == prevId + 1)
+                {
+                    range = true;
+                    // if this is the last element, it's the end of a range, so write
+                    if (*it == m_items.back())
+                    {
+                        st << "-" << vId;
+                    }
+                    continue;
+                }
+
+                // terminate a range, if present
+                if (range)
+                {
+                    st << "-" << prevId;
+                    range = false;
+                }
+
+                // write what will be either a single entry or start of new range
+                st << "," << vId;
+            }
+            // terminate
+            st << "] ";
+            return st.str();
+        }
 
         /// ID of composite.
         unsigned int m_id;

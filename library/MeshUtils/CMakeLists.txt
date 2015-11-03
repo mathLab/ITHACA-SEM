@@ -1,5 +1,15 @@
 SET(MESHUTILS_SOURCES
-    MeshElements/MeshElements.cpp
+    MeshElements/Mesh.cpp
+    MeshElements/Element.cpp
+    MeshElements/BooleanOperators.cpp
+    MeshElements/Point.cpp
+    MeshElements/Line.cpp
+    MeshElements/Triangle.cpp
+    MeshElements/Quadrilateral.cpp
+    MeshElements/Tetrahedron.cpp
+    MeshElements/Pyramid.cpp
+    MeshElements/Prism.cpp
+    MeshElements/Hexahedron.cpp
     )
 IF(NEKTAR_USE_MESH)
     SET(MESHUTILS_SOURCES ${MESHUTILS_SOURCES}

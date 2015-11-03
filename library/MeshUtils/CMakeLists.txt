@@ -37,7 +37,6 @@ SET(MESHUTILS_HEADERS
 IF(NEKTAR_USE_MESH)
     SET(MESHUTILS_HEADERS ${MESHUTILS_HEADERS}
         Octree/CurvaturePoint.hpp
-        MeshElem.hpp
         SurfaceMeshing/CurveMesh.h
         Octree/Octant.h
         Octree/Octree.h

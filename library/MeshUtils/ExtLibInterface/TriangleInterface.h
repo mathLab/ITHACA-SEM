@@ -50,7 +50,6 @@ extern "C"{
 }
 
 #include <MeshUtils/MeshElements/MeshElements.h>
-#include <MeshUtils/MeshElem.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 

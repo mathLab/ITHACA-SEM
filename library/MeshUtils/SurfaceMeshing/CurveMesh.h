@@ -40,7 +40,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include <MeshUtils/MeshElements/MeshElements.h>
-#include <MeshUtils/MeshElem.hpp>
 #include <MeshUtils/CADSystem/CADVert.h>
 #include <MeshUtils/CADSystem/CADCurve.h>
 #include <MeshUtils/Octree/Octree.h>
@@ -101,9 +100,6 @@ class CurveMesh
          */
         void Report();
 
-        int SplitEdge(int a, int b,
-                       std::map<int, MeshNodeSharedPtr> &Nodes,
-                       std::map<int, MeshEdgeSharedPtr> &Edges);
 
         NekDouble GetLength(){return m_curvelength;}
 

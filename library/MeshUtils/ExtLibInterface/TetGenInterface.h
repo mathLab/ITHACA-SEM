@@ -45,7 +45,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <MeshUtils/MeshElements/MeshElements.h>
-#include <MeshUtils/MeshElem.hpp>
 
 namespace Nektar
 {

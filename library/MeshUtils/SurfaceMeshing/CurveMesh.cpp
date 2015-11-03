@@ -167,61 +167,6 @@ void CurveMesh::Mesh()
 
 }
 
-int CurveMesh::SplitEdge(int a, int b,
-                          std::map<int, MeshNodeSharedPtr> &Nodes,
-                          std::map<int, MeshEdgeSharedPtr> &Edges)
-{
-    // this needs to be re written when format is decided.
-
-
-
-    //find position of a and b in the meshpoints vector
-    /*int posa, posb;
-    for(int i = 0; i < m_meshpoints.size(); i++)
-    {
-        if(m_meshpoints[i] == a)
-            posa = i;
-        if(m_meshpoints[i] == b)
-            posb = i;
-    }
-
-    ASSERTL0(posa < posb, "invalid orientaion");
-
-    NekDouble ta = Nodes[a]->GetC(m_id);
-    NekDouble tb = Nodes[b]->GetC(m_id);
-
-    NekDouble tn = (ta + tb)/2.0;
-
-    Array<OneD, NekDouble> loc = m_cadcurve->P(tn);
-
-    MeshNodeSharedPtr nn = boost::shared_ptr<MeshNode>(
-                      new MeshNode(Nodes.size(),loc[0],loc[1],loc[2]));
-    nn->SetCurve(m_id,tn);
-    Nodes[Nodes.size()] = nn;
-
-    int eid = Nodes[a]->EdgeInCommon(Nodes[b]);
-    Nodes[a]->RemoveEdge(eid);
-    Nodes[b]->RemoveEdge(eid);
-
-    Edges[eid]->ModifyNodes(a,Nodes.size()-1);
-    Nodes[a]->SetEdge(eid);
-    Nodes[Nodes.size()-1]->SetEdge(eid);
-
-    Edges[Edges.size()] = MemoryManager<MeshEdge>::
-            AllocateSharedPtr(Edges.size(),
-                              Nodes.size()-1,
-                              b);
-    Nodes[Nodes.size()-1]->SetEdge(Edges.size()-1);
-    Nodes[b]->SetEdge(Edges.size()-1);
-    Edges[Edges.size()-1]->SetCurve(Edges[eid]->GetCurve());
-
-    m_meshpoints.insert(m_meshpoints.begin() + posa + 1, 1, Nodes.size()-1);
-
-    Ne++;*/
-
-    return Nodes.size()-1;
-}
-
 void CurveMesh::Report()
 {
     cout << scientific << "\tLength: " << m_curvelength << "\tPoints: " << m_meshpoints.size() << endl;

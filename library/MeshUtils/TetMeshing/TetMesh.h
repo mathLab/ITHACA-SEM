@@ -45,7 +45,6 @@
 #include <MeshUtils/CADSystem/CADSystem.h>
 #include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <MeshUtils/MeshElem.hpp>
 
 namespace Nektar{
 namespace MeshUtils{
@@ -78,14 +77,6 @@ private:
     int numtet;
     /// conncetivity of the tets from the interface
     std::vector<Array<OneD, int> > tetconnect;
-    /// list of all nodes
-    std::map<int, MeshNodeSharedPtr> Nodes;
-    /// list of all surface edges
-    std::map<int, MeshEdgeSharedPtr> Edges;
-    /// list of all surface triangles
-    std::map<int, MeshTriSharedPtr> Tris;
-    /// list of all tets
-    std::map<int, MeshTetSharedPtr> Tets;
 };
 
 typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

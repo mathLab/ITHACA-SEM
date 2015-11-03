@@ -38,7 +38,6 @@
 #define MESHUTILS_SURFACEMESHING_FACEMESH
 
 #include <MeshUtils/MeshElements/MeshElements.h>
-#include <MeshUtils/MeshElem.hpp>
 #include <MeshUtils/CADSystem/CADSurf.h>
 #include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/CurveMesh.h>

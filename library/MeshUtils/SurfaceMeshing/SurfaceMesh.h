@@ -42,7 +42,6 @@
 #include <MeshUtils/Octree/Octree.h>
 #include <MeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <MeshUtils/SurfaceMeshing/CurveMesh.h>
-#include <MeshUtils/MeshElem.hpp>
 
 
 namespace Nektar
@@ -160,12 +159,6 @@ class SurfaceMesh
         std::map<int, FaceMeshSharedPtr> m_facemeshes;
         /// map of individual curve meshes of the curves in the domain
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-        /// map of mesh nodes
-        std::map<int, MeshNodeSharedPtr> Nodes;
-        /// map of mesh edges
-        std::map<int, MeshEdgeSharedPtr> Edges;
-        /// map of mesh triangles
-        std::map<int, MeshTriSharedPtr> Tris;
 };
 
 typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;

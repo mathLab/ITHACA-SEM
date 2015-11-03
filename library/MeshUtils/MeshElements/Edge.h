@@ -138,7 +138,7 @@ namespace MeshUtils
         vector<pair<ElementSharedPtr, int> > m_elLink;
         /// id of cad curve which edge lies on
         int CADCurveID;
-        int CADSurfID;
+        std::vector<int> CADSurfID;
 
     private:
         SpatialDomains::SegGeomSharedPtr m_geom;

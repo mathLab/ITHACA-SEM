@@ -204,6 +204,29 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
+                    if(ed->CADSurfID.size() > 0)
+                    {
+                        //sort out cad information
+                        list<int> surfs;
+                        for(int k = 0; k < ed->CADSurfID.size(); k++)
+                        {
+                            surfs.push_back(ed->CADSurfID[k]);
+                        }
+                        for(int k = 0; k < e2->CADSurfID.size(); k++)
+                        {
+                            surfs.push_back(e2->CADSurfID[k]);
+                        }
+                        surfs.sort(); surfs.unique();
+                        e2->CADSurfID.clear();
+                        list<int>::iterator it;
+                        for(it = surfs.begin(); it != surfs.end(); it++)
+                        {
+                            e2->CADSurfID.push_back(*it);
+                        }
+                        ASSERTL0(e2->CADSurfID.size() == 1 || e2->CADSurfID.size() == 2,
+                                "incorrect cad surfs");
+                    }
+
                     // Update edge to element map.
                     e2->m_elLink.push_back(
                         pair<ElementSharedPtr,int>(elmt[i],j));

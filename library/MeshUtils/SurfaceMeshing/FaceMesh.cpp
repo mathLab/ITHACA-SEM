@@ -131,6 +131,11 @@ void FaceMesh::Mesh()
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                                 LibUtilities::eTriangle, conf, m_connec[i], tags);
         E->SetCADSurf(m_id);
+        vector<EdgeSharedPtr> edgs = E->GetEdgeList();
+        for(int j = 0; j < edgs.size(); j++)
+        {
+            edgs[j]->CADSurfID.push_back(m_id);
+        }
         m_mesh->m_element[m_mesh->m_expDim].push_back(E);
     }
 }

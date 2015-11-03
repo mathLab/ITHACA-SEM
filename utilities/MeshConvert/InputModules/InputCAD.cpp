@@ -164,6 +164,18 @@ void InputCAD::Process()
 
     m_surfacemesh->HOSurf();
 
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
+        SpatialDomains::GeometrySharedPtr geom = f->GetGeom(m_mesh->m_spaceDim);
+        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+
+        if(!gfac->IsValid())
+        {
+            cout << "warning: invalid face curavture in boundary element" << endl;
+        }
+    }
+
     /*
 
     //look over all surface elements

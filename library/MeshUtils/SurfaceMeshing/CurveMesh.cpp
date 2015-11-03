@@ -164,6 +164,51 @@ void CurveMesh::Mesh()
         }
     }
 
+    //post process the curve mesh to analyse for bad segments based on high-order normals and split if needed
+    int ct = 1;
+    while(ct > 0)
+    {
+        ct = 0;
+        for(int i = 0; i < m_meshpoints.size() - 1; i++)
+        {
+            bool split = false;
+            for(int j = 0; j < 2; j++)
+            {
+                Array<OneD, NekDouble> uv1, uv2;
+                uv1 = m_meshpoints[i]->GetCADSurf(s[j]->GetId());
+                uv2 = m_meshpoints[i+1]->GetCADSurf(s[j]->GetId());
+                Array<OneD, NekDouble> N1, N2;
+                N1 = s[j]->N(uv1);
+                N2 = s[j]->N(uv2);
+                NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] + N1[2]*N2[2];
+                if(acos(dot) > 3.142/2.0-0.1)
+                {
+                    split = true;
+                }
+            }
+
+            if(split)
+            {
+                cout << "split" << endl;
+                ct++;
+                NekDouble t1, t2;
+                t1 = m_meshpoints[i]->GetCADCurve(m_id);
+                t2 = m_meshpoints[i+1]->GetCADCurve(m_id);
+                NekDouble tn = (t1 + t2)/2.0;
+                Array<OneD, NekDouble> loc = m_cadcurve->P(tn);
+                NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
+                nn->SetCADCurve(m_id, tn);
+                for(int j = 0; j < 2; j++)
+                {
+                    Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+                    nn->SetCADSurf(s[j]->GetId(), uv);
+                }
+                m_meshpoints.insert(m_meshpoints.begin() + i+1, nn);
+                break;
+            }
+        }
+    }
+
 
 }
 

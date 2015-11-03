@@ -574,6 +574,7 @@ void SurfaceMesh::Optimise()
                     }
                 }
 
+                newe->CADSurfID.push_back(tri1->GetCADSurf());
                 m_mesh->m_edgeSet.insert(newe);
 
                 m_mesh->m_element[2][id1] = ntri1;

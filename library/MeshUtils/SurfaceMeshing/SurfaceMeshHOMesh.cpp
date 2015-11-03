@@ -199,6 +199,7 @@ void SurfaceMesh::HOSurf()
         }
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
+        vector<EdgeSharedPtr> edgelist = m_mesh->m_element[2][i]->GetEdgeList();
         int surf = m_mesh->m_element[2][i]->GetTagList()[0];
 
         vector<EdgeSharedPtr> egs = f->m_edgeList;
@@ -214,8 +215,24 @@ void SurfaceMesh::HOSurf()
                 //insertion was sucsesful create high-order info
                 EdgeSharedPtr e = *testIns.first;
 
+                //the edges in the element are different to those in the face
+                //the cad information is stored in the element edges which are not
+                //in the m_mesh->m_edgeSet group.
+                //need to link them together and copy the cad information to be
+                //able to identify how to make it high-order
+                for(int k = 0; k < edgelist.size(); k++)
+                {
+                    if(edgelist[k] == e)
+                    {
+                        e->CADSurfID = edgelist[k]->CADSurfID;
+                    }
+                }
+
+                ASSERTL0(e->CADSurfID.size() == 1 || e->CADSurfID.size() == 2,
+                        "incorrect cad surfs");
+
                 //figure out surfaces and curves this edge is on
-                if(e->m_n1->GetListCADCurve().size() > 0 && e->m_n2->GetListCADCurve().size() > 0)
+                if(e->CADSurfID.size()==2) //shoul be on curve
                 {
                     vector<int> clist1, clist2, c;
                     clist1 = e->m_n1->GetListCADCurve();
@@ -246,16 +263,6 @@ void SurfaceMesh::HOSurf()
                             e->CADCurveID = c[0];
                         }
                     }
-                    else
-                    {
-                        e->CADCurveID = -1;
-                        e->CADSurfID = m_mesh->m_element[2][i]->GetTagList()[0];
-                    }
-                }
-                else
-                {
-                    e->CADCurveID = -1;
-                    e->CADSurfID = m_mesh->m_element[2][i]->GetTagList()[0];
                 }
 
                 //if we are here the edge needs to be high-ordered
@@ -298,8 +305,9 @@ void SurfaceMesh::HOSurf()
                 }
                 else
                 {
+                    ASSERTL0(e->CADSurfID.size() == 1, "should only be one");
                     //edge is on surface and needs 2d optimisation
-                    int sid = e->CADSurfID;
+                    int sid = e->CADSurfID[0];
                     CADSurfSharedPtr s = m_cad->GetSurf(sid);
                     Array<OneD, NekDouble> uvb,uve;
                     uvb = e->m_n1->GetCADSurf(sid);

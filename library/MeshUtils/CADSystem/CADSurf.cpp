@@ -256,23 +256,35 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
 
     if(uv[0] < m_occSurface.FirstUParameter())
     {
-        error << "U(" << uv[0] << ") is less than Umin(" << m_occSurface.FirstUParameter() << ")";
-        passed = false;
+        if(fabs(uv[0]-m_occSurface.FirstUParameter()) > 1E-8)
+        {
+            error << "U(" << uv[0] << ") is less than Umin(" << m_occSurface.FirstUParameter() << ")";
+            passed = false;
+        }
     }
     else if(uv[0] > m_occSurface.LastUParameter())
     {
-        error << "U(" << uv[0] << ") is greater than Umax(" << m_occSurface.LastUParameter() << ")";
-        passed = false;
+        if(fabs(uv[0]-m_occSurface.LastUParameter()) > 1E-8)
+        {
+            error << "U(" << uv[0] << ") is greater than Umax(" << m_occSurface.LastUParameter() << ")";
+            passed = false;
+        }
     }
     else if(uv[1] < m_occSurface.FirstVParameter())
     {
-        error << "V(" << uv[1] << ") is less than Vmin(" << m_occSurface.FirstVParameter() << ")";
-        passed = false;
+        if(fabs(uv[1]-m_occSurface.FirstVParameter()) > 1E-8)
+        {
+            error << "V(" << uv[1] << ") is less than Vmin(" << m_occSurface.FirstVParameter() << ")";
+            passed = false;
+        }
     }
     else if(uv[1] > m_occSurface.LastVParameter())
     {
-        error << "V(" << uv[1] << ") is greater than Vmax(" << m_occSurface.LastVParameter() << ")";
-        passed = false;
+        if(fabs(uv[1]-m_occSurface.LastVParameter()) > 1E-8)
+        {
+            error << "V(" << uv[1] << ") is greater than Vmax(" << m_occSurface.LastVParameter() << ")";
+            passed = false;
+        }
     }
 
     ASSERTL0(passed, error.str());

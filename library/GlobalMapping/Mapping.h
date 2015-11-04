@@ -210,13 +210,14 @@ class Mapping
             v_Divergence( inarray, outarray);
         }  
 
-        // Generalized velocity Laplacian operator
-        //         L = g^jk u^i_{,jk}
+        // Generalized (correction to the) velocity Laplacian operator
+        //        L = g^jk u^i_{,jk} - alpha*d^2(x^i)/dx^jdx^j
         GLOBAL_MAPPING_EXPORT void VelocityLaplacian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray)
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   alpha = 0.0)
         {
-            v_VelocityLaplacian( inarray, outarray);
+            v_VelocityLaplacian( inarray, outarray, alpha);
         } 
 
         // Generalized velocity second order derivatives
@@ -425,7 +426,8 @@ class Mapping
 
         GLOBAL_MAPPING_EXPORT virtual void v_VelocityLaplacian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray);  
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                    alpha);
 
         GLOBAL_MAPPING_EXPORT virtual void v_gradgradU(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,

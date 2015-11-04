@@ -88,6 +88,9 @@ namespace Nektar
         NekDouble                                   m_pressureRelaxation;
         NekDouble                                   m_viscousRelaxation;
         
+        // Pressure gradient (to avoid duplicate calculations)
+        Array<OneD, Array<OneD, NekDouble> >        m_gradP;
+
         // Virtual functions     
         virtual void v_DoInitialise(void);
         
@@ -137,14 +140,12 @@ namespace Nektar
         //     = -g^(ij)p_j + (\nabla p)   for constant Jacobian
         //         the pressure field can be in wavespace
         void MappingPressureCorrection(
-            const Array<OneD, NekDouble>                      &pressure,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         // Correction needed for viscous terms = g^jk u^i_{,jk}-(\nabla^2 u)
         //     vel     is the velocity field (can be in wavespace)
         //     velPhys is the velocity field (transformed for physical space)
         void MappingViscousCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &vel,
             const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
         

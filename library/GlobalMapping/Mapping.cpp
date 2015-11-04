@@ -695,14 +695,15 @@ void Mapping::v_Divergence(
 
 void Mapping::v_VelocityLaplacian(
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-    Array<OneD, Array<OneD, NekDouble> >              &outarray)
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+    const NekDouble                                    alpha)
 {
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
 
     Array<OneD, Array<OneD, NekDouble> > wk1(nvel*nvel);
     Array<OneD, Array<OneD, NekDouble> > wk2(nvel*nvel);
-    Array<OneD, Array<OneD, NekDouble> > tmp1(nvel);   
+    Array<OneD, Array<OneD, NekDouble> > tmp1(nvel);
     Array<OneD, Array<OneD, NekDouble> > tmp2(nvel);
     for (int i=0; i< nvel; i++)
     {
@@ -723,13 +724,23 @@ void Mapping::v_VelocityLaplacian(
     ApplyChristoffelContravar(inarray, wk1);        
     for (int i=0; i< nvel; i++)
     {
+        if(nvel == 2)
+        {
+            m_fields[0]->PhysDeriv(inarray[i],
+                                wk2[i*nvel+0],
+                                wk2[i*nvel+1]);
+        }
+        else
+        {
+            m_fields[0]->PhysDeriv(inarray[i],
+                                wk2[i*nvel+0],
+                                wk2[i*nvel+1],
+                                wk2[i*nvel+2]);
+        }
         for (int k=0; k< nvel; k++)
         {
-            m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[k],inarray[i],
-                                    wk2[i*nvel+k]);
-
             Vmath::Vadd(physTot,wk1[i*nvel+k],1,wk2[i*nvel+k],1,
-                                                wk2[i*nvel+k], 1);
+                                                wk1[i*nvel+k], 1);
         }
     }
     // Calculate wk1 = A^(ij) = g^(jk)*u^i_(,k)
@@ -737,7 +748,7 @@ void Mapping::v_VelocityLaplacian(
     {
         for (int k=0; k< nvel; k++)
         {
-            Vmath::Vcopy(physTot, wk2[i*nvel+k], 1, tmp1[k], 1);
+            Vmath::Vcopy(physTot, wk1[i*nvel+k], 1, tmp1[k], 1);
         }
         RaiseIndex(tmp1, tmp2);
         for (int j=0; j<nvel; j++)
@@ -746,19 +757,25 @@ void Mapping::v_VelocityLaplacian(
         }
     }
     //
-    // Calculate L(U)^i = (A^(ij))_(,j)
+    // Calculate L(U)^i = (A^(ij))_(,j) - alpha*d^2(u^i)/dx^jdx^j
     //
 
-    // Step 1 : d(A^(ij))/d(x^j)
+    // Step 1 :
+    //      d(A^(ij) - alpha*du^i/dx^j)/d(x^j)
     for (int i=0; i< nvel; i++)
     {
         outarray[i] = Array<OneD, NekDouble>(physTot,0.0); 
         for (int j=0; j< nvel; j++)
         {
+            Vmath::Smul(physTot, alpha, wk2[i*nvel+j], 1,
+                                        tmp1[0], 1);
+            Vmath::Vsub(physTot, wk1[i*nvel+j], 1, tmp1[0], 1,
+                                                    tmp1[0], 1);
+
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                    wk1[i*nvel+j],
-                                    wk2[0]);  
-            Vmath::Vadd(physTot,outarray[i],1,wk2[0],1,outarray[i], 1);
+                                    tmp1[0],
+                                    tmp2[0]);
+            Vmath::Vadd(physTot,outarray[i],1,tmp2[0],1,outarray[i], 1);
         }
     }
 

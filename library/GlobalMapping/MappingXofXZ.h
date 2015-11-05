@@ -75,7 +75,7 @@ public:
 protected:
     // Constructor
     MappingXofXZ(const LibUtilities::SessionReaderSharedPtr     &pSession,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>&   pFields);
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields);
 
     // Virtual functions
     GLOBAL_MAPPING_EXPORT
@@ -104,7 +104,7 @@ protected:
 
     GLOBAL_MAPPING_EXPORT virtual void v_DotGradJacobian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, NekDouble>               &outarray);
+        Array<OneD, NekDouble>                            &outarray);
 
     GLOBAL_MAPPING_EXPORT virtual void v_GetMetricTensor(
         Array<OneD, Array<OneD, NekDouble> >              &outarray);

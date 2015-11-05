@@ -72,7 +72,7 @@ namespace Nektar
 
     protected:
         // Mapping object
-        GlobalMapping::MappingSharedPtr               m_mapping;
+        GlobalMapping::MappingSharedPtr             m_mapping;
         
         bool                                        m_verbose;
         

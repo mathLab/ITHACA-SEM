@@ -141,7 +141,7 @@ class Mapping
         /// Calculate the dot product with the Jacobian gradient
         GLOBAL_MAPPING_EXPORT void DotGradJacobian(
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, NekDouble>               &outarray)
+            Array<OneD, NekDouble>                            &outarray)
         {
             v_DotGradJacobian( inarray, outarray);
         } 

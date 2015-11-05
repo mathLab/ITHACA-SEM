@@ -87,8 +87,8 @@ protected:
     Array<OneD, NekDouble>                      m_jac;
 
     // Constructor
-    MappingGeneral(const LibUtilities::SessionReaderSharedPtr  &pSession,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields); 
+    MappingGeneral(const LibUtilities::SessionReaderSharedPtr         &pSession,
+                   const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields);
 
     // Virtual functions
     GLOBAL_MAPPING_EXPORT

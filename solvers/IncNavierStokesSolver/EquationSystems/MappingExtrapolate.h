@@ -87,7 +87,7 @@ namespace Nektar
         
     protected:
         // Mapping object
-        GlobalMapping::MappingSharedPtr               m_mapping;
+        GlobalMapping::MappingSharedPtr             m_mapping;
         
         Array<OneD, NekDouble>                      m_bcCorrection;
         

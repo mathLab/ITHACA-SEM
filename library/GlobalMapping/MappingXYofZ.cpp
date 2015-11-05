@@ -156,7 +156,7 @@ void MappingXYofZ::v_GetJacobian(
 
 void MappingXYofZ::v_DotGradJacobian(
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-    Array<OneD, NekDouble>               &outarray)
+    Array<OneD, NekDouble>                            &outarray)
 {
     int physTot = m_fields[0]->GetTotPoints();        
     Vmath::Zero(physTot, outarray, 1);   

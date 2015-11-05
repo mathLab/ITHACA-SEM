@@ -65,16 +65,18 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        void SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields,
-								  Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								  const NekDouble aii_Dt)
+        void SetUpPressureForcing(
+                    const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                    Array<OneD, Array<OneD, NekDouble> > &Forcing,
+                    const NekDouble aii_Dt)
         {
             v_SetUpPressureForcing( fields, Forcing, aii_Dt);
         }
 
-        void SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								 const NekDouble aii_Dt)
+        void SetUpViscousForcing(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &Forcing,
+                    const NekDouble aii_Dt)
         {
             v_SetUpViscousForcing( inarray, Forcing, aii_Dt);
         }
@@ -84,21 +86,24 @@ namespace Nektar
             v_SolvePressure( Forcing);
         }
         
-        void SolveViscous( const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
-                            Array<OneD, Array<OneD, NekDouble> > &outarray,
-                            const NekDouble aii_Dt)
+        void SolveViscous(
+                    const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble aii_Dt)
         {
             v_SolveViscous( Forcing, outarray, aii_Dt);
         }
 
-        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									   Array<OneD, Array<OneD, NekDouble> > &outarray,
-									   const NekDouble time,
-									   const NekDouble a_iixDt);
+        void SolveUnsteadyStokesSystem(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble time,
+                    const NekDouble a_iixDt);
 
-        void EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-											  Array<OneD, Array<OneD, NekDouble> > &outarray,
-											  const NekDouble time)
+        void EvaluateAdvection_SetPressureBCs(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble time)
         {
             v_EvaluateAdvection_SetPressureBCs( inarray, outarray, time);
         }
@@ -138,7 +143,7 @@ namespace Nektar
         
         virtual void v_SolvePressure( const Array<OneD, NekDouble>  &Forcing);
         
-        virtual void v_SolveViscous( 
+        virtual void v_SolveViscous(
                     const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble aii_Dt);

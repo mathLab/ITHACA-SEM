@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: ProcessIsoContour.cpp
 //
@@ -31,7 +31,7 @@
 //
 //  Description: Generate isocontours from field data.
 //
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 #include <string>
 #include <iostream>
 using namespace std;
@@ -40,6 +40,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 namespace Nektar
@@ -105,6 +106,18 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
+    Timer timer;
+    int rank = m_f->m_comm->GetRank();
+    
+    if(m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            cout << "Process Contour extraction..." << endl;
+            timer.Start();
+        }
+    }
+
     vector<IsoSharedPtr> iso;
 
     if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
@@ -187,7 +200,15 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
         if((mincontour = m_config["removesmallcontour"].as<int>()))
         {
+            if(rank == 0)
+            {
+                cout << "Identifying separate regions [." << flush ;
+            }
             g_iso->separate_regions(glob_iso,mincontour);
+            if(rank == 0)
+            {
+                cout << "]" << endl <<  flush ;
+            }
         }
         else
         {
@@ -198,6 +219,22 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     else
     {
         ResetFieldPts(iso);
+    }
+
+
+    if(m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "Process Isocontour CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
     }
 }
 
@@ -579,8 +616,8 @@ void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
     }
 
     isovec.push_back(iso);
-
 }
+ 
 
 void Iso::condense(void)
 {
@@ -756,6 +793,11 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
     // identify which iso are connected by at least one point;
     // find min x,y,z and max x,y,z and see if overlap to select
     // which zones should be connected
+    if(niso == 1) // if only one isocontour check just that contour. 
+    {
+        isocon[0].push_back(0);
+    }
+    else
     {
         vector<Array<OneD, NekDouble> > sph(niso);
         Array<OneD, NekDouble> rng(6);
@@ -805,6 +847,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
                 }
             }
         }
+
     }
 
 
@@ -813,8 +856,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         vidmap[i] = Array<OneD, int>(iso[i]->m_nvert,-1);
     }
     nvert = 0;
-    // identify which vertices are connected to tolerance
-    cout << "GlobalCondense: Matching Vertices [" << endl << flush;
     int cnt = 0;
     // count up amount of checking to be done
     NekDouble totpts = 0; 
@@ -827,7 +868,8 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         }
     }
     int totchk  = totpts/50;
-    int cnt_out = 0; 
+    int cnt_out = 0;
+    
     for(i = 0; i < niso; ++i)
     {
         for(n = 0; n < isocon[i].size(); ++n)
@@ -837,10 +879,11 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             {
                 for(id2 = 0; id2 < iso[con]->m_nvert; ++id2, ++cnt)
                 {
+
+                    
                     if(cnt%totchk == 0)
                     {
-                        cout <<cnt_out << "%" << '\r' << flush;
-                        cnt_out +=2; 
+                        LibUtilities::PrintProgressbar(cnt,totpts,"Condensing verts");
                     }
 
                     if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
@@ -878,7 +921,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             }
         }
     }
-    cout <<endl << "]"<<endl;
     m_nvert = nvert;
 
     nelmt = 0;
@@ -906,7 +948,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         m_fields[i].resize(m_nvert);
     }
 
-
     // reset coordinate and fields.
     for(n = 0; n < niso; ++n)
     {
@@ -922,6 +963,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             }
         }
     }
+    cout << endl;
 }
 
 void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
@@ -1041,8 +1083,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         Array<OneD, int> vidregion(m_nvert,-1);
   
         int nregions = -1;
-
-        cout << "Identifying separate regions [." << flush ;
+        
         // check all points are assigned;
         for(k = 0; k < m_nvert; ++k)
         {
@@ -1093,7 +1134,6 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         }
         nregions++;
 
-        cout << "]" << endl <<  flush ;
         
         Array<OneD, int> nvert(nregions,0);
         Array<OneD, int> nelmt(nregions,0);

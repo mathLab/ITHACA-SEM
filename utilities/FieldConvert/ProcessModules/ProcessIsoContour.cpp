@@ -867,7 +867,10 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             totpts += iso[i]->m_nvert*iso[con]->m_nvert;
         }
     }
+
     int totchk  = totpts/50;
+    totchk = max(totchk,1);
+    
     int cnt_out = 0;
     
     for(i = 0; i < niso; ++i)
@@ -879,13 +882,13 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             {
                 for(id2 = 0; id2 < iso[con]->m_nvert; ++id2, ++cnt)
                 {
-
+                    
                     
                     if(cnt%totchk == 0)
                     {
                         LibUtilities::PrintProgressbar(cnt,totpts,"Condensing verts");
                     }
-
+                    
                     if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
                     {
                         if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
@@ -912,7 +915,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
                 }
             }
         }
-
+        
         for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
         {
             if(vidmap[i][id1] == -1)

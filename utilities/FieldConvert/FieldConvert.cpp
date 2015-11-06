@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
         ("range,r", po::value<string>(),
                 "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
                 "in which any vertex is contained.")
+        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
@@ -327,21 +328,32 @@ int main(int argc, char* argv[])
 
     // If any output module has to reset points then set intput
     // modules to match
-    bool RequiresEquiSpaced = false;
-    for (int i = 0; i < modules.size(); ++i)
-    {
-        if(modules[i]->GetRequireEquiSpaced())
-        {
-            RequiresEquiSpaced = true;
-        }
-    }
-    if (RequiresEquiSpaced)
+    if(vm.count("noequispaced"))
     {
         for (int i = 0; i < modules.size(); ++i)
         {
-            modules[i]->SetRequireEquiSpaced(true);
+            modules[i]->SetRequireEquiSpaced(false);
         }
     }
+    else
+    {
+        bool RequiresEquiSpaced = false;
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetRequireEquiSpaced())
+            {
+                RequiresEquiSpaced = true;
+            }
+        }
+        if (RequiresEquiSpaced)
+        {
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                modules[i]->SetRequireEquiSpaced(true);
+            }
+        }
+    }
+    
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {

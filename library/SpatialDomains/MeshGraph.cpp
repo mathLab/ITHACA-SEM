@@ -2550,7 +2550,7 @@ namespace Nektar
                             geom = m_tetGeoms[k];
 
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt], LibUtilities::eGaussLobattoLegendre);
+                                LibUtilities::PointsKey pkey(nmodes[cnt]+1, LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {

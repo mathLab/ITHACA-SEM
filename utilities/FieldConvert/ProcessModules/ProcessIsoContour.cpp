@@ -589,33 +589,41 @@ void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
 
-    // set up single iso with all the information from PtsField
-    IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-dim);    
-    
-    int nelmt = ptsConn[0].num_elements()/3;
-    iso->set_ntris(nelmt);
-    iso->resize_vid(3*nelmt);
 
-    int nvert = fieldpts[0].num_elements();
-    iso->set_nvert(nvert);
-    iso->resize_fields(nvert);
-    
-    // fill in points values (including coordinates)
-    for(int i = 0; i < nvert; ++i)
+    int cnt = 0;
+    for(int c = 0; c < ptsConn.size(); ++c)
     {
-        iso->set_fields(i,fieldpts,i);
-    }
+        // set up single iso with all the information from PtsField
+        IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-dim);
+        
+        int nelmt = 0;
+        nelmt = ptsConn[c].num_elements()/3;
 
-    // fill in connectivity values. 
-    for(int i = 0; i < nelmt; ++i)
-    {
-        for(int j = 0; j < 3; ++j)
+        iso->set_ntris(nelmt);
+        iso->resize_vid(3*nelmt);
+        
+        // fill in connectivity values. 
+        int nvert = 0; 
+        for(int i = 0; i < ptsConn[c].num_elements(); ++i)
         {
-            iso->set_vid(3*i+j,ptsConn[0][3*i+j]);
+            int cid = ptsConn[c][i]-cnt;
+            iso->set_vid(i,cid);
+            nvert = max(cid,nvert);
         }
+        nvert++;
+        
+        iso->set_nvert(nvert);
+        iso->resize_fields(nvert);
+        
+        // fill in points values (including coordinates)
+        for(int i = 0; i < nvert; ++i)
+        {
+            iso->set_fields(i,fieldpts,i+cnt);
+        }
+        cnt += nvert;
+        isovec.push_back(iso);
     }
-
-    isovec.push_back(iso);
+    
 }
  
 
@@ -858,36 +866,26 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
     nvert = 0;
     int cnt = 0;
     // count up amount of checking to be done
-    NekDouble totpts = 0; 
+    NekDouble totiso = 0; 
     for(i = 0; i < niso; ++i)
     {
-        for(n = 0; n < isocon[i].size(); ++n)
-        {
-            int con = isocon[i][n];
-            totpts += iso[i]->m_nvert*iso[con]->m_nvert;
-        }
+        totiso += isocon[i].size();
     }
 
-    int totchk  = totpts/50;
-    totchk = max(totchk,1);
-    
-    int cnt_out = 0;
-    
+
+    cout << "Progress Bar totiso: " << totiso << endl;
     for(i = 0; i < niso; ++i)
     {
-        for(n = 0; n < isocon[i].size(); ++n)
+        for(n = 0; n < isocon[i].size(); ++n, ++cnt)
         {
+            
+            LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
+
             int con = isocon[i][n];
             for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
             {
-                for(id2 = 0; id2 < iso[con]->m_nvert; ++id2, ++cnt)
+                for(id2 = 0; id2 < iso[con]->m_nvert; ++id2)
                 {
-                    
-                    
-                    if(cnt%totchk == 0)
-                    {
-                        LibUtilities::PrintProgressbar(cnt,totpts,"Condensing verts");
-                    }
                     
                     if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
                     {
@@ -1073,7 +1071,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         list<int>::iterator cid;
 
         Array<OneD, bool> viddone(m_nvert,false);
-        
+
         // make list of connecting tris around each vertex
         for(i = 0; i < m_ntris; ++i)
         {
@@ -1087,9 +1085,12 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
   
         int nregions = -1;
         
-        // check all points are assigned;
+        
+        // check all points are assigned to a region
         for(k = 0; k < m_nvert; ++k)
         {
+            LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions");
+
             if(vidregion[k] == -1)
             {
                 vidregion[k] = ++nregions;

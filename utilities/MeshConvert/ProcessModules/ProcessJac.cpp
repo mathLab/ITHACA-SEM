@@ -113,7 +113,7 @@ void ProcessJac::Process()
             if (printList)
             {
                 cout << "  - " << el[i]->GetId() << " ("
-                     << StdRegions::ElementTypeMap[el[i]->GetConf().m_e]
+                     << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e]
                      << ")" << endl;
             }
 

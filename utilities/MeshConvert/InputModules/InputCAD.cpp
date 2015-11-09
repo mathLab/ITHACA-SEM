@@ -114,6 +114,7 @@ void InputCAD::Process()
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;
     m_mesh->m_nummode = m_order+1;
+    //m_mesh->m_nummode = 2;
 
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
@@ -178,76 +179,41 @@ void InputCAD::Process()
         }
     }
 
-    /*
-
-    //look over all surface elements
-    //get the face between it and the tet
-    //for all the edges in the face insert curved information
-    //in the face first orientate and then add the face interior nodes
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim-1].size(); i++)
+    int nNeg = 0;
+    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
     {
-        FaceSharedPtr f =
-                m_mesh->m_element[m_mesh->m_expDim-1][i]->GetFaceLink();
-        vector<EdgeSharedPtr> egs = f->m_edgeList;
-        for(int j = 0; j < egs.size(); j++)
+        bool boundary = false;
+        vector<FaceSharedPtr> fs = m_mesh->m_element[3][i]->GetFaceList();
+        for(int j = 0; j < fs.size(); j++)
         {
-            if(egs[j]->m_edgeNodes.size()>0)
-                continue;
-
-            NodeSharedPtr n1 = egs[j]->m_n1;
-            NodeSharedPtr n2 = egs[j]->m_n2;
-            int n1ID = n1->m_mid;
-            int n2ID = n2->m_mid;
-
-            int edgekey = Nodes[n1ID]->EdgeInCommon(Nodes[n2ID]);
-
-            ASSERTL0(edgekey != -1, "no edge found");
-
-            vector<int> honode = Edges[edgekey]->GetHONodes(n1ID);
-
-            vector<NodeSharedPtr> localhonode;
-            for(int k = 0; k < honode.size(); k++)
+            if(fs[j]->m_faceNodes.size() > 0)
             {
-                localhonode.push_back(allnodes[honode[k]]);
+                boundary = true;
+                break;
             }
-
-            egs[j]->m_edgeNodes = localhonode;
-            egs[j]->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
-
-        int t = m_mesh->m_element[m_mesh->m_expDim-1][i]->GetTriID();
-
-        vector<int> honode = Tris[t]->GetHONodes();
-        vector<NodeSharedPtr> localhonode;
-
-        for(int j = 0; j < honode.size(); j++)
+        if(boundary)
         {
-            localhonode.push_back(allnodes[honode[j]]);
+            SpatialDomains::GeometrySharedPtr geom = m_mesh->m_element[3][i]->GetGeom(m_mesh->m_spaceDim);
+            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+
+            if(!gfac->IsValid())
+            {
+                nNeg++;
+                cout << "  - " << m_mesh->m_element[3][i]->GetId() << " ("
+                     << LibUtilities::ShapeTypeMap[m_mesh->m_element[3][i]->GetConf().m_e]
+                     << ")" << endl;
+            }
         }
+    }
 
-        f->m_faceNodes = localhonode;
-
-        Array<OneD, int> n = Tris[t]->GetN();
-        vector<int> trivert(3);
-        vector<int> facevert(3);
-        int aligned = 0;
-        for(int j = 0; j < 3; j++)
-        {
-            trivert[j] = n[j];
-            facevert[j] = f->m_vertexList[j]->m_mid;
-            if(trivert[j] == facevert[j]) aligned++;
-        }
-
-        if(aligned != 3)
-        {
-            HOTriangle<NodeSharedPtr> hoTri(trivert,localhonode);
-            hoTri.Align(facevert);
-
-            f->m_faceNodes = hoTri.surfVerts;
-        }
-        //f->m_faceNodes.clear();
-        f->m_curveType = LibUtilities::eNodalTriFekete;
-    }*/
+    if(m_mesh->m_verbose)
+    {
+        if(nNeg > 0)
+            cout << "Warning: " << nNeg << " invalid elements" << endl;
+        else
+            cout << "0 invalid elements" << endl;
+    }
 
     if(m_mesh->m_verbose)
         cout << endl;

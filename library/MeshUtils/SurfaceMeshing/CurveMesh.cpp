@@ -208,7 +208,6 @@ void CurveMesh::Mesh()
         }
     }
 
-
 }
 
 void CurveMesh::Report()

@@ -58,35 +58,51 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     {
         Array<OneD, NekDouble> octloc = OctantList[n]->GetLoc();
 
-        if(loc[0]>=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
+        if(!(loc[0] < octloc[0]) &&
+           !(loc[1] < octloc[1]) &&
+           !(loc[2] < octloc[2]))
         {
             quad=0;
         }
-        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
+        else if(!(loc[0] < octloc[0]) &&
+                !(loc[1] > octloc[1]) &&
+                !(loc[2] < octloc[2]))
         {
             quad=1;
         }
-        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]>octloc[2])
+        else if(!(loc[0] > octloc[0]) &&
+                !(loc[1] > octloc[1]) &&
+                !(loc[2] < octloc[2]))
         {
             quad=2;
         }
-        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]>octloc[2])
+        else if(!(loc[0] > octloc[0]) &&
+                !(loc[1] < octloc[1]) &&
+                !(loc[2] < octloc[2]))
         {
             quad=3;
         }
-        else if(loc[0]>octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
+        else if(!(loc[0] < octloc[0]) &&
+                !(loc[1] < octloc[1]) &&
+                !(loc[2] > octloc[2]))
         {
             quad=4;
         }
-        else if(loc[0]>octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
+        else if(!(loc[0] < octloc[0]) &&
+                !(loc[1] > octloc[1]) &&
+                !(loc[2] > octloc[2]))
         {
             quad=5;
         }
-        else if(loc[0]<=octloc[0] && loc[1]<=octloc[1] && loc[2]<=octloc[2])
+        else if(!(loc[0] > octloc[0]) &&
+                !(loc[1] > octloc[1]) &&
+                !(loc[2] > octloc[2]))
         {
             quad=6;
         }
-        else if(loc[0]<=octloc[0] && loc[1]>octloc[1] && loc[2]<=octloc[2])
+        else if(!(loc[0] > octloc[0]) &&
+                !(loc[1] < octloc[1]) &&
+                !(loc[2] > octloc[2]))
         {
             quad=7;
         }

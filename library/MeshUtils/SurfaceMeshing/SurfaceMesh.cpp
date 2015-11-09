@@ -230,14 +230,15 @@ void SurfaceMesh::Optimise()
                 D = nt[2];
             }
 
-            if(A->GetListCADCurve().size() > 0 ||
+            //uncomment this section to not allow swapping of curve adjacent elments
+            /*if(A->GetListCADCurve().size() > 0 ||
                B->GetListCADCurve().size() > 0 ||
                C->GetListCADCurve().size() > 0 ||
                D->GetListCADCurve().size() > 0 )
             {
                 m_mesh->m_edgeSet.insert(e);
                 continue;
-            }
+            }*/
 
             NekDouble CBA, BDA;
 
@@ -299,10 +300,6 @@ void SurfaceMesh::Optimise()
                 if(nodedefectafter < nodedefectbefore)
                 {
                     swap = true;
-                    A->m_elCount--;
-                    B->m_elCount--;
-                    C->m_elCount++;
-                    D->m_elCount++;
                 }
 
             }
@@ -330,6 +327,11 @@ void SurfaceMesh::Optimise()
 
             if(swap)
             {
+                A->m_elCount--;
+                B->m_elCount--;
+                C->m_elCount++;
+                D->m_elCount++;
+
                 //make the 4 other edges
                 EdgeSharedPtr CA, AD, DB, BC, CAt, ADt, DBt, BCt;
                 CAt = boost::shared_ptr<Edge>(new Edge(C,A));
@@ -498,24 +500,19 @@ void SurfaceMesh::Optimise()
             cout << ".\tEdges swapped: " << swappedEdges << endl;
     }
 
-    map<int, vector<NodeSharedPtr> > conectingNodes;
-    NodeSet::iterator nit;
-    for(nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); nit++)
-    {
-        conectingNodes[(*nit)->m_id] = vector<NodeSharedPtr>();
-    }
     EdgeSet::iterator eit;
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
         if((*eit)->m_elLink.size() !=2)
             continue;
 
-        conectingNodes[(*eit)->m_n1->m_id].push_back((*eit)->m_n2);
-        conectingNodes[(*eit)->m_n2->m_id].push_back((*eit)->m_n1);
+        (*eit)->m_n1->m_connectingNodes.push_back((*eit)->m_n2);
+        (*eit)->m_n2->m_connectingNodes.push_back((*eit)->m_n1);
     }
 
-    //perform 4 runs of elastic relaxation based on the octree
-    for(int q = 0; q < 4; q++)
+    NodeSet::iterator nit;
+    //perform 8 runs of elastic relaxation based on the octree
+    for(int q = 0; q < 8; q++)
     {
         if(m_mesh->m_verbose)
             cout << "\t\t Elastic relaxation run: " << q+1 << endl;
@@ -526,52 +523,210 @@ void SurfaceMesh::Optimise()
             if(c.size()>0) //node is on curve so skip
                 continue;
 
-            NekDouble d = m_octree->Query((*nit)->GetLoc());
-
             vector<int> surfs = (*nit)->GetListCADSurf();
             ASSERTL0(surfs.size()==1, //idiot checking
                         "node should be interior and only be on one surface");
 
-            Array<OneD, NekDouble> uvi = (*nit)->GetCADSurf(surfs[0]);
+            int surf = surfs[0];
+            CADSurfSharedPtr s = m_cad->GetSurf(surf);
 
-            vector<NodeSharedPtr> connodes;
-            connodes = conectingNodes[(*nit)->m_id];
+            vector<NodeSharedPtr> connodes = (*nit)->m_connectingNodes;
 
-            vector<NekDouble> om;
+            //figure out the convexity of the connodes system using graham scan
+            NodeSharedPtr lowest;
+            vector<NodeSharedPtr> orderedNodes;
+
+            //find lowest v node
+            lowest = connodes[0];
+            for(int i = 1; i < connodes.size(); i++)
+            {
+                Array<OneD, NekDouble> uvlow = lowest->GetCADSurf(surf);
+                Array<OneD, NekDouble> uvtest = connodes[i]->GetCADSurf(surf);
+                if(uvtest[1] < uvlow[1])
+                {
+                    lowest = connodes[i];
+                }
+            }
+            //build unordered list of others
             for(int i = 0; i < connodes.size(); i++)
             {
-                om.push_back((*nit)->Distance(connodes[i]) - d);
+                if(connodes[i] == lowest)
+                    continue;
+
+                orderedNodes.push_back(connodes[i]);
             }
 
-            NekDouble u0=0.0,v0=0.0,fu=0.0,dfu=0.0,fv=0.0,dfv=0.0;
+            Array<OneD, NekDouble> uvlow = lowest->GetCADSurf(surf);
+
+            vector<NekDouble> angles;
+            for(int i = 0; i < orderedNodes.size(); i++)
+            {
+                Array<OneD, NekDouble> uv = orderedNodes[i]->GetCADSurf(surf);
+                Array<OneD, NekDouble> cs1(2), cs2(2), cn1(2);
+                cs1[0]   = 1.0;
+                cs1[1]   = 0.0;
+                cs2[0]   = uv[0]-uvlow[0];
+                cs2[1]   = uv[1]-uvlow[1];
+                cn1[0]   = -cs1[1];
+                cn1[1]   =  cs1[0];
+                NekDouble an       = cn1[0]*cn1[0]+cn1[1]*cn1[1];
+                an       = 1.0/sqrt(an);
+                cn1[0]   = cn1[0]*an;
+                cn1[1]   = cn1[1]*an;
+                an       = cs1[0]*cs1[0]+cs1[1]*cs1[1];
+                an       = 1.0/sqrt(an);
+                cs1[0]   = cs1[0]*an;
+                cs1[1]   = cs1[1]*an;
+                an       = cs2[0]*cs2[0]+cs2[1]*cs2[1];
+                an       = 1.0/sqrt(an);
+                cs2[0]   = cs2[0]*an;
+                cs2[1]   = cs2[1]*an;
+                NekDouble cosw     = cs1[0]*cs2[0]+cs1[1]*cs2[1];
+                NekDouble sinw     = cs2[0]*cn1[0]+cs2[1]*cn1[1];
+                angles.push_back(atan2(sinw,cosw));
+            }
+
+            //sort the orderedNodes based on the angles
+            bool repeat = true;
+            while(repeat)
+            {
+                repeat = false;
+                for(int i = 0; i < orderedNodes.size() -1; i++)
+                {
+                    if(angles[i+1] < angles[i])
+                    {
+                        NodeSharedPtr tmpn = orderedNodes[i];
+                        NekDouble tmpa = angles[i];
+                        orderedNodes[i] = orderedNodes[i+1];
+                        angles[i] = angles[i+1];
+                        angles[i+1] = tmpa;
+                        orderedNodes[i+1] = tmpn;
+                        repeat = true;
+                    }
+                }
+            }
+
+            bool concave = false;
+
+            if(!(orderedNodes.size()>2))
+                continue;
+
+            Array<OneD, NekDouble> uva = orderedNodes[0]->GetCADSurf(surf);
+            Array<OneD, NekDouble> uvb = orderedNodes[1]->GetCADSurf(surf);
+            if((uvlow[1]-uva[1])*(uvb[0]-uva[0]) - (uvlow[0]-uva[0])*(uvb[1]-uva[1]) < 0)
+            {
+                concave = true;
+            }
+            else
+            {
+                for(int i = 1; i < orderedNodes.size() - 1; i++)
+                {
+                    Array<OneD, NekDouble> uvc = uva;
+                    uva = uvb;
+                    uvb = orderedNodes[i+1]->GetCADSurf(surf);
+                    if((uvc[1]-uva[1])*(uvb[0]-uva[0]) - (uvc[0]-uva[0])*(uvb[1]-uva[1]) < 0)
+                    {
+                        concave = true;
+                        break;
+                    }
+                }
+                if(concave == false) //test last combo
+                {
+                    Array<OneD, NekDouble> uvc = uva;
+                    uva = uvb;
+                    uvb = uvlow;
+                    if((uvc[1]-uva[1])*(uvb[0]-uva[0]) - (uvc[0]-uva[0])*(uvb[1]-uva[1]) < 0)
+                    {
+                        concave = true;
+                    }
+                }
+            }
+
+            if(concave)
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> uv0(2);
+            uv0[0]=0.0; uv0[1]=0.0;
+
+            DNekMat f(2,1,0.0);
+            DNekMat df(2,2,0.0);
             for(int i = 0; i < connodes.size(); i++)
             {
-                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(surfs[0]);
-                u0+=uvj[0]/connodes.size();
-                v0+=uvj[1]/connodes.size();
+                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(surf);
+                uv0[0]+=uvj[0]/connodes.size();
+                uv0[1]+=uvj[1]/connodes.size();
             }
+
+            Array<OneD, NekDouble> rui = m_cad->GetSurf(surf)->P(uv0);
+            NekDouble d = m_octree->Query(rui);
             for(int i = 0; i < connodes.size();i++)
             {
-                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(surfs[0]);
-                NekDouble sqr = sqrt((uvj[0]-u0)*(uvj[0]-u0) +
-                                     (uvj[1]-v0)*(uvj[1]-v0));
-                fu+=om[i]*(uvj[0]-u0)/sqr;
-                fv+=om[i]*(uvj[1]-v0)/sqr;
-                dfu+=om[i]*sqr*(2*(uvj[0]-u0)*(u0-uvj[0])+
-                                    (uvj[1]-v0)*(uvj[1]-v0));
-                dfv+=om[i]*sqr*(2*(uvj[1]-v0)*(uvi[1]-v0)+
-                                    (uvj[0]-u0)*(uvj[0]-u0));
+                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(surf);
+                Array<OneD, NekDouble> rj  = connodes[i]->GetLoc();
+
+                NekDouble difR = sqrt((rui[0]-rj[0])*(rui[0]-rj[0]) +
+                                      (rui[1]-rj[1])*(rui[1]-rj[1]) +
+                                      (rui[2]-rj[2])*(rui[2]-rj[2]));
+
+                NekDouble difU = sqrt((uvj[0]-uv0[0])*(uvj[0]-uv0[0]) +
+                                      (uvj[1]-uv0[1])*(uvj[1]-uv0[1]));
+
+                NekDouble A    = difR - d;
+
+                NekDouble B    = (uvj[0]-uv0[0]) / difU;
+
+                NekDouble C    = (uvj[1]-uv0[1]) / difU;
+
+                Array<OneD, NekDouble> r = s->D1(uv0);
+
+                NekDouble dAdu = ((r[0]-rj[0])*r[3] +
+                                  (r[1]-rj[1])*r[4] +
+                                  (r[2]-rj[2])*r[5]) / difR;
+
+                NekDouble dAdv = ((r[0]-rj[0])*r[6] +
+                                  (r[1]-rj[1])*r[7] +
+                                  (r[2]-rj[2])*r[8]) / difR;
+
+                NekDouble dBdu = (uvj[0]-uv0[0])*(uvj[0]-uv0[0])/
+                                 difU/difU/difU - 1.0/difU;
+
+                NekDouble dBdv = (uvj[0]-uv0[0])*(uvj[1]-uv0[1])/
+                                 difU/difU/difU;
+
+                NekDouble dCdv = (uvj[1]-uv0[1])*(uvj[1]-uv0[1])/
+                                 difU/difU/difU - 1.0/difU;
+
+                NekDouble dCdu = dBdv;
+
+                f(0,0) += A*B;
+                f(1,0) += A*C;
+
+                df(0,0) += B*dAdu + A*dBdu;
+                df(1,0) += C*dAdu + A*dCdu;
+                df(0,1) += B*dAdv + A*dBdv;
+                df(1,1) += C*dAdv + A*dCdv;
             }
-            Array<OneD, NekDouble> uv(2);
-            Array<OneD, NekDouble> bounds = m_cad->GetSurf(surfs[0])->GetBounds();
-            uv[0] = u0-fu/dfu; uv[1] = v0-fv/dfv;
-            if(!(uv[0] < bounds[0] ||
-                       uv[0] > bounds[1] ||
-                       uv[1] < bounds[2] ||
-                       uv[1] > bounds[3]))
+
+            df.Invert();
+
+            DNekMat ui = df*f;
+            Array<OneD, NekDouble> uvn(2);
+            uvn[0] = uv0[0];// - ui(0,0);
+            uvn[1] = uv0[1];// - ui(1,0);
+
+            Array<OneD, NekDouble> bounds = m_cad->GetSurf(surf)->GetBounds();
+            Array<OneD, NekDouble> uvi = (*nit)->GetCADSurf(surf);
+
+            if(!(uvn[0] < bounds[0] ||
+                       uvn[0] > bounds[1] ||
+                       uvn[1] < bounds[2] ||
+                       uvn[1] > bounds[3]))
             {
-                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surfs[0])->P(uv);
-                (*nit)->Move(l2,surfs[0],uv);
+
+                Array<OneD, NekDouble> l2 = m_cad->GetSurf(surf)->P(uvn);
+                (*nit)->Move(l2,surf,uvn);
             }
         }
     }

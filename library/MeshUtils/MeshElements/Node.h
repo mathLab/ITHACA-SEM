@@ -220,7 +220,7 @@ namespace MeshUtils
 
         NekDouble Angle(NodeSharedPtr &a, NodeSharedPtr &b)
         {
-            Array<OneD,NekDouble> va(3),vb(3);
+            Array<OneD,NekDouble> va(3),vb(3),cn(3);
             va[0] = a->m_x - m_x;
             va[1] = a->m_y - m_y;
             va[2] = a->m_z - m_z;
@@ -228,11 +228,27 @@ namespace MeshUtils
             vb[1] = b->m_y - m_y;
             vb[2] = b->m_z - m_z;
 
-            NekDouble ca = va[0]*vb[0] + va[1]*vb[1] + va[2]*vb[2];
-            ca /= sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
-            ca /= sqrt(vb[0]*vb[0] + vb[1]*vb[1] + vb[2]*vb[2]);
+            NekDouble lva = sqrt(va[0]*va[0] + va[1]*va[1] + va[2]*va[2]);
+            NekDouble lvb = sqrt(vb[0]*vb[0] + vb[1]*vb[1] + vb[2]*vb[2]);
 
-            return acos(ca);
+            NekDouble aw = 1.0/(lva*lvb);
+
+            NekDouble cosw = (va[0]*vb[0] + va[1]*vb[1] + va[2]*vb[2])*aw;
+
+            cn[0] = vb[1]*va[2] - vb[2]*va[1];
+            cn[1] = vb[2]*va[0] - vb[0]*va[2];
+            cn[2] = vb[0]*va[1] - vb[1]*va[0];
+
+            NekDouble lcn = sqrt(cn[0]*cn[0] + cn[1]*cn[1] + cn[2]*cn[2]);
+
+            NekDouble sinw = aw*lcn;
+
+            NekDouble an = atan2(sinw,cosw);
+
+            if(an < 0)
+                an += 6.2831853071796;
+
+            return an;
         }
 
         void Move(Array<OneD, NekDouble> l, int s, Array<OneD, NekDouble> uv)
@@ -265,6 +281,8 @@ namespace MeshUtils
         std::map<int, Array<OneD, NekDouble> > CADSurf;
         ///edge link count;
         int m_elCount;
+        ///this could probably do with a better method but its easy for now
+        vector<NodeSharedPtr> m_connectingNodes;
 
     private:
         SpatialDomains::PointGeomSharedPtr m_geom;

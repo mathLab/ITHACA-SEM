@@ -94,6 +94,94 @@ void SurfaceMesh::Mesh()
     }
 }
 
+void SurfaceMesh::Metric()
+{
+    NekDouble Angles[18] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        vector<NodeSharedPtr> list = m_mesh->m_element[2][i]->GetVertexList();
+        vector<NekDouble> ang;
+        ang.push_back(list[0]->Angle(list[1],list[2]));
+        ang.push_back(list[1]->Angle(list[0],list[2]));
+        ang.push_back(list[2]->Angle(list[1],list[0]));
+        for(int j = 0; j < ang.size(); j++)
+        {
+            if(ang[j] < 10.0/180.0*3.142)
+                Angles[0]++;
+            else if(ang[j] < 20.0/180.0*3.142)
+                Angles[1]++;
+            else if(ang[j] < 30.0/180.0*3.142)
+                Angles[2]++;
+            else if(ang[j] < 40.0/180.0*3.142)
+                Angles[3]++;
+            else if(ang[j] < 50.0/180.0*3.142)
+                Angles[4]++;
+            else if(ang[j] < 60.0/180.0*3.142)
+                Angles[5]++;
+            else if(ang[j] < 70.0/180.0*3.142)
+                Angles[6]++;
+            else if(ang[j] < 80.0/180.0*3.142)
+                Angles[7]++;
+            else if(ang[j] < 90.0/180.0*3.142)
+                Angles[8]++;
+            else if(ang[j] < 100.0/180.0*3.142)
+                Angles[9]++;
+            else if(ang[j] < 110.0/180.0*3.142)
+                Angles[10]++;
+            else if(ang[j] < 120.0/180.0*3.142)
+                Angles[11]++;
+            else if(ang[j] < 130.0/180.0*3.142)
+                Angles[12]++;
+            else if(ang[j] < 140.0/180.0*3.142)
+                Angles[13]++;
+            else if(ang[j] < 150.0/180.0*3.142)
+                Angles[14]++;
+            else if(ang[j] < 160.0/180.0*3.142)
+                Angles[15]++;
+            else if(ang[j] < 170.0/180.0*3.142)
+                Angles[16]++;
+            else
+                Angles[17]++;
+        }
+    }
+
+    cout.unsetf(ios_base::floatfield);
+
+    if(m_mesh->m_verbose)
+    {
+        cout << endl << endl;
+        cout << "\tSurface Mesh Angle Histogram" << endl;
+        for(int i = 0; i < 18; i++)
+        {
+            cout << "\t\t" << i*10.0 << "\t<= ang < " << (i+1)*10.0 << ":\t" << Angles[i] << "\t";
+            for(int j = 0; j < ceil(Angles[i]/m_mesh->m_element[2].size()/3*80); j++)
+                cout << "=";
+            cout << endl;
+        }
+    }
+
+    /*//analyse t/R
+    EdgeSet::iterator it;
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        EdgeSharedPtr e = *it;
+        int surf = e->CADSurf;
+        Array<OneD, NekDouble> loc1, loc2, locc(3);
+        loc1 = e->m_n1->GetCADSurf(surf);
+        loc2 = e->m_n2->GetCADSurf(surf);
+
+        locc[0] = (loc1[0] + loc2[0])/2.0;
+        locc[1] = (loc1[1] + loc2[1])/2.0;
+        locc[2] = (loc1[2] + loc2[2])/2.0;
+
+        CADSurfSharedPtr s = m_cad->GetSurf(surf);
+
+        NekDouble t = s->DistanceTo(locc);
+
+    }*/
+
+}
+
 //this mesh is valided that each egde is listed twice in the triangles
 void SurfaceMesh::Validate()
 {

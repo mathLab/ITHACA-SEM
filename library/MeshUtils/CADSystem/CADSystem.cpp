@@ -61,6 +61,45 @@ void CADSystem::Report()
     cout << "\tCAD has: " << m_surfs.size() << " surfaces." << endl;
 }
 
+void CADSystem::SmallFeatureAnalysis(NekDouble min)
+{
+    vector<pair<int,NekDouble> >lens;
+    map<int, CADCurveSharedPtr>::iterator it;
+    for(it = m_curves.begin(); it != m_curves.end(); it++)
+    {
+        ASSERTL0(it->second->GetTotLength() > 1e-5,"curve too small for meshing");
+        if(it->second->GetTotLength() < 5.0 * min)
+        {
+            lens.push_back(pair<int,NekDouble>(
+                            it->second->GetID(),it->second->GetTotLength()));
+        }
+    }
+    if(lens.size()>0)
+    {
+            cout << endl;
+            cout << "Small feature testing:" << endl;
+            for(int i = 0; i < lens.size(); i++)
+            {
+                cout << "\tCurve: " << lens[i].first << " has length: " << lens[i].second << endl;
+            }
+            if(lens.size() == 1)
+                cout << "\tThis curve's length is less than or close to minDelta" << endl;
+            else
+                cout << "\tThese curve's length are less than or close to minDelta" << endl;
+            cout << "\tIf these featurs are not planar the mesh generator may struggle ";
+            cout << "to produce a high-order mesh due to high curvature" << endl;
+            cout << "\tWould you like the Octree system to adjust accordingly, this may ";
+            cout << "compramise mesh smoothness (Y/N)" << endl;
+            string ans;
+            cin >> ans;
+            if(boost::iequals(ans,"Y"))
+                smallfeatreAdjust = true;
+            else
+                smallfeatreAdjust = false;
+
+    }
+}
+
 Array<OneD, NekDouble> CADSystem::GetBoundingBox()
 {
     Array<OneD, NekDouble> bound(6);

@@ -151,6 +151,8 @@ public:
      */
     bool InsideShape(Array<OneD, NekDouble> loc);
 
+    void SmallFeatureAnalysis(NekDouble min);
+
 private:
     /// Private function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
@@ -168,6 +170,8 @@ private:
     std::map<int, CADVertSharedPtr> m_verts;
     /// occ master object
     TopoDS_Shape shape;
+
+    bool smallfeatreAdjust;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

@@ -104,6 +104,8 @@ void InputCAD::Process()
         m_cad->Report();
     }
 
+    m_cad->SmallFeatureAnalysis(m_minDelta);
+
     //create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
                                     m_mesh->m_verbose, m_minDelta,
@@ -135,7 +137,11 @@ void InputCAD::Process()
 
     m_surfacemesh->Optimise();
 
-    m_surfacemesh->HOAwareness();
+    //m_surfacemesh->HOAwareness();
+
+    m_surfacemesh->Metric();
+
+    exit(-1);
 
     ClearElementLinks(); //mesh needs reprocessing to clean element and edge lists, easiest way to do it
     ProcessVertices  ();

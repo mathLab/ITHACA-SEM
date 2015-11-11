@@ -166,6 +166,8 @@ public:
 
     int GetId(){return m_ID;}
 
+    NekDouble DistanceTo(Array<OneD, NekDouble> p);
+
 private:
 
     void Test(Array<OneD, NekDouble> uv);

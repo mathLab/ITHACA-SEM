@@ -42,12 +42,16 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <boost/unordered_set.hpp>
 
-namespace Nektar {
-namespace MeshUtils {
+namespace Nektar
+{
+namespace MeshUtils
+{
 
 class Octant; //have to forward declare the class for the sharedptr
 typedef boost::shared_ptr<Octant> OctantSharedPtr;
+typedef boost::unordered_set<OctantSharedPtr> OctantSet;
 
 /**
  * @brief this class contains the infomration and methods for individal octants
@@ -61,15 +65,17 @@ class Octant
         /**
          * @brief Defualt constructor
          */
+        Octant(OctantSharedPtr p, Array<OneD, NekDouble> dir);
+
+        //master constructor
         Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
-               int p, int l,
-               const std::vector<CurvaturePointSharedPtr> &CurvaturePointList);
+                       const std::vector<CurvaturePointSharedPtr> &cplist);
 
         /**
          * @brief scans over all octants in the octantlist and finds neighouring
          * octants
          */
-        void CreateNeighbourList(std::vector<OctantSharedPtr> OctantList);
+        void CreateNeighbourList(OctantSet OctantList);
 
         /**
          * @brief get boolean on whether the octant needs to divide based on
@@ -80,12 +86,12 @@ class Octant
         /**
          * @brief returns the id of the ith child of 8 for a non leaf octant
          */
-        int GetChild(int i){return m_children[i];}
+        OctantSharedPtr GetChild(int i){return m_children[i];}
 
         /**
          * @brief get boolean on whether the octant is a leaf or not
          */
-        bool GetLeaf(){return m_leaf;}
+        bool IsLeaf(){return m_leaf;}
 
         /**
          * @brief alter leaf status
@@ -127,12 +133,12 @@ class Octant
          * @brief get boolean on whether the octant has had a mesh spacing
          * assigned
          */
-        bool GetDeltaKnown(){return m_deltaSet;}
+        bool IsDeltaKnown(){return m_deltaSet;}
 
         /**
          * @brief get the neigbour list of the octant
          */
-        std::vector<int> GetNeighbourList(){return m_neighbourList;}
+        std::vector<OctantSharedPtr> GetNeighbourList(){return m_neighbourList;}
 
         /**
          * @brief get the location of the octant
@@ -185,7 +191,7 @@ class Octant
         /**
          * @brief set the list of child octants
          */
-        void SetChildren(Array<OneD, int> i){m_children = i;}
+        void SetChildren(Array<OneD, OctantSharedPtr> i){m_children = i;}
 
         /**
          * @brief clear neigbour list
@@ -195,7 +201,7 @@ class Octant
         /**
          * @brief get the parent of this octant
          */
-        int GetParent(){return m_parent;}
+        OctantSharedPtr GetParent(){return m_parent;}
 
         /**
          * @brief get the distance between this octant and another
@@ -230,16 +236,23 @@ class Octant
             return sqrt(3.0*m_hd*m_hd);
         }
 
+        int GetLocation(){return m_location;}
+        bool KnowsLocation(){return m_locationKnown;}
 
+        void SetLocation(int l)
+        {
+            m_locationKnown = true;
+            m_location = l;
+        }
 
     private:
 
         /// leaf identifer
         bool m_leaf;
         /// parent id
-        int m_parent;
+        OctantSharedPtr m_parent;
         /// list of child ids
-        Array<OneD, int> m_children;
+        Array<OneD, OctantSharedPtr> m_children;
         /// level of the octant
         int m_level;
         /// x,y,z location of the octant
@@ -251,15 +264,20 @@ class Octant
         /// mesh sizing parameter
         NekDouble m_delta;
         /// list of ids of neigbours
-        std::vector<int> m_neighbourList;
+        std::vector<OctantSharedPtr> m_neighbourList;
         /// idenify if division is needed
         bool m_needToDivide; //asume no need to divide
         /// idenify if delta has ben set
         bool m_deltaSet; //will not know delta
         /// idenify if orientation has been set
         int m_numValidPoints;
+        /// location with respect to the domain
+        bool m_locationKnown;
+        int m_location; //1 is interior 2 is boundary 3 is outside
 
 };
+
+bool operator==(OctantSharedPtr const &p1, OctantSharedPtr const &p2);
 
 }
 }

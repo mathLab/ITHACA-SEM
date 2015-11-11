@@ -55,41 +55,30 @@ public:
     /**
      * @brief constructor for a valid point (has radius of curvature)
      */
-    CurvaturePoint(Array<OneD, NekDouble> l, NekDouble R,
-                   Array<OneD, NekDouble> n) : m_loc(l), m_norm(n),
-                                               m_radius(R)
+    CurvaturePoint(int i, Array<OneD, NekDouble> uv,
+                   Array<OneD, NekDouble> l, NekDouble d)
+                   : sid(i), m_uv(uv), m_loc(l), m_delta(d)
     {
         m_valid = true;
+    }
+
+    CurvaturePoint(int i, Array<OneD, NekDouble> uv,
+                   Array<OneD, NekDouble> l, NekDouble d, NekDouble di)
+                   : sid(i), m_uv(uv), m_loc(l), m_delta(d), m_deltaIdeal(di)
+    {
+        m_valid = true;
+        m_minlimited = true;
     }
 
     /**
      * @brief constructor for a invalid point
      */
-    CurvaturePoint(Array<OneD, NekDouble> l,
-                   Array<OneD, NekDouble> n) : m_loc(l), m_norm(n)
+    CurvaturePoint(int i, Array<OneD, NekDouble> uv,
+                   Array<OneD, NekDouble> l)
+                   : sid(i), m_uv(uv), m_loc(l)
     {
         m_delta = -1;
         m_valid = false;
-    }
-
-    /**
-     * @brief calculate mesh spacing delta from radius of curvature
-     */
-    void Process(NekDouble min, NekDouble max, NekDouble eps)
-    {
-        if(m_valid)
-        {
-            m_delta = 2.0*m_radius*sqrt(eps*(2.0-eps));
-
-            if(m_delta>max)
-            {
-                m_delta = max;
-            }
-            if(m_delta<min)
-            {
-                m_delta = min;
-            }
-        }
     }
 
     /**
@@ -117,21 +106,27 @@ public:
      */
     Array<OneD, NekDouble> GetLoc(){return m_loc;}
 
-    /**
-     * @brief get normal vector
-     */
-    Array<OneD, NekDouble> GetNormal(){return m_norm;}
+    void GetCAD(int &surf, Array<OneD, NekDouble> &uv)
+    {
+        surf = sid;
+        uv = m_uv;
+    }
+
 
 private:
 
+    ///surf id
+    int sid;
+    ///uv coord on surf
+    Array<OneD, NekDouble> m_uv;
     /// x,y,z location
     Array<OneD, NekDouble> m_loc;
     ///normal vector of surface at point
-    Array<OneD, NekDouble> m_norm;
-    /// radius of curvature at point
-    NekDouble m_radius;
-    /// mesh spacing parameter at point
     NekDouble m_delta;
+    /// was the point min limited
+    bool m_minlimited;
+    /// if so what was the delta
+    NekDouble m_deltaIdeal;
     /// valid point or not
     bool m_valid;
 };

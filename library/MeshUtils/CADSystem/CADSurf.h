@@ -168,6 +168,8 @@ public:
 
     NekDouble DistanceTo(Array<OneD, NekDouble> p);
 
+    NekDouble Curvature(Array<OneD, NekDouble> uv);
+
 private:
 
     void Test(Array<OneD, NekDouble> uv);

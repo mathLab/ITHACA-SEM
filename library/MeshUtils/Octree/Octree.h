@@ -95,8 +95,6 @@ public:
      */
     NekDouble Query(Array<OneD, NekDouble> loc);
 
-    void Modify(Array<OneD, NekDouble> loc, NekDouble delta);
-
     /**
      * @brief returns the miminum spacing in the octree (for meshing purposes)
      *
@@ -104,13 +102,13 @@ public:
      */
     NekDouble GetMinDelta(){return m_minDelta;}
 
+private:
+
     /**
      * @brief Smooths specification over all octants to a
      * gradation criteria
      */
     void SmoothAllOctants();
-
-private:
 
     /**
      * @brief gets an optimum number of curvature sampling points and
@@ -122,7 +120,7 @@ private:
      * @brief Recursive alorithm which divides and creates new octants based
      * on the geometry
      */
-    void InitialSubDivide(int parent);
+    void InitialSubDivide(OctantSharedPtr parent);
 
     /**
      * @brief Recursive alorithm which subdivides octants so that the
@@ -133,7 +131,7 @@ private:
     /**
      * @brief Subdivision step for smoothoctants()
      */
-    void SubDivideLevel(int parent);
+    void SubDivideLevel(OctantSharedPtr parent);
 
     /**
      * @brief Smooths specification over the surface octants to a
@@ -157,7 +155,7 @@ private:
      * @brief Calculates the difference in delta divided by the difference
      * in location between two octants i and j
      */
-    NekDouble ddx(int i, int j);
+    NekDouble ddx(OctantSharedPtr i, OctantSharedPtr j);
 
     /// minimum delta in the octree
     NekDouble m_minDelta;
@@ -175,9 +173,11 @@ private:
     /// list of curvature sample points
     std::vector<CurvaturePointSharedPtr> m_cpList;
     /// list of octants
-    std::vector<OctantSharedPtr> OctantList;
+    OctantSet Octants;
     /// number which do not need subdivding, when this is 0 octree complete
     int m_totNotDividing;
+    ///master octant for searching
+    OctantSharedPtr m_masteroct;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

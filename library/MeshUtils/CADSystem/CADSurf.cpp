@@ -135,6 +135,47 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
     return uvr;
 }
 
+NekDouble CADSurf::Curvature(Array<OneD, NekDouble> uv)
+{
+    Test(uv);
+
+    Array<OneD, NekDouble> n = N(uv);
+
+    //a zero normal occurs at a signularity, CurvaturePoint
+    //cannot be sampled here
+    if(n[0]==0 && n[1]==0 && n[2]==0)
+    {
+        return 0.0;
+    }
+
+    Array<OneD, NekDouble> r = D2(uv);
+
+    //metric and curvature tensors
+    NekDouble E = r[3]*r[3] + r[4]*r[4] + r[5]*r[5];
+    NekDouble F = r[3]*r[6] + r[4]*r[7] + r[5]*r[8];
+    NekDouble G = r[6]*r[6] + r[7]*r[7] + r[8]*r[8];
+    NekDouble e = n[0]*r[9] + n[1]*r[10] + n[2]*r[11];
+    NekDouble f = n[0]*r[15] + n[1]*r[16] + n[2]*r[17];
+    NekDouble g = n[0]*r[12] + n[1]*r[13] + n[2]*r[14];
+
+    //if det is zero cannot invert matrix, R=0 so must skip
+    if(E*G-F*F<1E-30)
+    {
+        return numeric_limits<double>::max();
+    }
+
+    NekDouble K, H;
+
+    K = (e*g-f*f)/(E*G-F*F);
+    H = 0.5*(e*G-2*f*F+g*E)/(E*G-F*F);
+
+    NekDouble kv[2];
+    kv[0] = abs(H + sqrt(H*H-K));
+    kv[1] = abs(H - sqrt(H*H-K));
+
+    return kv[0] > kv[1] ? kv[0] : kv[1];
+}
+
 NekDouble CADSurf::DistanceTo(Array<OneD, NekDouble> p)
 {
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);

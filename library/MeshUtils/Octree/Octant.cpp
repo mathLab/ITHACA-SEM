@@ -165,5 +165,10 @@ bool operator==(OctantSharedPtr const &p1, OctantSharedPtr const &p2)
         return false;
 }
 
+bool lessThanOp(OctantSharedPtr const &p1, OctantSharedPtr const &p2)
+{
+    return p1->GetId() < p2->GetId();
+}
+
 }
 }

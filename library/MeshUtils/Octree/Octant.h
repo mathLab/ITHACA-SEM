@@ -53,6 +53,8 @@ class Octant; //have to forward declare the class for the sharedptr
 typedef boost::shared_ptr<Octant> OctantSharedPtr;
 typedef std::set<OctantSharedPtr> OctantSet;
 
+bool lessThanOp(OctantSharedPtr const &p1, OctantSharedPtr const &p2);
+
 /**
  * @brief this class contains the infomration and methods for individal octants
  * in the Octree
@@ -75,7 +77,10 @@ class Octant
         void ClearNeigbourList(){m_neighbourList.clear();}
 
         void SetNeigbourList(std::vector<OctantSharedPtr> const &l)
-                        {m_neighbourList = l;}
+        {
+            std::sort(l.begin(), l.end(), &lessThanOp);
+            m_neighbourList = l;
+        }
 
         int GetId(){return m_id;}
 

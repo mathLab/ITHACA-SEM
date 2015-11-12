@@ -409,6 +409,22 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     {
         m_surfs[i]->SetTwoC();
     }
+
+    //check the normals are interior
+    Array<OneD, NekDouble> bnds = newSurf->GetBounds();
+    Array<OneD, NekDouble> uv(2);
+    uv[0] = (bnds[1]+bnds[0])/2.0;
+    uv[1] = (bnds[3]+bnds[2])/2.0;
+
+    Array<OneD, NekDouble> N = newSurf->N(uv);
+    Array<OneD, NekDouble> P = newSurf->P(uv);
+
+    Array<OneD, NekDouble> tl(3);
+    tl[0] = P[0] + 0.01*N[0];
+    tl[1] = P[1] + 0.01*N[1];
+    tl[2] = P[2] + 0.01*N[2];
+
+    ASSERTL0(InsideShape(tl), "normal incorrectly orientated");
 }
 
 bool CADSystem::InsideShape(Array<OneD, NekDouble> loc)

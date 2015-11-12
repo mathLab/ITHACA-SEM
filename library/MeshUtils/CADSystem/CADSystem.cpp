@@ -78,6 +78,7 @@ void CADSystem::SmallFeatureAnalysis(NekDouble min)
     {
             cout << endl;
             cout << "Small feature testing:" << endl;
+            cout << "\tWARNING" << endl;
             for(int i = 0; i < lens.size(); i++)
             {
                 cout << "\tCurve: " << lens[i].first << " has length: " << lens[i].second << endl;
@@ -88,15 +89,6 @@ void CADSystem::SmallFeatureAnalysis(NekDouble min)
                 cout << "\tThese curve's length are less than or close to minDelta" << endl;
             cout << "\tIf these featurs are not planar the mesh generator may struggle ";
             cout << "to produce a high-order mesh due to high curvature" << endl;
-            cout << "\tWould you like the Octree system to adjust accordingly, this may ";
-            cout << "compramise mesh smoothness (Y/N)" << endl;
-            string ans;
-            cin >> ans;
-            if(boost::iequals(ans,"Y"))
-                smallfeatreAdjust = true;
-            else
-                smallfeatreAdjust = false;
-
     }
 }
 

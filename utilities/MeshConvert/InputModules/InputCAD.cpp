@@ -141,8 +141,6 @@ void InputCAD::Process()
 
     m_surfacemesh->Metric();
 
-    exit(-1);
-
     ClearElementLinks(); //mesh needs reprocessing to clean element and edge lists, easiest way to do it
     ProcessVertices  ();
     ProcessEdges     ();

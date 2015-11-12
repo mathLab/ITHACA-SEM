@@ -110,6 +110,8 @@ private:
      */
     void SmoothAllOctants();
 
+    void AssignNeigbours(OctantSharedPtr const &o);
+
     /**
      * @brief gets an optimum number of curvature sampling points and
      * calculates the curavture at these points
@@ -131,7 +133,7 @@ private:
     /**
      * @brief Subdivision step for smoothoctants()
      */
-    void SubDivideLevel(OctantSharedPtr parent);
+    Array<OneD, OctantSharedPtr> SubDivideLevel(OctantSharedPtr parent);
 
     /**
      * @brief Smooths specification over the surface octants to a

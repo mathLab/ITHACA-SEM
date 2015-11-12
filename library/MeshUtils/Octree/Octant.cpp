@@ -43,7 +43,7 @@ namespace Nektar
 namespace MeshUtils
 {
 
-Octant::Octant(OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_parent(p)
+Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), m_parent(p)
 {
     //initialise variables to defualt states
     m_leaf = true;
@@ -128,14 +128,13 @@ Octant::Octant(OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_parent(p)
 }
 
 //constructor for the master octant
-Octant::Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
+Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                const vector<CurvaturePointSharedPtr> &cplist)
-               : m_hd(dx)
+               : m_id(i), m_hd(dx)
 {
     //initialise variables to defualt states
     m_leaf = false;
     m_needToDivide = true;
-    m_deltaSet = true;
     m_numValidPoints = 0;
     m_delta = -1;
 
@@ -158,109 +157,9 @@ Octant::Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
     m_location = 2;
 }
 
-void Octant::CreateNeighbourList(OctantSet Octants)
-{
-    //clear old list
-    DeleteNeighbourList();
-
-    OctantSet::iterator it;
-
-    //look over all octants and consider if they are neigbours
-    for(it = Octants.begin(); it != Octants.end(); it++)
-    {
-        OctantSharedPtr oct = *it;
-
-        if(oct == boost::shared_ptr<Octant>(this))
-            continue;
-
-        if(oct->IsLeaf())
-        {
-            //work out the max distance between the two octants if they were
-            //joined corner to corner
-            NekDouble rmax = DiagonalDim() + oct->DiagonalDim();
-
-            NekDouble ractual = Distance(oct);
-
-            //if the actucal distance between them is greater that this
-            //this octant should not be considered, massive speed up
-            if(ractual > 1.1*rmax)
-            {
-                continue;
-            }
-
-            //check overlapping in 2-D for all three dimensions
-            if(fabs(FX(-1) - oct->FX(+1)) < 1E-6 ||
-               fabs(FX(+1) - oct->FX(-1)) < 1E-6 )
-            {
-                //check yz rects
-                bool Cond1 = false;
-                bool Cond2 = false;
-                bool Cond3 = false;
-                bool Cond4 = false;
-                if(FY(+1) < oct->FY(-1))
-                    Cond1 = true;
-                if(FY(-1) > oct->FY(+1))
-                    Cond1 = true;
-                if(FZ(+1) < oct->FZ(-1))
-                    Cond1 = true;
-                if(FZ(-1) > oct->FZ(+1))
-                    Cond1 = true;
-                if(!Cond1 && !Cond2 && !Cond3 && !Cond4)
-                {
-                    m_neighbourList.push_back(oct);
-                }
-            }
-            else if(fabs(FY(-1) - oct->FY(+1)) <1E-6 ||
-                    fabs(FY(+1) - oct->FY(-1)) <1E-6)
-            {
-                //check xz rects
-                bool Cond1 = false;
-                bool Cond2 = false;
-                bool Cond3 = false;
-                bool Cond4 = false;
-                if(FX(+1) < oct->FX(-1))
-                    Cond1 = true;
-                if(FX(-1) > oct->FX(+1))
-                    Cond1 = true;
-                if(FZ(+1) < oct->FZ(-1))
-                    Cond1 = true;
-                if(FZ(-1) > oct->FZ(+1))
-                    Cond1 = true;
-                if(!Cond1 && !Cond2 && !Cond3 && !Cond4)
-                {
-                    m_neighbourList.push_back(oct);
-                }
-            }
-            else if(fabs(FZ(-1) - oct->FZ(+1)) <1E-6 ||
-                    fabs(FZ(+1) - oct->FZ(-1)) <1E-6)
-            {
-                //check xy rects
-                bool Cond1 = false;
-                bool Cond2 = false;
-                bool Cond3 = false;
-                bool Cond4 = false;
-                if(FX(+1) < oct->FX(-1))
-                    Cond1 = true;
-                if(FX(-1) > oct->FX(+1))
-                    Cond1 = true;
-                if(FY(+1) < oct->FY(-1))
-                    Cond1 = true;
-                if(FY(-1) > oct->FY(+1))
-                    Cond1 = true;
-                if(!Cond1 && !Cond2 && !Cond3 && !Cond4)
-                {
-                    m_neighbourList.push_back(oct);
-                }
-            }
-        }
-    }
-}
-
 bool operator==(OctantSharedPtr const &p1, OctantSharedPtr const &p2)
 {
-    Array<OneD, NekDouble> loc1 = p1->GetLoc();
-    Array<OneD, NekDouble> loc2 = p2->GetLoc();
-    if(loc1[0] == loc2[0] && loc1[1] == loc2[1] && loc1[2] == loc2[2])
+    if(p1->GetId() == p2->GetId())
         return true;
     else
         return false;

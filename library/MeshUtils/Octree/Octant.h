@@ -51,7 +51,7 @@ namespace MeshUtils
 
 class Octant; //have to forward declare the class for the sharedptr
 typedef boost::shared_ptr<Octant> OctantSharedPtr;
-typedef boost::unordered_set<OctantSharedPtr> OctantSet;
+typedef std::set<OctantSharedPtr> OctantSet;
 
 /**
  * @brief this class contains the infomration and methods for individal octants
@@ -65,17 +65,19 @@ class Octant
         /**
          * @brief Defualt constructor
          */
-        Octant(OctantSharedPtr p, Array<OneD, NekDouble> dir);
+        Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir);
 
         //master constructor
-        Octant(NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
+        Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                        const std::vector<CurvaturePointSharedPtr> &cplist);
 
-        /**
-         * @brief scans over all octants in the octantlist and finds neighouring
-         * octants
-         */
-        void CreateNeighbourList(OctantSet OctantList);
+
+        void ClearNeigbourList(){m_neighbourList.clear();}
+
+        void SetNeigbourList(std::vector<OctantSharedPtr> const &l)
+                        {m_neighbourList = l;}
+
+        int GetId(){return m_id;}
 
         /**
          * @brief get boolean on whether the octant needs to divide based on
@@ -92,11 +94,6 @@ class Octant
          * @brief get boolean on whether the octant is a leaf or not
          */
         bool IsLeaf(){return m_leaf;}
-
-        /**
-         * @brief alter leaf status
-         */
-        void SetLeaf(bool l){m_leaf = l;}
 
         /**
          * @brief get boolean on whether the octant has curvature sample points
@@ -191,12 +188,7 @@ class Octant
         /**
          * @brief set the list of child octants
          */
-        void SetChildren(Array<OneD, OctantSharedPtr> i){m_children = i;}
-
-        /**
-         * @brief clear neigbour list
-         */
-        void DeleteNeighbourList(){m_neighbourList.clear();}
+        void SetChildren(Array<OneD, OctantSharedPtr> i){m_children = i; m_leaf=false;}
 
         /**
          * @brief get the parent of this octant
@@ -247,6 +239,8 @@ class Octant
 
     private:
 
+        ///id
+        int m_id;
         /// leaf identifer
         bool m_leaf;
         /// parent id

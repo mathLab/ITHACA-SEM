@@ -721,11 +721,49 @@ int Octree::CountElemt()
                     ctcor++;
                 }
             }
-            if(oct->GetLocation() == 2)
+            else if(oct->GetLocation() == 2)
+            {
                 c2++;
+                vector<CurvaturePointSharedPtr> l = oct->GetCPList();
+                Array<OneD, NekDouble> avl(3,0.0);
+                Array<OneD, NekDouble> avN(3,0.0);
+                for(int j = 0; j < l.size(); j++)
+                {
+                    int surf;
+                    Array<OneD, NekDouble> uv,loc,N;
+                    loc = l[j]->GetLoc();
+                    l->GetCAD(surf, uv);
+                    N = m_cad->GetSurf(surf)->N(uv);
+                    avl[0] += loc[0]/l.size();
+                    avl[1] += loc[1]/l.size();
+                    avl[2] += loc[2]/l.size();
+                    avN[0] += N[0]/l.size();
+                    avN[1] += N[1]/l.size();
+                    avN[2] += N[2]/l.size();
+                }
+
+                NekDouble V;
+                if(avN[0] > avN[1] && avN[0] > avN[2])
+                {
+                    V = (avl[0]-oct->FX(-1))*4.0*oct->DX()*oct->DX();
+                }
+                else if(avN[1] > avN[0] && avN[1] > avN[2])
+                {
+                    V = (avl[1]-oct->FY(-1))*4.0*oct->DX()*oct->DX();
+                }
+                else if(avN[2] > avN[0] && avN[2] > avN[1])
+                {
+                    V = (avl[2]-oct->FZ(-1))*4.0*oct->DX()*oct->DX();
+                }
+                else
+                {
+                    ASSERTL0(false,"bad normal");
+                }
+                altot += V/(oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
+            }
 
             Array<OneD, NekDouble> loc = oct->GetLoc();
-            if(m_cad->InsideShape(loc) || oct->GetLocation() == 2)
+            if(m_cad->InsideShape(loc))
             {
                 altot += 8.0*oct->DX()*oct->DX()*oct->DX() /
                  (oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));

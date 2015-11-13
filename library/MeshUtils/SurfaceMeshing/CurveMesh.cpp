@@ -208,11 +208,90 @@ void CurveMesh::Mesh()
         }
     }
 
+    //make edges and add them to the edgeset for the face mesher to use
+    for(int i = 0; i < m_meshpoints.size() - 1; i++)
+    {
+        EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(m_meshpoints[i],
+                                                           m_meshpoints[i+1]));
+        e->CADCurveID = m_id;
+        m_mesh->m_edgeSet.insert(e);
+    }
+
+    cout << "\r                                                                                             ";
+    cout << scientific << "\r\t\tCurve " << m_id << endl
+         << "\t\t\tLength: " << m_curvelength << endl
+         << "\t\t\tNodes: " << m_meshpoints.size() << endl
+         << "\t\t\tSample points: " << m_numSamplePoints << endl
+         << endl;
 }
 
-void CurveMesh::Report()
+void CurveMesh::SplitWRT(NodeSharedPtr n, NekDouble d)
 {
-    cout << scientific << "\tLength: " << m_curvelength << "\tPoints: " << m_meshpoints.size() << endl;
+    if(m_meshpoints[0] == n)
+    {
+        while(m_meshpoints[0]->Distance(m_meshpoints[1]) > 1.5*d)
+        {
+            vector<CADSurfSharedPtr> s = m_cadcurve->GetAdjSurf();
+
+            NekDouble ta = m_meshpoints[0]->GetCADCurve(m_id);
+            NekDouble tb = m_meshpoints[1]->GetCADCurve(m_id);
+            NekDouble tn = (ta + tb)/2.0;
+            Array<OneD, NekDouble> loc = m_cadcurve->P(tn);
+            NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
+            nn->SetCADCurve(m_id, tn);
+            for(int j = 0; j < 2; j++)
+            {
+                Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+                nn->SetCADSurf(s[j]->GetId(), uv);
+            }
+
+            m_mesh->m_edgeSet.erase(boost::shared_ptr<Edge>(new Edge(m_meshpoints[0],m_meshpoints[1])));
+            m_meshpoints.insert(m_meshpoints.begin() + 1, nn);
+            EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(m_meshpoints[0],
+                                                               m_meshpoints[1]));
+            e->CADCurveID = m_id;
+            m_mesh->m_edgeSet.insert(e);
+            e = boost::shared_ptr<Edge>(new Edge(m_meshpoints[1],m_meshpoints[2]));
+            e->CADCurveID = m_id;
+            m_mesh->m_edgeSet.insert(e);
+            cout << "split" << endl;
+        }
+    }
+    else if(m_meshpoints.back() == n)
+    {
+        while(m_meshpoints.back()->Distance(m_meshpoints[m_meshpoints.size()-2]) > 1.5*d)
+        {
+            vector<CADSurfSharedPtr> s = m_cadcurve->GetAdjSurf();
+            NodeSharedPtr n1 = m_meshpoints.back();
+            NodeSharedPtr n2 = m_meshpoints[m_meshpoints.size()-2];
+            NekDouble ta = n1->GetCADCurve(m_id);
+            NekDouble tb = n2->GetCADCurve(m_id);
+            NekDouble tn = (ta + tb)/2.0;
+            Array<OneD, NekDouble> loc = m_cadcurve->P(tn);
+            NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
+            nn->SetCADCurve(m_id, tn);
+            for(int j = 0; j < 2; j++)
+            {
+                Array<OneD, NekDouble> uv = s[j]->locuv(loc);
+                nn->SetCADSurf(s[j]->GetId(), uv);
+            }
+
+            m_mesh->m_edgeSet.erase(boost::shared_ptr<Edge>(new Edge(n1,n2)));
+            m_meshpoints.insert(m_meshpoints.begin() + m_meshpoints.size() - 1, nn);
+            EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(m_meshpoints.back(),
+                                                              m_meshpoints[m_meshpoints.size()-2]));
+            e->CADCurveID = m_id;
+            m_mesh->m_edgeSet.insert(e);
+            e = boost::shared_ptr<Edge>(new Edge(m_meshpoints.back(),m_meshpoints[m_meshpoints.size()-3]));
+            e->CADCurveID = m_id;
+            m_mesh->m_edgeSet.insert(e);
+            cout << "split" << endl;
+        }
+    }
+    else
+    {
+        ASSERTL0(false,"node is not on this curve");
+    }
 }
 
 void CurveMesh::GetPhiFunction()

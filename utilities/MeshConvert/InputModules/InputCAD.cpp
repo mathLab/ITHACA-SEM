@@ -150,7 +150,26 @@ void InputCAD::Process()
 
     m_surfacemesh->Validate();
 
-    m_mesh->m_expDim = 3;
+    vector<ElementSharedPtr> elements = m_mesh->m_element[2];
+    m_mesh->m_element[2].clear();
+
+    for(int i = 0; i < elements.size(); i++)
+    {
+        if(elements[i]->GetTagList()[0] == 4 ||
+           elements[i]->GetTagList()[0] == 7 ||
+           elements[i]->GetTagList()[0] == 8 ||
+           elements[i]->GetTagList()[0] == 9)
+            m_mesh->m_element[2].push_back(elements[i]);
+    }
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
+    ProcessComposites();
+    m_mesh->m_nummode = 2;
+    return;
+
+    /*m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");
     m_mesh->m_fields.push_back("w");

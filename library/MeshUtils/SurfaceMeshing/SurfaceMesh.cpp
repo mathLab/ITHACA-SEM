@@ -50,13 +50,16 @@ void SurfaceMesh::Mesh()
     if(m_mesh->m_verbose)
         cout << endl << "Surface meshing" << endl;
 
+    if(m_mesh->m_verbose)
+        cout << endl << "\tCurve meshing:" << endl << endl;
+
     //linear mesh all curves
     for(int i = 1; i <= m_cad->GetNumCurve(); i++)
     {
         if(m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(i,m_cad->GetNumCurve(),
-                                           "\tCurve meshing");
+                                           "Curve progress");
         }
 
         m_curvemeshes[i] =
@@ -67,13 +70,23 @@ void SurfaceMesh::Mesh()
 
     }
 
-    if(m_mesh->m_verbose)
+    //make large jumps between curves split
+    for(int i = 1; i <= m_cad->GetNumCurve(); i++)
     {
-        cout << endl << "\tCurve mesh stats:" << endl;
-        for(int i = 1; i <= m_cad->GetNumCurve(); i++)
+        vector<NodeSharedPtr> n = m_curvemeshes[i]->GetMeshPoints();
+        vector<int> l = n[0]->GetListCADCurve();
+        for(int j = 0; j < l.size(); j++)
         {
-            cout << "\t\tCurve: " << i;
-            m_curvemeshes[i]->Report();
+            if(i == l[j])
+                continue;
+            m_curvemeshes[l[j]]->SplitWRT(n[0], n[0]->Distance(n[1]));
+        }
+        l = n.back()->GetListCADCurve();
+        for(int j = 0; j < l.size(); j++)
+        {
+            if(i == l[j])
+                continue;
+            m_curvemeshes[l[j]]->SplitWRT(n.back(), n.back()->Distance(n[n.size()-2]));
         }
     }
 

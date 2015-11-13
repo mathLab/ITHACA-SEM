@@ -95,13 +95,10 @@ class CurveMesh
          */
         int GetNumPoints(){return m_meshpoints.size();}
 
-        /**
-         * @brief print report to screen
-         */
-        void Report();
-
 
         NekDouble GetLength(){return m_curvelength;}
+
+        void SplitWRT(NodeSharedPtr n, NekDouble d);
 
     private:
 

@@ -205,8 +205,6 @@ void Octree::Build()
         int elem = CountElemt();
         printf("\tPredicted mesh: %.2d elements\n", elem);
     }
-
-    exit(-1);
 }
 
 void Octree::InitialSubDivide(OctantSharedPtr parent)
@@ -535,9 +533,8 @@ void Octree::PropagateDomain()
                 known.clear();
             }
 
-            //check to see if the octant knows its location if not try and find it
             if(oct->IsLeaf() && !oct->KnowsLocation())
-            {
+            { //if the node does not know its location
                 ct+=1;
                 vector<OctantSharedPtr> known;
                 vector<OctantSharedPtr> nList = oct->GetNeighbourList();
@@ -549,75 +546,82 @@ void Octree::PropagateDomain()
                         known.push_back(nList[j]);
                     }
                 }
-
                 if(known.size() > 0)
                 {
-                    vector<OctantSharedPtr> loc2; //need to know which octants are location 2
+                    vector<OctantSharedPtr> isOrient2;
                     for(int j = 0; j < known.size(); j++)
                     {
                         if(known[j]->GetLocation() == 2)
                         {
-                            loc2.push_back(known[j]);
+                            isOrient2.push_back(known[j]);
                         }
                     }
-                    if(loc2.size() > 0)
-                    {
-                        //has a neighbour with boundary section
-                        //need to explicity calucalte orienation
-                        //otherwise can just copy
 
-                        //get list of curvature points in from all loc2 octants
-                        vector<CurvaturePointSharedPtr> cplist;
-                        for(int j = 0; j < loc2.size(); j++)
+                    if(isOrient2.size() == 0)
+                    {
+                        NekDouble dist=numeric_limits<double>::max();
+                        OctantSharedPtr closest;
+                        for(int j = 0; j < known.size(); j++)
                         {
-                            vector<CurvaturePointSharedPtr> l = loc2[j]->GetCPList();
-                            cplist.insert(cplist.end(), l.begin(), l.end());
-                        }
-                        //of all these points find the closest
-                        NekDouble dist = numeric_limits<double>::max();
-                        CurvaturePointSharedPtr closest;
-                        for(int j = 0; j < cplist.size(); j++)
-                        {
-                            if(oct->CPDistance(cplist[j]) < dist)
+                            if(oct->Distance(known[j]) < dist)
                             {
-                                dist = oct->CPDistance(cplist[j]);
-                                closest = cplist[j];
+                                closest= known[j];
+                                dist = oct->Distance(known[j]);
                             }
                         }
 
-                        //we know the closest point and the octant
-                        Array<OneD, NekDouble> octloc, cploc;
-                        octloc = oct->GetLoc();
-                        cploc = closest->GetLoc();
-                        Array<OneD, NekDouble> uv(2);
-                        int surf;
-                        closest->GetCAD(surf, uv);
-                        Array<OneD, NekDouble> SurfNorm = m_cad->GetSurf(surf)->N(uv);
-                        Array<OneD, NekDouble> pdir(3);
-
-                        pdir[0] = octloc[0] - cploc[0];
-                        pdir[1] = octloc[1] - cploc[1];
-                        pdir[2] = octloc[2] - cploc[2];
-
-                        NekDouble dot = SurfNorm[0]*pdir[0] +
-                                        SurfNorm[1]*pdir[1] +
-                                        SurfNorm[2]*pdir[2];
-
-                        if(dot < 0.0)
-                        {
-                            oct->SetLocation(3); //outside the domain
-                        }
-                        else
-                        {
-                            oct->SetLocation(1); //inside
-                        }
+                        oct->SetLocation(closest->GetLocation());
 
                     }
                     else
                     {
-                        int newloc = known[0]->GetLocation();
-                        oct->SetLocation(newloc);
-                        //doing this may cause issues, needs testing and fixing
+                        NekDouble dist = numeric_limits<double>::max();
+
+                        OctantSharedPtr closest;
+
+                        for(int j = 0; j < isOrient2.size(); j++)
+                        {
+                            if(oct->Distance(isOrient2[j]) < dist)
+                            {
+                                closest = isOrient2[j];
+                                dist = oct->Distance(isOrient2[j]);
+                            }
+                        }
+
+                        CurvaturePointSharedPtr closestPoint;
+                        dist = numeric_limits<double>::max();
+                        vector<CurvaturePointSharedPtr> cp = closest->GetCPList();
+                        for(int j = 0; j < cp.size(); j++)
+                        {
+                            if(oct->CPDistance(cp[j]) < dist)
+                            {
+                                closestPoint = cp[j];
+                                dist = oct->CPDistance(cp[j]);
+                            }
+                        }
+
+                        Array<OneD, NekDouble> octloc, cploc, vec(3), uv, N;
+                        int surf;
+                        closestPoint->GetCAD(surf, uv);
+                        N = m_cad->GetSurf(surf)->N(uv);
+
+                        octloc = oct->GetLoc();
+                        cploc = closestPoint->GetLoc();
+
+                        vec[0] = octloc[0] - cploc[0];
+                        vec[1] = octloc[1] - cploc[1];
+                        vec[2] = octloc[2] - cploc[2];
+
+                        NekDouble dot = vec[0]*N[0] + vec[1]*N[1] + vec[2]*N[2];
+
+                        if(dot <= 0.0)
+                        {
+                            oct->SetLocation(3);
+                        }
+                        else
+                        {
+                            oct->SetLocation(1);
+                        }
                     }
                 }
                 known.clear();
@@ -694,12 +698,6 @@ int Octree::CountElemt()
     //mesh
 
     NekDouble total = 0.0;
-    NekDouble altot = 0.0;
-    OctantSet::iterator it;
-
-    int ctcor = 0;
-    int ctinc = 0;
-    int c2 = 0;
 
     for(int i = 0; i < Octants.size(); i++)
     {
@@ -710,69 +708,12 @@ int Octree::CountElemt()
             {
                 total += 8.0*oct->DX()*oct->DX()*oct->DX() /
                  (oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
-
-                Array<OneD, NekDouble> loc = oct->GetLoc();
-                if(!m_cad->InsideShape(loc))
-                {
-                    ctinc++;
-                }
-                else
-                {
-                    ctcor++;
-                }
             }
             else if(oct->GetLocation() == 2)
             {
-                c2++;
-                vector<CurvaturePointSharedPtr> l = oct->GetCPList();
-                Array<OneD, NekDouble> avl(3,0.0);
-                Array<OneD, NekDouble> avN(3,0.0);
-                for(int j = 0; j < l.size(); j++)
-                {
-                    int surf;
-                    Array<OneD, NekDouble> uv,loc,N;
-                    loc = l[j]->GetLoc();
-                    l->GetCAD(surf, uv);
-                    N = m_cad->GetSurf(surf)->N(uv);
-                    avl[0] += loc[0]/l.size();
-                    avl[1] += loc[1]/l.size();
-                    avl[2] += loc[2]/l.size();
-                    avN[0] += N[0]/l.size();
-                    avN[1] += N[1]/l.size();
-                    avN[2] += N[2]/l.size();
-                }
-
-                NekDouble V;
-                if(avN[0] > avN[1] && avN[0] > avN[2])
-                {
-                    V = (avl[0]-oct->FX(-1))*4.0*oct->DX()*oct->DX();
-                }
-                else if(avN[1] > avN[0] && avN[1] > avN[2])
-                {
-                    V = (avl[1]-oct->FY(-1))*4.0*oct->DX()*oct->DX();
-                }
-                else if(avN[2] > avN[0] && avN[2] > avN[1])
-                {
-                    V = (avl[2]-oct->FZ(-1))*4.0*oct->DX()*oct->DX();
-                }
-                else
-                {
-                    ASSERTL0(false,"bad normal");
-                }
-                altot += V/(oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
-            }
-
-            Array<OneD, NekDouble> loc = oct->GetLoc();
-            if(m_cad->InsideShape(loc))
-            {
-                altot += 8.0*oct->DX()*oct->DX()*oct->DX() /
-                 (oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
             }
         }
     }
-
-    cout << ctcor << " correct " << ctinc << " incorcect " << c2 << " in 2 loc" << endl;
-    cout << "alternative total " << int(altot) << endl;
 
     return int(total);
 }

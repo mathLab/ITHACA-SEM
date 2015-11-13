@@ -152,21 +152,18 @@ void Octree::Build()
      (BoundingBox[5]+BoundingBox[4])/2, maxdim, m_cpList);
 
     m_masteroct = newOctant;
-    Octants.insert(newOctant);
+    Octants.push_back(newOctant);
 
     m_totNotDividing=0;
 
     InitialSubDivide(m_masteroct);
 
-    OctantSet::iterator it;
-
-    int ct = 0;
-    for(it = Octants.begin(); it != Octants.end(); it++, ct++)
+    for(int i = 0; i < Octants.size(); i++)
     {
-        OctantSharedPtr oct = *it;
+        OctantSharedPtr oct = Octants[i];
         if(m_verbose)
         {
-            LibUtilities::PrintProgressbar(ct, Octants.size(),
+            LibUtilities::PrintProgressbar(i, Octants.size(),
                                            "\tDetermining neigbours\t");
         }
         if(oct->IsLeaf())
@@ -193,11 +190,12 @@ void Octree::Build()
 
     SmoothAllOctants();
 
-    for(it = Octants.begin(); it != Octants.end(); it++)
+    for(int i = 0; i < Octants.size(); i++)
     {
-        if((*it)->IsLeaf())
+        OctantSharedPtr oct = Octants[i];
+        if(oct->IsLeaf())
         {
-            ASSERTL0(!((*it)->GetDelta() < 0.0),
+            ASSERTL0(!(oct->GetDelta() < 0.0),
                      "Error in initial octree construction");
         }
     }
@@ -265,8 +263,7 @@ void Octree::InitialSubDivide(OctantSharedPtr parent)
         OctantSharedPtr newOctant = MemoryManager<Octant>::AllocateSharedPtr
                                                     (Octants.size(), parent, dir);
 
-        pair<OctantSet::iterator, bool> test = Octants.insert(newOctant);
-        ASSERTL0(test.second,"insertion should not fail");
+        Octants.push_back(newOctant);
         children[i] = newOctant;
 
         if(children[i]->GetDivide())
@@ -289,7 +286,6 @@ void Octree::SubDivideByLevel()
     bool brk;
     int j = 0;
     int imax=0;
-    OctantSet::iterator it;
 
     do
     {
@@ -297,12 +293,12 @@ void Octree::SubDivideByLevel()
         j = 0;
         OctantSharedPtr oct;
         Array<OneD, OctantSharedPtr> newoctants;
-        for(it = Octants.begin(); it != Octants.end(); it++, j++)
+        for(int i = 0; i < Octants.size(); i++, j++)
         {
+            oct = Octants[i];
             if(j > imax)
                 imax = j;
 
-            oct = *it;
             if(oct->IsLeaf())
             {
                 vector<OctantSharedPtr> nList = oct->GetNeighbourList();
@@ -331,8 +327,7 @@ void Octree::SubDivideByLevel()
             oct->SetChildren(newoctants);
             for(int i = 0; i < 8; i++)
             {
-                pair<OctantSet::iterator, bool> test = Octants.insert(newoctants[i]);
-                ASSERTL0(test.second,"insertion should not fail");
+                Octants.push_back(newoctants[i]);
             }
             for(int i = 0; i < 8; i++)
             {
@@ -435,9 +430,9 @@ void Octree::SmoothSurfaceOctants()
     do
     {
         ct=0;
-        for(it = Octants.begin(); it != Octants.end(); it++)
+        for(int i = 0; i < Octants.size(); i++)
         {
-            OctantSharedPtr oct = *it;
+            OctantSharedPtr oct = Octants[i];
 
             if(oct->IsLeaf() && oct->IsDeltaKnown())
             {
@@ -490,9 +485,9 @@ void Octree::PropagateDomain()
     do
     {
         ct=0;
-        for(it = Octants.begin(); it != Octants.end(); it++)
+        for(int i = 0; i < Octants.size(); i++)
         {
-            OctantSharedPtr oct = *it;
+            OctantSharedPtr oct = Octants[i];
 
             if(oct->IsLeaf() && !oct->IsDeltaKnown())
             { //if it is leaf and delta has not been asigned
@@ -600,9 +595,9 @@ void Octree::PropagateDomain()
                         Array<OneD, NekDouble> SurfNorm = m_cad->GetSurf(surf)->N(uv);
                         Array<OneD, NekDouble> pdir(3);
 
-                        pdir[0] = cploc[0] - octloc[0];
-                        pdir[1] = cploc[1] - octloc[1];
-                        pdir[2] = cploc[2] - octloc[2];
+                        pdir[0] = octloc[0] - cploc[0];
+                        pdir[1] = octloc[1] - cploc[1];
+                        pdir[2] = octloc[2] - cploc[2];
 
                         NekDouble dot = SurfNorm[0]*pdir[0] +
                                         SurfNorm[1]*pdir[1] +
@@ -610,11 +605,11 @@ void Octree::PropagateDomain()
 
                         if(dot < 0.0)
                         {
-                            oct->SetLocation(1); //outside the domain
+                            oct->SetLocation(3); //outside the domain
                         }
                         else
                         {
-                            oct->SetLocation(3); //inside
+                            oct->SetLocation(1); //inside
                         }
 
                     }
@@ -631,11 +626,12 @@ void Octree::PropagateDomain()
 
     }while(ct>0);
 
-    for(it = Octants.begin(); it != Octants.end(); it++)
+    for(int i = 0; i < Octants.size(); i++)
     {
-        if((*it)->IsLeaf())
+        OctantSharedPtr oct = Octants[i];
+        if(oct->IsLeaf())
         {
-            ASSERTL0((*it)->GetDelta() > 0.0, "leaf delta less than zero");
+            ASSERTL0(oct->GetDelta() > 0.0, "leaf delta less than zero");
         }
     }
 }
@@ -645,14 +641,13 @@ void Octree::SmoothAllOctants()
     //until no more changes occur smooth the mesh specification between all
     //octants not particualrly strictly
     int ct = 0;
-    OctantSet::iterator it;
 
     do
     {
         ct=0;
-        for(it = Octants.begin(); it != Octants.end(); it++)
+        for(int i = 0; i < Octants.size(); i++)
         {
-            OctantSharedPtr oct = *it;
+            OctantSharedPtr oct = Octants[i];
 
             if(oct->IsLeaf())
             {
@@ -706,9 +701,9 @@ int Octree::CountElemt()
     int ctinc = 0;
     int c2 = 0;
 
-    for(it = Octants.begin(); it != Octants.end(); it++)
+    for(int i = 0; i < Octants.size(); i++)
     {
-        OctantSharedPtr oct = *it;
+        OctantSharedPtr oct = Octants[i];
         if(oct->IsLeaf())
         {
             if(oct->GetLocation() == 1)
@@ -904,9 +899,9 @@ void Octree::AssignNeigbours(OctantSharedPtr const &o)
     int eqhit = 0;
 
     //look over all octants and consider if they are neigbours
-    for(it = Octants.begin(); it != Octants.end(); it++)
+    for(int i = 0; i < Octants.size(); i++)
     {
-        OctantSharedPtr oct = *it;
+        OctantSharedPtr oct = Octants[i];
 
         if(oct->IsLeaf())
         {

@@ -165,7 +165,6 @@ private:
     NekDouble m_maxDelta;
     /// curavture sensivity paramter
     NekDouble m_eps;
-
     /// cad object
     CADSystemSharedPtr m_cad;
     /// verbose output?
@@ -175,7 +174,7 @@ private:
     /// list of curvature sample points
     std::vector<CurvaturePointSharedPtr> m_cpList;
     /// list of octants
-    OctantSet Octants;
+    std::vector<OctantSharedPtr> Octants;
     /// number which do not need subdivding, when this is 0 octree complete
     int m_totNotDividing;
     ///master octant for searching

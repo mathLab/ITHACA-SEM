@@ -135,11 +135,11 @@ void InputCAD::Process()
 
     m_surfacemesh->Validate();
 
-    m_surfacemesh->Optimise();
+    //m_surfacemesh->Optimise();
 
     //m_surfacemesh->HOAwareness();
 
-    m_surfacemesh->Metric();
+    //m_surfacemesh->Metric();
 
     ClearElementLinks(); //mesh needs reprocessing to clean element and edge lists, easiest way to do it
     ProcessVertices  ();
@@ -169,7 +169,9 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    m_surfacemesh->HOSurf();
+    m_mesh->m_nummode = 2;
+
+    /*m_surfacemesh->HOSurf();
 
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
@@ -217,7 +219,7 @@ void InputCAD::Process()
             cout << "Warning: " << nNeg << " invalid elements" << endl;
         else
             cout << "0 invalid elements" << endl;
-    }
+    }*/
 
     if(m_mesh->m_verbose)
         cout << endl;

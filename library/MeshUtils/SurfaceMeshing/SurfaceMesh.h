@@ -83,17 +83,8 @@ class SurfaceMesh
          */
         void Validate();
 
-        /**
-         * @brief Optimise the linear surface mesh using spring relaxation
-         * and edge swapping
-         */
-        void Optimise();
-
         void Report();
 
-        void HOAwareness();
-
-        void Metric();
 
     private:
 

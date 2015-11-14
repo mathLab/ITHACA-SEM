@@ -724,7 +724,7 @@ namespace Nektar
                             // store in ptmp (PBCvals contains a
                             // function from the input file )
                             ptmp[k] =  kinvis * ptmp[k] - 0.5 * utot[k] * fac
-                                                        - PBCvals[k];
+                                                        + PBCvals[k];
                         }
 
                         int u_offset = UBndExp[0][n]->GetPhys_Offset(i);

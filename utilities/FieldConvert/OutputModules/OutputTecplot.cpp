@@ -643,6 +643,8 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
     for(i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
     {
+        cnt = m_f->m_exp[0]->GetPhys_Offset(i);
+        
         if(nbase == 1)
         {
             int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
@@ -666,8 +668,8 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             {
                 nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
                 totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
-
-
+                
+                
                 for(int n = 1; n < nPlanes; ++n)
                 {
                     for(j = 1; j < np1; ++j)
@@ -693,7 +695,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                         }
                     }
                 }
-                cnt += np0*np1;
             }
             else
             {
@@ -707,7 +708,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                         outfile << cnt + j*np0 + k    << endl;
                     }
                 }
-                cnt += np0*np1;
             }
         }
         else if(nbase == 3)
@@ -734,7 +734,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                     }
                 }
             }
-            cnt += np0*np1*np2;
         }
         else
         {

@@ -84,12 +84,21 @@ void InputCAD::Process()
     pSession->LoadParameter("EPS",      m_eps);
     pSession->LoadParameter("Order",    m_order);
     m_CADName = pSession->GetSolverInfo("CADFile");
+    m_orelax = pSession->GetSolverInfo("OCtreeRelax");
+    if(boost::iequals(m_orelax,"TRUE"))
+        m_octreeRelax = true;
+    else
+        m_octreeRelax = false;
 
     CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
                                             AllocateSharedPtr(m_CADName);
 
     if(m_mesh->m_verbose)
+    {
         cout << "Building mesh for: " << m_CADName << endl;
+        if(m_octreeRelax)
+            cout << "With a relaxed octree" << endl;
+    }
 
     ASSERTL0(m_cad->LoadCAD(),
              "Failed to load CAD");
@@ -109,7 +118,7 @@ void InputCAD::Process()
     //create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
                                     m_mesh->m_verbose, m_minDelta,
-                                    m_maxDelta, m_eps);
+                                    m_maxDelta, m_eps, m_octreeRelax);
 
     m_octree->Build();
 

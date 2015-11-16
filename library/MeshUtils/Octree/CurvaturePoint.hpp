@@ -112,6 +112,19 @@ public:
         uv = m_uv;
     }
 
+    bool IsMinLimited(NekDouble &d)
+    {
+        if(m_minlimited)
+        {
+            d = m_deltaIdeal;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 
 private:
 

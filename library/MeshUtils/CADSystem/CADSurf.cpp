@@ -161,7 +161,7 @@ NekDouble CADSurf::Curvature(Array<OneD, NekDouble> uv)
     //if det is zero cannot invert matrix, R=0 so must skip
     if(E*G-F*F<1E-30)
     {
-        return numeric_limits<double>::max();
+        return 0.0;
     }
 
     NekDouble K, H;

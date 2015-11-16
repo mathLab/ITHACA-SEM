@@ -71,7 +71,7 @@ void SurfaceMesh::Mesh()
     }
 
     //make large jumps between curves split
-    for(int i = 1; i <= m_cad->GetNumCurve(); i++)
+    /*for(int i = 1; i <= m_cad->GetNumCurve(); i++)
     {
         vector<NodeSharedPtr> n = m_curvemeshes[i]->GetMeshPoints();
         vector<int> l = n[0]->GetListCADCurve();
@@ -88,7 +88,7 @@ void SurfaceMesh::Mesh()
                 continue;
             m_curvemeshes[l[j]]->SplitWRT(n.back(), n.back()->Distance(n[n.size()-2]));
         }
-    }
+    }*/
 
     //linear mesh all surfaces
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)

@@ -69,9 +69,10 @@ public:
      * @param ver bool verbose
      */
     Octree(CADSystemSharedPtr cad, const bool ver,
-            const NekDouble min, const NekDouble max, const NekDouble eps) :
+            const NekDouble min, const NekDouble max, const NekDouble eps,
+            const bool rel) :
                             m_minDelta(min), m_maxDelta(max), m_eps(eps),
-                            m_cad(cad), m_verbose(ver)
+                            m_cad(cad), m_verbose(ver), m_relax(rel)
     {
     }
 
@@ -130,6 +131,10 @@ private:
      */
     void SubDivideByLevel();
 
+    void SmoothAllOctantsRelaxed();
+
+    void SubDivideMinLimited(OctantSharedPtr parent, std::vector<OctantSharedPtr> &np);
+
     /**
      * @brief Subdivision step for smoothoctants()
      */
@@ -179,6 +184,8 @@ private:
     int m_totNotDividing;
     ///master octant for searching
     OctantSharedPtr m_masteroct;
+    ///
+    bool m_relax;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

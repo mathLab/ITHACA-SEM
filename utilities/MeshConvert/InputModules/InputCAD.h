@@ -59,7 +59,8 @@ public:
 private:
     NekDouble m_minDelta, m_maxDelta, m_eps;
     int m_order;
-    string m_CADName;
+    string m_CADName, m_orelax;
+    bool m_octreeRelax;
 };
 
 }

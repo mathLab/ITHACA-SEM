@@ -29,6 +29,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterModalEnergy.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
+  Interpolator.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -72,6 +73,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterModalEnergy.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h
+  Interpolator.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h

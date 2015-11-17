@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_INTERPOLATOR_H
-#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_INTERPOLATOR_H
+#ifndef NEKTAR_SOLVERUTILS_INTERPOLATOR_H
+#define NEKTAR_SOLVERUTILS_INTERPOLATOR_H
 
 #include <vector>
 
@@ -46,6 +46,8 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
+
+#include <MultiRegions/ExpList.h>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -59,7 +61,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace LibUtilities
+namespace SolverUtils
 {
 
 enum InterpMethod{
@@ -85,11 +87,15 @@ class Interpolator
         };
 
         LIB_UTILITIES_EXPORT void CalcWeights(
-            const PtsFieldSharedPtr inField,
-            PtsFieldSharedPtr &outField);
+            const LibUtilities::PtsFieldSharedPtr inField,
+            LibUtilities::PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT void Interpolate(
-            const PtsFieldSharedPtr inField,
+            const LibUtilities::PtsFieldSharedPtr inField,
+            LibUtilities::PtsFieldSharedPtr &outField);
+
+        LIB_UTILITIES_EXPORT void Interpolate(
+            const vector<MultiRegions::ExpListSharedPtr> inField,
             PtsFieldSharedPtr &outField);
 
         LIB_UTILITIES_EXPORT int GetDim() const;
@@ -100,9 +106,9 @@ class Interpolator
 
         LIB_UTILITIES_EXPORT InterpMethod GetInterpMethod() const;
 
-        LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetInField() const;
+        LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetInField() const;
 
-        LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetOutField() const;
+        LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
 
         template<typename FuncPointerT, typename ObjectPointerT>
@@ -148,8 +154,8 @@ class Interpolator
         typedef std::pair<BPoint, unsigned int>                       PtsPointPair;
         typedef bgi::rtree< PtsPointPair, bgi::rstar<16> >            PtsRtree;
 
-        PtsFieldSharedPtr                           m_inField;
-        PtsFieldSharedPtr                           m_outField;
+        LibUtilities::PtsFieldSharedPtr             m_inField;
+        LibUtilities::PtsFieldSharedPtr             m_outField;
 
         /// Interpolation Method
         InterpMethod                                m_method;

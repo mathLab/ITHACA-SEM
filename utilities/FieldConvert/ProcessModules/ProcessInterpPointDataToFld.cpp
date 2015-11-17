@@ -40,7 +40,7 @@ using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
 
-#include <LibUtilities/BasicUtils/Interpolator.h>
+#include <SolverUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -113,7 +113,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         cout << "Interpolating:       ";
     }
 
-    LibUtilities::Interpolator Interp(Nektar::LibUtilities::eNoMethod, coord_id);
+    SolverUtils::Interpolator Interp(SolverUtils::eNoMethod, coord_id);
     Interp.Interpolate(m_f->m_fieldPts, outPts);
 
     cout << " done" << endl;

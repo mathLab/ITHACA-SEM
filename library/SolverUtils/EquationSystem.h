@@ -42,11 +42,11 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
-#include <LibUtilities/BasicUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
+#include <SolverUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 
@@ -419,7 +419,7 @@ namespace Nektar
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
             /// Map of the interpolation weights for a specific filename.
-            map<std::string, LibUtilities::Interpolator > m_interpolators;
+            map<std::string, Interpolator > m_interpolators;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.

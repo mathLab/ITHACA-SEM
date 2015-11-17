@@ -898,12 +898,12 @@ namespace Nektar
 
                     //  check if we already computed this funcKey combination
                     std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    map<std::string, LibUtilities::Interpolator >::iterator it
+                    map<std::string, Interpolator >::iterator it
                         = m_interpolators.find(interpKey);
                     if (it == m_interpolators.end())
                     {
-                        m_interpolators[interpKey] = LibUtilities::Interpolator(
-                                Nektar::LibUtilities::eShepard);
+                        m_interpolators[interpKey] = SolverUtils::Interpolator(
+                                Nektar::SolverUtils::eShepard);
                     }
                     m_interpolators[interpKey].Interpolate(ptsField, outPts);
 

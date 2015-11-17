@@ -87,16 +87,24 @@ class Interpolator
         };
 
         LIB_UTILITIES_EXPORT void CalcWeights(
-            const LibUtilities::PtsFieldSharedPtr inField,
-            LibUtilities::PtsFieldSharedPtr &outField);
+            const LibUtilities::PtsFieldSharedPtr ptsInField,
+            LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
         LIB_UTILITIES_EXPORT void Interpolate(
-            const LibUtilities::PtsFieldSharedPtr inField,
-            LibUtilities::PtsFieldSharedPtr &outField);
+            const LibUtilities::PtsFieldSharedPtr ptsInField,
+            LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
         LIB_UTILITIES_EXPORT void Interpolate(
-            const vector<MultiRegions::ExpListSharedPtr> inField,
-            PtsFieldSharedPtr &outField);
+            const vector<MultiRegions::ExpListSharedPtr> expInField,
+            vector<MultiRegions::ExpListSharedPtr> &expOutField);
+
+        LIB_UTILITIES_EXPORT void Interpolate(
+            const vector<MultiRegions::ExpListSharedPtr> expInField,
+            LibUtilities::PtsFieldSharedPtr &ptsOutField);
+
+        LIB_UTILITIES_EXPORT void Interpolate(
+            const LibUtilities::PtsFieldSharedPtr ptsInField,
+            vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
         LIB_UTILITIES_EXPORT int GetDim() const;
 

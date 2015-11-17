@@ -51,15 +51,14 @@ namespace SolverUtils
  * The most suitable algorithm is chosen automatically.
  */
 void Interpolator::CalcWeights(
-            const LibUtilities::PtsFieldSharedPtr inField,
-            LibUtilities::PtsFieldSharedPtr &outField)
+            const LibUtilities::PtsFieldSharedPtr ptsInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
 {
-    ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
-    ASSERTL0(inField->GetDim() <= m_dim, "too many dimesions in inField");
-    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
+    ASSERTL0(ptsInField->GetNFields() == ptsOutField->GetNFields(), "number of fields does not match");
+    ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
+    ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
-    m_inField = inField;
-    m_outField = outField;
+    m_inField = ptsInField;
+    m_outField = ptsOutField;
 
     int nOutPts = m_outField->GetNpoints();
     int lastProg = 0;
@@ -225,19 +224,18 @@ void Interpolator::CalcWeights(
  * @SetWeights.
  */
 void Interpolator::Interpolate(
-            const LibUtilities::PtsFieldSharedPtr inField,
-            LibUtilities::PtsFieldSharedPtr &outField)
+            const LibUtilities::PtsFieldSharedPtr ptsInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
 {
-    ASSERTL0(inField->GetNFields() == outField->GetNFields(), "number of fields does not match");
-    ASSERTL0(inField->GetDim() <= m_dim, "too many dimesions in inField");
-    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
+    ASSERTL0(ptsInField->GetNFields() == ptsOutField->GetNFields(), "number of fields does not match");
+    ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
+    ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
-    m_inField = inField;
-    m_outField = outField;
+    m_inField = ptsInField;
+    m_outField = ptsOutField;
 
     if ( m_weights.num_elements() == 0)
     {
-        CalcWeights(inField, outField);
+        CalcWeights(ptsInField, ptsOutField);
     }
 
     ASSERTL0(m_weights.num_elements() == m_outField->GetNpoints(), "weights dimension mismatch");
@@ -263,17 +261,22 @@ void Interpolator::Interpolate(
     }
 }
 
-
-void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > inField, LibUtilities::PtsFieldSharedPtr &outField)
+void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > expInField, vector< MultiRegions::ExpListSharedPtr > &expOutField)
 {
-    ASSERTL0(inField.size() == outField->GetNFields(), "number of fields does not match");
-    ASSERTL0(inField[0]->GetCoordim(0) <= m_dim, "too many dimesions in inField");
-    ASSERTL0(outField->GetDim() <= m_dim, "too many dimesions in outField");
+    ASSERTL0(false, "not implemented yet");
+}
+
+
+void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > expInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
+{
+    ASSERTL0(expInField.size() == ptsOutField->GetNFields(), "number of fields does not match");
+    ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim, "too many dimesions in inField");
+    ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
 //     m_inField = inField;
-    m_outField = outField;
+    m_outField = ptsOutField;
 
-    int nInDim = inField[0]->GetCoordim(0);
+    int nInDim = expInField[0]->GetCoordim(0);
     int nOutPts = m_outField->GetNpoints();
     int lastProg = 0;
 
@@ -290,16 +293,16 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > in
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = inField[0]->GetExpIndex(coords, Lcoords, 1e-3);
+        int elmtid = expInField[0]->GetExpIndex(coords, Lcoords, 1e-3);
 
         if(elmtid >= 0)
         {
-            int offset = inField[0]->GetPhys_Offset(inField[0]->
+            int offset = expInField[0]->GetPhys_Offset(inField[0]->
                                                GetOffset_Elmt_Id(elmtid));
 
-            for (int f = 0; f < inField.size(); ++f)
+            for (int f = 0; f < expInField.size(); ++f)
             {
-                NekDouble value = inField[f]->GetExp(elmtid)->
+                NekDouble value = expInField[f]->GetExp(elmtid)->
                     StdPhysEvaluate(Lcoords, inField[f]->GetPhys() +offset);
 
                 if ((boost::math::isnan)(value))
@@ -320,6 +323,12 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > in
             lastProg = progress;
         }
     }
+}
+
+
+void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField, vector< MultiRegions::ExpListSharedPtr > &expOutField)
+{
+    ASSERTL0(false, "not implemented yet");
 }
 
 

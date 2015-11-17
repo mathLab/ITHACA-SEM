@@ -70,7 +70,7 @@ void Interpolator::CalcWeights(
     std::vector<PtsPointPair> inPoints;
     for (int i = 0; i < m_inField->GetNpoints(); ++i)
     {
-        Array<OneD, NekDouble> coords(m_dim, 0.0);
+        Array<OneD, NekDouble> coords(3, 0.0);
         for (int j = 0; j < m_inField->GetDim(); ++j)
         {
             coords[j] = m_inField->GetPointVal(j,i);

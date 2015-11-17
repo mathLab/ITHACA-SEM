@@ -75,7 +75,7 @@ class Interpolator
     public:
 
         LIB_UTILITIES_EXPORT Interpolator(
-            InterpMethod method,
+            InterpMethod method = eNoMethod,
             short int coordId = -1,
             NekDouble filtWidth = 0.0):
             m_method(method),
@@ -103,15 +103,6 @@ class Interpolator
         LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetInField() const;
 
         LIB_UTILITIES_EXPORT PtsFieldSharedPtr GetOutField() const;
-
-        LIB_UTILITIES_EXPORT void GetWeights(
-            Array<OneD, Array<OneD, float> > &weights,
-            Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const;
-
-        LIB_UTILITIES_EXPORT void SetWeights
-        (const Array<OneD, Array<OneD, float> >
-         &weights,
-         const Array<OneD, Array<OneD, unsigned int> > &neighbourInds);
 
 
         template<typename FuncPointerT, typename ObjectPointerT>

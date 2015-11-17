@@ -49,8 +49,6 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
-#include <LibUtilities/BasicUtils/Interpolator.h>
-
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
@@ -897,30 +895,17 @@ namespace Nektar
                             MemoryManager<LibUtilities::PtsField>::
                             AllocateSharedPtr(3, pts);
 
-                    LibUtilities::Interpolator interp(Nektar::LibUtilities::eShepard);
 
                     //  check if we already computed this funcKey combination
-                    std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    if (m_interpWeights.count(weightsKey) != 0)
+                    std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+                    map<std::string, LibUtilities::Interpolator >::iterator it
+                        = m_interpolators.find(interpKey);
+                    if (it == m_interpolators.end())
                     {
-                        //  found, re-use
-                        interp.SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
+                        m_interpolators[interpKey] = LibUtilities::Interpolator(
+                                Nektar::LibUtilities::eShepard);
                     }
-                    else
-                    {
-                        if (m_session->GetComm()->GetRank() == 0)
-                        {
-                            interp.SetProgressCallback(&EquationSystem::PrintProgressbar, this);
-                            cout << "Interpolating:       ";
-                        }
-                        interp.CalcWeights(ptsField, outPts);
-                        if (m_session->GetComm()->GetRank() == 0)
-                        {
-                            cout << endl;
-                        }
-                        interp.GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
-                    }
-                    interp.Interpolate(ptsField, outPts);
+                    m_interpolators[interpKey].Interpolate(ptsField, outPts);
 
                     int fieldInd;
                     vector<string> fieldNames = ptsField->GetFieldNames();

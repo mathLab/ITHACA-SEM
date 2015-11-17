@@ -300,44 +300,6 @@ PtsFieldSharedPtr Interpolator::GetOutField() const
 
 
 /**
- * @brief Get the interpolation weights and corresponding neighbour indices
- *
- * @param weights       Interpolation weights for each neighbour.
- * Structure: m_weights[physPtIdx][neighbourIdx]
- * @param neighbourInds Indices of the relevant neighbours for each physical point.
- * Structure: m_neighInds[ptIdx][neighbourIdx]
- */
-void Interpolator::GetWeights(
-            Array<OneD, Array<OneD, float> > &weights,
-            Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const
-{
-    weights = m_weights;
-    neighbourInds = m_neighInds;
-}
-
-
-/**
- * @brief Set the interpolation weights for an interpolation
- *
- * @param weights       Interpolation weights for each neighbour.
- * Structure: m_weights[physPtIdx][neighbourIdx]
- * @param neighbourInds Indices of the relevant neighbours for each physical point.
- * Structure: m_neighInds[ptIdx][neighbourIdx]
- */
-void Interpolator::SetWeights(const Array<OneD, Array<OneD, float> >
-         &weights,
-         const Array<OneD, Array<OneD, unsigned int> > &neighbourInds)
-{
-    ASSERTL0(weights.num_elements() ==  neighbourInds.num_elements(),
-             "weights and neighbourInds not of same number of physical points")
-
-    m_weights = weights;
-    m_neighInds = neighbourInds;
-
-}
-
-
-/**
  * @brief Compute interpolation weights for a physical point using Gauss filtering
  *
  * @param physPtIdx         The index of the physical point in its storage array

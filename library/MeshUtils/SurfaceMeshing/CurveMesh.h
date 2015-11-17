@@ -98,8 +98,6 @@ class CurveMesh
 
         NekDouble GetLength(){return m_curvelength;}
 
-        void SplitWRT(NodeSharedPtr n, NekDouble d);
-
     private:
 
         /**

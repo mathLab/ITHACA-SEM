@@ -104,24 +104,532 @@ void FaceMesh::Mesh()
         meshcounter++;
     }
 
-    NekDouble area = numeric_limits<double>::max();
-    //idiot check the elements
-    for(int i = 0; i < m_connec.size(); i++)
+    BuildLocalMesh();
+
+    OptimiseLocalMesh();
+
+    //clear local element links
+    EdgeSet::iterator eit;
+    for(eit = m_localEdges.begin(); eit != m_localEdges.end(); eit++)
     {
-        Array<OneD, NekDouble> a = m_connec[i][0]->GetCADSurf(m_id);
-        Array<OneD, NekDouble> b = m_connec[i][1]->GetCADSurf(m_id);
-        Array<OneD, NekDouble> c = m_connec[i][2]->GetCADSurf(m_id);
-
-        area = min(area, 0.5*(-b[0]*a[1] + c[0]*a[1] + a[0]*b[1] - c[0]*b[1] - a[0]*c[1] + b[0]*c[1]));
-
-        if(area <= 0)
-        {
-            cout << area << endl;
-            exit(-1);
-        }
+        (*eit)->m_elLink.clear();
     }
 
     //make new elements and add to list from list of nodes and connectivity from triangle
+    for(int i = 0; i < m_localElements.size(); i++)
+    {
+        m_mesh->m_element[m_mesh->m_expDim].push_back(m_localElements[i]);
+    }
+
+    cout << "\r                                                                                             ";
+    cout << scientific << "\r\t\tFace " << m_id << endl
+         << "\t\t\tNodes: " << m_localNodes.size() << endl
+         << "\t\t\tEdges: " << m_localEdges.size() << endl
+         << "\t\t\tTriangles: " << m_localElements.size() << endl
+         << endl;
+}
+
+void FaceMesh::OptimiseLocalMesh()
+{
+    DiagonalSwap();
+
+    Smoothing();
+
+    DiagonalSwap();
+
+    Smoothing();
+}
+
+void FaceMesh::Smoothing()
+{
+    EdgeSet::iterator eit;
+    NodeSet::iterator nit;
+
+    map<int, vector<NodeSharedPtr> > connectingnodes;
+
+    for(eit = m_localEdges.begin(); eit != m_localEdges.end(); eit++)
+    {
+        connectingnodes[(*eit)->m_n1->m_id].push_back((*eit)->m_n2);
+        connectingnodes[(*eit)->m_n2->m_id].push_back((*eit)->m_n1);
+    }
+
+    //perform 8 runs of elastic relaxation based on the octree
+    for(int q = 0; q < 4; q++)
+    {
+        if(m_mesh->m_verbose)
+            cout << "\t\t Elastic relaxation run: " << q+1 << endl;
+
+        for(nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
+        {
+            vector<int> c = (*nit)->GetListCADCurve();
+            if(c.size()>0) //node is on curve so skip
+                continue;
+
+            vector<NodeSharedPtr> connodes = connectingnodes[(*nit)->m_id];
+
+            
+
+            Array<OneD, NekDouble> uv0(2);
+            uv0[0]=0.0; uv0[1]=0.0;
+
+            DNekMat f(2,1,0.0);
+            DNekMat df(2,2,0.0);
+            for(int i = 0; i < connodes.size(); i++)
+            {
+                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(m_id);
+                uv0[0]+=uvj[0]/connodes.size();
+                uv0[1]+=uvj[1]/connodes.size();
+            }
+
+            Array<OneD, NekDouble> rui = m_cadsurf->P(uv0);
+            NekDouble d = m_octree->Query(rui);
+            for(int i = 0; i < connodes.size();i++)
+            {
+                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(m_id);
+                Array<OneD, NekDouble> rj  = connodes[i]->GetLoc();
+
+                NekDouble difR = sqrt((rui[0]-rj[0])*(rui[0]-rj[0]) +
+                                      (rui[1]-rj[1])*(rui[1]-rj[1]) +
+                                      (rui[2]-rj[2])*(rui[2]-rj[2]));
+
+                NekDouble difU = sqrt((uvj[0]-uv0[0])*(uvj[0]-uv0[0]) +
+                                      (uvj[1]-uv0[1])*(uvj[1]-uv0[1]));
+
+                NekDouble A    = difR - d;
+
+                NekDouble B    = (uvj[0]-uv0[0]) / difU;
+
+                NekDouble C    = (uvj[1]-uv0[1]) / difU;
+
+                Array<OneD, NekDouble> r = m_cadsurf->D1(uv0);
+
+                NekDouble dAdu = ((r[0]-rj[0])*r[3] +
+                                  (r[1]-rj[1])*r[4] +
+                                  (r[2]-rj[2])*r[5]) / difR;
+
+                NekDouble dAdv = ((r[0]-rj[0])*r[6] +
+                                  (r[1]-rj[1])*r[7] +
+                                  (r[2]-rj[2])*r[8]) / difR;
+
+                NekDouble dBdu = (uvj[0]-uv0[0])*(uvj[0]-uv0[0])/
+                                 difU/difU/difU - 1.0/difU;
+
+                NekDouble dBdv = (uvj[0]-uv0[0])*(uvj[1]-uv0[1])/
+                                 difU/difU/difU;
+
+                NekDouble dCdv = (uvj[1]-uv0[1])*(uvj[1]-uv0[1])/
+                                 difU/difU/difU - 1.0/difU;
+
+                NekDouble dCdu = dBdv;
+
+                f(0,0) += A*B;
+                f(1,0) += A*C;
+
+                df(0,0) += B*dAdu + A*dBdu;
+                df(1,0) += C*dAdu + A*dCdu;
+                df(0,1) += B*dAdv + A*dBdv;
+                df(1,1) += C*dAdv + A*dCdv;
+            }
+
+            df.Invert();
+
+            DNekMat ui = df*f;
+            Array<OneD, NekDouble> uvn(2);
+            uvn[0] = uv0[0];// - ui(0,0);
+            uvn[1] = uv0[1];// - ui(1,0);
+
+            Array<OneD, NekDouble> bounds = m_cadsurf->GetBounds();
+            Array<OneD, NekDouble> uvi = (*nit)->GetCADSurf(m_id);
+
+            if(!(uvn[0] < bounds[0] ||
+                       uvn[0] > bounds[1] ||
+                       uvn[1] < bounds[2] ||
+                       uvn[1] > bounds[3]))
+            {
+
+                Array<OneD, NekDouble> l2 = m_cadsurf->P(uvn);
+                (*nit)->Move(l2,m_id,uvn);
+            }
+        }
+    }
+}
+
+void FaceMesh::DiagonalSwap()
+{
+    map<int, int> idealConnec;
+    map<int, int> actualConnec;
+    map<int, vector<EdgeSharedPtr> > nodetoedge;
+    //figure out ideal node count and actual node count
+    EdgeSet::iterator eit;
+    for(eit = m_localEdges.begin(); eit != m_localEdges.end(); eit++)
+    {
+        nodetoedge[(*eit)->m_n1->m_id].push_back(*eit);
+        nodetoedge[(*eit)->m_n2->m_id].push_back(*eit);
+    }
+    NodeSet::iterator nit;
+    for(nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
+    {
+        if((*nit)->GetListCADCurve().size() == 0)
+        {
+            //node is interior
+            idealConnec[(*nit)->m_id] = 6;
+        }
+        else
+        {
+            //need to identify the two other nodes on the boundary to find
+            //interior angle
+            vector<NodeSharedPtr> ns;
+            vector<EdgeSharedPtr> e = nodetoedge[(*nit)->m_id];
+            for(int i = 0; i < e.size(); i++)
+            {
+                if(e[i]->CADCurveID == -1)
+                    continue; //the linking nodes are not going to exist on interior edges
+
+                if(e[i]->m_n1 == (*nit))
+                    ns.push_back(e[i]->m_n2);
+                else
+                    ns.push_back(e[i]->m_n1);
+            }
+            ASSERTL0(ns.size() == 2,"failed to find 2 nodes in the angle system");
+
+            idealConnec[(*nit)->m_id] = ceil((*nit)->Angle(ns[0],ns[1])/3.142*3) + 1;
+        }
+    }
+    for(nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
+    {
+        actualConnec[(*nit)->m_id] = nodetoedge[(*nit)->m_id].size();
+    }
+
+    //edgeswapping fun times
+    //perfrom edge swap based on node defect and then angle
+    for(int q = 0; q < 4; q++)
+    {
+        if(m_mesh->m_verbose)
+        {
+            cout << "\t\t Edge swap ";
+            if(q<2)
+            {
+                cout << "defect run: " << q+1;
+            }
+            else
+            {
+                cout << "angle run: " << q+1-2;
+            }
+        }
+
+        int edgesStart = m_localEdges.size();
+        EdgeSet edges = m_localEdges;
+        m_localEdges.clear();
+
+        int swappedEdges = 0;
+
+        EdgeSet::iterator it;
+
+        for(it = edges.begin(); it != edges.end(); it++)
+        {
+            EdgeSharedPtr e = *it;
+
+            if(e->m_elLink.size() != 2)
+            {
+                m_localEdges.insert(e);
+                continue;
+            }
+
+            ElementSharedPtr tri1 = e->m_elLink[0].first;
+            ElementSharedPtr tri2 = e->m_elLink[1].first;
+
+            NodeSharedPtr n1 = e->m_n1;
+            NodeSharedPtr n2 = e->m_n2;
+
+            vector<NodeSharedPtr> nt = tri1->GetVertexList();
+
+            //identify node a,b,c,d of the swapping
+            NodeSharedPtr A,B,C,D;
+            if(nt[0] != n1 && nt[0] != n2)
+            {
+                C = nt[0];
+                B = nt[1];
+                A = nt[2];
+            }
+            else if(nt[1] != n1 && nt[1] != n2)
+            {
+                C = nt[1];
+                B = nt[2];
+                A = nt[0];
+            }
+            else if(nt[2] != n1 && nt[2] != n2)
+            {
+                C = nt[2];
+                B = nt[0];
+                A = nt[1];
+            }
+            else
+            {
+                ASSERTL0(false,"failed to identify verticies in tri1");
+            }
+
+            nt = tri2->GetVertexList();
+
+            if(nt[0] != n1 && nt[0] != n2)
+            {
+                D = nt[0];
+            }
+            else if(nt[1] != n1 && nt[1] != n2)
+            {
+                D = nt[1];
+            }
+            else if(nt[2] != n1 && nt[2] != n2)
+            {
+                D = nt[2];
+            }
+            else
+            {
+                ASSERTL0(false,"failed to identify verticies in tri2");
+            }
+
+            //determine signed area of alternate config
+            Array<OneD, NekDouble> ai,bi,ci,di;
+            ai = A->GetCADSurf(m_id);
+            bi = B->GetCADSurf(m_id);
+            ci = C->GetCADSurf(m_id);
+            di = D->GetCADSurf(m_id);
+
+            NekDouble CDA, CBD;
+
+            CDA = 0.5*(-di[0]*ci[1] + ai[0]*ci[1] + ci[0]*di[1] - ai[0]*di[1] -
+                            ci[0]*ai[1] + di[0]*ai[1]);
+
+            CBD = 0.5*(-bi[0]*ci[1] + di[0]*ci[1] + ci[0]*bi[1] - di[0]*bi[1] -
+                            ci[0]*di[1] + bi[0]*di[1]);
+
+            //if signed area of the swapping triangles is less than zero
+            //that configuration is invalid and swap cannot be performed
+            if(!(CDA > 0.001 && CBD > 0.001))
+            {
+                m_localEdges.insert(e);
+                continue;
+            }
+
+            bool swap = false; //assume do not swap
+
+            if(q<2)
+            {
+                int nodedefectbefore = 0;
+                nodedefectbefore += abs(actualConnec[A->m_id] - idealConnec[A->m_id]);
+                nodedefectbefore += abs(actualConnec[B->m_id] - idealConnec[B->m_id]);
+                nodedefectbefore += abs(actualConnec[C->m_id] - idealConnec[C->m_id]);
+                nodedefectbefore += abs(actualConnec[D->m_id] - idealConnec[D->m_id]);
+
+                int nodedefectafter = 0;
+                nodedefectafter += abs(actualConnec[A->m_id] -1 - idealConnec[A->m_id]);
+                nodedefectafter += abs(actualConnec[B->m_id] -1 - idealConnec[B->m_id]);
+                nodedefectafter += abs(actualConnec[C->m_id] +1 - idealConnec[C->m_id]);
+                nodedefectafter += abs(actualConnec[D->m_id] +1 - idealConnec[D->m_id]);
+
+                if(nodedefectafter < nodedefectbefore)
+                {
+                    swap = true;
+                }
+
+            }
+            else
+            {
+                NekDouble minanglebefore = C->Angle(A,B);
+                minanglebefore = min(minanglebefore, A->Angle(B,C));
+                minanglebefore = min(minanglebefore, B->Angle(A,C));
+                minanglebefore = min(minanglebefore, B->Angle(A,D));
+                minanglebefore = min(minanglebefore, A->Angle(B,D));
+                minanglebefore = min(minanglebefore, D->Angle(A,B));
+
+                NekDouble minangleafter = C->Angle(B,D);
+                minangleafter = min(minangleafter, D->Angle(B,C));
+                minangleafter = min(minangleafter, B->Angle(C,D));
+                minangleafter = min(minangleafter, C->Angle(A,D));
+                minangleafter = min(minangleafter, A->Angle(C,D));
+                minangleafter = min(minangleafter, D->Angle(A,C));
+
+                if(minangleafter > minanglebefore)
+                {
+                    swap = true;
+                }
+            }
+
+            if(swap)
+            {
+                actualConnec[A->m_id]--;
+                actualConnec[B->m_id]--;
+                actualConnec[C->m_id]++;
+                actualConnec[D->m_id]++;
+
+                //make the 4 other edges
+                EdgeSharedPtr CA, AD, DB, BC, CAt, ADt, DBt, BCt;
+                CAt = boost::shared_ptr<Edge>(new Edge(C,A));
+                ADt = boost::shared_ptr<Edge>(new Edge(A,D));
+                DBt = boost::shared_ptr<Edge>(new Edge(D,B));
+                BCt = boost::shared_ptr<Edge>(new Edge(B,C));
+
+                vector<EdgeSharedPtr> es = tri1->GetEdgeList();
+                for(int i = 0; i < 3; i++)
+                {
+                    if(es[i] == CAt)
+                    {
+                        CA = es[i];
+                    }
+                    if(es[i] == BCt)
+                    {
+                        BC = es[i];
+                    }
+                }
+                es = tri2->GetEdgeList();
+                for(int i = 0; i < 3; i++)
+                {
+                    if(es[i] == DBt)
+                    {
+                        DB = es[i];
+                    }
+                    if(es[i] == ADt)
+                    {
+                        AD = es[i];
+                    }
+                }
+
+                //now sort out links for the 4 edges surrounding the patch
+                vector<pair<ElementSharedPtr, int> > links;
+
+                links = CA->m_elLink;
+                CA->m_elLink.clear();
+                for(int i = 0; i < links.size(); i++)
+                {
+                    if(links[i].first->GetId() == tri1->GetId())
+                        continue;
+                    CA->m_elLink.push_back(links[i]);
+                }
+
+                links = BC->m_elLink;
+                BC->m_elLink.clear();
+                for(int i = 0; i < links.size(); i++)
+                {
+                    if(links[i].first->GetId() == tri1->GetId())
+                        continue;
+                    BC->m_elLink.push_back(links[i]);
+                }
+
+                links = AD->m_elLink;
+                AD->m_elLink.clear();
+                for(int i = 0; i < links.size(); i++)
+                {
+                    if(links[i].first->GetId() == tri2->GetId())
+                        continue;
+                    AD->m_elLink.push_back(links[i]);
+                }
+
+                links = DB->m_elLink;
+                DB->m_elLink.clear();
+                for(int i = 0; i < links.size(); i++)
+                {
+                    if(links[i].first->GetId() == tri2->GetId())
+                        continue;
+                    DB->m_elLink.push_back(links[i]);
+                }
+
+                EdgeSharedPtr newe = boost::shared_ptr<Edge>(new Edge(C,D));
+
+                vector<NodeSharedPtr> t1,t2;
+                t1.push_back(B); t1.push_back(D); t1.push_back(C);
+                t2.push_back(A); t2.push_back(C); t2.push_back(D);
+
+                ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                vector<int> tags;
+                tags.push_back(m_id);
+
+                int id1 = tri1->GetId();
+                int id2 = tri2->GetId();
+
+                ElementSharedPtr ntri1 = GetElementFactory().
+                            CreateInstance(LibUtilities::eTriangle,
+                                           conf,t1,tags);
+                ElementSharedPtr ntri2 = GetElementFactory().
+                            CreateInstance(LibUtilities::eTriangle,
+                                           conf,t2,tags);
+
+                ntri1->SetId(id1);
+                ntri2->SetId(id2);
+
+                vector<EdgeSharedPtr> t1es = ntri1->GetEdgeList();
+                for(int i = 0; i < 3; i++)
+                {
+                    if(t1es[i] == DB)
+                    {
+                        ntri1->SetEdge(i,DB);
+                        DB->m_elLink.push_back(pair<ElementSharedPtr,int>(ntri1,i));
+                    }
+                    else if(t1es[i] == BC)
+                    {
+                        ntri1->SetEdge(i,BC);
+                        BC->m_elLink.push_back(pair<ElementSharedPtr,int>(ntri1,i));
+                    }
+                    else if(t1es[i] == newe)
+                    {
+                        ntri1->SetEdge(i,newe);
+                        newe->m_elLink.push_back(pair<ElementSharedPtr,int>(ntri1,i));
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"weird edge in new tri 1");
+                    }
+                }
+                vector<EdgeSharedPtr> t2es = ntri2->GetEdgeList();
+                for(int i = 0; i < 3; i++)
+                {
+                    if(t2es[i] == CA)
+                    {
+                        ntri2->SetEdge(i,CA);
+                        CA->m_elLink.push_back(pair<ElementSharedPtr,int>(ntri2,i));
+                    }
+                    else if(t2es[i] == AD)
+                    {
+                        ntri2->SetEdge(i,AD);
+                        AD->m_elLink.push_back(pair<ElementSharedPtr,int>(ntri2,i));
+                    }
+                    else if(t2es[i] == newe)
+                    {
+                        ntri2->SetEdge(i,newe);
+                        newe->m_elLink.push_back(pair<ElementSharedPtr,int>(ntri2,i));
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"weird edge in new tri 2");
+                    }
+                }
+
+                newe->CADSurfID.push_back(m_id);
+                m_localEdges.insert(newe);
+
+                m_localElements[id1] = ntri1;
+                m_localElements[id2] = ntri2;
+
+                swappedEdges++;
+
+            }
+            else
+            {
+                m_localEdges.insert(e);
+            }
+        }
+
+        ASSERTL0(m_localEdges.size() == edgesStart, "mismatch edge count");
+
+        if(m_mesh->m_verbose)
+            cout << ".\tEdges swapped: " << swappedEdges << endl;
+    }
+}
+
+void FaceMesh::BuildLocalMesh()
+{
+    /*************************
+    // build a local set of nodes edges and elemenets for optimstaion prior to putting them into m_mesh
+    */
+
     for(int i = 0; i < m_connec.size(); i++)
     {
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
@@ -130,32 +638,40 @@ void FaceMesh::Mesh()
         tags.push_back(m_id);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                                 LibUtilities::eTriangle, conf, m_connec[i], tags);
-        E->SetCADSurf(m_id);
+
+        vector<NodeSharedPtr> nods = E->GetVertexList();
+        for(int j = 0; j < nods.size(); j++)
+        {
+            //nodes are already unique some will insert some wont
+            m_localNodes.insert(nods[j]);
+        }
         vector<EdgeSharedPtr> edgs = E->GetEdgeList();
         for(int j = 0; j < edgs.size(); j++)
         {
-            edgs[j]->CADSurfID.push_back(m_id);
+            //look for edge in m_mesh edgeset from curves
+            EdgeSet::iterator s = m_mesh->m_edgeSet.find(edgs[j]);
+            if(!(s == m_mesh->m_edgeSet.end()))
+            {
+                edgs[j] = *s;
+                E->SetEdge(j, edgs[j]);
+            }
+
+            pair<EdgeSet::iterator, bool> test = m_localEdges.insert(edgs[j]);
+
+            if(test.second)
+            {
+                (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(E,j));
+                (*test.first)->CADSurfID.push_back(m_id);
+            }
+            else
+            {
+                E->SetEdge(j, *test.first);
+                (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(E,j));
+            }
         }
-        m_mesh->m_element[m_mesh->m_expDim].push_back(E);
+        E->SetId(i);
+        m_localElements.push_back(E);
     }
-}
-
-void FaceMesh::Report()
-{
-    int edgec = 0;
-    for(int i = 0; i < m_edgeloops.size(); i++)
-    {
-        edgec+=m_edgeloops[i].edges.size();
-    }
-    int nump = 0;
-    for(int i = 0; i < orderedLoops.size(); i++)
-    {
-        nump+=orderedLoops[i].size();
-    }
-    nump+=m_stienerpoints.size();
-
-    cout << scientific << "\tPoints: " << nump << "\tTris: " << m_connec.size() << "\tCAD Edges: " << edgec <<  "\tLoops: " << orderedLoops.size() << endl;
-
 }
 
 void FaceMesh::Stretching()
@@ -275,7 +791,8 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
     Array<OneD, NekDouble> np = m_cadsurf->P(uv);
     NekDouble npDelta = m_octree->Query(np);
 
-    NodeSharedPtr n = boost::shared_ptr<Node>(new Node(0,np[0],np[1],np[2]));
+    NodeSharedPtr n = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
+                                                       np[0],np[1],np[2]));
 
     bool add = true;
 

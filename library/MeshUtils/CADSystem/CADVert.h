@@ -76,7 +76,7 @@ public:
         m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
         m_node = boost::shared_ptr<Node>(
-                new Node(0, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
+                new Node(i-1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
         degen = false;
     }
 

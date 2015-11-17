@@ -91,6 +91,8 @@ namespace MeshUtils
         std::vector<NodeSharedPtr>      m_node;
         /// Set of element vertices.
         NodeSet                         m_vertexSet;
+        /// used for meshing purposes to keep trac of ids
+        int                             m_numNodes;
         /// Set of element edges.
         EdgeSet                         m_edgeSet;
         /// Set of element faces.

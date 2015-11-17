@@ -143,6 +143,8 @@ public:
         return m_verts;
     }
 
+    int GetNumVerts(){return m_verts.size();}
+
     /**
      * @brief based on location in space, uses opencascade routines to
      * determin if the point is within the domain. This routine is slow

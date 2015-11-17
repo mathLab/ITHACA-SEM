@@ -142,8 +142,6 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    m_surfacemesh->Validate();
-
     //m_surfacemesh->Optimise();
 
     //m_surfacemesh->HOAwareness();
@@ -157,24 +155,27 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    m_surfacemesh->Validate();
-
-    vector<ElementSharedPtr> elements = m_mesh->m_element[2];
+    vector<ElementSharedPtr> elmt = m_mesh->m_element[2];
     m_mesh->m_element[2].clear();
 
-    for(int i = 0; i < elements.size(); i++)
+    for(int i = 0; i < elmt.size(); i++)
     {
-        if(elements[i]->GetTagList()[0] == 4 ||
-           elements[i]->GetTagList()[0] == 7 ||
-           elements[i]->GetTagList()[0] == 8 ||
-           elements[i]->GetTagList()[0] == 9)
-            m_mesh->m_element[2].push_back(elements[i]);
+        if(elmt[i]->GetTagList()[0] == 4 ||
+           elmt[i]->GetTagList()[0] == 7 ||
+           elmt[i]->GetTagList()[0] == 8 ||
+           elmt[i]->GetTagList()[0] == 9)
+        {
+            m_mesh->m_element[2].push_back(elmt[i]);
+        }
     }
+
+    ClearElementLinks();
     ProcessVertices  ();
     ProcessEdges     ();
     ProcessFaces     ();
     ProcessElements  ();
     ProcessComposites();
+
     m_mesh->m_nummode = 2;
     return;
 

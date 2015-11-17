@@ -111,13 +111,6 @@ void OutputModule::OpenStream()
 void Module::ProcessVertices()
 {
     vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-    for (int i = 0; i < elmt.size(); ++i)
-    {
-        for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
-        {
-            elmt[i]->GetVertex(j)->m_elCount = 0;
-        }
-    }
 
     m_mesh->m_vertexSet.clear();
 
@@ -127,9 +120,6 @@ void Module::ProcessVertices()
         {
             pair<NodeSet::iterator,bool> testIns =
                 m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
-
-            //this vertex is connected to an element, count it.
-            (*(testIns.first))->m_elCount++;
 
             if (testIns.second)
             {

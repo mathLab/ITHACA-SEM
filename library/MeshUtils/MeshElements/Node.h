@@ -279,10 +279,6 @@ namespace MeshUtils
         std::map<int, NekDouble> CADCurve;
         ///list of cadsurfs the node lies on
         std::map<int, Array<OneD, NekDouble> > CADSurf;
-        ///edge link count;
-        int m_elCount;
-        ///this could probably do with a better method but its easy for now
-        vector<NodeSharedPtr> m_connectingNodes;
 
     private:
         SpatialDomains::PointGeomSharedPtr m_geom;

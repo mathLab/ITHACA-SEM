@@ -72,10 +72,9 @@ public:
      */
     void Mesh();
 
-    /**
-     * @brief Print report of the surface mesh to screen
-     */
-    void Report();
+    void Smoothing();
+
+    void DiagonalSwap();
 
 
 private:
@@ -84,6 +83,10 @@ private:
      * @brief Calculate the paramter plane streching factor
      */
     void Stretching();
+
+    void BuildLocalMesh();
+
+    void OptimiseLocalMesh();
 
     /**
      * @brief Validate the surface mesh base on the octree and real
@@ -122,6 +125,10 @@ private:
     NekDouble pasr,asr;
     /// triangle connectiviities
     std::vector<std::vector<NodeSharedPtr> > m_connec;
+
+    NodeSet m_localNodes;
+    EdgeSet m_localEdges;
+    std::vector<ElementSharedPtr> m_localElements;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

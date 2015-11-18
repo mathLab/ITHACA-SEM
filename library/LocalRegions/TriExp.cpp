@@ -699,31 +699,13 @@ namespace Nektar
             {
             case 0:
                 Vmath::Vcopy(nquad0, &(inarray[0]), 1, &(outarray[0]), 1);
-                /*
-                for (int i = 0; i < nquad0; ++i)
-                {
-                    cout << "outarray = " << outarray[i] << endl;
-                }
-                 */
                 break;
             case 1:
                 Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
                              nquad0, &(outarray[0]), 1);
-                /*
-                for (int i = 0; i < nquad1; ++i)
-                {
-                    cout << "outarray = " << outarray[i] << endl;
-                }
-                 */
                 break;
             case 2:
                 Vmath::Vcopy(nquad1, &(inarray[0]), nquad0, &(outarray[0]), 1);
-                /*
-                for (int i = 0; i < nquad1; ++i)
-                {
-                    cout << "outarray = " << outarray[i] << endl;
-                }
-                 */
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
@@ -787,8 +769,6 @@ namespace Nektar
                     {
                         outarray[i] = i;
                     }
-                    //Vmath::Vcopy(nquad0, &(inarray[0]), 1,
-                    //             &(outarray[0]), 1);
                     break;
                 case 1:
                     outarray = Array<OneD, int>(nquad1);
@@ -796,39 +776,22 @@ namespace Nektar
                     {
                         outarray[i] = (nquad0-1) + i * nquad0;
                     }
-                    //Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
-                    //             nquad0, &(outarray[0]), 1);
                     break;
                 case 2:
                     outarray = Array<OneD, int>(nquad1);
                     for (int i = 0; i < nquad1; ++i)
                     {
-                        //cout << "i = " << i << endl;
-                        //cout << "i + i*(nquad0-1) = "
-                        //     << i + i*(nquad0-1) << endl;
-                        //outarray[i] = i + i*(nquad0-1);
                         outarray[i] =  i*nquad0;
-                        
-                        //cout << "outarray = " << outarray[i] << endl;
                     }
-                    //Vmath::Vcopy(nquad1, &(inarray[0]),
-                    //             nquad0, &(outarray[0]), 1);
                     break;
                 default:
                     ASSERTL0(false, "edge value (< 3) is out of range");
                     break;
             }
             
-            /*
-            cout << "eBackwards?"
-                 << (GetCartesianEorient(edge) == StdRegions::eBackwards)
-                 << endl;
-            
             // Reverse data if necessary
             if (GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                cout << "Hello" <<endl;
-                
                 int nn = outarray.num_elements();
                 int nloop = nn/2;
                 int store;
@@ -838,10 +801,8 @@ namespace Nektar
                     store = outarray[nn-1-rev];
                     outarray[nn-1-rev] = outarray[rev];
                     outarray[rev] = store;
-                    cout << "outarray = " << outarray[rev] << endl;
                 }
             }
-             */
         }
 
 

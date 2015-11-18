@@ -1420,7 +1420,7 @@ namespace Nektar
         {
             if (idmap.num_elements() != nq0)
             {
-                idmap = Array<OneD,int>(nq0);
+                idmap = Array<OneD, int>(nq0);
             }
             switch (orient)
             {

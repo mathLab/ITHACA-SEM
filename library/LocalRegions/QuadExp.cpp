@@ -894,8 +894,6 @@ namespace Nektar
                     {
                         outarray[i] = (nquad0-1) + i*nquad1;
                     }
-                    //Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
-                    //             nquad0, &(outarray[0]), 1);
                     break;
                 case 2:
                     outarray = Array<OneD, int>(nquad0);
@@ -903,8 +901,6 @@ namespace Nektar
                     {
                         outarray[i] = i + nquad0*(nquad1-1);
                     }
-                    //Vmath::Vcopy(nquad0, &(inarray[0])+nquad0*(nquad1-1), 1,
-                    //             &(outarray[0]), 1);
                     break;
                 case 3:
                     outarray = Array<OneD, int>(nquad1);
@@ -912,8 +908,6 @@ namespace Nektar
                     {
                         outarray[i] = i + i*(nquad0-1);
                     }
-                    //Vmath::Vcopy(nquad1, &(inarray[0]), nquad0,
-                    //             &(outarray[0]), 1);
                     break;
                 default:
                     ASSERTL0(false, "edge value (< 3) is out of range");

@@ -125,10 +125,6 @@ namespace Nektar
                     fields[i]->IProductWRTDerivBase(j, inarray[i], qcoeffs);
                     Vmath::Neg                      (nCoeffs, qcoeffs, 1);
                     fields[i]->AddTraceIntegral     (flux[j][i], qcoeffs);
-                    for (int mm = 0; mm < qcoeffs.num_elements(); ++mm)
-                    {
-                        cout << "i = " << mm << "\tqcoeffs = " << qcoeffs[mm] << endl;
-                    }
                     fields[i]->SetPhysState         (false);
                     fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);
                     fields[i]->BwdTrans             (qcoeffs, qfield[j][i]);
@@ -372,13 +368,10 @@ namespace Nektar
             Array<OneD, NekDouble > Fwd(nTracePts);
             Array<OneD, NekDouble > Bwd(nTracePts);
             Array<OneD, NekDouble > Vn (nTracePts, 0.0);
-            
             Array<OneD, NekDouble > qFwd     (nTracePts);
             Array<OneD, NekDouble > qBwd     (nTracePts);
             Array<OneD, NekDouble > qfluxtemp(nTracePts, 0.0);
-            
             Array<OneD, NekDouble > uterm(nTracePts);
-            
             /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
@@ -395,7 +388,6 @@ namespace Nektar
                 Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
                              Vn, 1, Vn, 1);
             }
-            
             // Evaulate upwind flux:
             // qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)
             for (i = 0; i < nvariables; ++i)

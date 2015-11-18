@@ -236,20 +236,33 @@ namespace Nektar
                     int order_f = edge->GetNcoeffs();
                     int foffset = trace->GetCoeff_Offset(edge->GetElmtId());
                     
-                    int fac = (*exp)[n]->EdgeNormalNegated(e) ? -1.0 : 1.0;
+                    // Bug is on fac! ##########################################
+                    double fac = (*exp)[n]->EdgeNormalNegated(e) ? -1.0 : 1.0;
+                    //cout << "fac1 = " << fac << endl;
                     
                     LocalRegions::Expansion1DSharedPtr locExp1d
                         = elmtToTrace[n][e]->as<LocalRegions::Expansion1D>();
                     
-                    if (locExp1d->GetRightAdjacentElementExp())
+                    if (exp2d->GetEdgeExp(e)->GetRightAdjacentElementExp())
                     {
+                        //cout << "if 1" << endl;
+                        
+                        //cout << "first item = "
+                        //<< locExp1d->GetRightAdjacentElementExp()->
+                        //GetGeom()->GetGlobalID() << endl;
+                        
+                        //cout << "second item = "
+                        //<< exp2d->GetGeom()->GetGlobalID() << endl;
+                        
                         if (locExp1d->GetRightAdjacentElementExp()->
-                            GetGeom()->GetGlobalID() == locExp1d->GetGeom()->
-                            GetGlobalID())
+                            GetGeom()->GetGlobalID() ==
+                            exp2d->GetGeom()->GetGlobalID())
                         {
                             fac = -1.0;
+                            //cout << "fac2 = " << fac << endl;
                         }
                     }
+                    // #########################################################
 
                     if (LeftAdjacents[cnt])
                     {
@@ -275,17 +288,18 @@ namespace Nektar
             }
             
             int nInterpType = TraceInterpMap.size();
+
             for (int i = 0; i < 2; ++i)
             {
-                m_interpTrace[i]   =
+                m_interpTrace[i] =
                     Array<OneD, InterpLocTraceToTrace>  (nInterpType);
                 m_interpTraceI0[i] =
                     Array<OneD, DNekMatSharedPtr>       (nInterpType);
                 m_interpEndPtI0[i] =
                     Array<OneD, Array<OneD, NekDouble> >(nInterpType);
-                m_interpPoints[i]  =
+                m_interpPoints[i] =
                     Array<OneD, TraceInterpPoints>      (nInterpType);
-                m_interpNfaces[i]  =
+                m_interpNfaces[i] =
                     Array<OneD, int>                    (nInterpType, 0);
             }
             
@@ -299,7 +313,7 @@ namespace Nektar
             int set;
             Array<OneD, int> edgeids;
             Array<OneD, int> locTraceToTraceMap;
-            cnt = 0 ;
+            cnt = 0;
             
             for (it = TraceInterpMap.begin();
                  it != TraceInterpMap.end(); ++it, ++cnt1)
@@ -343,21 +357,29 @@ namespace Nektar
                             elmtToTrace[n][e]->GetNverts(),
                             orient, toPointsKey0.GetNumPoints(),
                             locTraceToTraceMap);
-                    
 
-#if 0 // not sure we need this
+#if 1 // not sure we need this
                     if (orient == StdRegions::eBackwards)
                     {
-                        int nn = toPointsKey0.GetNumPoints();
-                        int nloop = nn/2;
                         int store;
                         int nverts = exp2d->GetNverts();
                         if (nverts == 3)
                         {
-
+                            int nn = locTraceToTraceMap.num_elements();
+                            int nloop = nn/2;
+                            
+                            for (int rev = 0; rev < nloop; ++rev)
+                            {
+                                store = locTraceToTraceMap[nn-1-rev];
+                                locTraceToTraceMap[nn-1-rev] = locTraceToTraceMap[rev];
+                                locTraceToTraceMap[rev] = store;
+                            }
                         }
                         else
                         {
+                            int nn = edgeids.num_elements();
+                            int nloop = nn/2;
+                            
                             for (int rev = 0; rev < nloop; ++rev)
                             {
                                 store = edgeids[nn-1-rev];
@@ -371,115 +393,63 @@ namespace Nektar
                     int offset = trace->GetPhys_Offset(elmtToTrace[n][e]->
                                                        GetElmtId());
                     
-                    // Temporary switch between quads and triangles
-                    if (exp2d->DetShapeType() == LibUtilities::eTriangle)
+                    //if (exp2d->DetShapeType() == LibUtilities::eTriangle)
+                    if (LeftAdjacents[TraceOrder[n][e]])
                     {
-                        if (LeftAdjacents[TraceOrder[n][e]])
+                        //cout << "LeftAdjacent" << endl;
+                        for (int i = 0; i < nedgepts; ++i)
                         {
-                            //cout << "LeftAdjacent" << endl;
-                            for (int i = 0; i < nedgepts; ++i)
-                            {
-                                m_fieldToLocTraceMap[cntFwd + i] = phys_offset +
-                                edgeids[i];
-                                
-                                /*
-                                cout << "cntFwd + i = " << cntFwd + i
-                                << "\tm_fieldToLocTraceMap = "
-                                << m_fieldToLocTraceMap[cntFwd + i] << endl;
-                                 */
-                            }
+                            m_fieldToLocTraceMap[cntFwd + i] = phys_offset +
+                                                               edgeids[i];
                             
-                            for (int i = 0; i < nedgepts1; ++i)
-                            {
-                                m_LocTraceToTraceMap[0][cntFwd1 + i]
-                                = offset + locTraceToTraceMap[i];
-                            }
-                            
-                            cntFwd  += nedgepts;
-                            cntFwd1 += nedgepts1;
-                            set = 0;
+                            //cout << "cntFwd + i = " << cntFwd + i
+                            //     << "\tm_fieldToLocTraceMap = "
+                            //     << m_fieldToLocTraceMap[cntFwd + i] << endl;
                         }
-                        else
+                        
+                        for (int i = 0; i < nedgepts1; ++i)
                         {
-                            //cout << "RightAdjacent" << endl;
-                            for (int i = 0; i < nedgepts; ++i)
-                            {
-                                m_fieldToLocTraceMap[
-                                    m_nFwdLocTracePts + cntBwd + i]
-                                    = phys_offset + edgeids[i];
-                                
-                                /*
-                                 cout << "m_nFwdLocTracePts + cntBwd + i = "
-                                 << m_nFwdLocTracePts + cntBwd + i
-                                 << "\tm_fieldToLocTraceMap = "
-                                 << m_fieldToLocTraceMap[m_nFwdLocTracePts + cntBwd + i] << endl;
-                                 */
-                            }
-                            
-                            for (int i = 0; i < nedgepts1; ++i)
-                            {
-                                m_LocTraceToTraceMap[1][cntBwd1 + i]
+                            m_LocTraceToTraceMap[0][cntFwd1 + i]
                                 = offset + locTraceToTraceMap[i];
-                            }
                             
-                            cntBwd  += nedgepts;
-                            cntBwd1 += nedgepts1;
-                            set = 1;
+                            //cout << "cntFwd1 + i = " << cntFwd1 + i
+                            //     << "\tm_LocTraceToTraceMap = "
+                            //     << m_LocTraceToTraceMap[0][cntFwd + i] << endl;
                         }
+                        
+                        cntFwd  += nedgepts;
+                        cntFwd1 += nedgepts1;
+                        set = 0;
                     }
                     else
                     {
-                        if (LeftAdjacents[TraceOrder[n][e]])
+                        //cout << "RightAdjacent" << endl;
+                        for (int i = 0; i < nedgepts; ++i)
                         {
-                            //cout << "LeftAdjacent" << endl;
-                            for (int i = 0; i < nedgepts; ++i)
-                            {
-                                m_fieldToLocTraceMap[cntFwd + i] = phys_offset +
-                                                                    edgeids[i];
-                                /*
-                                cout << "cntFwd + i = " << cntFwd + i
-                                     << "\tm_fieldToLocTraceMap = "
-                                     << m_fieldToLocTraceMap[cntFwd + i] << endl;
-                                 */
-                            }
+                            m_fieldToLocTraceMap[
+                                m_nFwdLocTracePts + cntBwd + i]
+                                = phys_offset + edgeids[i];
                         
-                            for (int i = 0; i < nedgepts1; ++i)
-                            {
-                                m_LocTraceToTraceMap[0][cntFwd1 + i]
-                                    = offset + locTraceToTraceMap[i];
-                            }
-                        
-                            cntFwd  += nedgepts;
-                            cntFwd1 += nedgepts1;
-                            set = 0;
+                            //cout << "m_nFwdLocTracePts + cntBwd + i = "
+                            //     << m_nFwdLocTracePts + cntBwd + i
+                            //     << "\tm_fieldToLocTraceMap = "
+                            //     << m_fieldToLocTraceMap[m_nFwdLocTracePts + cntBwd + i]
+                            //     << endl;
                         }
-                        else
+                        
+                        for (int i = 0; i < nedgepts1; ++i)
                         {
-                            //cout << "RightAdjacent" << endl;
-                            for (int i = 0; i < nedgepts; ++i)
-                            {
-                                m_fieldToLocTraceMap[
-                                    m_nFwdLocTracePts + cntBwd + i]
-                                    = phys_offset + edgeids[i];
+                            m_LocTraceToTraceMap[1][cntBwd1 + i]
+                                = offset + locTraceToTraceMap[i];
                             
-                                /*
-                                cout << "m_nFwdLocTracePts + cntBwd + i = "
-                                     << m_nFwdLocTracePts + cntBwd + i
-                                     << "\tm_fieldToLocTraceMap = "
-                                     << m_fieldToLocTraceMap[m_nFwdLocTracePts + cntBwd + i] << endl;
-                                 */
-                            }
-                        
-                            for (int i = 0; i < nedgepts1; ++i)
-                            {
-                                m_LocTraceToTraceMap[1][cntBwd1 + i]
-                                    = offset + locTraceToTraceMap[i];
-                            }
-                        
-                            cntBwd  += nedgepts;
-                            cntBwd1 += nedgepts1;
-                            set = 1;
+                            //cout << "cntBwd1 + i = " << cntBwd1 + i
+                            //     << "\tm_LocTraceToTraceMap = "
+                            //     << m_LocTraceToTraceMap[1][cntBwd1 + i] << endl;
                         }
+                    
+                        cntBwd  += nedgepts;
+                        cntBwd1 += nedgepts1;
+                        set = 1;
                     }
                     
                     m_interpNfaces[set][cnt1] += 1;
@@ -505,8 +475,8 @@ namespace Nektar
                             // check to see if we can
                             // just interpolate endpoint
                             if ((fromPointsKey0.GetPointsType() ==
-                                LibUtilities::eGaussRadauMAlpha1Beta0) &&
-                                (toPointsKey0.GetPointsType() ==
+                                LibUtilities::eGaussRadauMAlpha1Beta0)
+                                && (toPointsKey0.GetPointsType() ==
                                 LibUtilities::eGaussLobattoLegendre))
                             {
                                 //cout << "Interp 2" << endl;
@@ -514,7 +484,6 @@ namespace Nektar
                                     toPointsKey0.GetNumPoints())
                                 {
                                     //cout << "Interp 3" << endl;
-                            
                                     m_interpTrace[set][cnt1] = eInterpEndPtDir0;
                             
                                     int fnp0 = fromPointsKey0.
@@ -665,7 +634,7 @@ namespace Nektar
                 TraceOrder[n].resize(nface);
                 
                 int coeffoffset = locExp.GetCoeff_Offset(n);
-                for (e = 0; e < nface; ++e,++cnt)
+                for (e = 0; e < nface; ++e, ++cnt)
                 {
                     StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e];
                     StdRegions::Orientation orient = exp3d->GetForient(e);
@@ -1004,7 +973,7 @@ namespace Nektar
         }
 
 
-        /// interpolate local edges to trace face point distribution
+        // interpolate local edges to trace edge point distribution
         void LocTraceToTraceMap::InterpLocEdgesToTrace(
             const int dir,
             const Array<OneD, const NekDouble> &locedges,
@@ -1013,8 +982,8 @@ namespace Nektar
             ASSERTL1(dir < 2, "option dir out of range, "
                      " dir=0 is fwd, dir=1 is bwd");
             
-            int cnt1 = 0;
             int cnt  = 0;
+            int cnt1 = 0;
             
             // tmp space assuming forward map is of size of trace
             Array<OneD, NekDouble> tmp(m_nTracePts);
@@ -1066,24 +1035,42 @@ namespace Nektar
                         {
                             //cout << "eInterpEndPtDir0!" << endl;
                             int nedges = m_interpNfaces[dir][i];
-                            for (int k = 0; k < fnp0; ++k)
-                            {
-                                Vmath::Vcopy(nedges*fnp1, locedges.get()+cnt+k,
-                                             fnp0, tmp.get()+cnt1+k, tnp0);
-                            }
+                            
                             Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                             
-                            Blas::Dgemv('T', fnp0, tnp1*m_interpNfaces[dir][i],
-                                        1.0, tmp.get()+cnt1, tnp0, I0.get(), 1,
-                                        0.0, tmp.get()+cnt1+tnp0-1, tnp0);
+                            for (int k = 0; k < nedges; ++k)
+                            {
+                                Vmath::Vcopy(fnp0, &locedges[cnt+k*fnp0],
+                                             1, &tmp[cnt+k*tnp0], 1);
+                                    
+                                tmp[cnt+k*tnp0+tnp0-1] = Blas::
+                                    Ddot(fnp0, locedges.get()+cnt+k*fnp0,
+                                         1, &I0[0], 1);
+                            }
                         }
                             break;
                     }
+                    
                     cnt  += nfromfacepts;
                     cnt1 += m_interpNfaces[dir][i]*tnp0*tnp1;
                 }
             }
-
+            
+            /*
+            for (int k = 0; k < edges.num_elements(); ++k)
+            {
+                cout << "k = "
+                     << k
+                     << ",\tm_LocTraceToTraceMap[dir] = "
+                     << *(m_LocTraceToTraceMap[dir].get()+k)
+                     << ",\ttmp = "
+                     << *(tmp.get()+k)
+                     << ",\tedges = "
+                     << *(edges.get()+k)
+                     << endl;
+            }
+             */
+            
             Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
                          tmp.get(), m_LocTraceToTraceMap[dir].get(),
                          edges.get());
@@ -1275,6 +1262,8 @@ namespace Nektar
             {
                 //cout << "m_traceCoeffsToElmtMap = " << m_traceCoeffsToElmtMap[0][i] << endl;
                 //cout << "m_traceCoeffsToElmtSign = " << m_traceCoeffsToElmtSign[0][i] << endl;
+                //cout << "m_traceCoeffsToElmtTrace = " << m_traceCoeffsToElmtTrace[0][i] << endl;
+                //cout << "field = " << field[m_traceCoeffsToElmtMap[0][i]] << endl;
                 //cout << "trace = " << trace[m_traceCoeffsToElmtTrace[0][i]] << endl;
 
                 field[m_traceCoeffsToElmtMap[0][i]] +=

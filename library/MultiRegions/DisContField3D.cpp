@@ -1717,7 +1717,7 @@
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
              
-#if 1 // blocked routine
+#if 0 // blocked routine
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
                                             GetNLocTracePts());
             m_locTraceToTraceMap->LocTracesFromField(field,facevals);
@@ -1729,7 +1729,7 @@
 #else
             // Loop over elements and collect forward and backward expansions.
             int nexp = GetExpSize();
-            int cnt, n, e, npts, offset, phys_offset;
+            int offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
@@ -1903,11 +1903,18 @@
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
+            /*
+            for (int i = 0; i < Fn.num_elements(); ++i)
+            {
+                cout << "i = " << i << "\tFn = " << Fn[i] << endl;
+            }
+             */
 #if 1
             Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
-            m_trace->IProductWRTBase(Fn,Fcoeffs);
+            m_trace->IProductWRTBase(Fn, Fcoeffs);
             
-            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,outarray);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                              outarray);
 #else
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
@@ -1928,6 +1935,14 @@
                 }
             }
 #endif
+            /*
+            for (int i = 0; i < outarray.num_elements(); ++i)
+            {
+                cout << "i = " << i << "\toutarray = " << outarray[i] << endl;
+            }
+             */
+            //int num;
+            //cin >> num;
         }
         /**
          * @brief Add trace contributions into elemental coefficient spaces.

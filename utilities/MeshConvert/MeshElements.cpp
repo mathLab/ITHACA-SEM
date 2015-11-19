@@ -1244,7 +1244,7 @@ namespace Nektar
 
             if (fabs(dist) <= 1e-4)
             {
-                cerr << "Warning: degenerate tetrahedron, 3rd vertex is = " << dist <<" from face" << endl;
+                cerr << "Warning: degenerate tetrahedron, 3rd vertex is = " << fabs(dist) <<" from face" << endl;
             }
 
             if (dist < 0)

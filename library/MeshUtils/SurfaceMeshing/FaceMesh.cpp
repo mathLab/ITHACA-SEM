@@ -118,6 +118,11 @@ void FaceMesh::Mesh()
     //make new elements and add to list from list of nodes and connectivity from triangle
     for(int i = 0; i < m_localElements.size(); i++)
     {
+        vector<EdgeSharedPtr> e  = m_localElements[i]->GetEdgeList();
+        for(int j = 0; j < e.size(); j++)
+        {
+            e[j]->m_elLink.clear();
+        }
         m_mesh->m_element[m_mesh->m_expDim].push_back(m_localElements[i]);
     }
 
@@ -145,12 +150,23 @@ void FaceMesh::Smoothing()
     EdgeSet::iterator eit;
     NodeSet::iterator nit;
 
-    map<int, vector<NodeSharedPtr> > connectingnodes;
+    map<int, vector<EdgeSharedPtr> > connectingedges;
+
+    map<int, vector<ElementSharedPtr> > connectingelements;
 
     for(eit = m_localEdges.begin(); eit != m_localEdges.end(); eit++)
     {
-        connectingnodes[(*eit)->m_n1->m_id].push_back((*eit)->m_n2);
-        connectingnodes[(*eit)->m_n2->m_id].push_back((*eit)->m_n1);
+        connectingedges[(*eit)->m_n1->m_id].push_back(*eit);
+        connectingedges[(*eit)->m_n2->m_id].push_back(*eit);
+    }
+
+    for(int i = 0; i < m_localElements.size(); i++)
+    {
+        vector<NodeSharedPtr> v = m_localElements[i]->GetVertexList();
+        for(int j = 0; j < 3; j++)
+        {
+            connectingelements[v[j]->m_id].push_back(m_localElements[i]);
+        }
     }
 
     //perform 8 runs of elastic relaxation based on the octree
@@ -165,87 +181,183 @@ void FaceMesh::Smoothing()
             if(c.size()>0) //node is on curve so skip
                 continue;
 
-            vector<NodeSharedPtr> connodes = connectingnodes[(*nit)->m_id];
+            vector<NodeSharedPtr> connodes; //this can be real nodes or dummy nodes depending on the system
 
-            
+            vector<EdgeSharedPtr> edges = connectingedges[(*nit)->m_id];
+            vector<ElementSharedPtr> els = connectingelements[(*nit)->m_id];
 
-            Array<OneD, NekDouble> uv0(2);
-            uv0[0]=0.0; uv0[1]=0.0;
+            vector<NodeSharedPtr> nodesystem;
+            vector<NekDouble> lamp;
+
+            for(int i = 0; i < edges.size(); i++)
+            {
+                vector<NekDouble> lambda;
+
+                NodeSharedPtr J;
+                if(*nit == edges[i]->m_n1)
+                    J = edges[i]->m_n2;
+                else if(*nit == edges[i]->m_n2)
+                    J = edges[i]->m_n1;
+                else
+                    ASSERTL0(false,"could not find node");
+
+                Array<OneD, NekDouble> ui = (*nit)->GetCADSurf(m_id);
+                Array<OneD, NekDouble> uj = J->GetCADSurf(m_id);
+
+                for(int j = 0; j < els.size(); j++)
+                {
+                    vector<NodeSharedPtr> v = els[j]->GetVertexList();
+                    if(v[0] == J || v[1] == J || v[2] == J)
+                        continue; //elememt is adjacent to J therefore no intersection on IJ
+
+                    //need to find other edge
+                    EdgeSharedPtr LK;
+                    vector<EdgeSharedPtr> es = els[j]->GetEdgeList();
+                    if(!(es[0]->m_n1 == *nit || es[0]->m_n2 == *nit))
+                    {
+                        LK = es[0];
+                    }
+                    else
+                    {
+                        if(!(es[1]->m_n1 == *nit || es[1]->m_n2 == *nit))
+                        {
+                            LK = es[1];
+                        }
+                        else
+                        {
+                            if(!(es[2]->m_n1 == *nit || es[2]->m_n2 == *nit))
+                            {
+                                LK = es[2];
+                            }
+                            else
+                            {
+                                ASSERTL0(false,"failed to find edge");
+                            }
+                        }
+                    }
+
+                    Array<OneD, NekDouble> uk = LK->m_n1->GetCADSurf(m_id);
+                    Array<OneD, NekDouble> ul = LK->m_n2->GetCADSurf(m_id);
+
+
+
+                    Array<OneD, NekDouble> n(2);
+                    n[0] = -1.0*(uk[1] - ul[1]);
+                    n[1] = uk[0] - ul[0];
+                    n[0] = n[0] / sqrt(n[0]*n[0] + n[1]*n[1]);
+                    n[1] = n[1] / sqrt(n[0]*n[0] + n[1]*n[1]);
+
+                    NekDouble lam = -1.0*(ui[0]*uk[0]+ui[1]*uk[1]) /
+                                    ((uj[0]-ui[0])*n[0] +
+                                     (uj[1]-ui[1])*n[1]);
+                    if(!(lam < 0) && !(lam > 1))
+                        lambda.push_back(lam);
+                }
+
+                if(lambda.size() > 0)
+                {
+                    sort(lambda.begin(),lambda.end());
+                    //make a new dummy node based on the system
+                    Array<OneD, NekDouble> ud(2);
+                    ud[0] = ui[0] + lambda[0]*(uj[0] - ui[0]);
+                    ud[1] = ui[1] + lambda[0]*(uj[1] - ui[1]);
+                    Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
+                    NodeSharedPtr dn = boost::shared_ptr<Node>(new Node(0,locd[0],locd[1],locd[2]));
+                    dn->SetCADSurf(m_id,ud);
+                    nodesystem.push_back(dn);
+
+                    lamp.push_back(lambda[0]);
+                }
+                else
+                {
+                    nodesystem.push_back(J);
+                    lamp.push_back(1.0);
+                }
+            }
+
+            //we want to move the node to the centroid of the system,
+            //then perfrom one newton interation to move the node according to deltaspec
+            Array<OneD, NekDouble> ui(2);
+            ui[0]=0.0; ui[1]=0.0;
 
             DNekMat f(2,1,0.0);
-            DNekMat df(2,2,0.0);
-            for(int i = 0; i < connodes.size(); i++)
+            DNekMat J(2,2,0.0);
+            for(int i = 0; i < nodesystem.size(); i++)
             {
-                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(m_id);
-                uv0[0]+=uvj[0]/connodes.size();
-                uv0[1]+=uvj[1]/connodes.size();
+                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurf(m_id);
+                ui[0]+=uj[0]/nodesystem.size();
+                ui[1]+=uj[1]/nodesystem.size();
             }
 
-            Array<OneD, NekDouble> rui = m_cadsurf->P(uv0);
-            NekDouble d = m_octree->Query(rui);
-            for(int i = 0; i < connodes.size();i++)
+            Array<OneD, NekDouble> Xi = m_cadsurf->P(ui);
+            Array<OneD, NekDouble> ri = m_cadsurf->D1(ui);
+
+            for(int i = 0; i < nodesystem.size();i++)
             {
-                Array<OneD, NekDouble> uvj = connodes[i]->GetCADSurf(m_id);
-                Array<OneD, NekDouble> rj  = connodes[i]->GetLoc();
+                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurf(m_id);
+                Array<OneD, NekDouble> Xj = nodesystem[i]->GetLoc();
 
-                NekDouble difR = sqrt((rui[0]-rj[0])*(rui[0]-rj[0]) +
-                                      (rui[1]-rj[1])*(rui[1]-rj[1]) +
-                                      (rui[2]-rj[2])*(rui[2]-rj[2]));
+                NekDouble ljstar = m_octree->Query(Xj);
+                NekDouble lj = sqrt((Xi[0]-Xj[0])*(Xi[0]-Xj[0]) +
+                                    (Xi[1]-Xj[1])*(Xi[1]-Xj[1]) +
+                                    (Xi[2]-Xj[2])*(Xi[2]-Xj[2]));
 
-                NekDouble difU = sqrt((uvj[0]-uv0[0])*(uvj[0]-uv0[0]) +
-                                      (uvj[1]-uv0[1])*(uvj[1]-uv0[1]));
+                NekDouble Lj = sqrt((ui[0]-uj[0])*(ui[0]-uj[0]) +
+                                    (ui[1]-uj[1])*(ui[1]-uj[1]));
 
-                NekDouble A    = difR - d;
+                f(0,0) += (lj - ljstar)*(ui[0] - uj[0])/Lj;
+                f(1,0) += (lj - ljstar)*(ui[1] - uj[1])/Lj;
 
-                NekDouble B    = (uvj[0]-uv0[0]) / difU;
+                J(0,0) += (ri[3]*(Xi[0]-Xj[0]) + ri[4]*(Xi[1]-Xj[1]) + ri[5]*(Xi[2]-Xj[2]))/lj/Lj*(ui[0]-uj[0]) + (lj-ljstar)/Lj/Lj*(Lj - (ui[0]-uj[0])*(ui[0]-uj[0])/Lj);
 
-                NekDouble C    = (uvj[1]-uv0[1]) / difU;
+                J(1,1) += (ri[6]*(Xi[0]-Xj[0]) + ri[7]*(Xi[1]-Xj[1]) + ri[8]*(Xi[2]-Xj[2]))/lj/Lj*(ui[1]-uj[1]) + (lj-ljstar)/Lj/Lj*(Lj - (ui[1]-uj[1])*(ui[1]-uj[1])/Lj);
 
-                Array<OneD, NekDouble> r = m_cadsurf->D1(uv0);
+                J(1,0) += (ri[3]*(Xi[0]-Xj[0]) + ri[4]*(Xi[1]-Xj[1]) + ri[5]*(Xi[2]-Xj[2]))/lj/Lj*(ui[1]-uj[1]) - (lj-ljstar)/Lj/Lj*(ui[0]-uj[0])*(ui[1]-uj[1])/Lj;
 
-                NekDouble dAdu = ((r[0]-rj[0])*r[3] +
-                                  (r[1]-rj[1])*r[4] +
-                                  (r[2]-rj[2])*r[5]) / difR;
-
-                NekDouble dAdv = ((r[0]-rj[0])*r[6] +
-                                  (r[1]-rj[1])*r[7] +
-                                  (r[2]-rj[2])*r[8]) / difR;
-
-                NekDouble dBdu = (uvj[0]-uv0[0])*(uvj[0]-uv0[0])/
-                                 difU/difU/difU - 1.0/difU;
-
-                NekDouble dBdv = (uvj[0]-uv0[0])*(uvj[1]-uv0[1])/
-                                 difU/difU/difU;
-
-                NekDouble dCdv = (uvj[1]-uv0[1])*(uvj[1]-uv0[1])/
-                                 difU/difU/difU - 1.0/difU;
-
-                NekDouble dCdu = dBdv;
-
-                f(0,0) += A*B;
-                f(1,0) += A*C;
-
-                df(0,0) += B*dAdu + A*dBdu;
-                df(1,0) += C*dAdu + A*dCdu;
-                df(0,1) += B*dAdv + A*dBdv;
-                df(1,1) += C*dAdv + A*dCdv;
+                J(0,1) += (ri[6]*(Xi[0]-Xj[0]) + ri[7]*(Xi[1]-Xj[1]) + ri[8]*(Xi[2]-Xj[2]))/lj/Lj*(ui[0]-uj[0]) - (lj-ljstar)/Lj/Lj*(ui[0]-uj[0])*(ui[1]-uj[1])/Lj;
             }
 
-            df.Invert();
+            NekDouble fmagbefore = sqrt(f(0,0)*f(0,0)+f(1,0)*f(1,0));
 
-            DNekMat ui = df*f;
-            Array<OneD, NekDouble> uvn(2);
-            uvn[0] = uv0[0];// - ui(0,0);
-            uvn[1] = uv0[1];// - ui(1,0);
+            J.Invert();
 
             Array<OneD, NekDouble> bounds = m_cadsurf->GetBounds();
-            Array<OneD, NekDouble> uvi = (*nit)->GetCADSurf(m_id);
+
+            DNekMat U = J*f;
+            Array<OneD, NekDouble> uvn(2);
+
+            uvn[0] = ui[0]; //- U(0,0);
+            uvn[1] = ui[1]; //- U(1,0);
 
             if(!(uvn[0] < bounds[0] ||
                        uvn[0] > bounds[1] ||
                        uvn[1] < bounds[2] ||
                        uvn[1] > bounds[3]))
             {
+
+                /*f(0,0) = 0; f(1,0) = 0;
+                Xi = m_cadsurf->P(uvn);
+                for(int i = 0; i < nodesystem.size();i++)
+                {
+                    Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurf(m_id);
+                    Array<OneD, NekDouble> Xj = nodesystem[i]->GetLoc();
+
+                    NekDouble ljstar = m_octree->Query(Xj);
+                    NekDouble lj = sqrt((Xi[0]-Xj[0])*(Xi[0]-Xj[0]) +
+                                        (Xi[1]-Xj[1])*(Xi[1]-Xj[1]) +
+                                        (Xi[2]-Xj[2])*(Xi[2]-Xj[2]));
+
+                    NekDouble Lj = sqrt((uvn[0]-uj[0])*(uvn[0]-uj[0]) +
+                                        (uvn[1]-uj[1])*(uvn[1]-uj[1]));
+
+                    f(0,0) += (lj - ljstar)*(uvn[0] - uj[0])/Lj;
+                    f(1,0) += (lj - ljstar)*(uvn[1] - uj[1])/Lj;
+                }
+
+                NekDouble fmagafter = sqrt(f(0,0)*f(0,0)+f(1,0)*f(1,0));
+
+                if(fmagafter > fmagbefore)
+                    cout << "not optimsing" << endl;*/
 
                 Array<OneD, NekDouble> l2 = m_cadsurf->P(uvn);
                 (*nit)->Move(l2,m_id,uvn);

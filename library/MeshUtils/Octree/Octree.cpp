@@ -242,7 +242,7 @@ void Octree::Build()
             }
         }
 
-        if(maxdiff/mindiff > 1.1)
+        if(maxdiff/mindiff > 1.5)
         {
             vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
             neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
@@ -376,7 +376,7 @@ void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr>
         if(children[i]->GetDelta() < m_minDelta/10.0)
             children[i]->SetDelta(m_minDelta/10.0);
 
-        if(maxdiff/mindiff > 1.1)
+        if(maxdiff/mindiff > 1.5)
         {
             if(children[i]->DX() / 2.0 > m_minDelta/10.0)
             {
@@ -413,7 +413,7 @@ void Octree::SmoothAllOctantsRelaxed()
                     {
                         continue;
                     }
-                    if(nList[j]->GetDelta() < oct->GetDelta() && ddx(oct, nList[j]) > 0.5)
+                    if(nList[j]->GetDelta() < oct->GetDelta() && ddx(oct, nList[j]) > 0.6)
                     {
                         check.push_back(nList[j]);
                     }
@@ -427,9 +427,9 @@ void Octree::SmoothAllOctantsRelaxed()
                     {
                         NekDouble r = oct->Distance(check[j]);
 
-                        if(0.49 * r + check[j]->GetDelta() < deltaSM)
+                        if(0.59 * r + check[j]->GetDelta() < deltaSM)
                         {
-                            deltaSM = 0.49 * r + check[j]->GetDelta();
+                            deltaSM = 0.59 * r + check[j]->GetDelta();
                         }
                     }
                     oct->SetDelta(deltaSM);

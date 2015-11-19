@@ -142,44 +142,7 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    //m_surfacemesh->Optimise();
-
-    //m_surfacemesh->HOAwareness();
-
-    //m_surfacemesh->Metric();
-
-    ClearElementLinks(); //mesh needs reprocessing to clean element and edge lists, easiest way to do it
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
-
-    vector<ElementSharedPtr> elmt = m_mesh->m_element[2];
-    m_mesh->m_element[2].clear();
-
-    for(int i = 0; i < elmt.size(); i++)
-    {
-        if(elmt[i]->GetTagList()[0] == 4 ||
-           elmt[i]->GetTagList()[0] == 7 ||
-           elmt[i]->GetTagList()[0] == 8 ||
-           elmt[i]->GetTagList()[0] == 9)
-        {
-            m_mesh->m_element[2].push_back(elmt[i]);
-        }
-    }
-
-    ClearElementLinks();
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
-
-    m_mesh->m_nummode = 2;
-    return;
-
-    /*m_mesh->m_expDim = 3;
+    m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");
     m_mesh->m_fields.push_back("w");
@@ -198,9 +161,7 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    m_mesh->m_nummode = 2;
-
-    /*m_surfacemesh->HOSurf();
+    m_surfacemesh->HOSurf();
 
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
@@ -248,7 +209,7 @@ void InputCAD::Process()
             cout << "Warning: " << nNeg << " invalid elements" << endl;
         else
             cout << "0 invalid elements" << endl;
-    }*/
+    }
 
     if(m_mesh->m_verbose)
         cout << endl;

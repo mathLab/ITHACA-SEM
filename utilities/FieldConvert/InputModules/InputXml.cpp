@@ -88,7 +88,10 @@ void InputXml::Process(po::variables_map &vm)
 
     //check for multiple calls to inputXml due to split xml
     //files. If so just return
-    if(m_f->m_exp.size() != 0)
+    int expsize = m_f->m_exp.size();
+    m_f->m_comm->AllReduce(expsize,LibUtilities::ReduceMax);
+    
+    if(expsize != 0)
     {
         return; 
     }
@@ -274,7 +277,6 @@ void InputXml::Process(po::variables_map &vm)
         m_f->m_session = LibUtilities::SessionReader::
             CreateInstance(argc, (char **) argv, files, m_f->m_comm);
     }
-
 
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
     m_f->m_fld = MemoryManager<LibUtilities::FieldIO>

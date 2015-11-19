@@ -151,6 +151,7 @@ void InputFld::Process(po::variables_map &vm)
         // if Range has been speficied it is possible to have a
         // partition which is empty so check this and return if
         // no elements present.
+
         if(!expansions.size())
         {
             return;

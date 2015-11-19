@@ -20,6 +20,7 @@ SET(MeshConvertHeaders
     ProcessModules/ProcessScalar.h
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
+    ProcessModules/ProcessOptiExtract.h
 )
 
 SET(MeshConvertSources
@@ -45,6 +46,7 @@ SET(MeshConvertSources
     ProcessModules/ProcessScalar.cpp
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
+    ProcessModules/ProcessOptiExtract.cpp
 )
 
 IF (NEKTAR_USE_CCM)

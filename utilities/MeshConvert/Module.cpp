@@ -296,6 +296,8 @@ void Module::ProcessFaces(bool ReprocessFaces)
                 if (testIns.second)
                 {
                     (*(testIns.first))->m_id = fid++;
+                    (*(testIns.first))->m_elLink.push_back(
+                    pair<ElementSharedPtr,int>(elmt[i],j));
                 }
                 else
                 {

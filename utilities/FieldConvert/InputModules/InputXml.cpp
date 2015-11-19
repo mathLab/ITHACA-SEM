@@ -353,7 +353,14 @@ void InputXml::Process(po::variables_map &vm)
 
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
     }
-
+    else
+    {
+        if(vm.count("output-points"))
+        {
+            int nPointsNew = vm["output-points"].as<int>();
+            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
+        }
+    }
 
     if(m_f->m_verbose)
     {

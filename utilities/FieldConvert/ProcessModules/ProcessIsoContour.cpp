@@ -109,11 +109,6 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     Timer timer;
     int rank = m_f->m_comm->GetRank();
     
-    if(m_f->m_exp.size() == 0) // need check in case no elmts with -r option
-    {
-        return;
-    }
-    
     if(m_f->m_verbose)
     {
         if(rank == 0)
@@ -131,6 +126,11 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
     else // extract isocontour from field 
     {
+        if(m_f->m_exp.size() == 0)
+        {
+            return;
+        }
+
         // extract all fields to equi-spaced
         SetupEquiSpacedField();
         
@@ -177,8 +177,9 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         
         ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
         value   = m_config["fieldvalue"].as<NekDouble>();
-        
+
         iso = ExtractContour(fieldid,value);
+
     }
 
 

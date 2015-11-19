@@ -2159,6 +2159,7 @@ namespace Nektar
                 if (elmtToExpId.count(elmtId) == 0)
                 {
                     offset += datalen;
+                    modes_offset += (*m_exp)[0]->GetNumBases();
                     continue;
                 }
 

@@ -3035,7 +3035,7 @@ namespace Nektar
 
         /**
          * \brief Reset all points keys to have equispaced points with
-         * optional arguemtn of \a npoints which redefines how many
+         * optional arguemt of \a npoints which redefines how many
          * points are to be used.
          */
         void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
@@ -3106,6 +3106,40 @@ namespace Nektar
             }
         }
 
+
+        /** 
+         * \brief Reset all points keys to have expansion order of \a
+         *  nmodes.  we keep the point distribution the same and make
+         *  the number of points the same difference from the number
+         *  of modes as the original expansion definition
+         */
+        void MeshGraph::SetExpansionsToPointOrder(int npts)
+        {
+            ExpansionMapShPtrMapIter   it;
+
+            // iterate over all defined expansions
+            for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
+            {
+                ExpansionMapIter expIt;
+                
+                for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
+                {
+                    for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
+                    {
+                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i]; 
+                        
+                        const LibUtilities::PointsKey pkey(npts,bkeyold.GetPointsType());
+                        LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),
+                                                       bkeyold.GetNumModes(),
+                                                       pkey);
+                        expIt->second->m_basisKeyVector[i] = bkeynew; 
+                        
+                    }
+                }
+            }
+        }
+
+        
         /**
          * For each element of shape given by \a shape in field \a
          * var, replace the current BasisKeyVector describing the

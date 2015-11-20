@@ -409,14 +409,17 @@ the .dat file, i.e.
 Optionally \inltt{smooth} can be specified to smooth the isocontour
 with default values \inltt{smoothnegdiffusion}=0.495,
 \inltt{smoothnegdiffusion}=0.5 and \inltt{smoothiter}=100. This option
-automatically calls a \inltt{globalcondense} option which remove
-multiply defined verties from the simplex definition which arise as
-isocontour are generated element by element. 
+typically should be used wiht the \inltt{globalcondense} option which
+removes multiply defined verties from the simplex definition which
+arise as isocontour are generated element by element. The
+\inltt{smooth} option preivously automatically called the
+\inltt{globalcondense} option but this has been depracated since it is
+now possible to read isocontour files directly and so it is useful to
+have these as separate options.
 
 In addition to the \inltt{smooth} or \inltt{globalcondense} options
 you can specify \inltt{removesmallcontour}=100 which will remove
-separate isocontours of less than 100 triangles. This optin requires
-\inltt{smooth} or \inltt{globalcondense} to be specified.
+separate isocontours of less than 100 triangles. 
 
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,

@@ -182,51 +182,57 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     }
 
-
     // Process isocontour
     bool smoothing      = m_config["smooth"].m_beenSet;
     bool globalcondense = m_config["globalcondense"].m_beenSet;
-    if(smoothing||globalcondense)
+    if(globalcondense)
     {
-        vector<IsoSharedPtr> glob_iso;
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
-        int mincontour = 0; 
 
         g_iso->globalcondense(iso);
 
-        if(smoothing)
-        {
-            int  niter = m_config["smoothiter"].as<int>();
-            NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
-            NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
-            g_iso->smooth(niter,lambda,-mu);
-        }
 
-    
-        if((mincontour = m_config["removesmallcontour"].as<int>()))
-        {
-            if(rank == 0)
-            {
-                cout << "Identifying separate regions [." << flush ;
-            }
-            g_iso->separate_regions(glob_iso,mincontour);
-            if(rank == 0)
-            {
-                cout << "]" << endl <<  flush ;
-            }
-        }
-        else
-        {
-            glob_iso.push_back(g_iso);
-        }
-        ResetFieldPts(glob_iso);
+        iso.clear();
+        iso.push_back(g_iso);
     }
-    else
+
+    if(smoothing)
     {
-        ResetFieldPts(iso);
+        int  niter = m_config["smoothiter"].as<int>();
+        NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
+        NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
+        for(int i =0 ; i < iso.size(); ++i)
+        {
+            iso[i]->smooth(niter,lambda,-mu);
+        }
     }
+    
+    int mincontour = 0; 
+    if((mincontour = m_config["removesmallcontour"].as<int>()))
+    {
+        vector<IsoSharedPtr> new_iso;
 
+        if(rank == 0)
+        {
+            cout << "Identifying separate regions [." << flush ;
+        }
+        for(int i =0 ; i < iso.size(); ++i)
+        {
+            iso[i]->separate_regions(new_iso,mincontour);
+        }
+       
+        if(rank == 0)
+        {
+            cout << "]" << endl <<  flush ;
+        }
+
+        // reset iso to new_iso;
+        iso = new_iso;
+    }
+    
+    ResetFieldPts(iso);
+    
 
     if(m_f->m_verbose)
     {
@@ -692,7 +698,7 @@ void Iso::condense(void)
 
                 m_vid[3*i+j] = v.m_id;
                 ++cnt;
-            }
+           }
         }
     }
 
@@ -807,11 +813,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
     // identify which iso are connected by at least one point;
     // find min x,y,z and max x,y,z and see if overlap to select
     // which zones should be connected
-    if(niso == 1) // if only one isocontour check just that contour. 
-    {
-        isocon[0].push_back(0);
-    }
-    else
     {
         vector<Array<OneD, NekDouble> > sph(niso);
         Array<OneD, NekDouble> rng(6);
@@ -848,7 +849,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
 
         for(i = 0; i < niso; ++i)
         {
-            for(j = i+1; j < niso; ++j)
+            for(j = i; j < niso; ++j)
             {
                 NekDouble diff=sqrt((sph[i][0]-sph[j][0])*(sph[i][0]-sph[j][0])+
                           (sph[i][1]-sph[j][1])*(sph[i][1]-sph[j][1])+
@@ -885,11 +886,19 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         for(n = 0; n < isocon[i].size(); ++n, ++cnt)
         {
             
-            LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
+            if(totiso >= 40)
+            {
+                LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
+            }
 
             int con = isocon[i][n];
             for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
             {
+                if(totiso <40)
+                {
+                    LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon");
+                }
+
                 for(id2 = 0; id2 < iso[con]->m_nvert; ++id2)
                 {
                     
@@ -1066,7 +1075,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         }
     }
 }
-
+    
 
     void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso, int minsize)
     {

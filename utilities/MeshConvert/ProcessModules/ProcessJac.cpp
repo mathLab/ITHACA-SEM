@@ -62,6 +62,8 @@ ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
         true, "0", "remove curve nodes if element is singular.");
     m_config["list"]    = ConfigOption(
         true, "0", "Print list of elements having negative Jacobian.");
+    m_config["file"]    = ConfigOption(
+        false, "-1", "Write a file with a histogram of scaled Jacobians");
 }
 
 ProcessJac::~ProcessJac()
@@ -79,6 +81,9 @@ void ProcessJac::Process()
     bool extract = m_config["extract"].as<bool>();
     bool printList = m_config["list"].as<bool>();
     bool RemoveCurveIfSingular = m_config["removecurveifsingular"].as<bool>();
+    string fn = m_config["file"].as<string>();
+    bool file = !boost::iequals(fn,"-1");
+
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
 
     if (extract)
@@ -92,6 +97,8 @@ void ProcessJac::Process()
     }
 
     int nNeg = 0;
+
+    Array<OneD, int> bin(20,0);
 
     // Iterate over list of elements of expansion dimension.
     for (int i = 0; i < el.size(); ++i)
@@ -145,6 +152,49 @@ void ProcessJac::Process()
                 m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
             }
         }
+
+        if(file)
+        {
+            LibUtilities::PointsKeyVector pkey =
+                        geom->GetXmap()->GetPointsKeys();
+            Array<OneD, NekDouble> jac = gfac->GetJac(pkey);
+            int nq = jac.num_elements();
+
+            NekDouble sjac = Vmath::Vmin(nq,jac,1) / Vmath::Vmax(nq,jac,1);
+            if(!gfac->IsValid()) sjac = sjac*-1.0;
+
+            if(sjac < -0.9) bin[0]++;
+            else if(sjac < -0.8 && sjac >= -0.9) bin[1]++;
+            else if(sjac < -0.7 && sjac >= -0.8) bin[2]++;
+            else if(sjac < -0.6 && sjac >= -0.7) bin[3]++;
+            else if(sjac < -0.5 && sjac >= -0.6) bin[4]++;
+            else if(sjac < -0.4 && sjac >= -0.5) bin[5]++;
+            else if(sjac < -0.3 && sjac >= -0.4) bin[6]++;
+            else if(sjac < -0.2 && sjac >= -0.3) bin[7]++;
+            else if(sjac < -0.1 && sjac >= -0.2) bin[8]++;
+            else if(sjac < 0.0 && sjac >= -0.1) bin[9]++;
+            else if(sjac < 0.1 && sjac >= 0.0) bin[10]++;
+            else if(sjac < 0.2 && sjac >= 0.1) bin[11]++;
+            else if(sjac < 0.3 && sjac >= 0.2) bin[12]++;
+            else if(sjac < 0.4 && sjac >= 0.3) bin[13]++;
+            else if(sjac < 0.5 && sjac >= 0.4) bin[14]++;
+            else if(sjac < 0.6 && sjac >= 0.5) bin[15]++;
+            else if(sjac < 0.7 && sjac >= 0.6) bin[16]++;
+            else if(sjac < 0.8 && sjac >= 0.7) bin[17]++;
+            else if(sjac < 0.9 && sjac >= 0.8) bin[18]++;
+            else if(sjac <= 1.0 && sjac >= 0.9) bin[19]++;
+        }
+    }
+
+    if(file)
+    {
+        ofstream out;
+        out.open(fn.c_str());
+        for(int i = 0; i < 20; i++)
+        {
+            out << -1.0+i*0.1+0.05 << " " << bin[i] << endl;
+        }
+        out.close();
     }
 
     if (extract)

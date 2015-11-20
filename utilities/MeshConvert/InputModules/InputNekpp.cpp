@@ -90,7 +90,7 @@ void InputNekpp::Process()
 
     // Copy vertices.
     map<int, NodeSharedPtr> vIdMap;
-    int nVerts = graph->GetNvertices();
+    /*int nVerts = graph->GetNvertices();
     for (int i = 0; i < nVerts; ++i)
     {
         SpatialDomains::PointGeomSharedPtr vert =
@@ -99,6 +99,23 @@ void InputNekpp::Process()
             (*vert)(0), (*vert)(1), (*vert)(2)));
         m_mesh->m_vertexSet.insert(n);
         vIdMap[vert->GetVid()] = n;
+    }*/
+
+    {
+        int nel=0;
+        SpatialDomains::PointGeomMap tmp = graph->GetAllPointGeoms();
+        SpatialDomains::PointGeomMap::iterator it;
+        nel+= tmp.size();
+
+        for(it = tmp.begin(); it != tmp.end(); ++it)
+        {
+            SpatialDomains::PointGeomSharedPtr vert =
+            graph->GetVertex(it->second->GetVid());
+            NodeSharedPtr n = boost::shared_ptr<Node>(new Node(vert->GetVid(),
+                                 (*vert)(0), (*vert)(1), (*vert)(2)));
+            m_mesh->m_vertexSet.insert(n);
+            vIdMap[vert->GetVid()] = n;
+        }
     }
 
     map<int, EdgeSharedPtr> eIdMap;
@@ -282,6 +299,7 @@ void InputNekpp::Process()
         }
     }
     m_mesh->m_element[m_mesh->m_expDim].resize(nel);
+    int ele_counter=0;
 
     // loop over all composites and set up elements with edges and faces from the maps above.
     for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
@@ -313,7 +331,8 @@ void InputNekpp::Process()
 
             if(dim == m_mesh->m_expDim) // load mesh into location baded on globalID
             {
-                m_mesh->m_element[dim][(*geomIt)->GetGlobalID()] = E;
+                m_mesh->m_element[dim][ele_counter] = E;
+                ele_counter++;
             }
             else // push onto vector for later usage as composite region
             {

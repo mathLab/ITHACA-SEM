@@ -78,8 +78,8 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
                                         "values");
 
     m_config["smooth"]             = ConfigOption(true, "NotSet",
-                                        "Smooth isocontour (implies global "
-                                        "condense)");
+                                        "Smooth isocontour (might require "
+                                                  "globalcondense)");
 
     m_config["smoothiter"]         = ConfigOption(false, "100",
                                         "Number of smoothing cycle, default = "

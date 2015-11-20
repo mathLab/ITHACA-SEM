@@ -4,7 +4,7 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
 
     SET_COMMON_PROPERTIES(${name})
 
-    TARGET_LINK_LIBRARIES(${name} MeshUtils)
+    TARGET_LINK_LIBRARIES(${name} NekMeshUtils)
 
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name}
@@ -28,7 +28,7 @@ ADD_UTILITIES_EXECUTABLE(XmlToTecplot      util XmlToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplotWireFrame  util XmlToTecplotWireFrame.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToVtk          util XmlToVtk.cpp)
 
-#SUBDIRS(PostProcessing FieldConvert MeshConvert SimpleMeshGen Extras)
+#SUBDIRS(PostProcessing FieldConvert NekMesh SimpleMeshGen Extras)
 
 # Generate list of available utilities
 FILE(GLOB dir_list "*")

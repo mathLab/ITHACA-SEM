@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Nektar linear hexahedron with boundary layer splitting</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m bl:layers=3 -m jac:list HexLinear.rea HexLinear.xml:xml:test</parameters>
     <files>
         <file description="Input File">HexLinear.rea</file>

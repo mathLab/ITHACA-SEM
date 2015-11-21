@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Gmsh high-order tri square, order 8</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m jac:list SquareTri.msh SquareTri.xml:xml:test</parameters>
     <files>
         <file description="Input File">SquareTri.msh</file>

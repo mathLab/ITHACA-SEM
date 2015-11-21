@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Gmsh high-order prism cube, order 2</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m jac:list CubePrism.msh CubePrism.xml:xml:test</parameters>
     <files>
         <file description="Input File">CubePrism.msh</file>

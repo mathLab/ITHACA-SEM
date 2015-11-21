@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Gmsh high-order hex cube</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m jac:list CubeHex.msh CubeHex.xml:xml:test</parameters>
     <files>
         <file description="Input File">CubeHex.msh</file>

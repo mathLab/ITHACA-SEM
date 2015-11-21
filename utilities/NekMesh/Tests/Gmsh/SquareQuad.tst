@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Gmsh high-order quad square, order 8</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m jac:list SquareQuad.msh SquareQuad.xml:xml:test</parameters>
     <files>
         <file description="Input File">SquareQuad.msh</file>

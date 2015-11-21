@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Tet with an invalid face curvature</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m jac:list InvalidTetFace.xml InvalidTetFace.xml:xml:test</parameters>
     <files>
         <file description="Input File">InvalidTetFace.xml</file>

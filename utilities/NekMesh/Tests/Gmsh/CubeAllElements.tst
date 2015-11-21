@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>Gmsh linear mesh of cube, all elements</description>
-    <executable>MeshConvert</executable>
+    <executable>NekMesh</executable>
     <parameters>-m jac:list CubeAllElements.msh CubeAllElements.xml:xml:test</parameters>
     <files>
         <file description="Input File">CubeAllElements.msh</file>

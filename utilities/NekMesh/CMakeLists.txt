@@ -83,6 +83,8 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
+TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils)
+
 # Nektar++
 ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
 # Gmsh tests

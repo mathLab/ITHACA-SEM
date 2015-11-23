@@ -40,7 +40,9 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <SolverUtils/Interpolator.h>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/lexical_cast.hpp>
 namespace Nektar
 {
 namespace Utilities
@@ -327,7 +329,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(fromField->m_exp, pts,
+    InterpolateFieldToPts(fromField->m_exp, m_f->m_fieldPts,
                           clamp_low, clamp_up, def_value);
 
     if(fromField->m_session->GetComm()->GetRank() == 0)
@@ -337,79 +339,38 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 }
 
+
 void ProcessInterpPoints::InterpolateFieldToPts(
                          vector<MultiRegions::ExpListSharedPtr> &field0,
-                         Array<OneD, Array<OneD, NekDouble> >   &pts,
+                         LibUtilities::PtsFieldSharedPtr        &pts,
                          NekDouble                              clamp_low,
                          NekDouble                              clamp_up,
                          NekDouble                              def_value)
 {
-    int expdim = pts.num_elements();
+    int nfields = field0.size();
 
-    Array<OneD, NekDouble> coords(expdim), Lcoords(expdim);
-    int nq1 = pts[0].num_elements();
-    int elmtid, offset;
-    int r, f;
-    int intpts = 0;
-
-    // resize data field
-    m_f->m_data.resize(field0.size());
-
-    for (f = 0; f < field0.size(); ++f)
+    for (int f = pts->GetNFields(); f < field0.size(); ++f)
     {
-        m_f->m_data[f].resize(nq1);
+        Array<OneD, NekDouble> tmp(pts->GetNpoints(), def_value);
+        pts->AddField(tmp, "f" + boost::lexical_cast<std::string>(f));
     }
+    
+    SolverUtils::Interpolator interp;
+    interp.Interpolate(field0, pts);
 
-    for (r = 0; r < nq1; r++)
+    for (int f = 0; f < nfields; ++f)
     {
-        coords[0] = pts[0][r];
-        coords[1] = pts[1][r];
-        if (expdim == 3)
+        for (int i = 0; i < pts->GetNpoints(); ++i)
         {
-            coords[2] = pts[2][r];
-        }
-
-        // Obtain Element and LocalCoordinate to interpolate
-        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3);
-
-        if(elmtid >= 0)
-        {
-            offset = field0[0]->GetPhys_Offset(field0[0]->
-                                               GetOffset_Elmt_Id(elmtid));
-
-            for (f = 0; f < field0.size(); ++f)
+            if (pts->GetPointVal(f, i) > clamp_up)
             {
-                NekDouble value;
-                value = field0[f]->GetExp(elmtid)->
-                    StdPhysEvaluate(Lcoords, field0[f]->GetPhys() +offset);
-
-                if ((boost::math::isnan)(value))
-                {
-                    ASSERTL0(false, "new value is not a number");
-                }
-                else
-                {
-                    value = (value > clamp_up)? clamp_up :
-                        ((value < clamp_low)? clamp_low :
-                         value);
-
-                    m_f->m_data[f][r] = value;
-                }
+                pts->SetPointVal(f, i, clamp_up);
+            }
+            else if (pts->GetPointVal(f, i) < clamp_low)
+            {
+                pts->SetPointVal(f, i, clamp_low);
             }
         }
-        else
-        {
-            for (f = 0; f < field0.size(); ++f)
-            {
-                m_f->m_data[f][r] = def_value;
-            }
-        }
-
-        if (intpts%1000 == 0)
-        {
-            cout <<"." << flush;
-        }
-        intpts ++;
     }
 }
 

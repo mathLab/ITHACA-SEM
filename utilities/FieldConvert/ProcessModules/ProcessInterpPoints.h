@@ -38,6 +38,8 @@
 
 #include "../Module.h"
 
+#include <LibUtilities/BasicUtils/PtsField.h>
+
 namespace Nektar
 {
 namespace Utilities
@@ -64,7 +66,7 @@ class ProcessInterpPoints : public ProcessModule
     private:
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
-                                   Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                   LibUtilities::PtsFieldSharedPtr        &pts,
                                    NekDouble                               clamp_low,
                                    NekDouble                               clamp_up,
                                    NekDouble                               def_value);

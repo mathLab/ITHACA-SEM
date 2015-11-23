@@ -162,8 +162,10 @@ class Interpolator
         typedef std::pair<BPoint, unsigned int>                       PtsPointPair;
         typedef bgi::rtree< PtsPointPair, bgi::rstar<16> >            PtsRtree;
 
-        LibUtilities::PtsFieldSharedPtr             m_inField;
-        LibUtilities::PtsFieldSharedPtr             m_outField;
+        LibUtilities::PtsFieldSharedPtr             m_ptsInField;
+        LibUtilities::PtsFieldSharedPtr             m_ptsOutField;
+        vector<MultiRegions::ExpListSharedPtr>      m_expInField;
+        vector<MultiRegions::ExpListSharedPtr>      m_expOutField;
 
         /// Interpolation Method
         InterpMethod                                m_method;

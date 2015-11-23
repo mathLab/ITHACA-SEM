@@ -263,7 +263,6 @@ namespace Nektar
 
    void Extrapolate::CalcOutflowBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
-        const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
         static bool init = true;
@@ -683,8 +682,9 @@ namespace Nektar
                             for(int j = 0; j < m_bnd_dim; ++j)
                             {
                                 Vmath::Vcopy(nbc,
-                                        veltmp = m_outflowVel[j][0] +veloffset, 1,
-                                        BndValues[j],                           1);
+                                             veltmp = m_outflowVel[j][0]
+                                             +veloffset, 1,
+                                             BndValues[j],1);
                             }
                         }
                         else // only set up for 2nd order extrapolation
@@ -692,12 +692,14 @@ namespace Nektar
                             for(int j = 0; j < m_bnd_dim; ++j)
                             {
                                 Vmath::Smul(nbc, 2.0,
-                                        veltmp = m_outflowVel[j][0] + veloffset, 1,
-                                        BndValues[j],                            1);
+                                        veltmp = m_outflowVel[j][0]
+                                            + veloffset,  1,
+                                            BndValues[j], 1);
                                 Vmath::Svtvp(nbc, -1.0,
-                                        veltmp = m_outflowVel[j][1] + veloffset, 1,
-                                        BndValues[j],                            1,
-                                        BndValues[j],                            1);
+                                             veltmp = m_outflowVel[j][1]
+                                             + veloffset,  1,
+                                             BndValues[j], 1,
+                                             BndValues[j], 1);
                             }
                         }
 
@@ -725,6 +727,10 @@ namespace Nektar
                             // function from the input file )
                             ptmp[k] =  kinvis * ptmp[k] - 0.5 * utot[k] * fac
                                                         + PBCvals[k];
+                            if(normDotu[k] < 0.0)
+                            {
+                                cout << fac << " " << utot[k] << " " << ptmp[k] << endl;
+                            }
                         }
 
                         int u_offset = UBndExp[0][n]->GetPhys_Offset(i);

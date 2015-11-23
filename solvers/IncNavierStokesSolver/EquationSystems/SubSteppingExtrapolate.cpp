@@ -263,6 +263,9 @@ namespace Nektar
 
         // Copy m_pressureHBCs to m_PbndExp
         CopyPressureHBCsToPbndExp();            
+
+        // Evaluate High order outflow conditiosn if required. 
+        CalcOutflowBCs(inarray, kinvis);
     }
 
     /** 

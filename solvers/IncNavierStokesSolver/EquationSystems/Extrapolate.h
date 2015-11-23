@@ -175,7 +175,6 @@ namespace Nektar
         
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
-            const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
         void RollOver(

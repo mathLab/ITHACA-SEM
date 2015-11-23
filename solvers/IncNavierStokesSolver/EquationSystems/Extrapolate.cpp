@@ -727,10 +727,6 @@ namespace Nektar
                             // function from the input file )
                             ptmp[k] =  kinvis * ptmp[k] - 0.5 * utot[k] * fac
                                                         + PBCvals[k];
-                            if(normDotu[k] < 0.0)
-                            {
-                                cout << fac << " " << utot[k] << " " << ptmp[k] << endl;
-                            }
                         }
 
                         int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
@@ -1544,7 +1540,6 @@ namespace Nektar
                 }
 
                 maxV[el] = sqrt(maxV[el]);
-                //cout << maxV[el]*maxV[el] << endl;
             }
         }
         

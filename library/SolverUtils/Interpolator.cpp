@@ -328,7 +328,55 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > ex
 
 void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField, vector< MultiRegions::ExpListSharedPtr > &expOutField)
 {
-    ASSERTL0(false, "not implemented yet");
+    ASSERTL0(expOutField.size() == ptsInField->GetNFields(), "number of fields does not match");
+    ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
+    ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim, "too many dimesions in outField");
+
+    m_ptsInField = ptsInField;
+    m_expOutField = expOutField;
+
+    int nFields = max( (int) ptsInField->GetNFields(), (int) m_expOutField.size());
+    int nOutPts = m_expOutField[0]->GetTotPoints();
+    int outDim = m_expOutField[0]->GetCoordim(0);
+
+    // create intermediate Ptsfield that matches the expOutField
+    Array<OneD, Array<OneD, NekDouble> > pts(outDim + nFields);
+    for (int i = 0; i < outDim + nFields; ++i)
+    {
+        pts[i] = Array<OneD,  NekDouble>(nOutPts);
+    }
+    if (outDim == 1)
+    {
+        m_expOutField[0]->GetCoords(pts[0]);
+    }
+    else if (outDim == 2)
+    {
+        m_expOutField[0]->GetCoords(pts[0], pts[1]);
+    }
+    else if (outDim == 3)
+    {
+        m_expOutField[0]->GetCoords(pts[0], pts[1], pts[2]);
+    }
+    LibUtilities::PtsFieldSharedPtr tmpPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(outDim, pts);
+    //TODO: no interpolation needed here, we might as well just take the physical values of the expansion
+    Interpolator interp1;
+    interp1.Interpolate(m_expOutField, tmpPts);
+
+    // interpolate m_ptsInField to this intermediate field
+    Interpolator interp2;
+    interp2.Interpolate(m_ptsInField, tmpPts);
+
+    // write the intermediate fields data into our expOutField
+    for (int i = 0; i < nFields; i++)
+    {
+        for (int j = 0; j < nOutPts; ++j)
+        {
+            m_expOutField[i]->UpdatePhys()[j] = tmpPts->GetPointVal(i, j);
+        }
+    }
+
+    //TODO: figure out a way to show a reasonable progreesbar
 }
 
 

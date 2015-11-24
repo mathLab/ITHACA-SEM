@@ -329,8 +329,8 @@ std::string PtsIO::SetUpOutput(const std::string outname)
         WriteMultiFldFileIDs(infofile, filenames);
     }
 
-    // Pad rank to 8char filenames, e.g. P0000000.fld
-    boost::format pad("P%1$07d.fld");
+    // Pad rank to 8char filenames, e.g. P0000000.pts
+    boost::format pad("P%1$07d.pts");
     pad % m_comm->GetRank();
 
     // Generate full path name

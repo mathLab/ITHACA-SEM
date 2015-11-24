@@ -280,7 +280,7 @@ IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
         MultiRegions Collections)
     IF(NEKTAR_USE_MESH)
-	SET(NEKTAR++_LIBRARIES ${NEKTAR++_LIBRARIES} MeshUtils)
+	SET(NEKTAR++_LIBRARIES ${NEKTAR++_LIBRARIES} NekMeshUtils)
     ENDIF(NEKTAR_USE_MESH)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)

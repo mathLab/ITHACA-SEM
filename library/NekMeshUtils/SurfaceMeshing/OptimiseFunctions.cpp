@@ -38,7 +38,7 @@
 using namespace std;
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 Array<OneD, NekDouble> SurfaceMesh::EdgeGrad(NekDouble ux, NekDouble vx,

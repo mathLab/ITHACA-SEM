@@ -40,7 +40,7 @@
 using namespace std;
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), m_parent(p)

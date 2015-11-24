@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_HEX
-#define MESHUTILS_MESHELEMENTS_HEX
+#ifndef NekMeshUtils_MESHELEMENTS_HEX
+#define NekMeshUtils_MESHELEMENTS_HEX
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 3-dimensional six-faced element.

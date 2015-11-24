@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_PRISM
-#define MESHUTILS_MESHELEMENTS_PRISM
+#ifndef NekMeshUtils_MESHELEMENTS_PRISM
+#define NekMeshUtils_MESHELEMENTS_PRISM
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 3-dimensional five-faced element (2 triangles, 3

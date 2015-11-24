@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_FACE
-#define MESHUTILS_MESHELEMENTS_FACE
+#ifndef NekMeshUtils_MESHELEMENTS_FACE
+#define NekMeshUtils_MESHELEMENTS_FACE
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief Represents a face comprised of three or more edges.

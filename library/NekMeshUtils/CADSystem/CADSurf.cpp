@@ -40,7 +40,7 @@
 using namespace std;
 
 namespace Nektar {
-namespace MeshUtils {
+namespace NekMeshUtils {
 
 CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein) : m_ID(i), m_edges(ein)
 {

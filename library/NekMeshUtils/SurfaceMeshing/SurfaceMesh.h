@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef MESHUTILS_SURFACEMESHING_SURFACEMESH
-#define MESHUTILS_SURFACEMESHING_SURFACEMESH
+#ifndef NekMeshUtils_SURFACEMESHING_SURFACEMESH
+#define NekMeshUtils_SURFACEMESHING_SURFACEMESH
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
@@ -46,7 +46,7 @@
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 /**

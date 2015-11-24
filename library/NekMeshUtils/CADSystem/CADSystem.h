@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_CADSYSTEM_CADSYSTEM
-#define MESHUTILS_CADSYSTEM_CADSYSTEM
+#ifndef NekMeshUtils_CADSYSTEM_CADSYSTEM
+#define NekMeshUtils_CADSYSTEM_CADSYSTEM
 
 #include <boost/shared_ptr.hpp>
 
@@ -50,7 +50,7 @@
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 /**

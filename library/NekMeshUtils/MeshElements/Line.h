@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_LINE
-#define MESHUTILS_MESHELEMENTS_LINE
+#ifndef NekMeshUtils_MESHELEMENTS_LINE
+#define NekMeshUtils_MESHELEMENTS_LINE
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 1-dimensional line between two vertex nodes.

@@ -12,7 +12,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Hexahedron.cpp
     )
 IF(NEKTAR_USE_MESH)
-    SET(MESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
+    SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         SurfaceMeshing/CurveMesh.cpp
         Octree/Octant.cpp
         Octree/Octree.cpp

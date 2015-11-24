@@ -42,7 +42,7 @@
 #include "InputStar.h"
 
 using namespace std;
-using namespace Nektar::MeshUtils;
+using namespace Nektar::NekMeshUtils;
 
 namespace Nektar
 {

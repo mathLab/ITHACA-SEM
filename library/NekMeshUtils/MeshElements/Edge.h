@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_EDGE
-#define MESHUTILS_MESHELEMENTS_EDGE
+#ifndef NekMeshUtils_MESHELEMENTS_EDGE
+#define NekMeshUtils_MESHELEMENTS_EDGE
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief Represents an edge which joins two points.

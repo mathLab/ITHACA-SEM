@@ -41,7 +41,7 @@
 
 using namespace std;
 using namespace Nektar::Utilities;
-using namespace Nektar::MeshUtils;
+using namespace Nektar::NekMeshUtils;
 
 namespace po = boost::program_options;
 

@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_TET
-#define MESHUTILS_MESHELEMENTS_TET
+#ifndef NekMeshUtils_MESHELEMENTS_TET
+#define NekMeshUtils_MESHELEMENTS_TET
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 3-dimensional four-faced element.

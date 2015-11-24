@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_POINT
-#define MESHUTILS_MESHELEMENTS_POINT
+#ifndef NekMeshUtils_MESHELEMENTS_POINT
+#define NekMeshUtils_MESHELEMENTS_POINT
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 0-dimensional vertex.

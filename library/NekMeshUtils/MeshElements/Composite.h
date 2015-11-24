@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_COMPOSITE
-#define MESHUTILS_MESHELEMENTS_COMPOSITE
+#ifndef NekMeshUtils_MESHELEMENTS_COMPOSITE
+#define NekMeshUtils_MESHELEMENTS_COMPOSITE
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A composite is a collection of elements.

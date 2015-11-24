@@ -40,7 +40,7 @@
 using namespace std;
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 void TriangleInterface::Mesh(bool Quiet, bool Quality)

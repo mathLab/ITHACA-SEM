@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_CADSYSTEM_CADSURF
-#define MESHUTILS_CADSYSTEM_CADSURF
+#ifndef NekMeshUtils_CADSYSTEM_CADSURF
+#define NekMeshUtils_CADSYSTEM_CADSURF
 
 #include <boost/shared_ptr.hpp>
 
@@ -47,7 +47,7 @@
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 class CADCurve;

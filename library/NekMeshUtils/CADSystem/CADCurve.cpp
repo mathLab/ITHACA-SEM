@@ -39,7 +39,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)

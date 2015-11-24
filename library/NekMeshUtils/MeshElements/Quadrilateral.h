@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_QUAD
-#define MESHUTILS_MESHELEMENTS_QUAD
+#ifndef NekMeshUtils_MESHELEMENTS_QUAD
+#define NekMeshUtils_MESHELEMENTS_QUAD
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 2-dimensional four-sided element.

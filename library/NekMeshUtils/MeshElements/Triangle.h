@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_TRIANGLE
-#define MESHUTILS_MESHELEMENTS_TRIANGLE
+#ifndef NekMeshUtils_MESHELEMENTS_TRIANGLE
+#define NekMeshUtils_MESHELEMENTS_TRIANGLE
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A lightweight struct for dealing with high-order triangle

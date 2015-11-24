@@ -40,7 +40,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 LibUtilities::ShapeType Pyramid::type = GetElementFactory().

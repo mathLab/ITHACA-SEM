@@ -48,7 +48,7 @@
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 
-using namespace Nektar::MeshUtils;
+using namespace Nektar::NekMeshUtils;
 
 namespace Nektar
 {

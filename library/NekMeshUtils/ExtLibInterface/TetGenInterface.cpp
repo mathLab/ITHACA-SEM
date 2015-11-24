@@ -37,7 +37,7 @@
 
 using namespace std;
 namespace Nektar{
-namespace MeshUtils{
+namespace NekMeshUtils{
 
 void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> nis,
                                   vector<ElementSharedPtr> tri)

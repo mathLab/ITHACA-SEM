@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESH
-#define MESHUTILS_MESHELEMENTS_MESH
+#ifndef NekMeshUtils_MESHELEMENTS_MESH
+#define NekMeshUtils_MESHELEMENTS_MESH
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * Enumeration of condition types (Dirichlet, Neumann, etc).

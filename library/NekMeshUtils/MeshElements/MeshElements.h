@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_MESHELEMENTS
-#define MESHUTILS_MESHELEMENTS_MESHELEMENTS
+#ifndef NekMeshUtils_MESHELEMENTS_MESHELEMENTS
+#define NekMeshUtils_MESHELEMENTS_MESHELEMENTS
 
 #include <vector>
 #include <string>

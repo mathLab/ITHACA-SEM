@@ -38,7 +38,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 bool operator==(ElmtConfig const &c1, ElmtConfig const &c2)

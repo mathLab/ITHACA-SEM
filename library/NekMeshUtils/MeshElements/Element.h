@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_ELEMENT
-#define MESHUTILS_MESHELEMENTS_ELEMENT
+#ifndef NekMeshUtils_MESHELEMENTS_ELEMENT
+#define NekMeshUtils_MESHELEMENTS_ELEMENT
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief Basic information about an element.

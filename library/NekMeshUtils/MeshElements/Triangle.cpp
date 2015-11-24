@@ -41,7 +41,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 LibUtilities::ShapeType Triangle::m_type = GetElementFactory().

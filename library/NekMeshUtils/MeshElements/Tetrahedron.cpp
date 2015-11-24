@@ -42,7 +42,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 LibUtilities::ShapeType Tetrahedron::m_type = GetElementFactory().

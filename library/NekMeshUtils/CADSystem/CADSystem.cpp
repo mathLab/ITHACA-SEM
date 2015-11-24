@@ -46,7 +46,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 string CADSystem::GetName()
@@ -292,7 +292,7 @@ bool CADSystem::LoadCAD()
                     if(j ==k) continue;
 
                     BRepClass_FaceClassifier fc(TopoDS::Face(wirefacecuts[j]), centersofcutfaces[k], 1e-7);
-                    ASSERTL0(fc.State() == 1, "Internal face loops make this cad impossible to mesh");
+                    //ASSERTL0(fc.State() == 1, "Internal face loops make this cad impossible to mesh");
                 }
             }
 
@@ -410,7 +410,7 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
         m_surfs[i]->SetTwoC();
     }
 
-    //check the normals are interior
+    /*//check the normals are interior
     Array<OneD, NekDouble> bnds = newSurf->GetBounds();
     Array<OneD, NekDouble> uv(2);
     uv[0] = (bnds[1]+bnds[0])/2.0;
@@ -424,7 +424,7 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     tl[1] = P[1] + 0.01*N[1];
     tl[2] = P[2] + 0.01*N[2];
 
-    ASSERTL0(InsideShape(tl), "normal incorrectly orientated");
+    ASSERTL0(InsideShape(tl), "normal incorrectly orientated");*/
 }
 
 bool CADSystem::InsideShape(Array<OneD, NekDouble> loc)

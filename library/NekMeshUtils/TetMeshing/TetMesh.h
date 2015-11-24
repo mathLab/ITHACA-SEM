@@ -47,7 +47,7 @@
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
 namespace Nektar{
-namespace MeshUtils{
+namespace NekMeshUtils{
 
 class TetMesh
 {

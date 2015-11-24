@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef MESHUTILS_CADSYSTEM_OCC
-#define MESHUTILS_CADSYSTEM_OCC
+#ifndef NekMeshUtils_CADSYSTEM_OCC
+#define NekMeshUtils_CADSYSTEM_OCC
 
 #include <STEPControl_Reader.hxx>
 #include <IGESControl_Reader.hxx>

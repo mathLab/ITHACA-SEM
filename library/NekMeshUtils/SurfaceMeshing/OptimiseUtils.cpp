@@ -39,7 +39,7 @@
 using namespace std;
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 NekDouble SurfaceMesh::BrentOpti(NekDouble ax, NekDouble bx,

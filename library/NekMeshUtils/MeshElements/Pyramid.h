@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_PYM
-#define MESHUTILS_MESHELEMENTS_PYM
+#ifndef NekMeshUtils_MESHELEMENTS_PYM
+#define NekMeshUtils_MESHELEMENTS_PYM
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     /**
      * @brief A 3-dimensional square-based pyramidic element

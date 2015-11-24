@@ -41,7 +41,7 @@ using namespace std;
 #include "InputGmsh.h"
 
 
-using namespace Nektar::MeshUtils;
+using namespace Nektar::NekMeshUtils;
 
 namespace Nektar
 {

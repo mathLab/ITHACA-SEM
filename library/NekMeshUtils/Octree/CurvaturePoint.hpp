@@ -33,15 +33,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_OCTREE_CURAVTUREPOINT
-#define MESHUTILS_OCTREE_CURAVTUREPOINT
+#ifndef NekMeshUtils_OCTREE_CURAVTUREPOINT
+#define NekMeshUtils_OCTREE_CURAVTUREPOINT
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 /**

@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MESHUTILS_MESHELEMENTS_NODE
-#define MESHUTILS_MESHELEMENTS_NODE
+#ifndef NekMeshUtils_MESHELEMENTS_NODE
+#define NekMeshUtils_MESHELEMENTS_NODE
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
     // Forwards declaration for Element class.
     class Element;

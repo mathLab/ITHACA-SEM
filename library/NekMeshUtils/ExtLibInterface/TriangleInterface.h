@@ -56,7 +56,7 @@ extern "C"{
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 class TriangleInterface

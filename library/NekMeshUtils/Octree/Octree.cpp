@@ -44,7 +44,7 @@
 using namespace std;
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
@@ -190,79 +190,82 @@ void Octree::Build()
 
     SmoothAllOctants();
 
-    //identify octants which contain minlimited octants
-    vector<OctantSharedPtr> minlimitedoct;
-    for(int i = 0; i < Octants.size(); i++)
+    if(m_relax)
     {
-        OctantSharedPtr oct = Octants[i];
-        if(oct->IsLeaf())
+        //identify octants which contain minlimited octants
+        vector<OctantSharedPtr> minlimitedoct;
+        for(int i = 0; i < Octants.size(); i++)
         {
-            vector<CurvaturePointSharedPtr> cp = oct->GetCPList();
+            OctantSharedPtr oct = Octants[i];
+            if(oct->IsLeaf())
+            {
+                vector<CurvaturePointSharedPtr> cp = oct->GetCPList();
+                for(int j = 0; j < cp.size(); j++)
+                {
+                    NekDouble d;
+                    if(cp[j]->IsValid() && cp[j]->IsMinLimited(d))
+                    {
+                        minlimitedoct.push_back(oct);
+                        break;
+                    }
+                }
+            }
+        }
+
+        cout << minlimitedoct.size() << " octants contain min limited points" << endl;
+
+        vector<OctantSharedPtr> neighRevaluate;
+        for(int i = 0; i < minlimitedoct.size(); i++)
+        {
+            NekDouble av = 0.0;
+            NekDouble d, mindiff = numeric_limits<double>::max(), maxdiff = 0.0;
+            vector<CurvaturePointSharedPtr> cp = minlimitedoct[i]->GetCPList();
             for(int j = 0; j < cp.size(); j++)
             {
-                NekDouble d;
-                if(cp[j]->IsValid() && cp[j]->IsMinLimited(d))
+                if(cp[j]->IsValid())
                 {
-                    minlimitedoct.push_back(oct);
-                    break;
+                    if(cp[j]->IsMinLimited(d))
+                    {
+                        if(d < mindiff)
+                            mindiff = d;
+                        if(d > maxdiff)
+                            maxdiff = d;
+                        av += d/cp.size();
+                    }
+                    else
+                    {
+                        d = cp[j]->GetDelta();
+                        if(d < mindiff)
+                            mindiff = d;
+                        if(d > maxdiff)
+                            maxdiff = d;
+                        av += d/cp.size();
+                    }
                 }
             }
-        }
-    }
 
-    cout << minlimitedoct.size() << " octants contain min limited points" << endl;
-
-    vector<OctantSharedPtr> neighRevaluate;
-    for(int i = 0; i < minlimitedoct.size(); i++)
-    {
-        NekDouble av = 0.0;
-        NekDouble d, mindiff = numeric_limits<double>::max(), maxdiff = 0.0;
-        vector<CurvaturePointSharedPtr> cp = minlimitedoct[i]->GetCPList();
-        for(int j = 0; j < cp.size(); j++)
-        {
-            if(cp[j]->IsValid())
+            if(maxdiff/mindiff > 1.5)
             {
-                if(cp[j]->IsMinLimited(d))
-                {
-                    if(d < mindiff)
-                        mindiff = d;
-                    if(d > maxdiff)
-                        maxdiff = d;
-                    av += d/cp.size();
-                }
-                else
-                {
-                    d = cp[j]->GetDelta();
-                    if(d < mindiff)
-                        mindiff = d;
-                    if(d > maxdiff)
-                        maxdiff = d;
-                    av += d/cp.size();
-                }
+                vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
+                neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
+                SubDivideMinLimited(minlimitedoct[i], neighRevaluate);
+            }
+            else
+            {
+                minlimitedoct[i]->SetDelta(av);
             }
         }
 
-        if(maxdiff/mindiff > 1.5)
+        for(int i = 0; i < neighRevaluate.size(); i++)
         {
-            vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
-            neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
-            SubDivideMinLimited(minlimitedoct[i], neighRevaluate);
+            if(neighRevaluate[i]->IsLeaf())
+            {
+                AssignNeigbours(neighRevaluate[i]);
+            }
         }
-        else
-        {
-            minlimitedoct[i]->SetDelta(av);
-        }
-    }
 
-    for(int i = 0; i < neighRevaluate.size(); i++)
-    {
-        if(neighRevaluate[i]->IsLeaf())
-        {
-            AssignNeigbours(neighRevaluate[i]);
-        }
+        SmoothAllOctantsRelaxed();
     }
-
-    SmoothAllOctantsRelaxed();
 
     for(int i = 0; i < Octants.size(); i++)
     {

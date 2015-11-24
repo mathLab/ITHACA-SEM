@@ -46,7 +46,7 @@
 
 namespace Nektar
 {
-namespace MeshUtils
+namespace NekMeshUtils
 {
 
 class Octant; //have to forward declare the class for the sharedptr

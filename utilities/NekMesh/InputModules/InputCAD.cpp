@@ -39,14 +39,13 @@
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 #include <NekMeshUtils/TetMeshing/TetMesh.h>
-//#include <NekMeshUtils/MeshElem.hpp>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
 #include "InputCAD.h"
 
 using namespace std;
-using namespace Nektar::MeshUtils;
+using namespace Nektar::NekMeshUtils;
 
 namespace Nektar
 {
@@ -84,11 +83,14 @@ void InputCAD::Process()
     pSession->LoadParameter("EPS",      m_eps);
     pSession->LoadParameter("Order",    m_order);
     m_CADName = pSession->GetSolverInfo("CADFile");
-    m_orelax = pSession->GetSolverInfo("OCtreeRelax");
+    m_orelax = pSession->GetSolverInfo("OctreeRelax");
     if(boost::iequals(m_orelax,"TRUE"))
         m_octreeRelax = true;
     else
+    {
+        cout << "hit" << endl;
         m_octreeRelax = false;
+    }
 
     CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
                                             AllocateSharedPtr(m_CADName);

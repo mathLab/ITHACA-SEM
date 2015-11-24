@@ -147,6 +147,12 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField, FieldMetaD
         // Load metadata
         ImportFieldMetaData(infile, fieldmetadatamap);
 
+        //HACK: only load the filename matching our rank.
+        filenames.clear();
+        boost::format pad("P%1$07d.pts");
+        pad % m_comm->GetRank();
+        filenames.push_back(pad.str());
+
         for(int i = 0; i < filenames.size(); ++i)
         {
             fs::path pfilename(filenames[i]);

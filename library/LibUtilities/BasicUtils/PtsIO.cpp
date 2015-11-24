@@ -126,7 +126,7 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
  * @param inFile    filename of the file to read
  * @param ptsField  the resulting pts field.
  */
-void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
+void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField, FieldMetaDataMap &fieldmetadatamap)
 {
     std::string infile = inFile;
 
@@ -142,11 +142,10 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
         std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
 
 
-        ImportMultiFldFileIDs(infile,filenames);
+        ImportMultiFldFileIDs(infile,filenames, fieldmetadatamap);
 
         // Load metadata
-        // TODO: copy from FieldIO
-        // ImportFieldMetaData(infile,fieldmetadatamap);
+        ImportFieldMetaData(infile, fieldmetadatamap);
 
         for(int i = 0; i < filenames.size(); ++i)
         {
@@ -362,7 +361,8 @@ void PtsIO::WriteMultiFldFileIDs(const std::string &outFile,
 
 
 void PtsIO::ImportMultiFldFileIDs(const std::string &inFile,
-                                    std::vector<std::string> &fileNames)
+                                    std::vector<std::string> &fileNames,
+                                    FieldMetaDataMap &fieldmetadatamap)
 {
     TiXmlDocument doc(inFile);
     bool loadOkay = doc.LoadFile();
@@ -417,6 +417,92 @@ void PtsIO::ImportMultiFldFileIDs(const std::string &inFile,
 
     fldfileIDs = fldfileIDs->NextSiblingElement(strPartition.c_str());
     }
+}
+
+
+void PtsIO::ImportFieldMetaData(std::string filename,
+                                 FieldMetaDataMap &fieldmetadatamap)
+{
+    TiXmlDocument doc(filename);
+    bool loadOkay = doc.LoadFile();
+
+    std::stringstream errstr;
+    errstr << "Unable to load file: " << filename << std::endl;
+    errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+    errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+    ASSERTL0(loadOkay, errstr.str());
+
+    ImportFieldMetaData(doc,fieldmetadatamap);
+}
+
+
+void PtsIO::ImportFieldMetaData(TiXmlDocument &doc,
+                        FieldMetaDataMap &fieldmetadatamap)
+{
+
+    TiXmlHandle docHandle(&doc);
+    TiXmlElement* master = 0;    // Master tag within which all data is contained.
+    TiXmlElement* metadata = 0;
+
+    master = doc.FirstChildElement("NEKTAR");
+    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+    std::string strLoop = "NEKTAR";
+
+    // Retain original metadata structure for backwards compatibility
+    // TODO: Remove old metadata format
+    metadata = master->FirstChildElement("FIELDMETADATA");
+    if(metadata)
+    {
+        TiXmlElement *param = metadata->FirstChildElement("P");
+
+        while (param)
+        {
+            TiXmlAttribute *paramAttr = param->FirstAttribute();
+            std::string attrName(paramAttr->Name());
+            std::string paramString;
+
+            if(attrName == "PARAM")
+            {
+                paramString.insert(0,paramAttr->Value());
+            }
+            else
+            {
+                ASSERTL0(false,"PARAM not provided as an attribute in FIELDMETADATA section");
+            }
+
+            // Now read body of param
+            std::string paramBodyStr;
+
+            TiXmlNode *paramBody = param->FirstChild();
+
+            paramBodyStr += paramBody->ToText()->Value();
+
+            fieldmetadatamap[paramString] = paramBodyStr;
+            param = param->NextSiblingElement("P");
+        }
+    }
+
+    // New metadata format
+    metadata = master->FirstChildElement("Metadata");
+    if(metadata)
+    {
+        TiXmlElement *param = metadata->FirstChildElement();
+
+        while (param)
+        {
+            std::string paramString = param->Value();
+            if (paramString != "Provenance")
+            {
+                // Now read body of param
+                TiXmlNode *paramBody = param->FirstChild();
+                std::string paramBodyStr = paramBody->ToText()->Value();
+
+                fieldmetadatamap[paramString] = paramBodyStr;
+            }
+            param = param->NextSiblingElement();
+        }
+    }
+
 }
 
 

@@ -100,8 +100,7 @@ class PtsIO
                 FieldMetaDataMap &fieldmetadatamap);
 
         LIB_UTILITIES_EXPORT void ImportFieldData(
-            TiXmlDocument docInput,
-            Nektar::LibUtilities::PtsFieldSharedPtr ptsField);
+            TiXmlDocument docInput, Nektar::LibUtilities::PtsFieldSharedPtr &ptsField);
 
     private:
 

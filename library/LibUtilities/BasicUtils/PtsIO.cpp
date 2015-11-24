@@ -572,7 +572,7 @@ void PtsIO::AddInfoTag(TiXmlElement *root,
 }
 
 
-void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr ptsField)
+void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
 {
     TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
     TiXmlElement *points = nektar->FirstChildElement("POINTS");

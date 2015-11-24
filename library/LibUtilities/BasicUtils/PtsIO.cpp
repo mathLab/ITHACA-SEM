@@ -128,68 +128,58 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
  */
 void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
 {
-    TiXmlDocument docInput;
-    ASSERTL0(docInput.LoadFile(inFile), "Unable to open file '" + inFile + "'.");
+    std::string infile = inFile;
 
-    TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
-    TiXmlElement *points = nektar->FirstChildElement("POINTS");
-    int dim;
-    int err = points->QueryIntAttribute("DIM", &dim);
+    fs::path pinfilename(infile);
 
-    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute DIM.");
-
-    std::string fields = points->Attribute("FIELDS");
-
-    vector<string> fieldNames;
-    if (!fields.empty())
+    if(fs::is_directory(pinfilename)) // check to see that infile is a directory
     {
-        bool valid = ParseUtils::GenerateOrderedStringVector(
-                         fields.c_str(), fieldNames);
-        ASSERTL0(valid,
-                 "Unable to process list of field variable in  FIELDS attribute:  " + fields);
-    }
+        fs::path infofile("Info.xml");
+        fs::path fullpath = pinfilename / infofile;
+        infile = PortablePath(fullpath);
 
-    int nfields = fieldNames.size();
-    int totvars = dim + nfields;
+        std::vector<std::string> filenames;
+        std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
 
-    TiXmlNode *pointsBody = points->FirstChild();
 
-    std::istringstream pointsDataStrm(pointsBody->ToText()->Value());
+        ImportMultiFldFileIDs(infile,filenames);
 
-    vector<NekDouble> ptsSerial;
-    Array<OneD,  Array<OneD,  NekDouble> > pts(totvars);
+        // Load metadata
+        // TODO: copy from FieldIO
+        // ImportFieldMetaData(infile,fieldmetadatamap);
 
-    try
-    {
-        NekDouble      ptsStream;
-        while (!pointsDataStrm.fail())
+        for(int i = 0; i < filenames.size(); ++i)
         {
-            pointsDataStrm >> ptsStream;
+            fs::path pfilename(filenames[i]);
+            fullpath = pinfilename / pfilename;
+            string fname = PortablePath(fullpath);
 
-            ptsSerial.push_back(ptsStream);
+            TiXmlDocument doc1(fname);
+            bool loadOkay1 = doc1.LoadFile();
+
+            std::stringstream errstr;
+            errstr << "Unable to load file: " << fname << std::endl;
+            errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+            errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
+            ASSERTL0(loadOkay1, errstr.str());
+
+            ImportFieldData(doc1, ptsField);
         }
     }
-    catch (...)
+    else
     {
-        ASSERTL0(false, "Unable to read Points data.");
+        TiXmlDocument doc(infile);
+        bool loadOkay = doc.LoadFile();
+
+        std::stringstream errstr;
+        errstr << "Unable to load file: " << infile << std::endl;
+        errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+        errstr << "Position: Line " << doc.ErrorRow() << ", Column " <<
+            doc.ErrorCol() << std::endl;
+        ASSERTL0(loadOkay, errstr.str());
+
+        ImportFieldData(doc, ptsField);
     }
-
-    int npts = ptsSerial.size() / totvars;
-
-    for (int i = 0; i < totvars; ++i)
-    {
-        pts[i] = Array<OneD, NekDouble>(npts);
-    }
-
-    for (int i = 0; i < npts; ++i)
-    {
-        for (int j = 0; j < totvars; ++j)
-        {
-            pts[j][i] = ptsSerial[i * totvars + j];
-        }
-    }
-
-    ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
 }
 
 
@@ -371,6 +361,65 @@ void PtsIO::WriteMultiFldFileIDs(const std::string &outFile,
 }
 
 
+void PtsIO::ImportMultiFldFileIDs(const std::string &inFile,
+                                    std::vector<std::string> &fileNames)
+{
+    TiXmlDocument doc(inFile);
+    bool loadOkay = doc.LoadFile();
+
+
+    std::stringstream errstr;
+    errstr << "Unable to load file: " << inFile<< std::endl;
+    errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+    errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+    ASSERTL0(loadOkay, errstr.str());
+
+    // Handle on XML document
+    TiXmlHandle docHandle(&doc);
+
+    // Retrieve main NEKTAR tag - XML specification states one
+    // top-level element tag per file.
+    TiXmlElement* master = doc.FirstChildElement("NEKTAR");
+    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+    // Partition element tag name
+    std::string strPartition = "Partition";
+
+    // First attempt to get the first Partition element
+    TiXmlElement* fldfileIDs = master->FirstChildElement(strPartition.c_str());
+    if (!fldfileIDs)
+    {
+        // If this files try previous name
+        strPartition = "MultipleFldFiles";
+        fldfileIDs = master->FirstChildElement("MultipleFldFiles");
+    }
+    ASSERTL0(fldfileIDs,
+            "Unable to find 'Partition' or 'MultipleFldFiles' tag "
+            "within nektar tag.");
+
+    while (fldfileIDs)
+    {
+    // Read file name of partition file
+    const char *attr = fldfileIDs->Attribute("FileName");
+    ASSERTL0(attr, "'FileName' not provided as an attribute of '"
+                    + strPartition + "' tag.");
+    fileNames.push_back(std::string(attr));
+
+//     const char* elementIDs = fldfileIDs->GetText();
+//     ASSERTL0(elementIDs, "Element IDs not specified.");
+//
+//     std::string elementIDsStr(elementIDs);
+//
+//     std::vector<unsigned int> idvec;
+//     ParseUtils::GenerateSeqVector(elementIDsStr.c_str(),idvec);
+//
+//     elementList.push_back(idvec);
+
+    fldfileIDs = fldfileIDs->NextSiblingElement(strPartition.c_str());
+    }
+}
+
+
 // TODO: copied from FieldIO, unify
 /**
  * \brief add information about provenance and fieldmetadata
@@ -429,6 +478,72 @@ void PtsIO::AddInfoTag(TiXmlElement *root,
         }
     }
 }
+
+
+void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr ptsField)
+{
+    TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
+    TiXmlElement *points = nektar->FirstChildElement("POINTS");
+    int dim;
+    int err = points->QueryIntAttribute("DIM", &dim);
+
+    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute DIM.");
+
+    std::string fields = points->Attribute("FIELDS");
+
+    vector<string> fieldNames;
+    if (!fields.empty())
+    {
+        bool valid = ParseUtils::GenerateOrderedStringVector(
+                        fields.c_str(), fieldNames);
+        ASSERTL0(valid,
+                "Unable to process list of field variable in  FIELDS attribute:  " + fields);
+    }
+
+    int nfields = fieldNames.size();
+    int totvars = dim + nfields;
+
+    TiXmlNode *pointsBody = points->FirstChild();
+
+    std::istringstream pointsDataStrm(pointsBody->ToText()->Value());
+
+    vector<NekDouble> ptsSerial;
+    Array<OneD,  Array<OneD,  NekDouble> > pts(totvars);
+
+    try
+    {
+        NekDouble      ptsStream;
+        while (!pointsDataStrm.fail())
+        {
+            pointsDataStrm >> ptsStream;
+
+            ptsSerial.push_back(ptsStream);
+        }
+    }
+    catch (...)
+    {
+        ASSERTL0(false, "Unable to read Points data.");
+    }
+
+    int npts = ptsSerial.size() / totvars;
+
+    for (int i = 0; i < totvars; ++i)
+    {
+        pts[i] = Array<OneD, NekDouble>(npts);
+    }
+
+    for (int i = 0; i < npts; ++i)
+    {
+        for (int j = 0; j < totvars; ++j)
+        {
+            pts[j][i] = ptsSerial[i * totvars + j];
+        }
+    }
+
+    ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
+
+}
+
 
 }
 }

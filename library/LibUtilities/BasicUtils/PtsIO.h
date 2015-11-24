@@ -89,6 +89,10 @@ class PtsIO
             const std::vector<std::string> fileNames,
             const PtsMetaDataMap &fieldinfomap  = NullPtsMetaDataMap);
 
+        LIB_UTILITIES_EXPORT void ImportFieldData(
+            TiXmlDocument docInput,
+            Nektar::LibUtilities::PtsFieldSharedPtr ptsField);
+
     private:
 
         LibUtilities::CommSharedPtr    m_comm;
@@ -98,6 +102,10 @@ class PtsIO
         LIB_UTILITIES_EXPORT void AddInfoTag(
             TiXmlElement *root,
             const PtsMetaDataMap &fieldmetadatamap);
+
+        LIB_UTILITIES_EXPORT void ImportMultiFldFileIDs(
+            const std::string &inFile,
+            std::vector<std::string> &fileNames);
 
 };
 

@@ -100,8 +100,7 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
         if(projection.Distance(1) > 1.0)
         {
             stringstream ss;
-            ss << "large locuv distance " << projection.Distance(1)/1000.0 << endl;
-            ASSERTL1(false,ss.str());
+            cerr << "large locuv distance " << projection.Distance(1)/1000.0 << endl;
         }
     }
 

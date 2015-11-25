@@ -53,7 +53,6 @@ namespace SolverUtils
 void Interpolator::CalcWeights(
             const LibUtilities::PtsFieldSharedPtr ptsInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
 {
-    ASSERTL0(ptsInField->GetNFields() == ptsOutField->GetNFields(), "number of fields does not match");
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 

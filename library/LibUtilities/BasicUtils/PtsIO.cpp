@@ -289,23 +289,24 @@ std::string PtsIO::SetUpOutput(const std::string outname)
             ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
                      "Filesystem error: " + string(e.what()));
         }
+
+        // Create the destination directory
+        try
+        {
+            fs::create_directory(specPath);
+        }
+        catch (fs::filesystem_error &e)
+        {
+            ASSERTL0(false, "Filesystem error: " + string(e.what()));
+        }
     }
+    m_comm->Block();
 
     // serial processing just add ending.
     if (nprocs == 1)
     {
         cout << "Writing: " << specPath << endl;
         return LibUtilities::PortablePath(specPath);
-    }
-
-    // Create the destination directory
-    try
-    {
-        fs::create_directory(specPath);
-    }
-    catch (fs::filesystem_error &e)
-    {
-        ASSERTL0(false, "Filesystem error: " + string(e.what()));
     }
 
     // Collate per-process element lists on root process to generate

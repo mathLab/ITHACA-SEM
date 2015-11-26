@@ -683,15 +683,15 @@ void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
     m_rtree->query(bgi::nearest(searchBPoint, numPts), std::back_inserter(result));
 
     // massage into or own format
-    for(typename vector<PtsPointPair>::iterator it = result.begin(); it != result.end(); ++it)
+    for (int i = 0; i < result.size(); ++i)
     {
-        int idx = it->second;
+        int idx = result[i].second;
         Array<OneD, NekDouble> coords(m_dim, 0.0);
         for (int j = 0; j < m_ptsInField->GetDim(); ++j)
         {
             coords[j] = m_ptsInField->GetPointVal(j, idx);
         }
-        NekDouble d = bg::distance(searchBPoint, it->first);
+        NekDouble d = bg::distance(searchBPoint, result[i].first);
         neighbourPts.push_back(PtsPoint(idx, coords, d));
     }
 
@@ -726,15 +726,15 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
     m_rtree->query(bgi::within(bbox), std::back_inserter(result));
 
     // massage into or own format
-    for(typename vector<PtsPointPair>::iterator it = result.begin(); it != result.end(); ++it)
+    for (int i = 0; i < result.size(); ++i)
     {
-        int idx = it->second;
+        int idx = result[i].second;
         Array<OneD, NekDouble> coords(m_dim, 0.0);
         for (int j = 0; j < m_ptsInField->GetDim(); ++j)
         {
             coords[j] = m_ptsInField->GetPointVal(j, idx);
         }
-        NekDouble d = bg::distance(searchBPoint, it->first);
+        NekDouble d = bg::distance(searchBPoint, result[i].first);
 
         // discard points beyonf dist
         if (d <= dist)

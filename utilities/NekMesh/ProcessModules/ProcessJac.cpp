@@ -64,6 +64,8 @@ ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
         true, "0", "Print list of elements having negative Jacobian.");
     m_config["file"]    = ConfigOption(
         false, "-1", "Write a file with a histogram of scaled Jacobians");
+    m_config["roca"]    = ConfigOption(
+        false, "-1", "Write a file with a histogram of scaled Jacobians");
 }
 
 ProcessJac::~ProcessJac()
@@ -82,7 +84,9 @@ void ProcessJac::Process()
     bool printList = m_config["list"].as<bool>();
     bool RemoveCurveIfSingular = m_config["removecurveifsingular"].as<bool>();
     string fn = m_config["file"].as<string>();
+    string rc = m_config["roca"].as<string>();
     bool file = !boost::iequals(fn,"-1");
+    bool roca = !boost::iequals(rc,"-1");
 
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
 
@@ -151,6 +155,40 @@ void ProcessJac::Process()
             {
                 m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
             }
+        }
+
+        if(roca)
+        {
+            StdRegions::StdExpansionSharedPtr chi = geom->GetXmap();
+            LibUtilities::PointsKeyVector p = chi->GetPointsKeys();
+
+            SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+
+            // get 4th order triangle points
+            int order = 5;
+            LibUtilities::PointsKey nodalKey(order, LibUtilities::eNodalTriEvenlySpaced);
+            Array<OneD, NekDouble> x, y;
+            LibUtilities::PointsManager()[nodalKey]->GetPoints(x,y);
+
+            int numNodalPoints = x.num_elements();
+
+            Array<ThreeD, NekDouble> jacmat(3,3,numNodalPoints,0.0);
+
+            for (int i = 0; i < numNodalPoints; ++i)
+            {
+                for(int j = 0; j < 3; j++)
+                {
+                    for(int k = 0; k < 3; k++)
+                    {
+                        Array<OneD, NekDouble> coords(2);
+                        coords[0] = x[i];
+                        coords[1] = y[i];
+                        jacmat[k][j][i] = chi->PhysEvaluate(coords, deriv[k][j]);
+                    }
+
+                }
+            }
+
         }
 
         if(file)

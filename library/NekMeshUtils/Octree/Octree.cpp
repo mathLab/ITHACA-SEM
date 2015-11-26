@@ -255,6 +255,7 @@ void Octree::Build()
                 minlimitedoct[i]->SetDelta(av);
             }
         }
+        cout << "done, neighbours" << endl;
 
         for(int i = 0; i < neighRevaluate.size(); i++)
         {
@@ -263,6 +264,8 @@ void Octree::Build()
                 AssignNeigbours(neighRevaluate[i]);
             }
         }
+
+        cout << "smoothing" << endl;
 
         SmoothAllOctantsRelaxed();
     }

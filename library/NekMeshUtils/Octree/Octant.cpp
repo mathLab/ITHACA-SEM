@@ -109,7 +109,10 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), 
             m_needToDivide=true;
         }
 
-        SetDelta(av/NumValidCurvePoint());
+        SetDelta(minDif);
+
+        if(GetDelta() < m_hd*10)
+            m_needToDivide = true;
 
         ASSERTL0(GetDelta()>0, "negative delta assignment");
 

@@ -144,24 +144,6 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    m_mesh->m_nummode = 2;
-
-    vector<ElementSharedPtr> el = m_mesh->m_element[2];
-    m_mesh->m_element[2].clear();
-    for(int i = 0; i < el.size(); i++)
-    {
-        if(el[i]->GetTagList()[0] < 7)
-            continue;
-
-        m_mesh->m_element[2].push_back(el[i]);
-    }
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
-    return;
-
     m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");

@@ -984,16 +984,10 @@ void FaceMesh::OrientateCurves()
 
     }while(ct>0);
 
+    cout << endl << orderedLoops.size() << endl;
+
     for(int i = 0; i < orderedLoops.size(); i++)
     {
-        //center does not matter for i=0
-        if(i==0)
-        {
-            Array<OneD, NekDouble> tmp(2,0.0);
-            m_edgeloops[i].center=tmp;
-            continue;
-        }
-
         NodeSharedPtr n1,n2;
 
         n1 = orderedLoops[i][0];
@@ -1005,12 +999,14 @@ void FaceMesh::OrientateCurves()
 
         Array<OneD, NekDouble> N(2);
         NekDouble mag = sqrt((n1info[0]-n2info[0])*(n1info[0]-n2info[0])+(n1info[1]-n2info[1])*(n1info[1]-n2info[1]));
-        N[0] = -1.0*(n1info[1] - n2info[1])/mag;
-        N[1] = (n1info[0]-n2info[0])/mag;
+        ASSERTL0(mag > 1e-30,"infinity");
+        N[0] = -1.0*(n2info[1] - n1info[1])/mag;
+        N[1] = (n2info[0]-n1info[0])/mag;
+        cout << N[0] << " " << N[1] << endl;
 
         Array<OneD, NekDouble> P(2);
-        P[0] = (n1info[0]+n2info[0])/2.0 + 1e-3*N[0];
-        P[1] = (n1info[1]+n2info[1])/2.0 + 1e-3*N[1];
+        P[0] = (n1info[0]+n2info[0])/2.0 + 1e-6*N[0];
+        P[1] = (n1info[1]+n2info[1])/2.0 + 1e-6*N[1];
 
         //now test to see if p is inside or outside the shape
         //vector to the right
@@ -1020,32 +1016,77 @@ void FaceMesh::OrientateCurves()
             Array<OneD,NekDouble> nt1,nt2;
             nt1 = orderedLoops[i][j]->GetCADSurf(m_id);
             nt2 = orderedLoops[i][j+1]->GetCADSurf(m_id);
-            NekDouble lam = -1.0*(nt1[0]*P[0]+nt1[1]*P[1])/(nt2[1]-nt1[1]);
-            if(!(lam < 0) && !(lam > 1))
+
+            if(fabs(nt2[1]-nt1[1]) < 1e-30)
+                continue;
+
+            NekDouble lam = (P[1] - nt1[1])/(nt2[1]-nt1[1]);
+            NekDouble S = nt1[0] - P[0] + (nt2[0]-nt1[0])*lam;
+
+            if(!(lam < 0) && !(lam > 1) && S > 0)
             {
                 intercepts++;
             }
         }
-        if(intercepts % 2 != 0)
         {
-            P[0] = (n1info[0]+n2info[0])/2.0 - 1e-3*N[0];
-            P[1] = (n1info[1]+n2info[1])/2.0 - 1e-3*N[1];
+            Array<OneD,NekDouble> nt1,nt2;
+            nt1 = orderedLoops[i].back()->GetCADSurf(m_id);
+            nt2 = orderedLoops[i][0]->GetCADSurf(m_id);
+
+            if(fabs(nt2[1]-nt1[1]) < 1e-30)
+                continue;
+
+            NekDouble lam = (P[1] - nt1[1])/(nt2[1]-nt1[1]);
+            NekDouble S = nt1[0] - P[0] + (nt2[0]-nt1[0])*lam;
+
+            if(!(lam < 0) && !(lam > 1) && S > 0)
+            {
+                intercepts++;
+            }
+        }
+        cout << intercepts << endl;
+        if(intercepts % 2 == 0)
+        {
+            P[0] = (n1info[0]+n2info[0])/2.0 - 1e-6*N[0];
+            P[1] = (n1info[1]+n2info[1])/2.0 - 1e-6*N[1];
             intercepts = 0;
             for(int j = 0; j < orderedLoops[i].size()-1; j++)
             {
                 Array<OneD,NekDouble> nt1,nt2;
                 nt1 = orderedLoops[i][j]->GetCADSurf(m_id);
                 nt2 = orderedLoops[i][j+1]->GetCADSurf(m_id);
-                NekDouble lam = -1.0*(nt1[0]*P[0]+nt1[1]*P[1])/(nt2[1]-nt1[1]);
-                if(!(lam < 0) && !(lam > 1))
+
+                if(fabs(nt2[1]-nt1[1]) < 1e-30)
+                    continue;
+
+                NekDouble lam = (P[1] - nt1[1])/(nt2[1]-nt1[1]);
+                NekDouble S = nt1[0] - P[0] + (nt2[0]-nt1[0])*lam;
+
+                if(!(lam < 0) && !(lam > 1) && S > 0)
                 {
                     intercepts++;
                 }
             }
-            if(intercepts % 2 != 0)
             {
-                cout << "still failed to find point inside loop" << endl;
-                exit(-1);
+                Array<OneD,NekDouble> nt1,nt2;
+                nt1 = orderedLoops[i].back()->GetCADSurf(m_id);
+                nt2 = orderedLoops[i][0]->GetCADSurf(m_id);
+
+                if(fabs(nt2[1]-nt1[1]) < 1e-30)
+                    continue;
+
+                NekDouble lam = (P[1] - nt1[1])/(nt2[1]-nt1[1]);
+                NekDouble S = nt1[0] - P[0] + (nt2[0]-nt1[0])*lam;
+
+                if(!(lam < 0) && !(lam > 1) && S > 0)
+                {
+                    intercepts++;
+                }
+            }
+            cout << intercepts << endl;
+            if(intercepts % 2 == 0)
+            {
+                cerr << "still failed to find point inside loop" << endl;
             }
         }
 

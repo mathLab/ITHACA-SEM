@@ -248,8 +248,13 @@ void Interpolator::Interpolate(
     {
         for (int j = 0; j < nOutPts; ++j)
         {
-            NekDouble val = 0.0;
             int nPts = m_weights[j].num_elements();
+            if (nPts == 0)
+            {
+                continue;
+            }
+
+            NekDouble val = 0.0;
             for (int k = 0; k < nPts; ++k)
             {
                 unsigned int nIdx = m_neighInds[j][k];

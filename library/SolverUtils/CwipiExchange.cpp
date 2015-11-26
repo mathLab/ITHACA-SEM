@@ -37,6 +37,7 @@
 
 #include <cwipi.h>
 
+#define READ_FROM_CWIPI
 
 namespace Nektar
 {
@@ -64,6 +65,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     SpatialDomains::MeshGraphSharedPtr graph = m_field->GetGraph();
     int spacedim = graph->GetSpaceDimension();
 
+#ifdef READ_FROM_CWIPI
     cwipi_create_coupling(m_name.c_str(),
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
                           m_distAppname.c_str(),
@@ -74,6 +76,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                           m_outputFreq,
                           m_outputFormat.c_str(),
                           m_outputFormatOption.c_str());
+#endif
 
     // get Elements
     SpatialDomains::SegGeomMap   seggeom;
@@ -148,12 +151,14 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     }
     */
 
+#ifdef READ_FROM_CWIPI
     cwipi_define_mesh(m_name.c_str(),
                       nVerts,
                       nElts,
                       m_coords,
                       m_connecIdx,
                       m_connec);
+#endif
 
 
     int nq = m_field->GetTotPoints();
@@ -163,7 +168,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     coords[2] = Array<OneD, NekDouble>(nq);
     m_field->GetCoords(coords[0], coords[1], coords[2]);
 
-    NekDouble thres = 4 * 0.4246609001 * m_filtWidth;
+    NekDouble thres = 4 * 0.4246609001 * 4E-3;
     Array<OneD, Array<OneD, NekDouble> > bbox(3);
     for (int i = 0; i < bbox.num_elements(); ++i)
     {
@@ -171,6 +176,50 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         bbox[i][0] = Vmath::Vmin(nq, coords[i], 1) - thres;
         bbox[i][1] = Vmath::Vmax(nq, coords[i], 1) + thres;
     }
+
+#ifndef READ_FROM_CWIPI
+    switch (m_field->GetSession()->GetComm()->GetRank())
+    {
+        case 0:
+            bbox[0][0] = -0.0687946;
+            bbox[0][1] = -0.0242054;
+            bbox[1][0] = -0.0217946;
+            bbox[1][1] = 0.00679457;
+            bbox[2][0] = -0.00679457;
+            bbox[2][1] = 0.00679457;
+            break;
+
+        case 1:
+            bbox[0][0] = -0.0687946;
+            bbox[0][1] = -0.0242054;
+            bbox[1][0] = -0.00679457;
+            bbox[1][1] = 0.0217946;
+            bbox[2][0] = -0.00679457;
+            bbox[2][1] = 0.00679457;
+            break;
+
+        case 2:
+            bbox[0][0] = -0.0245089;
+            bbox[0][1] = 0.00679457;
+            bbox[1][0] = -0.0217946;
+            bbox[1][1] = 0.0217946;
+            bbox[2][0] = -0.00679457;
+            bbox[2][1] = 0.00679457;
+            break;
+
+        case 3:
+            bbox[0][0] = -0.0377946;
+            bbox[0][1] = -0.00649114;
+            bbox[1][0] = -0.0217946;
+            bbox[1][1] = 0.0217946;
+            bbox[2][0] = -0.00679457;
+            bbox[2][1] = 0.00679457;
+            break;
+
+        default:
+            break;
+    }
+#endif
 
     SetupRecvMesh(bbox);
 
@@ -213,8 +262,9 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
             m_points[3 * i + 2] = 0.0;
         }
     }
-
+#ifdef READ_FROM_CWIPI
     cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
+#endif
 }
 
 
@@ -229,7 +279,9 @@ CwipiCoupling::~CwipiCoupling()
 
 void CwipiCoupling::v_FinalizeCoupling(void)
 {
+#ifdef READ_FROM_CWIPI
     cwipi_delete_coupling(m_name.c_str());
+#endif
 }
 
 
@@ -370,16 +422,19 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     ASSERTL0(time > lastUdate, "CwipiExchange::v_ReceiveFields called twice in this timestep")
     lastUdate = time;
 
+    LibUtilities::PtsFieldSharedPtr recvMesh = m_coupling->GetRecvMesh();
+
     int nPoints = m_coupling->GetNPoints();
     ASSERTL1(m_nEVars ==  field.num_elements(), "field size mismatch");
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
 
+    int nNotLoc = 0;
+#ifdef READ_FROM_CWIPI
     // workaround a bug in cwipi: receiving_field_name should be const char* but is char*
     char recFN[m_recvFieldName.length() + 1];
     strcpy(recFN, m_recvFieldName.c_str());
 
-    int nNotLoc;
     cwipi_exchange(m_coupling->GetName().c_str(),
                    m_name.c_str(),
                    m_nEVars,
@@ -391,6 +446,28 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                    m_rValsInterl,
                    &nNotLoc);
 
+    LibUtilities::PtsIO ptsIO(m_coupling->GetField()->GetSession()->GetComm());
+    Array<OneD, Array<OneD, NekDouble> > rv(1);
+    rv[0] = Array<OneD, NekDouble>(nPoints * m_nEVars);
+    for (int i = 0; i < nPoints * m_nEVars; ++i)
+    {
+        rv[0][i] = m_rValsInterl[i];
+    }
+    LibUtilities::PtsFieldSharedPtr rvPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(0, rv);
+    ptsIO.Write("rValsInterl_" + boost::lexical_cast<std::string>(time) + ".pts", rvPts);
+
+#else
+    LibUtilities::PtsIO ptsIO(m_coupling->GetField()->GetSession()->GetComm());
+    LibUtilities::PtsFieldSharedPtr rvPts;
+    ptsIO.Import("rValsInterl_" + boost::lexical_cast<std::string>(time) + ".pts", rvPts);
+    Array<OneD, Array<OneD, NekDouble> > rv;
+    rvPts->GetPts(rv);
+    for (int i = 0; i < nPoints * m_nEVars; ++i)
+    {
+        m_rValsInterl[i] = rv[0][i];
+    }
+#endif
+
     int tmp = -1;
     const int *notLoc = &tmp;
     if (nNotLoc !=  0)
@@ -400,7 +477,6 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     }
 
     // store received values in a ptsField
-    LibUtilities::PtsFieldSharedPtr recvMesh = m_coupling->GetRecvMesh();
     Array<OneD, Array<OneD,  NekDouble> > pts(recvMesh->GetDim() +  m_nEVars);
     recvMesh->GetPts(pts);
 

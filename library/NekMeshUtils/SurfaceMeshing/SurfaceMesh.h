@@ -63,8 +63,9 @@ class SurfaceMesh
          */
         SurfaceMesh(   MeshSharedPtr m,
                        CADSystemSharedPtr cad,
-                       OctreeSharedPtr octree) :
-                          m_mesh(m), m_cad(cad), m_octree(octree)
+                       OctreeSharedPtr octree,
+                       std::vector<unsigned int> sy, NekDouble b) :
+                          m_mesh(m), m_cad(cad), m_octree(octree), m_symsurfs(sy), m_bl(b)
         {
         };
 
@@ -157,6 +158,9 @@ class SurfaceMesh
         std::map<int, FaceMeshSharedPtr> m_facemeshes;
         /// map of individual curve meshes of the curves in the domain
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+
+        std::vector<unsigned int> m_symsurfs;
+        NekDouble m_bl;
 };
 
 typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;

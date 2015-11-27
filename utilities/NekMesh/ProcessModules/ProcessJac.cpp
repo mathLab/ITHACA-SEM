@@ -130,22 +130,21 @@ void ProcessJac::Process()
 
             if(RemoveCurveIfSingular)
             {
-                int nSurf = el[i]->GetFaceCount();
-                if(nSurf == 5) // prism mesh
+                vector<FaceSharedPtr> f = el[i]->GetFaceList();
+                for(int j = 0; j < f.size(); j++)
                 {
-                    // find edges ndoes and blend to far side.
-                    for(int e = 0; e < el[i]->GetEdgeCount(); ++e)
+                    if(f[j]->m_faceNodes.size())
                     {
-                        EdgeSharedPtr ed = el[i]->GetEdge(e);
-                        EdgeSet::iterator it;
-                        // find edge in m_edgeSet;
-                        if((it = m_mesh->m_edgeSet.find(ed)) != m_mesh->m_edgeSet.end())
+                        vector<NodeSharedPtr> zeroNodes;
+                        f[j]->m_faceNodes = zeroNodes;
+                    }
+                    vector<EdgeSharedPtr> e = f[j]->m_edgeList;
+                    for(int k = 0; k < e.size(); k++)
+                    {
+                        if(e[k]->m_edgeNodes.size())
                         {
-                            if((*it)->m_edgeNodes.size())
-                            {
-                                vector<NodeSharedPtr> zeroNodes;
-                                (*it)->m_edgeNodes = zeroNodes;
-                            }
+                            vector<NodeSharedPtr> zeroNodes;
+                            e[k]->m_edgeNodes = zeroNodes;
                         }
                     }
                 }

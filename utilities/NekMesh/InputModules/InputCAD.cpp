@@ -42,6 +42,8 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+
 #include "InputCAD.h"
 
 using namespace std;
@@ -84,11 +86,37 @@ void InputCAD::Process()
     pSession->LoadParameter("Order",    m_order);
     m_CADName = pSession->GetSolverInfo("CADFile");
     m_orelax = pSession->GetSolverInfo("OctreeRelax");
+
+    vector<unsigned int> symsurfs;
+    vector<unsigned int> blsurfs;
+    if(pSession->GetSolverInfo("MeshType") == "BL")
+    {
+        string sym = pSession->GetSolverInfo("SymPlane");
+        string bl = pSession->GetSolverInfo("BLSurfs");
+        ParseUtils::GenerateSeqVector(sym.c_str(), symsurfs);
+        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
+        sort(symsurfs.begin(), symsurfs.end());
+        sort(blsurfs.begin(), blsurfs.end());
+
+        //pSession->LoadParameter("BL", bl); not working just set to min delta for now
+    }
+
+    cout << "making boundary layer of surfs: ";
+    for(int i = 0; i < blsurfs.size(); i++)
+    {
+        cout << blsurfs[i] << " ";
+    }
+    cout << endl << "with the symmetry planes: ";
+    for(int i = 0; i < symsurfs.size(); i++)
+    {
+        cout << symsurfs[i] << " ";
+    }
+    cout << endl;
+
     if(boost::iequals(m_orelax,"TRUE"))
         m_octreeRelax = true;
     else
     {
-        cout << "hit" << endl;
         m_octreeRelax = false;
     }
 
@@ -132,7 +160,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                                AllocateSharedPtr(m_mesh, m_cad, m_octree);
+                                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_minDelta);
 
     m_surfacemesh->Mesh();
 

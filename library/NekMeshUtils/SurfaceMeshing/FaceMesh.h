@@ -65,6 +65,21 @@ public:
 
     {
         m_edgeloops = m_cadsurf->GetEdges();
+        m_makebl = false;
+    };
+
+    FaceMesh(   const int id,
+                MeshSharedPtr m,
+                CADSurfSharedPtr cad,
+                OctreeSharedPtr oct,
+                const std::map<int, CurveMeshSharedPtr> &cmeshes,
+                const NekDouble b)
+                    : m_mesh(m), m_cadsurf(cad), m_octree(oct),
+                      m_curvemeshes(cmeshes),m_id(id), m_bl(b)
+
+    {
+        m_edgeloops = m_cadsurf->GetEdges();
+        m_makebl = true;
     };
 
     /**
@@ -116,6 +131,8 @@ private:
      */
     void AddNewPoint(Array<OneD, NekDouble> uv);
 
+    void MakeBL();
+
     ///mesh pointer
     MeshSharedPtr m_mesh;
     /// CAD surface
@@ -142,6 +159,8 @@ private:
     EdgeSet m_localEdges;
     ///local list of elements
     std::vector<ElementSharedPtr> m_localElements;
+    NekDouble m_bl;
+    bool  m_makebl;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

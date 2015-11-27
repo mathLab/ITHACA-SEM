@@ -32,6 +32,7 @@
 //  Description: surfacemeshing object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <algorithm>
 
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
@@ -83,9 +84,22 @@ void SurfaceMesh::Mesh()
             LibUtilities::PrintProgressbar(i,m_cad->GetNumSurf(),
                                            "Face progress");
         }
-        m_facemeshes[i] =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_cad->GetSurf(i), m_octree, m_curvemeshes);
+
+        vector<unsigned int>::iterator it;
+
+        it = find(m_symsurfs.begin(), m_symsurfs.end(), i);
+        if(it == m_symsurfs.end())
+        {
+            m_facemeshes[i] =
+                MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
+                    m_cad->GetSurf(i), m_octree, m_curvemeshes);
+        }
+        else
+        {
+            m_facemeshes[i] =
+                MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
+                    m_cad->GetSurf(i), m_octree, m_curvemeshes, m_bl);
+        }
 
         m_facemeshes[i]->Mesh();
 

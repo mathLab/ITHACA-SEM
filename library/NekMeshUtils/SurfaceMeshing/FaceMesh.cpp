@@ -52,6 +52,9 @@ void FaceMesh::Mesh()
 
     OrientateCurves();
 
+    if(m_makebl)
+        MakeBL();
+
     int numPoints = 0;
     for(int i = 0; i < orderedLoops.size(); i++)
     {
@@ -134,6 +137,18 @@ void FaceMesh::Mesh()
          << "\t\t\tLoops: " << m_edgeloops.size() << endl
          << "\t\t\tSTR: " << asr/pasr << endl
          << endl;
+}
+
+void FaceMesh::MakeBL()
+{
+    for(int i = 1; i < orderedLoops.size(); i++)//dont do this to first loop
+    {
+        for(int j = 0; j < orderedLoops[i].size(); j++)
+        {
+            //for each of the nodes make a new node which exists off the surface
+            
+        }
+    }
 }
 
 void FaceMesh::OptimiseLocalMesh()

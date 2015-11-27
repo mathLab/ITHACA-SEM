@@ -183,6 +183,7 @@ void Interpolator::CalcWeights(
         case eGauss:
         {
             ASSERTL0(m_filtWidth > NekConstants::kNekZeroTol, "No filter width set");
+            // use m_filtWidth as FWHM
             NekDouble sigma = m_filtWidth * 0.4246609001;
 
             for (int i = 0; i < nOutPts; ++i)
@@ -429,14 +430,12 @@ LibUtilities::PtsFieldSharedPtr Interpolator::GetOutField() const
 void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 {
     NekDouble ts2 = 2 * sigma * sigma;
-    NekDouble fac = 1.0 / (sigma * sqrt(2 * M_PI));
-    fac = pow(fac, m_ptsInField->GetDim());
 
     // find nearest neighbours
     int maxPts = 500;
     vector<PtsPoint > neighbourPts;
-    FindNeighbours(searchPt, neighbourPts, 1.96 * sigma);
-    int numPts = min( (int) neighbourPts.size(), maxPts);
+    FindNeighbours(searchPt, neighbourPts, 4 * sigma);
+    int numPts = neighbourPts.size();
 
     // handle the case that there was no point within 1.96 * sigma
     if (numPts == 0)
@@ -458,7 +457,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.idx][i] = fac * exp(-1 * pow(neighbourPts[i].dist, 2.0f) / ts2);
+        m_weights[searchPt.idx][i] = exp(-1 * pow(neighbourPts[i].dist, 2.0f) / ts2);
         wSum += m_weights[searchPt.idx][i];
     }
 
@@ -739,7 +738,7 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
         // discard points beyonf dist
         if (d <= dist)
         {
-            neighbourPts.push_back(PtsPoint(idx, coords, dist));
+            neighbourPts.push_back(PtsPoint(idx, coords, d));
         }
     }
 

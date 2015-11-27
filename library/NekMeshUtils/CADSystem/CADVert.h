@@ -80,6 +80,9 @@ public:
         degen = false;
     }
 
+    /**
+     * @brief Get x,y,z location of the vertex
+     */
     Array<OneD, NekDouble> GetLoc()
     {
         Array<OneD, NekDouble> out(3);
@@ -87,10 +90,19 @@ public:
         return out;
     }
 
+    /**
+     * @brief Return ID of the vertex
+     */
     int GetId(){return m_ID;}
 
+    /**
+     * @brief returns a node object of the cad vertex
+     */
     NodeSharedPtr GetNode(){return m_node;}
 
+    /**
+     * @brief if the vertex is degenerate manually set uv for that surface
+     */
     void SetDegen(int s, NekDouble u, NekDouble v)
     {
         degen = true;
@@ -101,6 +113,9 @@ public:
         m_node->SetCADSurf(s,uv);
     }
 
+    /**
+     * @brief query is degenerate 
+     */
     int IsDegen()
     {
         if(degen)

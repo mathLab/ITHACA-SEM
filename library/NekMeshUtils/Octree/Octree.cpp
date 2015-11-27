@@ -212,6 +212,7 @@ void Octree::Build()
             }
         }
 
+        cout << Octants.size() << endl;
         cout << minlimitedoct.size() << " octants contain min limited points" << endl;
 
         vector<OctantSharedPtr> neighRevaluate;
@@ -244,7 +245,7 @@ void Octree::Build()
                 }
             }
 
-            if(maxdiff/mindiff > 1.5)
+            if(maxdiff/mindiff > 2.0)
             {
                 vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
                 neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
@@ -252,17 +253,24 @@ void Octree::Build()
             }
             else
             {
+                if(av < m_minDelta/5.0) av = m_minDelta/3.0;
                 minlimitedoct[i]->SetDelta(av);
             }
         }
-        cout << "done, neighbours" << endl;
+        cout << Octants.size() << endl;
+        cout << "done, neighbours " << neighRevaluate.size() << endl;
+
+        set<int> done;
 
         for(int i = 0; i < neighRevaluate.size(); i++)
         {
-            if(neighRevaluate[i]->IsLeaf())
-            {
-                AssignNeigbours(neighRevaluate[i]);
-            }
+            set<int>::iterator s = done.find(neighRevaluate[i]->GetId());
+            if(s == done.end())
+                if(neighRevaluate[i]->IsLeaf())
+                {
+                    AssignNeigbours(neighRevaluate[i]);
+                    done.insert(neighRevaluate[i]->GetId());
+                }
         }
 
         cout << "smoothing" << endl;
@@ -372,6 +380,7 @@ void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr>
         }
         if(children[i]->IsDeltaKnown())
         {
+            if(av < m_minDelta/3.0) av = m_minDelta/3.0;
             children[i]->SetDelta(av);
         }
         else
@@ -379,12 +388,12 @@ void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr>
             children[i]->SetDelta(parent->GetDelta());
         }
 
-        if(children[i]->GetDelta() < m_minDelta/10.0)
-            children[i]->SetDelta(m_minDelta/10.0);
+        if(children[i]->GetDelta() < m_minDelta/3.0)
+            children[i]->SetDelta(3.0);
 
-        if(maxdiff/mindiff > 1.5)
+        if(maxdiff/mindiff > 2.0)
         {
-            if(children[i]->DX() / 2.0 > m_minDelta/10.0)
+            if(children[i]->DX() / 2.0 > m_minDelta/3.0)
             {
                 SubDivideMinLimited(children[i], np);
             }

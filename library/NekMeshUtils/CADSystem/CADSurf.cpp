@@ -39,10 +39,13 @@
 
 using namespace std;
 
-namespace Nektar {
-namespace NekMeshUtils {
+namespace Nektar
+{
+namespace NekMeshUtils
+{
 
-CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein) : m_ID(i), m_edges(ein)
+CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
+                : m_ID(i), m_edges(ein)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m
@@ -100,28 +103,35 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
         if(projection.Distance(1) > 1.0)
         {
             stringstream ss;
-            cerr << "large locuv distance " << projection.Distance(1)/1000.0 << endl;
+            cerr << "large locuv distance "
+                 << projection.Distance(1)/1000.0 << endl;
         }
     }
 
+    //if the uv returned is slightly off the surface
+    //(which ShapeAnalysis_Surface can do sometimes)
     if(uvr[0] < m_occSurface.FirstUParameter() ||
                uvr[0] > m_occSurface.LastUParameter() ||
                uvr[1] < m_occSurface.FirstVParameter() ||
                uvr[1] > m_occSurface.LastVParameter())
     {
-        if(uvr[0] < m_occSurface.FirstUParameter() && fabs(m_occSurface.FirstUParameter() - uvr[0]) < 1E-6)
+        if(uvr[0] < m_occSurface.FirstUParameter() &&
+           fabs(m_occSurface.FirstUParameter() - uvr[0]) < 1E-6)
         {
             uvr[0] = m_occSurface.FirstUParameter();
         }
-        else if(uvr[0] > m_occSurface.LastUParameter() && fabs(m_occSurface.LastUParameter() - uvr[0]) < 1E-6)
+        else if(uvr[0] > m_occSurface.LastUParameter() &&
+                fabs(m_occSurface.LastUParameter() - uvr[0]) < 1E-6)
         {
             uvr[0] = m_occSurface.LastUParameter();
         }
-        else if(uvr[1] < m_occSurface.FirstVParameter() && fabs(m_occSurface.FirstVParameter() - uvr[1]) < 1E-6)
+        else if(uvr[1] < m_occSurface.FirstVParameter() &&
+                fabs(m_occSurface.FirstVParameter() - uvr[1]) < 1E-6)
         {
             uvr[1] = m_occSurface.FirstVParameter();
         }
-        else if(uvr[1] > m_occSurface.LastVParameter() && fabs(m_occSurface.LastVParameter() - uvr[1]) < 1E-6)
+        else if(uvr[1] > m_occSurface.LastVParameter() &&
+                fabs(m_occSurface.LastVParameter() - uvr[1]) < 1E-6)
         {
             uvr[1] = m_occSurface.LastVParameter();
         }
@@ -316,7 +326,8 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     {
         if(fabs(uv[0]-m_occSurface.FirstUParameter()) > 1E-8)
         {
-            error << "U(" << uv[0] << ") is less than Umin(" << m_occSurface.FirstUParameter() << ")";
+            error << "U(" << uv[0] << ") is less than Umin("
+                  << m_occSurface.FirstUParameter() << ")";
             passed = false;
         }
     }
@@ -324,7 +335,8 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     {
         if(fabs(uv[0]-m_occSurface.LastUParameter()) > 1E-8)
         {
-            error << "U(" << uv[0] << ") is greater than Umax(" << m_occSurface.LastUParameter() << ")";
+            error << "U(" << uv[0] << ") is greater than Umax("
+                  << m_occSurface.LastUParameter() << ")";
             passed = false;
         }
     }
@@ -332,7 +344,8 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     {
         if(fabs(uv[1]-m_occSurface.FirstVParameter()) > 1E-8)
         {
-            error << "V(" << uv[1] << ") is less than Vmin(" << m_occSurface.FirstVParameter() << ")";
+            error << "V(" << uv[1] << ") is less than Vmin("
+                  << m_occSurface.FirstVParameter() << ")";
             passed = false;
         }
     }
@@ -340,7 +353,8 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     {
         if(fabs(uv[1]-m_occSurface.LastVParameter()) > 1E-8)
         {
-            error << "V(" << uv[1] << ") is greater than Vmax(" << m_occSurface.LastVParameter() << ")";
+            error << "V(" << uv[1] << ") is greater than Vmax("
+                  << m_occSurface.LastVParameter() << ")";
             passed = false;
         }
     }

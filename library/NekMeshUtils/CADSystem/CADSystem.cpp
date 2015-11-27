@@ -67,7 +67,9 @@ void CADSystem::SmallFeatureAnalysis(NekDouble min)
     map<int, CADCurveSharedPtr>::iterator it;
     for(it = m_curves.begin(); it != m_curves.end(); it++)
     {
-        ASSERTL0(it->second->GetTotLength() > 1e-5,"curve too small for meshing");
+        ASSERTL0(it->second->GetTotLength() > 1e-5,
+                        "curve too small for meshing");
+
         if(it->second->GetTotLength() < 5.0 * min)
         {
             lens.push_back(pair<int,NekDouble>(
@@ -81,7 +83,8 @@ void CADSystem::SmallFeatureAnalysis(NekDouble min)
             cout << "\tWARNING" << endl;
             for(int i = 0; i < lens.size(); i++)
             {
-                cout << "\tCurve: " << lens[i].first << " has length: " << lens[i].second << endl;
+                cout << "\tCurve: " << lens[i].first << " has length: "
+                     << lens[i].second << endl;
             }
             if(lens.size() == 1)
                 cout << "\tThis curve's length is less than or close to minDelta" << endl;
@@ -222,8 +225,9 @@ bool CADSystem::LoadCAD()
 
                 BRep_Tool::UVPoints(TopoDS::Edge(edge),TopoDS::Face(face),p1,p2);
 
-                m_verts[mapOfVerts.FindIndex(TopExp::FirstVertex(TopoDS::Edge(edge), Standard_True))]->
-                                SetDegen(i, (p1.X() + p2.X())/2.0, (p1.Y() + p2.Y())/2.0);
+                m_verts[mapOfVerts.FindIndex(TopExp::FirstVertex(
+                            TopoDS::Edge(edge), Standard_True))]->SetDegen(
+                                i, (p1.X() + p2.X())/2.0, (p1.Y() + p2.Y())/2.0);
             }
 
 
@@ -274,11 +278,13 @@ bool CADSystem::LoadCAD()
 
                 if(wire != ow)
                 {
-                    BRepBuilderAPI_MakeFace build(BRep_Tool::Surface(TopoDS::Face(face)),1e-7);
+                    BRepBuilderAPI_MakeFace build(BRep_Tool::Surface(
+                                                    TopoDS::Face(face)),1e-7);
                     build.Add(TopoDS::Wire(wire));
                     TopoDS_Shape newface = build.Shape();
                     wirefacecuts.push_back(newface);
-                    BRepAdaptor_Surface b = BRepAdaptor_Surface(TopoDS::Face(newface));
+                    BRepAdaptor_Surface b = BRepAdaptor_Surface(
+                                                        TopoDS::Face(newface));
                     NekDouble u,v;
                     u = (b.LastUParameter()-b.FirstUParameter())/2.0;
                     v = (b.LastVParameter()-b.FirstVParameter())/2.0;
@@ -291,6 +297,7 @@ bool CADSystem::LoadCAD()
                 {
                     if(j ==k) continue;
 
+                    ///TODO fix this test
                     BRepClass_FaceClassifier fc(TopoDS::Face(wirefacecuts[j]), centersofcutfaces[k], 1e-7);
                     //ASSERTL0(fc.State() == 1, "Internal face loops make this cad impossible to mesh");
                 }
@@ -409,22 +416,6 @@ void CADSystem::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     {
         m_surfs[i]->SetTwoC();
     }
-
-    /*//check the normals are interior
-    Array<OneD, NekDouble> bnds = newSurf->GetBounds();
-    Array<OneD, NekDouble> uv(2);
-    uv[0] = (bnds[1]+bnds[0])/2.0;
-    uv[1] = (bnds[3]+bnds[2])/2.0;
-
-    Array<OneD, NekDouble> N = newSurf->N(uv);
-    Array<OneD, NekDouble> P = newSurf->P(uv);
-
-    Array<OneD, NekDouble> tl(3);
-    tl[0] = P[0] + 0.01*N[0];
-    tl[1] = P[1] + 0.01*N[1];
-    tl[2] = P[2] + 0.01*N[2];
-
-    ASSERTL0(InsideShape(tl), "normal incorrectly orientated");*/
 }
 
 bool CADSystem::InsideShape(Array<OneD, NekDouble> loc)

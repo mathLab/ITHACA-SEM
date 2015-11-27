@@ -157,23 +157,38 @@ public:
         m_correctNormal = false;
     }
 
+    /**
+     * @brief surface needs to know if it is bounded by only two curves
+     */
     void SetTwoC()
     {
         m_hasTwoCurves = true;
     }
 
+    /**
+     * @brief query two curves
+     */
     bool GetTwoC(){return m_hasTwoCurves;}
 
+    /**
+     * @brief return id
+     */
     int GetId(){return m_ID;}
 
+    /**
+     * @brief does unconstrained locuv to project point from anywhere
+     */
     NekDouble DistanceTo(Array<OneD, NekDouble> p);
 
+    /**
+     * @brief returns curvature at point uv
+     */
     NekDouble Curvature(Array<OneD, NekDouble> uv);
 
 private:
 
+    /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv);
-
     /// ID of surface.
     int m_ID;
     /// normal

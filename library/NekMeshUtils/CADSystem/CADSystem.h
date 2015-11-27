@@ -138,11 +138,17 @@ public:
         return search->second;
     }
 
+    /**
+     * @brief Gets map of all verts
+     */
     std::map<int, CADVertSharedPtr> GetVerts()
     {
         return m_verts;
     }
 
+    /**
+     * @brief Gets number of vertices
+     */
     int GetNumVerts(){return m_verts.size();}
 
     /**
@@ -153,9 +159,13 @@ public:
      */
     bool InsideShape(Array<OneD, NekDouble> loc);
 
+    /**
+     * @brief tests for features which are smaller that the specified mesh limit
+     */
     void SmallFeatureAnalysis(NekDouble min);
 
 private:
+    
     /// Private function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
     /// Private function to add curve to CADSystem::m_curves.
@@ -172,8 +182,6 @@ private:
     std::map<int, CADVertSharedPtr> m_verts;
     /// occ master object
     TopoDS_Shape shape;
-
-    bool smallfeatreAdjust;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

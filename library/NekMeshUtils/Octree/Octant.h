@@ -71,14 +71,22 @@ class Octant
         Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                        const std::vector<CurvaturePointSharedPtr> &cplist);
 
-
+        /**
+         * @brief delete neigbour lise
+         */
         void ClearNeigbourList(){m_neighbourList.clear();}
 
+        /**
+         * @brief set neigbours
+         */
         void SetNeigbourList(std::vector<OctantSharedPtr> const &l)
         {
             m_neighbourList = l;
         }
 
+        /**
+         * @brief get id of the octant
+         */
         int GetId(){return m_id;}
 
         /**
@@ -230,9 +238,19 @@ class Octant
             return sqrt(3.0*m_hd*m_hd);
         }
 
+        /**
+         * @brief get orientation compared to domain
+         */
         int GetLocation(){return m_location;}
+
+        /**
+         * @brief does the octant know a location
+         */
         bool KnowsLocation(){return m_locationKnown;}
 
+        /**
+         * @brief set location
+         */
         void SetLocation(int l)
         {
             m_locationKnown = true;
@@ -269,6 +287,7 @@ class Octant
         int m_numValidPoints;
         /// location with respect to the domain
         bool m_locationKnown;
+        /// integer id of the location
         int m_location; //1 is interior 2 is boundary 3 is outside
 
 };

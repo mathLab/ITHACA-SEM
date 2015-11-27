@@ -192,90 +192,7 @@ void Octree::Build()
 
     if(m_relax)
     {
-        //identify octants which contain minlimited octants
-        vector<OctantSharedPtr> minlimitedoct;
-        for(int i = 0; i < Octants.size(); i++)
-        {
-            OctantSharedPtr oct = Octants[i];
-            if(oct->IsLeaf())
-            {
-                vector<CurvaturePointSharedPtr> cp = oct->GetCPList();
-                for(int j = 0; j < cp.size(); j++)
-                {
-                    NekDouble d;
-                    if(cp[j]->IsValid() && cp[j]->IsMinLimited(d))
-                    {
-                        minlimitedoct.push_back(oct);
-                        break;
-                    }
-                }
-            }
-        }
-
-        cout << Octants.size() << endl;
-        cout << minlimitedoct.size() << " octants contain min limited points" << endl;
-
-        vector<OctantSharedPtr> neighRevaluate;
-        for(int i = 0; i < minlimitedoct.size(); i++)
-        {
-            NekDouble av = 0.0;
-            NekDouble d, mindiff = numeric_limits<double>::max(), maxdiff = 0.0;
-            vector<CurvaturePointSharedPtr> cp = minlimitedoct[i]->GetCPList();
-            for(int j = 0; j < cp.size(); j++)
-            {
-                if(cp[j]->IsValid())
-                {
-                    if(cp[j]->IsMinLimited(d))
-                    {
-                        if(d < mindiff)
-                            mindiff = d;
-                        if(d > maxdiff)
-                            maxdiff = d;
-                        av += d/cp.size();
-                    }
-                    else
-                    {
-                        d = cp[j]->GetDelta();
-                        if(d < mindiff)
-                            mindiff = d;
-                        if(d > maxdiff)
-                            maxdiff = d;
-                        av += d/cp.size();
-                    }
-                }
-            }
-
-            if(maxdiff/mindiff > 2.0)
-            {
-                vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
-                neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
-                SubDivideMinLimited(minlimitedoct[i], neighRevaluate);
-            }
-            else
-            {
-                if(av < m_minDelta/5.0) av = m_minDelta/3.0;
-                minlimitedoct[i]->SetDelta(av);
-            }
-        }
-        cout << Octants.size() << endl;
-        cout << "done, neighbours " << neighRevaluate.size() << endl;
-
-        set<int> done;
-
-        for(int i = 0; i < neighRevaluate.size(); i++)
-        {
-            set<int>::iterator s = done.find(neighRevaluate[i]->GetId());
-            if(s == done.end())
-                if(neighRevaluate[i]->IsLeaf())
-                {
-                    AssignNeigbours(neighRevaluate[i]);
-                    done.insert(neighRevaluate[i]->GetId());
-                }
-        }
-
-        cout << "smoothing" << endl;
-
-        SmoothAllOctantsRelaxed();
+        Relax();
     }
 
     for(int i = 0; i < Octants.size(); i++)
@@ -293,6 +210,87 @@ void Octree::Build()
         int elem = CountElemt();
         printf("\tPredicted mesh: %.2d elements\n", elem);
     }
+}
+
+void Octree::Relax()
+{
+    //identify octants which contain minlimited octants
+    vector<OctantSharedPtr> minlimitedoct;
+    for(int i = 0; i < Octants.size(); i++)
+    {
+        OctantSharedPtr oct = Octants[i];
+        if(oct->IsLeaf())
+        {
+            vector<CurvaturePointSharedPtr> cp = oct->GetCPList();
+            for(int j = 0; j < cp.size(); j++)
+            {
+                NekDouble d;
+                if(cp[j]->IsValid() && cp[j]->IsMinLimited(d))
+                {
+                    minlimitedoct.push_back(oct);
+                    break;
+                }
+            }
+        }
+    }
+
+    vector<OctantSharedPtr> neighRevaluate;
+    for(int i = 0; i < minlimitedoct.size(); i++)
+    {
+        NekDouble av = 0.0;
+        NekDouble d, mindiff = numeric_limits<double>::max(), maxdiff = 0.0;
+        vector<CurvaturePointSharedPtr> cp = minlimitedoct[i]->GetCPList();
+        for(int j = 0; j < cp.size(); j++)
+        {
+            if(cp[j]->IsValid())
+            {
+                if(cp[j]->IsMinLimited(d))
+                {
+                    if(d < mindiff)
+                        mindiff = d;
+                    if(d > maxdiff)
+                        maxdiff = d;
+                    av += d/cp.size();
+                }
+                else
+                {
+                    d = cp[j]->GetDelta();
+                    if(d < mindiff)
+                        mindiff = d;
+                    if(d > maxdiff)
+                        maxdiff = d;
+                    av += d/cp.size();
+                }
+            }
+        }
+
+        if(maxdiff/mindiff > 2.0)
+        {
+            vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
+            neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
+            SubDivideMinLimited(minlimitedoct[i], neighRevaluate);
+        }
+        else
+        {
+            if(av < m_minDelta/5.0) av = m_minDelta/3.0;
+            minlimitedoct[i]->SetDelta(av);
+        }
+    }
+
+    set<int> done;
+
+    for(int i = 0; i < neighRevaluate.size(); i++)
+    {
+        set<int>::iterator s = done.find(neighRevaluate[i]->GetId());
+        if(s == done.end())
+            if(neighRevaluate[i]->IsLeaf())
+            {
+                AssignNeigbours(neighRevaluate[i]);
+                done.insert(neighRevaluate[i]->GetId());
+            }
+    }
+
+    SmoothAllOctantsRelaxed();
 }
 
 void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr> &np)
@@ -650,20 +648,6 @@ Array<OneD, OctantSharedPtr> Octree::SubDivideLevel(OctantSharedPtr parent)
     }
 
     return children;
-
-    /*parent->SetChildren(children);
-
-    for(int i = 0; i < 8; i++)
-    {
-        AssignNeigbours(children[i]);
-    }
-
-    //need to revaluate the neighbour list of all the neighbours of the parent
-    vector<OctantSharedPtr> nList = parent->GetNeighbourList();
-    for(int i = 0; i < nList.size(); i++)
-    {
-        AssignNeigbours(nList[i]);
-    }*/
 }
 
 void Octree::SmoothSurfaceOctants()

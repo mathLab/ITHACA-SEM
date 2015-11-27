@@ -111,6 +111,9 @@ private:
      */
     void SmoothAllOctants();
 
+    /**
+     * @brief Get neighbours for octant o
+     */
     void AssignNeigbours(OctantSharedPtr const &o);
 
     /**
@@ -131,6 +134,9 @@ private:
      */
     void SubDivideByLevel();
 
+    /**
+     * @brief Smoothing for the relaxed octree
+     */
     void SmoothAllOctantsRelaxed();
 
     void SubDivideMinLimited(OctantSharedPtr parent, std::vector<OctantSharedPtr> &np);
@@ -157,6 +163,11 @@ private:
      * @brief estimates the number of elements to be creted in the mesh
      */
     int CountElemt();
+
+    /**
+     * @brief Further subdivide octree with less strict rules
+     */
+    void Relax();
 
     /**
      * @brief Calculates the difference in delta divided by the difference

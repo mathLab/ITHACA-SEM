@@ -166,7 +166,7 @@ void CurveMesh::Mesh()
     }
 
     //post process the curve mesh to analyse for bad segments based on high-order normals and split if needed
-    /*int ct = 1;
+    int ct = 1;
     while(ct > 0)
     {
         ct = 0;
@@ -208,7 +208,7 @@ void CurveMesh::Mesh()
                 break;
             }
         }
-    }*/
+    }
 
     //make edges and add them to the edgeset for the face mesher to use
     for(int i = 0; i < m_meshpoints.size() - 1; i++)

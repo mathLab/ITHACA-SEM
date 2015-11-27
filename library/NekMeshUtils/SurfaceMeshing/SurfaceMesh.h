@@ -83,6 +83,9 @@ class SurfaceMesh
          */
         void Validate();
 
+        /**
+         * @brief Print brief information to screen
+         */
         void Report();
 
 

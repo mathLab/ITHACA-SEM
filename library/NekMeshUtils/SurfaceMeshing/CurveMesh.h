@@ -55,99 +55,101 @@ namespace NekMeshUtils
 
 class CurveMesh
 {
-    public:
-        friend class MemoryManager<CurveMesh>;
+public:
+    friend class MemoryManager<CurveMesh>;
 
-        /**
-         * @brief default constructor
-         */
-        CurveMesh(int id,
-                  MeshSharedPtr m,
-                  CADCurveSharedPtr c,
-                  OctreeSharedPtr o) :
-                  m_cadcurve(c),m_octree(o),
-                  m_id(id), m_mesh(m)
-        {
-        };
+    /**
+     * @brief default constructor
+     */
+    CurveMesh(int id,
+              MeshSharedPtr m,
+              CADCurveSharedPtr c,
+              OctreeSharedPtr o) :
+              m_cadcurve(c),m_octree(o),
+              m_id(id), m_mesh(m)
+    {
+    };
 
-        /**
-         * @brief execute meshing
-         */
-        void Mesh();
+    /**
+     * @brief execute meshing
+     */
+    void Mesh();
 
-        /**
-         * @brief get id of first node
-         */
-        NodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
+    /**
+     * @brief get id of first node
+     */
+    NodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
 
-        /**
-         * @brief get id of last node
-         */
-        NodeSharedPtr GetLastPoint(){return m_meshpoints.back();}
+    /**
+     * @brief get id of last node
+     */
+    NodeSharedPtr GetLastPoint(){return m_meshpoints.back();}
 
-        /**
-         * @brief get list of mesh nodes
-         */
-        std::vector<NodeSharedPtr> GetMeshPoints(){return m_meshpoints;}
+    /**
+     * @brief get list of mesh nodes
+     */
+    std::vector<NodeSharedPtr> GetMeshPoints(){return m_meshpoints;}
 
-        /**
-         * @brief get the number of points in the curve
-         */
-        int GetNumPoints(){return m_meshpoints.size();}
+    /**
+     * @brief get the number of points in the curve
+     */
+    int GetNumPoints(){return m_meshpoints.size();}
 
+    /**
+     * @brief get the length of the curve
+     */
+    NekDouble GetLength(){return m_curvelength;}
 
-        NekDouble GetLength(){return m_curvelength;}
+private:
 
-    private:
+    /**
+     * @brief get node spacing sampling function
+     */
+    void GetSampleFunction();
 
-        /**
-         * @brief get node spacing sampling function
-         */
-        void GetSampleFunction();
+    /**
+     * @brief get node spacing phi function
+     */
+    void GetPhiFunction();
 
-        /**
-         * @brief get node spacing phi function
-         */
-        void GetPhiFunction();
+    /**
+     * @brief evaluate paramter ds at curve location s
+     */
+    NekDouble EvaluateDS(NekDouble s);
 
-        /**
-         * @brief evaluate paramter ds at curve location s
-         */
-        NekDouble EvaluateDS(NekDouble s);
+    /**
+     * @brief evaluate paramter ps at curve location s
+     */
+    NekDouble EvaluatePS(NekDouble s);
 
-        /**
-         * @brief evaluate paramter ps at curve location s
-         */
-        NekDouble EvaluatePS(NekDouble s);
-
-        /// CAD curve
-        CADCurveSharedPtr m_cadcurve;
-        /// Octree object
-        OctreeSharedPtr m_octree;
-        /// length of the curve in real space
-        NekDouble m_curvelength;
-        /// number of sampling points used in algorithm
-        int m_numSamplePoints;
-        /// coords of the ends of the parametric curve
-        Array<OneD, NekDouble> m_bounds;
-        /// array of function ds evaluations
-        std::vector<std::vector<NekDouble> > m_dst;
-        /// array of function ps evaluations
-        std::vector<std::vector<NekDouble> > m_ps;
-        /// spacing function evaluation
-        NekDouble Ae;
-        /// ds
-        NekDouble ds;
-        /// number of edges to be made in the curve as defined by the spacing funtion
-        int Ne;
-        /// paramteric coordiates of the mesh nodes
-        std::vector<NekDouble> meshsvalue;
-        /// ids of the mesh nodes
-        std::vector<NodeSharedPtr> m_meshpoints;
-        /// id of the curvemesh
-        int m_id;
-        ///
-        MeshSharedPtr m_mesh;
+    /// CAD curve
+    CADCurveSharedPtr m_cadcurve;
+    /// Octree object
+    OctreeSharedPtr m_octree;
+    /// length of the curve in real space
+    NekDouble m_curvelength;
+    /// number of sampling points used in algorithm
+    int m_numSamplePoints;
+    /// coords of the ends of the parametric curve
+    Array<OneD, NekDouble> m_bounds;
+    /// array of function ds evaluations
+    std::vector<std::vector<NekDouble> > m_dst;
+    /// array of function ps evaluations
+    std::vector<std::vector<NekDouble> > m_ps;
+    /// spacing function evaluation
+    NekDouble Ae;
+    /// ds
+    NekDouble ds;
+    /// number of edges to be made in the curve as defined by the spacing funtion
+    int Ne;
+    /// paramteric coordiates of the mesh nodes
+    std::vector<NekDouble> meshsvalue;
+    /// ids of the mesh nodes
+    std::vector<NodeSharedPtr> m_meshpoints;
+    /// id of the curvemesh
+    int m_id;
+    ///
+    MeshSharedPtr m_mesh;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

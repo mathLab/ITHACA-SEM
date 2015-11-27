@@ -72,11 +72,6 @@ public:
      */
     void Mesh();
 
-    void Smoothing();
-
-    void DiagonalSwap();
-
-
 private:
 
     /**
@@ -84,8 +79,24 @@ private:
      */
     void Stretching();
 
+    /**
+     * @brief performs node smoothing on face
+     */
+    void Smoothing();
+
+    /**
+     * @brief performs diagonal swapping of edges
+     */
+    void DiagonalSwap();
+
+    /**
+     * @brief build a local version of mesh elements
+     */
     void BuildLocalMesh();
 
+    /**
+     * @brief function which calls the optimisation routines
+     */
     void OptimiseLocalMesh();
 
     /**
@@ -125,9 +136,11 @@ private:
     NekDouble pasr,asr;
     /// triangle connectiviities
     std::vector<std::vector<NodeSharedPtr> > m_connec;
-
+    ///local set of nodes
     NodeSet m_localNodes;
+    ///local set of edges
     EdgeSet m_localEdges;
+    ///local list of elements
     std::vector<ElementSharedPtr> m_localElements;
 };
 

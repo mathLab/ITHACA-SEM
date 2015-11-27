@@ -131,6 +131,7 @@ void FaceMesh::Mesh()
          << "\t\t\tNodes: " << m_localNodes.size() << endl
          << "\t\t\tEdges: " << m_localEdges.size() << endl
          << "\t\t\tTriangles: " << m_localElements.size() << endl
+         << "\t\t\tLoops: " << m_edgeloops.size() << endl
          << "\t\t\tSTR: " << asr/pasr << endl
          << endl;
 }
@@ -306,16 +307,18 @@ void FaceMesh::Smoothing()
                 f(0,0) += (lj - ljstar)*(ui[0] - uj[0])/Lj;
                 f(1,0) += (lj - ljstar)*(ui[1] - uj[1])/Lj;
 
-                J(0,0) += (ri[3]*(Xi[0]-Xj[0]) + ri[4]*(Xi[1]-Xj[1]) + ri[5]*(Xi[2]-Xj[2]))/lj/Lj*(ui[0]-uj[0]) + (lj-ljstar)/Lj/Lj*(Lj - (ui[0]-uj[0])*(ui[0]-uj[0])/Lj);
+                J(0,0) += (ri[3]*(Xi[0]-Xj[0]) + ri[4]*(Xi[1]-Xj[1]) + ri[5]*(Xi[2]-Xj[2]))/lj/Lj*(ui[0]-uj[0]) +
+                          (lj-ljstar)/Lj/Lj*(Lj - (ui[0]-uj[0])*(ui[0]-uj[0])/Lj);
 
-                J(1,1) += (ri[6]*(Xi[0]-Xj[0]) + ri[7]*(Xi[1]-Xj[1]) + ri[8]*(Xi[2]-Xj[2]))/lj/Lj*(ui[1]-uj[1]) + (lj-ljstar)/Lj/Lj*(Lj - (ui[1]-uj[1])*(ui[1]-uj[1])/Lj);
+                J(1,1) += (ri[6]*(Xi[0]-Xj[0]) + ri[7]*(Xi[1]-Xj[1]) + ri[8]*(Xi[2]-Xj[2]))/lj/Lj*(ui[1]-uj[1]) +
+                          (lj-ljstar)/Lj/Lj*(Lj - (ui[1]-uj[1])*(ui[1]-uj[1])/Lj);
 
-                J(1,0) += (ri[3]*(Xi[0]-Xj[0]) + ri[4]*(Xi[1]-Xj[1]) + ri[5]*(Xi[2]-Xj[2]))/lj/Lj*(ui[1]-uj[1]) - (lj-ljstar)/Lj/Lj*(ui[0]-uj[0])*(ui[1]-uj[1])/Lj;
+                J(1,0) += (ri[3]*(Xi[0]-Xj[0]) + ri[4]*(Xi[1]-Xj[1]) + ri[5]*(Xi[2]-Xj[2]))/lj/Lj*(ui[1]-uj[1]) -
+                          (lj-ljstar)/Lj/Lj*(ui[0]-uj[0])*(ui[1]-uj[1])/Lj;
 
-                J(0,1) += (ri[6]*(Xi[0]-Xj[0]) + ri[7]*(Xi[1]-Xj[1]) + ri[8]*(Xi[2]-Xj[2]))/lj/Lj*(ui[0]-uj[0]) - (lj-ljstar)/Lj/Lj*(ui[0]-uj[0])*(ui[1]-uj[1])/Lj;
+                J(0,1) += (ri[6]*(Xi[0]-Xj[0]) + ri[7]*(Xi[1]-Xj[1]) + ri[8]*(Xi[2]-Xj[2]))/lj/Lj*(ui[0]-uj[0]) -
+                          (lj-ljstar)/Lj/Lj*(ui[0]-uj[0])*(ui[1]-uj[1])/Lj;
             }
-
-            NekDouble fmagbefore = sqrt(f(0,0)*f(0,0)+f(1,0)*f(1,0));
 
             J.Invert();
 
@@ -351,11 +354,7 @@ void FaceMesh::Smoothing()
                     f(0,0) += (lj - ljstar)*(uvn[0] - uj[0])/Lj;
                     f(1,0) += (lj - ljstar)*(uvn[1] - uj[1])/Lj;
                 }
-
-                NekDouble fmagafter = sqrt(f(0,0)*f(0,0)+f(1,0)*f(1,0));
-
-                if(fmagafter > fmagbefore)
-                    cout << "not optimsing" << endl;*/
+                */
 
                 Array<OneD, NekDouble> l2 = m_cadsurf->P(uvn);
                 (*nit)->Move(l2,m_id,uvn);
@@ -984,8 +983,6 @@ void FaceMesh::OrientateCurves()
 
     }while(ct>0);
 
-    cout << endl << orderedLoops.size() << endl;
-
     for(int i = 0; i < orderedLoops.size(); i++)
     {
         NodeSharedPtr n1,n2;
@@ -1002,7 +999,6 @@ void FaceMesh::OrientateCurves()
         ASSERTL0(mag > 1e-30,"infinity");
         N[0] = -1.0*(n2info[1] - n1info[1])/mag;
         N[1] = (n2info[0]-n1info[0])/mag;
-        cout << N[0] << " " << N[1] << endl;
 
         Array<OneD, NekDouble> P(2);
         P[0] = (n1info[0]+n2info[0])/2.0 + 1e-6*N[0];
@@ -1044,7 +1040,6 @@ void FaceMesh::OrientateCurves()
                 intercepts++;
             }
         }
-        cout << intercepts << endl;
         if(intercepts % 2 == 0)
         {
             P[0] = (n1info[0]+n2info[0])/2.0 - 1e-6*N[0];
@@ -1083,7 +1078,6 @@ void FaceMesh::OrientateCurves()
                     intercepts++;
                 }
             }
-            cout << intercepts << endl;
             if(intercepts % 2 == 0)
             {
                 cerr << "still failed to find point inside loop" << endl;

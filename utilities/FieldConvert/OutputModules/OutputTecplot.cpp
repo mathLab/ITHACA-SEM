@@ -78,16 +78,17 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     m_doError = (vm.count("error") == 1)?  true: false;
 
-    if (m_f->m_verbose)
-    {
-        cout << "OutputTecplot: Writing file..." << endl;
-    }
-
     // Do nothing if no expansion defined
     if (fPts == LibUtilities::NullPtsField && !m_f->m_exp.size())
     {
         return;
     }
+
+    if (m_f->m_verbose)
+    {
+        cout << "OutputTecplot: Writing file..." << endl;
+    }
+
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();

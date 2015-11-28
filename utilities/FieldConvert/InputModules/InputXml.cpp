@@ -311,12 +311,27 @@ void InputXml::Process(po::variables_map &vm)
 
     m_f->m_exp.resize(1);
 
-    // load fielddef if fld file is defined This gives
+    // load fielddef header if fld file is defined. This gives
     // precedence to Homogeneous definition in fld file
     int NumHomogeneousDir = 0;
     if(fldfilegiven)
     {
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
+        // use original expansion to identify which elements are in
+        // this partition/subrange
+
+        Array<OneD,int> ElementGIDs(expansions.size());
+        SpatialDomains::ExpansionMap::const_iterator expIt;
+
+        int i = 0; 
+        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+        {
+            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        }
+        
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,
+                           LibUtilities::NullVectorNekDoubleVector,
+                           LibUtilities::NullFieldMetaDataMap,
+                           ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
         //----------------------------------------------

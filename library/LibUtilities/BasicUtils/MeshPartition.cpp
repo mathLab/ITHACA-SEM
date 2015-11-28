@@ -92,7 +92,8 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(int nParts, bool shared)
+        void MeshPartition::PartitionMesh(int nParts, bool shared,
+                                          bool overlapping)
         {
             ASSERTL0(m_meshElements.size() >= nParts,
                      "Too few elements for this many processes.");
@@ -103,7 +104,7 @@ namespace Nektar
                 WeightElements();
             }
             CreateGraph(m_mesh);
-            PartitionGraph(m_mesh, nParts, m_localPartition);
+            PartitionGraph(m_mesh, nParts, m_localPartition, overlapping);
         }
 
         void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -1067,7 +1068,8 @@ namespace Nektar
 
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
                                            int nParts,
-                                           std::vector<BoostSubGraph>& pLocalPartition)
+                                           std::vector<BoostSubGraph>& pLocalPartition,
+                                           bool overlapping)
         {
             int i;
             int nGraphVerts = boost::num_vertices(pGraph);
@@ -1075,6 +1077,7 @@ namespace Nektar
 
             // Convert boost graph into CSR format
             BoostVertexIterator    vertit, vertit_end;
+            BoostAdjacencyIterator adjvertit, adjvertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
             if (m_comm->GetRowComm()->TreatAsRankZero())
@@ -1082,7 +1085,6 @@ namespace Nektar
                 int acnt = 0;
                 int vcnt = 0;
                 int nWeight = nGraphVerts;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> vwgt(nWeight, 1);
@@ -1180,8 +1182,27 @@ namespace Nektar
                 pGraph[*vertit].partition = part[i];
                 boost::add_vertex(i, pLocalPartition[part[i]]);
             }
-        }
 
+            if(overlapping)
+            {
+                // 
+                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                      vertit != vertit_end;
+                      ++vertit)
+                {
+                    for (boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
+                         adjvertit != adjvertit_end; ++adjvertit)
+                    {
+                        if(part[*adjvertit] != part[*vertit])
+                        {
+                            boost::add_vertex(*adjvertit, pLocalPartition[part[*vertit]]);
+                            
+                        }
+                    }
+                }
+            }
+        }
+        
 
         void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)
         {

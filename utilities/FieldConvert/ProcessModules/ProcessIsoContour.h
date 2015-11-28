@@ -48,8 +48,8 @@ class Iso
 {
     public:
         void  condense(void);
-        void  globalcondense(vector<boost::shared_ptr<Iso> > &iso);
-        void  separate_regions(vector<boost::shared_ptr<Iso> > &iso, int minsize);
+        void  globalcondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
+        void  separate_regions(vector<boost::shared_ptr<Iso> > &iso, int minsize, bool verbose);
 
         void  smooth(int n_iter, NekDouble lambda, NekDouble mu);
 

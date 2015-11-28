@@ -190,7 +190,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        g_iso->globalcondense(iso);
+        g_iso->globalcondense(iso,m_f->m_verbose);
 
 
         iso.clear();
@@ -219,7 +219,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         }
         for(int i =0 ; i < iso.size(); ++i)
         {
-            iso[i]->separate_regions(new_iso,mincontour);
+            iso[i]->separate_regions(new_iso,mincontour,m_f->m_verbose);
         }
        
         if(rank == 0)
@@ -774,7 +774,7 @@ bool same(NekDouble x1, NekDouble y1, NekDouble z1,
     return false;
 }
 
-void Iso::globalcondense(vector<IsoSharedPtr> &iso)
+void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
 {
     int    i,j,n;
     int    nvert,nelmt;
@@ -880,13 +880,16 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
     }
 
 
-    cout << "Progress Bar totiso: " << totiso << endl;
+    if(verbose)
+    {
+        cout << "Progress Bar totiso: " << totiso << endl;
+    }
     for(i = 0; i < niso; ++i)
     {
         for(n = 0; n < isocon[i].size(); ++n, ++cnt)
         {
             
-            if(totiso >= 40)
+            if(verbose && totiso >= 40)
             {
                 LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
             }
@@ -894,12 +897,18 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             int con = isocon[i][n];
             for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
             {
-                if(totiso <40)
+
+                if(verbose && totiso < 40)
                 {
                     LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon");
                 }
 
-                for(id2 = 0; id2 < iso[con]->m_nvert; ++id2)
+                int start  = 0; 
+                if(con == i)
+                {
+                    start = id1+1;
+                }
+                for(id2 = start; id2 < iso[con]->m_nvert; ++id2)
                 {
                     
                     if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
@@ -1077,7 +1086,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
 }
     
 
-    void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso, int minsize)
+    void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso, int minsize, bool verbose)
     {
         int i,j,k,id;
         Array<OneD, vector<int> >vertcon(m_nvert);
@@ -1104,7 +1113,10 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         // check all points are assigned to a region
         for(k = 0; k < m_nvert; ++k)
         {
-            LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions");
+            if(verbose)
+            {
+                LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions");
+            }
 
             if(vidregion[k] == -1)
             {

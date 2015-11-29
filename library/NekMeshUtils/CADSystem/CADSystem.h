@@ -165,7 +165,7 @@ public:
     void SmallFeatureAnalysis(NekDouble min);
 
 private:
-    
+
     /// Private function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
     /// Private function to add curve to CADSystem::m_curves.

@@ -111,7 +111,7 @@ void CurveMesh::Mesh()
 
     NodeSharedPtr n = verts[0]->GetNode();
     t = m_bounds[0];
-    n->SetCADCurve(m_id,t);
+    n->SetCADCurve(m_id, m_cadcurve,t);
     loc = n->GetLoc();
     for(int j = 0; j < 2; j++)
     {
@@ -119,7 +119,7 @@ void CurveMesh::Mesh()
             continue;
 
         Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-        n->SetCADSurf(s[j]->GetId(), uv);
+        n->SetCADSurf(s[j]->GetId(), s[j], uv);
     }
     m_meshpoints.push_back(n);
 
@@ -130,18 +130,18 @@ void CurveMesh::Mesh()
         NodeSharedPtr n2 = boost::shared_ptr<Node>(
                                             new Node(m_mesh->m_numNodes++,
                                                      loc[0],loc[1],loc[2]));
-        n2->SetCADCurve(m_id,t);
+        n2->SetCADCurve(m_id, m_cadcurve, t);
         for(int j = 0; j < 2; j++)
         {
             Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-            n2->SetCADSurf(s[j]->GetId(), uv);
+            n2->SetCADSurf(s[j]->GetId(), s[j], uv);
         }
         m_meshpoints.push_back(n2);
     }
 
     n = verts[1]->GetNode();
     t = m_bounds[1];
-    n->SetCADCurve(m_id,t);
+    n->SetCADCurve(m_id, m_cadcurve, t);
     loc = n->GetLoc();
     for(int j = 0; j < 2; j++)
     {
@@ -149,7 +149,7 @@ void CurveMesh::Mesh()
             continue;
 
         Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-        n->SetCADSurf(s[j]->GetId(), uv);
+        n->SetCADSurf(s[j]->GetId(), s[j], uv);
     }
     m_meshpoints.push_back(n);
 
@@ -161,7 +161,7 @@ void CurveMesh::Mesh()
         for(int j = 0; j < 2; j++)
         {
             Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-            m_meshpoints[i]->SetCADSurf(s[j]->GetId(), uv);
+            m_meshpoints[i]->SetCADSurf(s[j]->GetId(), s[j], uv);
         }
     }
 
@@ -176,8 +176,8 @@ void CurveMesh::Mesh()
             for(int j = 0; j < 2; j++)
             {
                 Array<OneD, NekDouble> uv1, uv2;
-                uv1 = m_meshpoints[i]->GetCADSurf(s[j]->GetId());
-                uv2 = m_meshpoints[i+1]->GetCADSurf(s[j]->GetId());
+                uv1 = m_meshpoints[i]->GetCADSurfInfo(s[j]->GetId());
+                uv2 = m_meshpoints[i+1]->GetCADSurfInfo(s[j]->GetId());
                 Array<OneD, NekDouble> N1, N2;
                 N1 = s[j]->N(uv1);
                 N2 = s[j]->N(uv2);
@@ -192,17 +192,17 @@ void CurveMesh::Mesh()
             {
                 ct++;
                 NekDouble t1, t2;
-                t1 = m_meshpoints[i]->GetCADCurve(m_id);
-                t2 = m_meshpoints[i+1]->GetCADCurve(m_id);
+                t1 = m_meshpoints[i]->GetCADCurveInfo(m_id);
+                t2 = m_meshpoints[i+1]->GetCADCurveInfo(m_id);
                 NekDouble tn = (t1 + t2)/2.0;
                 Array<OneD, NekDouble> loc = m_cadcurve->P(tn);
                 NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
                                                             loc[0],loc[1],loc[2]));
-                nn->SetCADCurve(m_id, tn);
+                nn->SetCADCurve(m_id, m_cadcurve, tn);
                 for(int j = 0; j < 2; j++)
                 {
                     Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-                    nn->SetCADSurf(s[j]->GetId(), uv);
+                    nn->SetCADSurf(s[j]->GetId(), s[j], uv);
                 }
                 m_meshpoints.insert(m_meshpoints.begin() + i+1, nn);
                 break;
@@ -215,7 +215,9 @@ void CurveMesh::Mesh()
     {
         EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(m_meshpoints[i],
                                                            m_meshpoints[i+1]));
-        e->CADCurveID = m_id;
+        e->CADCurveId = m_id;
+        e->CADCurve = m_cadcurve;
+        e->onCurve = true;
         m_mesh->m_edgeSet.insert(e);
     }
 

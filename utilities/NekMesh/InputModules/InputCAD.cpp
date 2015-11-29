@@ -172,6 +172,8 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
+    return;
+
     m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
     m_mesh->m_fields.push_back("v");

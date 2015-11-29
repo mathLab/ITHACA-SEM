@@ -1203,7 +1203,6 @@ void Octree::AssignNeigbours(OctantSharedPtr const &o)
         }
     }
     o->SetNeigbourList(nlist);
-    ASSERTL0(nlist.size()>6,"not enough neigbours");
     ASSERTL0(eqhit == 1,"found itself more than once");
 }
 

@@ -77,7 +77,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         {
             nodemap[pointc] = m_boundingloops[i][j];
 
-            Array<OneD, NekDouble> uv = m_boundingloops[i][j]->GetCADSurf(sid);
+            Array<OneD, NekDouble> uv = m_boundingloops[i][j]->GetCADSurfInfo(sid);
             in.pointlist[pointc*2+0] = uv[0]*m_str;
             in.pointlist[pointc*2+1] = uv[1];
         }
@@ -87,7 +87,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
         nodemap[pointc] = m_stienerpoints[i];
 
-        Array<OneD, NekDouble> uv = m_stienerpoints[i]->GetCADSurf(sid);
+        Array<OneD, NekDouble> uv = m_stienerpoints[i]->GetCADSurfInfo(sid);
         in.pointlist[pointc*2+0] = uv[0]*m_str;
         in.pointlist[pointc*2+1] = uv[1];
     }

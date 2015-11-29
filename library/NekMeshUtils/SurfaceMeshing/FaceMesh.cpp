@@ -53,7 +53,10 @@ void FaceMesh::Mesh()
     OrientateCurves();
 
     if(m_makebl)
+    {
         MakeBL();
+        cout << "done" << endl;
+    }
 
     int numPoints = 0;
     for(int i = 0; i < orderedLoops.size(); i++)
@@ -109,7 +112,7 @@ void FaceMesh::Mesh()
 
     BuildLocalMesh();
 
-    OptimiseLocalMesh();
+    //OptimiseLocalMesh();
 
     //clear local element links
     EdgeSet::iterator eit;
@@ -146,7 +149,38 @@ void FaceMesh::MakeBL()
         for(int j = 0; j < orderedLoops[i].size(); j++)
         {
             //for each of the nodes make a new node which exists off the surface
-            
+            vector<pair<int, CADSurfSharedPtr> > surfs = orderedLoops[i][j]->GetCADSurfs();
+            ASSERTL0(surfs.size() > 1, "point does not have enough surfs to make quad");
+
+            Array<OneD, NekDouble> AN(3,0.0);
+            //make a averaged normal ignoring surface mid
+            for(int s = 0; s < surfs.size(); s++)
+            {
+                if(surfs[s].first == m_id)
+                    continue; //does not contribute to norm
+
+                Array<OneD, NekDouble> uv = orderedLoops[i][j]->GetCADSurfInfo(surfs[s].first);
+                Array<OneD, NekDouble> N = surfs[s].second->N(uv);
+                for(int k = 0; k < 3; k++) AN[k] += N[k];
+            }
+
+            //renormalise normal
+            NekDouble mag = sqrt(AN[0]*AN[0] + AN[1]*AN[1] + AN[2]*AN[2]);
+            for(int k = 0; k < 3; k++) AN[k] /= mag;
+
+            Array<OneD, NekDouble> loc = orderedLoops[i][j]->GetLoc();
+            Array<OneD, NekDouble> tp(3);
+            for(int k = 0; k < 3; k++) tp[k] = AN[k] + loc[k];
+            //project tp onto to surface to get new point
+            Array<OneD, NekDouble> uv(2);
+            m_cadsurf->ProjectTo(tp,uv);
+            NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
+                                                        tp[0],tp[1],tp[2]));
+            nn->SetCADSurf(m_id,m_cadsurf,uv);
+
+            blpairs.push_back(pair<NodeSharedPtr,NodeSharedPtr>(orderedLoops[i][j],nn));
+            //place the new node into ordered loops for the surface triangulation to work With
+            orderedLoops[i][j] = nn;
         }
     }
 }
@@ -191,8 +225,7 @@ void FaceMesh::Smoothing()
     {
         for(nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
         {
-            vector<int> c = (*nit)->GetListCADCurve();
-            if(c.size()>0) //node is on curve so skip
+            if((*nit)->GetNumCadCurve() > 0) //node is on curve so skip
                 continue;
 
             vector<NodeSharedPtr> connodes; //this can be real nodes or dummy nodes depending on the system
@@ -215,8 +248,8 @@ void FaceMesh::Smoothing()
                 else
                     ASSERTL0(false,"could not find node");
 
-                Array<OneD, NekDouble> ui = (*nit)->GetCADSurf(m_id);
-                Array<OneD, NekDouble> uj = J->GetCADSurf(m_id);
+                Array<OneD, NekDouble> ui = (*nit)->GetCADSurfInfo(m_id);
+                Array<OneD, NekDouble> uj = J->GetCADSurfInfo(m_id);
 
                 for(int j = 0; j < els.size(); j++)
                 {
@@ -250,10 +283,8 @@ void FaceMesh::Smoothing()
                         }
                     }
 
-                    Array<OneD, NekDouble> uk = LK->m_n1->GetCADSurf(m_id);
-                    Array<OneD, NekDouble> ul = LK->m_n2->GetCADSurf(m_id);
-
-
+                    Array<OneD, NekDouble> uk = LK->m_n1->GetCADSurfInfo(m_id);
+                    Array<OneD, NekDouble> ul = LK->m_n2->GetCADSurfInfo(m_id);
 
                     Array<OneD, NekDouble> n(2);
                     n[0] = -1.0*(uk[1] - ul[1]);
@@ -277,7 +308,7 @@ void FaceMesh::Smoothing()
                     ud[1] = ui[1] + lambda[0]*(uj[1] - ui[1]);
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
                     NodeSharedPtr dn = boost::shared_ptr<Node>(new Node(0,locd[0],locd[1],locd[2]));
-                    dn->SetCADSurf(m_id,ud);
+                    dn->SetCADSurf(m_id, m_cadsurf, ud);
                     nodesystem.push_back(dn);
 
                     lamp.push_back(lambda[0]);
@@ -298,7 +329,7 @@ void FaceMesh::Smoothing()
             DNekMat J(2,2,0.0);
             for(int i = 0; i < nodesystem.size(); i++)
             {
-                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurf(m_id);
+                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurfInfo(m_id);
                 ui[0]+=uj[0]/nodesystem.size();
                 ui[1]+=uj[1]/nodesystem.size();
             }
@@ -308,7 +339,7 @@ void FaceMesh::Smoothing()
 
             for(int i = 0; i < nodesystem.size();i++)
             {
-                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurf(m_id);
+                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurfInfo(m_id);
                 Array<OneD, NekDouble> Xj = nodesystem[i]->GetLoc();
 
                 NekDouble ljstar = m_octree->Query(Xj);
@@ -393,7 +424,7 @@ void FaceMesh::DiagonalSwap()
     NodeSet::iterator nit;
     for(nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
     {
-        if((*nit)->GetListCADCurve().size() == 0)
+        if((*nit)->GetNumCadCurve() == 0)
         {
             //node is interior
             idealConnec[(*nit)->m_id] = 6;
@@ -406,7 +437,7 @@ void FaceMesh::DiagonalSwap()
             vector<EdgeSharedPtr> e = nodetoedge[(*nit)->m_id];
             for(int i = 0; i < e.size(); i++)
             {
-                if(e[i]->CADCurveID == -1)
+                if(!e[i]->onCurve)
                     continue; //the linking nodes are not going to exist on interior edges
 
                 if(e[i]->m_n1 == (*nit))
@@ -500,10 +531,10 @@ void FaceMesh::DiagonalSwap()
 
             //determine signed area of alternate config
             Array<OneD, NekDouble> ai,bi,ci,di;
-            ai = A->GetCADSurf(m_id);
-            bi = B->GetCADSurf(m_id);
-            ci = C->GetCADSurf(m_id);
-            di = D->GetCADSurf(m_id);
+            ai = A->GetCADSurfInfo(m_id);
+            bi = B->GetCADSurfInfo(m_id);
+            ci = C->GetCADSurfInfo(m_id);
+            di = D->GetCADSurfInfo(m_id);
 
             NekDouble CDA, CBD;
 
@@ -665,6 +696,8 @@ void FaceMesh::DiagonalSwap()
 
                 ntri1->SetId(id1);
                 ntri2->SetId(id2);
+                ntri1->CADSurfId = m_id;
+                ntri2->CADSurfId = m_id;
 
                 vector<EdgeSharedPtr> t1es = ntri1->GetEdgeList();
                 for(int i = 0; i < 3; i++)
@@ -713,7 +746,6 @@ void FaceMesh::DiagonalSwap()
                     }
                 }
 
-                newe->CADSurfID.push_back(m_id);
                 m_localEdges.insert(newe);
 
                 m_localElements[id1] = ntri1;
@@ -738,6 +770,73 @@ void FaceMesh::BuildLocalMesh()
     // build a local set of nodes edges and elemenets for optimstaion prior to putting them into m_mesh
     */
 
+    //first build quads is bl surface
+    if(m_makebl)
+    {
+        for(int i = 0; i < blpairs.size() - 1; i++)//this wont work for more than one sym plane loop
+        {
+            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+            vector<NodeSharedPtr> ns;
+            ns.push_back(blpairs[i].first);
+            ns.push_back(blpairs[i].second);
+            ns.push_back(blpairs[i+1].second);
+            ns.push_back(blpairs[i+1].first);
+            vector<int> tags;
+            tags.push_back(10); //need to fix this
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                    LibUtilities::eQuadrilateral, conf, ns, tags);
+            E->CADSurfId = m_id;
+            m_localElements.push_back(E);
+        }
+        {
+            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+            vector<NodeSharedPtr> ns;
+            ns.push_back(blpairs.back().first);
+            ns.push_back(blpairs.back().second);
+            ns.push_back(blpairs[0].second);
+            ns.push_back(blpairs[0].first);
+            vector<int> tags;
+            tags.push_back(10); //need to fix this
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                    LibUtilities::eQuadrilateral, conf, ns, tags);
+            E->CADSurfId = m_id;
+            m_localElements.push_back(E);
+        }
+        for(int i = 0; i < m_localElements.size(); i++)
+        {
+            vector<NodeSharedPtr> nods = m_localElements[i]->GetVertexList();
+            for(int j = 0; j < nods.size(); j++)
+            {
+                //nodes are already unique some will insert some wont
+                m_localNodes.insert(nods[j]);
+            }
+            vector<EdgeSharedPtr> edgs = m_localElements[i]->GetEdgeList();
+            for(int j = 0; j < edgs.size(); j++)
+            {
+                //look for edge in m_mesh edgeset from curves
+                EdgeSet::iterator s = m_mesh->m_edgeSet.find(edgs[j]);
+                if(!(s == m_mesh->m_edgeSet.end()))
+                {
+                    edgs[j] = *s;
+                    m_localElements[i]->SetEdge(j, edgs[j]);
+                }
+
+                pair<EdgeSet::iterator, bool> test = m_localEdges.insert(edgs[j]);
+
+                if(test.second)
+                {
+                    (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(m_localElements[i],j));
+                }
+                else
+                {
+                    m_localElements[i]->SetEdge(j, *test.first);
+                    (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(m_localElements[i],j));
+                }
+            }
+            m_localElements[i]->SetId(i);
+        }
+    }
+
     for(int i = 0; i < m_connec.size(); i++)
     {
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
@@ -746,6 +845,7 @@ void FaceMesh::BuildLocalMesh()
         tags.push_back(m_id);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                                 LibUtilities::eTriangle, conf, m_connec[i], tags);
+        E->CADSurfId = m_id;
 
         vector<NodeSharedPtr> nods = E->GetVertexList();
         for(int j = 0; j < nods.size(); j++)
@@ -769,7 +869,6 @@ void FaceMesh::BuildLocalMesh()
             if(test.second)
             {
                 (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(E,j));
-                (*test.first)->CADSurfID.push_back(m_id);
             }
             else
             {
@@ -858,9 +957,9 @@ bool FaceMesh::Validate()
         if(numValid != 3)
         {
             Array<OneD,NekDouble> ainfo,binfo,cinfo;
-            ainfo = m_connec[i][0]->GetCADSurf(m_id);
-            binfo = m_connec[i][1]->GetCADSurf(m_id);
-            cinfo = m_connec[i][2]->GetCADSurf(m_id);
+            ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
+            binfo = m_connec[i][1]->GetCADSurfInfo(m_id);
+            cinfo = m_connec[i][2]->GetCADSurfInfo(m_id);
 
             Array<OneD, NekDouble> uvc(2);
             uvc[0] = (ainfo[0]+binfo[0]+cinfo[0])/3.0;
@@ -920,7 +1019,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 
     if(add)
     {
-        n->SetCADSurf(m_id,uv);
+        n->SetCADSurf(m_id,m_cadsurf,uv);
         m_stienerpoints.push_back(n);
     }
 }
@@ -963,8 +1062,8 @@ void FaceMesh::OrientateCurves()
         for(int j = 0; j < orderedLoops[i].size()-1; j++)
         {
             Array<OneD,NekDouble> n1info,n2info;
-            n1info = orderedLoops[i][j]->GetCADSurf(m_id);
-            n2info = orderedLoops[i][j+1]->GetCADSurf(m_id);
+            n1info = orderedLoops[i][j]->GetCADSurfInfo(m_id);
+            n2info = orderedLoops[i][j+1]->GetCADSurfInfo(m_id);
 
             area += -n2info[1]*(n2info[0]-n1info[0])
                     +n1info[0]*(n2info[1]-n1info[1]);
@@ -1006,8 +1105,8 @@ void FaceMesh::OrientateCurves()
         n2 = orderedLoops[i][1];
 
         Array<OneD,NekDouble> n1info,n2info;
-        n1info = n1->GetCADSurf(m_id);
-        n2info = n2->GetCADSurf(m_id);
+        n1info = n1->GetCADSurfInfo(m_id);
+        n2info = n2->GetCADSurfInfo(m_id);
 
         Array<OneD, NekDouble> N(2);
         NekDouble mag = sqrt((n1info[0]-n2info[0])*(n1info[0]-n2info[0])+(n1info[1]-n2info[1])*(n1info[1]-n2info[1]));
@@ -1025,8 +1124,8 @@ void FaceMesh::OrientateCurves()
         for(int j = 0; j < orderedLoops[i].size()-1; j++)
         {
             Array<OneD,NekDouble> nt1,nt2;
-            nt1 = orderedLoops[i][j]->GetCADSurf(m_id);
-            nt2 = orderedLoops[i][j+1]->GetCADSurf(m_id);
+            nt1 = orderedLoops[i][j]->GetCADSurfInfo(m_id);
+            nt2 = orderedLoops[i][j+1]->GetCADSurfInfo(m_id);
 
             if(fabs(nt2[1]-nt1[1]) < 1e-30)
                 continue;
@@ -1041,8 +1140,8 @@ void FaceMesh::OrientateCurves()
         }
         {
             Array<OneD,NekDouble> nt1,nt2;
-            nt1 = orderedLoops[i].back()->GetCADSurf(m_id);
-            nt2 = orderedLoops[i][0]->GetCADSurf(m_id);
+            nt1 = orderedLoops[i].back()->GetCADSurfInfo(m_id);
+            nt2 = orderedLoops[i][0]->GetCADSurfInfo(m_id);
 
             if(fabs(nt2[1]-nt1[1]) < 1e-30)
                 continue;
@@ -1063,8 +1162,8 @@ void FaceMesh::OrientateCurves()
             for(int j = 0; j < orderedLoops[i].size()-1; j++)
             {
                 Array<OneD,NekDouble> nt1,nt2;
-                nt1 = orderedLoops[i][j]->GetCADSurf(m_id);
-                nt2 = orderedLoops[i][j+1]->GetCADSurf(m_id);
+                nt1 = orderedLoops[i][j]->GetCADSurfInfo(m_id);
+                nt2 = orderedLoops[i][j+1]->GetCADSurfInfo(m_id);
 
                 if(fabs(nt2[1]-nt1[1]) < 1e-30)
                     continue;
@@ -1079,8 +1178,8 @@ void FaceMesh::OrientateCurves()
             }
             {
                 Array<OneD,NekDouble> nt1,nt2;
-                nt1 = orderedLoops[i].back()->GetCADSurf(m_id);
-                nt2 = orderedLoops[i][0]->GetCADSurf(m_id);
+                nt1 = orderedLoops[i].back()->GetCADSurfInfo(m_id);
+                nt2 = orderedLoops[i][0]->GetCADSurfInfo(m_id);
 
                 if(fabs(nt2[1]-nt1[1]) < 1e-30)
                     continue;

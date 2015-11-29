@@ -153,16 +153,6 @@ namespace NekMeshUtils
                         m_z*pSrc.m_x-m_x*pSrc.m_z, m_x*pSrc.m_y-m_y*pSrc.m_x);
         }
 
-        void SetCADCurve(int i, NekDouble t)
-        {
-            CADCurve[i] = t;
-        }
-
-        void SetCADSurf(int i, Array<OneD, NekDouble> uv)
-        {
-            CADSurf[i] = uv;
-        }
-
         Array<OneD, NekDouble> GetLoc()
         {
             Array<OneD, NekDouble> out(3);
@@ -170,46 +160,14 @@ namespace NekMeshUtils
             return out;
         }
 
-        NekDouble GetCADCurve(int i)
+        /// Generate a %SpatialDomains::PointGeom for this node.
+        SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
         {
-            std::map<int, NekDouble>::iterator search =
-                            CADCurve.find(i);
-            ASSERTL0(search->first == i, "node not on this curve");
+            SpatialDomains::PointGeomSharedPtr ret =
+                MemoryManager<SpatialDomains::PointGeom>
+                    ::AllocateSharedPtr(coordDim,m_id,m_x,m_y,m_z);
 
-            return search->second;
-        }
-
-        Array<OneD, NekDouble> GetCADSurf(int i)
-        {
-            //I dont know why I ahev to do this to get it to work
-            //this really needs bound checking
-            std::map<int, Array<OneD, NekDouble> >::iterator search =
-                        CADSurf.find(i);
-            ASSERTL0(search->first == i,"surface not found");
-
-            return search->second;
-        }
-
-        std::vector<int> GetListCADCurve()
-        {
-            std::vector<int> list;
-            std::map<int, NekDouble >::iterator c;
-            for(c = CADCurve.begin(); c != CADCurve.end(); c++)
-            {
-                list.push_back(c->first);
-            }
-            return list;
-        }
-
-        std::vector<int> GetListCADSurf()
-        {
-            std::vector<int> list;
-            std::map<int, Array<OneD, NekDouble> >::iterator s;
-            for(s = CADSurf.begin(); s != CADSurf.end(); s++)
-            {
-                list.push_back(s->first);
-            }
-            return list;
+            return ret;
         }
 
         NekDouble Distance(NodeSharedPtr &p)
@@ -251,21 +209,77 @@ namespace NekMeshUtils
             return an;
         }
 
+#ifdef MESHGEN //fucntions for cad information
+
+        void SetCADCurve(int i, CADCurveSharedPtr c, NekDouble t)
+        {
+            CADCurveList[i] = std::pair<CADCurveSharedPtr, NekDouble>(c,t);
+        }
+
+        void SetCADSurf(int i, CADSurfSharedPtr s, Array<OneD, NekDouble> uv)
+        {
+            CADSurfList[i] = std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(s,uv);
+        }
+
+        CADCurveSharedPtr GetCADCurve(int i)
+        {
+            std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator search =
+                                                        CADCurveList.find(i);
+            ASSERTL0(search->first == i, "node not on this curve");
+
+            return search->second.first;
+        }
+
+        CADSurfSharedPtr GetCADSurf(int i)
+        {
+            std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::iterator search =
+                        CADSurfList.find(i);
+            ASSERTL0(search->first == i,"surface not found");
+
+            return search->second.first;
+        }
+
+        NekDouble GetCADCurveInfo(int i)
+        {
+            std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator search =
+                                                        CADCurveList.find(i);
+            ASSERTL0(search->first == i, "node not on this curve");
+
+            return search->second.second;
+        }
+
+        Array<OneD, NekDouble> GetCADSurfInfo(int i)
+        {
+            std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::iterator search =
+                        CADSurfList.find(i);
+            ASSERTL0(search->first == i,"surface not found");
+
+            return search->second.second;
+        }
+
+        std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
+        {
+            std::vector<std::pair<int, CADSurfSharedPtr> > lst;
+            std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::iterator s;
+            for(s = CADSurfList.begin(); s != CADSurfList.end(); s++)
+            {
+                lst.push_back(std::pair<int, CADSurfSharedPtr>(s->first,s->second.first));
+            }
+            return lst;
+        }
+
+        int GetNumCadCurve() {return CADCurveList.size();}
+
+        int GetNumCADSurf() {return CADSurfList.size();}
+
         void Move(Array<OneD, NekDouble> l, int s, Array<OneD, NekDouble> uv)
         {
             m_x = l[0]; m_y = l[1]; m_z = l[2];
-            CADSurf[s] = uv;
+            CADSurfSharedPtr su = CADSurfList[s].first;
+            CADSurfList[s] = std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su,uv);
         }
 
-        /// Generate a %SpatialDomains::PointGeom for this node.
-        SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
-        {
-            SpatialDomains::PointGeomSharedPtr ret =
-                MemoryManager<SpatialDomains::PointGeom>
-                    ::AllocateSharedPtr(coordDim,m_id,m_x,m_y,m_z);
-
-            return ret;
-        }
+#endif
 
         /// ID of node.
         int m_id;
@@ -275,10 +289,14 @@ namespace NekMeshUtils
         NekDouble m_y;
         /// Z-coordinate.
         NekDouble m_z;
+
+#ifdef MESHGEN //tag to tell the meshelemnets to include cad information
+
         ///list of cadcurves the node lies on
-        std::map<int, NekDouble> CADCurve;
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> > CADCurveList;
         ///list of cadsurfs the node lies on
-        std::map<int, Array<OneD, NekDouble> > CADSurf;
+        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > > CADSurfList;
+#endif
 
     private:
         SpatialDomains::PointGeomSharedPtr m_geom;

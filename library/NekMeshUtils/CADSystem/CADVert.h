@@ -103,18 +103,18 @@ public:
     /**
      * @brief if the vertex is degenerate manually set uv for that surface
      */
-    void SetDegen(int s, NekDouble u, NekDouble v)
+    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
     {
         degen = true;
         degensurf = s;
         Array<OneD, NekDouble> uv(2);
         uv[0] = u;
         uv[1] = v;
-        m_node->SetCADSurf(s,uv);
+        m_node->SetCADSurf(s, su, uv);
     }
 
     /**
-     * @brief query is degenerate 
+     * @brief query is degenerate
      */
     int IsDegen()
     {

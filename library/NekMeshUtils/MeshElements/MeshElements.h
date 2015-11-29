@@ -49,6 +49,19 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
+#ifdef MESHGEN //forard declare cad objects for mesh elements
+namespace Nektar
+{
+namespace NekMeshUtils
+{
+    class CADCurve;
+    class CADSurf;
+    typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+    typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+}
+}
+#endif
+
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>

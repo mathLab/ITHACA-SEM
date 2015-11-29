@@ -200,7 +200,15 @@ void SurfaceMesh::HOSurf()
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
         vector<EdgeSharedPtr> edgelist = m_mesh->m_element[2][i]->GetEdgeList();
-        int surf = m_mesh->m_element[2][i]->GetTagList()[0];
+        int surf = m_mesh->m_element[2][i]->CADSurfId;
+
+        int numsurf = m_cad->GetNumSurf();
+
+        if(!(surf >= 1 && surf <= numsurf))
+        {
+            cout  << surf << endl;
+            exit(-1);
+        }
 
         vector<EdgeSharedPtr> egs = f->m_edgeList;
         for(int j = 0; j < egs.size(); j++)
@@ -224,55 +232,20 @@ void SurfaceMesh::HOSurf()
                 {
                     if(edgelist[k] == e)
                     {
-                        e->CADSurfID = edgelist[k]->CADSurfID;
-                    }
-                }
-
-                ASSERTL0(e->CADSurfID.size() == 1 || e->CADSurfID.size() == 2,
-                        "incorrect cad surfs");
-
-                //figure out surfaces and curves this edge is on
-                if(e->CADSurfID.size()==2) //shoul be on curve
-                {
-                    vector<int> clist1, clist2, c;
-                    clist1 = e->m_n1->GetListCADCurve();
-                    clist2 = e->m_n2->GetListCADCurve();
-                    sort(clist1.begin(), clist1.end());
-                    sort(clist2.begin(), clist2.end());
-
-                    set_intersection(clist1.begin(), clist1.end(),
-                                     clist2.begin(), clist2.end(),
-                                     back_inserter(c));
-                    //this is a bit hacky, if the edge can identify two curves, it chooses the shortest
-                    if(c.size() > 0)
-                    {
-                        if(c.size() > 1)
-                        {
-                            if(m_curvemeshes[c[0]]->GetLength() >
-                               m_curvemeshes[c[1]]->GetLength())
-                            {
-                                e->CADCurveID = c[1];
-                            }
-                            else
-                            {
-                                e->CADCurveID = c[0];
-                            }
-                        }
-                        else
-                        {
-                            e->CADCurveID = c[0];
-                        }
+                        e->onCurve = edgelist[k]->onCurve;
+                        e->CADCurveId = edgelist[k]->CADCurveId;
+                        e->CADCurve = edgelist[k]->CADCurve;
                     }
                 }
 
                 //if we are here the edge needs to be high-ordered
-                if(e->CADCurveID != -1)
+                if(e->onCurve)
                 {
-                    int cid = e->CADCurveID;
-                    CADCurveSharedPtr c = m_cad->GetCurve(cid);
+                    int cid = e->CADCurveId;
+                    CADCurveSharedPtr c = e->CADCurve;
                     //edge is on curve and needs hoing that way
-                    NekDouble tb = e->m_n1->GetCADCurve(cid);
-                    NekDouble te = e->m_n2->GetCADCurve(cid);
+                    NekDouble tb = e->m_n1->GetCADCurveInfo(cid);
+                    NekDouble te = e->m_n2->GetCADCurveInfo(cid);
 
                     Array<OneD, NekDouble> ti(m_mesh->m_nummode);
 
@@ -292,11 +265,11 @@ void SurfaceMesh::HOSurf()
                         Array<OneD, NekDouble> loc = c->P(ti[i]);
                         NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
 
-                        nn->SetCADCurve(cid,ti[i]);
+                        nn->SetCADCurve(cid, c, ti[i]);
                         Array<OneD, NekDouble> uv = s[0]->locuv(loc);
-                        nn->SetCADSurf(s[0]->GetId(),uv);
+                        nn->SetCADSurf(s[0]->GetId(), s[0], uv);
                         uv = s[1]->locuv(loc);
-                        nn->SetCADSurf(s[1]->GetId(),uv);
+                        nn->SetCADSurf(s[1]->GetId(), s[1], uv);
                         honodes[i-1] = nn;
                     }
 
@@ -305,13 +278,11 @@ void SurfaceMesh::HOSurf()
                 }
                 else
                 {
-                    ASSERTL0(e->CADSurfID.size() == 1, "should only be one");
                     //edge is on surface and needs 2d optimisation
-                    int sid = e->CADSurfID[0];
-                    CADSurfSharedPtr s = m_cad->GetSurf(sid);
+                    CADSurfSharedPtr s = m_cad->GetSurf(surf);
                     Array<OneD, NekDouble> uvb,uve;
-                    uvb = e->m_n1->GetCADSurf(sid);
-                    uve = e->m_n2->GetCADSurf(sid);
+                    uvb = e->m_n1->GetCADSurfInfo(surf);
+                    uve = e->m_n2->GetCADSurfInfo(surf);
 
                     vector<NodeSharedPtr> honodes(m_mesh->m_nummode-2);
                     vector<NekDouble> gllint(m_mesh->m_nummode-2);
@@ -323,7 +294,7 @@ void SurfaceMesh::HOSurf()
                         uv[1] = uvb[1]*(1.0 - gll[i])/2.0 + uve[1]*(1.0 + gll[i])/2.0;
                         loc = s->P(uv);
                         NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
-                        nn->SetCADSurf(sid,uv);
+                        nn->SetCADSurf(surf, s, uv);
                         honodes[i-1] = nn;
                         gllint[i-1] = gll[i];
                     }
@@ -354,7 +325,7 @@ void SurfaceMesh::HOSurf()
                             }
                             else
                             {
-                                bcs.push_back(honodes[i-1]->GetCADSurf(sid));
+                                bcs.push_back(honodes[i-1]->GetCADSurfInfo(surf));
                                 za = gllint[i-1];
                             }
                             if(i==honodes.size()-1)
@@ -364,7 +335,7 @@ void SurfaceMesh::HOSurf()
                             }
                             else
                             {
-                                bcs.push_back(honodes[i+1]->GetCADSurf(sid));
+                                bcs.push_back(honodes[i+1]->GetCADSurfInfo(surf));
                                 zb = gllint[i+1];
                             }
 
@@ -374,11 +345,11 @@ void SurfaceMesh::HOSurf()
                             weights[0] = 1.0/(zb - zm);
                             weights[1] = 1.0 /(zm - za);
 
-                            uvi = honodes[i]->GetCADSurf(sid);
+                            uvi = honodes[i]->GetCADSurfInfo(surf);
 
                             bool valid;
                             Array<OneD, NekDouble> df = EdgeGrad(uvi[0],uvi[1],bcs,
-                                                                 weights,sid,
+                                                                 weights,surf,
                                                                  valid);
                             if(!valid)
                             {
@@ -391,10 +362,10 @@ void SurfaceMesh::HOSurf()
                             Find1DBounds(a,b,uvi,df,bounds);
 
                             NekDouble fxi = EdgeF(uvi[0],uvi[1],bcs,weights,
-                                                  sid,valid);
+                                                  surf,valid);
                             NekDouble fx= fxi;
 
-                            NekDouble xmin = BrentOpti(a,0,b,fx,tol,sid,
+                            NekDouble xmin = BrentOpti(a,0,b,fx,tol,surf,
                                                        uvi,df,bounds,bcs,weights,
                                                        &SurfaceMesh::EdgeF);
 
@@ -406,7 +377,7 @@ void SurfaceMesh::HOSurf()
                             {
                                 uvi[0]+=xmin*df[0]; uvi[1]+=xmin*df[1];
                                 Array<OneD, NekDouble> loc = s->P(uvi);
-                                honodes[i]->Move(loc,sid,uvi);
+                                honodes[i]->Move(loc,surf,uvi);
                             }
                         }
                         if(converged == honodes.size())
@@ -431,9 +402,9 @@ void SurfaceMesh::HOSurf()
 
         vector<NodeSharedPtr> vertices = f->m_vertexList;
         Array<OneD, NekDouble> uv1,uv2,uv3;
-        uv1 = vertices[0]->GetCADSurf(surf);
-        uv2 = vertices[1]->GetCADSurf(surf);
-        uv3 = vertices[2]->GetCADSurf(surf);
+        uv1 = vertices[0]->GetCADSurfInfo(surf);
+        uv2 = vertices[1]->GetCADSurfInfo(surf);
+        uv3 = vertices[2]->GetCADSurfInfo(surf);
 
         DNekMat a (3,3,1.0);
         a(0,0) = uv1[0];
@@ -449,6 +420,7 @@ void SurfaceMesh::HOSurf()
         DNekMat M = a*c;
         DNekMat result = M*p;
 
+        CADSurfSharedPtr s = m_cad->GetSurf(surf);
         vector<NodeSharedPtr> honodes(numInteriorPoints);
         for(int i = 0; i < numInteriorPoints; i++)
         {
@@ -456,9 +428,9 @@ void SurfaceMesh::HOSurf()
             Array<OneD, NekDouble> uv(2);
             uv[0] = result(0,i);
             uv[1] = result(1,i);
-            loc = m_cad->GetSurf(surf)->P(uv);
+            loc = s->P(uv);
             NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
-            nn->SetCADSurf(surf,uv);
+            nn->SetCADSurf(surf, s, uv);
             honodes[i] = nn;
         }
 
@@ -473,15 +445,13 @@ void SurfaceMesh::HOSurf()
 
             for(int k = 0; k < hon.size(); k++)
             {
-                uvList.push_back(hon[k]->GetCADSurf(surf));
+                uvList.push_back(hon[k]->GetCADSurfInfo(surf));
             }
         }
         for(int j = 0; j < honodes.size(); j++)
         {
-            uvList.push_back(honodes[j]->GetCADSurf(surf));
+            uvList.push_back(honodes[j]->GetCADSurfInfo(surf));
         }
-
-        CADSurfSharedPtr s = m_cad->GetSurf(surf);
 
         bool repeatoverallnodes = true;
 

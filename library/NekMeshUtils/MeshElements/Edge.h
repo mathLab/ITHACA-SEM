@@ -53,16 +53,27 @@ namespace NekMeshUtils
              std::vector<NodeSharedPtr> pEdgeNodes,
              LibUtilities::PointsType pCurveType)
             : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
-              m_curveType(pCurveType), CADCurveID(-1), m_geom() {}
+              m_curveType(pCurveType), m_geom()
+        {
+#ifdef MESHGEN
+            onCurve = false;
+#endif
+        }
         /// Creates a new linear edge.
         Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
             : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(),
-              m_curveType(), CADCurveID(-1), m_geom() {}
+              m_curveType(), m_geom()
+        {
+#ifdef MESHGEN
+            onCurve = false;
+#endif
+        }
         /// Copies an existing edge.
         Edge(const Edge& pSrc)
             : m_n1(pSrc.m_n1), m_n2(pSrc.m_n2), m_edgeNodes(pSrc.m_edgeNodes),
-              m_curveType(pSrc.m_curveType), CADCurveID(pSrc.CADCurveID), m_geom(pSrc.m_geom) {}
-        ~Edge() {}
+              m_curveType(pSrc.m_curveType), m_geom(pSrc.m_geom) {}
+        ~Edge()
+        {}
 
         /// Returns the total number of nodes defining the edge.
         unsigned int GetNodeCount() const
@@ -136,9 +147,13 @@ namespace NekMeshUtils
         LibUtilities::PointsType m_curveType;
         /// Element(s) which are linked to this edge.
         vector<pair<ElementSharedPtr, int> > m_elLink;
+
+#ifdef MESHGEN
+        bool onCurve;
         /// id of cad curve which edge lies on
-        int CADCurveID;
-        std::vector<int> CADSurfID;
+        int CADCurveId;
+        CADCurveSharedPtr CADCurve;
+#endif
 
     private:
         SpatialDomains::SegGeomSharedPtr m_geom;

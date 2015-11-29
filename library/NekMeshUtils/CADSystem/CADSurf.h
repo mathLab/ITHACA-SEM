@@ -180,6 +180,8 @@ public:
      */
     NekDouble DistanceTo(Array<OneD, NekDouble> p);
 
+    void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
+
     /**
      * @brief returns curvature at point uv
      */

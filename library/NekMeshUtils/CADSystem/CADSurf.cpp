@@ -203,6 +203,29 @@ NekDouble CADSurf::DistanceTo(Array<OneD, NekDouble> p)
     return p3.Distance(loc);
 }
 
+void CADSurf::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
+{
+    gp_Pnt loc(tp[0] * 1000.0, tp[1] * 1000.0, tp[2] * 1000.0);
+
+    // alternative locuv methods
+    ShapeAnalysis_Surface sas(m_s);
+    sas.SetDomain(m_occSurface.FirstUParameter(),
+                  m_occSurface.LastUParameter(),
+                  m_occSurface.FirstVParameter(),
+                  m_occSurface.LastVParameter());
+
+    gp_Pnt2d p2 = sas.ValueOfUV(loc,1e-7);
+
+    gp_Pnt p3 = sas.Value(p2);
+
+    tp[0] = p3.X()/1000.0;
+    tp[1] = p3.Y()/1000.0;
+    tp[2] = p3.Z()/1000.0;
+
+    uv[0] = p2.X();
+    uv[1] = p2.X();
+}
+
 bool CADSurf::IsPlane()
 {
     if(m_occSurface.GetType() == GeomAbs_Plane)

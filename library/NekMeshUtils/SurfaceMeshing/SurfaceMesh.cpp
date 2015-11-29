@@ -124,28 +124,6 @@ void SurfaceMesh::Validate()
         }
     }
 
-    //check elements have positive area in paramter plane after processing
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        Array<OneD, NekDouble> a = m_mesh->m_element[2][i]->GetVertex(0)
-                            ->GetCADSurf(m_mesh->m_element[2][i]->GetCADSurf());
-        Array<OneD, NekDouble> b = m_mesh->m_element[2][i]->GetVertex(1)
-                            ->GetCADSurf(m_mesh->m_element[2][i]->GetCADSurf());
-        Array<OneD, NekDouble> c = m_mesh->m_element[2][i]->GetVertex(2)
-                            ->GetCADSurf(m_mesh->m_element[2][i]->GetCADSurf());
-
-        NekDouble area = 0.5*(-b[0]*a[1] + c[0]*a[1] + a[0]*b[1] -
-                               c[0]*b[1] - a[0]*c[1] + b[0]*c[1]);
-
-        if(!(area > 0))
-        {
-            if(m_mesh->m_verbose)
-                cout << "\t\tFailed" << endl;
-            cout << i << " " << area << endl;
-            ASSERTL0(false,"area negative");
-        }
-    }
-
     if(m_mesh->m_verbose)
         cout << "\t\tPassed" << endl;
 }

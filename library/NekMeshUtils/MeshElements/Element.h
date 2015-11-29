@@ -124,14 +124,6 @@ namespace NekMeshUtils
             if (m_edgeLink.get() != 0) return m_edgeLink->m_id;
             return m_id;
         }
-        /// returns id of the Tri which this elemnt was created from in
-        /// mesh utils, only applys to surface elements
-        int GetCADSurf() const {
-            return m_meshtriID;
-        }
-        void SetCADSurf(int i) {
-            m_meshtriID = i;
-        }
         /// Returns the expansion dimension of the element.
         unsigned int GetDim() const {
             return m_dim;
@@ -446,11 +438,13 @@ namespace NekMeshUtils
             }
         }
 
+#ifdef MESHGEN
+        int CADSurfId;
+#endif
+
     protected:
         /// ID of the element.
         unsigned int m_id;
-        /// ID of mesh utilse Tri
-        int m_meshtriID;
         /// Dimension of the element.
         unsigned int m_dim;
         /// Contains configuration of the element.

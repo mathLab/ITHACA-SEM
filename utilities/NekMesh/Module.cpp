@@ -194,27 +194,11 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-                    if(ed->CADSurfID.size() > 0)
+                    if(ed->onCurve)
                     {
-                        //sort out cad information
-                        list<int> surfs;
-                        for(int k = 0; k < ed->CADSurfID.size(); k++)
-                        {
-                            surfs.push_back(ed->CADSurfID[k]);
-                        }
-                        for(int k = 0; k < e2->CADSurfID.size(); k++)
-                        {
-                            surfs.push_back(e2->CADSurfID[k]);
-                        }
-                        surfs.sort(); surfs.unique();
-                        e2->CADSurfID.clear();
-                        list<int>::iterator it;
-                        for(it = surfs.begin(); it != surfs.end(); it++)
-                        {
-                            e2->CADSurfID.push_back(*it);
-                        }
-                        ASSERTL0(e2->CADSurfID.size() == 1 || e2->CADSurfID.size() == 2,
-                                "incorrect cad surfs");
+                        e2->onCurve = ed->onCurve;
+                        e2->CADCurveId = ed->CADCurveId;
+                        e2->CADCurve = ed->CADCurve;
                     }
 
                     // Update edge to element map.

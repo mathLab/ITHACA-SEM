@@ -207,33 +207,6 @@ bool CADSystem::LoadCAD()
         }
     }
 
-    //attempts to identify properties of the vertex on the degen edge
-    for(int i = 1; i <= mapOfFaces.Extent(); i++)
-    {
-        TopoDS_Shape face= mapOfFaces.FindKey(i);
-
-        TopTools_IndexedMapOfShape localEdges;
-        TopExp::MapShapes(face, TopAbs_EDGE, localEdges);
-
-        for(int j = 1; j <= localEdges.Extent(); j++)
-        {
-            TopoDS_Shape edge = localEdges.FindKey(j);
-            if(BRep_Tool::Degenerated(TopoDS::Edge(edge)))
-            {
-                cout << "degen edge on face " << i << endl;
-                gp_Pnt2d p1,p2;
-
-                BRep_Tool::UVPoints(TopoDS::Edge(edge),TopoDS::Face(face),p1,p2);
-
-                m_verts[mapOfVerts.FindIndex(TopExp::FirstVertex(
-                            TopoDS::Edge(edge), Standard_True))]->SetDegen(
-                                i, (p1.X() + p2.X())/2.0, (p1.Y() + p2.Y())/2.0);
-            }
-
-
-        }
-    }
-
     map<int, vector<int> > adjsurfmap; //from id of curve to list of ids of surfs
 
     // Adds edges to our type and map
@@ -356,6 +329,31 @@ bool CADSystem::LoadCAD()
         }
 
         AddSurf(i, face, edgeloops);
+    }
+
+    //attempts to identify properties of the vertex on the degen edge
+    for(int i = 1; i <= mapOfFaces.Extent(); i++)
+    {
+        TopoDS_Shape face= mapOfFaces.FindKey(i);
+
+        TopTools_IndexedMapOfShape localEdges;
+        TopExp::MapShapes(face, TopAbs_EDGE, localEdges);
+
+        for(int j = 1; j <= localEdges.Extent(); j++)
+        {
+            TopoDS_Shape edge = localEdges.FindKey(j);
+            if(BRep_Tool::Degenerated(TopoDS::Edge(edge)))
+            {
+                cout << "degen edge on face " << i << endl;
+                gp_Pnt2d p1,p2;
+
+                BRep_Tool::UVPoints(TopoDS::Edge(edge),TopoDS::Face(face),p1,p2);
+
+                m_verts[mapOfVerts.FindIndex(TopExp::FirstVertex(
+                            TopoDS::Edge(edge), Standard_True))]->SetDegen(
+                                i, m_surfs[i], (p1.X() + p2.X())/2.0, (p1.Y() + p2.Y())/2.0);
+            }
+        }
     }
 
     // This checks that all edges are bound by two surfaces, sanity check.

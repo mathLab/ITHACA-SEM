@@ -161,6 +161,7 @@ private:
     std::vector<ElementSharedPtr> m_localElements;
     NekDouble m_bl;
     bool  m_makebl;
+    std::vector<std::pair<NodeSharedPtr, NodeSharedPtr> > blpairs;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

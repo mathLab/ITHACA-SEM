@@ -24,6 +24,7 @@ IF(NEKTAR_USE_MESH)
         ExtLibInterface/TriangleInterface.cpp
         ExtLibInterface/TetGenInterface.cpp
         TetMeshing/TetMesh.cpp
+        BLMeshing/BLMesh.cpp
     )
 ENDIF()
 
@@ -55,6 +56,7 @@ IF(NEKTAR_USE_MESH)
         ExtLibInterface/TriangleInterface.h
         ExtLibInterface/TetGenInterface.h
         TetMeshing/TetMesh.h
+        BLMeshing/BLMesh.h
     )
 ENDIF()
 

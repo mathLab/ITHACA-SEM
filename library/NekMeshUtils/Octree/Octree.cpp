@@ -272,7 +272,7 @@ void Octree::Relax()
         }
         else
         {
-            if(av < m_minDelta/5.0) av = m_minDelta/3.0;
+            if(av < m_minDelta/10.0) av = m_minDelta/10.0;
             minlimitedoct[i]->SetDelta(av);
         }
     }
@@ -378,7 +378,7 @@ void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr>
         }
         if(children[i]->IsDeltaKnown())
         {
-            if(av < m_minDelta/3.0) av = m_minDelta/3.0;
+            if(av < m_minDelta/10.0) av = m_minDelta/10.0;
             children[i]->SetDelta(av);
         }
         else
@@ -386,12 +386,12 @@ void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr>
             children[i]->SetDelta(parent->GetDelta());
         }
 
-        if(children[i]->GetDelta() < m_minDelta/3.0)
-            children[i]->SetDelta(3.0);
+        if(children[i]->GetDelta() < m_minDelta/10.0)
+            children[i]->SetDelta(10.0);
 
         if(maxdiff/mindiff > 2.0)
         {
-            if(children[i]->DX() / 2.0 > m_minDelta/3.0)
+            if(children[i]->DX() / 2.0 > m_minDelta/5.0)
             {
                 SubDivideMinLimited(children[i], np);
             }

@@ -38,6 +38,7 @@
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <NekMeshUtils/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/TetMeshing/TetMesh.h>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -171,6 +172,7 @@ void InputCAD::Process()
     ProcessComposites();
 
     m_surfacemesh->Report();
+
     m_mesh->m_nummode = 2;
 
     vector<ElementSharedPtr> el = m_mesh->m_element[2];
@@ -198,6 +200,10 @@ void InputCAD::Process()
     m_mesh->m_fields.push_back("v");
     m_mesh->m_fields.push_back("w");
     m_mesh->m_fields.push_back("p");
+
+    BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(m_mesh);
+
+    m_blmesh->Mesh();
 
     //create tet mesh
     TetMeshSharedPtr m_tet =

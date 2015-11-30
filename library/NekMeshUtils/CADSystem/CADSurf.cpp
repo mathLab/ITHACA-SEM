@@ -223,7 +223,7 @@ void CADSurf::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
     tp[2] = p3.Z()/1000.0;
 
     uv[0] = p2.X();
-    uv[1] = p2.X();
+    uv[1] = p2.Y();
 }
 
 bool CADSurf::IsPlane()

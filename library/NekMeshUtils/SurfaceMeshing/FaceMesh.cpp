@@ -58,6 +58,29 @@ void FaceMesh::Mesh()
         cout << "done" << endl;
     }
 
+    /*if(m_id == 4)
+    {
+        ofstream out;
+        out.open("pts.txt");
+        for(int i = 0; i < orderedLoops.size(); i++)
+        {
+            for(int j = 0; j < orderedLoops[i].size(); j++)
+            {
+                Array<OneD, NekDouble> uv = orderedLoops[i][j]->GetCADSurfInfo(m_id);
+                out << uv[0] << " " << uv[1] << endl;
+            }
+        }
+        for(int i = 0; i < blpairs.size(); i++)
+        {
+            Array<OneD, NekDouble> uv = blpairs[i].first->GetCADSurfInfo(m_id);
+            out << uv[0] << " " << uv[1] << endl;
+            uv = blpairs[i].second->GetCADSurfInfo(m_id);
+            out << uv[0] << " " << uv[1] << endl;
+        }
+        out.close();
+        exit(-1);
+    }*/
+
     int numPoints = 0;
     for(int i = 0; i < orderedLoops.size(); i++)
     {
@@ -112,7 +135,7 @@ void FaceMesh::Mesh()
 
     BuildLocalMesh();
 
-    //OptimiseLocalMesh();
+    OptimiseLocalMesh();
 
     //clear local element links
     EdgeSet::iterator eit;
@@ -170,7 +193,7 @@ void FaceMesh::MakeBL()
 
             Array<OneD, NekDouble> loc = orderedLoops[i][j]->GetLoc();
             Array<OneD, NekDouble> tp(3);
-            for(int k = 0; k < 3; k++) tp[k] = AN[k] + loc[k];
+            for(int k = 0; k < 3; k++) tp[k] = m_bl*AN[k] + loc[k];
             //project tp onto to surface to get new point
             Array<OneD, NekDouble> uv(2);
             m_cadsurf->ProjectTo(tp,uv);
@@ -232,6 +255,19 @@ void FaceMesh::Smoothing()
 
             vector<EdgeSharedPtr> edges = connectingedges[(*nit)->m_id];
             vector<ElementSharedPtr> els = connectingelements[(*nit)->m_id];
+
+            bool perfrom = true;
+            for(int i = 0; i < els.size(); i++)
+            {
+                if(els[i]->GetConf().m_e == LibUtilities::eQuadrilateral)
+                {
+                    perfrom = false;
+                    break;
+                }
+            }
+
+            if(!perfrom)
+                continue;
 
             vector<NodeSharedPtr> nodesystem;
             vector<NekDouble> lamp;
@@ -411,6 +447,7 @@ void FaceMesh::Smoothing()
 
 void FaceMesh::DiagonalSwap()
 {
+    ///TODO fix this bit of code which figures out the node defect, doesnt work on quads or relfex angles
     map<int, int> idealConnec;
     map<int, int> actualConnec;
     map<int, vector<EdgeSharedPtr> > nodetoedge;
@@ -472,6 +509,12 @@ void FaceMesh::DiagonalSwap()
             EdgeSharedPtr e = *it;
 
             if(e->m_elLink.size() != 2)
+            {
+                m_localEdges.insert(e);
+                continue;
+            }
+            if(e->m_elLink[0].first->GetConf().m_e == LibUtilities::eQuadrilateral ||
+               e->m_elLink[1].first->GetConf().m_e == LibUtilities::eQuadrilateral)
             {
                 m_localEdges.insert(e);
                 continue;
@@ -681,8 +724,7 @@ void FaceMesh::DiagonalSwap()
                 t2.push_back(A); t2.push_back(C); t2.push_back(D);
 
                 ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
-                vector<int> tags;
-                tags.push_back(m_id);
+                vector<int> tags = tri1->GetTagList();
 
                 int id1 = tri1->GetId();
                 int id2 = tri2->GetId();
@@ -690,6 +732,7 @@ void FaceMesh::DiagonalSwap()
                 ElementSharedPtr ntri1 = GetElementFactory().
                             CreateInstance(LibUtilities::eTriangle,
                                            conf,t1,tags);
+                tags = tri2->GetTagList();
                 ElementSharedPtr ntri2 = GetElementFactory().
                             CreateInstance(LibUtilities::eTriangle,
                                            conf,t2,tags);
@@ -876,7 +919,7 @@ void FaceMesh::BuildLocalMesh()
                 (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(E,j));
             }
         }
-        E->SetId(i);
+        E->SetId(m_localElements.size());
         m_localElements.push_back(E);
     }
 }
@@ -912,7 +955,7 @@ void FaceMesh::Stretching()
             ru *= du;
             rv *= dv;
 
-            if(rv < 1E-30)
+            if(rv < 1E-8)
                 continue;
 
             asr += ru/rv;

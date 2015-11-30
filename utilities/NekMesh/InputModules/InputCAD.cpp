@@ -171,6 +171,25 @@ void InputCAD::Process()
     ProcessComposites();
 
     m_surfacemesh->Report();
+    m_mesh->m_nummode = 2;
+
+    vector<ElementSharedPtr> el = m_mesh->m_element[2];
+    m_mesh->m_element[2].clear();
+    for(int i = 0; i < el.size(); i++)
+    {
+        if(el[i]->GetTagList()[0] == 4 ||
+           el[i]->GetTagList()[0] == 7 ||
+           el[i]->GetTagList()[0] == 8 ||
+           el[i]->GetTagList()[0] == 9 ||
+           el[i]->GetTagList()[0] == 10)
+                m_mesh->m_element[2].push_back(el[i]);
+    }
+    ClearElementLinks();
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
+    ProcessComposites();
 
     return;
 

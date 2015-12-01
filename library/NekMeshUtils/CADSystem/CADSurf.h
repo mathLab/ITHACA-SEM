@@ -157,6 +157,11 @@ public:
         m_correctNormal = false;
     }
 
+    bool IsReversedNormal()
+    {
+        return !m_correctNormal;
+    }
+
     /**
      * @brief surface needs to know if it is bounded by only two curves
      */

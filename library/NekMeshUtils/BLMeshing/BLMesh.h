@@ -57,8 +57,10 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m)
-                : m_mesh(m)
+    BLMesh(MeshSharedPtr m, const std::vector<unsigned int> bl,
+                            const std::vector<unsigned int> sym,
+                            const NekDouble b)
+                : m_mesh(m), m_blsurfs(bl), m_symsurfs(sym), m_bl(b)
     {
     };
 
@@ -71,6 +73,10 @@ private:
 
     /// print stuff to screen?
     MeshSharedPtr m_mesh;
+
+    std::vector<unsigned int> m_blsurfs;
+    std::vector<unsigned int> m_symsurfs;
+    NekDouble m_bl;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

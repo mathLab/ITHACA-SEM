@@ -173,20 +173,18 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    m_mesh->m_nummode = 2;
+    m_mesh->m_expDim = 3;
+    m_mesh->m_fields.push_back("u");
+    m_mesh->m_fields.push_back("v");
+    m_mesh->m_fields.push_back("w");
+    m_mesh->m_fields.push_back("p");
 
-    vector<ElementSharedPtr> el = m_mesh->m_element[2];
+    BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(m_mesh, blsurfs, symsurfs, m_minDelta);
+
+    m_blmesh->Mesh();
+
     m_mesh->m_element[2].clear();
-    for(int i = 0; i < el.size(); i++)
-    {
-        if(el[i]->GetTagList()[0] == 4 ||
-           el[i]->GetTagList()[0] == 7 ||
-           el[i]->GetTagList()[0] == 8 ||
-           el[i]->GetTagList()[0] == 9 ||
-           el[i]->GetTagList()[0] == 10)
-                m_mesh->m_element[2].push_back(el[i]);
-    }
-    ClearElementLinks();
+    //m_mesh->m_nummode = 2;
     ProcessVertices  ();
     ProcessEdges     ();
     ProcessFaces     ();
@@ -194,16 +192,6 @@ void InputCAD::Process()
     ProcessComposites();
 
     return;
-
-    m_mesh->m_expDim = 3;
-    m_mesh->m_fields.push_back("u");
-    m_mesh->m_fields.push_back("v");
-    m_mesh->m_fields.push_back("w");
-    m_mesh->m_fields.push_back("p");
-
-    BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(m_mesh);
-
-    m_blmesh->Mesh();
 
     //create tet mesh
     TetMeshSharedPtr m_tet =

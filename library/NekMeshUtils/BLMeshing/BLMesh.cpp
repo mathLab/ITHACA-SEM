@@ -43,6 +43,135 @@ namespace NekMeshUtils
 
 void BLMesh::Mesh()
 {
+    //At this stage the surface mesh is complete and the elements know their
+    //neigbours through element links in the edges, this includes quads,
+
+    //here elements are made for the boundary layer they will need to know links (maybe facelinks)
+    //so that the tetmeshing module can extract the surface upon which it needs to mesh (top of the bl and the rest of the surface)
+
+    vector<ElementSharedPtr> quad;
+    vector<ElementSharedPtr> ptri;  //triangles to grow prisms onto
+
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        bool onblsurf = false;
+        for(int j = 0; j < m_blsurfs.size(); j++)
+        {
+            if(m_mesh->m_element[2][i]->CADSurfId == m_blsurfs[j])
+            {
+                onblsurf = true;
+                break;
+            }
+        }
+        if(m_mesh->m_element[2][i]->GetConf().m_e == LibUtilities::eQuadrilateral)
+        {
+            quad.push_back(m_mesh->m_element[2][i]);
+        }
+        else if(onblsurf)
+        {
+            ptri.push_back(m_mesh->m_element[2][i]);
+        }
+    }
+
+    map<int, NodeSharedPtr> blpair;
+    for(int i = 0; i < quad.size(); i++)
+    {
+        vector<EdgeSharedPtr> e = quad[i]->GetEdgeList();
+        for(int j = 0; j < e.size(); j++)
+        {
+            if((e[j]->m_n1->GetNumCadCurve() > 0 && e[j]->m_n2->GetNumCadCurve() > 0) ||
+               (!(e[j]->m_n1->GetNumCadCurve() > 0) && !(e[j]->m_n2->GetNumCadCurve() > 0))) //if both or none are on curve skip
+                    continue;
+
+            if(e[j]->m_n1->GetNumCadCurve() > 0)
+            {
+                blpair[e[j]->m_n1->m_id] = e[j]->m_n2;
+            }
+            else if(e[j]->m_n2->GetNumCadCurve() > 0)
+            {
+                blpair[e[j]->m_n2->m_id] = e[j]->m_n1;
+            }
+            else
+            {
+                ASSERTL0(false,"that failed");
+            }
+        }
+    }
+
+    map<int,int> nm;
+    nm[0] = 0;
+    nm[1] = 3;
+    nm[2] = 4;
+    nm[3] = 5;
+    nm[4] = 1;
+    nm[5] = 2;
+
+    for(int i = 0; i < ptri.size(); i++)
+    {
+        vector<NodeSharedPtr> pn(6); //all prism nodes
+        vector<NodeSharedPtr> n = ptri[i]->GetVertexList();
+
+        vector<pair<int, CADSurfSharedPtr> > tmpss = n[0]->GetCADSurfs();
+        CADSurfSharedPtr tmps;
+        for(int j = 0; j < tmpss.size(); j++)
+        {
+            if(tmpss[j].first == ptri[i]->CADSurfId)
+            {
+                tmps = tmpss[j].second;
+                break;
+            }
+        }
+        if(tmps->IsReversedNormal())
+        {
+            nm[0] = 0;
+            nm[1] = 3;
+            nm[2] = 1;
+            nm[3] = 2;
+            nm[4] = 4;
+            nm[5] = 5;
+        }
+
+        for(int j = 0; j < n.size(); j++)
+        {
+            pn[nm[j*2]] = n[j];
+
+            map<int, NodeSharedPtr>::iterator it;
+            it = blpair.find(n[j]->m_id);
+            if(it != blpair.end())
+            {
+                pn[nm[j*2+1]] = blpair[n[j]->m_id];
+            }
+            else
+            {
+                Array<OneD, NekDouble> AN(3);
+
+                vector<pair<int, CADSurfSharedPtr> > surfs = n[j]->GetCADSurfs();
+                for(int s = 0; s < surfs.size(); s++)
+                {
+                    Array<OneD, NekDouble> N = surfs[s].second->N(n[j]->GetCADSurfInfo(surfs[s].first));
+                    for(int k = 0; k < 3; k++) AN[k] += N[k];
+                }
+                NekDouble mag = sqrt(AN[0]*AN[0] + AN[1]*AN[1] + AN[2]*AN[2]);
+                for(int k = 0; k < 3; k++) AN[k] /= mag;
+
+                Array<OneD, NekDouble> loc = n[j]->GetLoc();
+                Array<OneD, NekDouble> np(3);
+                for(int k = 0; k < 3; k++) np[k] = loc[k] + AN[k]*m_bl;
+                NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
+                                                                np[0],np[1],np[2]));
+                pn[nm[j*2+1]] = nn;
+                blpair[n[j]->m_id] = nn;
+            }
+        }
+
+        ElmtConfig conf(LibUtilities::ePrism,1,false,false);
+        vector<int> tags;
+        tags.push_back(11); //need to fix again
+        ElementSharedPtr E = GetElementFactory().
+                    CreateInstance(LibUtilities::ePrism, conf, pn, tags);
+
+        m_mesh->m_element[3].push_back(E);
+    }
 
 }
 

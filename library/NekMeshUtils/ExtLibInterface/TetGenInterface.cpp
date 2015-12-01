@@ -39,8 +39,8 @@ using namespace std;
 namespace Nektar{
 namespace NekMeshUtils{
 
-void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> nis,
-                                  vector<ElementSharedPtr> tri)
+void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> tgidton,
+                                  vector<Array<OneD, int> > tri)
 {
     surface.initialize();
     output.initialize();
@@ -50,16 +50,17 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> nis,
     tetgenio::polygon *p;
 
     surface.firstnumber = 0;
-    surface.numberofpoints = nis.size();
+    surface.numberofpoints = tgidton.size();
     surface.pointlist = new REAL[surface.numberofpoints*3];
 
-    for(int i = 0; i < nis.size(); i++)
+    map<int, NodeSharedPtr>::iterator it;
+    for(it = tgidton.begin(); it != tgidton.end(); it++)
     {
-        Array<OneD, NekDouble> loc = nis[i]->GetLoc();
+        Array<OneD, NekDouble> loc = it->second->GetLoc();
 
-        surface.pointlist[i*3+0] = loc[0];
-        surface.pointlist[i*3+1] = loc[1];
-        surface.pointlist[i*3+2] = loc[2];
+        surface.pointlist[it->first*3+0] = loc[0];
+        surface.pointlist[it->first*3+1] = loc[1];
+        surface.pointlist[it->first*3+2] = loc[2];
     }
 
     surface.numberoffacets = tri.size();
@@ -77,10 +78,9 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> nis,
         p->numberofvertices = 3;
         p->vertexlist = new int[p->numberofvertices];
 
-        vector<NodeSharedPtr> n = tri[i]->GetVertexList();
-        p->vertexlist[0] = n[0]->m_id;
-        p->vertexlist[1] = n[1]->m_id;
-        p->vertexlist[2] = n[2]->m_id;
+        p->vertexlist[0] = tri[i][0];
+        p->vertexlist[1] = tri[i][1];
+        p->vertexlist[2] = tri[i][2];
         surface.facetmarkerlist[i] = 0;
     }
 

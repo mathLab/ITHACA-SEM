@@ -57,8 +57,9 @@ public:
     /**
      *@brief default constructor
      */
-    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct)
-                : m_mesh(m), m_octree(oct)
+    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct,
+                std::map<int, FaceSharedPtr> &stp)
+                : m_mesh(m), m_octree(oct), surftopriface(stp)
     {
     };
 
@@ -77,6 +78,8 @@ private:
     int numtet;
     /// conncetivity of the tets from the interface
     std::vector<Array<OneD, int> > tetconnect;
+
+    std::map<int, FaceSharedPtr>& surftopriface;
 };
 
 typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

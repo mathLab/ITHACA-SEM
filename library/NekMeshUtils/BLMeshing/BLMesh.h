@@ -57,12 +57,14 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m, const std::vector<unsigned int> bl,
-                            const std::vector<unsigned int> sym,
-                            const NekDouble b)
-                : m_mesh(m), m_blsurfs(bl), m_symsurfs(sym), m_bl(b)
+    BLMesh(MeshSharedPtr m, const std::vector<unsigned int> &bl,
+                            const std::vector<unsigned int> &sym,
+                            const NekDouble &b,
+                            std::map<int, FaceSharedPtr> &stp)
+                : m_mesh(m), m_blsurfs(bl), m_symsurfs(sym), m_bl(b), surftopriface(stp)
     {
     };
+
 
     /**
      *@brief execute tet meshing
@@ -77,6 +79,7 @@ private:
     std::vector<unsigned int> m_blsurfs;
     std::vector<unsigned int> m_symsurfs;
     NekDouble m_bl;
+    std::map<int, FaceSharedPtr>& surftopriface;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

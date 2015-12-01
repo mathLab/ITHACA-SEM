@@ -88,6 +88,7 @@ void InputCAD::Process()
     m_CADName = pSession->GetSolverInfo("CADFile");
     m_orelax = pSession->GetSolverInfo("OctreeRelax");
 
+    bl = 0.0;
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;
     if(pSession->GetSolverInfo("MeshType") == "BL")
@@ -98,7 +99,6 @@ void InputCAD::Process()
         ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
         sort(symsurfs.begin(), symsurfs.end());
         sort(blsurfs.begin(), blsurfs.end());
-
         //pSession->LoadParameter("BL", bl); not working just set to min delta for now
     }
 
@@ -179,25 +179,57 @@ void InputCAD::Process()
     m_mesh->m_fields.push_back("w");
     m_mesh->m_fields.push_back("p");
 
-    BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(m_mesh, blsurfs, symsurfs, m_minDelta);
+    map<int, FaceSharedPtr> surftopriface; //map of surface element id to opposite prism face for psudo surface in tetmesh
+
+    BLMeshSharedPtr m_blmesh = boost::shared_ptr<BLMesh>(new BLMesh(m_mesh,
+                                            blsurfs, symsurfs, m_minDelta, surftopriface));
 
     m_blmesh->Mesh();
 
+    //create tet mesh
+    TetMeshSharedPtr m_tet =
+                boost::shared_ptr<TetMesh>(new TetMesh(m_mesh, m_octree, surftopriface));
+
+    m_tet->Mesh();
+
+    m_mesh->m_nummode = 2;
     m_mesh->m_element[2].clear();
-    //m_mesh->m_nummode = 2;
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
+    ProcessComposites();
+    vector<ElementSharedPtr> el  = m_mesh->m_element[3];
+    m_mesh->m_element[3].clear();
+    for(int i = 0; i < el.size(); i++)
+    {
+        if(el[i]->GetConf().m_e == LibUtilities::ePrism)
+        {
+            m_mesh->m_element[3].push_back(el[i]);
+        }
+        else
+        {
+            NodeSharedPtr n = el[i]->GetVertexList()[0];
+            bool add = true;
+            if(n->m_x < -0.05 || n->m_x > 1.5)
+                add = false;
+            if(n->m_z > 0.1)
+                add = false;
+
+            if(add)
+            {
+                m_mesh->m_element[3].push_back(el[i]);
+            }
+        }
+    }
+
     ProcessVertices  ();
     ProcessEdges     ();
     ProcessFaces     ();
     ProcessElements  ();
     ProcessComposites();
 
-    return;
-
-    //create tet mesh
-    TetMeshSharedPtr m_tet =
-                MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
-
-    m_tet->Mesh();
+    /*exit(-1);
 
     ClearElementLinks();
     ProcessVertices  ();
@@ -254,7 +286,7 @@ void InputCAD::Process()
             cout << "Warning: " << nNeg << " invalid elements" << endl;
         else
             cout << "0 invalid elements" << endl;
-    }
+    }*/
 
     if(m_mesh->m_verbose)
         cout << endl;

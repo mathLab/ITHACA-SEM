@@ -66,8 +66,8 @@ class TetGenInterface
         /**
          * @brief assign parameters for meshing
          */
-        void InitialMesh(std::map<int, NodeSharedPtr> nis,
-                         std::vector<ElementSharedPtr> tri);
+        void InitialMesh(std::map<int, NodeSharedPtr> tgidton,
+                         std::vector<Array<OneD, int> > tri);
 
         /**
          * @brief gets the locations of the stiener points added by tetgen

@@ -171,8 +171,26 @@ void BLMesh::Mesh()
                     CreateInstance(LibUtilities::ePrism, conf, pn, tags);
 
         m_mesh->m_element[3].push_back(E);
-    }
 
+        //need to give the surface element some information about which prism is above it
+        //so that tetmesh can infer the psudo surface
+        vector<NodeSharedPtr> faceNodes;
+        vector<EdgeSharedPtr> edgeList = ptri[i]->GetEdgeList();
+        FaceSharedPtr F = boost::shared_ptr<Face>(
+            new Face(n, faceNodes, edgeList,
+                       ptri[i]->GetConf().m_faceCurveType));
+        vector<FaceSharedPtr> f = E->GetFaceList();
+        for(int j = 0; j < f.size(); j++)
+        {
+            if(f[j]->m_vertexList.size() != 3) //quad
+                continue;
+
+            if(!(F == f[j])) //only two triangle faces so if its not this one, this is the psudo surfaces
+            {
+                surftopriface[ptri[i]->GetId()] = f[j];
+            }
+        }
+    }
 }
 
 }

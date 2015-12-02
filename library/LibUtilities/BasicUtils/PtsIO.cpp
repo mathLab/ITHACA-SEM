@@ -202,6 +202,8 @@ void PtsIO::Write(const string &outFile,
 
     std::string filename = SetUpOutput(outFile);
 
+    cout << "writing to " << filename << endl;
+
     // until tinyxml gains support for line break, write the xml manually
     std::ofstream ptsFile;
     ptsFile.open(filename.c_str());
@@ -289,18 +291,7 @@ std::string PtsIO::SetUpOutput(const std::string outname)
             ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
                      "Filesystem error: " + string(e.what()));
         }
-
-        // Create the destination directory
-        try
-        {
-            fs::create_directory(specPath);
-        }
-        catch (fs::filesystem_error &e)
-        {
-            ASSERTL0(false, "Filesystem error: " + string(e.what()));
-        }
     }
-    m_comm->Block();
 
     // serial processing just add ending.
     if (nprocs == 1)
@@ -313,6 +304,17 @@ std::string PtsIO::SetUpOutput(const std::string outname)
     // the info file.
     if (rank == 0)
     {
+        // Create the destination directory
+        try
+        {
+            fs::create_directory(specPath);
+        }
+        catch (fs::filesystem_error &e)
+        {
+            ASSERTL0(false, "Filesystem error: " + string(e.what()));
+        }
+        m_comm->Block();
+
         // Set up output names
         std::vector<std::string> filenames;
         for (int i = 0; i < nprocs; ++i)

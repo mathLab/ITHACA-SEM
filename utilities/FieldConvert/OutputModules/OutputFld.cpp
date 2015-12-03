@@ -175,14 +175,7 @@ void OutputFld::Process(po::variables_map &vm)
                     int cnt = 0;
                     for(int n = 0; n < Border; ++n)
                     {
-                        if (m_f->m_fielddef[0]->m_numHomogeneousDir == 1)
-                        {
-                            cnt += BndExp[0][n]->GetPlane(0)->GetExpSize();
-                        }
-                        else
-                        {
-                            cnt += BndExp[0][n]->GetExpSize();
-                        }
+                        cnt += BndExp[0][n]->GetExpSize();
                     }
 
                     Array<OneD, NekDouble> tmp_array;
@@ -194,27 +187,14 @@ void OutputFld::Process(po::variables_map &vm)
                     }
 
                     // setup phys arrays of normals
-                    for(int j = 0; j < BndExp[0][Border]->GetExpSize();
-                        ++j)
+                    for(int j=0; j < BndExp[0][Border]->GetExpSize(); ++j,++cnt)
                     {
-                        // find element and face of this expansion.
-                        int cnt2;
-                        if (m_f->m_fielddef[0]->m_numHomogeneousDir == 1)
-                        {
-                            int exp_per_plane = BndExp[0][Border]->GetPlane(0)->
-                                                        GetExpSize();
-                            cnt2 = cnt + (j%exp_per_plane);
-                        }
-                        else
-                        {
-                            cnt2 = cnt+j;
-                        }
-                        int elmtid = BoundarytoElmtID[cnt2];
+                        int elmtid = BoundarytoElmtID[cnt];
 
                         elmt = m_f->m_exp[0]->GetExp(elmtid);
 
                         //identify boundary of element looking at.
-                        int boundary = BoundarytoTraceID[cnt2];
+                        int boundary = BoundarytoTraceID[cnt];
 
                         // Dimension specific part
                         switch(normdim)

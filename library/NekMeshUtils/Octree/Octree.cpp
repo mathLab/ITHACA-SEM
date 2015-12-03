@@ -674,7 +674,7 @@ void Octree::SmoothSurfaceOctants()
                 {
                     if(nList[j]->IsDeltaKnown() && nList[j]->GetDelta()
                                                     < oct->GetDelta()
-                       && ddx(oct, nList[j]) > 0.075)
+                       && ddx(oct, nList[j]) > 0.2)
                     {
                         check.push_back(nList[j]);
                     }
@@ -689,9 +689,9 @@ void Octree::SmoothSurfaceOctants()
                     {
                         NekDouble r = oct->Distance(check[j]);
 
-                        if(0.074 * r + check[j]->GetDelta() < deltaSM)
+                        if(0.199 * r + check[j]->GetDelta() < deltaSM)
                         {
-                            deltaSM = 0.074 * r + check[j]->GetDelta();
+                            deltaSM = 0.199 * r + check[j]->GetDelta();
                         }
                     }
                     oct->SetDelta(deltaSM);

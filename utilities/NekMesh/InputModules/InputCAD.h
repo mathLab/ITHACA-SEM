@@ -57,10 +57,10 @@ public:
     /// %ModuleKey for class.
     static ModuleKey className;
 private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, bl;
+    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
     int m_order;
     string m_CADName, m_orelax;
-    bool m_octreeRelax;
+    bool m_octreeRelax, m_makeBL;
 };
 
 }

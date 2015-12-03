@@ -85,13 +85,23 @@ void InputCAD::Process()
     pSession->LoadParameter("MaxDelta", m_maxDelta);
     pSession->LoadParameter("EPS",      m_eps);
     pSession->LoadParameter("Order",    m_order);
+
     m_CADName = pSession->GetSolverInfo("CADFile");
     m_orelax = pSession->GetSolverInfo("OctreeRelax");
+    if(pSession->GetSolverInfo("MeshType") == "BL")
+    {
+        m_makeBL = true;
+        pSession->LoadParameter("BLThick",  m_blthick);
+    }
+    else
+    {
+        m_makeBL = false;
+    }
 
-    bl = 0.0;
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;
-    if(pSession->GetSolverInfo("MeshType") == "BL")
+
+    if(m_makeBL)
     {
         string sym = pSession->GetSolverInfo("SymPlane");
         string bl = pSession->GetSolverInfo("BLSurfs");
@@ -99,20 +109,22 @@ void InputCAD::Process()
         ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
         sort(symsurfs.begin(), symsurfs.end());
         sort(blsurfs.begin(), blsurfs.end());
-        //pSession->LoadParameter("BL", bl); not working just set to min delta for now
-    }
 
-    cout << "making boundary layer of surfs: ";
-    for(int i = 0; i < blsurfs.size(); i++)
-    {
-        cout << blsurfs[i] << " ";
+        if(m_mesh->m_verbose)
+        {
+            cout << "making boundary layer of surfs: ";
+            for(int i = 0; i < blsurfs.size(); i++)
+            {
+                cout << blsurfs[i] << " ";
+            }
+            cout << endl << "with the symmetry planes: ";
+            for(int i = 0; i < symsurfs.size(); i++)
+            {
+                cout << symsurfs[i] << " ";
+            }
+            cout << endl << "of thickness " << m_blthick << endl;
+        }
     }
-    cout << endl << "with the symmetry planes: ";
-    for(int i = 0; i < symsurfs.size(); i++)
-    {
-        cout << symsurfs[i] << " ";
-    }
-    cout << endl;
 
     if(boost::iequals(m_orelax,"TRUE"))
         m_octreeRelax = true;
@@ -161,7 +173,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_minDelta);
+                                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, bl);
 
     m_surfacemesh->Mesh();
 
@@ -181,55 +193,16 @@ void InputCAD::Process()
 
     map<int, FaceSharedPtr> surftopriface; //map of surface element id to opposite prism face for psudo surface in tetmesh
 
-    BLMeshSharedPtr m_blmesh = boost::shared_ptr<BLMesh>(new BLMesh(m_mesh,
-                                            blsurfs, symsurfs, m_minDelta, surftopriface));
+    //BLMeshSharedPtr m_blmesh = boost::shared_ptr<BLMesh>(new BLMesh(m_mesh,
+    //                                        blsurfs, symsurfs, bl, surftopriface));
 
-    m_blmesh->Mesh();
+    //m_blmesh->Mesh();
 
     //create tet mesh
     TetMeshSharedPtr m_tet =
                 boost::shared_ptr<TetMesh>(new TetMesh(m_mesh, m_octree, surftopriface));
 
     m_tet->Mesh();
-
-    m_mesh->m_nummode = 2;
-    m_mesh->m_element[2].clear();
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
-    vector<ElementSharedPtr> el  = m_mesh->m_element[3];
-    m_mesh->m_element[3].clear();
-    for(int i = 0; i < el.size(); i++)
-    {
-        if(el[i]->GetConf().m_e == LibUtilities::ePrism)
-        {
-            m_mesh->m_element[3].push_back(el[i]);
-        }
-        else
-        {
-            NodeSharedPtr n = el[i]->GetVertexList()[0];
-            bool add = true;
-            if(n->m_x < -0.05 || n->m_x > 1.5)
-                add = false;
-            if(n->m_z > 0.1)
-                add = false;
-
-            if(add)
-            {
-                m_mesh->m_element[3].push_back(el[i]);
-            }
-        }
-    }
-
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
-
-    /*exit(-1);
 
     ClearElementLinks();
     ProcessVertices  ();
@@ -239,54 +212,6 @@ void InputCAD::Process()
     ProcessComposites();
 
     m_surfacemesh->HOSurf();
-
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
-        SpatialDomains::GeometrySharedPtr geom = f->GetGeom(m_mesh->m_spaceDim);
-        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-
-        if(!gfac->IsValid())
-        {
-            cout << "warning: invalid face curavture in boundary element" << endl;
-        }
-    }
-
-    int nNeg = 0;
-    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
-    {
-        bool boundary = false;
-        vector<FaceSharedPtr> fs = m_mesh->m_element[3][i]->GetFaceList();
-        for(int j = 0; j < fs.size(); j++)
-        {
-            if(fs[j]->m_faceNodes.size() > 0)
-            {
-                boundary = true;
-                break;
-            }
-        }
-        if(boundary)
-        {
-            SpatialDomains::GeometrySharedPtr geom = m_mesh->m_element[3][i]->GetGeom(m_mesh->m_spaceDim);
-            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-
-            if(!gfac->IsValid())
-            {
-                nNeg++;
-                cout << "  - " << m_mesh->m_element[3][i]->GetId() << " ("
-                     << LibUtilities::ShapeTypeMap[m_mesh->m_element[3][i]->GetConf().m_e]
-                     << ")" << endl;
-            }
-        }
-    }
-
-    if(m_mesh->m_verbose)
-    {
-        if(nNeg > 0)
-            cout << "Warning: " << nNeg << " invalid elements" << endl;
-        else
-            cout << "0 invalid elements" << endl;
-    }*/
 
     if(m_mesh->m_verbose)
         cout << endl;

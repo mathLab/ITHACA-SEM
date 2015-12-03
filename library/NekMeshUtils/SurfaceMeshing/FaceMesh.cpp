@@ -55,31 +55,7 @@ void FaceMesh::Mesh()
     if(m_makebl)
     {
         MakeBL();
-        cout << "done" << endl;
     }
-
-    /*if(m_id == 4)
-    {
-        ofstream out;
-        out.open("pts.txt");
-        for(int i = 0; i < orderedLoops.size(); i++)
-        {
-            for(int j = 0; j < orderedLoops[i].size(); j++)
-            {
-                Array<OneD, NekDouble> uv = orderedLoops[i][j]->GetCADSurfInfo(m_id);
-                out << uv[0] << " " << uv[1] << endl;
-            }
-        }
-        for(int i = 0; i < blpairs.size(); i++)
-        {
-            Array<OneD, NekDouble> uv = blpairs[i].first->GetCADSurfInfo(m_id);
-            out << uv[0] << " " << uv[1] << endl;
-            uv = blpairs[i].second->GetCADSurfInfo(m_id);
-            out << uv[0] << " " << uv[1] << endl;
-        }
-        out.close();
-        exit(-1);
-    }*/
 
     int numPoints = 0;
     for(int i = 0; i < orderedLoops.size(); i++)
@@ -1038,7 +1014,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
         {
             NekDouble r = orderedLoops[i][j]->Distance(n);
 
-            if(r<npDelta/1.414)
+            if(r<npDelta/2.0)
             {
                 add = false;
                 break;
@@ -1052,7 +1028,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
         {
             NekDouble r = m_stienerpoints[i]->Distance(n);
 
-            if(r<npDelta/1.414)
+            if(r<npDelta/2.0)
             {
                 add = false;
                 break;

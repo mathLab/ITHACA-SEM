@@ -198,6 +198,9 @@ void SurfaceMesh::HOSurf()
                                            "\t\tSurface elements");
         }
 
+        if(m_mesh->m_element[2][i]->GetConf().m_e == LibUtilities::eQuadrilateral)
+            continue;
+
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
         vector<EdgeSharedPtr> edgelist = m_mesh->m_element[2][i]->GetEdgeList();
         int surf = m_mesh->m_element[2][i]->CADSurfId;
@@ -457,7 +460,7 @@ void SurfaceMesh::HOSurf()
 
         NekDouble tol = 1E-12;
 
-        while(repeatoverallnodes)
+        /*while(repeatoverallnodes)
         {
             int converged = 0;
 
@@ -550,7 +553,7 @@ void SurfaceMesh::HOSurf()
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;
+        f->m_curveType = LibUtilities::eNodalTriFekete;*/
     }
 
     if(m_mesh->m_verbose)

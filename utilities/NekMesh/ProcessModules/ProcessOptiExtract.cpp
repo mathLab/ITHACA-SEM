@@ -132,7 +132,7 @@ void ProcessOptiExtract::Process()
             }
         }
 
-        for(int i = 0; i < 10; i++)
+        for(int i = 0; i < 12; i++)
         {
             vector<ElementSharedPtr> tmp = totest;
             totest.clear();

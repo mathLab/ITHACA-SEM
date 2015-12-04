@@ -170,7 +170,7 @@ namespace Nektar
                     = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
 
             // Preserve original matrix in m_S1Blk
             for (n = 0; n < n_exp; ++n)
@@ -520,8 +520,8 @@ namespace Nektar
                 {
                     const int rows = m_rows[i];
                     Blas::Dgemv('N', rows, rows,
-                                m_scale[i], m_denseBlocks[i], rows, 
-                                m_wsp.get()+cnt, 1, 
+                                m_scale[i], m_denseBlocks[i], rows,
+                                m_wsp.get()+cnt, 1,
                                 0.0, tmpout.get()+cnt, 1);
                 }
                 m_locToGloMap->AssembleBnd(tmpout, pOutput);

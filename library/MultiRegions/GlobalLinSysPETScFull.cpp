@@ -77,9 +77,10 @@ namespace Nektar
                                 pLocToGloMap);
 
             // SET UP VECTORS AND MATRIX
-            SetUpMatVec();
+            SetUpMatVec(pLocToGloMap->GetNumGlobalCoeffs(), nDirDofs, true);
 
             // POPULATE MATRIX
+#if 0
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
                 loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
@@ -113,6 +114,7 @@ namespace Nektar
             // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
+#endif 0
 
             // SET UP SCATTER OBJECTS
             SetUpScatter();

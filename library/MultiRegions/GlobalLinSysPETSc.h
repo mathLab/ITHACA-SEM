@@ -57,7 +57,7 @@ namespace Nektar
                 const GlobalLinSysKey                &pKey,
                 const boost::weak_ptr<ExpList>       &pExp,
                 const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-            
+
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETSc();
 
             virtual void v_SolveLinearSystem(
@@ -68,20 +68,36 @@ namespace Nektar
                 const int                          pNumDir);
 
         protected:
-            Mat m_matrix;
-            Vec m_x, m_b, m_locVec;
-            KSP m_ksp;
+            /// PETSc matrix object
+            Mat         m_matrix;
+            /// PETSc vector objects used for local storage
+            Vec         m_x, m_b, m_locVec, m_locVec2;
+            /// KSP object that represents solver system
+            KSP         m_ksp;
             vector<int> m_reorderedMap;
-            VecScatter m_ctx;
-            int m_nLocal;
+            VecScatter  m_ctx;
+            int         m_nLocal;
+
+            struct MatShellCtx
+            {
+                int nGlobal;
+                int nDir;
+                GlobalLinSysPETSc *linSys;
+            };
 
             void SetUpScatter();
-            void SetUpMatVec();
+            void SetUpMatVec(int nGlobal, int nDir, bool shell=false);
             void SetUpSolver(NekDouble tolerance);
             void CalculateReordering(
                 const Array<OneD, const int> &glo2uniMap,
                 const Array<OneD, const int> &glo2unique,
                 const AssemblyMapSharedPtr   &pLocToGloMap);
+
+            virtual void v_DoMatrixMultiply(
+                const Array<OneD, const NekDouble>& pInput,
+                      Array<OneD,       NekDouble>& pOutput) = 0;
+        private:
+            static PetscErrorCode DoMatrixMultiply(Mat M, Vec in, Vec out);
         };
     }
 }

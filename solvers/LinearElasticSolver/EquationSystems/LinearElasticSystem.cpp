@@ -43,6 +43,8 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
+#include <MultiRegions/GlobalLinSysPETScStaticCond.h>
+#include <MultiRegions/GlobalLinSysXxtStaticCond.h>
 #include <MultiRegions/Preconditioner.h>
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
 #include <StdRegions/StdNodalTriExp.h>
@@ -154,7 +156,7 @@ void LinearElasticSystem::v_InitObject()
             ::AllocateSharedPtr(m_session,
                                 m_graph,
                                 u->GetLocalToGlobalMap(),
-                                m_boundaryConditions,
+                                m_fields[0]->GetBndConditions(),
                                 m_fields);
     }
 
@@ -166,7 +168,7 @@ void LinearElasticSystem::v_InitObject()
             ::AllocateSharedPtr(m_session,
                                 m_graph,
                                 u->GetLocalToGlobalMap(),
-                                m_boundaryConditions,
+                                m_fields[0]->GetBndConditions(),
                                 m_fields);
     }
 
@@ -411,6 +413,22 @@ void LinearElasticSystem::v_DoSolve()
                 key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
                 m_assemblyMap, MultiRegions::NullPreconditionerSharedPtr);
     }
+    else if (m_assemblyMap->GetGlobalSysSolnType() ==
+             MultiRegions::ePETScStaticCond)
+    {
+        linSys = MemoryManager<
+            MultiRegions::GlobalLinSysPETScStaticCond>::AllocateSharedPtr(
+                key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
+                m_assemblyMap);
+    }
+    else if (m_assemblyMap->GetGlobalSysSolnType() ==
+             MultiRegions::eXxtStaticCond)
+    {
+        linSys = MemoryManager<
+            MultiRegions::GlobalLinSysXxtStaticCond>::AllocateSharedPtr(
+                key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
+                m_assemblyMap);
+    }
 
     linSys->Initialise(m_assemblyMap);
 
@@ -611,6 +629,7 @@ void LinearElasticSystem::v_DoSolve()
     Array<OneD, NekDouble> inout    (nGlobDofs, 0.0);
     Array<OneD, NekDouble> rhs      (nGlobDofs, 0.0);
 
+    /*
     for (nv = 0; nv < nVel; ++nv)
     {
         // Take the inner product of the forcing function.
@@ -637,6 +656,7 @@ void LinearElasticSystem::v_DoSolve()
             }
         }
     }
+    */
 
     // -- Impose Dirichlet boundary conditions.
 
@@ -680,15 +700,23 @@ void LinearElasticSystem::v_DoSolve()
 
         for (i = 0; i < bndCondExp.num_elements(); ++i)
         {
-            const Array<OneD,const NekDouble> &bndCoeffs =
-                bndCondExp[i]->GetCoeffs();
-
-            for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
+            if (m_fields[nv]->GetBndConditions()[i]->GetBoundaryConditionType()
+                == SpatialDomains::eDirichlet)
             {
-                NekDouble sign =
-                    m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsSign(
-                        bndcnt);
-                inout[bndMap[bndcnt++]] = sign * bndCoeffs[j];
+                const Array<OneD,const NekDouble> &bndCoeffs =
+                    bndCondExp[i]->GetCoeffs();
+
+                for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
+                {
+                    NekDouble sign =
+                        m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsSign(
+                            bndcnt);
+                    inout[bndMap[bndcnt++]] = sign * bndCoeffs[j];
+                }
+            }
+            else
+            {
+                bndcnt += bndCondExp[i]->GetNcoeffs();
             }
         }
     }

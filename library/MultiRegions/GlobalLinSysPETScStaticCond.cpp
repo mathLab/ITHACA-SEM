@@ -158,8 +158,9 @@ namespace Nektar
                                 pLocToGloMap);
 
             // SET UP VECTORS AND MATRIX
-            SetUpMatVec();
+            SetUpMatVec(pLocToGloMap->GetNumGlobalBndCoeffs(), nDirDofs, true);
 
+#if 0
             for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
                 loc_mat = m_schurCompl->GetBlock(n,n);
@@ -190,15 +191,29 @@ namespace Nektar
                 cnt   += loc_lda;
             }
 
+#endif
             // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
-
             // SET UP SCATTER OBJECTS
             SetUpScatter();
 
             // CONSTRUCT KSP OBJECT
             SetUpSolver(pLocToGloMap->GetIterativeTolerance());
+        }
+
+        void GlobalLinSysPETScStaticCond::v_DoMatrixMultiply(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output)
+        {
+            int nLocBndDofs = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nBndDofs = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirDofs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
+            NekVector<NekDouble> in(nLocBndDofs), out(nLocBndDofs);
+            m_locToGloMap->GlobalToLocalBnd(input, in.GetPtr(), nDirDofs);
+            out = (*m_schurCompl) * in;
+            m_locToGloMap->AssembleBnd(out.GetPtr(), output, nDirDofs);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysPETScStaticCond::v_Recurse(

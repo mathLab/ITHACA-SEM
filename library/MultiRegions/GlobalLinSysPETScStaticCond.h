@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
-#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSPETSCSTATICCOND_H
+#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSPETSCSTATICCOND_H
 
 #include <MultiRegions/GlobalLinSysPETSc.h>
 #include <MultiRegions/GlobalLinSysStaticCond.h>
@@ -107,6 +107,11 @@ namespace Nektar
             /// Assemble the Schur complement matrix.
             virtual void v_AssembleSchurComplement(
                 boost::shared_ptr<AssemblyMap> locToGloMap);
+
+            virtual void v_DoMatrixMultiply(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output);
+
         };
     }
 }

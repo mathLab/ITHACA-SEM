@@ -47,8 +47,6 @@ namespace Nektar
          *
          * Solves a linear system using PETSc.
          */
-
-
         GlobalLinSysPETSc::GlobalLinSysPETSc(
             const GlobalLinSysKey                &pKey,
             const boost::weak_ptr<ExpList>       &pExp,
@@ -221,7 +219,7 @@ namespace Nektar
          * @todo Preallocation should be done at this point, since presently
          *       matrix allocation takes a significant amount of time.
          */
-        void GlobalLinSysPETSc::SetUpMatVec()
+        void GlobalLinSysPETSc::SetUpMatVec(int nGlobal, int nDir, bool shell)
         {
             // CREATE VECTORS
             VecCreate        (PETSC_COMM_WORLD, &m_x);
@@ -230,12 +228,69 @@ namespace Nektar
             VecDuplicate     (m_x, &m_b);
 
             // CREATE MATRICES
-            MatCreate        (PETSC_COMM_WORLD, &m_matrix);
-            MatSetType       (m_matrix, MATAIJ);
-            MatSetSizes      (m_matrix, m_nLocal, m_nLocal,
-                              PETSC_DETERMINE, PETSC_DETERMINE);
-            MatSetFromOptions(m_matrix);
-            MatSetUp         (m_matrix);
+            if (shell)
+            {
+                // Create MatShell context object which will store the matrix
+                // size and a pointer to the linear system. We do this so that
+                // we can call a member function to the matrix-vector
+                // multiplication in a subclass.
+                MatShellCtx *ctx = new MatShellCtx();
+                ctx->nGlobal = nGlobal;
+                ctx->nDir    = nDir;
+                ctx->linSys  = this;
+
+                MatCreateShell      (PETSC_COMM_WORLD, m_nLocal, m_nLocal,
+                                     PETSC_DETERMINE, PETSC_DETERMINE,
+                                     (void *)ctx, &m_matrix);
+                MatShellSetOperation(m_matrix, MATOP_MULT,
+                                     (void(*)(void))DoMatrixMultiply);
+            }
+            else
+            {
+                MatCreate        (PETSC_COMM_WORLD, &m_matrix);
+                MatSetType       (m_matrix, MATAIJ);
+                MatSetSizes      (m_matrix, m_nLocal, m_nLocal,
+                                  PETSC_DETERMINE, PETSC_DETERMINE);
+                MatSetFromOptions(m_matrix);
+                MatSetUp         (m_matrix);
+            }
+        }
+
+        PetscErrorCode GlobalLinSysPETSc::DoMatrixMultiply(
+            Mat M, Vec in, Vec out)
+        {
+            void *ptr;
+            MatShellGetContext(M, &ptr);
+            MatShellCtx *ctx = (MatShellCtx *)ptr;
+
+            const int nGlobal  = ctx->nGlobal;
+            const int nDir     = ctx->nDir;
+            const int nHomDofs = nGlobal - nDir;
+
+            GlobalLinSysPETSc *linSys = ctx->linSys;
+
+            VecScatterBegin(linSys->m_ctx, in, linSys->m_locVec,
+                            INSERT_VALUES, SCATTER_FORWARD);
+            VecScatterEnd  (linSys->m_ctx, in, linSys->m_locVec,
+                            INSERT_VALUES, SCATTER_FORWARD);
+
+            // Temporary storage to pass to Nektar++
+            Array<OneD, NekDouble> tmpIn(nHomDofs), tmpOut(nHomDofs);
+
+            // Get values from vector
+            PetscScalar *tmpLocIn;
+            VecGetArray    (linSys->m_locVec, &tmpLocIn);
+            Vmath::Vcopy   (nHomDofs, tmpLocIn, 1, &tmpIn[0], 1);
+            VecRestoreArray(linSys->m_locVec, &tmpLocIn);
+
+            // Do matrix multiply in Nektar++
+            linSys->v_DoMatrixMultiply(tmpIn, tmpOut);
+
+            // Scatter back to PETSc ordering
+            VecSetValues(out, nHomDofs, &linSys->m_reorderedMap[0],
+                         &tmpOut[0], INSERT_VALUES);
+
+            return 0;
         }
 
         /**

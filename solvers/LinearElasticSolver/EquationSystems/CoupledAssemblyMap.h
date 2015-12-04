@@ -54,7 +54,7 @@ public:
         const LibUtilities::SessionReaderSharedPtr        &pSession,
         const SpatialDomains::MeshGraphSharedPtr          &graph,
         const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
-        const SpatialDomains::BoundaryConditionsSharedPtr &boundConds,
+        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &boundaryConditions,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 };
 

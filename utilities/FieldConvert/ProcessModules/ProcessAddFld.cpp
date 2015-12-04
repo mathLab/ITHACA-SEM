@@ -91,14 +91,16 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
         }
-        m_f->m_fld->Import(fromfld,fromField->m_fielddef,
+        m_f->m_fld->Import(fromfld,
+                           fromField->m_fielddef,
                            fromField->m_data,
                            LibUtilities::NullFieldMetaDataMap,
                            ElementGIDs);
     }
     else
     {
-        m_f->m_fld->Import(fromfld,fromField->m_fielddef,
+        m_f->m_fld->Import(fromfld,
+                           fromField->m_fielddef,
                            fromField->m_data,
                            LibUtilities::NullFieldMetaDataMap);
     }
@@ -151,13 +153,28 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             Vmath::Vcopy(ncoeffs,m_f->m_exp[j]->GetCoeffs(),1, SaveFld,1);
 
+
+            // since expansion is set up according to m_f search for same variable in new field
+            int nfield;
+            for (nfield = 0; nfield < fromField->m_fielddef[0]->m_fields.size(); ++nfield)
+            {
+                if(fromField->m_fielddef[0]->m_fields[nfield] ==
+                   m_f->m_fielddef[0]->m_fields[j])
+                {
+                    break;
+                }
+            }
+
+            ASSERTL0(nfield != fromField->m_fielddef[0]->m_fields.size(),
+                     "Could not find field " + m_f->m_fielddef[0]->m_fields[j] + " in from field");
+            
             // load new field
             for (int i = 0; i < fromField->m_data.size(); ++i)
             {
                 m_f->m_exp[j]->ExtractDataToCoeffs(
                                        fromField->m_fielddef[i],
                                        fromField->m_data[i],
-                                       fromField->m_fielddef[i]->m_fields[j],
+                                       fromField->m_fielddef[i]->m_fields[nfield],
                                        m_f->m_exp[j]->UpdateCoeffs());
             }
 

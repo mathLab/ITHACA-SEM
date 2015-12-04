@@ -222,31 +222,63 @@ void InputXml::Process(po::variables_map &vm)
                  "argument");
     }
 
+    // set up command lines options for session read to pass through
+    string firstarg = "FieldConvert";
+    int argc = 1;
+    char **argv;
+    argv = (char**)malloc(6*sizeof(char*));
+
+    argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
+    sprintf(argv[0],"%s",firstarg.c_str());
+    
     if(m_f->m_verbose)
     {
-        string firstarg = "FieldConvert";
-        string verbose = "-v";
-        int argc = 2;
-        char **argv;
-        argv = (char**)malloc(3*sizeof(char*));
-        argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
-        argv[1] = (char *)malloc(verbose.size()*sizeof(char));
+        string verbose = "--verbose";
+        argv[argc] = (char *)malloc(verbose.size()*sizeof(char));
 
-        sprintf(argv[0],"%s",firstarg.c_str());
-        sprintf(argv[1],"%s",verbose.c_str());
+        sprintf(argv[argc],"%s",verbose.c_str());
+        ++argc;
+    }
 
-        if(vm.count("shared-fileystem"))
-        {
-            argc ++;
-            string sharedfs = "shared-filesystem";
-            argv[2] = (char *)malloc(sharedfs.size()*sizeof(char));
-            sprintf(argv[2],"%s",sharedfs.c_str());
-        }
+    if(vm.count("shared-filesystem"))
+    {
+        string sharedfs = "--shared-filesystem";
+        argv[argc] = (char *)malloc(sharedfs.size()*sizeof(char));
+        sprintf(argv[argc],"%s",sharedfs.c_str());
+        argc ++;
+    }
 
+    if(vm.count("part-only"))
+    {
+        string argstr = "--part-only";
+        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
+        sprintf(argv[argc],"%s",argstr.c_str());
+        argc ++;
         
-        m_f->m_session = LibUtilities::SessionReader::
-            CreateInstance(argc, (char **)argv, files, m_f->m_comm);
+        argstr = boost::lexical_cast<string>(vm["part-only"].as<int>());
+        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
+        sprintf(argv[argc],"%s",argstr.c_str());
+        argc ++;
+    }
+    
+    if(vm.count("part-only-overlapping"))
+    {
+        string argstr = "--part-only-overlapping";
+        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
+        sprintf(argv[argc],"%s",argstr.c_str());
+        argc ++;
 
+        argstr = boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>());
+        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
+        sprintf(argv[argc],"%s",argstr.c_str());
+        argc ++;
+    }
+
+    m_f->m_session = LibUtilities::SessionReader::
+        CreateInstance(argc, (char **) argv, files, m_f->m_comm);
+    
+    if(m_f->m_verbose)
+    {
         if(m_f->m_comm->GetRank() == 0)
         {
             timerpart.Stop();
@@ -258,26 +290,8 @@ void InputXml::Process(po::variables_map &vm)
                  << ss.str() << endl;
             timerpart.Start();
         }
-
     }
-    else
-    {
-        int argc = 0;
-        char **argv;
-        argv = (char**)malloc(3*sizeof(char*));
-
-        if(vm.count("shared-fileystem"))
-        {
-            argc++;
-            string sharedfs = "shared-filesystem";
-            argv[0] = (char *)malloc(sharedfs.size()*sizeof(char));
-            sprintf(argv[0],"%s",sharedfs.c_str());
-        }
-
-        m_f->m_session = LibUtilities::SessionReader::
-            CreateInstance(argc, (char **) argv, files, m_f->m_comm);
-    }
-
+    
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
     m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                     ::AllocateSharedPtr(m_f->m_session->GetComm());

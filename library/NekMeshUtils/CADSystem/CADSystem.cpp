@@ -59,6 +59,15 @@ void CADSystem::Report()
     cout << endl << "CAD report:" << endl;
     cout << "\tCAD has: " << m_curves.size() << " curves." << endl;
     cout << "\tCAD has: " << m_surfs.size() << " surfaces." << endl;
+    if(m_surfs.size() == 1 && m_surfs[1]->IsPlane())
+    {
+        cout << "\tCAD is 2D" << endl;
+        m_2d = true;
+    }
+    else
+    {
+        m_2d = false;
+    }
 }
 
 void CADSystem::SmallFeatureAnalysis(NekDouble min)

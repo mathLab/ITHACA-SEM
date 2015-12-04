@@ -93,23 +93,43 @@ void InputCAD::Process()
         m_makeBL = true;
         pSession->LoadParameter("BLThick",  m_blthick);
     }
-    else
-    {
+    else if(pSession->GetSolverInfo("MeshType") == "EULER")
         m_makeBL = false;
-    }
+    else
+        ASSERTL0(false,"unknown MeshType");
 
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;
 
     if(m_makeBL)
     {
-        string sym = pSession->GetSolverInfo("SymPlane");
-        string bl = pSession->GetSolverInfo("BLSurfs");
+        string sym, bl;
+        sym = pSession->GetSolverInfo("SymPlane");
+        bl = pSession->GetSolverInfo("BLSurfs");
         ParseUtils::GenerateSeqVector(sym.c_str(), symsurfs);
         ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
         sort(symsurfs.begin(), symsurfs.end());
         sort(blsurfs.begin(), blsurfs.end());
+        ASSERTL0(blsurfs.size() > 0, "No surfaces selected to make boundary layer on");
+    }
 
+    if(boost::iequals(m_orelax,"TRUE"))
+        m_octreeRelax = true;
+    else
+        m_octreeRelax = false;
+
+    CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
+                                            AllocateSharedPtr(m_CADName);
+
+    if(m_mesh->m_verbose)
+    {
+        cout << "Building mesh for: " << m_CADName << endl;
+        if(m_octreeRelax)
+            cout << "With a relaxed octree" << endl;
+    }
+
+    if(m_makeBL)
+    {
         if(m_mesh->m_verbose)
         {
             cout << "making boundary layer of surfs: ";
@@ -124,23 +144,6 @@ void InputCAD::Process()
             }
             cout << endl << "of thickness " << m_blthick << endl;
         }
-    }
-
-    if(boost::iequals(m_orelax,"TRUE"))
-        m_octreeRelax = true;
-    else
-    {
-        m_octreeRelax = false;
-    }
-
-    CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
-                                            AllocateSharedPtr(m_CADName);
-
-    if(m_mesh->m_verbose)
-    {
-        cout << "Building mesh for: " << m_CADName << endl;
-        if(m_octreeRelax)
-            cout << "With a relaxed octree" << endl;
     }
 
     ASSERTL0(m_cad->LoadCAD(),
@@ -173,7 +176,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, bl);
+                                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_blthick);
 
     m_surfacemesh->Mesh();
 
@@ -193,10 +196,13 @@ void InputCAD::Process()
 
     map<int, FaceSharedPtr> surftopriface; //map of surface element id to opposite prism face for psudo surface in tetmesh
 
-    //BLMeshSharedPtr m_blmesh = boost::shared_ptr<BLMesh>(new BLMesh(m_mesh,
-    //                                        blsurfs, symsurfs, bl, surftopriface));
+    if(m_makeBL)
+    {
+        BLMeshSharedPtr m_blmesh = boost::shared_ptr<BLMesh>(new BLMesh(m_mesh,
+                                                blsurfs, symsurfs, m_blthick, surftopriface));
 
-    //m_blmesh->Mesh();
+        m_blmesh->Mesh();
+    }
 
     //create tet mesh
     TetMeshSharedPtr m_tet =

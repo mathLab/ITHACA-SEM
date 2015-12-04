@@ -182,6 +182,8 @@ private:
     std::map<int, CADVertSharedPtr> m_verts;
     /// occ master object
     TopoDS_Shape shape;
+
+    bool m_2d;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

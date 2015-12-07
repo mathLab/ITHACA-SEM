@@ -60,6 +60,11 @@ IF(NEKTAR_USE_OCC)
 		)
 	    LINK_DIRECTORIES(${TPDIST}/lib)
 	    INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
+
+        EXTERNALPROJECT_ADD_STEP(opencascade-6.8 patch-install-path
+                COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPSRC}/opencascade-6.8/i686/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
+                DEPENDEES build
+                DEPENDERS install)
 	ENDIF()
 
 	SET(OCC_LIBS PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr

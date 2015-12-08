@@ -2605,6 +2605,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        /**
+         */
+        void ExpList::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
 
         /**
          */

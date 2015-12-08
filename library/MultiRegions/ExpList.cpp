@@ -2648,7 +2648,7 @@ namespace Nektar
                 elmt->GetTracePhysVals(EdgeID[cnt+n],
                                       GetBndCondExpansions()[i]->GetExp(n),
                                       tmp1 = element + offsetElmt,
-                                      tmp1 = boundary + offsetBnd);
+                                      tmp2 = boundary + offsetBnd);
                 
                 offsetElmt += elmt->GetTotPoints();
             }

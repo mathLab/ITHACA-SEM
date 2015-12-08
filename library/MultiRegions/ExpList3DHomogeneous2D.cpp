@@ -131,6 +131,42 @@ namespace Nektar
                 SetCoeffPhys();
             }
         }
+        
+        /**
+         * 
+         */
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareLinesSetCoeffPhys):
+            ExpListHomogeneous2D(In)
+        {
+            SetExpType(e3DH2D);
+
+            if(DeclareLinesSetCoeffPhys)
+            {
+                bool False = false;
+                std::vector<unsigned int> eIDsLine;
+                int nel = eIDs.size()/m_lines.num_elements();
+                
+                for (int i = 0; i < nel; ++i)
+                {
+                    eIDsLine.push_back(eIDs[i]);
+                }
+                
+                ExpList1DSharedPtr zero_line_old =
+                        boost::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                
+                ExpList1DSharedPtr zero_line = 
+                        MemoryManager<ExpList1D>::AllocateSharedPtr(*(zero_line_old), eIDsLine);
+
+                for(int n = 0; n < m_lines.num_elements(); ++n)
+                {
+                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                }
+
+                SetCoeffPhys();
+            }
+        }
 
         /**
          * Destructor

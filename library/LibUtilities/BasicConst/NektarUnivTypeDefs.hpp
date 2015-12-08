@@ -42,6 +42,8 @@ namespace Nektar
 {
     typedef double NekDouble;
 
+    typedef __int32_t  NekInt;
+    
     struct OneD
     {
         static const unsigned int Value = 1;

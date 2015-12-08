@@ -52,61 +52,61 @@ namespace Nektar
         
         struct MeshEdge
         {
-            int id;
-            int v0;
-            int v1;
+            NekInt id;
+            NekInt v0;
+            NekInt v1;
         };
 
         struct MeshTri
         {
-            int id;
-            int e[3];
+            NekInt id;
+            NekInt e[3];
         };
 
         struct MeshQuad
         {
-            int id;
-            int e[4];
+            NekInt id;
+            NekInt e[4];
         };
 
         struct MeshTet
         {
-            int id;
-            int f[4];
+            NekInt id;
+            NekInt f[4];
         };
 
         struct MeshPyr
         {
-            int id;
-            int f[5];
+            NekInt id;
+            NekInt f[5];
         };
 
         struct MeshPrism
         {
-            int id;
-            int f[5];
+            NekInt id;
+            NekInt f[5];
         };
 
         struct MeshHex
         {
-            int id;
-            int f[6];
+            NekInt id;
+            NekInt f[6];
         };
         
         struct MeshCurvedInfo
         {
-            int        id;
-            int        entityid;
-            int        npoints;
-            PointsType ptype;     
-            int        ptid;     // id of point data map
-            int        ptoffset; // pffset of data entry for this curve
+            NekInt        id;
+            NekInt        entityid;
+            NekInt        npoints;
+            PointsType    ptype;     
+            NekInt        ptid;     // id of point data map
+            NekInt        ptoffset; // pffset of data entry for this curve
         };
         
         struct MeshCurvedPts
         {
-            int id;
-            std::vector<int>       index;
+            NekInt id;
+            std::vector<NekInt>     index;
             std::vector<MeshVertex> pts; 
         };
             

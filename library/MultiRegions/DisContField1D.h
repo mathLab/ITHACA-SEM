@@ -240,6 +240,8 @@ namespace Nektar
 
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
             virtual void v_Reset();
 
             /// Evaluate all boundary conditions at a given time..

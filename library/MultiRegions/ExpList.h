@@ -737,6 +737,9 @@ namespace Nektar
 
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
+            
+            inline void GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
@@ -1229,6 +1232,9 @@ namespace Nektar
             
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
+            
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
 
             virtual void v_ReadGlobalOptimizationParameters();
 
@@ -2100,6 +2106,12 @@ namespace Nektar
                                             Array<OneD,int> &EdgeID)
         {
             v_GetBoundaryToElmtMap(ElmtID,EdgeID);
+        }
+        
+        inline void ExpList::GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            v_GetBndElmtExpansion(i, result);
         }
 
         const static Array<OneD, ExpListSharedPtr> NullExpListSharedPtrArray;

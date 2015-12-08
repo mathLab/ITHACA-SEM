@@ -164,6 +164,46 @@ namespace Nektar
         {
             SetExpType(eNoType);
         }
+        
+        /**
+         * Copies the eIds elements from an existing expansion list.
+         * @param   in              Source expansion list.
+         * @param   in              elements that will be in the new exp list.
+         */
+        ExpList::ExpList(const ExpList &in, 
+                         const std::vector<unsigned int> &eIDs,
+                         const bool DeclareCoeffPhysArrays):
+            m_comm(in.m_comm),
+            m_session(in.m_session),
+            m_graph(in.m_graph),
+            m_ncoeffs(0),
+            m_npoints(0),
+            m_coeffs(),
+            m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
+                      ::AllocateSharedPtr()),
+            m_coeff_offset(),
+            m_phys_offset(),
+            m_offset_elmt_id(),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
+        {
+            SetExpType(eNoType);
+            
+            for (int i=0; i < eIDs.size(); ++i)
+            {
+                (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
+                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                m_npoints += (*m_exp)[i]->GetTotPoints();
+            }
+
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
+            }
+        }
 
 
         /**

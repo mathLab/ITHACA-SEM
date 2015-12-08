@@ -262,6 +262,9 @@ namespace Nektar
 
            virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
+           
+           virtual void v_GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
             // virtual functions

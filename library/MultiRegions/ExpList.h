@@ -740,6 +740,13 @@ namespace Nektar
             
             inline void GetBndElmtExpansion(int i,
                             boost::shared_ptr<ExpList> &result);
+            
+            inline void ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &elmt,
+                            Array<OneD, NekDouble> &boundary);
+            
+            inline void GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
@@ -1235,6 +1242,13 @@ namespace Nektar
             
             virtual void v_GetBndElmtExpansion(int i,
                             boost::shared_ptr<ExpList> &result);
+            
+            virtual void v_ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &elmt,
+                            Array<OneD, NekDouble> &boundary);
+            
+            virtual void v_GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
             virtual void v_ReadGlobalOptimizationParameters();
 
@@ -2112,6 +2126,19 @@ namespace Nektar
                             boost::shared_ptr<ExpList> &result)
         {
             v_GetBndElmtExpansion(i, result);
+        }
+        
+        inline void ExpList::ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &elmt,
+                            Array<OneD, NekDouble> &boundary)
+        {
+            v_ExtractElmtToBndPhys(i, elmt, boundary);
+        }
+        
+        inline void ExpList::GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            v_GetBoundaryNormals(i, normals);
         }
 
         const static Array<OneD, ExpListSharedPtr> NullExpListSharedPtrArray;

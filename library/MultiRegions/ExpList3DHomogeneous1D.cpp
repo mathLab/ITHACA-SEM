@@ -154,7 +154,7 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, 
                 const std::vector<unsigned int> &eIDs,
                 bool DeclarePlanesSetCoeffPhys):
-            ExpListHomogeneous1D(In)
+            ExpListHomogeneous1D(In, eIDs)
         {
             SetExpType(e3DH1D);
 

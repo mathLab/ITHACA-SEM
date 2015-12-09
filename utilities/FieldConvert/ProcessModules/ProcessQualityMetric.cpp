@@ -73,6 +73,7 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
 
     Array<OneD, NekDouble> &phys   = m_f->m_exp[0]->UpdatePhys();
     Array<OneD, NekDouble> &coeffs = m_f->m_exp[0]->UpdateCoeffs();
+    int expdim = m_f->m_graph->GetMeshDimension();
 
     for(int i =0; i < m_f->m_exp[0]->GetExpSize(); ++i)
     {
@@ -85,9 +86,14 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         // Project onto output stuff
         LibUtilities::PointsKeyVector pFrom = Elmt->GetGeom()->GetPointsKeys();
         LibUtilities::PointsKeyVector pTo   = Elmt->GetPointsKeys();
-        LibUtilities::Interp2D(pFrom[0], pFrom[1], q, pTo[0], pTo[1], out);
-        
-        //Vmath::Vcopy(q.num_elements(), &q[0], 1, &phys[offset], 1);
+
+        if(expdim == 2)
+            LibUtilities::Interp2D(pFrom[0], pFrom[1], q, pTo[0], pTo[1], out);
+        else if(expdim == 3)
+            LibUtilities::Interp3D(pFrom[0], pFrom[1], pFrom[2], q,
+                                   pTo[0], pTo[1], pTo[2], out);
+        else
+            ASSERTL0(false,"mesh dim makes no sense");
     }
 
     m_f->m_exp[0]->FwdTrans_IterPerExp(phys, coeffs);
@@ -132,20 +138,36 @@ inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
         }
     }
 
-    // Set up reference triangle or tetrahedron mapping.
-    if (n == 3)
+    if (geom->GetShapeType() == LibUtilities::eTriangle)
     {
         mapref(0,0) = -1.0; mapref(1,0) = -1.0;
         mapref(0,1) =  1.0; mapref(1,1) = -1.0;
         mapref(0,2) = -1.0; mapref(1,2) =  1.0;
     }
-    else if (n == 4)
+    else if (geom->GetShapeType() == LibUtilities::eTetrahedron)
     {
         mapref(0,0) = -1.0; mapref(1,0) = -1.0; mapref(2,0) = -1.0;
         mapref(0,1) =  1.0; mapref(1,1) = -1.0; mapref(2,1) = -1.0;
         mapref(0,2) = -1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
         mapref(0,3) = -1.0; mapref(1,3) = -1.0; mapref(2,3) =  1.0;
     }
+    else if (geom->GetShapeType() == LibUtilities::eQuadrilateral)
+    {
+        mapref(0,0) = -1.0; mapref(1,0) = -1.0;
+        mapref(0,1) =  1.0; mapref(1,1) = -1.0;
+        mapref(0,2) = -1.0; mapref(1,2) =  1.0;
+        mapref(0,3) =  1.0; mapref(1,3) =  1.0;
+    }
+    else if (geom->GetShapeType() == LibUtilities::ePrism)
+    {
+        //this is incorrect for prism
+        mapref(0,0) = -1.0; mapref(1,0) = -1.0; mapref(2,0) = -1.0;
+        mapref(0,1) =  1.0; mapref(1,1) = -1.0; mapref(2,1) = -1.0;
+        mapref(0,2) = -1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
+        mapref(0,3) = -1.0; mapref(1,3) = -1.0; mapref(2,3) =  1.0;
+    }
+    else
+        ASSERTL0(false,"element type not programed");
 
     map.Invert();
 

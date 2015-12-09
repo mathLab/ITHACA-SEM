@@ -23,7 +23,7 @@ IF (THIRDPARTY_BUILD_TRIANGLE)
         triangle-1.6
         PREFIX ${TPSRC}
         URL http://ae-nektar.ae.ic.ac.uk/~mt4313/triangle.zip
-        URL_MD5 5a7668274c799fa7ca942dbc4ad35889
+        URL_MD5 c4a72e5dfd7ae7bedfcf7729ef22747d
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/triangle-1.6

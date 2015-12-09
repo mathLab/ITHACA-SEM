@@ -31,6 +31,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessWSS.h
     ProcessModules/ProcessC0Projection.h
     ProcessModules/ProcessQCriterion.h
+    ProcessModules/ProcessQualityMetric.h
 )
 
 SET(FieldConvertSources
@@ -66,6 +67,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessWSS.cpp
     ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessQCriterion.cpp
+    ProcessModules/ProcessQualityMetric.cpp
 )
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
@@ -99,4 +101,3 @@ IF (NEKTAR_USE_MPI)
     #ADD_NEKTAR_TEST(chan3D_vtu_par)
     ADD_NEKTAR_TEST(chan3D_vort_par)
 ENDIF (NEKTAR_USE_MPI)
-

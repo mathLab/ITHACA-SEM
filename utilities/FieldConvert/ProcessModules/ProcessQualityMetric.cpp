@@ -178,39 +178,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
     const int nq  = chi->GetTotPoints();
     const int expDim = chi->GetNumBases();
 
-    Array<OneD, NekDouble> jac(pts, 0.0);
     Array<OneD, NekDouble> eta(nq);
-
-    switch (expDim)
-    {
-        case 2:
-        {
-            Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
-                           &deriv[1][0][0], 1, &deriv[0][1][0], 1,
-                           &jac[0],         1);
-            break;
-        }
-        case 3:
-        {
-            Array<OneD, NekDouble> tmp(pts, 0.0);
-            Vmath::Vvtvvtm(pts, &deriv[1][1][0], 1, &deriv[2][2][0], 1,
-                           &deriv[2][1][0], 1, &deriv[1][2][0], 1,
-                           &tmp[0],         1);
-            Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],         1,
-                           &jac[0],         1, &jac[0],         1);
-            Vmath::Vvtvvtm(pts, &deriv[2][1][0], 1, &deriv[0][2][0], 1,
-                           &deriv[0][1][0], 1, &deriv[2][2][0], 1,
-                           &tmp[0],         1);
-            Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],         1,
-                           &jac[0],         1, &jac[0],         1);
-            Vmath::Vvtvvtm(pts, &deriv[0][1][0], 1, &deriv[1][2][0], 1,
-                           &deriv[1][1][0], 1, &deriv[0][2][0], 1,
-                           &tmp[0],         1);
-            Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],         1,
-                           &jac[0],         1, &jac[0],         1);
-            break;
-        }
-    }
 
     for (int k = 0; k < pts; ++k)
     {

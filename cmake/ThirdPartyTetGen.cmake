@@ -12,15 +12,15 @@ IF(NEKTAR_USE_MESH)
 SET(BUILD_TETGEN ON)
 
 OPTION(THIRDPARTY_BUILD_TETGEN
-    "Build Triangle library from ThirdParty." ${BUILD_TETGEN})
+    "Build TetGen library from ThirdParty." ${BUILD_TETGEN})
 
 IF (THIRDPARTY_BUILD_TETGEN)
     INCLUDE(ExternalProject)
     EXTERNALPROJECT_ADD(
         tetgen-1.5
         PREFIX ${TPSRC}
-        URL http://ae-nektar.ae.ic.ac.uk/~mt4313/tetgen.zip
-        URL_MD5 e79a5845c88acd9c848e74e9bfefb285
+        URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/tetgen.zip
+        URL_MD5 6d62e63f9b1e7a8ce53d5bc87e6a0a09
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tetgen-1.5

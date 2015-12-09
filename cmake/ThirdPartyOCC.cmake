@@ -66,7 +66,7 @@ IF(NEKTAR_USE_OCC)
 
       SET(OCC_LIBS PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
                 TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
-                TKXSBase TKPShape TKTopAlgo CACHE FILEPATH "OCC library" FORCE)
+                TKXSBase TKPShape TKTopAlgo)
 MESSAGE(STATUS "Link to OCC: ${OCC_LIBS}.so")
 	ENDIF()
 

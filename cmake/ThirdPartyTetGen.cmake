@@ -20,7 +20,7 @@ IF (THIRDPARTY_BUILD_TETGEN)
         tetgen-1.5
         PREFIX ${TPSRC}
         URL http://ae-nektar.ae.ic.ac.uk/~mt4313/tetgen.zip
-        URL_MD5 d12cc04baa977380c893364bb09857ee
+        URL_MD5 e79a5845c88acd9c848e74e9bfefb285
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tetgen-1.5

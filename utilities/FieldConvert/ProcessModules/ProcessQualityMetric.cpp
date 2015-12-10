@@ -124,7 +124,7 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
  */
 inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
 {
-    int n = geom->GetNumVerts(), i, j;
+    int n = geom->GetNumVerts(), i, j, dim = geom->GetShapeDim();
 
     DNekMat map   (n, n, 1.0, eFULL);
     DNekMat mapref(n, n, 1.0, eFULL);
@@ -132,7 +132,7 @@ inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
     // Extract coordinate information.
     for (i = 0; i < n; ++i)
     {
-        for (j = 0; j < n-1; ++j)
+        for (j = 0; j < dim; ++j)
         {
             map(j,i) = (*geom->GetVertex(i))[j];
         }
@@ -163,8 +163,10 @@ inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
         //this is incorrect for prism
         mapref(0,0) = -1.0; mapref(1,0) = -1.0; mapref(2,0) = -1.0;
         mapref(0,1) =  1.0; mapref(1,1) = -1.0; mapref(2,1) = -1.0;
-        mapref(0,2) = -1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
-        mapref(0,3) = -1.0; mapref(1,3) = -1.0; mapref(2,3) =  1.0;
+        mapref(0,2) =  1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
+        mapref(0,3) = -1.0; mapref(1,3) =  1.0; mapref(2,3) = -1.0;
+        mapref(0,4) = -1.0; mapref(1,4) = -1.0; mapref(2,4) =  1.0;
+        mapref(0,5) = -1.0; mapref(1,5) =  1.0; mapref(2,5) =  1.0;
     }
     else
         ASSERTL0(false,"element type not programed");
@@ -172,11 +174,11 @@ inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
     map.Invert();
 
     DNekMat newmap = mapref * map;
-    DNekMat mapred(n-1, n-1, 1.0, eFULL);
+    DNekMat mapred(dim, dim, 1.0, eFULL);
 
-    for (i = 0; i < n-1; ++i)
+    for (i = 0; i < dim; ++i)
     {
-        for (j = 0; j < n-1; ++j)
+        for (j = 0; j < dim; ++j)
         {
             mapred(i,j) = newmap(i,j);
         }

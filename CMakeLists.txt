@@ -96,13 +96,8 @@ MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 
-# meshing and cad options
-OPTION(NEKTAR_USE_OCC "Use opencascade for geometry interface." OFF)
+# meshing
 OPTION(NEKTAR_USE_MESH "Build meshing utilities." OFF)
-# if meshing is selected hard set the occ option
-IF( NEKTAR_USE_MESH )
-    SET(NEKTAR_USE_OCC ON CACHE BOOL "Use opencascade for geometry interface." FORCE)
-ENDIF()
 
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)

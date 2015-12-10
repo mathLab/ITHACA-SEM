@@ -125,16 +125,18 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
 inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
 {
     int n = geom->GetNumVerts(), i, j, dim = geom->GetShapeDim();
-
+    cout << n << endl;
     DNekMat map   (n, n, 1.0, eFULL);
     DNekMat mapref(n, n, 1.0, eFULL);
 
     // Extract coordinate information.
     for (i = 0; i < n; ++i)
     {
+        Array<OneD, NekDouble> loc(dim);
+        geom->GetVertex(i)->GetCoords(loc);
         for (j = 0; j < dim; ++j)
         {
-            map(j,i) = (*geom->GetVertex(i))[j];
+            map(j,i) = loc[j];
         }
     }
 

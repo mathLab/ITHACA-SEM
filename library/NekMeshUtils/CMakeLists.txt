@@ -25,6 +25,9 @@ IF(NEKTAR_USE_MESH)
         ExtLibInterface/TetGenInterface.cpp
         TetMeshing/TetMesh.cpp
         BLMeshing/BLMesh.cpp
+        CADSystem/CADSystem.cpp
+        CADSystem/CADCurve.cpp
+        CADSystem/CADSurf.cpp
     )
 ENDIF()
 
@@ -57,25 +60,13 @@ IF(NEKTAR_USE_MESH)
         ExtLibInterface/TetGenInterface.h
         TetMeshing/TetMesh.h
         BLMeshing/BLMesh.h
-    )
-ENDIF()
-
-IF(NEKTAR_USE_OCC)
-    SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
-        CADSystem/CADSystem.cpp
-        CADSystem/CADCurve.cpp
-        CADSystem/CADSurf.cpp
-        )
-
-    SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
         CADSystem/CADSystem.h
         CADSystem/CADVert.h
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
         CADSystem/OpenCascade.h
-        )
-
-ENDIF(NEKTAR_USE_OCC)
+    )
+ENDIF()
 
 ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
@@ -86,12 +77,12 @@ IF(NEKTAR_USE_MESH)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
 ENDIF()
 
-IF(NEKTAR_USE_OCC)
+IF(NEKTAR_USE_MESH)
     SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
     SET_TARGET_PROPERTIES(NekMeshUtils PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBS})
     ADD_DEPENDENCIES(NekMeshUtils opencascade-6.8)
-ENDIF(NEKTAR_USE_OCC)
+ENDIF(NEKTAR_USE_MESH)
 
 IF (NEKTAR_USE_MESH)
     SET_TARGET_PROPERTIES(NekMeshUtils PROPERTIES COMPILE_DEFINITIONS "MESHGEN")

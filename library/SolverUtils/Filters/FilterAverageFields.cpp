@@ -103,11 +103,10 @@ void FilterAverageFields::v_Initialise(
         const NekDouble &time)
 {
     int nfield = pFields.num_elements();
-    int ncoeff = pFields[0]->GetNcoeffs();
     m_avgFields = Array<OneD, Array<OneD, NekDouble> >(nfield);
     for(int n =0; n < nfield; ++n)
     {
-        m_avgFields[n] = Array<OneD, NekDouble>(ncoeff, 0.0);
+        m_avgFields[n] = Array<OneD, NekDouble>(pFields[n]->GetNcoeffs(), 0.0);
     }
     m_avgFieldMetaData["InitialTime"]
                        = boost::lexical_cast<std::string>(time);

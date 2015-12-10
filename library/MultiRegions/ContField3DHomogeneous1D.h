@@ -73,6 +73,8 @@ namespace Nektar
         private:
 
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
+            virtual void v_FillBndCondFromField();
             /// Template method virtual forwarded for LocalToGlobal()
             virtual void v_LocalToGlobal(void);
 

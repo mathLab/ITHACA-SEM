@@ -197,6 +197,9 @@ namespace Nektar
             
             virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
+            virtual void v_WriteVtkPieceData(std::ostream &outfile, int expansion,
+                                             std::string var);
+            
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
                                                CoeffState coeffstate = eLocal,

@@ -38,11 +38,13 @@
 
 #include <map>
 #include <boost/cstdint.hpp>
-#include <boost/cstdfloat.hpp>
+//#include <boost/cstdfloat.hpp>
 
 namespace Nektar
 {
-    typedef boost::float64_t NekDouble;
+    //  typedef boost::float64_t NekDouble;
+
+    typedef double NekDouble;
 
     typedef boost::int32_t  NekInt;
     

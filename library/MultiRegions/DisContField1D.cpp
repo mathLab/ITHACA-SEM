@@ -93,6 +93,29 @@ namespace Nektar
             {
                 SetUpDG(variable);
             }
+            else
+            {
+                int i;
+                Array<OneD, int> ElmtID, VertexID;
+                GetBoundaryToElmtMap(ElmtID, VertexID);
+
+                for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                {
+                    MultiRegions::ExpListSharedPtr locExpList;
+                    locExpList = m_bndCondExpansions[i];
+
+                    LocalRegions::Expansion1DSharedPtr exp1d =
+                            (*m_exp)[ElmtID[i]]->
+                                    as<LocalRegions::Expansion1D>();
+                    LocalRegions::Expansion0DSharedPtr exp0d =
+                            locExpList->GetExp(0)->
+                                    as<LocalRegions::Expansion0D>();
+
+                    exp0d->SetAdjacentElementExp(VertexID[i], exp1d);
+                }
+                
+                SetUpPhysNormals();
+            }
 
         }
 

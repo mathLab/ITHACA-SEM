@@ -360,6 +360,10 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
             
+            inline void NormVectorIProductWRTBase(
+                Array<OneD, Array<OneD, NekDouble> > &V,
+                Array<OneD, NekDouble> &outarray);
+            
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
@@ -744,6 +748,10 @@ namespace Nektar
             inline void ExtractElmtToBndPhys(int i,
                             Array<OneD, NekDouble> &elmt,
                             Array<OneD, NekDouble> &boundary);
+            
+            inline void ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt);
             
             inline void GetBoundaryNormals(int i,
                             Array<OneD, Array<OneD, NekDouble> > &normals);
@@ -1235,6 +1243,10 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
             
+            virtual void v_NormVectorIProductWRTBase(
+                Array<OneD, Array<OneD, NekDouble> > &V,
+                Array<OneD, NekDouble> &outarray);
+            
             virtual void v_SetUpPhysNormals();
             
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
@@ -1246,6 +1258,10 @@ namespace Nektar
             virtual void v_ExtractElmtToBndPhys(int i,
                             Array<OneD, NekDouble> &elmt,
                             Array<OneD, NekDouble> &boundary);
+            
+            virtual void v_ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt);
             
             virtual void v_GetBoundaryNormals(int i,
                             Array<OneD, Array<OneD, NekDouble> > &normals);
@@ -1761,6 +1777,13 @@ namespace Nektar
         {
             v_NormVectorIProductWRTBase(V1,V2,outarray,BndID);
         }
+        
+        inline void ExpList::NormVectorIProductWRTBase(
+            Array<OneD, Array<OneD, NekDouble> > &V,
+            Array<OneD, NekDouble> &outarray)
+        {
+            v_NormVectorIProductWRTBase(V, outarray);
+        }
     
         /**
          * @param   eid         The index of the element to be checked.
@@ -2133,6 +2156,13 @@ namespace Nektar
                             Array<OneD, NekDouble> &boundary)
         {
             v_ExtractElmtToBndPhys(i, elmt, boundary);
+        }
+        
+        inline void ExpList::ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt)
+        {
+            v_ExtractPhysToBndElmt(i, phys, bndElmt);
         }
         
         inline void ExpList::GetBoundaryNormals(int i,

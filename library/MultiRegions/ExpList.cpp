@@ -2461,6 +2461,52 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        void ExpList::v_NormVectorIProductWRTBase(
+                                Array<OneD, Array<OneD, NekDouble> > &V,
+                                Array<OneD, NekDouble> &outarray)
+        {
+            Array< OneD, NekDouble> tmp;
+            switch (GetCoordim(0))
+            {
+                case 1:
+                {
+                    for(int i = 0; i < GetExpSize(); ++i)
+                    {
+                        (*m_exp)[i]->NormVectorIProductWRTBase(
+                                        V[0] + GetPhys_Offset(i), 
+                                        tmp = outarray + GetCoeff_Offset(i));
+                    }
+                }
+                break;
+                case 2:
+                {
+                    for(int i = 0; i < GetExpSize(); ++i)
+                    {
+                        (*m_exp)[i]->NormVectorIProductWRTBase(
+                                        V[0] + GetPhys_Offset(i),
+                                        V[1] + GetPhys_Offset(i),
+                                        tmp = outarray + GetCoeff_Offset(i));
+                    }
+                }
+                break;
+                case 3:
+                {
+                    for(int i = 0; i < GetExpSize(); ++i)
+                    {
+                        (*m_exp)[i]->NormVectorIProductWRTBase(
+                                        V[0] + GetPhys_Offset(i),
+                                        V[1] + GetPhys_Offset(i),
+                                        V[2] + GetPhys_Offset(i),
+                                        tmp = outarray + GetCoeff_Offset(i));
+                    }
+                }
+                break;
+                default:
+                    ASSERTL0(false,"Dimension not supported");
+                    break;
+            }
+        }
 
         void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
@@ -2651,6 +2697,47 @@ namespace Nektar
                                       tmp2 = boundary + offsetBnd);
                 
                 offsetElmt += elmt->GetTotPoints();
+            }
+        }
+        
+        /**
+         */
+        void ExpList::v_ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt)
+        {
+            int n, cnt, nq;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            // Count number of points
+            int npoints = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                npoints += GetExp(ElmtID[cnt+n])->GetTotPoints();
+            }
+            
+            // Initialise result
+            bndElmt = Array<OneD, NekDouble> (npoints, 0.0);
+            
+            // Extract data
+            int offsetPhys;
+            int offsetElmt = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
+                Vmath::Vcopy(nq, tmp1 = phys    + offsetPhys, 1,
+                                 tmp2 = bndElmt + offsetElmt, 1);
+                offsetElmt += nq;
             }
         }
         

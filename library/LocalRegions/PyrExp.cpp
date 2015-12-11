@@ -461,6 +461,16 @@ namespace Nektar
                     break;
             }
         }
+        
+        void PyrExp::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
 
         void PyrExp::v_ComputeFaceNormal(const int face)
         {

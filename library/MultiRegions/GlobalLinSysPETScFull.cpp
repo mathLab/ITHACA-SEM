@@ -77,10 +77,15 @@ namespace Nektar
                                 pLocToGloMap);
 
             // SET UP VECTORS AND MATRIX
-            SetUpMatVec(pLocToGloMap->GetNumGlobalCoeffs(), nDirDofs, true);
+            SetUpMatVec(pLocToGloMap->GetNumGlobalCoeffs(), nDirDofs);
+
+            // SET UP SCATTER OBJECTS
+            SetUpScatter();
+
+            // CONSTRUCT KSP OBJECT
+            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
 
             // POPULATE MATRIX
-#if 0
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
                 loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
@@ -114,13 +119,6 @@ namespace Nektar
             // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
-#endif 0
-
-            // SET UP SCATTER OBJECTS
-            SetUpScatter();
-
-            // CONSTRUCT KSP OBJECT
-            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
         }
 
 
@@ -180,6 +178,24 @@ namespace Nektar
             {
                 SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
             }
+        }
+
+        /**
+         * @brief Apply matrix-vector multiplication using local approach and
+         * the assembly map.
+         *
+         * @param input   Vector input.
+         * @param output  Result of multiplication.
+         */
+        void GlobalLinSysPETScFull::v_DoMatrixMultiply(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output)
+        {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+
+            // Perform matrix-vector operation A*d_i
+            expList->GeneralMatrixOp(
+                m_linSysKey, pInput, pOutput, eGlobal);
         }
     }
 }

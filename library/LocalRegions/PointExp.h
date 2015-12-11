@@ -121,6 +121,10 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2);
+            
+            virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const NekDouble> &Fx,
+                          Array<OneD, NekDouble> &outarray);
         };
         
         // type defines for use of PointExp in a boost vector

@@ -112,81 +112,65 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
     m_f->m_data     = FieldData;
 }
 
-/*
- * @brief Generate mapping between a simplex and the reference element.
- *
- * Mapping that requires the coordinates of the three vertices (x,y) of the
- * triangular element and outputs the function coefficients that defines the
- * mapping to the reference element for each coordinate (xfunc and yfunc)
- *
- * @param x   co-ordinates of triangle/tetrahedron
- * @param xf  components of mapping
- */
-inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
+inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
+                                 StdRegions::StdExpansionSharedPtr chi)
 {
-    int n = geom->GetNumVerts(), i, j, dim = geom->GetShapeDim();
-    cout << n << endl;
-    DNekMat map   (n, n, 1.0, eFULL);
-    DNekMat mapref(n, n, 1.0, eFULL);
+    int dim = geom->GetShapeDim();
+    vector<DNekMat> ret;
 
-    // Extract coordinate information.
-    for (i = 0; i < n; ++i)
+    if(geom->GetShapeType() == LibUtilities::eQuadrilateral)
     {
-        Array<OneD, NekDouble> loc(dim);
-        geom->GetVertex(i)->GetCoords(loc);
-        for (j = 0; j < dim; ++j)
+        vector<Array<OneD, NekDouble> > xy;
+        for(int i = 0; i < geom->GetNumVerts(); i++)
         {
-            map(j,i) = loc[j];
+            Array<OneD, NekDouble> loc(2);
+            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
+            p->GetCoords(loc);
+            xy.push_back(loc);
         }
-    }
 
-    if (geom->GetShapeType() == LibUtilities::eTriangle)
-    {
-        mapref(0,0) = -1.0; mapref(1,0) = -1.0;
-        mapref(0,1) =  1.0; mapref(1,1) = -1.0;
-        mapref(0,2) = -1.0; mapref(1,2) =  1.0;
-    }
-    else if (geom->GetShapeType() == LibUtilities::eTetrahedron)
-    {
-        mapref(0,0) = -1.0; mapref(1,0) = -1.0; mapref(2,0) = -1.0;
-        mapref(0,1) =  1.0; mapref(1,1) = -1.0; mapref(2,1) = -1.0;
-        mapref(0,2) = -1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
-        mapref(0,3) = -1.0; mapref(1,3) = -1.0; mapref(2,3) =  1.0;
-    }
-    else if (geom->GetShapeType() == LibUtilities::eQuadrilateral)
-    {
-        mapref(0,0) = -1.0; mapref(1,0) = -1.0;
-        mapref(0,1) =  1.0; mapref(1,1) = -1.0;
-        mapref(0,2) = -1.0; mapref(1,2) =  1.0;
-        mapref(0,3) =  1.0; mapref(1,3) =  1.0;
-    }
-    else if (geom->GetShapeType() == LibUtilities::ePrism)
-    {
-        //this is incorrect for prism
-        mapref(0,0) = -1.0; mapref(1,0) = -1.0; mapref(2,0) = -1.0;
-        mapref(0,1) =  1.0; mapref(1,1) = -1.0; mapref(2,1) = -1.0;
-        mapref(0,2) =  1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
-        mapref(0,3) = -1.0; mapref(1,3) =  1.0; mapref(2,3) = -1.0;
-        mapref(0,4) = -1.0; mapref(1,4) = -1.0; mapref(2,4) =  1.0;
-        mapref(0,5) = -1.0; mapref(1,5) =  1.0; mapref(2,5) =  1.0;
+        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
+        Array<OneD, NekDouble> u = b[0]->GetZ();
+        Array<OneD, NekDouble> v = b[1]->GetZ();
+
+        for(int i = 0; i < b[0]->GetNumPoints(); i++)
+        {
+            for(int j = 0; j < b[1]->GetNumPoints(); j++)
+            {
+                DNekMat dxdz(2,2,1.0,eFULL);
+                dxdz(0,0) = -xy[0][0]/4.0 + xy[0][0]/4.0*v[j]
+                            +xy[1][0]/4.0 - xy[1][0]/4.0*v[j]
+                            +xy[2][0]/4.0 + xy[2][0]/4.0*v[j]
+                            -xy[3][0]/4.0 - xy[3][0]/4.0*v[j];
+
+                dxdz(0,1) = +xy[0][0]/4.0*u[i] - xy[0][0]/4.0
+                            -xy[1][0]/4.0*u[i] - xy[1][0]/4.0
+                            +xy[2][0]/4.0*u[i] + xy[2][0]/4.0
+                            -xy[3][0]/4.0*u[i] + xy[3][0]/4.0;
+
+                dxdz(1,0) = -xy[0][1]/4.0 + xy[0][1]/4.0*v[j]
+                            +xy[1][1]/4.0 - xy[1][1]/4.0*v[j]
+                            +xy[2][1]/4.0 + xy[2][1]/4.0*v[j]
+                            -xy[3][1]/4.0 - xy[3][1]/4.0*v[j];
+
+                dxdz(1,1) = +xy[0][1]/4.0*u[i] - xy[0][1]/4.0
+                            -xy[1][1]/4.0*u[i] - xy[1][1]/4.0
+                            +xy[2][1]/4.0*u[i] + xy[2][1]/4.0
+                            -xy[3][1]/4.0*u[i] + xy[3][1]/4.0;
+
+                dxdz.Invert();
+                ret.push_back(dxdz);
+            }
+        }
     }
     else
-        ASSERTL0(false,"element type not programed");
-
-    map.Invert();
-
-    DNekMat newmap = mapref * map;
-    DNekMat mapred(dim, dim, 1.0, eFULL);
-
-    for (i = 0; i < dim; ++i)
     {
-        for (j = 0; j < dim; ++j)
-        {
-            mapred(i,j) = newmap(i,j);
-        }
+        ASSERTL0(false,"not coded");
     }
 
-    return mapred;
+
+
+    return ret;
 }
 
 Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedPtr e)
@@ -196,7 +180,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
     LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
     SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
-    DNekMat i2rm = MappingIdealToRef(geom);
+    vector<DNekMat> i2rm = MappingIdealToRef(geom,chi);
 
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
 
@@ -219,7 +203,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
             }
         }
 
-        jacIdeal = jac * i2rm;
+        jacIdeal = jac * i2rm[k];
 
         NekDouble jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
         NekDouble frob = 0.0;
@@ -236,8 +220,6 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
         NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4*delta*delta));
 
         eta[k] = expDim * pow(sigma,2.0/expDim) / frob;
-        if(eta[k] > 1 || eta[k] < 0)
-            cout << eta[k] << endl;
     }
 
     if (pts == 1)

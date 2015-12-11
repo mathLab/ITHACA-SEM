@@ -14,3 +14,7 @@ Physical Line(1) = {1};
 Physical Line(2) = {4};
 Physical Line(3) = {2};
 Physical Line(4) = {3};
+Recombine Surface {5};
+Recombine Surface {5};
+Recombine Surface {5};
+Recombine Surface {5};

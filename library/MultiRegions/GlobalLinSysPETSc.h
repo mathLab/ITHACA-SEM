@@ -48,6 +48,13 @@ namespace Nektar
         // Forward declarations
         class ExpList;
 
+        /// Enumerator
+        enum PETScMatMult
+        {
+            ePETScMatMultSparse,
+            ePETScMatMultShell
+        };
+
         /// A global linear system.
         class GlobalLinSysPETSc : virtual public GlobalLinSys
         {
@@ -68,25 +75,48 @@ namespace Nektar
                 const int                          pNumDir);
 
         protected:
-            /// PETSc matrix object
-            Mat         m_matrix;
-            /// PETSc vector objects used for local storage
-            Vec         m_x, m_b, m_locVec, m_locVec2;
-            /// KSP object that represents solver system
-            KSP         m_ksp;
-            vector<int> m_reorderedMap;
-            VecScatter  m_ctx;
-            int         m_nLocal;
+            /// PETSc matrix object.
+            Mat          m_matrix;
+            /// PETSc vector objects used for local storage.
+            Vec          m_x, m_b, m_locVec;
+            /// KSP object that represents solver system.
+            KSP          m_ksp;
+            /// Enumerator to select matrix multiplication type.
+            PETScMatMult m_matMult;
+            /// Reordering that takes universal IDs to a unique row in the PETSc
+            /// matrix. @see GlobalLinSysPETSc::CalculateReordering
+            vector<int>  m_reorderedMap;
+            /// PETSc scatter context that takes us between Nektar++ global
+            /// ordering and PETSc vector ordering.
+            VecScatter   m_ctx;
+            /// Number of unique degrees of freedom on this process.
+            int          m_nLocal;
 
+            /**
+             * @brief Internal struct for MatShell call to store current
+             * context for callback.
+             *
+             * To use the MatShell representation inside PETSc KSP objects (so
+             * that we can use the local spectral element approach) requires the
+             * use of a callback function, which must be static. This is a
+             * lightweight wrapper allowing us to call a virtual function so
+             * that we can handle the static condensation/full variants of the
+             * global system.
+             *
+             * @see GlobalLinSysPETSc::DoMatrixMultiply
+             */
             struct MatShellCtx
             {
+                /// Number of global degrees of freedom.
                 int nGlobal;
+                /// Number of Dirichlet degrees of freedom.
                 int nDir;
+                /// Pointer to the original calling object.
                 GlobalLinSysPETSc *linSys;
             };
 
             void SetUpScatter();
-            void SetUpMatVec(int nGlobal, int nDir, bool shell=false);
+            void SetUpMatVec(int nGlobal, int nDir);
             void SetUpSolver(NekDouble tolerance);
             void CalculateReordering(
                 const Array<OneD, const int> &glo2uniMap,
@@ -97,6 +127,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& pInput,
                       Array<OneD,       NekDouble>& pOutput) = 0;
         private:
+            static std::string matMult;
+            static std::string matMultIds[];
+
             static PetscErrorCode DoMatrixMultiply(Mat M, Vec in, Vec out);
         };
     }

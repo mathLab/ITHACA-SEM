@@ -42,6 +42,20 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        std::string GlobalLinSysPETSc::matMult =
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "PETScMatMult", "Sparse");
+        std::string GlobalLinSysPETSc::matMultIds[] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "PETScMatMult",
+                "Sparse",
+                MultiRegions::ePETScMatMultSparse),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "PETScMatMult",
+                "Shell",
+                MultiRegions::ePETScMatMultShell)
+        };
+
         /**
          * @class GlobalLinSysPETSc
          *
@@ -53,6 +67,12 @@ namespace Nektar
             const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
+            // Determine whether to use standard sparse matrix approach or
+            // shell.
+            m_matMult = pExp.lock()->GetSession()
+                ->GetSolverInfoAsEnum<PETScMatMult>(
+                    "PETScMatMult");
+
             // Check PETSc is initialized
             // For some reason, this is needed on OS X as logging is not
             // initialized properly in the call within CommMpi.
@@ -146,6 +166,10 @@ namespace Nektar
          * degrees of freedom which represents its position inside the
          * matrix. Presently Gs does not guarantee this, so this routine
          * constructs a new universal mapping.
+         *
+         * @param glo2uniMap    Global to universal map
+         * @param glo2unique    Global to unique map
+         * @param pLocToGloMap  Assembly map for this system
          */
         void GlobalLinSysPETSc::CalculateReordering(
             const Array<OneD, const int> &glo2uniMap,
@@ -218,8 +242,13 @@ namespace Nektar
          *
          * @todo Preallocation should be done at this point, since presently
          *       matrix allocation takes a significant amount of time.
+         *
+         * @param nGlobal  Number of global degrees of freedom in the system (on
+         *                 this processor)
+         * @param nDir     Number of Dirichlet degrees of freedom (on this
+         *                 processor).
          */
-        void GlobalLinSysPETSc::SetUpMatVec(int nGlobal, int nDir, bool shell)
+        void GlobalLinSysPETSc::SetUpMatVec(int nGlobal, int nDir)
         {
             // CREATE VECTORS
             VecCreate        (PETSC_COMM_WORLD, &m_x);
@@ -228,7 +257,7 @@ namespace Nektar
             VecDuplicate     (m_x, &m_b);
 
             // CREATE MATRICES
-            if (shell)
+            if (m_matMult == ePETScMatMultShell)
             {
                 // Create MatShell context object which will store the matrix
                 // size and a pointer to the linear system. We do this so that
@@ -239,6 +268,7 @@ namespace Nektar
                 ctx->nDir    = nDir;
                 ctx->linSys  = this;
 
+                // Set up MatShell object.
                 MatCreateShell      (PETSC_COMM_WORLD, m_nLocal, m_nLocal,
                                      PETSC_DETERMINE, PETSC_DETERMINE,
                                      (void *)ctx, &m_matrix);
@@ -247,6 +277,8 @@ namespace Nektar
             }
             else
             {
+                // Otherwise we create a PETSc matrix and use MatSetFromOptions
+                // so that we can set various options on the command line.
                 MatCreate        (PETSC_COMM_WORLD, &m_matrix);
                 MatSetType       (m_matrix, MATAIJ);
                 MatSetSizes      (m_matrix, m_nLocal, m_nLocal,
@@ -256,19 +288,37 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Perform matrix multiplication using Nektar++ routines.
+         *
+         * This static function uses Nektar++ routines to calculate the
+         * matrix-vector product of @p M with @p in, storing the output in @p
+         * out.
+         *
+         * @todo There's a lot of scatters and copies that might possibly be
+         *       eliminated to make this more efficient.
+         *
+         * @param M    Original MatShell matrix, which stores the MatShellCtx
+         *             object.
+         * @param in   Input vector.
+         * @param out  Output vector.
+         */
         PetscErrorCode GlobalLinSysPETSc::DoMatrixMultiply(
             Mat M, Vec in, Vec out)
         {
+            // Grab our MatShell context from M.
             void *ptr;
             MatShellGetContext(M, &ptr);
             MatShellCtx *ctx = (MatShellCtx *)ptr;
 
-            const int nGlobal  = ctx->nGlobal;
-            const int nDir     = ctx->nDir;
-            const int nHomDofs = nGlobal - nDir;
+            const int          nGlobal  = ctx->nGlobal;
+            const int          nDir     = ctx->nDir;
+            const int          nHomDofs = nGlobal - nDir;
+            GlobalLinSysPETSc *linSys   = ctx->linSys;
 
-            GlobalLinSysPETSc *linSys = ctx->linSys;
-
+            // Scatter from PETSc ordering to our local ordering. It's actually
+            // unclear whether this step might also do some communication in
+            // parallel, which is probably not ideal.
             VecScatterBegin(linSys->m_ctx, in, linSys->m_locVec,
                             INSERT_VALUES, SCATTER_FORWARD);
             VecScatterEnd  (linSys->m_ctx, in, linSys->m_locVec,
@@ -277,19 +327,20 @@ namespace Nektar
             // Temporary storage to pass to Nektar++
             Array<OneD, NekDouble> tmpIn(nHomDofs), tmpOut(nHomDofs);
 
-            // Get values from vector
+            // Get values from input vector and copy to tmpIn.
             PetscScalar *tmpLocIn;
             VecGetArray    (linSys->m_locVec, &tmpLocIn);
             Vmath::Vcopy   (nHomDofs, tmpLocIn, 1, &tmpIn[0], 1);
             VecRestoreArray(linSys->m_locVec, &tmpLocIn);
 
-            // Do matrix multiply in Nektar++
+            // Do matrix multiply in Nektar++, store in tmpOut.
             linSys->v_DoMatrixMultiply(tmpIn, tmpOut);
 
-            // Scatter back to PETSc ordering
+            // Scatter back to PETSc ordering and put in out.
             VecSetValues(out, nHomDofs, &linSys->m_reorderedMap[0],
                          &tmpOut[0], INSERT_VALUES);
 
+            // Must return 0, otherwise PETSc complains.
             return 0;
         }
 
@@ -298,6 +349,8 @@ namespace Nektar
          *
          * This is reasonably generic setup -- most solver types can be changed
          * using the .petscrc file.
+         *
+         * @param tolerance  Residual tolerance to converge to.
          */
         void GlobalLinSysPETSc::SetUpSolver(NekDouble tolerance)
         {

@@ -183,21 +183,13 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             for(int j = 0; j < b[1]->GetNumPoints(); j++)
             {
                 DNekMat dxdz(2,2,1.0,eFULL);
-                dxdz(0,0) = -xy[0][0]/4.0 + xy[0][0]/4.0*v[j]
-                            +xy[1][0]/4.0 - xy[1][0]/4.0*v[j]
-                            -xy[2][0]/4.0 - xy[2][0]/4.0*v[j];
+                dxdz(0,0) = -xy[0][0]/2.0 + xy[1][0]/2.0;
 
-                dxdz(0,1) = +xy[0][0]/4.0*u[i] - xy[0][0]/4.0
-                            -xy[1][0]/4.0*u[i] - xy[1][0]/4.0
-                            -xy[2][0]/4.0*u[i] + xy[2][0]/4.0;
+                dxdz(0,1) = -xy[0][0]/2.0 + xy[2][0]/2.0;
 
-                dxdz(1,0) = -xy[0][1]/4.0 + xy[0][1]/4.0*v[j]
-                            +xy[1][1]/4.0 - xy[1][1]/4.0*v[j]
-                            -xy[2][1]/4.0 - xy[2][1]/4.0*v[j];
+                dxdz(1,0) = -xy[0][1]/2.0 + xy[1][1]/2.0;
 
-                dxdz(1,1) = +xy[0][1]/4.0*u[i] - xy[0][1]/4.0
-                            -xy[1][1]/4.0*u[i] - xy[1][1]/4.0
-                            -xy[2][1]/4.0*u[i] + xy[2][1]/4.0;
+                dxdz(1,1) = -xy[0][1]/2.0 + xy[2][1]/2.0;
 
                 dxdz.Invert();
                 ret.push_back(dxdz);

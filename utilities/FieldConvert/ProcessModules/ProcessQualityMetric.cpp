@@ -163,6 +163,47 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             }
         }
     }
+    else if(geom->GetShapeType() == LibUtilities::eTriangle)
+    {
+        vector<Array<OneD, NekDouble> > xy;
+        for(int i = 0; i < geom->GetNumVerts(); i++)
+        {
+            Array<OneD, NekDouble> loc(2);
+            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
+            p->GetCoords(loc);
+            xy.push_back(loc);
+        }
+
+        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
+        Array<OneD, NekDouble> u = b[0]->GetZ();
+        Array<OneD, NekDouble> v = b[1]->GetZ();
+
+        for(int i = 0; i < b[0]->GetNumPoints(); i++)
+        {
+            for(int j = 0; j < b[1]->GetNumPoints(); j++)
+            {
+                DNekMat dxdz(2,2,1.0,eFULL);
+                dxdz(0,0) = -xy[0][0]/4.0 + xy[0][0]/4.0*v[j]
+                            +xy[1][0]/4.0 - xy[1][0]/4.0*v[j]
+                            -xy[2][0]/4.0 - xy[2][0]/4.0*v[j];
+
+                dxdz(0,1) = +xy[0][0]/4.0*u[i] - xy[0][0]/4.0
+                            -xy[1][0]/4.0*u[i] - xy[1][0]/4.0
+                            -xy[2][0]/4.0*u[i] + xy[2][0]/4.0;
+
+                dxdz(1,0) = -xy[0][1]/4.0 + xy[0][1]/4.0*v[j]
+                            +xy[1][1]/4.0 - xy[1][1]/4.0*v[j]
+                            -xy[2][1]/4.0 - xy[2][1]/4.0*v[j];
+
+                dxdz(1,1) = +xy[0][1]/4.0*u[i] - xy[0][1]/4.0
+                            -xy[1][1]/4.0*u[i] - xy[1][1]/4.0
+                            -xy[2][1]/4.0*u[i] + xy[2][1]/4.0;
+
+                dxdz.Invert();
+                ret.push_back(dxdz);
+            }
+        }
+    }
     else
     {
         ASSERTL0(false,"not coded");

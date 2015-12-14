@@ -43,6 +43,8 @@ using namespace std;
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTetExp.h>
 
 namespace Nektar
 {
@@ -264,7 +266,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
     {
         nElemPts *= pElem[i].GetNumPoints();
         needsInterp =
-            needsInterp || pElem[i].GetNumPoints() < p[i].GetNumPoints();
+            needsInterp || pElem[i].GetNumPoints() < p[i].GetNumPoints() -1;
     }
 
     if (needsInterp)
@@ -290,6 +292,14 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
         case LibUtilities::eTriangle:
             chiMod = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(
                 basisKeys[0], basisKeys[1]);
+            break;
+        case LibUtilities::eQuadrilateral:
+            chiMod = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1]);
+            break;
+        case LibUtilities::eTetrahedron:
+            chiMod = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1], basisKeys[2]);
             break;
         default:
             ASSERTL0(false, "nope");
@@ -317,8 +327,23 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
         }
 
         jacIdeal = jac * i2rm[k];
+        NekDouble jacDet;
 
-        NekDouble jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+        if(expDim == 2)
+        {
+            jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+        }
+        else if(expDim == 3)
+        {
+            jacDet = jacIdeal(0,0) * (jacIdeal(1,1)*jacIdeal(2,2) - jacIdeal(2,1)*jacIdeal(1,2)) -
+                     jacIdeal(0,1) * (jacIdeal(1,0)*jacIdeal(2,2) - jacIdeal(2,0)*jacIdeal(1,2)) +
+                     jacIdeal(0,2) * (jacIdeal(1,0)*jacIdeal(2,1) - jacIdeal(2,0)*jacIdeal(1,1));
+        }
+        else
+        {
+            ASSERTL0(false,"silly exp dim");
+        }
+
         NekDouble frob = 0.0;
 
         for (int i = 0; i < expDim; ++i)
@@ -329,8 +354,7 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
             }
         }
 
-        NekDouble delta = 0.0; // fixme
-        NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4*delta*delta));
+        NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet));
 
         eta[k] = expDim * pow(sigma,2.0/expDim) / frob;
     }

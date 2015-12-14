@@ -196,6 +196,55 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             }
         }
     }
+    else if(geom->GetShapeType() == LibUtilities::eTetrahedron)
+    {
+        vector<Array<OneD, NekDouble> > xyz;
+        for(int i = 0; i < geom->GetNumVerts(); i++)
+        {
+            Array<OneD, NekDouble> loc(3);
+            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
+            p->GetCoords(loc);
+            xyz.push_back(loc);
+        }
+
+        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
+        Array<OneD, NekDouble> u = b[0]->GetZ();
+        Array<OneD, NekDouble> v = b[1]->GetZ();
+        Array<OneD, NekDouble> z = b[2]->GetZ();
+
+        for(int i = 0; i < b[0]->GetNumPoints(); i++)
+        {
+            for(int j = 0; j < b[1]->GetNumPoints(); j++)
+            {
+                for(int k = 0; k < b[2]->GetNumPoints(); k++)
+                {
+                    DNekMat dxdz(3,3,1.0,eFULL);
+                    dxdz(0,0) = -xyz[0][0]/2.0 + xyz[1][0]/2.0;
+
+                    dxdz(0,1) = -xyz[0][0]/2.0 + xyz[2][0]/2.0;
+
+                    dxdz(0,2) = -xyz[0][0]/2.0 + xyz[3][0]/2.0;
+
+
+                    dxdz(1,0) = -xyz[0][1]/2.0 + xyz[1][1]/2.0;
+
+                    dxdz(1,1) = -xyz[0][1]/2.0 + xyz[2][1]/2.0;
+
+                    dxdz(1,2) = -xyz[0][1]/2.0 + xyz[3][1]/2.0;
+
+
+                    dxdz(2,0) = -xyz[0][2]/2.0 + xyz[1][2]/2.0;
+
+                    dxdz(2,1) = -xyz[0][2]/2.0 + xyz[2][2]/2.0;
+
+                    dxdz(2,2) = -xyz[0][2]/2.0 + xyz[3][2]/2.0;
+
+                    dxdz.Invert();
+                    ret.push_back(dxdz);
+                }
+            }
+        }
+    }
     else
     {
         ASSERTL0(false,"not coded");

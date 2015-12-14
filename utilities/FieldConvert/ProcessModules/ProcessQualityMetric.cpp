@@ -42,6 +42,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/Foundations/Interp.h>
+#include <StdRegions/StdTriExp.h>
 
 namespace Nektar
 {
@@ -83,17 +84,8 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         Array<OneD, NekDouble> q = GetQ(Elmt);
         Array<OneD, NekDouble> out = phys + offset;
 
-        // Project onto output stuff
-        LibUtilities::PointsKeyVector pFrom = Elmt->GetGeom()->GetPointsKeys();
-        LibUtilities::PointsKeyVector pTo   = Elmt->GetPointsKeys();
-
-        if(expdim == 2)
-            LibUtilities::Interp2D(pFrom[0], pFrom[1], q, pTo[0], pTo[1], out);
-        else if(expdim == 3)
-            LibUtilities::Interp3D(pFrom[0], pFrom[1], pFrom[2], q,
-                                   pTo[0], pTo[1], pTo[2], out);
-        else
-            ASSERTL0(false,"mesh dim makes no sense");
+        ASSERTL0(q.num_elements() == Elmt->GetTotPoints(), "number of points mismatch");
+        Vmath::Vcopy(q.num_elements(), q, 1, out, 1);
     }
 
     m_f->m_exp[0]->FwdTrans_IterPerExp(phys, coeffs);
@@ -260,16 +252,55 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
     SpatialDomains::GeometrySharedPtr    geom = e->GetGeom();
     StdRegions::StdExpansionSharedPtr    chi  = e->GetGeom()->GetXmap();
     LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
+    LibUtilities::PointsKeyVector        pElem= e->GetPointsKeys();
     SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+    const int expDim = chi->GetNumBases();
+    int nElemPts = 1;
 
-    vector<DNekMat> i2rm = MappingIdealToRef(geom,chi);
+    vector<LibUtilities::BasisKey> basisKeys;
+    bool needsInterp = false;
 
-    SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+    for (int i = 0; i < expDim; ++i)
+    {
+        nElemPts *= pElem[i].GetNumPoints();
+        needsInterp =
+            needsInterp || pElem[i].GetNumPoints() < p[i].GetNumPoints();
+    }
+
+    if (needsInterp)
+    {
+        stringstream err;
+        err << "Interpolating from higher order geometry to lower order in "
+            << "element " << geom->GetGlobalID();
+        NEKERROR(ErrorUtil::ewarning, err.str());
+    }
+
+    for (int i = 0; i < expDim; ++i)
+    {
+        basisKeys.push_back(
+            needsInterp ? chi->GetBasis(i)->GetBasisKey() :
+            LibUtilities::BasisKey(chi->GetBasisType(i),
+                                   chi->GetBasisNumModes(i),
+                                   pElem[i]));
+    }
+
+    StdRegions::StdExpansionSharedPtr chiMod;
+    switch(chi->DetShapeType())
+    {
+        case LibUtilities::eTriangle:
+            chiMod = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1]);
+            break;
+        default:
+            ASSERTL0(false, "nope");
+    }
+
+    SpatialDomains::DerivStorage deriv = gfac->GetDeriv(pElem);
 
     const int pts = deriv[0][0].num_elements();
-    const int nq  = chi->GetTotPoints();
-    const int expDim = chi->GetNumBases();
+    const int nq  = chiMod->GetTotPoints();
 
+    vector<DNekMat> i2rm = MappingIdealToRef(geom, chiMod);
     Array<OneD, NekDouble> eta(nq);
 
     for (int k = 0; k < pts; ++k)
@@ -302,6 +333,28 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
         NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4*delta*delta));
 
         eta[k] = expDim * pow(sigma,2.0/expDim) / frob;
+    }
+
+    // Project onto output stuff
+    if (needsInterp && pts != 1)
+    {
+        Array<OneD, NekDouble> tmp(nElemPts);
+
+        if (expDim == 2)
+        {
+            LibUtilities::Interp2D(p[0], p[1], eta, pElem[0], pElem[1], tmp);
+        }
+        else if(expDim == 3)
+        {
+            LibUtilities::Interp3D(p[0], p[1], p[2], eta, pElem[0], pElem[1],
+                                   pElem[2], tmp);
+        }
+        else
+        {
+            ASSERTL0(false,"mesh dim makes no sense");
+        }
+
+        eta = tmp;
     }
 
     if (pts == 1)

@@ -826,11 +826,21 @@ void Mapping::v_gradgradU(
     ApplyChristoffelContravar(inarray, m_wk1);        
     for (int i=0; i< nvel; i++)
     {
+        if (nvel == 2)
+        {
+            m_fields[0]->PhysDeriv(inarray[i],
+                                    m_wk2[i*nvel+0],
+                                    m_wk2[i*nvel+1]);
+        }
+        else
+        {
+            m_fields[0]->PhysDeriv(inarray[i],
+                                    m_wk2[i*nvel+0],
+                                    m_wk2[i*nvel+1],
+                                    m_wk2[i*nvel+2]);
+        }
         for (int j=0; j< nvel; j++)
         {
-            m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
-                                    m_wk2[i*nvel+j]);
-
             Vmath::Vadd(physTot,m_wk1[i*nvel+j],1,m_wk2[i*nvel+j],1,
                                                 m_wk1[i*nvel+j], 1);
         }
@@ -845,10 +855,18 @@ void Mapping::v_gradgradU(
     { 
         for (int j=0; j< nvel; j++)
         {
-            for (int k=0; k< nvel; k++)
+            if (nvel == 2)
             {
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[k],
-                        m_wk1[i*nvel+j], outarray[i*nvel*nvel+j*nvel+k]);
+                m_fields[0]->PhysDeriv(m_wk1[i*nvel+j], 
+                                        outarray[i*nvel*nvel+j*nvel+0],
+                                        outarray[i*nvel*nvel+j*nvel+1]);
+            }
+            else
+            {
+                m_fields[0]->PhysDeriv(m_wk1[i*nvel+j], 
+                                        outarray[i*nvel*nvel+j*nvel+0],
+                                        outarray[i*nvel*nvel+j*nvel+1],
+                                        outarray[i*nvel*nvel+j*nvel+2]);
             }
         }
     }

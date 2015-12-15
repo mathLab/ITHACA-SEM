@@ -165,7 +165,6 @@ void MappingXofZ::v_GetMetricTensor(
 {
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
-        Array<OneD, NekDouble> wk(physTot, 0.0);
 
         for (int i=0; i<nvel*nvel; i++)
         {
@@ -271,7 +270,6 @@ void MappingXofZ::v_ApplyChristoffelContravar(
 {
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
-    Array<OneD, NekDouble> wk(physTot, 0.0);
 
     for (int i = 0; i< nvel; i++)
     {
@@ -295,7 +293,6 @@ void MappingXofZ::v_ApplyChristoffelCovar(
 {
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
-    Array<OneD, NekDouble> wk(physTot, 0.0);
 
     for (int i = 0; i< nvel; i++)
     {

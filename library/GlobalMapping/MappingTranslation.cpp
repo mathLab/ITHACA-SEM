@@ -85,6 +85,13 @@ void MappingTranslation::v_InitObject(
         }
 
         m_fields[0]->GetCoords(m_coords[0], m_coords[1], m_coords[2]);
+        
+        // Initialise workspace variables
+        m_tmp = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+        for (int i=0; i< m_nConvectiveFields; i++)
+        {
+            m_tmp[i] = Array<OneD, NekDouble>(phystot,0.0);
+        }
     }
 
 }

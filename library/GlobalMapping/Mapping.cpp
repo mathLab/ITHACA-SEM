@@ -208,6 +208,21 @@ void Mapping::v_InitObject(
             Vmath::Zero(phystot, m_coordsVel[i], 1);
         }
     }
+    
+    // Initialise workspace variables
+    int nvel = m_nConvectiveFields;
+    m_wk1 = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel);
+    m_wk2 = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel);
+    m_tmp = Array<OneD, Array<OneD, NekDouble> > (nvel);
+    for (int i=0; i< nvel; i++)
+    {
+        m_tmp[i] = Array<OneD, NekDouble>(phystot,0.0);
+        for (int j=0; j< nvel; j++)
+        {
+            m_wk1[i*nvel+j] = Array<OneD, NekDouble>(phystot,0.0);
+            m_wk2[i*nvel+j] = Array<OneD, NekDouble>(phystot,0.0);
+        }
+    }
 
     // Calculate information required by the particular mapping
     UpdateGeomInfo();
@@ -431,13 +446,11 @@ void Mapping::ContravarToCartesian(
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
 
-        Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
         for (int i=0; i< nvel; i++)
         {
-            tmp[i] = Array<OneD, NekDouble>(physTot);
-            Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+            Vmath::Vcopy(physTot, inarray[i], 1, m_tmp[i], 1);
         }
-        v_ContravarToCartesian( tmp, outarray);
+        v_ContravarToCartesian( m_tmp, outarray);
     }
     else
     {
@@ -454,13 +467,11 @@ void Mapping::CovarToCartesian(
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
 
-        Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
         for (int i=0; i< nvel; i++)
         {
-            tmp[i] = Array<OneD, NekDouble>(physTot);
-            Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+            Vmath::Vcopy(physTot, inarray[i], 1, m_tmp[i], 1);
         }
-        v_CovarToCartesian( tmp, outarray);
+        v_CovarToCartesian( m_tmp, outarray);
     }
     else
     {
@@ -477,13 +488,11 @@ void Mapping::ContravarFromCartesian(
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
 
-        Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
         for (int i=0; i< nvel; i++)
         {
-            tmp[i] = Array<OneD, NekDouble>(physTot);
-            Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+            Vmath::Vcopy(physTot, inarray[i], 1, m_tmp[i], 1);
         }
-        v_ContravarFromCartesian( tmp, outarray);
+        v_ContravarFromCartesian( m_tmp, outarray);
     }
     else
     {
@@ -500,13 +509,11 @@ void Mapping::CovarFromCartesian(
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
 
-        Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
         for (int i=0; i< nvel; i++)
         {
-            tmp[i] = Array<OneD, NekDouble>(physTot);
-            Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+            Vmath::Vcopy(physTot, inarray[i], 1, m_tmp[i], 1);
         }
-        v_CovarFromCartesian( tmp, outarray);
+        v_CovarFromCartesian( m_tmp, outarray);
     }
     else
     {
@@ -523,13 +530,11 @@ void Mapping::LowerIndex(
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
 
-        Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
         for (int i=0; i< nvel; i++)
         {
-            tmp[i] = Array<OneD, NekDouble>(physTot);
-            Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+            Vmath::Vcopy(physTot, inarray[i], 1, m_tmp[i], 1);
         }
-        v_LowerIndex( tmp, outarray);
+        v_LowerIndex( m_tmp, outarray);
     }
     else
     {
@@ -546,13 +551,11 @@ void Mapping::RaiseIndex(
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_nConvectiveFields;
 
-        Array<OneD, Array<OneD, NekDouble> >  tmp(nvel);
         for (int i=0; i< nvel; i++)
         {
-            tmp[i] = Array<OneD, NekDouble>(physTot);
-            Vmath::Vcopy(physTot, inarray[i], 1, tmp[i], 1);
+            Vmath::Vcopy(physTot, inarray[i], 1, m_tmp[i], 1);
         }
-        v_RaiseIndex( tmp, outarray);
+        v_RaiseIndex( m_tmp, outarray);
     }
     else
     {
@@ -701,46 +704,33 @@ void Mapping::v_VelocityLaplacian(
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
 
-    Array<OneD, Array<OneD, NekDouble> > wk1(nvel*nvel);
-    Array<OneD, Array<OneD, NekDouble> > wk2(nvel*nvel);
-    Array<OneD, Array<OneD, NekDouble> > tmp1(nvel);
-    Array<OneD, Array<OneD, NekDouble> > tmp2(nvel);
-    for (int i=0; i< nvel; i++)
-    {
-        tmp1[i] = Array<OneD, NekDouble>(physTot,0.0);
-        tmp2[i] = Array<OneD, NekDouble>(physTot,0.0);
-        for (int j=0; j< nvel; j++)
-        {
-            wk1[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            wk2[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-        }
-    }
+    Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
 
     // Set wavespace to false and store current value
     bool wavespace = m_fields[0]->GetWaveSpace();
     m_fields[0]->SetWaveSpace(false);
 
     // Calculate vector gradient wk2 = u^i_(,k) = du^i/dx^k + {i,jk}*u^j
-    ApplyChristoffelContravar(inarray, wk1);        
+    ApplyChristoffelContravar(inarray, m_wk1);        
     for (int i=0; i< nvel; i++)
     {
         if(nvel == 2)
         {
             m_fields[0]->PhysDeriv(inarray[i],
-                                wk2[i*nvel+0],
-                                wk2[i*nvel+1]);
+                                m_wk2[i*nvel+0],
+                                m_wk2[i*nvel+1]);
         }
         else
         {
             m_fields[0]->PhysDeriv(inarray[i],
-                                wk2[i*nvel+0],
-                                wk2[i*nvel+1],
-                                wk2[i*nvel+2]);
+                                m_wk2[i*nvel+0],
+                                m_wk2[i*nvel+1],
+                                m_wk2[i*nvel+2]);
         }
         for (int k=0; k< nvel; k++)
         {
-            Vmath::Vadd(physTot,wk1[i*nvel+k],1,wk2[i*nvel+k],1,
-                                                wk1[i*nvel+k], 1);
+            Vmath::Vadd(physTot,m_wk1[i*nvel+k],1,m_wk2[i*nvel+k],1,
+                                                m_wk1[i*nvel+k], 1);
         }
     }
     // Calculate wk1 = A^(ij) = g^(jk)*u^i_(,k)
@@ -748,12 +738,12 @@ void Mapping::v_VelocityLaplacian(
     {
         for (int k=0; k< nvel; k++)
         {
-            Vmath::Vcopy(physTot, wk1[i*nvel+k], 1, tmp1[k], 1);
+            tmp[k] = m_wk1[i*nvel+k];
         }
-        RaiseIndex(tmp1, tmp2);
+        RaiseIndex(tmp, m_tmp);
         for (int j=0; j<nvel; j++)
         {
-            Vmath::Vcopy(physTot, tmp2[j], 1, wk1[i*nvel+j], 1);
+            Vmath::Vcopy(physTot, m_tmp[j], 1, m_wk1[i*nvel+j], 1);
         }
     }
     //
@@ -767,15 +757,15 @@ void Mapping::v_VelocityLaplacian(
         outarray[i] = Array<OneD, NekDouble>(physTot,0.0); 
         for (int j=0; j< nvel; j++)
         {
-            Vmath::Smul(physTot, alpha, wk2[i*nvel+j], 1,
-                                        tmp1[0], 1);
-            Vmath::Vsub(physTot, wk1[i*nvel+j], 1, tmp1[0], 1,
-                                                    tmp1[0], 1);
+            Vmath::Smul(physTot, alpha, m_wk2[i*nvel+j], 1,
+                                        m_tmp[0], 1);
+            Vmath::Vsub(physTot, m_wk1[i*nvel+j], 1, m_tmp[0], 1,
+                                                    m_tmp[0], 1);
 
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                    tmp1[0],
-                                    tmp2[0]);
-            Vmath::Vadd(physTot,outarray[i],1,tmp2[0],1,outarray[i], 1);
+                                    m_tmp[0],
+                                    m_tmp[1]);
+            Vmath::Vadd(physTot,outarray[i],1,m_tmp[1],1,outarray[i], 1);
         }
     }
 
@@ -784,12 +774,12 @@ void Mapping::v_VelocityLaplacian(
     {
         for (int p=0; p< nvel; p++)
         {
-            Vmath::Vcopy(physTot, wk1[i*nvel+p], 1, tmp1[p], 1);
+            tmp[p] = m_wk1[i*nvel+p];
         }
-        ApplyChristoffelContravar(tmp1, wk2);
+        ApplyChristoffelContravar(tmp, m_wk2);
         for (int j=0; j< nvel; j++)
         {
-                Vmath::Vadd(physTot,outarray[i],1,wk2[j*nvel+j],1,
+                Vmath::Vadd(physTot,outarray[i],1,m_wk2[j*nvel+j],1,
                                                     outarray[i], 1);
         }
     }
@@ -799,12 +789,12 @@ void Mapping::v_VelocityLaplacian(
     {
         for (int p=0; p< nvel; p++)
         {
-            Vmath::Vcopy(physTot, wk1[p*nvel+j], 1, tmp1[p], 1);
+            tmp[p] = m_wk1[p*nvel+j];
         }
-        ApplyChristoffelContravar(tmp1, wk2);
+        ApplyChristoffelContravar(tmp, m_wk2);
         for (int i=0; i< nvel; i++)
         {
-                Vmath::Vadd(physTot,outarray[i], 1, wk2[i*nvel+j], 1,
+                Vmath::Vadd(physTot,outarray[i], 1, m_wk2[i*nvel+j], 1,
                                                         outarray[i], 1);
         }
     }
@@ -822,22 +812,10 @@ void Mapping::v_gradgradU(
 
     // Declare variables
     outarray = Array<OneD, Array<OneD, NekDouble> > (nvel*nvel*nvel);
-    Array<OneD, Array<OneD, NekDouble> > wk1(nvel*nvel);
-    Array<OneD, Array<OneD, NekDouble> > wk2(nvel*nvel);
     Array<OneD, Array<OneD, NekDouble> > tmp(nvel);   
-    for (int i=0; i< nvel; i++)
+    for (int i=0; i< nvel*nvel*nvel; i++)
     {
-        tmp[i] = Array<OneD, NekDouble>(physTot,0.0);
-        for (int j=0; j< nvel; j++)
-        {
-            wk1[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            wk2[i*nvel+j] = Array<OneD, NekDouble>(physTot,0.0);
-            for (int k=0; k< nvel; k++)
-            {
-                outarray[i*nvel*nvel+j*nvel+k] = 
-                                    Array<OneD, NekDouble>(physTot,0.0);
-            }
-        }
+        outarray[i] = Array<OneD, NekDouble>(physTot,0.0);
     }
 
     // Set wavespace to false and store current value
@@ -845,16 +823,16 @@ void Mapping::v_gradgradU(
     m_fields[0]->SetWaveSpace(false);
 
     // Calculate vector gradient u^i_(,j) = du^i/dx^j + {i,pj}*u^p
-    ApplyChristoffelContravar(inarray, wk1);        
+    ApplyChristoffelContravar(inarray, m_wk1);        
     for (int i=0; i< nvel; i++)
     {
         for (int j=0; j< nvel; j++)
         {
             m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[j],inarray[i],
-                                    wk2[i*nvel+j]);
+                                    m_wk2[i*nvel+j]);
 
-            Vmath::Vadd(physTot,wk1[i*nvel+j],1,wk2[i*nvel+j],1,
-                                                wk1[i*nvel+j], 1);
+            Vmath::Vadd(physTot,m_wk1[i*nvel+j],1,m_wk2[i*nvel+j],1,
+                                                m_wk1[i*nvel+j], 1);
         }
     }
 
@@ -870,7 +848,7 @@ void Mapping::v_gradgradU(
             for (int k=0; k< nvel; k++)
             {
                 m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[k],
-                        wk1[i*nvel+j], outarray[i*nvel*nvel+j*nvel+k]);
+                        m_wk1[i*nvel+j], outarray[i*nvel*nvel+j*nvel+k]);
             }
         }
     }
@@ -880,15 +858,15 @@ void Mapping::v_gradgradU(
     {
         for (int p=0; p< nvel; p++)
         {
-            Vmath::Vcopy(physTot, wk1[i*nvel+p], 1, tmp[p], 1);
+            tmp[p] = m_wk1[i*nvel+p];
         }
-        ApplyChristoffelCovar(tmp, wk2);
+        ApplyChristoffelCovar(tmp, m_wk2);
         for (int j=0; j< nvel; j++)
         {
             for (int k=0; k< nvel; k++)
             {
                 Vmath::Vsub(physTot,outarray[i*nvel*nvel+j*nvel+k],1,
-                                    wk2[j*nvel+k],1,
+                                    m_wk2[j*nvel+k],1,
                                     outarray[i*nvel*nvel+j*nvel+k], 1);
             }
         }
@@ -899,15 +877,15 @@ void Mapping::v_gradgradU(
     {
         for (int p=0; p< nvel; p++)
         {
-            Vmath::Vcopy(physTot, wk1[p*nvel+j], 1, tmp[p], 1);
+            tmp[p] = m_wk1[p*nvel+j];
         }
-        ApplyChristoffelContravar(tmp, wk2);
+        ApplyChristoffelContravar(tmp, m_wk2);
         for (int i=0; i< nvel; i++)
         {
             for (int k=0; k< nvel; k++)
             {
                 Vmath::Vadd(physTot,outarray[i*nvel*nvel+j*nvel+k],1,
-                                    wk2[i*nvel+k],1,
+                                    m_wk2[i*nvel+k],1,
                                     outarray[i*nvel*nvel+j*nvel+k], 1);
             }
         }
@@ -924,14 +902,6 @@ void Mapping::v_CurlCurlField(
 {
     int physTot = m_fields[0]->GetTotPoints();
     int nvel = m_nConvectiveFields;
-    Array<OneD, NekDouble> tmp (physTot, 0.0);
-    Array<OneD, Array<OneD, NekDouble> > wk1(nvel);
-    Array<OneD, Array<OneD, NekDouble> > wk2(nvel);
-    for (int i = 0; i < nvel; ++i)
-    {
-        wk1[i] = Array<OneD, NekDouble> (physTot, 0.0);
-        wk2[i] = Array<OneD, NekDouble> (physTot, 0.0);
-    }
 
     // Set wavespace to false and store current value
     bool wavespace = m_fields[0]->GetWaveSpace();
@@ -942,6 +912,7 @@ void Mapping::v_CurlCurlField(
     if (generalized)
     {
         // Get the second derivatives u^i_{,jk}
+        Array<OneD, Array<OneD, NekDouble> > tmp(nvel);
         Array<OneD, Array<OneD, NekDouble> > ddU(nvel*nvel*nvel);
         gradgradU(inarray, ddU);
 
@@ -953,13 +924,12 @@ void Mapping::v_CurlCurlField(
                 // Copy to wk
                 for (int j = 0; j < nvel; ++j)
                 {
-                    Vmath::Vcopy(physTot, ddU[i*nvel*nvel+j*nvel+k], 1, 
-                                            wk1[j], 1);
+                    tmp[j] =  ddU[i*nvel*nvel+j*nvel+k];
                 }
-                RaiseIndex(wk1, wk2);
+                RaiseIndex(tmp, m_tmp);
                 for (int p=0; p<nvel; ++p)
                 {
-                   Vmath::Vcopy(physTot, wk2[p], 1, 
+                   Vmath::Vcopy(physTot, m_tmp[p], 1, 
                                          ddU[i*nvel*nvel+p*nvel+k], 1);
                 }
             }

@@ -338,8 +338,11 @@ class Mapping
         static MappingSharedPtr                     m_mappingPtr;
         static bool                                 m_init;
         static bool                                 m_isDefined;
-
-
+        
+        // Workspace variables
+        Array<OneD, Array<OneD, NekDouble> >        m_wk1;
+        Array<OneD, Array<OneD, NekDouble> >        m_wk2;
+        Array<OneD, Array<OneD, NekDouble> >        m_tmp;
 
         /// Constructor
         GLOBAL_MAPPING_EXPORT Mapping(

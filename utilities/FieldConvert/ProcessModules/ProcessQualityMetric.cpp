@@ -45,6 +45,7 @@ using namespace std;
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPrismExp.h>
 
 namespace Nektar
 {
@@ -239,6 +240,70 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             }
         }
     }
+    else if(geom->GetShapeType() == LibUtilities::ePrism)
+    {
+        vector<Array<OneD, NekDouble> > xyz;
+        for(int i = 0; i < geom->GetNumVerts(); i++)
+        {
+            Array<OneD, NekDouble> loc(3);
+            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
+            p->GetCoords(loc);
+            xyz.push_back(loc);
+        }
+
+        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
+        Array<OneD, NekDouble> u = b[0]->GetZ();
+        Array<OneD, NekDouble> v = b[1]->GetZ();
+        Array<OneD, NekDouble> z = b[2]->GetZ();
+
+        for(int i = 0; i < b[0]->GetNumPoints(); i++)
+        {
+            for(int j = 0; j < b[1]->GetNumPoints(); j++)
+            {
+                for(int k = 0; k < b[2]->GetNumPoints(); k++)
+                {
+                    DNekMat dxdz(3,3,1.0,eFULL);
+                    dxdz(0,0) = -xyz[0][0]/4.0*(1.0-v[j]) + xyz[1][0]/4.0*(1.0-v[j])
+                                -xyz[2][0]/4.0*(1.0+v[j]) + xyz[3][0]/4.0*(1.0+v[j]);
+
+                    dxdz(0,1) = +xyz[0][0]/4.0*((1.0+u[i])-(1.0-z[k])) - xyz[1][0]/4.0*(1.0+u[i])
+                                +xyz[2][0]/4.0*((1.0-z[k])-(1.0+u[i])) + xyz[3][0]/4.0*(1.0+u[i])
+                                -xyz[4][0]/4.0*(1.0+z[k]) + xyz[5][0]/4.0*(1.0+z[k]);
+
+                    dxdz(0,2) = -xyz[0][0]/4.0*(1.0-v[j])
+                                +xyz[2][0]/4.0*(1.0+v[j])
+                                +xyz[4][0]/4.0*(1.0-v[j]) + xyz[5][0]/4.0*(1.0+v[j]);
+
+
+                    dxdz(1,0) = -xyz[0][1]/4.0*(1.0-v[j]) + xyz[1][1]/4.0*(1.0-v[j])
+                                -xyz[2][1]/4.0*(1.0+v[j]) + xyz[3][1]/4.0*(1.0+v[j]);
+
+                    dxdz(1,1) = +xyz[0][1]/4.0*((1.0+u[i])-(1.0-z[k])) - xyz[1][1]/4.0*(1.0+u[i])
+                                +xyz[2][1]/4.0*((1.0-z[k])-(1.0+u[i])) + xyz[3][1]/4.0*(1.0+u[i])
+                                -xyz[4][1]/4.0*(1.0+z[k]) + xyz[5][1]/4.0*(1.0+z[k]);
+
+                    dxdz(1,2) = -xyz[0][1]/4.0*(1.0-v[j])
+                                +xyz[2][1]/4.0*(1.0+v[j])
+                                +xyz[4][1]/4.0*(1.0-v[j]) + xyz[5][1]/4.0*(1.0+v[j]);
+
+
+                    dxdz(2,0) = -xyz[0][2]/4.0*(1.0-v[j]) + xyz[1][2]/4.0*(1.0-v[j])
+                                -xyz[2][2]/4.0*(1.0+v[j]) + xyz[3][2]/4.0*(1.0+v[j]);
+
+                    dxdz(2,1) = +xyz[0][2]/4.0*((1.0+u[i])-(1.0-z[k])) - xyz[1][2]/4.0*(1.0+u[i])
+                                +xyz[2][2]/4.0*((1.0-z[k])-(1.0+u[i])) + xyz[3][2]/4.0*(1.0+u[i])
+                                -xyz[4][2]/4.0*(1.0+z[k]) + xyz[5][2]/4.0*(1.0+z[k]);
+
+                    dxdz(2,2) = -xyz[0][2]/4.0*(1.0-v[j])
+                                +xyz[2][2]/4.0*(1.0+v[j])
+                                +xyz[4][2]/4.0*(1.0-v[j]) + xyz[5][2]/4.0*(1.0+v[j]);
+
+                    dxdz.Invert();
+                    ret.push_back(dxdz);
+                }
+            }
+        }
+    }
     else
     {
         ASSERTL0(false,"not coded");
@@ -299,6 +364,10 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
             break;
         case LibUtilities::eTetrahedron:
             chiMod = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1], basisKeys[2]);
+            break;
+        case LibUtilities::ePrism:
+            chiMod = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
                 basisKeys[0], basisKeys[1], basisKeys[2]);
             break;
         default:

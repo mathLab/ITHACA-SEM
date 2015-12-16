@@ -114,7 +114,8 @@ namespace Nektar
             m_lhom(In.m_lhom), 
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
             m_dealiasing(In.m_dealiasing),
-            m_padsize(In.m_padsize)
+            m_padsize(In.m_padsize),
+            m_StripZcomm(In.m_StripZcomm)
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }

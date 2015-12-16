@@ -406,6 +406,15 @@ namespace Nektar
             /// Perform a case-insensitive string comparison.
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
                 const string & s1, const string& s2) ;
+            
+            SOLVER_UTILS_EXPORT void SetTime(
+                const NekDouble time)
+            {
+                m_time = time;
+            }
+            
+            /// Evaluates the boundary conditions at the given time.
+            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
                 
             /// Virtual function to identify if operator is negated in DoSolve
             SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
@@ -523,9 +532,6 @@ namespace Nektar
             }
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
-            
-            /// Evaluates the boundary conditions at the given time.
-            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
             
             /// Virtual function for initialisation implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoInitialise();

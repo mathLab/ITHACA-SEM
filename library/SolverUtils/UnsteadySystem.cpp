@@ -45,6 +45,7 @@ namespace Nektar
 {	
     namespace SolverUtils
     {
+        int UnsteadySystem::m_nchk = 1;
         /**
          * @class UnsteadySystem
          *
@@ -172,7 +173,7 @@ namespace Nektar
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
 
-            int i, nchk = 1;
+            int i = 1;
             int nvariables = 0;
             int nfields = m_fields.num_elements();
 
@@ -351,7 +352,7 @@ namespace Nektar
                 }
                 
                 // Write out checkpoint files
-                if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
+                if ((m_checksteps && step && !((int (m_time/m_timestep + 1.5)) % m_checksteps)) ||
                     doCheckTime)
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
@@ -368,7 +369,7 @@ namespace Nektar
                                 transformed[i] = true;
                             }
                         }
-                        Checkpoint_Output(nchk++);
+                        Checkpoint_Output(m_nchk++);
                         for(i = 0; i < nfields; i++)
                         {
                             if (transformed[i])
@@ -383,7 +384,7 @@ namespace Nektar
                     }
                     else
                     {
-                        Checkpoint_Output(nchk++);
+                        Checkpoint_Output(m_nchk++);
                     }
                     doCheckTime = false;
                 }

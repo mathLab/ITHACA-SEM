@@ -123,7 +123,7 @@ void ProcessMapping::Process(po::variables_map &vm)
     mapping->GetCartesianCoordinates(coords[0], coords[1], coords[2]);
     
     // Add new information to m_f
-    string fieldNames[3] = {"x", "y", "z"};
+    string fieldNames[3] = {"xCoord", "yCoord", "zCoord"};
     vector<string > outname;
     for (int i = 0; i < addfields; ++i)
     {

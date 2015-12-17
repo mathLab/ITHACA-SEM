@@ -252,9 +252,9 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
         }
 
         Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
-        Array<OneD, NekDouble> u = b[0]->GetZ();
-        Array<OneD, NekDouble> v = b[1]->GetZ();
-        Array<OneD, NekDouble> z = b[2]->GetZ();
+        Array<OneD, NekDouble> eta1 = b[0]->GetZ();
+        Array<OneD, NekDouble> eta2 = b[1]->GetZ();
+        Array<OneD, NekDouble> eta3 = b[2]->GetZ();
 
         for(int i = 0; i < b[0]->GetNumPoints(); i++)
         {
@@ -262,41 +262,24 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             {
                 for(int k = 0; k < b[2]->GetNumPoints(); k++)
                 {
+                    NekDouble xi1 = 0.5*(1+eta1[i])*(1-eta3[k])-1.0;
+                    NekDouble a1 = 0.5*(1-xi1),     a2 = 0.5*(1+xi1);
+                    NekDouble b1 = 0.5*(1-eta2[j]), b2 = 0.5*(1+eta2[j]);
+                    NekDouble c1 = 0.5*(1-eta3[k]), c2 = 0.5*(1+eta3[k]);
+
                     DNekMat dxdz(3,3,1.0,eFULL);
-                    dxdz(0,0) = -xyz[0][0]/4.0*(1.0-v[j]) + xyz[1][0]/4.0*(1.0-v[j])
-                                -xyz[2][0]/4.0*(1.0+v[j]) + xyz[3][0]/4.0*(1.0+v[j]);
 
-                    dxdz(0,1) = +xyz[0][0]/4.0*((1.0+u[i])-(1.0-z[k])) - xyz[1][0]/4.0*(1.0+u[i])
-                                +xyz[2][0]/4.0*((1.0-z[k])-(1.0+u[i])) + xyz[3][0]/4.0*(1.0+u[i])
-                                -xyz[4][0]/4.0*(1.0+z[k]) + xyz[5][0]/4.0*(1.0+z[k]);
+                    dxdz(0,0) = 0.5*(-b1*xyz[0][0] + b1*xyz[1][0] + b2*xyz[2][0] - b2*xyz[3][0]);
+                    dxdz(0,1) = 0.5*(-b1*xyz[0][1] + b1*xyz[1][1] + b2*xyz[2][1] - b2*xyz[3][1]);
+                    dxdz(0,2) = 0.5*(-b1*xyz[0][2] + b1*xyz[1][2] + b2*xyz[2][2] - b2*xyz[3][2]);
 
-                    dxdz(0,2) = -xyz[0][0]/4.0*(1.0-v[j])
-                                +xyz[2][0]/4.0*(1.0+v[j])
-                                +xyz[4][0]/4.0*(1.0-v[j]) + xyz[5][0]/4.0*(1.0+v[j]);
+                    dxdz(1,0) = 0.5*((a2-c1)*xyz[0][0] - a2*xyz[1][0] + a2*xyz[2][0] + (c1-a2)*xyz[3][0] - c2*xyz[4][0] + c2*xyz[5][0]);
+                    dxdz(1,1) = 0.5*((a2-c1)*xyz[0][1] - a2*xyz[1][1] + a2*xyz[2][1] + (c1-a2)*xyz[3][1] - c2*xyz[4][1] + c2*xyz[5][1]);
+                    dxdz(1,2) = 0.5*((a2-c1)*xyz[0][2] - a2*xyz[1][2] + a2*xyz[2][2] + (c1-a2)*xyz[3][2] - c2*xyz[4][2] + c2*xyz[5][2]);
 
-
-                    dxdz(1,0) = -xyz[0][1]/4.0*(1.0-v[j]) + xyz[1][1]/4.0*(1.0-v[j])
-                                -xyz[2][1]/4.0*(1.0+v[j]) + xyz[3][1]/4.0*(1.0+v[j]);
-
-                    dxdz(1,1) = +xyz[0][1]/4.0*((1.0+u[i])-(1.0-z[k])) - xyz[1][1]/4.0*(1.0+u[i])
-                                +xyz[2][1]/4.0*((1.0-z[k])-(1.0+u[i])) + xyz[3][1]/4.0*(1.0+u[i])
-                                -xyz[4][1]/4.0*(1.0+z[k]) + xyz[5][1]/4.0*(1.0+z[k]);
-
-                    dxdz(1,2) = -xyz[0][1]/4.0*(1.0-v[j])
-                                +xyz[2][1]/4.0*(1.0+v[j])
-                                +xyz[4][1]/4.0*(1.0-v[j]) + xyz[5][1]/4.0*(1.0+v[j]);
-
-
-                    dxdz(2,0) = -xyz[0][2]/4.0*(1.0-v[j]) + xyz[1][2]/4.0*(1.0-v[j])
-                                -xyz[2][2]/4.0*(1.0+v[j]) + xyz[3][2]/4.0*(1.0+v[j]);
-
-                    dxdz(2,1) = +xyz[0][2]/4.0*((1.0+u[i])-(1.0-z[k])) - xyz[1][2]/4.0*(1.0+u[i])
-                                +xyz[2][2]/4.0*((1.0-z[k])-(1.0+u[i])) + xyz[3][2]/4.0*(1.0+u[i])
-                                -xyz[4][2]/4.0*(1.0+z[k]) + xyz[5][2]/4.0*(1.0+z[k]);
-
-                    dxdz(2,2) = -xyz[0][2]/4.0*(1.0-v[j])
-                                +xyz[2][2]/4.0*(1.0+v[j])
-                                +xyz[4][2]/4.0*(1.0-v[j]) + xyz[5][2]/4.0*(1.0+v[j]);
+                    dxdz(2,0) = 0.5*(-b1*xyz[0][0] - b2*xyz[3][0] + b1*xyz[4][0] + b2*xyz[5][0]);
+                    dxdz(2,1) = 0.5*(-b1*xyz[0][1] - b2*xyz[3][1] + b1*xyz[4][1] + b2*xyz[5][1]);
+                    dxdz(2,2) = 0.5*(-b1*xyz[0][2] - b2*xyz[3][2] + b1*xyz[4][2] + b2*xyz[5][2]);
 
                     dxdz.Invert();
                     ret.push_back(dxdz);

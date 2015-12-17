@@ -51,7 +51,7 @@ ModuleKey OutputVtk::m_className =
 
 OutputVtk::OutputVtk(FieldSharedPtr f) : OutputModule(f)
 {
-    m_requireEquiSpaced = true;
+    m_requireEquiSpaced = false;
 }
 
 OutputVtk::~OutputVtk()

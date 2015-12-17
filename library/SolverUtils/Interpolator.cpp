@@ -420,6 +420,19 @@ LibUtilities::PtsFieldSharedPtr Interpolator::GetOutField() const
 }
 
 
+void Interpolator::PrintStatistics()
+{
+    int meanN = 0;
+    for (int i = 0; i < m_neighInds.num_elements(); ++i)
+    {
+        meanN += m_neighInds[i].num_elements();
+    }
+
+    cout << "Number of points: " << m_neighInds.num_elements() << endl;
+    cout << "mean Number of Neighbours per point: " << meanN /  m_neighInds.num_elements() << endl;
+}
+
+
 /**
  * @brief Compute interpolation weights for a physical point using Gauss filtering
  *

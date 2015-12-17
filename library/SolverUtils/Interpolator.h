@@ -118,6 +118,8 @@ class Interpolator
 
         LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
+        LIB_UTILITIES_EXPORT void PrintStatistics();
+
 
         template<typename FuncPointerT, typename ObjectPointerT>
         void SetProgressCallback(FuncPointerT func,

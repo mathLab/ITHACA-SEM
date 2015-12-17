@@ -261,15 +261,15 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
                     DNekMat dxdz(3,3,1.0,eFULL);
 
                     dxdz(0,0) = 0.5*(-b1*xyz[0][0] + b1*xyz[1][0] + b2*xyz[2][0] - b2*xyz[3][0]);
-                    dxdz(0,1) = 0.5*(-b1*xyz[0][1] + b1*xyz[1][1] + b2*xyz[2][1] - b2*xyz[3][1]);
-                    dxdz(0,2) = 0.5*(-b1*xyz[0][2] + b1*xyz[1][2] + b2*xyz[2][2] - b2*xyz[3][2]);
+                    dxdz(1,0) = 0.5*(-b1*xyz[0][1] + b1*xyz[1][1] + b2*xyz[2][1] - b2*xyz[3][1]);
+                    dxdz(2,0) = 0.5*(-b1*xyz[0][2] + b1*xyz[1][2] + b2*xyz[2][2] - b2*xyz[3][2]);
 
-                    dxdz(1,0) = 0.5*((a2-c1)*xyz[0][0] - a2*xyz[1][0] + a2*xyz[2][0] + (c1-a2)*xyz[3][0] - c2*xyz[4][0] + c2*xyz[5][0]);
+                    dxdz(0,1) = 0.5*((a2-c1)*xyz[0][0] - a2*xyz[1][0] + a2*xyz[2][0] + (c1-a2)*xyz[3][0] - c2*xyz[4][0] + c2*xyz[5][0]);
                     dxdz(1,1) = 0.5*((a2-c1)*xyz[0][1] - a2*xyz[1][1] + a2*xyz[2][1] + (c1-a2)*xyz[3][1] - c2*xyz[4][1] + c2*xyz[5][1]);
-                    dxdz(1,2) = 0.5*((a2-c1)*xyz[0][2] - a2*xyz[1][2] + a2*xyz[2][2] + (c1-a2)*xyz[3][2] - c2*xyz[4][2] + c2*xyz[5][2]);
+                    dxdz(2,1) = 0.5*((a2-c1)*xyz[0][2] - a2*xyz[1][2] + a2*xyz[2][2] + (c1-a2)*xyz[3][2] - c2*xyz[4][2] + c2*xyz[5][2]);
 
-                    dxdz(2,0) = 0.5*(-b1*xyz[0][0] - b2*xyz[3][0] + b1*xyz[4][0] + b2*xyz[5][0]);
-                    dxdz(2,1) = 0.5*(-b1*xyz[0][1] - b2*xyz[3][1] + b1*xyz[4][1] + b2*xyz[5][1]);
+                    dxdz(0,2) = 0.5*(-b1*xyz[0][0] - b2*xyz[3][0] + b1*xyz[4][0] + b2*xyz[5][0]);
+                    dxdz(1,2) = 0.5*(-b1*xyz[0][1] - b2*xyz[3][1] + b1*xyz[4][1] + b2*xyz[5][1]);
                     dxdz(2,2) = 0.5*(-b1*xyz[0][2] - b2*xyz[3][2] + b1*xyz[4][2] + b2*xyz[5][2]);
 
                     dxdz.Invert();
@@ -316,8 +316,6 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
         NEKERROR(ErrorUtil::ewarning, err.str());
     }
 
-    cout << LibUtilities::kPointsTypeStr[pElem[0].GetPointsType()] << endl;
-
     for (int i = 0; i < expDim; ++i)
     {
         basisKeys.push_back(
@@ -350,15 +348,6 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
             ASSERTL0(false, "nope");
     }
 
-    const Array<TwoD, const NekDouble> &df = gfac->GetDerivFactors(p);
-
-    for (int k = 0; k < p[0].GetNumPoints() * p[1].GetNumPoints()* p[2].GetNumPoints(); ++k)
-    {
-        cout << df[0][k] << " " << df[1][k] << " " << df[2][k] << " " << df[3][k] << " "
-             << df[4][k] << " " << df[5][k] << " " << df[6][k] << " " << df[7][k] << " "
-             << df[8][k] << endl;
-    }
-
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(pElem);
 
     const int pts = deriv[0][0].num_elements();
@@ -382,19 +371,12 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
             }
         }
 
-        cout << i2rm[k] << endl;
-        cout << endl;
-
         jacIdeal = jac * i2rm[k];
-        // cout << "JAC = " << endl << jac << endl;
-        // cout << "I2RM = " << endl << i2rm[k] << endl;
-        // cout << "JACIDEAL = " << endl << jacIdeal << endl;
         NekDouble jacDet;
 
         if(expDim == 2)
         {
             jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
-            //cout << jacDet << endl;
         }
         else if(expDim == 3)
         {
@@ -418,7 +400,6 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
         }
 
         NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet));
-
         eta[k] = expDim * pow(sigma, 2.0/expDim) / frob;
     }
 

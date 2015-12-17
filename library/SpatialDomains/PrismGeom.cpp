@@ -868,22 +868,12 @@ namespace Nektar
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
                 order0 = *max_element(tmp.begin(), tmp.end());
-
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
-                points0 = *max_element(tmp.begin(), tmp.end());
             }
             else
             {
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
                 order0 = *max_element(tmp.begin(), tmp.end());
-
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(3));
-                points0 = *max_element(tmp.begin(), tmp.end());
             }
             
             if (m_forient[0] < 9)
@@ -893,12 +883,6 @@ namespace Nektar
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
                 tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
                 order1 = *max_element(tmp.begin(), tmp.end());
-                
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(3));
-                tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNumPoints(2));
-                points1 = *max_element(tmp.begin(), tmp.end());
             }
             else
             {
@@ -907,12 +891,6 @@ namespace Nektar
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
                 tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
                 order1 = *max_element(tmp.begin(), tmp.end());
-                
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
-                tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNumPoints(2));
-                points1 = *max_element(tmp.begin(), tmp.end());
             }
             
             tmp.clear();
@@ -923,32 +901,19 @@ namespace Nektar
             tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
             tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(2));
             int order2 = *max_element(tmp.begin(), tmp.end());
-            
-            tmp.clear();
-            tmp.push_back(points0);
-            tmp.push_back(points1);
-            tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(1));
-            tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(2));
-            tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(1));
-            tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(2));
-            tmp.push_back(m_faces[1]->GetEdge(1)->GetBasis(0)->GetNumPoints());
-            tmp.push_back(m_faces[1]->GetEdge(2)->GetBasis(0)->GetNumPoints());
-            tmp.push_back(m_faces[3]->GetEdge(1)->GetBasis(0)->GetNumPoints());
-            tmp.push_back(m_faces[3]->GetEdge(2)->GetBasis(0)->GetNumPoints());
-            int points2 = *max_element(tmp.begin(), tmp.end());
-            
+
             const LibUtilities::BasisKey A(
                 LibUtilities::eModified_A, order0,
                 LibUtilities::PointsKey(
-                    points0, LibUtilities::eGaussLobattoLegendre));
+                    order0+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B(
                 LibUtilities::eModified_A, order1,
                 LibUtilities::PointsKey(
-                    points1, LibUtilities::eGaussLobattoLegendre));
+                    order1+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey C(
                 LibUtilities::eModified_B, order2,
                 LibUtilities::PointsKey(
-                    points2, LibUtilities::eGaussRadauMAlpha1Beta0));
+                    order2, LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
                 A, B, C);

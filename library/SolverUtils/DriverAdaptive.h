@@ -74,7 +74,7 @@ namespace Nektar
             
             SOLVER_UTILS_EXPORT void ReplaceExpansion(
                         Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
-                        Array<OneD, int> deltaP);
+                        map<int, int> deltaP);
             
             SOLVER_UTILS_EXPORT void GenerateSeqString(const std::vector<unsigned int> &elmtids,
                                       std::string &idString);

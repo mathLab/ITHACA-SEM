@@ -37,6 +37,7 @@
 
 #include <SolverUtils/DriverAdaptive.h>
 #include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTriExp.h>
 //#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
@@ -101,18 +102,16 @@ namespace Nektar
                                        isHomogeneous1D, false);
             
             // Get number of elements and planes
-            int nExp, nPlanes, nDim;
+            int nExp, nPlanes;
             if (isHomogeneous1D)
             {
                 nExp = m_equ[0]->UpdateFields()[0]->GetPlane(0)->GetExpSize();
                 nPlanes = m_equ[0]->UpdateFields()[0]->GetZIDs().num_elements();
-                nDim = 3;
             }
             else
             {
                 nExp = m_equ[0]->UpdateFields()[0]->GetExpSize();
                 nPlanes = 1;
-                nDim = 2;
             }
             
             int nFields = m_equ[0]->UpdateFields().num_elements();
@@ -126,6 +125,7 @@ namespace Nektar
             Array< OneD, NekDouble> tmpArray;
             //GlobalMapping::MappingSharedPtr mapping;
             // Adaptive loop
+            LocalRegions:: ExpansionSharedPtr Exp;
             for( int i = 1; i < nRuns; i++ )
             {
                 // Get field expansions
@@ -133,40 +133,58 @@ namespace Nektar
                                                     m_equ[0]->UpdateFields();
 
                 // Determine the change to be applied in the order
-                Array<OneD, int> deltaP (nDim*nExp, 0);
+                map<int, int> deltaP;
                 int offset = 0;
                 for ( int n = 0; n < nExp; n++)
                 {
                     offset = fields[sensorVar]->GetPhys_Offset(n);
 
-                    int P = fields[sensorVar]->GetExp(n)->
-                                                    GetBasis(0)->GetNumModes();
-                    int Q = fields[sensorVar]->GetExp(n)->
-                                                    GetBasis(1)->GetNumModes();
+                    Exp = fields[sensorVar]->GetExp(n);
 
-                    int qa = fields[sensorVar]->GetExp(n)->
-                                                    GetBasis(0)->GetNumPoints();
-                    int qb = fields[sensorVar]->GetExp(n)->
-                                                    GetBasis(1)->GetNumPoints();
+                    int P = Exp->GetBasis(0)->GetNumModes();
+                    int Q = Exp->GetBasis(1)->GetNumModes();
+
+                    int qa = Exp->GetBasis(0)->GetNumPoints();
+                    int qb = Exp->GetBasis(1)->GetNumPoints();
 
                     // Declare orthogonal basis.
-                    LibUtilities::PointsKey pa(qa,fields[sensorVar]->GetExp(n)->
+                    LibUtilities::PointsKey pa(qa,Exp->
                                                 GetBasis(0)->GetPointsType());
-                    LibUtilities::PointsKey pb(qb,fields[sensorVar]->GetExp(n)->
+                    LibUtilities::PointsKey pb(qb,Exp->
                                                 GetBasis(1)->GetPointsType());
-
-                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,P-1,pa);
-                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,Q-1,pb);
-                    StdRegions::StdQuadExp OrthoExp(Ba,Bb);
-                    int nq = OrthoExp.GetTotPoints();
+                    
+                    StdRegions::StdExpansionSharedPtr OrthoExp;
+                    switch (Exp->GetGeom()->GetShapeType())
+                    {
+                        case LibUtilities::eQuadrilateral:
+                        {
+                            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,P-1,pa);
+                            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,Q-1,pb);
+                            OrthoExp = MemoryManager<StdRegions::StdQuadExp>::
+                                            AllocateSharedPtr(Ba,Bb);
+                        }
+                        break;
+                        case LibUtilities::eTriangle:
+                        {
+                            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,P-1,pa);
+                            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,Q-1,pb);
+                            OrthoExp = MemoryManager<StdRegions::StdTriExp>::
+                                            AllocateSharedPtr(Ba,Bb);
+                        }
+                        break;
+                        default:
+                            ASSERTL0(false, "Shape not supported.");
+                            break;
+                    }
+                    int nq = OrthoExp->GetTotPoints();
 
                     NekDouble error = 0;
                     NekDouble fac = 0;
                     NekDouble tmp = 0;
 
-                    coeffs = Array< OneD, NekDouble> (OrthoExp.GetNcoeffs());
-                    physReduced = Array< OneD, NekDouble> (OrthoExp.GetTotPoints());
-                    tmpArray = Array< OneD, NekDouble> (OrthoExp.GetTotPoints(), 0.0);
+                    coeffs = Array< OneD, NekDouble> (OrthoExp->GetNcoeffs());
+                    physReduced = Array< OneD, NekDouble> (OrthoExp->GetTotPoints());
+                    tmpArray = Array< OneD, NekDouble> (OrthoExp->GetTotPoints(), 0.0);
 
                     // Refinement based only on one variable
                     for ( int plane = 0; plane < nPlanes; plane++)
@@ -180,16 +198,16 @@ namespace Nektar
                             phys = fields[sensorVar]->GetPhys()+offset;
                         }
                         // Project solution to lower order
-                        OrthoExp.FwdTrans(phys,coeffs);
-                        OrthoExp.BwdTrans(coeffs,physReduced);
+                        OrthoExp->FwdTrans(phys,coeffs);
+                        OrthoExp->BwdTrans(coeffs,physReduced);
 
                         // Calculate error =||phys-physReduced||^2 / ||phys||^2
                         Vmath::Vsub( nq, phys, 1, physReduced, 1, tmpArray, 1);
                         Vmath::Vmul( nq, tmpArray, 1, tmpArray, 1, tmpArray, 1);
-                        tmp = fields[sensorVar]->GetExp(n)->Integral(tmpArray);
+                        tmp = Exp->Integral(tmpArray);
 
                         Vmath::Vmul( nq, phys, 1, phys, 1, tmpArray, 1);
-                        fac = fields[sensorVar]->GetExp(n)->Integral(tmpArray);
+                        fac = Exp->Integral(tmpArray);
 
                         tmp = abs(tmp/fac);
 
@@ -210,13 +228,13 @@ namespace Nektar
                     // Override tolerances if function is defined
                     if (m_session->DefinesFunction("AdaptiveLowerTolerance"))
                     {
-                        int nq = fields[0]->GetExp(n)->GetTotPoints();
+                        int nq = Exp->GetTotPoints();
                         // Obtain points from the the element
                         Array<OneD,NekDouble>  xc0,xc1,xc2;
                         xc0 = Array<OneD,NekDouble>(nq,0.0);
                         xc1 = Array<OneD,NekDouble>(nq,0.0);
                         xc2 = Array<OneD,NekDouble>(nq,0.0);
-                        fields[0]->GetExp(n)->GetCoords(xc0,xc1,xc2);
+                        Exp->GetCoords(xc0,xc1,xc2);
 
                         // Evaluate function from session file
                         Array< OneD, NekDouble> tolerance(nq,0.0);
@@ -227,13 +245,13 @@ namespace Nektar
                     }
                     if (m_session->DefinesFunction("AdaptiveUpperTolerance"))
                     {
-                        int nq = fields[0]->GetExp(n)->GetTotPoints();
+                        int nq = Exp->GetTotPoints();
                         // Obtain points from the the element
                         Array<OneD,NekDouble>  xc0,xc1,xc2;
                         xc0 = Array<OneD,NekDouble>(nq,0.0);
                         xc1 = Array<OneD,NekDouble>(nq,0.0);
                         xc2 = Array<OneD,NekDouble>(nq,0.0);
-                        fields[0]->GetExp(n)->GetCoords(xc0,xc1,xc2);
+                        Exp->GetCoords(xc0,xc1,xc2);
 
                         // Evaluate function from session file
                         Array< OneD, NekDouble> tolerance(nq,0.0);
@@ -246,14 +264,16 @@ namespace Nektar
                     if ( (error > upperTol) &&
                          (P < maxP)   )
                     {
-                        deltaP[nDim*n] = 1;
-                        deltaP[nDim*n+1] = 1;
+                        deltaP[Exp->GetGeom()->GetGlobalID()] = 1;
                     }
                     else if( (error < lowerTol) &&
                               P > minP )
                     {
-                        deltaP[nDim*n] = -1;
-                        deltaP[nDim*n+1] = -1;
+                        deltaP[Exp->GetGeom()->GetGlobalID()] = -1;
+                    }
+                    else
+                    {
+                        deltaP[Exp->GetGeom()->GetGlobalID()] =  0;
                     }
                 }
 
@@ -261,9 +281,6 @@ namespace Nektar
                 // mapping = GlobalMapping::Mapping::Load(m_session, 
                 //                                      m_equ[0]->UpdateFields()); 
                 
-                // Make sure all processes have the same result
-                m_session->GetComm()->GetColumnComm()->AllReduce
-                                        (deltaP, LibUtilities::ReduceMax);
                 // Write new expansion section to the session reader
                 ReplaceExpansion(fields, deltaP); 
                 // Reset GlobalLinSys Manager to avoid using too much memory
@@ -353,33 +370,29 @@ namespace Nektar
         
         void DriverAdaptive::ReplaceExpansion(
                         Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
-                        Array<OneD, int> deltaP) 
+                        map<int, int> deltaP) 
         {
             int nExp, nDim;      
             
             // Get field definitions
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs
                         = fields[0]->GetFieldDefinitions();
+            int expDim = 2;
             if (fielddefs[0]->m_numHomogeneousDir == 1)
             {
-                nExp = fields[0]->GetPlane(0)->GetExpSize();
                 nDim = 3;
             }
             else
             {
-                nExp = fields[0]->GetExpSize();
                 nDim = 2;
             }
             // Add variables to field definition
             for(int i = 0; i < fielddefs.size(); ++i)
             {
-                fielddefs[i]->m_fields.push_back("u");
-                fielddefs[i]->m_fields.push_back("v");
-                if (fielddefs[0]->m_numHomogeneousDir == 1)
+                for (int j = 0; j < fields.num_elements(); ++j)
                 {
-                    fielddefs[i]->m_fields.push_back("w");
+                    fielddefs[i]->m_fields.push_back(m_session->GetVariable(j));
                 }
-                fielddefs[i]->m_fields.push_back("p");
             }         
             
             // Get tinyxml objects
@@ -390,6 +403,7 @@ namespace Nektar
             // Write new expansion information
             for (int f = 0; f < fielddefs.size(); ++f)
             {
+                nExp = fielddefs[f]->m_elementIDs.size();
                 //---------------------------------------------
                 // Write ELEMENTS
                 TiXmlElement * elemTag = new TiXmlElement("ELEMENTS");
@@ -514,21 +528,28 @@ namespace Nektar
 
                     numModesStringStream << "MIXORDER:";
                     bool first = true;
+                    int eId;
+                    Array<OneD, int> order(nDim, 0);
                     for (int n = 0 ; n < nExp; n++)
                     {
+                        eId = fielddefs[f]->m_elementIDs[n];
+                        for (int i =0; i<expDim; i++)
+                        {
+                            order[i] = deltaP[eId];
+                        }
                         for (int i =0; i<nDim; i++)
                         {
                             if (fielddefs[f]->m_uniOrder)
                             {
-                                deltaP[n*nDim + i] += fielddefs[f]->m_numModes[i];
+                                order[i] += fielddefs[f]->m_numModes[i];
                             }
                             else
                             {
-                                deltaP[n*nDim + i] +=fielddefs[f]->m_numModes[n*nDim + i];
+                                order[i] += fielddefs[f]->m_numModes[n*nDim + i];
                             }
                             if (!first)
                                 numModesStringStream << ",";
-                            numModesStringStream << deltaP[n*nDim + i];
+                            numModesStringStream << order[i];
                             first = false;                           
                         }
                     }

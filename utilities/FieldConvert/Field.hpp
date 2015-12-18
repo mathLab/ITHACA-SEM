@@ -295,14 +295,11 @@ struct Field {
                         m_session->LoadParameter("LZ",lz);
                         btype = LibUtilities::eFourier;
                     }
-                    int extraPlanes;
-                    m_session->LoadParameter("OutputExtraPlanes", extraPlanes, 0);
-                    nplanes += extraPlanes;
 
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
 
                     const LibUtilities::BasisKey  Bkey(btype, nplanes, Pkey);
 

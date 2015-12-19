@@ -125,9 +125,20 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 
 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
 {
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(Octants.size());
+    int ct = 0;
     for(int i = 0; i < Octants.size(); i++)
     {
+        if(Octants[i]->GetLocation() != 3)
+        {
+            ct++;
+        }
+    }
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(ct);
+    for(int i = 0; i < Octants.size(); i++)
+    {
+        if(Octants[i]->GetLocation() == 3)
+            continue;
+
         Array<OneD, Array<OneD, NekDouble> > oct(8);
         Array<OneD, NekDouble> p1(3);
         p1[0] = Octants[i]->FX(-1);

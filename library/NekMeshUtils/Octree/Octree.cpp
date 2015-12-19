@@ -128,15 +128,16 @@ Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
     int ct = 0;
     for(int i = 0; i < Octants.size(); i++)
     {
-        if(Octants[i]->GetLocation() != 3)
+        if(Octants[i]->GetLocation() == 2 && Octants[i]->IsLeaf())
         {
             ct++;
         }
     }
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(ct);
+    ct = 0;
     for(int i = 0; i < Octants.size(); i++)
     {
-        if(Octants[i]->GetLocation() == 3)
+        if(Octants[i]->GetLocation() != 3 || !Octants[i]->IsLeaf())
             continue;
 
         Array<OneD, Array<OneD, NekDouble> > oct(8);
@@ -188,7 +189,7 @@ Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
         p8[2] = Octants[i]->FZ(+1);
         oct[7] = p8;
 
-        out[i] = oct;
+        out[ct++] = oct;
     }
 
     return out;

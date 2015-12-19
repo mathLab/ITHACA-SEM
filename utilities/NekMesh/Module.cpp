@@ -194,14 +194,12 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-                    /*
                     if(ed->onCurve)
                     {
                         e2->onCurve = ed->onCurve;
                         e2->CADCurveId = ed->CADCurveId;
                         e2->CADCurve = ed->CADCurve;
                     }
-                    */
 
                     // Update edge to element map.
                     e2->m_elLink.push_back(

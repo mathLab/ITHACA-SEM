@@ -123,6 +123,66 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return n->GetDelta();
 }
 
+Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
+{
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(Octants.size());
+    for(int i = 0; i < Octants.size(); i++)
+    {
+        Array<OneD, Array<OneD, NekDouble> > oct(8);
+        Array<OneD, NekDouble> p1(3);
+        p1[0] = Octants[i]->FX(-1);
+        p1[1] = Octants[i]->FY(-1);
+        p1[2] = Octants[i]->FZ(-1);
+        oct[0] = p1;
+
+        Array<OneD, NekDouble> p2(3);
+        p2[0] = Octants[i]->FX(+1);
+        p2[1] = Octants[i]->FY(-1);
+        p2[2] = Octants[i]->FZ(-1);
+        oct[1] = p2;
+
+        Array<OneD, NekDouble> p3(3);
+        p3[0] = Octants[i]->FX(+1);
+        p3[1] = Octants[i]->FY(+1);
+        p3[2] = Octants[i]->FZ(-1);
+        oct[2] = p3;
+
+        Array<OneD, NekDouble> p4(3);
+        p4[0] = Octants[i]->FX(-1);
+        p4[1] = Octants[i]->FY(+1);
+        p4[2] = Octants[i]->FZ(-1);
+        oct[3] = p4;
+
+        Array<OneD, NekDouble> p5(3);
+        p5[0] = Octants[i]->FX(-1);
+        p5[1] = Octants[i]->FY(-1);
+        p5[2] = Octants[i]->FZ(+1);
+        oct[4] = p5;
+
+        Array<OneD, NekDouble> p6(3);
+        p6[0] = Octants[i]->FX(+1);
+        p6[1] = Octants[i]->FY(-1);
+        p6[2] = Octants[i]->FZ(+1);
+        oct[5] = p6;
+
+        Array<OneD, NekDouble> p7(3);
+        p7[0] = Octants[i]->FX(+1);
+        p7[1] = Octants[i]->FY(+1);
+        p7[2] = Octants[i]->FZ(+1);
+        oct[6] = p7;
+
+        Array<OneD, NekDouble> p8(3);
+        p8[0] = Octants[i]->FX(-1);
+        p8[1] = Octants[i]->FY(+1);
+        p8[2] = Octants[i]->FZ(+1);
+        oct[7] = p8;
+
+        out[i] = oct;
+    }
+
+    return out;
+}
+
 void Octree::Build()
 {
     BoundingBox = m_cad->GetBoundingBox();

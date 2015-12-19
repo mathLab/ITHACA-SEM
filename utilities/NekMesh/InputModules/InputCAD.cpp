@@ -98,6 +98,12 @@ void InputCAD::Process()
     else
         ASSERTL0(false,"unknown MeshType");
 
+    bool writeoctree;
+    if(pSession->DefinesSolverInfo("WriteOctree"))
+    {
+        writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
+    }
+
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;
 
@@ -167,6 +173,46 @@ void InputCAD::Process()
                                     m_maxDelta, m_eps, m_octreeRelax);
 
     m_octree->Build();
+
+    if(writeoctree)
+    {
+        MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
+        //build hexs for oct mesh
+        oct->m_expDim = 3;
+        oct->m_spaceDim = 3;
+        oct->m_nummode = 2;
+
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > octs = m_octree->GetOctantVerts();
+        for(int i = 0; i < octs.num_elements(); i++)
+        {
+            vector<NodeSharedPtr> ns;
+            for(int j = 0; j < 8; j++)
+            {
+                NodeSharedPtr n = boost::shared_ptr<Node>(new Node(0, octs[i][j][0],
+                                octs[i][j][1], octs[i][j][2]));
+                ns.push_back(n);
+            }
+            vector<int> tags;
+            tags.push_back(0);
+            ElmtConfig conf(LibUtilities::eHexahedron,1,false,false);
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                    LibUtilities::eHexahedron,conf,ns,tags);
+            oct->m_element[3].push_back(E);
+        }
+
+        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
+                ModuleKey(eOutputModule, "xml"), oct);
+        mod->RegisterConfig("outfile","oct.xml");
+        mod->ProcessVertices();
+        mod->ProcessEdges();
+        mod->ProcessFaces();
+        mod->ProcessElements();
+        mod->ProcessComposites();
+        mod->Process();
+
+    }
+
+    exit(-1);
 
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;

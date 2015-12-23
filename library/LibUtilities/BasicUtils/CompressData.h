@@ -72,7 +72,7 @@ namespace LibUtilities
 
             /* allocate deflate state */
             strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
+            strm.zfree  = Z_NULL;
             strm.opaque = Z_NULL;
             ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
 

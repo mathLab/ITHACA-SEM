@@ -726,10 +726,12 @@ namespace Nektar
                         else  if(boost::iequals(entitytype,"DATAPOINTS"))
                         {
                             MeshCurvedPts cpts; 
+                            NekInt id;
                             
-                            ASSERTL0(x->Attribute("ID", &cpts.id),
+                            ASSERTL0(x->Attribute("ID", &id),
                                      "Failed to get ID from PTS section");
-
+                            cpts.id = id;
+                            
                             // read in data
                             std::string elmtStr;             
 

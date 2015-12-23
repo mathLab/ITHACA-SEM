@@ -406,6 +406,12 @@ namespace Nektar
                 std::vector<LibUtilities::MeshVertex> vertData;
                 LibUtilities::CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
 
+                cout << "size of vector: " << vertData.size() <<
+                    " size of MeshVertex: " << sizeof(LibUtilities::MeshVertex) << endl;
+                cout << " size of int: " << sizeof(int) 
+                     << " size of NekInt: " << sizeof(NekInt) 
+                     << " size of NekDouble: "<< sizeof(NekDouble) << endl;
+                
                 int indx;
                 NekDouble xval, yval, zval;
                 for(int i = 0; i < vertData.size(); ++i)
@@ -1282,9 +1288,10 @@ namespace Nektar
                     }
                     else  if(boost::iequals(entitytype,"DATAPOINTS"))
                     {
-
-                        ASSERTL0(x->Attribute("ID", &cpts.id),
+                        NekInt id;
+                        ASSERTL0(x->Attribute("ID", &id),
                                  "Failed to get ID from PTS section");
+                        cpts.id = id;
                         
                         // read in data
                         std::string elmtStr;             
@@ -1334,8 +1341,9 @@ namespace Nektar
                 for(int i = 0; i < edginfo.size(); ++i)
                 {
                     int edgeid = edginfo[i].entityid;
+                    LibUtilities::PointsType ptype; 
 
-                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, edginfo[i].ptype));
+                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, ptype = (LibUtilities::PointsType) edginfo[i].ptype));
 
                     // load points
                     int offset = edginfo[i].ptoffset;
@@ -1354,9 +1362,9 @@ namespace Nektar
                 for(int i = 0; i < facinfo.size(); ++i)
                 {
                     int faceid = facinfo[i].entityid;
+                    LibUtilities::PointsType ptype;
                     
-                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid,
-                                                                          facinfo[i].ptype)); 
+                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid,ptype = (LibUtilities::PointsType) facinfo[i].ptype)); 
 
                     int offset = facinfo[i].ptoffset;
                     for(int j = 0; j < facinfo[i].npoints; ++j)

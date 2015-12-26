@@ -32,6 +32,7 @@
 //  Description: Routines for compressing and inflating data
 //
 ////////////////////////////////////////////////////////////////////////////////
+#define NOMINMAX
 
 #include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/MeshEntities.hpp>

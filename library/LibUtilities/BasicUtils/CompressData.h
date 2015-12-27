@@ -48,6 +48,7 @@
 
 #include "zlib.h"
 
+
 // Buffer size for zlib compression/decompression
 #define CHUNK 16384
 
@@ -56,8 +57,39 @@ namespace Nektar
 namespace LibUtilities
 {
 
+#if ((ULONG_MAX) == (UINT_MAX))
+    const std::string BitSizeStr = "32 Bit";
+#else
+    const std::string BitSizeStr = "64 Bit";
+#endif
+
+    enum EndianType {
+        eEndianUnknown,
+        eEndianBig, 
+        eEndianLittle,
+        eEndianBigWord,   /* Middle-endian, Honeywell 316 style */
+        eEndianLittleWord /* Middle-endian, PDP-11 style */
+    };
+
+    const std::string EndianTypeMap[] =
+    {
+        "UnknownEndian",
+        "BigEndian",
+        "LittleEndian",
+        "BigWordEndian",
+        "LittleWordEndian"
+    };
+    
+    LIB_UTILITIES_EXPORT EndianType Endianness(void);
+    
     namespace CompressData
     {
+        LIB_UTILITIES_EXPORT std::string GetCompressString(void); 
+
+
+        LIB_UTILITIES_EXPORT std::string GetBitSizeStr(void); 
+
+        
         /**
          * Compress a vector of NekDouble values into a string using zlib.
          */

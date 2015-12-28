@@ -346,7 +346,10 @@ namespace Nektar
                     GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
                 }
                 elemTag->SetAttribute("ID", idString);
-
+                elemTag->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                elemTag->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                 std::string base64string;
                 ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f], 
                                                                      base64string),
@@ -766,6 +769,18 @@ namespace Nektar
                             numPointsString.insert(0, attr->Value());
                             numPointDef = true;
                         }
+                        else if (attrName == "COMPRESSED")
+                        {
+                            if(!boost::iequals(attr->Value(),
+                                               CompressData::GetCompressString()))
+                            {
+                                WARNINGL0(false,"Endianness of file does not match");
+                            }
+                        }
+                        else if (attrName == "BITSIZE")
+                        {
+                            // do nothing
+                        }
                         else
                         {
                             std::string errstr("Unknown attribute: ");
@@ -961,6 +976,16 @@ namespace Nektar
 
                     std::vector<NekDouble> elementFieldData;
                     // Convert from base64 to binary.
+
+                    const char *CompressStr = element->Attribute("COMPRESSED");
+                    if(CompressStr)
+                    {
+                        if(!boost::iequals(CompressStr,CompressData::GetCompressString()))
+                        {
+                            WARNINGL0(false,"Endianness of file does not match");
+                        }
+                    }
+                                                                              
 
                     ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
                                                         elementStr, 

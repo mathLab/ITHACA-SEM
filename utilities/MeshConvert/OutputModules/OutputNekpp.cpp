@@ -181,7 +181,11 @@ namespace Nektar
                 }
                 std::string vertStr;
                 LibUtilities::CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
-                verTag->SetAttribute("COMPRESSED","B64Z");
+                verTag->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                verTag->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
+
                 verTag->LinkEndChild(new TiXmlText(vertStr));
             }
 
@@ -227,7 +231,10 @@ namespace Nektar
                     }
                     std::string edgeStr;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(edgeInfo,edgeStr);
-                    verTag->SetAttribute("COMPRESSED","B64Z");
+                    verTag->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    verTag->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     verTag->LinkEndChild(new TiXmlText(edgeStr));
                 }
                 pRoot->LinkEndChild( verTag );
@@ -317,7 +324,10 @@ namespace Nektar
                         TiXmlElement* x = new TiXmlElement(vType);
                         std::string faceStr;
                         LibUtilities::CompressData::ZlibEncodeToBase64Str(TriFaceInfo,faceStr);
-                        x->SetAttribute("COMPRESSED","B64Z");
+                        x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                        x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                         x->LinkEndChild(new TiXmlText(faceStr));
                         verTag->LinkEndChild(x);
                     }
@@ -328,7 +338,10 @@ namespace Nektar
                         TiXmlElement* x = new TiXmlElement(vType);
                         std::string faceStr;
                         LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,faceStr);
-                        x->SetAttribute("COMPRESSED","B64Z");
+                        x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                        x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                         x->LinkEndChild(new TiXmlText(faceStr));
                         verTag->LinkEndChild(x);
                     }
@@ -452,7 +465,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(SegInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -463,7 +479,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(TriInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -474,7 +493,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -485,7 +507,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(TetInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -496,7 +521,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(PyrInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -507,7 +535,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(PrismInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -518,7 +549,10 @@ namespace Nektar
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
                     LibUtilities::CompressData::ZlibEncodeToBase64Str(HexInfo,Str);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
@@ -846,7 +880,10 @@ namespace Nektar
                 // add xml information
                 if(edgeinfo.size())
                 {
-                    curved->SetAttribute("COMPRESSED","B64Z");
+                    curved->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    curved->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     
                     TiXmlElement *x = new TiXmlElement("E");
                     std::string dataStr;
@@ -857,7 +894,10 @@ namespace Nektar
 
                 if(faceinfo.size())
                 {
-                    curved->SetAttribute("COMPRESSED","B64Z");
+                    curved->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
+                    curved->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                     
                     TiXmlElement *x = new TiXmlElement("F");
                     std::string dataStr;

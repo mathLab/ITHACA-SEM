@@ -45,15 +45,17 @@ namespace NekMeshUtils
 
 Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), m_parent(p)
 {
+    cout << "made: " << i << endl;
+
     //initialise variables to defualt states
     m_leaf = true;
     m_needToDivide = false;
-    m_deltaSet = false;
     m_numValidPoints = 0;
-    m_delta = -1;
-    NekDouble av=0;
-    NekDouble maxDif=0;
+    m_delta = pair<bool, NekDouble>(false, 0.0);
+    NekDouble av = 0;
+    NekDouble maxDif = 0;
     NekDouble minDif=numeric_limits<double>::max();
+    m_location = eUnknown;
 
     //pull information from parent
     Array<OneD, NekDouble> parentloc = m_parent->GetLoc();
@@ -63,7 +65,6 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), 
     m_loc[2] = parentloc[2] + dir[2] * m_parent->DX() / 2.0;
 
     m_hd = m_parent->DX() / 2.0;
-    m_level = m_parent->GetLevel() + 1;
     vector<CurvaturePointSharedPtr> CurvaturePointList = m_parent->GetCPList();
 
     //setup complete
@@ -120,13 +121,7 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), 
 
     if(NumCurvePoint()>0)
     {
-        //location should be on the boundary
-        m_locationKnown = true;
-        m_location = 2;
-    }
-    else
-    {
-        m_location = false;
+        m_location = eOnBoundary;
     }
 }
 
@@ -135,18 +130,19 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                const vector<CurvaturePointSharedPtr> &cplist)
                : m_id(i), m_hd(dx)
 {
+    cout << "made: " << i << endl;
+
     //initialise variables to defualt states
     m_leaf = false;
     m_needToDivide = true;
     m_numValidPoints = 0;
-    m_delta = -1;
+    m_delta = pair<bool, NekDouble>(false, 0.0);
 
     m_loc = Array<OneD, NekDouble>(3);
     m_loc[0] = x;
     m_loc[1] = y;
     m_loc[2] = z;
 
-    m_level = 0;
     m_localCPIDList = cplist;
 
     for(int i = 0; i < m_localCPIDList.size(); i++)
@@ -157,7 +153,80 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
         }
     }
 
-    m_location = 2;
+    m_location = eOnBoundary;
+}
+
+void Octant::Subdivide(OctantSharedPtr p, NekDouble minDelta, int &numoct)
+{
+    if(!p->m_needToDivide) return;
+
+    m_leaf = false; //set as not leaf and make children
+
+    Array<OneD, OctantSharedPtr> children(8);
+
+    for(int i = 0; i < 8; i++)
+    {
+        //set up x,y,z ordering of the 8 octants
+        Array<OneD, NekDouble> dir(3);
+        if(i<4)
+        {
+            dir[2] = +1.0;
+            if(i<2)
+            {
+                dir[0] = +1.0;
+            }
+            else
+            {
+                dir[0] = -1.0;
+            }
+            if(i==0||i==3)
+            {
+                dir[1] = +1.0;
+            }
+            else
+            {
+                dir[1] = -1.0;
+            }
+        }
+        else
+        {
+            dir[2] = -1.0;
+            if(i<6)
+            {
+                dir[0] = +1.0;
+            }
+            else
+            {
+                dir[0] = -1.0;
+            }
+            if(i==4||i==7)
+            {
+                dir[1] = +1.0;
+            }
+            else
+            {
+                dir[1] = -1.0;
+            }
+        }
+
+        children[i] = boost::shared_ptr<Octant>(new Octant(numoct++, p, dir));
+    }
+
+    this->SetChildren(children);
+
+    //need to figure out neigbours here
+    for(int i = 0; i < 8; i++)
+    {
+
+    }
+
+    for(int i = 0; i < 8; i++)
+    {
+        if(children[i]->DX() / 4.0 > minDelta)
+        {
+            children[i]->Subdivide(children[i], minDelta, numoct);
+        }
+    }
 }
 
 bool operator==(OctantSharedPtr const &p1, OctantSharedPtr const &p2)

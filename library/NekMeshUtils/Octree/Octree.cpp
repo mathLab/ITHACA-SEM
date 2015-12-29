@@ -46,7 +46,7 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-
+/*
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     //starting at master octant 0 move through succsesive octants which contain
@@ -122,76 +122,63 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     }
     return n->GetDelta();
 }
-
+*/
 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
 {
-    int ct = 0;
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(Octants.size());
     for(int i = 0; i < Octants.size(); i++)
     {
-        if(Octants[i]->GetLocation() == 2 && Octants[i]->IsLeaf())
-        {
-            ct++;
-        }
-    }
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(ct);
-    ct = 0;
-    for(int i = 0; i < Octants.size(); i++)
-    {
-        if(Octants[i]->GetLocation() != 3 || !Octants[i]->IsLeaf())
-            continue;
-
         Array<OneD, Array<OneD, NekDouble> > oct(8);
         Array<OneD, NekDouble> p1(3);
-        p1[0] = Octants[i]->FX(-1);
-        p1[1] = Octants[i]->FY(-1);
-        p1[2] = Octants[i]->FZ(-1);
+        p1[0] = Octants[i]->FX(eBack);
+        p1[1] = Octants[i]->FX(eRight);
+        p1[2] = Octants[i]->FX(eBottom);
         oct[0] = p1;
 
         Array<OneD, NekDouble> p2(3);
-        p2[0] = Octants[i]->FX(+1);
-        p2[1] = Octants[i]->FY(-1);
-        p2[2] = Octants[i]->FZ(-1);
+        p2[0] = Octants[i]->FX(eFront);
+        p2[1] = Octants[i]->FX(eRight);
+        p2[2] = Octants[i]->FX(eBottom);
         oct[1] = p2;
 
         Array<OneD, NekDouble> p3(3);
-        p3[0] = Octants[i]->FX(+1);
-        p3[1] = Octants[i]->FY(+1);
-        p3[2] = Octants[i]->FZ(-1);
+        p3[0] = Octants[i]->FX(eFront);
+        p3[1] = Octants[i]->FX(eLeft);
+        p3[2] = Octants[i]->FX(eBottom);
         oct[2] = p3;
 
         Array<OneD, NekDouble> p4(3);
-        p4[0] = Octants[i]->FX(-1);
-        p4[1] = Octants[i]->FY(+1);
-        p4[2] = Octants[i]->FZ(-1);
+        p4[0] = Octants[i]->FX(eBack);
+        p4[1] = Octants[i]->FX(eLeft);
+        p4[2] = Octants[i]->FX(eBottom);
         oct[3] = p4;
 
         Array<OneD, NekDouble> p5(3);
-        p5[0] = Octants[i]->FX(-1);
-        p5[1] = Octants[i]->FY(-1);
-        p5[2] = Octants[i]->FZ(+1);
+        p5[0] = Octants[i]->FX(eBack);
+        p5[1] = Octants[i]->FX(eRight);
+        p5[2] = Octants[i]->FX(eTop);
         oct[4] = p5;
 
         Array<OneD, NekDouble> p6(3);
-        p6[0] = Octants[i]->FX(+1);
-        p6[1] = Octants[i]->FY(-1);
-        p6[2] = Octants[i]->FZ(+1);
+        p6[0] = Octants[i]->FX(eFront);
+        p6[1] = Octants[i]->FX(eRight);
+        p6[2] = Octants[i]->FX(eTop);
         oct[5] = p6;
 
         Array<OneD, NekDouble> p7(3);
-        p7[0] = Octants[i]->FX(+1);
-        p7[1] = Octants[i]->FY(+1);
-        p7[2] = Octants[i]->FZ(+1);
+        p7[0] = Octants[i]->FX(eFront);
+        p7[1] = Octants[i]->FX(eLeft);
+        p7[2] = Octants[i]->FX(eTop);
         oct[6] = p7;
 
         Array<OneD, NekDouble> p8(3);
-        p8[0] = Octants[i]->FX(-1);
-        p8[1] = Octants[i]->FY(+1);
-        p8[2] = Octants[i]->FZ(+1);
+        p8[0] = Octants[i]->FX(eBack);
+        p8[1] = Octants[i]->FX(eLeft);
+        p8[2] = Octants[i]->FX(eTop);
         oct[7] = p8;
 
-        out[ct++] = oct;
+        out[i] = oct;
     }
-
     return out;
 }
 
@@ -206,8 +193,7 @@ void Octree::Build()
     CompileCuravturePointList();
 
     if(m_verbose)
-        cout << "\tCurvature samples: " << m_cpList.size() << endl
-        << "\tInitial subdivision: ";
+        cout << "\tCurvature samples: " << m_cpList.size() << endl;
 
     NekDouble maxdim = (BoundingBox[1]-BoundingBox[0])/2 >
                            (BoundingBox[3]-BoundingBox[2])/2 ?
@@ -217,18 +203,18 @@ void Octree::Build()
                         maxdim : (BoundingBox[5]-BoundingBox[4])/2;
 
     //make master octant based on the bounding box of the domain
-    OctantSharedPtr newOctant =
-    MemoryManager<Octant>::AllocateSharedPtr(0,
-     (BoundingBox[1]+BoundingBox[0])/2,
-     (BoundingBox[3]+BoundingBox[2])/2,
-     (BoundingBox[5]+BoundingBox[4])/2, maxdim, m_cpList);
+    m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(0,
+                        (BoundingBox[1]+BoundingBox[0])/2.0,
+                        (BoundingBox[3]+BoundingBox[2])/2.0,
+                        (BoundingBox[5]+BoundingBox[4])/2.0, maxdim, m_cpList);
 
-    m_masteroct = newOctant;
-    Octants.push_back(newOctant);
+    int numoct = 1;
+    m_masteroct->Subdivide(m_masteroct, m_minDelta , numoct);
 
-    m_totNotDividing=0;
+    Octants.push_back(m_masteroct);
+    m_masteroct->CompileLeaves(Octants);
 
-    InitialSubDivide(m_masteroct);
+    /*InitialSubDivide(m_masteroct);
 
     for(int i = 0; i < Octants.size(); i++)
     {
@@ -281,10 +267,10 @@ void Octree::Build()
     {
         int elem = CountElemt();
         printf("\tPredicted mesh: %.2d elements\n", elem);
-    }
+    }*/
 }
 
-void Octree::Relax()
+/*void Octree::Relax()
 {
     //identify octants which contain minlimited octants
     vector<OctantSharedPtr> minlimitedoct;
@@ -838,7 +824,7 @@ void Octree::PropagateDomain()
                 known.clear();
             }
 
-            if(oct->IsLeaf() && !oct->KnowsLocation())
+            if(oct->IsLeaf() && oct->GetLocation() == eUnknown)
             { //if the node does not know its location
                 ct+=1;
                 vector<OctantSharedPtr> known;
@@ -846,7 +832,7 @@ void Octree::PropagateDomain()
 
                 for(int j = 0; j < nList.size(); j++)
                 {
-                    if(nList[j]->KnowsLocation())
+                    if(nList[j]->GetLocation() != eUnknown)
                     {
                         known.push_back(nList[j]);
                     }
@@ -856,7 +842,7 @@ void Octree::PropagateDomain()
                     vector<OctantSharedPtr> isOrient2;
                     for(int j = 0; j < known.size(); j++)
                     {
-                        if(known[j]->GetLocation() == 2)
+                        if(known[j]->GetLocation() == eOnBoundary)
                         {
                             isOrient2.push_back(known[j]);
                         }
@@ -921,11 +907,11 @@ void Octree::PropagateDomain()
 
                         if(dot <= 0.0)
                         {
-                            oct->SetLocation(3);
+                            oct->SetLocation(eOutside);
                         }
                         else
                         {
-                            oct->SetLocation(1);
+                            oct->SetLocation(eInside);
                         }
                     }
                 }
@@ -1021,7 +1007,7 @@ int Octree::CountElemt()
     }
 
     return int(total);
-}
+}*/
 
 void Octree::CompileCuravturePointList()
 {
@@ -1167,7 +1153,7 @@ void Octree::CompileCuravturePointList()
     }
 }
 
-NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)
+/*NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)
 {
     return fabs(i->GetDelta() - j->GetDelta()) / i->Distance(j);
 }
@@ -1276,7 +1262,7 @@ void Octree::AssignNeigbours(OctantSharedPtr const &o)
     }
     o->SetNeigbourList(nlist);
     ASSERTL0(eqhit == 1,"found itself more than once");
-}
+}*/
 
 }
 }

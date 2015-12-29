@@ -61,8 +61,8 @@ namespace LibUtilities
     {
         union
         {
-            uint32_t value;
-            uint8_t data[sizeof(uint32_t)];
+            boost::uint32_t value;
+            boost::uint8_t  data[sizeof(boost::uint32_t)];
         } number;
         
         number.data[0] = 0x00;

@@ -57,13 +57,8 @@ namespace Nektar
 namespace LibUtilities
 {
 
-#if ((ULONG_MAX) == (UINT_MAX))
-    const std::string BitSizeStr = "32 Bit";
-#else
-    const std::string BitSizeStr = "64 Bit";
-#endif
-
-    enum EndianType {
+    enum EndianType
+    {
         eEndianUnknown,
         eEndianBig, 
         eEndianLittle,

@@ -348,7 +348,7 @@ void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
         totPts = totPts * nPtsPerEdge.at(i);
     }
 
-    ASSERTL0(totPts == m_pts.num_elements(),
+    ASSERTL0(totPts == m_pts[0].num_elements(),
              "nPtsPerEdge does not match total number of points");
 
     m_nPtsPerEdge = nPtsPerEdge;

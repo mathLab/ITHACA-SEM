@@ -62,6 +62,7 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule
 
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
+    f->m_declareAsNewField = true;
 
     // check for correct input files
     if((f->m_inputfiles.count("xml") == 0)&&(f->m_inputfiles.count("xml.gz") == 0))

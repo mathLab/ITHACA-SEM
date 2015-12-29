@@ -2435,7 +2435,7 @@
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
             MultiRegions::ExpListSharedPtr locExpList;
-
+       
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
@@ -2446,7 +2446,8 @@
                     Array<OneD, NekDouble> x0(npoints, 0.0);
                     Array<OneD, NekDouble> x1(npoints, 0.0);
                     Array<OneD, NekDouble> x2(npoints, 0.0);
-                    
+                    Array<OneD, NekDouble> valuesFile(npoints, 1.0), valuesExp(npoints, 1.0);
+  
                     locExpList->GetCoords(x0, x1, x2);
                     
                     if (m_bndConditions[i]->GetBoundaryConditionType()
@@ -2456,23 +2457,30 @@
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i])->m_filename;
                         
+                        string exprbcs = boost::static_pointer_cast<
+                            SpatialDomains::DirichletBoundaryCondition>(
+                                m_bndConditions[i])->m_expr;
+
                         if (filebcs != "")
                         {
                             ExtractFileBCs(filebcs, varName, locExpList);
+                            valuesFile = locExpList->GetPhys();
                         }
-                        else
+                        
+                        if (exprbcs != "")
                         {
                             LibUtilities::Equation  condition = boost::static_pointer_cast<SpatialDomains::
                                     DirichletBoundaryCondition >(
                                     m_bndConditions[i])->m_dirichletCondition;
                             
-                            condition.Evaluate(x0, x1, x2, time, 
-                                               locExpList->UpdatePhys());
-                            
-                            locExpList->FwdTrans_BndConstrained(
-                                                locExpList->GetPhys(),
-                                                locExpList->UpdateCoeffs());
+                            condition.Evaluate(x0, x1, x2, time, valuesExp);
                         }
+
+                        Vmath::Vmul(npoints, valuesExp, 1, valuesFile, 1, locExpList->UpdatePhys(), 1);
+                        
+                        locExpList->FwdTrans_BndConstrained(
+                            locExpList->GetPhys(),
+                            locExpList->UpdateCoeffs());
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)

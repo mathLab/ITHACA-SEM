@@ -32,6 +32,7 @@
 //  Description: Routines for compressing and inflating data
 //
 ////////////////////////////////////////////////////////////////////////////////
+#define NOMINMAX
 
 #include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/MeshEntities.hpp>
@@ -53,8 +54,47 @@ namespace Nektar
 namespace LibUtilities
 {
 
+    /**
+     * run time determination of endianness, returning an EndianType
+     */
+    EndianType Endianness(void)
+    {
+        union
+        {
+            boost::uint32_t value;
+            boost::uint8_t  data[sizeof(boost::uint32_t)];
+        } number;
+        
+        number.data[0] = 0x00;
+        number.data[1] = 0x01;
+        number.data[2] = 0x02;
+        number.data[3] = 0x03;
+        
+        switch (number.value)
+        {
+        case UINT32_C(0x00010203): return eEndianBig;
+        case UINT32_C(0x03020100): return eEndianLittle;
+        case UINT32_C(0x02030001): return eEndianBigWord;
+        case UINT32_C(0x01000302): return eEndianLittleWord;
+        default:                   return eEndianUnknown;
+        }
+    }
+
     namespace CompressData
     {
+
+        /**
+         * Return a string describing this compression and endianness
+         */
+        std::string GetCompressString(void)
+        {
+            return  "B64Z-"+ EndianTypeMap[Endianness()];
+        }
+
+        std::string GetBitSizeStr(void)
+        {
+            return boost::lexical_cast<std::string>(sizeof(void*)*8);
+        }
 
         /**
          * Convert a binary string to Base 64 string 

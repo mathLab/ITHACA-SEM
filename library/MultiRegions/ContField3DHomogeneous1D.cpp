@@ -157,6 +157,14 @@ namespace Nektar
             }
         }
 
+        void ContField3DHomogeneous1D::v_FillBndCondFromField(void)
+        {
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->FillBndCondFromField();
+            }
+        }
+
         /**
          * 
          */

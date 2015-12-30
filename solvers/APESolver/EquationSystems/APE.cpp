@@ -146,15 +146,6 @@ APE::~APE()
 
 
 /**
- *
- */
-void APE::v_DoInitialise()
-{
-    SetInitialConditions();
-}
-
-
-/**
  * @brief Return the flux vector for the APE equations.
  *
  * @param physfield   Fields.
@@ -453,8 +444,8 @@ void APE::UpdateBasefield()
 
     if (m_time > last_update)
     {
-        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
         last_update = m_time;
+        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
     }
 }
 

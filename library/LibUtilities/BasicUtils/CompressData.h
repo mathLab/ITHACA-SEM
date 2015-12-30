@@ -48,6 +48,7 @@
 
 #include "zlib.h"
 
+
 // Buffer size for zlib compression/decompression
 #define CHUNK 16384
 
@@ -56,12 +57,38 @@ namespace Nektar
 namespace LibUtilities
 {
 
+    enum EndianType
+    {
+        eEndianUnknown,
+        eEndianBig, 
+        eEndianLittle,
+        eEndianBigWord,   /* Middle-endian, Honeywell 316 style */
+        eEndianLittleWord /* Middle-endian, PDP-11 style */
+    };
+
+    const std::string EndianTypeMap[] =
+    {
+        "UnknownEndian",
+        "BigEndian",
+        "LittleEndian",
+        "BigWordEndian",
+        "LittleWordEndian"
+    };
+    
+    LIB_UTILITIES_EXPORT EndianType Endianness(void);
+    
     namespace CompressData
     {
+        LIB_UTILITIES_EXPORT std::string GetCompressString(void); 
+
+
+        LIB_UTILITIES_EXPORT std::string GetBitSizeStr(void); 
+
+        
         /**
          * Compress a vector of NekDouble values into a string using zlib.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibEncode(std::vector<T>& in, std::string& out)
+        template<class T> int ZlibEncode(std::vector<T>& in, std::string& out)
         {
             int ret;
             unsigned have;
@@ -72,7 +99,7 @@ namespace LibUtilities
 
             /* allocate deflate state */
             strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
+            strm.zfree  = Z_NULL;
             strm.opaque = Z_NULL;
             ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
 
@@ -119,7 +146,7 @@ namespace LibUtilities
         /**
          * Compress a vector of NekDouble values into a base64 string.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibEncodeToBase64Str(std::vector<T>& in, std::string& out64)
+        template<class T> int ZlibEncodeToBase64Str(std::vector<T>& in, std::string& out64)
         {
             std::string out;
 
@@ -135,7 +162,7 @@ namespace LibUtilities
          * Decompress a zlib-compressed string into a vector of NekDouble
          * values.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibDecode(std::string& in, std::vector<T>& out)
+        template<class T> int ZlibDecode(std::string& in, std::vector<T>& out)
                     {
             int ret;
             unsigned have;
@@ -208,8 +235,8 @@ namespace LibUtilities
          * Decompress a base 64 compressed binary string into a vector
          * of NekDouble values.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(std::string& in64,
-                                 std::vector<T>& out)
+        template<class T> int ZlibDecodeFromBase64Str(std::string& in64,
+                                                      std::vector<T>& out)
         {
             std::string in;
             Base64StrToBinaryStr(in64,in);

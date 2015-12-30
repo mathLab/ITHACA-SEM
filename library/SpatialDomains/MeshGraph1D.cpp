@@ -115,47 +115,54 @@ namespace Nektar
             while (segment)
             {
                 const char *IsCompressed = segment->Attribute("COMPRESSED");
-                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+                if(IsCompressed)
                 {
-                    // Extract the face body
-                    TiXmlNode* child = segment->FirstChild();
-                    ASSERTL0(child, "Unable to extract the data from "
-                             "the compressed face tag.");
-                
-                    std::string str;
-                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                    if(boost::iequals(IsCompressed,LibUtilities::CompressData::GetCompressString()))
                     {
-                        str += child->ToText()->ValueStr();
-                    }
-                    
-                    int indx;
-
-                    std::vector<LibUtilities::MeshEdge> data;
-                    LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,data);
-                    
-                    for(int i = 0; i < data.size(); ++i)
-                    {
-                        indx = data[i].id;
-
-                        /// See if this face has curves.
-                        it = m_curvedFaces.find(indx);
-
-                        PointGeomSharedPtr vertices[2] = {GetVertex(data[i].v0), GetVertex(data[i].v1)};
-                        SegGeomSharedPtr seg;
+                        // Extract the face body
+                        TiXmlNode* child = segment->FirstChild();
+                        ASSERTL0(child, "Unable to extract the data from "
+                                 "the compressed face tag.");
                         
-                        if (it == m_curvedEdges.end())
+                        std::string str;
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
                         {
-                            seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
-                            seg->SetGlobalID(indx); // Set global mesh id
+                            str += child->ToText()->ValueStr();
                         }
-                        else
+                        
+                        int indx;
+                        
+                        std::vector<LibUtilities::MeshEdge> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,data);
+                        
+                        for(int i = 0; i < data.size(); ++i)
                         {
-                            seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
-                            seg->SetGlobalID(indx); //Set global mesh id
+                            indx = data[i].id;
+                            
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+                            
+                            PointGeomSharedPtr vertices[2] = {GetVertex(data[i].v0), GetVertex(data[i].v1)};
+                            SegGeomSharedPtr seg;
+                            
+                            if (it == m_curvedEdges.end())
+                            {
+                                seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                                seg->SetGlobalID(indx); // Set global mesh id
+                            }
+                            else
+                            {
+                                seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                                seg->SetGlobalID(indx); //Set global mesh id
+                            }
+                            seg->SetGlobalID(indx);
+                            m_segGeoms[indx] = seg;
+                            
                         }
-                        seg->SetGlobalID(indx);
-                        m_segGeoms[indx] = seg;
-
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Compressed formats do not match. Expected :" + LibUtilities::CompressData::GetCompressString() + " but got " + boost::lexical_cast<std::string>(IsCompressed));
                     }
                 }
                 else

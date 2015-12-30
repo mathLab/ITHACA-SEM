@@ -475,7 +475,7 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
             {
                 NekDouble l2err;
                 std::string coordval[] = {"x","y","z"};
-                int rank = m_f->m_session->GetComm()->GetRank();
+                int rank = m_f->m_comm->GetRank();
 
                 for(int i = 0; i < coordim; ++i)
                 {
@@ -607,7 +607,7 @@ void OutputTecplot::WriteTecplotField(const int field,
         {
             NekDouble l2err = m_f->m_exp[0]->L2(m_f->m_exp[field]->UpdatePhys());
 
-            if(m_f->m_session->GetComm()->GetRank() == 0)
+            if(m_f->m_comm->GetRank() == 0)
             {
                 cout << "L 2 error (variable "
                      << m_f->m_fielddef[0]->m_fields[field]  << ") : "

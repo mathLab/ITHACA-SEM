@@ -135,6 +135,10 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "line string should contain 2 Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N is not an integer");
+            ASSERTL0(values[0] > 1, "N is not a valid number");
+           
             int dim = (values.size()-1)/2;
             int npts = values[0];
             Array<OneD, Array<OneD, NekDouble> > pts(dim);
@@ -166,7 +170,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
             m_f->m_fieldPts->SetPointsPerEdge(ppe);
-
+       
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
         {
@@ -180,7 +184,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "plane string should contain 4 Dim+2 values "
                      "N1,N2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3");
 
-
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N1 is not an integer");
+            ASSERTL0(std::modf(values[1], &tmp) == 0.0, "N2 is not an integer");
+            
+            ASSERTL0(values[0] > 1, "N1 is not a valid number");
+            ASSERTL0(values[1] > 1, "N2 is not a valid number");
+            
             int dim = (values.size()-2)/4;
 
             int npts1 = values[0];
@@ -313,6 +323,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                 
                 for(int k = 0; k < npts3; ++k)
                 {
+<<<<<<< HEAD
                     for(int j = 0; j < npts2; ++j)
                     {
                         for(int i = 0; i < npts1; ++i)
@@ -473,7 +484,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             vector<NekDouble> boxdim;
             boxdim.assign(&values[3],&values[3]+6);
             m_f->m_fieldPts->SetBoxSize(boxdim);
-
         }
     }
 
@@ -750,5 +760,3 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
 }
 }
-
-

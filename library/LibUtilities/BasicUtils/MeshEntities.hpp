@@ -41,10 +41,19 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        // Note: the following structs are defined using 64 bit ints so
+        // that the structs are memory aligned in both 64 bit and 32
+        // bit machines. All Structs (with the exception of
+        // MeshCurvedPts) are therefore aligned to 8 byte blocks.
+        //
+        // Note the MeshCurvedPts are exported as a list of NekInt64
+        // and MeshVetexs and so the struct does not comply with the
+        // above.
+       
         
         struct MeshVertex
         {
-            int id;
+            NekInt64 id;
             NekDouble x;
             NekDouble y;
             NekDouble z;
@@ -52,61 +61,64 @@ namespace Nektar
         
         struct MeshEdge
         {
-            int id;
-            int v0;
-            int v1;
+            NekInt64 id;
+            NekInt64 v0;
+            NekInt64 v1;
         };
 
         struct MeshTri
         {
-            int id;
-            int e[3];
+            NekInt64 id;
+            NekInt64 e[3];
         };
 
         struct MeshQuad
         {
-            int id;
-            int e[4];
+            NekInt64 id;
+            NekInt64 e[4];
         };
 
         struct MeshTet
         {
-            int id;
-            int f[4];
+            NekInt64 id;
+            NekInt64 f[4];
         };
 
         struct MeshPyr
         {
-            int id;
-            int f[5];
+            NekInt64 id;
+            NekInt64 f[5];
         };
 
         struct MeshPrism
         {
-            int id;
-            int f[5];
+            NekInt64 id;
+            NekInt64 f[5];
         };
 
         struct MeshHex
         {
-            int id;
-            int f[6];
+            NekInt64 id;
+            NekInt64 f[6];
         };
         
         struct MeshCurvedInfo
         {
-            int        id;
-            int        entityid;
-            int        npoints;
-            PointsType ptype;     
-            int        ptid;     // id of point data map
-            int        ptoffset; // pffset of data entry for this curve
+            NekInt64        id;
+            NekInt64        entityid;
+            NekInt64        npoints;
+            NekInt64        ptid;     // id of point data map
+            NekInt64        ptoffset; // pffset of data entry for this curve
+            // Defined as an int (instead of a PointsType) so that we
+            // are using a memory aligned structure which is suitable
+            // for 32 and 64 bit machines.
+            NekInt64        ptype;    
         };
         
         struct MeshCurvedPts
         {
-            int id;
-            std::vector<int>       index;
+            NekInt64 id;
+            std::vector<NekInt64>   index;
             std::vector<MeshVertex> pts; 
         };
             

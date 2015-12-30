@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description> Extract a isocontour</description>
+    <description> Extract an isocontour</description>
     <executable>FieldConvert</executable>
-    <parameters>-e -m isocontour:fieldstr="u+v":fieldvalue=0.5:fieldname="UplusV":smooth chan3D.xml chan3D.fld isocontour.dat</parameters>
+    <parameters>-e -m isocontour:fieldstr="u+v":fieldvalue=0.5:fieldname="UplusV":globalcondense:smooth chan3D.xml chan3D.fld isocontour.dat</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
         <file description="Session File">chan3D.fld</file>

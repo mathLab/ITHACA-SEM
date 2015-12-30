@@ -55,7 +55,10 @@ GetModuleFactory().RegisterCreatorFunction(
 ProcessC0Projection::ProcessC0Projection(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["fields"] = ConfigOption(false,"All","Start field to project");
-    m_config["localtoglobalmap"] = ConfigOption(true,"0","Just perform a local to global mapping and back"); 
+    m_config["localtoglobalmap"] = ConfigOption(true,"0","Just perform a local to global mapping and back");
+    m_config["usexmlbcs"] = ConfigOption(true,"0","Use boundary conditions given in xml file. Requires all projected fields to be defined in xml file");
+
+    f->m_declareExpansionAsContField = true;
 }
 
 ProcessC0Projection::~ProcessC0Projection()
@@ -105,15 +108,28 @@ void ProcessC0Projection::Process(po::variables_map &vm)
     }
     bool JustPerformLocToGloMap = m_config["localtoglobalmap"].as<bool>();
 
-    // generate an C0 expansion field with no boundary conditions.
-    bool savedef = m_f->m_declareExpansionAsContField;
-    m_f->m_declareExpansionAsContField = true;
-    MultiRegions::ExpListSharedPtr C0ProjectExp = 
-        m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
-                           "DefaultVar",true);
-    m_f->m_declareExpansionAsContField = savedef;
-
     int nfields = m_f->m_exp.size();
+    Array<OneD, MultiRegions::ExpListSharedPtr> C0ProjectExp(nfields);
+    if(m_config["usexmlbcs"].as<bool>())
+    {
+        for(int i = 0; i < nfields; ++i)
+        {
+            C0ProjectExp[i] = m_f->m_exp[i];
+        }
+    }
+    else
+    {
+        // generate an C0 expansion field with no boundary conditions.
+        bool savedef = m_f->m_declareExpansionAsContField;
+        m_f->m_declareExpansionAsContField = true;
+        C0ProjectExp[0] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                             "DefaultVar",true);
+        m_f->m_declareExpansionAsContField = savedef;
+        for(int i = 1; i < nfields; ++i)
+        {
+            C0ProjectExp[i] = C0ProjectExp[0];
+        }
+    }
 
     string fields = m_config["fields"].as<string>();
     vector<unsigned int> processFields;
@@ -150,17 +166,17 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         {
             int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
             Vmath::Vcopy(ncoeffs,m_f->m_exp[processFields[i]]->GetCoeffs(),1,
-                         C0ProjectExp->UpdateCoeffs(),1);
-            C0ProjectExp->LocalToGlobal();
-            C0ProjectExp->GlobalToLocal();
-            Vmath::Vcopy(ncoeffs,C0ProjectExp->GetCoeffs(),1,
+                         C0ProjectExp[processFields[i]]->UpdateCoeffs(),1);
+            C0ProjectExp[processFields[i]]->LocalToGlobal();
+            C0ProjectExp[processFields[i]]->GlobalToLocal();
+            Vmath::Vcopy(ncoeffs,C0ProjectExp[processFields[i]]->GetCoeffs(),1,
                          m_f->m_exp[processFields[i]]->UpdateCoeffs(),1);
         }
         else
         {
-            C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+            C0ProjectExp[processFields[i]]->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
                                    m_f->m_exp[processFields[i]]->UpdatePhys());
-            C0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
+            C0ProjectExp[processFields[i]]->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
                                    m_f->m_exp[processFields[i]]->UpdateCoeffs());
         }
     }

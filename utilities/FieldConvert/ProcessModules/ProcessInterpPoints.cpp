@@ -323,7 +323,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                 
                 for(int k = 0; k < npts3; ++k)
                 {
-<<<<<<< HEAD
                     for(int j = 0; j < npts2; ++j)
                     {
                         for(int i = 0; i < npts1; ++i)

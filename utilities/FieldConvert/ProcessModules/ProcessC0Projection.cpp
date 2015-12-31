@@ -57,6 +57,7 @@ ProcessC0Projection::ProcessC0Projection(FieldSharedPtr f) : ProcessModule(f)
     m_config["fields"] = ConfigOption(false,"All","Start field to project");
     m_config["localtoglobalmap"] = ConfigOption(true,"0","Just perform a local to global mapping and back");
     m_config["usexmlbcs"] = ConfigOption(true,"0","Use boundary conditions given in xml file. Requires all projected fields to be defined in xml file");
+    m_config["helmsmoothing"] = ConfigOption(false,"Not Set","Use a Helmholtz smoother to remove high frequency components above specified L");
 
     f->m_declareExpansionAsContField = true;
 }
@@ -107,7 +108,7 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         }
     }
     bool JustPerformLocToGloMap = m_config["localtoglobalmap"].as<bool>();
-
+    bool HelmSmoother = (boost::iequals(m_config["helmsmoothing"].as<string>(),"Not Set"))? false:true;
     int nfields = m_f->m_exp.size();
     Array<OneD, MultiRegions::ExpListSharedPtr> C0ProjectExp(nfields);
     if(m_config["usexmlbcs"].as<bool>())
@@ -174,10 +175,53 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         }
         else
         {
-            C0ProjectExp[processFields[i]]->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
-                                   m_f->m_exp[processFields[i]]->UpdatePhys());
-            C0ProjectExp[processFields[i]]->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
-                                   m_f->m_exp[processFields[i]]->UpdateCoeffs());
+            if(HelmSmoother)
+            {
+                int dim = m_f->m_graph->GetSpaceDimension(); 
+                int npoints = m_f->m_exp[0]->GetNpoints();
+                NekDouble lambda = m_config["helmsmoothing"].as<NekDouble>();
+                lambda = 2*M_PI/lambda;
+                lambda = lambda*lambda; 
+
+                if(m_f->m_verbose)
+                {
+                    cout << "Setting up Helmholtz smoother with lambda = " << lambda << endl;
+                }
+                
+                StdRegions::ConstFactorMap factors; 
+                Array<OneD, NekDouble> forcing(npoints);
+                factors[StdRegions::eFactorLambda] = -lambda;
+
+                Array<OneD, Array<OneD, NekDouble> > Velocity(dim);
+                for(int i =0; i < dim; ++i)
+                {
+                    Velocity[i] = Array<OneD, NekDouble> (npoints,0.0);
+                }
+                
+                C0ProjectExp[processFields[i]]->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+                                                     m_f->m_exp[processFields[i]]->UpdatePhys());
+
+                Vmath::Smul(npoints,-lambda,m_f->m_exp[processFields[i]]->GetPhys(),1,
+                             forcing,1);
+
+                // Note we are using the
+                // LinearAdvectionDiffusionReaction solver here
+                // instead of HelmSolve since lambda is negative and
+                // so matrices are not positive definite. Ideally
+                // should allow for negative lambda coefficient in
+                // HelmSolve
+                C0ProjectExp[processFields[i]]->LinearAdvectionDiffusionReactionSolve(Velocity,
+                                                   forcing,
+                                                   m_f->m_exp[processFields[i]]->UpdateCoeffs(),
+                                                                                 -lambda);
+            }
+            else
+            {
+                C0ProjectExp[processFields[i]]->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+                                                     m_f->m_exp[processFields[i]]->UpdatePhys());
+                C0ProjectExp[processFields[i]]->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
+                                       m_f->m_exp[processFields[i]]->UpdateCoeffs());
+            }
         }
     }
 

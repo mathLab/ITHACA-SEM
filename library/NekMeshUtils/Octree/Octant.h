@@ -51,9 +51,9 @@ namespace NekMeshUtils
 
 enum OctantFace
 {
-    eTop,
-    eBottom,
-    eFront,
+    eUp,
+    eDown,
+    eForward,
     eBack,
     eLeft,
     eRight
@@ -71,18 +71,6 @@ class Octant; //have to forward declare the class for the sharedptr
 typedef boost::shared_ptr<Octant> OctantSharedPtr;
 typedef std::set<OctantSharedPtr> OctantSet;
 
-struct Neighbour
-{
-    Neighbour(OctantFace lf, OctantFace fn, OctantSharedPtr n)
-        : m_localFace(lf), m_faceOnNeighbour(fn), m_neighbour(n)
-    {
-    };
-
-    OctantFace m_localFace;
-    OctantFace m_faceOnNeighbour;
-    OctantSharedPtr m_neighbour;
-};
-
 /**
  * @brief this class contains the infomration and methods for individal octants
  * in the Octree
@@ -95,13 +83,13 @@ class Octant
         /**
          * @brief Defualt constructor
          */
-        Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir);
+        Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir);
 
         //master constructor
         Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                        const std::vector<CurvaturePointSharedPtr> &cplist);
 
-        void Subdivide(OctantSharedPtr p, NekDouble minDelta, int &numoct);
+        void Subdivide(OctantSharedPtr p, int &numoct);
 
         void CompileLeaves(std::vector<OctantSharedPtr> &Octants)
         {
@@ -173,13 +161,13 @@ class Octant
         {
             switch (f)
             {
-                case eTop:
+                case eUp:
                     return m_loc[2] + m_hd;
                     break;
-                case eBottom:
+                case eDown:
                     return m_loc[2] - m_hd;
                     break;
-                case eFront:
+                case eForward:
                     return m_loc[0] + m_hd;
                     break;
                 case eBack:
@@ -192,6 +180,23 @@ class Octant
                     return m_loc[1] - m_hd;
                     break;
             }
+        }
+
+        void RemoveNeigbour(int id, OctantFace f);
+
+        void SetNeigbour(OctantSharedPtr o, OctantFace f)
+        {
+            m_neigbours[f].push_back(o);
+        }
+
+        std::map<OctantFace, std::vector<OctantSharedPtr> > GetNeigbours()
+        {
+            return m_neigbours;
+        }
+
+        bool NeedDivide()
+        {
+            return m_needToDivide;
         }
 
     private:
@@ -213,12 +218,12 @@ class Octant
         int m_numValidPoints;
         /// mesh sizing parameter
         std::pair<bool, NekDouble> m_delta;
-        /// list of ids of neigbours
-        std::vector<OctantSharedPtr> m_neighbourList;
         /// idenify if division is needed
         bool m_needToDivide; //asume no need to divide
         /// idenify if delta has ben set
         OctantLocation m_location;
+        /// list of neighbours
+        std::map<OctantFace, std::vector<OctantSharedPtr> > m_neigbours;
 };
 
 bool operator==(OctantSharedPtr const &p1, OctantSharedPtr const &p2);

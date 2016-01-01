@@ -124,11 +124,7 @@ private:
      */
     void CompileCuravturePointList();
 
-    /**
-     * @brief Recursive alorithm which divides and creates new octants based
-     * on the geometry
-     */
-    //void InitialSubDivide(OctantSharedPtr parent);
+    void SubDivide();
 
     /**
      * @brief Recursive alorithm which subdivides octants so that the
@@ -199,6 +195,7 @@ private:
     OctantSharedPtr m_masteroct;
     ///
     bool m_relax;
+    int numoct;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

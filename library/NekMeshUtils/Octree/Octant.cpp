@@ -43,10 +43,27 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), m_parent(p)
+OctantFace GetReverseFace(OctantFace f)
 {
-    cout << "made: " << i << endl;
+    switch (f)
+    {
+        case eUp:
+            return eDown;
+        case eDown:
+            return eUp;
+        case eForward:
+            return eBack;
+        case eBack:
+            return eForward;
+        case eLeft:
+            return eRight;
+        case eRight:
+            return eLeft;
+    }
+}
 
+Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i), m_parent(p)
+{
     //initialise variables to defualt states
     m_leaf = true;
     m_needToDivide = false;
@@ -57,12 +74,42 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), 
     NekDouble minDif=numeric_limits<double>::max();
     m_location = eUnknown;
 
+    //build empty neigbour map
+    m_neigbours[eUp] = vector<OctantSharedPtr>();
+    m_neigbours[eDown] = vector<OctantSharedPtr>();
+    m_neigbours[eForward] = vector<OctantSharedPtr>();
+    m_neigbours[eBack] = vector<OctantSharedPtr>();
+    m_neigbours[eLeft] = vector<OctantSharedPtr>();
+    m_neigbours[eRight] = vector<OctantSharedPtr>();
+
     //pull information from parent
     Array<OneD, NekDouble> parentloc = m_parent->GetLoc();
     m_loc = Array<OneD, NekDouble>(3);
-    m_loc[0] = parentloc[0] + dir[0] * m_parent->DX() / 2.0;
-    m_loc[1] = parentloc[1] + dir[1] * m_parent->DX() / 2.0;
-    m_loc[2] = parentloc[2] + dir[2] * m_parent->DX() / 2.0;
+    if(dir[0] == eForward)
+    {
+        m_loc[0] = parentloc[0] + m_parent->DX() / 2.0;
+    }
+    else
+    {
+        m_loc[0] = parentloc[0] - m_parent->DX() / 2.0;
+    }
+    if(dir[1] == eUp)
+    {
+        m_loc[1] = parentloc[1] + m_parent->DX() / 2.0;
+    }
+    else
+    {
+        m_loc[1] = parentloc[1] - m_parent->DX() / 2.0;
+    }
+    if(dir[2] == eLeft)
+    {
+        m_loc[2] = parentloc[2] + m_parent->DX() / 2.0;
+    }
+    else
+    {
+        m_loc[2] = parentloc[2] - m_parent->DX() / 2.0;
+    }
+
 
     m_hd = m_parent->DX() / 2.0;
     vector<CurvaturePointSharedPtr> CurvaturePointList = m_parent->GetCPList();
@@ -105,7 +152,7 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, NekDouble> dir) : m_id(i), 
     if(NumValidCurvePoint()>0)
     {
         //geometrically octant should subdivide
-        if(maxDif/minDif>1.1)
+        if(maxDif/minDif>1.5)
         {
             m_needToDivide=true;
         }
@@ -130,7 +177,12 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
                const vector<CurvaturePointSharedPtr> &cplist)
                : m_id(i), m_hd(dx)
 {
-    cout << "made: " << i << endl;
+    m_neigbours[eUp] = vector<OctantSharedPtr>();
+    m_neigbours[eDown] = vector<OctantSharedPtr>();
+    m_neigbours[eForward] = vector<OctantSharedPtr>();
+    m_neigbours[eBack] = vector<OctantSharedPtr>();
+    m_neigbours[eLeft] = vector<OctantSharedPtr>();
+    m_neigbours[eRight] = vector<OctantSharedPtr>();
 
     //initialise variables to defualt states
     m_leaf = false;
@@ -156,76 +208,292 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
     m_location = eOnBoundary;
 }
 
-void Octant::Subdivide(OctantSharedPtr p, NekDouble minDelta, int &numoct)
+void Octant::Subdivide(OctantSharedPtr p, int &numoct)
 {
-    if(!p->m_needToDivide) return;
-
     m_leaf = false; //set as not leaf and make children
+
+    //need to loop over all neigbours and remove this octant from their lists
+    for(int i = 0; i < 6; i++)
+    {
+        OctantFace f = static_cast<OctantFace>(i);
+        vector<OctantSharedPtr> os = m_neigbours[f];
+        for(int j = 0; j < os.size(); j++)
+        {
+            os[j]->RemoveNeigbour(GetId(), GetReverseFace(f));
+        }
+    }
 
     Array<OneD, OctantSharedPtr> children(8);
 
     for(int i = 0; i < 8; i++)
     {
         //set up x,y,z ordering of the 8 octants
-        Array<OneD, NekDouble> dir(3);
+        Array<OneD, OctantFace> dir(3);
         if(i<4)
         {
-            dir[2] = +1.0;
+            dir[0] = eForward;
             if(i<2)
             {
-                dir[0] = +1.0;
+                dir[1] = eUp;
             }
             else
             {
-                dir[0] = -1.0;
+                dir[1] = eDown;
             }
-            if(i==0||i==3)
+            if(i==0||i==2)
             {
-                dir[1] = +1.0;
+                dir[2] = eLeft;
             }
             else
             {
-                dir[1] = -1.0;
+                dir[2] = eRight;
             }
         }
         else
         {
-            dir[2] = -1.0;
+            dir[0] = eBack;
             if(i<6)
             {
-                dir[0] = +1.0;
+                dir[1] = eUp;
             }
             else
             {
-                dir[0] = -1.0;
+                dir[1] = eDown;
             }
-            if(i==4||i==7)
+            if(i==4||i==6)
             {
-                dir[1] = +1.0;
+                dir[2] = eLeft;
             }
             else
             {
-                dir[1] = -1.0;
+                dir[2] = eRight;
             }
         }
 
         children[i] = boost::shared_ptr<Octant>(new Octant(numoct++, p, dir));
     }
 
-    this->SetChildren(children);
+    SetChildren(children);
 
-    //need to figure out neigbours here
-    for(int i = 0; i < 8; i++)
+    //this set of neibours are based on the children of the octant, only covers three sides
+    children[0]->SetNeigbour(children[1], eRight);
+    children[0]->SetNeigbour(children[4], eBack);
+    children[0]->SetNeigbour(children[2], eDown);
+
+    children[1]->SetNeigbour(children[0], eLeft);
+    children[1]->SetNeigbour(children[5], eBack);
+    children[1]->SetNeigbour(children[3], eDown);
+
+    children[2]->SetNeigbour(children[3], eRight);
+    children[2]->SetNeigbour(children[6], eBack);
+    children[2]->SetNeigbour(children[0], eUp);
+
+    children[3]->SetNeigbour(children[2], eLeft);
+    children[3]->SetNeigbour(children[7], eBack);
+    children[3]->SetNeigbour(children[1], eUp);
+
+    children[4]->SetNeigbour(children[5], eRight);
+    children[4]->SetNeigbour(children[0], eForward);
+    children[4]->SetNeigbour(children[6], eDown);
+
+    children[5]->SetNeigbour(children[4], eLeft);
+    children[5]->SetNeigbour(children[1], eForward);
+    children[5]->SetNeigbour(children[7], eDown);
+
+    children[6]->SetNeigbour(children[7], eRight);
+    children[6]->SetNeigbour(children[2], eForward);
+    children[6]->SetNeigbour(children[4], eUp);
+
+    children[7]->SetNeigbour(children[6], eLeft);
+    children[7]->SetNeigbour(children[3], eForward);
+    children[7]->SetNeigbour(children[5], eUp);
+
+    //need to obtain the remaning information from the parents neigbours (m_neigbours)
+    //consider top face
+    if(m_neigbours[eUp].size() == 1)
     {
-
+        children[0]->SetNeigbour(m_neigbours[eUp][0], eUp);
+        children[1]->SetNeigbour(m_neigbours[eUp][0], eUp);
+        children[4]->SetNeigbour(m_neigbours[eUp][0], eUp);
+        children[5]->SetNeigbour(m_neigbours[eUp][0], eUp);
+        m_neigbours[eUp][0]->SetNeigbour(children[0], eDown);
+        m_neigbours[eUp][0]->SetNeigbour(children[1], eDown);
+        m_neigbours[eUp][0]->SetNeigbour(children[4], eDown);
+        m_neigbours[eUp][0]->SetNeigbour(children[5], eDown);
+    }
+    else if(m_neigbours[eUp].size() == 4)
+    {
+        children[0]->SetNeigbour(m_neigbours[eUp][0], eUp); //2
+        children[1]->SetNeigbour(m_neigbours[eUp][1], eUp); //3
+        children[4]->SetNeigbour(m_neigbours[eUp][2], eUp); //6
+        children[5]->SetNeigbour(m_neigbours[eUp][3], eUp); //7
+        m_neigbours[eUp][0]->SetNeigbour(children[0], eDown);
+        m_neigbours[eUp][1]->SetNeigbour(children[1], eDown);
+        m_neigbours[eUp][2]->SetNeigbour(children[4], eDown);
+        m_neigbours[eUp][3]->SetNeigbour(children[5], eDown);
+    }
+    else if(m_neigbours[eUp].size() != 0)
+    {
+        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
     }
 
-    for(int i = 0; i < 8; i++)
+    if(m_neigbours[eDown].size() == 1)
     {
-        if(children[i]->DX() / 4.0 > minDelta)
+        children[2]->SetNeigbour(m_neigbours[eDown][0], eDown);
+        children[3]->SetNeigbour(m_neigbours[eDown][0], eDown);
+        children[6]->SetNeigbour(m_neigbours[eDown][0], eDown);
+        children[7]->SetNeigbour(m_neigbours[eDown][0], eDown);
+        m_neigbours[eDown][0]->SetNeigbour(children[2], eUp);
+        m_neigbours[eDown][0]->SetNeigbour(children[3], eUp);
+        m_neigbours[eDown][0]->SetNeigbour(children[6], eUp);
+        m_neigbours[eDown][0]->SetNeigbour(children[7], eUp);
+    }
+    else if(m_neigbours[eDown].size() == 4)
+    {
+        children[2]->SetNeigbour(m_neigbours[eDown][0], eDown); //0
+        children[3]->SetNeigbour(m_neigbours[eDown][1], eDown); //1
+        children[6]->SetNeigbour(m_neigbours[eDown][2], eDown); //4
+        children[7]->SetNeigbour(m_neigbours[eDown][3], eDown); //5
+        m_neigbours[eDown][0]->SetNeigbour(children[2], eUp);
+        m_neigbours[eDown][1]->SetNeigbour(children[3], eUp);
+        m_neigbours[eDown][2]->SetNeigbour(children[6], eUp);
+        m_neigbours[eDown][3]->SetNeigbour(children[7], eUp);
+    }
+    else if(m_neigbours[eDown].size() != 0)
+    {
+        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+    }
+
+    if(m_neigbours[eForward].size() == 1)
+    {
+        children[0]->SetNeigbour(m_neigbours[eForward][0], eForward);
+        children[1]->SetNeigbour(m_neigbours[eForward][0], eForward);
+        children[2]->SetNeigbour(m_neigbours[eForward][0], eForward);
+        children[3]->SetNeigbour(m_neigbours[eForward][0], eForward);
+        m_neigbours[eForward][0]->SetNeigbour(children[0], eBack);
+        m_neigbours[eForward][0]->SetNeigbour(children[1], eBack);
+        m_neigbours[eForward][0]->SetNeigbour(children[2], eBack);
+        m_neigbours[eForward][0]->SetNeigbour(children[3], eBack);
+    }
+    else if(m_neigbours[eForward].size() == 4)
+    {
+        children[0]->SetNeigbour(m_neigbours[eForward][0], eForward); //4
+        children[1]->SetNeigbour(m_neigbours[eForward][1], eForward); //5
+        children[2]->SetNeigbour(m_neigbours[eForward][2], eForward); //6
+        children[3]->SetNeigbour(m_neigbours[eForward][3], eForward); //7
+        m_neigbours[eForward][0]->SetNeigbour(children[0], eBack);
+        m_neigbours[eForward][1]->SetNeigbour(children[1], eBack);
+        m_neigbours[eForward][2]->SetNeigbour(children[2], eBack);
+        m_neigbours[eForward][3]->SetNeigbour(children[3], eBack);
+    }
+    else if(m_neigbours[eForward].size() != 0)
+    {
+        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+    }
+
+    if(m_neigbours[eBack].size() == 1)
+    {
+        children[4]->SetNeigbour(m_neigbours[eBack][0], eBack);
+        children[5]->SetNeigbour(m_neigbours[eBack][0], eBack);
+        children[6]->SetNeigbour(m_neigbours[eBack][0], eBack);
+        children[7]->SetNeigbour(m_neigbours[eBack][0], eBack);
+        m_neigbours[eBack][0]->SetNeigbour(children[4], eForward);
+        m_neigbours[eBack][0]->SetNeigbour(children[5], eForward);
+        m_neigbours[eBack][0]->SetNeigbour(children[6], eForward);
+        m_neigbours[eBack][0]->SetNeigbour(children[7], eForward);
+    }
+    else if(m_neigbours[eBack].size() == 4)
+    {
+        children[4]->SetNeigbour(m_neigbours[eBack][0], eBack); //0
+        children[5]->SetNeigbour(m_neigbours[eBack][1], eBack); //1
+        children[6]->SetNeigbour(m_neigbours[eBack][2], eBack); //2
+        children[7]->SetNeigbour(m_neigbours[eBack][3], eBack); //3
+        m_neigbours[eBack][0]->SetNeigbour(children[4], eForward);
+        m_neigbours[eBack][1]->SetNeigbour(children[5], eForward);
+        m_neigbours[eBack][2]->SetNeigbour(children[6], eForward);
+        m_neigbours[eBack][3]->SetNeigbour(children[7], eForward);
+    }
+    else if(m_neigbours[eBack].size() != 0)
+    {
+        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+    }
+
+    if(m_neigbours[eLeft].size() == 1)
+    {
+        children[0]->SetNeigbour(m_neigbours[eLeft][0], eLeft);
+        children[2]->SetNeigbour(m_neigbours[eLeft][0], eLeft);
+        children[4]->SetNeigbour(m_neigbours[eLeft][0], eLeft);
+        children[6]->SetNeigbour(m_neigbours[eLeft][0], eLeft);
+        m_neigbours[eLeft][0]->SetNeigbour(children[0], eRight);
+        m_neigbours[eLeft][0]->SetNeigbour(children[2], eRight);
+        m_neigbours[eLeft][0]->SetNeigbour(children[4], eRight);
+        m_neigbours[eLeft][0]->SetNeigbour(children[6], eRight);
+    }
+    else if(m_neigbours[eLeft].size() == 4)
+    {
+        children[0]->SetNeigbour(m_neigbours[eLeft][0], eLeft); //1
+        children[2]->SetNeigbour(m_neigbours[eLeft][1], eLeft); //3
+        children[4]->SetNeigbour(m_neigbours[eLeft][2], eLeft); //5
+        children[6]->SetNeigbour(m_neigbours[eLeft][3], eLeft); //7
+        m_neigbours[eLeft][0]->SetNeigbour(children[0], eRight);
+        m_neigbours[eLeft][1]->SetNeigbour(children[2], eRight);
+        m_neigbours[eLeft][2]->SetNeigbour(children[4], eRight);
+        m_neigbours[eLeft][3]->SetNeigbour(children[6], eRight);
+    }
+    else if(m_neigbours[eLeft].size() != 0)
+    {
+        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << " LEFT" << endl;
+        cout << m_neigbours[eLeft].size() << endl;
+    }
+
+    if(m_neigbours[eRight].size() == 1)
+    {
+        children[1]->SetNeigbour(m_neigbours[eRight][0], eRight);
+        children[3]->SetNeigbour(m_neigbours[eRight][0], eRight);
+        children[5]->SetNeigbour(m_neigbours[eRight][0], eRight);
+        children[7]->SetNeigbour(m_neigbours[eRight][0], eRight);
+        m_neigbours[eRight][0]->SetNeigbour(children[1], eLeft);
+        m_neigbours[eRight][0]->SetNeigbour(children[3], eLeft);
+        m_neigbours[eRight][0]->SetNeigbour(children[5], eLeft);
+        m_neigbours[eRight][0]->SetNeigbour(children[7], eLeft);
+    }
+    else if(m_neigbours[eRight].size() == 4)
+    {
+        children[1]->SetNeigbour(m_neigbours[eRight][0], eRight); //0
+        children[3]->SetNeigbour(m_neigbours[eRight][1], eRight); //2
+        children[5]->SetNeigbour(m_neigbours[eRight][2], eRight); //4
+        children[7]->SetNeigbour(m_neigbours[eRight][3], eRight); //6
+        m_neigbours[eRight][0]->SetNeigbour(children[1], eLeft);
+        m_neigbours[eRight][1]->SetNeigbour(children[3], eLeft);
+        m_neigbours[eRight][2]->SetNeigbour(children[5], eLeft);
+        m_neigbours[eRight][3]->SetNeigbour(children[7], eLeft);
+    }
+    else if(m_neigbours[eRight].size() != 0)
+    {
+        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << " RIGHT" << endl;
+    }
+
+}
+
+void Octant::RemoveNeigbour(int id, OctantFace f)
+{
+    vector<OctantSharedPtr> tmp = m_neigbours[f];
+    m_neigbours[f].clear();
+    bool found = false;
+    for(int i = 0; i < tmp.size(); i++)
+    {
+        if(tmp[i]->GetId() == id)
         {
-            children[i]->Subdivide(children[i], minDelta, numoct);
+            found = true;
         }
+        else
+        {
+            m_neigbours[f].push_back(tmp[i]);
+        }
+    }
+    if(!found)
+    {
+        cout << "!!!!!" << "NOT FOUND" << "!!!!!" << endl;
     }
 }
 

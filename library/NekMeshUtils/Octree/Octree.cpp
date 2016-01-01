@@ -132,49 +132,49 @@ Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
         Array<OneD, NekDouble> p1(3);
         p1[0] = Octants[i]->FX(eBack);
         p1[1] = Octants[i]->FX(eRight);
-        p1[2] = Octants[i]->FX(eBottom);
+        p1[2] = Octants[i]->FX(eDown);
         oct[0] = p1;
 
         Array<OneD, NekDouble> p2(3);
-        p2[0] = Octants[i]->FX(eFront);
+        p2[0] = Octants[i]->FX(eForward);
         p2[1] = Octants[i]->FX(eRight);
-        p2[2] = Octants[i]->FX(eBottom);
+        p2[2] = Octants[i]->FX(eDown);
         oct[1] = p2;
 
         Array<OneD, NekDouble> p3(3);
-        p3[0] = Octants[i]->FX(eFront);
+        p3[0] = Octants[i]->FX(eForward);
         p3[1] = Octants[i]->FX(eLeft);
-        p3[2] = Octants[i]->FX(eBottom);
+        p3[2] = Octants[i]->FX(eDown);
         oct[2] = p3;
 
         Array<OneD, NekDouble> p4(3);
         p4[0] = Octants[i]->FX(eBack);
         p4[1] = Octants[i]->FX(eLeft);
-        p4[2] = Octants[i]->FX(eBottom);
+        p4[2] = Octants[i]->FX(eDown);
         oct[3] = p4;
 
         Array<OneD, NekDouble> p5(3);
         p5[0] = Octants[i]->FX(eBack);
         p5[1] = Octants[i]->FX(eRight);
-        p5[2] = Octants[i]->FX(eTop);
+        p5[2] = Octants[i]->FX(eUp);
         oct[4] = p5;
 
         Array<OneD, NekDouble> p6(3);
-        p6[0] = Octants[i]->FX(eFront);
+        p6[0] = Octants[i]->FX(eForward);
         p6[1] = Octants[i]->FX(eRight);
-        p6[2] = Octants[i]->FX(eTop);
+        p6[2] = Octants[i]->FX(eUp);
         oct[5] = p6;
 
         Array<OneD, NekDouble> p7(3);
-        p7[0] = Octants[i]->FX(eFront);
+        p7[0] = Octants[i]->FX(eForward);
         p7[1] = Octants[i]->FX(eLeft);
-        p7[2] = Octants[i]->FX(eTop);
+        p7[2] = Octants[i]->FX(eUp);
         oct[6] = p7;
 
         Array<OneD, NekDouble> p8(3);
         p8[0] = Octants[i]->FX(eBack);
         p8[1] = Octants[i]->FX(eLeft);
-        p8[2] = Octants[i]->FX(eTop);
+        p8[2] = Octants[i]->FX(eUp);
         oct[7] = p8;
 
         out[i] = oct;
@@ -208,33 +208,17 @@ void Octree::Build()
                         (BoundingBox[3]+BoundingBox[2])/2.0,
                         (BoundingBox[5]+BoundingBox[4])/2.0, maxdim, m_cpList);
 
-    int numoct = 1;
-    m_masteroct->Subdivide(m_masteroct, m_minDelta , numoct);
+    numoct = 1;
+    m_masteroct->Subdivide(m_masteroct, numoct);
 
-    Octants.push_back(m_masteroct);
+    InitialSubDivide();
+
+    Octants.clear();
     m_masteroct->CompileLeaves(Octants);
 
-    /*InitialSubDivide(m_masteroct);
+    cout << Octants.size() << endl;
 
-    for(int i = 0; i < Octants.size(); i++)
-    {
-        OctantSharedPtr oct = Octants[i];
-        if(m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, Octants.size(),
-                                           "\tDetermining neigbours\t");
-        }
-        if(oct->IsLeaf())
-        {
-            AssignNeigbours(oct);
-        }
-    }
-    if(m_verbose)
-        cout << endl;
-
-    //memory is good down to hear
-
-    SubDivideByLevel();
+    /*
 
     SmoothSurfaceOctants();
 
@@ -270,443 +254,66 @@ void Octree::Build()
     }*/
 }
 
-/*void Octree::Relax()
+void Octree::SubDivide()
 {
-    //identify octants which contain minlimited octants
-    vector<OctantSharedPtr> minlimitedoct;
-    for(int i = 0; i < Octants.size(); i++)
-    {
-        OctantSharedPtr oct = Octants[i];
-        if(oct->IsLeaf())
-        {
-            vector<CurvaturePointSharedPtr> cp = oct->GetCPList();
-            for(int j = 0; j < cp.size(); j++)
-            {
-                NekDouble d;
-                if(cp[j]->IsValid() && cp[j]->IsMinLimited(d))
-                {
-                    minlimitedoct.push_back(oct);
-                    break;
-                }
-            }
-        }
-    }
+    bool repeat;
+    vector<OctantSharedPtr> Octants;
 
-    vector<OctantSharedPtr> neighRevaluate;
-    for(int i = 0; i < minlimitedoct.size(); i++)
-    {
-        NekDouble av = 0.0;
-        NekDouble d, mindiff = numeric_limits<double>::max(), maxdiff = 0.0;
-        vector<CurvaturePointSharedPtr> cp = minlimitedoct[i]->GetCPList();
-        for(int j = 0; j < cp.size(); j++)
-        {
-            if(cp[j]->IsValid())
-            {
-                if(cp[j]->IsMinLimited(d))
-                {
-                    if(d < mindiff)
-                        mindiff = d;
-                    if(d > maxdiff)
-                        maxdiff = d;
-                    av += d/cp.size();
-                }
-                else
-                {
-                    d = cp[j]->GetDelta();
-                    if(d < mindiff)
-                        mindiff = d;
-                    if(d > maxdiff)
-                        maxdiff = d;
-                    av += d/cp.size();
-                }
-            }
-        }
-
-        if(maxdiff/mindiff > 2.0)
-        {
-            vector<OctantSharedPtr> np = minlimitedoct[i]->GetNeighbourList();
-            neighRevaluate.insert(neighRevaluate.end(), np.begin(), np.end());
-            SubDivideMinLimited(minlimitedoct[i], neighRevaluate);
-        }
-        else
-        {
-            if(av < m_minDelta/10.0) av = m_minDelta/10.0;
-            minlimitedoct[i]->SetDelta(av);
-        }
-    }
-
-    set<int> done;
-
-    for(int i = 0; i < neighRevaluate.size(); i++)
-    {
-        set<int>::iterator s = done.find(neighRevaluate[i]->GetId());
-        if(s == done.end())
-            if(neighRevaluate[i]->IsLeaf())
-            {
-                AssignNeigbours(neighRevaluate[i]);
-                done.insert(neighRevaluate[i]->GetId());
-            }
-    }
-
-    SmoothAllOctantsRelaxed();
-}
-
-void Octree::SubDivideMinLimited(OctantSharedPtr parent, vector<OctantSharedPtr> &np)
-{
-    //in turn, create 8 child octants for octant parent
-    //if that child also needs sub dividing, call this function recursively
-    Array<OneD, OctantSharedPtr> children(8);
-
-    for(int i = 0; i < 8; i++)
-    {
-        //set up x,y,z ordering of the 8 octants
-        Array<OneD, NekDouble> dir(3);
-        if(i<4)
-        {
-            dir[2] = +1.0;
-            if(i<2)
-            {
-                dir[0] = +1.0;
-            }
-            else
-            {
-                dir[0] = -1.0;
-            }
-            if(i==0||i==3)
-            {
-                dir[1] = +1.0;
-            }
-            else
-            {
-                dir[1] = -1.0;
-            }
-        }
-        else
-        {
-            dir[2] = -1.0;
-            if(i<6)
-            {
-                dir[0] = +1.0;
-            }
-            else
-            {
-                dir[0] = -1.0;
-            }
-            if(i==4||i==7)
-            {
-                dir[1] = +1.0;
-            }
-            else
-            {
-                dir[1] = -1.0;
-            }
-        }
-
-        OctantSharedPtr newOctant = MemoryManager<Octant>::AllocateSharedPtr
-                                                    (Octants.size(), parent, dir);
-
-        Octants.push_back(newOctant);
-        children[i] = newOctant;
-
-        NekDouble av = 0.0;
-        NekDouble d, mindiff = numeric_limits<double>::max(), maxdiff = 0.0;
-        vector<CurvaturePointSharedPtr> cp = children[i]->GetCPList();
-        for(int j = 0; j < cp.size(); j++)
-        {
-            if(cp[j]->IsValid())
-            {
-                if(cp[j]->IsMinLimited(d))
-                {
-                    if(d < mindiff)
-                        mindiff = d;
-                    if(d > maxdiff)
-                        maxdiff = d;
-                    av += d/cp.size();
-                }
-                else
-                {
-                    d = cp[j]->GetDelta();
-                    if(d < mindiff)
-                        mindiff = d;
-                    if(d > maxdiff)
-                        maxdiff = d;
-                    av += d/cp.size();
-                }
-            }
-        }
-        if(children[i]->IsDeltaKnown())
-        {
-            if(av < m_minDelta/10.0) av = m_minDelta/10.0;
-            children[i]->SetDelta(av);
-        }
-        else
-        {
-            children[i]->SetDelta(parent->GetDelta());
-        }
-
-        if(children[i]->GetDelta() < m_minDelta/10.0)
-            children[i]->SetDelta(10.0);
-
-        if(maxdiff/mindiff > 2.0)
-        {
-            if(children[i]->DX() / 2.0 > m_minDelta/5.0)
-            {
-                SubDivideMinLimited(children[i], np);
-            }
-        }
-
-        np.push_back(children[i]);
-    }
-
-    parent->SetChildren(children);
-}
-
-void Octree::SmoothAllOctantsRelaxed()
-{
-    //until no more changes occur smooth the mesh specification between all
-    //octants not particualrly strictly
-    int ct = 0;
     do
     {
-        ct=0;
+        repeat = false;
+        Octants.clear();
+        //grab a list of the leaves curently in the octree
+        m_masteroct->CompileLeaves(Octants);
+
+        //needs to complile a list of leaf octants which require subdivision to make sure
+        //the levels will not exceed one
+        //Then create a list of octants which want to subdivide and then execute them
+        vector<OctantSharedPtr> dividelist;
         for(int i = 0; i < Octants.size(); i++)
         {
-            OctantSharedPtr oct = Octants[i];
-
-            if(oct->IsLeaf())
+            bool divide = false;
+            map<OctantFace, vector<OctantSharedPtr> > ne = Octants[i]->GetNeigbours();
+            map<OctantFace, vector<OctantSharedPtr> >::iterator it;
+            for(it = ne.begin(); it != ne.end(); it++)
             {
-                vector<OctantSharedPtr> check;
-                vector<OctantSharedPtr> nList = oct->GetNeighbourList();
-
-                for(int j = 0; j < nList.size(); j++)
+                for(int j = 0; j < it->second.size(); j++)
                 {
-                    if(!nList[j]->IsLeaf()) //this should not happen but does, this is a bit hacky but fixes it
+                    if(it->second[j]->NeedDivide())
                     {
-                        continue;
-                    }
-                    if(nList[j]->GetDelta() < oct->GetDelta() && ddx(oct, nList[j]) > 0.6)
-                    {
-                        check.push_back(nList[j]);
-                    }
-                }
-
-                //for each neighbour listed in check, figure out the smoothed delta, and asign the miminum of these to nodes[i].GetDelta()
-                if(check.size() > 0)
-                {
-                    NekDouble deltaSM = numeric_limits<double>::max();
-                    for(int j = 0; j < check.size(); j++)
-                    {
-                        NekDouble r = oct->Distance(check[j]);
-
-                        if(0.59 * r + check[j]->GetDelta() < deltaSM)
+                        if(it->second[j]->DX() < Octants[i]->DX())
                         {
-                            deltaSM = 0.59 * r + check[j]->GetDelta();
+                            dividelist.push_back(Octants[i]);
+                            divide = true;
+                            break;
                         }
                     }
-                    oct->SetDelta(deltaSM);
-                    ct+=1;
                 }
+                if(divide) break;
             }
         }
-
-    }while(ct>0);
-}
-
-void Octree::InitialSubDivide(OctantSharedPtr parent)
-{
-    //in turn, create 8 child octants for octant parent
-    //if that child also needs sub dividing, call this function recursively
-    Array<OneD, OctantSharedPtr> children(8);
-
-    for(int i = 0; i < 8; i++)
-    {
-        //set up x,y,z ordering of the 8 octants
-        Array<OneD, NekDouble> dir(3);
-        if(i<4)
+        for(int i = 0; i < dividelist.size(); i++)
         {
-            dir[2] = +1.0;
-            if(i<2)
-            {
-                dir[0] = +1.0;
-            }
-            else
-            {
-                dir[0] = -1.0;
-            }
-            if(i==0||i==3)
-            {
-                dir[1] = +1.0;
-            }
-            else
-            {
-                dir[1] = -1.0;
-            }
+            dividelist[i]->Subdivide(dividelist[i], numoct);
         }
-        else
+
+        Octants.clear();
+        m_masteroct->CompileLeaves(Octants);
+
+        //loop over all the octants and subdivide if they want to
+        for(int i = 0; i < Octants.size(); i++)
         {
-            dir[2] = -1.0;
-            if(i<6)
+            if(Octants[i]->NeedDivide() && Octants[i]->DX() / 4.0 > m_minDelta)
             {
-                dir[0] = +1.0;
-            }
-            else
-            {
-                dir[0] = -1.0;
-            }
-            if(i==4||i==7)
-            {
-                dir[1] = +1.0;
-            }
-            else
-            {
-                dir[1] = -1.0;
+                Octants[i]->Subdivide(Octants[i], numoct);
+                repeat = true;
             }
         }
-
-        OctantSharedPtr newOctant = MemoryManager<Octant>::AllocateSharedPtr
-                                                    (Octants.size(), parent, dir);
-
-        Octants.push_back(newOctant);
-        children[i] = newOctant;
-
-        if(children[i]->GetDivide())
-        {
-            if(children[i]->DX() / 2.0 > m_minDelta)
-            {
-                InitialSubDivide(children[i]);
-            }
-        }
-
     }
-
-    parent->SetChildren(children);
+    while(repeat);
 }
 
-void Octree::SubDivideByLevel()
-{
-    //until all subdivision ceases, evaluate each octant and subdivide if
-    //the neigbour levels are not smooth.
-    bool brk;
-    int j = 0;
-    int imax=0;
-
-    do
-    {
-        brk = false;
-        j = 0;
-        OctantSharedPtr oct;
-        Array<OneD, OctantSharedPtr> newoctants;
-        for(int i = 0; i < Octants.size(); i++, j++)
-        {
-            oct = Octants[i];
-            if(j > imax)
-                imax = j;
-
-            if(oct->IsLeaf())
-            {
-                vector<OctantSharedPtr> nList = oct->GetNeighbourList();
-
-                for(int k = 0; k < nList.size(); k++)
-                {
-                    if(nList[k]->GetLevel() - oct->GetLevel() > 1)
-                    {
-                        brk = true;
-                        newoctants = SubDivideLevel(oct);
-                        break;
-                    }
-                }
-                if(brk)
-                    break;
-            }
-
-            if(m_verbose)
-            {
-                LibUtilities::PrintProgressbar(imax, Octants.size(),
-                                          "\tSubdivide by level\t");
-            }
-        }
-        if(brk)
-        {
-            oct->SetChildren(newoctants);
-            for(int i = 0; i < 8; i++)
-            {
-                Octants.push_back(newoctants[i]);
-            }
-            for(int i = 0; i < 8; i++)
-            {
-                AssignNeigbours(newoctants[i]);
-            }
-            vector<OctantSharedPtr> nList = oct->GetNeighbourList();
-            for(int i = 0; i < nList.size(); i++)
-            {
-                AssignNeigbours(nList[i]);
-            }
-        }
-
-    }while(brk);
-
-    if(m_verbose)
-        cout <<endl;
-}
-
-Array<OneD, OctantSharedPtr> Octree::SubDivideLevel(OctantSharedPtr parent)
-{
-    //create 8 child octants in turn for octant parent
-    //after creation, re-evaluate all nessercary neighbour lists
-
-    Array<OneD, OctantSharedPtr> children(8);
-
-    for(int i = 0; i < 8; i++)
-    {
-        Array<OneD, NekDouble> dir(3);
-        if(i<4)
-        {
-            dir[2] = +1.0;
-            if(i<2)
-            {
-                dir[0] = +1.0;
-            }
-            else
-            {
-                dir[0] = -1.0;
-            }
-            if(i==0||i==3)
-            {
-                dir[1] = +1.0;
-            }
-            else
-            {
-                dir[1] = -1.0;
-            }
-        }
-        else
-        {
-            dir[2] = -1.0;
-            if(i<6)
-            {
-                dir[0] = +1.0;
-            }
-            else
-            {
-                dir[0] = -1.0;
-            }
-            if(i==4||i==7)
-            {
-                dir[1] = +1.0;
-            }
-            else
-            {
-                dir[1] = -1.0;
-            }
-        }
-
-        OctantSharedPtr newOctant = MemoryManager<Octant>::AllocateSharedPtr
-                                                    (Octants.size()+i, parent, dir);
-        children[i] = newOctant;
-    }
-
-    return children;
-}
+/*
 
 void Octree::SmoothSurfaceOctants()
 {

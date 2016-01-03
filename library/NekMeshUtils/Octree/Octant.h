@@ -144,6 +144,8 @@ class Octant
 
         NekDouble GetDelta()
         {
+            ASSERTL0(m_delta.first, "Tried to acsess delta of octant"
+                                    "which has not been set");
             return m_delta.second;
         }
 
@@ -162,10 +164,10 @@ class Octant
             switch (f)
             {
                 case eUp:
-                    return m_loc[2] + m_hd;
+                    return m_loc[1] + m_hd;
                     break;
                 case eDown:
-                    return m_loc[2] - m_hd;
+                    return m_loc[1] - m_hd;
                     break;
                 case eForward:
                     return m_loc[0] + m_hd;
@@ -174,10 +176,10 @@ class Octant
                     return m_loc[0] - m_hd;
                     break;
                 case eLeft:
-                    return m_loc[1] + m_hd;
+                    return m_loc[2] + m_hd;
                     break;
                 case eRight:
-                    return m_loc[1] - m_hd;
+                    return m_loc[2] - m_hd;
                     break;
             }
         }
@@ -197,6 +199,35 @@ class Octant
         bool NeedDivide()
         {
             return m_needToDivide;
+        }
+
+        NekDouble Distance(OctantSharedPtr o)
+        {
+            Array<OneD, NekDouble> loc = o->GetLoc();
+            return sqrt((loc[0] - m_loc[0])*(loc[0] - m_loc[0]) +
+                        (loc[1] - m_loc[1])*(loc[1] - m_loc[1]) +
+                        (loc[2] - m_loc[2])*(loc[2] - m_loc[2]));
+        }
+
+        bool IsDeltaKnown()
+        {
+            return m_delta.first;
+        }
+
+        void SetLocation(OctantLocation l)
+        {
+            m_location = l;
+        }
+
+        CurvaturePointSharedPtr GetCPPoint()
+        {
+            ASSERTL0(m_localCPIDList.size() > 0, "tried to get cp point where there is none");
+            return m_localCPIDList[0];
+        }
+
+        OctantLocation GetLocation()
+        {
+            return m_location;
         }
 
     private:

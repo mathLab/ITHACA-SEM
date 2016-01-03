@@ -114,48 +114,25 @@ private:
     //void SmoothAllOctants();
 
     /**
-     * @brief Get neighbours for octant o
-     */
-    //void AssignNeigbours(OctantSharedPtr const &o);
-
-    /**
      * @brief gets an optimum number of curvature sampling points and
      * calculates the curavture at these points
      */
     void CompileCuravturePointList();
 
-    void SubDivide();
-
-    /**
-     * @brief Recursive alorithm which subdivides octants so that the
-     * neighbours differ by no more that one level
-     */
-    //void SubDivideByLevel();
-
-    /**
-     * @brief Smoothing for the relaxed octree
-     */
-    //void SmoothAllOctantsRelaxed();
-
-    //void SubDivideMinLimited(OctantSharedPtr parent, std::vector<OctantSharedPtr> &np);
-
-    /**
-     * @brief Subdivision step for smoothoctants()
-     */
-    //Array<OneD, OctantSharedPtr> SubDivideLevel(OctantSharedPtr parent);
+    void SubDivide(NekDouble maxdim, NekDouble x, NekDouble y, NekDouble z);
 
     /**
      * @brief Smooths specification over the surface octants to a
      * gradation criteria
      */
-    //void SmoothSurfaceOctants();
+    void SmoothSurfaceOctants(const std::vector<OctantSharedPtr> &Octants);
 
     /**
      * @brief takes the mesh specification from surface octants and
      * progates that through the domain so all octants have a specification
      * using gradiation crieteria
      */
-    //void PropagateDomain();
+    void PropagateDomain();
 
     /**
      * @brief estimates the number of elements to be creted in the mesh
@@ -163,15 +140,10 @@ private:
     //int CountElemt();
 
     /**
-     * @brief Further subdivide octree with less strict rules
-     */
-    //void Relax();
-
-    /**
      * @brief Calculates the difference in delta divided by the difference
      * in location between two octants i and j
      */
-    //NekDouble ddx(OctantSharedPtr i, OctantSharedPtr j);
+    NekDouble ddx(OctantSharedPtr i, OctantSharedPtr j);
 
     /// minimum delta in the octree
     NekDouble m_minDelta;

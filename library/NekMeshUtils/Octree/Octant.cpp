@@ -185,7 +185,7 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
     m_neigbours[eRight] = vector<OctantSharedPtr>();
 
     //initialise variables to defualt states
-    m_leaf = false;
+    m_leaf = true;
     m_needToDivide = true;
     m_numValidPoints = 0;
     m_delta = pair<bool, NekDouble>(false, 0.0);
@@ -210,6 +210,8 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
 
 void Octant::Subdivide(OctantSharedPtr p, int &numoct)
 {
+    ASSERTL0(m_leaf, "octant must be a leaf for subdivision");
+
     m_leaf = false; //set as not leaf and make children
 
     //need to loop over all neigbours and remove this octant from their lists
@@ -334,7 +336,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if(m_neigbours[eUp].size() != 0)
     {
-        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+        cout << "!!!!!" << "NOT GOOD" << "!!!!! " << m_neigbours[eUp].size() << endl;
     }
 
     if(m_neigbours[eDown].size() == 1)
@@ -361,7 +363,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if(m_neigbours[eDown].size() != 0)
     {
-        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+        cout << "!!!!!" << "NOT GOOD" << "!!!!! " << m_neigbours[eDown].size() << endl;
     }
 
     if(m_neigbours[eForward].size() == 1)
@@ -388,7 +390,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if(m_neigbours[eForward].size() != 0)
     {
-        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+        cout << "!!!!!" << "NOT GOOD" << "!!!!! " << m_neigbours[eForward].size() << endl;
     }
 
     if(m_neigbours[eBack].size() == 1)
@@ -415,7 +417,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if(m_neigbours[eBack].size() != 0)
     {
-        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << endl;
+        cout << "!!!!!" << "NOT GOOD" << "!!!!! " << m_neigbours[eBack].size() << endl;
     }
 
     if(m_neigbours[eLeft].size() == 1)
@@ -442,7 +444,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if(m_neigbours[eLeft].size() != 0)
     {
-        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << " LEFT" << endl;
+        cout << "!!!!!" << "NOT GOOD" << "!!!!! " << m_neigbours[eLeft].size() << endl;
         cout << m_neigbours[eLeft].size() << endl;
     }
 
@@ -470,7 +472,7 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if(m_neigbours[eRight].size() != 0)
     {
-        cout << "!!!!!" << "NOT GOOD" << "!!!!!" << " RIGHT" << endl;
+        cout << "!!!!!" << "NOT GOOD" << "!!!!! " << m_neigbours[eRight].size() << endl;
     }
 
 }
@@ -493,7 +495,7 @@ void Octant::RemoveNeigbour(int id, OctantFace f)
     }
     if(!found)
     {
-        cout << "!!!!!" << "NOT FOUND" << "!!!!!" << endl;
+        //cout << "!!!!!" << "NOT FOUND" << "!!!!!" << endl;
     }
 }
 

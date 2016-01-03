@@ -211,22 +211,20 @@ void Octree::Build()
     numoct = 1;
     m_masteroct->Subdivide(m_masteroct, numoct);
 
-    InitialSubDivide();
+    SubDivide(maxdim ,(BoundingBox[1]+BoundingBox[0])/2.0,
+                      (BoundingBox[3]+BoundingBox[2])/2.0,
+                      (BoundingBox[5]+BoundingBox[4])/2.0);
 
     Octants.clear();
     m_masteroct->CompileLeaves(Octants);
 
-    cout << Octants.size() << endl;
+    cout << "Octants " <<  Octants.size() << endl;
 
-    /*
-
-    SmoothSurfaceOctants();
-
-    if(m_verbose)
-        cout << "\tPropagating spacing out to domain boundary" << endl;
+    SmoothSurfaceOctants(Octants);
 
     PropagateDomain();
 
+    /*
     if(m_verbose)
         cout << "\tRecersively ensuring smoothness between all nodes" << endl;
 
@@ -254,42 +252,105 @@ void Octree::Build()
     }*/
 }
 
-void Octree::SubDivide()
+void Octree::SubDivide(NekDouble maxdim, NekDouble x, NekDouble y, NekDouble z)
 {
     bool repeat;
     vector<OctantSharedPtr> Octants;
+    int i = 0;
 
     do
     {
+        i++;
+        if(i == 4)  break;
+
         repeat = false;
         Octants.clear();
         //grab a list of the leaves curently in the octree
         m_masteroct->CompileLeaves(Octants);
 
+        //check all neibours
+        for(int i = 0; i < Octants.size(); i++)
+        {
+            bool valid = true;
+            map<OctantFace, vector<OctantSharedPtr> > nlist = Octants[i]->GetNeigbours();
+            map<OctantFace, vector<OctantSharedPtr> >::iterator it;
+            for(it = nlist.begin(); it != nlist.end(); it++)
+            {
+                if(it->second.size() == 0)
+                {
+                    NekDouble expectedfx;
+                    switch (it->first)
+                    {
+                        case eUp:
+                            expectedfx = y + maxdim;
+                            break;
+                        case eDown:
+                            expectedfx = y - maxdim;
+                            break;
+                        case eLeft:
+                            expectedfx = z + maxdim;
+                            break;
+                        case eRight:
+                            expectedfx = z - maxdim;
+                            break;
+                        case eForward:
+                            expectedfx = x + maxdim;
+                            break;
+                        case eBack:
+                            expectedfx = x - maxdim;
+                            break;
+                    }
+                    if(fabs(Octants[i]->FX(it->first) - expectedfx) > 1E-6)
+                    {
+                        valid = false;
+                        cout << "wall neigbour error" << endl;
+                        cout << expectedfx << " " << Octants[i]->FX(it->first) << " " << it->first << endl;
+                    }
+                }
+                else if(it->second.size() == 1)
+                {
+                    if(!(Octants[i]->DX() == it->second[0]->DX() || it->second[0]->DX() == 2.0 * Octants[i]->DX()))
+                    {
+                        valid = false;
+                        cout << " 1 neigbour error" << endl;
+                        cout << Octants[i]->DX() << " " <<  it->second[0]->DX() << endl;
+                    }
+                }
+                else if(it->second.size() == 4)
+                {
+
+                }
+            }
+            if(!valid)
+                cout << "invalid neigbour config" << endl;
+        }
+
         //needs to complile a list of leaf octants which require subdivision to make sure
         //the levels will not exceed one
         //Then create a list of octants which want to subdivide and then execute them
         vector<OctantSharedPtr> dividelist;
+        set<int> inlist;
         for(int i = 0; i < Octants.size(); i++)
         {
-            bool divide = false;
-            map<OctantFace, vector<OctantSharedPtr> > ne = Octants[i]->GetNeigbours();
-            map<OctantFace, vector<OctantSharedPtr> >::iterator it;
-            for(it = ne.begin(); it != ne.end(); it++)
+            if(Octants[i]->NeedDivide())
             {
-                for(int j = 0; j < it->second.size(); j++)
+                map<OctantFace, vector<OctantSharedPtr> > nlist = Octants[i]->GetNeigbours();
+                map<OctantFace, vector<OctantSharedPtr> >::iterator it;
+                for(it = nlist.begin(); it != nlist.end(); it++)
                 {
-                    if(it->second[j]->NeedDivide())
+                    for(int j = 0; j < it->second.size(); j++)
                     {
-                        if(it->second[j]->DX() < Octants[i]->DX())
+                        if(Octants[i]->DX() < it->second[j]->DX())
                         {
-                            dividelist.push_back(Octants[i]);
-                            divide = true;
-                            break;
+                            set<int>::iterator s = inlist.find(it->second[j]->GetId());
+                            if(s == inlist.end())
+                            {
+                                inlist.insert(it->second[j]->GetId());
+                                dividelist.push_back(it->second[j]);
+                            }
                         }
                     }
                 }
-                if(divide) break;
             }
         }
         for(int i = 0; i < dividelist.size(); i++)
@@ -313,15 +374,12 @@ void Octree::SubDivide()
     while(repeat);
 }
 
-/*
-
-void Octree::SmoothSurfaceOctants()
+void Octree::SmoothSurfaceOctants(const vector<OctantSharedPtr> &Octants)
 {
     //for all the octants which are surface containing and know their delta
     //specification, look over all neighbours and ensure the specification
     //between them is smooth
     int ct = 0;
-    OctantSet::iterator it;
 
     do
     {
@@ -330,18 +388,23 @@ void Octree::SmoothSurfaceOctants()
         {
             OctantSharedPtr oct = Octants[i];
 
-            if(oct->IsLeaf() && oct->IsDeltaKnown())
+            if(oct->IsDeltaKnown())
             {
                 vector<OctantSharedPtr> check;
-                vector<OctantSharedPtr> nList = oct->GetNeighbourList();
+                map<OctantFace, vector<OctantSharedPtr> > nList =
+                                                        oct->GetNeigbours();
+                map<OctantFace, vector<OctantSharedPtr> >::iterator it;
 
-                for(int j = 0; j < nList.size(); j++)
+                for(it = nList.begin(); it != nList.end(); it++)
                 {
-                    if(nList[j]->IsDeltaKnown() && nList[j]->GetDelta()
-                                                    < oct->GetDelta()
-                       && ddx(oct, nList[j]) > 0.2)
+                    for(int j = 0; j < it->second.size(); j++)
                     {
-                        check.push_back(nList[j]);
+                        if(it->second[j]->IsDeltaKnown() &&
+                           it->second[j]->GetDelta() < oct->GetDelta() &&
+                           ddx(oct, it->second[j]) > 0.2)
+                         {
+                             check.push_back(it->second[j]);
+                         }
                     }
                 }
 
@@ -360,13 +423,10 @@ void Octree::SmoothSurfaceOctants()
                         }
                     }
                     oct->SetDelta(deltaSM);
-                    ASSERTL0(!(deltaSM<m_minDelta),
-                                    "Delta assignment less than min delta");
                     ct+=1;
                 }
             }
         }
-
     }while(ct>0);
 }
 
@@ -376,7 +436,6 @@ void Octree::PropagateDomain()
     //look over all octants and if their neighours know either their orientation
     //or specifcation calculate one for this octant
     int ct=0;
-    OctantSet::iterator it;
 
     do
     {
@@ -385,19 +444,22 @@ void Octree::PropagateDomain()
         {
             OctantSharedPtr oct = Octants[i];
 
-            if(oct->IsLeaf() && !oct->IsDeltaKnown())
-            { //if it is leaf and delta has not been asigned
-                ct+=1;
+            if(!oct->IsDeltaKnown())
+            { //if delta has not been asigned
                 vector<OctantSharedPtr> known;
-                vector<OctantSharedPtr> nList = oct->GetNeighbourList();
+                map<OctantFace, vector<OctantSharedPtr> > nList = oct->GetNeigbours();
+                map<OctantFace, vector<OctantSharedPtr> >::iterator it;
 
-                for(int j = 0; j < nList.size(); j++)
+                for(it = nList.begin(); it != nList.end(); it++)
                 {
-                    if(nList[j]->IsDeltaKnown())
+                    for(int j = 0; j < it->second.size(); j++)
                     {
-                        known.push_back(nList[j]);
+                        if(it->second[j]->IsDeltaKnown())
+                        {
+                            known.push_back(it->second[j]);
+                        }
                     }
-                }//create list of neighbours where delta is known.
+                }
 
                 if(known.size() > 0)
                 {
@@ -415,7 +477,7 @@ void Octree::PropagateDomain()
                             deltaPrime.push_back(m_maxDelta);
                         }
                     }
-                    NekDouble min=numeric_limits<double>::max();
+                    NekDouble min = numeric_limits<double>::max();
                     for(int j = 0; j < deltaPrime.size(); j++)
                     {
                         if(deltaPrime[j] < min)
@@ -424,52 +486,43 @@ void Octree::PropagateDomain()
                         }
                     }
                     oct->SetDelta(min);
-                    ASSERTL0(!(min<m_minDelta),
-                            "Delta assignment less than min delta");
+                    ct+=1;
                     deltaPrime.clear();
                 }
                 known.clear();
             }
 
-            if(oct->IsLeaf() && oct->GetLocation() == eUnknown)
+            if(oct->GetLocation() == eUnknown)
             { //if the node does not know its location
-                ct+=1;
                 vector<OctantSharedPtr> known;
-                vector<OctantSharedPtr> nList = oct->GetNeighbourList();
+                map<OctantFace, vector<OctantSharedPtr> > nList = oct->GetNeigbours();
+                map<OctantFace, vector<OctantSharedPtr> >::iterator it;
 
-                for(int j = 0; j < nList.size(); j++)
+                for(it = nList.begin(); it != nList.end(); it++)
                 {
-                    if(nList[j]->GetLocation() != eUnknown)
+                    for(int j = 0; j < it->second.size(); j++)
                     {
-                        known.push_back(nList[j]);
+                        if(it->second[j]->GetLocation() != eUnknown)
+                        {
+                            known.push_back(it->second[j]);
+                        }
                     }
                 }
+
                 if(known.size() > 0)
                 {
-                    vector<OctantSharedPtr> isOrient2;
+                    vector<OctantSharedPtr> isNotOnBound;
                     for(int j = 0; j < known.size(); j++)
                     {
-                        if(known[j]->GetLocation() == eOnBoundary)
+                        if(known[j]->GetLocation() != eOnBoundary)
                         {
-                            isOrient2.push_back(known[j]);
+                            isNotOnBound.push_back(known[j]);
                         }
                     }
 
-                    if(isOrient2.size() == 0)
+                    if(isNotOnBound.size() > 0)
                     {
-                        NekDouble dist=numeric_limits<double>::max();
-                        OctantSharedPtr closest;
-                        for(int j = 0; j < known.size(); j++)
-                        {
-                            if(oct->Distance(known[j]) < dist)
-                            {
-                                closest= known[j];
-                                dist = oct->Distance(known[j]);
-                            }
-                        }
-
-                        oct->SetLocation(closest->GetLocation());
-
+                        oct->SetLocation(isNotOnBound[0]->GetLocation());
                     }
                     else
                     {
@@ -477,34 +530,24 @@ void Octree::PropagateDomain()
 
                         OctantSharedPtr closest;
 
-                        for(int j = 0; j < isOrient2.size(); j++)
+                        for(int j = 0; j < known.size(); j++)
                         {
-                            if(oct->Distance(isOrient2[j]) < dist)
+                            if(oct->Distance(known[j]) < dist)
                             {
-                                closest = isOrient2[j];
-                                dist = oct->Distance(isOrient2[j]);
+                                closest = known[j];
+                                dist = oct->Distance(known[j]);
                             }
                         }
 
-                        CurvaturePointSharedPtr closestPoint;
-                        dist = numeric_limits<double>::max();
-                        vector<CurvaturePointSharedPtr> cp = closest->GetCPList();
-                        for(int j = 0; j < cp.size(); j++)
-                        {
-                            if(oct->CPDistance(cp[j]) < dist)
-                            {
-                                closestPoint = cp[j];
-                                dist = oct->CPDistance(cp[j]);
-                            }
-                        }
+                        CurvaturePointSharedPtr cp = closest->GetCPPoint();
 
                         Array<OneD, NekDouble> octloc, cploc, vec(3), uv, N;
                         int surf;
-                        closestPoint->GetCAD(surf, uv);
+                        cp->GetCAD(surf, uv);
                         N = m_cad->GetSurf(surf)->N(uv);
 
                         octloc = oct->GetLoc();
-                        cploc = closestPoint->GetLoc();
+                        cploc = cp->GetLoc();
 
                         vec[0] = octloc[0] - cploc[0];
                         vec[1] = octloc[1] - cploc[1];
@@ -515,10 +558,12 @@ void Octree::PropagateDomain()
                         if(dot <= 0.0)
                         {
                             oct->SetLocation(eOutside);
+                            ct+=1;
                         }
                         else
                         {
                             oct->SetLocation(eInside);
+                            ct+=1;
                         }
                     }
                 }
@@ -530,14 +575,11 @@ void Octree::PropagateDomain()
 
     for(int i = 0; i < Octants.size(); i++)
     {
-        OctantSharedPtr oct = Octants[i];
-        if(oct->IsLeaf())
-        {
-            ASSERTL0(oct->GetDelta() > 0.0, "leaf delta less than zero");
-        }
+        ASSERTL0(Octants[i]->IsDeltaKnown(),"does not know delta after propergation");
     }
-}
 
+}
+/*
 void Octree::SmoothAllOctants()
 {
     //until no more changes occur smooth the mesh specification between all
@@ -760,116 +802,10 @@ void Octree::CompileCuravturePointList()
     }
 }
 
-/*NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)
+NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)
 {
     return fabs(i->GetDelta() - j->GetDelta()) / i->Distance(j);
 }
-
-void Octree::AssignNeigbours(OctantSharedPtr const &o)
-{
-    //clear old list
-    o->ClearNeigbourList();
-
-    OctantSet::iterator it;
-    vector<OctantSharedPtr> nlist;
-
-    int eqhit = 0;
-
-    //look over all octants and consider if they are neigbours
-    for(int i = 0; i < Octants.size(); i++)
-    {
-        OctantSharedPtr oct = Octants[i];
-
-        if(oct->IsLeaf())
-        {
-            if(oct == o)
-            {
-                eqhit++;
-                continue;
-            }
-
-            //work out the max distance between the two octants if they were
-            //joined corner to corner
-            NekDouble rmax = o->DiagonalDim() + oct->DiagonalDim();
-
-            NekDouble ractual = o->Distance(oct);
-
-            //if the actucal distance between them is greater that this
-            //this octant should not be considered, massive speed up
-            if(ractual > 1.1*rmax)
-            {
-                continue;
-            }
-
-            //check overlapping in 2-D for all three dimensions
-            if(fabs(o->FX(-1) - oct->FX(+1)) < 1E-6 ||
-               fabs(o->FX(+1) - oct->FX(-1)) < 1E-6 )
-            {
-                //check yz rects
-                bool Cond1 = false;
-                bool Cond2 = false;
-                bool Cond3 = false;
-                bool Cond4 = false;
-                if(o->FY(+1) < oct->FY(-1))
-                    Cond1 = true;
-                if(o->FY(-1) > oct->FY(+1))
-                    Cond1 = true;
-                if(o->FZ(+1) < oct->FZ(-1))
-                    Cond1 = true;
-                if(o->FZ(-1) > oct->FZ(+1))
-                    Cond1 = true;
-                if(!Cond1 && !Cond2 && !Cond3 && !Cond4)
-                {
-                    nlist.push_back(oct);
-                }
-            }
-            else if(fabs(o->FY(-1) - oct->FY(+1)) <1E-6 ||
-                    fabs(o->FY(+1) - oct->FY(-1)) <1E-6)
-            {
-                //check xz rects
-                bool Cond1 = false;
-                bool Cond2 = false;
-                bool Cond3 = false;
-                bool Cond4 = false;
-                if(o->FX(+1) < oct->FX(-1))
-                    Cond1 = true;
-                if(o->FX(-1) > oct->FX(+1))
-                    Cond1 = true;
-                if(o->FZ(+1) < oct->FZ(-1))
-                    Cond1 = true;
-                if(o->FZ(-1) > oct->FZ(+1))
-                    Cond1 = true;
-                if(!Cond1 && !Cond2 && !Cond3 && !Cond4)
-                {
-                    nlist.push_back(oct);
-                }
-            }
-            else if(fabs(o->FZ(-1) - oct->FZ(+1)) <1E-6 ||
-                    fabs(o->FZ(+1) - oct->FZ(-1)) <1E-6)
-            {
-                //check xy rects
-                bool Cond1 = false;
-                bool Cond2 = false;
-                bool Cond3 = false;
-                bool Cond4 = false;
-                if(o->FX(+1) < oct->FX(-1))
-                    Cond1 = true;
-                if(o->FX(-1) > oct->FX(+1))
-                    Cond1 = true;
-                if(o->FY(+1) < oct->FY(-1))
-                    Cond1 = true;
-                if(o->FY(-1) > oct->FY(+1))
-                    Cond1 = true;
-                if(!Cond1 && !Cond2 && !Cond3 && !Cond4)
-                {
-                    nlist.push_back(oct);
-                }
-            }
-        }
-    }
-    o->SetNeigbourList(nlist);
-    ASSERTL0(eqhit == 1,"found itself more than once");
-}*/
 
 }
 }

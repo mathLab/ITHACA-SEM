@@ -123,61 +123,65 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return n->GetDelta();
 }
 */
-Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
+vector<Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
 {
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > out(Octants.size());
+    vector<Array<OneD, Array<OneD, NekDouble> > > out;
     for(int i = 0; i < Octants.size(); i++)
     {
+        /*if(Octants[i]->GetLocation() != eOnBoundary)
+        {
+            continue;
+        }*/
         Array<OneD, Array<OneD, NekDouble> > oct(8);
         Array<OneD, NekDouble> p1(3);
         p1[0] = Octants[i]->FX(eBack);
-        p1[1] = Octants[i]->FX(eRight);
-        p1[2] = Octants[i]->FX(eDown);
+        p1[1] = Octants[i]->FX(eDown);
+        p1[2] = Octants[i]->FX(eRight);
         oct[0] = p1;
 
         Array<OneD, NekDouble> p2(3);
         p2[0] = Octants[i]->FX(eForward);
-        p2[1] = Octants[i]->FX(eRight);
-        p2[2] = Octants[i]->FX(eDown);
+        p2[1] = Octants[i]->FX(eDown);
+        p2[2] = Octants[i]->FX(eRight);
         oct[1] = p2;
 
         Array<OneD, NekDouble> p3(3);
         p3[0] = Octants[i]->FX(eForward);
-        p3[1] = Octants[i]->FX(eLeft);
-        p3[2] = Octants[i]->FX(eDown);
+        p3[1] = Octants[i]->FX(eUp);
+        p3[2] = Octants[i]->FX(eRight);
         oct[2] = p3;
 
         Array<OneD, NekDouble> p4(3);
         p4[0] = Octants[i]->FX(eBack);
-        p4[1] = Octants[i]->FX(eLeft);
-        p4[2] = Octants[i]->FX(eDown);
+        p4[1] = Octants[i]->FX(eUp);
+        p4[2] = Octants[i]->FX(eRight);
         oct[3] = p4;
 
         Array<OneD, NekDouble> p5(3);
         p5[0] = Octants[i]->FX(eBack);
-        p5[1] = Octants[i]->FX(eRight);
-        p5[2] = Octants[i]->FX(eUp);
+        p5[1] = Octants[i]->FX(eDown);
+        p5[2] = Octants[i]->FX(eLeft);
         oct[4] = p5;
 
         Array<OneD, NekDouble> p6(3);
         p6[0] = Octants[i]->FX(eForward);
-        p6[1] = Octants[i]->FX(eRight);
-        p6[2] = Octants[i]->FX(eUp);
+        p6[1] = Octants[i]->FX(eDown);
+        p6[2] = Octants[i]->FX(eLeft);
         oct[5] = p6;
 
         Array<OneD, NekDouble> p7(3);
         p7[0] = Octants[i]->FX(eForward);
-        p7[1] = Octants[i]->FX(eLeft);
-        p7[2] = Octants[i]->FX(eUp);
+        p7[1] = Octants[i]->FX(eUp);
+        p7[2] = Octants[i]->FX(eLeft);
         oct[6] = p7;
 
         Array<OneD, NekDouble> p8(3);
         p8[0] = Octants[i]->FX(eBack);
-        p8[1] = Octants[i]->FX(eLeft);
-        p8[2] = Octants[i]->FX(eUp);
+        p8[1] = Octants[i]->FX(eUp);
+        p8[2] = Octants[i]->FX(eLeft);
         oct[7] = p8;
 
-        out[i] = oct;
+        out.push_back(oct);
     }
     return out;
 }
@@ -219,9 +223,9 @@ void Octree::Build()
 
     cout << "Octants " <<  Octants.size() << endl;
 
-    SmoothSurfaceOctants(Octants);
+    //SmoothSurfaceOctants(Octants);
 
-    PropagateDomain();
+    //PropagateDomain();
 
     /*
     if(m_verbose)

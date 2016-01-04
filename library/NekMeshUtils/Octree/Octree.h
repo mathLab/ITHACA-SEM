@@ -103,7 +103,7 @@ public:
      */
     NekDouble GetMinDelta(){return m_minDelta;}
 
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > GetOctantVerts();
+    std::vector<Array<OneD, Array<OneD, NekDouble> > > GetOctantVerts();
 
 private:
 

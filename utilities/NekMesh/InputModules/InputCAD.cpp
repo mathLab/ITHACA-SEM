@@ -182,8 +182,8 @@ void InputCAD::Process()
         oct->m_spaceDim = 3;
         oct->m_nummode = 2;
 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > octs = m_octree->GetOctantVerts();
-        for(int i = 0; i < octs.num_elements(); i++)
+        vector<Array<OneD, Array<OneD, NekDouble> > > octs = m_octree->GetOctantVerts();
+        for(int i = 0; i < octs.size(); i++)
         {
             vector<NodeSharedPtr> ns;
             for(int j = 0; j < 8; j++)

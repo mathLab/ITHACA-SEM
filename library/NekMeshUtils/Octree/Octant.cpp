@@ -69,7 +69,6 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
     m_needToDivide = false;
     m_numValidPoints = 0;
     m_delta = pair<bool, NekDouble>(false, 0.0);
-    NekDouble av = 0;
     NekDouble maxDif = 0;
     NekDouble minDif=numeric_limits<double>::max();
     m_location = eUnknown;
@@ -84,34 +83,33 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
 
     //pull information from parent
     Array<OneD, NekDouble> parentloc = m_parent->GetLoc();
+    m_hd = m_parent->DX() / 2.0;
     m_loc = Array<OneD, NekDouble>(3);
     if(dir[0] == eForward)
     {
-        m_loc[0] = parentloc[0] + m_parent->DX() / 2.0;
+        m_loc[0] = parentloc[0] + m_hd;
     }
     else
     {
-        m_loc[0] = parentloc[0] - m_parent->DX() / 2.0;
+        m_loc[0] = parentloc[0] - m_hd;
     }
     if(dir[1] == eUp)
     {
-        m_loc[1] = parentloc[1] + m_parent->DX() / 2.0;
+        m_loc[1] = parentloc[1] + m_hd;
     }
     else
     {
-        m_loc[1] = parentloc[1] - m_parent->DX() / 2.0;
+        m_loc[1] = parentloc[1] - m_hd;
     }
     if(dir[2] == eLeft)
     {
-        m_loc[2] = parentloc[2] + m_parent->DX() / 2.0;
+        m_loc[2] = parentloc[2] + m_hd;
     }
     else
     {
-        m_loc[2] = parentloc[2] - m_parent->DX() / 2.0;
+        m_loc[2] = parentloc[2] - m_hd;
     }
 
-
-    m_hd = m_parent->DX() / 2.0;
     vector<CurvaturePointSharedPtr> CurvaturePointList = m_parent->GetCPList();
 
     //setup complete
@@ -141,7 +139,6 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
                 {
                     minDif = CurvaturePointList[i]->GetDelta();
                 }
-                av+=CurvaturePointList[i]->GetDelta();
 
                 m_numValidPoints++;
             }
@@ -158,12 +155,6 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
         }
 
         SetDelta(minDif);
-
-        if(GetDelta() < m_hd*10)
-            m_needToDivide = true;
-
-        ASSERTL0(GetDelta()>0, "negative delta assignment");
-
     }
 
     if(NumCurvePoint()>0)

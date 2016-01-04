@@ -87,7 +87,6 @@ void InputCAD::Process()
     pSession->LoadParameter("Order",    m_order);
 
     m_CADName = pSession->GetSolverInfo("CADFile");
-    m_orelax = pSession->GetSolverInfo("OctreeRelax");
     if(pSession->GetSolverInfo("MeshType") == "BL")
     {
         m_makeBL = true;
@@ -119,19 +118,12 @@ void InputCAD::Process()
         ASSERTL0(blsurfs.size() > 0, "No surfaces selected to make boundary layer on");
     }
 
-    if(boost::iequals(m_orelax,"TRUE"))
-        m_octreeRelax = true;
-    else
-        m_octreeRelax = false;
-
     CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
                                             AllocateSharedPtr(m_CADName);
 
     if(m_mesh->m_verbose)
     {
         cout << "Building mesh for: " << m_CADName << endl;
-        if(m_octreeRelax)
-            cout << "With a relaxed octree" << endl;
     }
 
     if(m_makeBL)
@@ -170,7 +162,7 @@ void InputCAD::Process()
     //create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
                                     m_mesh->m_verbose, m_minDelta,
-                                    m_maxDelta, m_eps, m_octreeRelax);
+                                    m_maxDelta, m_eps);
 
     m_octree->Build();
 
@@ -211,8 +203,6 @@ void InputCAD::Process()
         mod->Process();
 
     }
-
-    exit(-1);
 
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;

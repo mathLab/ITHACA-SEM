@@ -46,7 +46,7 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-/*
+
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     //starting at master octant 0 move through succsesive octants which contain
@@ -60,51 +60,51 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     {
         Array<OneD, NekDouble> octloc = n->GetLoc();
 
-        if(!(loc[0] < octloc[0]) &&
-           !(loc[1] < octloc[1]) &&
-           !(loc[2] < octloc[2]))
+        if(!(loc[0] < octloc[0]) && //forward
+           !(loc[1] < octloc[1]) && //forward
+           !(loc[2] < octloc[2]))   //forward
         {
             quad=0;
         }
-        else if(!(loc[0] < octloc[0]) &&
-                !(loc[1] > octloc[1]) &&
-                !(loc[2] < octloc[2]))
+        else if(!(loc[0] < octloc[0]) &&  //forward
+                !(loc[1] < octloc[1]) &&  //forward
+                !(loc[2] > octloc[2]))    //back
         {
             quad=1;
         }
-        else if(!(loc[0] > octloc[0]) &&
-                !(loc[1] > octloc[1]) &&
-                !(loc[2] < octloc[2]))
+        else if(!(loc[0] < octloc[0]) && //forward
+                !(loc[1] > octloc[1]) && //back
+                !(loc[2] < octloc[2]))   //forward
         {
             quad=2;
         }
-        else if(!(loc[0] > octloc[0]) &&
-                !(loc[1] < octloc[1]) &&
-                !(loc[2] < octloc[2]))
+        else if(!(loc[0] < octloc[0]) &&  //forward
+                !(loc[1] > octloc[1]) &&  //back
+                !(loc[2] > octloc[2]))    //back
         {
             quad=3;
         }
-        else if(!(loc[0] < octloc[0]) &&
-                !(loc[1] < octloc[1]) &&
-                !(loc[2] > octloc[2]))
+        else if(!(loc[0] > octloc[0]) && //back
+                !(loc[1] < octloc[1]) && //forward
+                !(loc[2] < octloc[2]))   //forward
         {
             quad=4;
         }
-        else if(!(loc[0] < octloc[0]) &&
-                !(loc[1] > octloc[1]) &&
-                !(loc[2] > octloc[2]))
+        else if(!(loc[0] > octloc[0]) && //back
+                !(loc[1] < octloc[1]) && //forward
+                !(loc[2] > octloc[2]))   //back
         {
             quad=5;
         }
-        else if(!(loc[0] > octloc[0]) &&
-                !(loc[1] > octloc[1]) &&
-                !(loc[2] > octloc[2]))
+        else if(!(loc[0] > octloc[0]) && //back
+                !(loc[1] > octloc[1]) && //back
+                !(loc[2] < octloc[2]))  //forward
         {
             quad=6;
         }
-        else if(!(loc[0] > octloc[0]) &&
-                !(loc[1] < octloc[1]) &&
-                !(loc[2] > octloc[2]))
+        else if(!(loc[0] > octloc[0]) && //back
+                !(loc[1] > octloc[1]) && //back
+                !(loc[2] > octloc[2]))   //back
         {
             quad=7;
         }
@@ -122,7 +122,7 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     }
     return n->GetDelta();
 }
-*/
+
 vector<Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
 {
     vector<Array<OneD, Array<OneD, NekDouble> > > out;
@@ -223,36 +223,17 @@ void Octree::Build()
 
     cout << "Octants " <<  Octants.size() << endl;
 
-    //SmoothSurfaceOctants(Octants);
+    SmoothSurfaceOctants();
 
-    //PropagateDomain();
-
-    /*
-    if(m_verbose)
-        cout << "\tRecersively ensuring smoothness between all nodes" << endl;
+    PropagateDomain();
 
     SmoothAllOctants();
-
-    if(m_relax)
-    {
-        Relax();
-    }
-
-    for(int i = 0; i < Octants.size(); i++)
-    {
-        OctantSharedPtr oct = Octants[i];
-        if(oct->IsLeaf())
-        {
-            ASSERTL0(!(oct->GetDelta() < 0.0),
-                     "Error in initial octree construction");
-        }
-    }
 
     if(m_verbose)
     {
         int elem = CountElemt();
         printf("\tPredicted mesh: %.2d elements\n", elem);
-    }*/
+    }
 }
 
 void Octree::SubDivide()
@@ -274,7 +255,7 @@ void Octree::SubDivide()
         //grab a list of the leaves curently in the octree
         m_masteroct->CompileLeaves(Octants);
 
-        VerifyNeigbours(Octants);
+        VerifyNeigbours();
 
         //neeed to create a divide list, in the first list will be octants which need to
         //subdivide based on curvature,
@@ -347,7 +328,7 @@ void Octree::SubDivide()
     while(repeat);
 }
 
-bool Octree::VerifyNeigbours(vector<OctantSharedPtr> Octants)
+bool Octree::VerifyNeigbours()
 {
     //check all neibours
     bool error = false;
@@ -417,7 +398,7 @@ bool Octree::VerifyNeigbours(vector<OctantSharedPtr> Octants)
     return !error;
 }
 
-void Octree::SmoothSurfaceOctants(const vector<OctantSharedPtr> &Octants)
+void Octree::SmoothSurfaceOctants()
 {
     //for all the octants which are surface containing and know their delta
     //specification, look over all neighbours and ensure the specification
@@ -444,7 +425,7 @@ void Octree::SmoothSurfaceOctants(const vector<OctantSharedPtr> &Octants)
                     {
                         if(it->second[j]->IsDeltaKnown() &&
                            it->second[j]->GetDelta() < oct->GetDelta() &&
-                           ddx(oct, it->second[j]) > 0.2)
+                           ddx(oct, it->second[j]) > 0.1)
                          {
                              check.push_back(it->second[j]);
                          }
@@ -460,9 +441,9 @@ void Octree::SmoothSurfaceOctants(const vector<OctantSharedPtr> &Octants)
                     {
                         NekDouble r = oct->Distance(check[j]);
 
-                        if(0.199 * r + check[j]->GetDelta() < deltaSM)
+                        if(0.099 * r + check[j]->GetDelta() < deltaSM)
                         {
-                            deltaSM = 0.199 * r + check[j]->GetDelta();
+                            deltaSM = 0.099 * r + check[j]->GetDelta();
                         }
                     }
                     oct->SetDelta(deltaSM);
@@ -511,9 +492,9 @@ void Octree::PropagateDomain()
                     {
                         NekDouble r = oct->Distance(known[j]);
 
-                        if(0.24*r + known[j]->GetDelta() < m_maxDelta)
+                        if(0.099*r + known[j]->GetDelta() < m_maxDelta)
                         {
-                            deltaPrime.push_back(0.24 * r + known[j]->GetDelta());
+                            deltaPrime.push_back(0.099 * r + known[j]->GetDelta());
                         }
                         else
                         {
@@ -622,7 +603,7 @@ void Octree::PropagateDomain()
     }
 
 }
-/*
+
 void Octree::SmoothAllOctants()
 {
     //until no more changes occur smooth the mesh specification between all
@@ -636,39 +617,34 @@ void Octree::SmoothAllOctants()
         {
             OctantSharedPtr oct = Octants[i];
 
-            if(oct->IsLeaf())
+            vector<OctantSharedPtr> check;
+            map<OctantFace, vector<OctantSharedPtr> > nList = oct->GetNeigbours();
+            map<OctantFace, vector<OctantSharedPtr> >::iterator it;
+            for(it = nList.begin(); it != nList.end(); it++)
             {
-                vector<OctantSharedPtr> check;
-                vector<OctantSharedPtr> nList = oct->GetNeighbourList();
-
-                for(int j = 0; j < nList.size(); j++)
+                for(int j = 0; j < it->second.size(); j++)
                 {
-                    if(!nList[j]->IsLeaf()) //this should not happen but does, this is a bit hacky but fixes it
+                    if(it->second[j]->GetDelta() < oct->GetDelta() && ddx(oct, it->second[j]) > 0.2)
                     {
-                        continue;
-                    }
-                    if(nList[j]->GetDelta() < oct->GetDelta() && ddx(oct, nList[j]) > 0.3)
-                    {
-                        check.push_back(nList[j]);
+                        check.push_back(it->second[j]);
                     }
                 }
+            }
 
-                //for each neighbour listed in check, figure out the smoothed delta, and asign the miminum of these to nodes[i].GetDelta()
-                if(check.size() > 0)
+            if(check.size() > 0)
+            {
+                NekDouble deltaSM = numeric_limits<double>::max();
+                for(int j = 0; j < check.size(); j++)
                 {
-                    NekDouble deltaSM = numeric_limits<double>::max();
-                    for(int j = 0; j < check.size(); j++)
-                    {
-                        NekDouble r = oct->Distance(check[j]);
+                    NekDouble r = oct->Distance(check[j]);
 
-                        if(0.29 * r + check[j]->GetDelta() < deltaSM)
-                        {
-                            deltaSM = 0.29 * r + check[j]->GetDelta();
-                        }
+                    if(0.199 * r + check[j]->GetDelta() < deltaSM)
+                    {
+                        deltaSM = 0.199 * r + check[j]->GetDelta();
                     }
-                    oct->SetDelta(deltaSM);
-                    ct+=1;
                 }
+                oct->SetDelta(deltaSM);
+                ct+=1;
             }
         }
 
@@ -685,21 +661,19 @@ int Octree::CountElemt()
     for(int i = 0; i < Octants.size(); i++)
     {
         OctantSharedPtr oct = Octants[i];
-        if(oct->IsLeaf())
+        if(oct->GetLocation() == eInside)
         {
-            if(oct->GetLocation() == 1)
-            {
-                total += 8.0*oct->DX()*oct->DX()*oct->DX() /
-                 (oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
-            }
-            else if(oct->GetLocation() == 2)
-            {
-            }
+            total += 8.0*oct->DX()*oct->DX()*oct->DX() /
+             (oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
+        }
+        else if(oct->GetLocation() == eOnBoundary)
+        {
+
         }
     }
 
     return int(total);
-}*/
+}
 
 void Octree::CompileCuravturePointList()
 {

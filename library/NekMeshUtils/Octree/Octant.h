@@ -230,6 +230,11 @@ class Octant
             return m_location;
         }
 
+        OctantSharedPtr GetChild(int q)
+        {
+            return m_children[q];
+        }
+
     private:
 
         ///id

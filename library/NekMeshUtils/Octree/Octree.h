@@ -69,10 +69,9 @@ public:
      * @param ver bool verbose
      */
     Octree(CADSystemSharedPtr cad, const bool ver,
-            const NekDouble min, const NekDouble max, const NekDouble eps,
-            const bool rel) :
+            const NekDouble min, const NekDouble max, const NekDouble eps) :
                             m_minDelta(min), m_maxDelta(max), m_eps(eps),
-                            m_cad(cad), m_verbose(ver), m_relax(rel)
+                            m_cad(cad), m_verbose(ver)
     {
     }
 
@@ -111,7 +110,7 @@ private:
      * @brief Smooths specification over all octants to a
      * gradation criteria
      */
-    //void SmoothAllOctants();
+    void SmoothAllOctants();
 
     /**
      * @brief gets an optimum number of curvature sampling points and
@@ -125,7 +124,7 @@ private:
      * @brief Smooths specification over the surface octants to a
      * gradation criteria
      */
-    void SmoothSurfaceOctants(const std::vector<OctantSharedPtr> &Octants);
+    void SmoothSurfaceOctants();
 
     /**
      * @brief takes the mesh specification from surface octants and
@@ -137,7 +136,7 @@ private:
     /**
      * @brief estimates the number of elements to be creted in the mesh
      */
-    //int CountElemt();
+    int CountElemt();
 
     /**
      * @brief Calculates the difference in delta divided by the difference
@@ -145,7 +144,7 @@ private:
      */
     NekDouble ddx(OctantSharedPtr i, OctantSharedPtr j);
 
-    bool VerifyNeigbours(std::vector<OctantSharedPtr> Octants);
+    bool VerifyNeigbours();
 
     /// minimum delta in the octree
     NekDouble m_minDelta;
@@ -172,7 +171,6 @@ private:
     ///master octant for searching
     OctantSharedPtr m_masteroct;
     ///
-    bool m_relax;
     int numoct;
 };
 

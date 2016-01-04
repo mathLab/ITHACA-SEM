@@ -119,7 +119,7 @@ private:
      */
     void CompileCuravturePointList();
 
-    void SubDivide(NekDouble maxdim, NekDouble x, NekDouble y, NekDouble z);
+    void SubDivide();
 
     /**
      * @brief Smooths specification over the surface octants to a
@@ -145,6 +145,8 @@ private:
      */
     NekDouble ddx(OctantSharedPtr i, OctantSharedPtr j);
 
+    bool VerifyNeigbours(std::vector<OctantSharedPtr> Octants);
+
     /// minimum delta in the octree
     NekDouble m_minDelta;
     /// maximum delta in the octree
@@ -157,6 +159,10 @@ private:
     bool m_verbose;
     /// max and min dimensions of the domain 6 varibles
     Array<OneD, NekDouble> BoundingBox;
+    //
+    Array<OneD, NekDouble> centroid;
+    //
+    NekDouble dim;
     /// list of curvature sample points
     std::vector<CurvaturePointSharedPtr> m_cpList;
     /// list of octants

@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 
     // Add input and output modules to beginning and end of this vector.
     modcmds.insert   (modcmds.begin(), inout[0]);
-    modcmds.push_back(inout[1]);
+    modcmds.push_back(inout.back());
 
     for (int i = 0; i < modcmds.size(); ++i)
     {
@@ -219,6 +219,18 @@ int main(int argc, char* argv[])
         // Create module.
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module,mesh);
         modules.push_back(mod);
+
+        if(i == 0) //dealing with input module
+        {
+            if(inout.size() == 3)
+            {
+                ASSERTL0(module.second == "xml", "cannot do multiple input for anything other than xml files");
+                int    dot    = inout[1].find_last_of('.') + 1;
+                string ext    = inout[1].substr(dot, inout[1].length() - dot);
+                ASSERTL0(ext == "xml", "secondary input must be xml");
+                mod->RegisterConfig("additionalfile",inout[1]);
+            }
+        }
 
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)

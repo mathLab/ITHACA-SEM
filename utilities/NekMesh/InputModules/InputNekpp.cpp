@@ -57,7 +57,8 @@ ModuleKey InputNekpp::className =
  */
 InputNekpp::InputNekpp(MeshSharedPtr m) : InputModule(m)
 {
-
+    m_config["additionalfile"]    = ConfigOption(
+        false, "0", "Extra xml to be read by SessionReader");
 }
 
 InputNekpp::~InputNekpp()
@@ -79,6 +80,12 @@ void InputNekpp::Process()
 {
     vector<string> filename;
     filename.push_back(m_config["infile"].as<string>());
+
+    string add = m_config["additionalfile"].as<string>();
+    if(add != "0")
+    {
+        filename.push_back(add);
+    }
 
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);

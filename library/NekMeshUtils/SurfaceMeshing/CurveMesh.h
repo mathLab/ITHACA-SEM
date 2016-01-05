@@ -61,12 +61,8 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id,
-              MeshSharedPtr m,
-              CADCurveSharedPtr c,
-              OctreeSharedPtr o) :
-              m_cadcurve(c),m_octree(o),
-              m_id(id), m_mesh(m)
+    CurveMesh(int id, MeshSharedPtr m, CADCurveSharedPtr c, OctreeSharedPtr o) :
+              m_cadcurve(c),m_octree(o), m_id(id), m_mesh(m)
     {
     };
 

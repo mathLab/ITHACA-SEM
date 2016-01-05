@@ -149,8 +149,8 @@ private:
     std::vector<std::vector<NodeSharedPtr> > orderedLoops;
     /// list of stiener points in the triangulation
     std::vector<NodeSharedPtr> m_stienerpoints;
-    /// paramter plane and real space aspect ratios
-    NekDouble pasr,asr;
+    /// pplane stretching
+    NekDouble m_str;
     /// triangle connectiviities
     std::vector<std::vector<NodeSharedPtr> > m_connec;
     ///local set of nodes

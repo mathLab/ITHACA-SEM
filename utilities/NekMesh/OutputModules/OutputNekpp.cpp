@@ -108,7 +108,7 @@ void OutputNekpp::Process()
     string filename = m_config["outfile"].as<string>();
 
     // Compress output and append .gz extension
-    if (m_config["z"].as<bool>())
+    if (m_config["z"].beenSet)
     {
         filename += ".gz";
         ofstream fout(filename.c_str(),

@@ -81,7 +81,9 @@ void BLMesh::Mesh()
         {
             if((e[j]->m_n1->GetNumCadCurve() > 0 && e[j]->m_n2->GetNumCadCurve() > 0) ||
                (!(e[j]->m_n1->GetNumCadCurve() > 0) && !(e[j]->m_n2->GetNumCadCurve() > 0))) //if both or none are on curve skip
-                    continue;
+            {
+                continue;
+            }
 
             if(e[j]->m_n1->GetNumCadCurve() > 0)
             {
@@ -166,7 +168,7 @@ void BLMesh::Mesh()
 
         ElmtConfig conf(LibUtilities::ePrism,1,false,false);
         vector<int> tags;
-        tags.push_back(11); //need to fix again
+        tags.push_back(1); //all prisms are comp 1
         ElementSharedPtr E = GetElementFactory().
                     CreateInstance(LibUtilities::ePrism, conf, pn, tags);
 
@@ -187,7 +189,7 @@ void BLMesh::Mesh()
 
             if(!(F == f[j])) //only two triangle faces so if its not this one, this is the psudo surfaces
             {
-                surftopriface[ptri[i]->GetId()] = f[j];
+                m_surftopriface[ptri[i]->GetId()] = f[j];
             }
         }
     }

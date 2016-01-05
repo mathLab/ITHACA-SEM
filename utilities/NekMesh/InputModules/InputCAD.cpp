@@ -77,30 +77,42 @@ void InputCAD::Process()
 {
     vector<string> filename;
     filename.push_back(m_config["infile"].as<string>());
+    string fn = filename[0].substr(0, filename[0].find("."));
 
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
 
+    //these parameters must be defined for any mesh generation to work
     pSession->LoadParameter("MinDelta", m_minDelta);
     pSession->LoadParameter("MaxDelta", m_maxDelta);
     pSession->LoadParameter("EPS",      m_eps);
     pSession->LoadParameter("Order",    m_order);
-
     m_CADName = pSession->GetSolverInfo("CADFile");
-    m_orelax = pSession->GetSolverInfo("OctreeRelax");
-    if(pSession->GetSolverInfo("MeshType") == "BL")
+
+    if(pSession->DefinesSolverInfo("MeshType"))
     {
-        m_makeBL = true;
-        pSession->LoadParameter("BLThick",  m_blthick);
+        if(pSession->GetSolverInfo("MeshType") == "BL")
+        {
+            m_makeBL = true;
+            pSession->LoadParameter("BLThick",  m_blthick);
+        }
+        else
+        {
+            m_makeBL = false;
+        }
     }
-    else if(pSession->GetSolverInfo("MeshType") == "EULER")
-        m_makeBL = false;
     else
-        ASSERTL0(false,"unknown MeshType");
+    {
+        m_makeBL = false;
+    }
+
+    if(pSession->DefinesSolverInfo("WriteOctree"))
+    {
+        m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
+    }
 
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;
-
     if(m_makeBL)
     {
         string sym, bl;
@@ -113,41 +125,15 @@ void InputCAD::Process()
         ASSERTL0(blsurfs.size() > 0, "No surfaces selected to make boundary layer on");
     }
 
-    if(boost::iequals(m_orelax,"TRUE"))
-        m_octreeRelax = true;
-    else
-        m_octreeRelax = false;
-
     CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
                                             AllocateSharedPtr(m_CADName);
 
     if(m_mesh->m_verbose)
     {
         cout << "Building mesh for: " << m_CADName << endl;
-        if(m_octreeRelax)
-            cout << "With a relaxed octree" << endl;
     }
 
-    if(m_makeBL)
-    {
-        if(m_mesh->m_verbose)
-        {
-            cout << "making boundary layer of surfs: ";
-            for(int i = 0; i < blsurfs.size(); i++)
-            {
-                cout << blsurfs[i] << " ";
-            }
-            cout << endl << "with the symmetry planes: ";
-            for(int i = 0; i < symsurfs.size(); i++)
-            {
-                cout << symsurfs[i] << " ";
-            }
-            cout << endl << "of thickness " << m_blthick << endl;
-        }
-    }
-
-    ASSERTL0(m_cad->LoadCAD(),
-             "Failed to load CAD");
+    ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
 
     if(m_mesh->m_verbose)
     {
@@ -159,24 +145,66 @@ void InputCAD::Process()
         m_cad->Report();
     }
 
-    m_cad->SmallFeatureAnalysis(m_minDelta);
+    if(m_makeBL && m_mesh->m_verbose)
+    {
+
+        cout << "\tWill make boundary layers on surfs: ";
+        for(int i = 0; i < blsurfs.size(); i++)
+        {
+            cout << blsurfs[i] << " ";
+        }
+        cout << endl << "\tWith the symmetry planes: ";
+        for(int i = 0; i < symsurfs.size(); i++)
+        {
+            cout << symsurfs[i] << " ";
+        }
+        cout << endl << "\tWith thickness " << m_blthick << endl;
+    }
 
     //create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
                                     m_mesh->m_verbose, m_minDelta,
-                                    m_maxDelta, m_eps, m_octreeRelax);
+                                    m_maxDelta, m_eps);
 
     m_octree->Build();
 
+    if(m_writeoctree)
+    {
+        MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
+        oct->m_expDim = 3;
+        oct->m_spaceDim = 3;
+        oct->m_nummode = 2;
+
+        m_octree->GetOctreeMesh(oct);
+
+        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
+                ModuleKey(eOutputModule, "xml"), oct);
+        mod->RegisterConfig("outfile", fn + "_oct.xml");
+        mod->ProcessVertices();
+        mod->ProcessEdges();
+        mod->ProcessFaces();
+        mod->ProcessElements();
+        mod->ProcessComposites();
+        mod->Process();
+    }
+
     m_mesh->m_expDim = 3;
     m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = m_order+1;
+    m_mesh->m_nummode = m_order + 1;
+    if(m_makeBL)
+    {
+        m_mesh->m_numcomp = 2; //prisms and tets
+    }
+    else
+    {
+        m_mesh->m_numcomp = 1;  //just tets
+    }
     //m_mesh->m_nummode = 2;
 
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_blthick);
+                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_blthick);
 
     m_surfacemesh->Mesh();
 
@@ -194,19 +222,28 @@ void InputCAD::Process()
     m_mesh->m_fields.push_back("w");
     m_mesh->m_fields.push_back("p");
 
-    map<int, FaceSharedPtr> surftopriface; //map of surface element id to opposite prism face for psudo surface in tetmesh
+    map<int, FaceSharedPtr> surftopriface;
+    //map of surface element id to opposite prism
+    //face for psudo surface in tetmesh
 
+    TetMeshSharedPtr m_tet;
     if(m_makeBL)
     {
-        BLMeshSharedPtr m_blmesh = boost::shared_ptr<BLMesh>(new BLMesh(m_mesh,
-                                                blsurfs, symsurfs, m_blthick, surftopriface));
+        BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
+                          m_mesh, blsurfs, symsurfs, m_blthick);
 
         m_blmesh->Mesh();
+
+        //create tet mesh
+        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
+                                                m_mesh, m_octree, m_blmesh);
+    }
+    else
+    {
+        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
     }
 
-    //create tet mesh
-    TetMeshSharedPtr m_tet =
-                boost::shared_ptr<TetMesh>(new TetMesh(m_mesh, m_octree, surftopriface));
+
 
     m_tet->Mesh();
 

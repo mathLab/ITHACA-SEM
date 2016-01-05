@@ -167,13 +167,6 @@ namespace Nektar
 
             /// Extract element vertices
             virtual void ProcessVertices();
-
-        protected:
-            /// Mesh object
-            MeshSharedPtr m_mesh;
-            /// List of configuration values.
-            map<string, ConfigOption> m_config;
-
             /// Extract element edges
             virtual void ProcessEdges(bool ReprocessEdges = true);
             /// Extract element faces
@@ -184,6 +177,14 @@ namespace Nektar
             virtual void ProcessComposites();
 
             virtual void ClearElementLinks();
+
+        protected:
+            /// Mesh object
+            MeshSharedPtr m_mesh;
+            /// List of configuration values.
+            map<string, ConfigOption> m_config;
+
+
 
             void ReorderPrisms(PerMap                   &perFaces);
             void PrismLines   (int                       prism,
@@ -239,6 +240,7 @@ namespace Nektar
         public:
             OutputModule(MeshSharedPtr p_m);
             void OpenStream();
+
 
         protected:
             /// Output stream

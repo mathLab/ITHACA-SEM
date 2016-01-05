@@ -62,7 +62,7 @@ void TetMesh::Mesh()
     vector<Array<OneD, int> > surfacetris; //surface mesh connectivity based on tetgenids
 
     int cnt = 0;
-    if(surftopriface.size() == 0)
+    if(!m_pseudosurface)
     {
         //build surface mesh and node map from all surface elements
         for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -94,6 +94,7 @@ void TetMesh::Mesh()
     }
     else
     {
+        m_surftopriface = m_blmesh->GetSurfToPri();
         //surface triangles will need to be checked against surftopriface to get the right face
         //all surface elements are sequentially numbered so this should be easy to find in map
         for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -102,8 +103,8 @@ void TetMesh::Mesh()
                 continue; //no quads for tetgen
 
             map<int, FaceSharedPtr>::iterator fit;
-            fit = surftopriface.find(m_mesh->m_element[2][i]->GetId());
-            if(fit == surftopriface.end())
+            fit = m_surftopriface.find(m_mesh->m_element[2][i]->GetId());
+            if(fit == m_surftopriface.end())
             {
                 //surface element does not have a correspoding prism, build tetgen surface
                 //tri from surface element
@@ -155,7 +156,10 @@ void TetMesh::Mesh()
         }
     }
 
-    cout << TetgenIdToNode.size() << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << "\tInital Node Count: " << TetgenIdToNode.size() << endl;
+    }
 
     tetgen->InitialMesh(TetgenIdToNode, surfacetris);
 
@@ -186,18 +190,18 @@ void TetMesh::Mesh()
         TetgenIdToNode[ctbefore + i] = n;
     }
 
-    tetconnect = tetgen->Extract();
+    m_tetconnect = tetgen->Extract();
 
     //tetgen->freetet();
 
     //create tets
-    for(int i = 0; i < tetconnect.size(); i++)
+    for(int i = 0; i < m_tetconnect.size(); i++)
     {
         vector<NodeSharedPtr> n;
-        n.push_back(TetgenIdToNode[tetconnect[i][0]]);
-        n.push_back(TetgenIdToNode[tetconnect[i][1]]);
-        n.push_back(TetgenIdToNode[tetconnect[i][2]]);
-        n.push_back(TetgenIdToNode[tetconnect[i][3]]);
+        n.push_back(TetgenIdToNode[m_tetconnect[i][0]]);
+        n.push_back(TetgenIdToNode[m_tetconnect[i][1]]);
+        n.push_back(TetgenIdToNode[m_tetconnect[i][2]]);
+        n.push_back(TetgenIdToNode[m_tetconnect[i][3]]);
         ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
         vector<int> tags;
         tags.push_back(0);
@@ -208,7 +212,7 @@ void TetMesh::Mesh()
     }
 
     if(m_mesh->m_verbose)
-        cout << "\tTets :" << tetconnect.size() << endl;
+        cout << "\tTets :" << m_tetconnect.size() << endl;
 }
 
 }

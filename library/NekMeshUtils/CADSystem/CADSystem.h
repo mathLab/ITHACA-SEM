@@ -77,7 +77,7 @@ public:
     std::string GetName();
 
     /**
-     * @brief Initialises CAD and makes surface and curve maps.
+     * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
      * @return true if completed successfully
      */
@@ -99,7 +99,7 @@ public:
     Array<OneD, NekDouble> GetBoundingBox();
 
     /**
-     * @brief Return number of surfaces.
+     * @brief Get the number of surfaces.
      */
     int GetNumSurf()
     {
@@ -107,7 +107,7 @@ public:
     }
 
     /**
-     * @brief Return number of curves.
+     * @brief Get the number of curves.
      */
     int GetNumCurve()
     {
@@ -115,9 +115,9 @@ public:
     }
 
     /**
-     * @brief Gets curve type from map.
+     * @brief Gets a curve from the map.
      */
-    const CADCurveSharedPtr GetCurve(int i)
+    CADCurveSharedPtr GetCurve(int i)
     {
         std::map<int,CADCurveSharedPtr>::iterator
                                 search = m_curves.find(i);
@@ -127,7 +127,7 @@ public:
     }
 
     /**
-     * @brief Gets suface from map.
+     * @brief Gets a suface from the map.
      */
     CADSurfSharedPtr GetSurf(int i)
     {
@@ -139,7 +139,7 @@ public:
     }
 
     /**
-     * @brief Gets map of all verts
+     * @brief Gets map of all vertices
      */
     std::map<int, CADVertSharedPtr> GetVerts()
     {
@@ -159,18 +159,13 @@ public:
      */
     bool InsideShape(Array<OneD, NekDouble> loc);
 
-    /**
-     * @brief tests for features which are smaller that the specified mesh limit
-     */
-    void SmallFeatureAnalysis(NekDouble min);
-
 private:
 
-    /// Private function to add curve to CADSystem::m_verts.
+    /// function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
-    /// Private function to add curve to CADSystem::m_curves.
+    /// function to add curve to CADSystem::m_curves.
     void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
-    /// Private function to add surface to CADSystem::m_surfs.
+    /// function to add surface to CADSystem::m_surfs.
     void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
     /// Name of cad file to be opened, including file extension.
     std::string m_name;
@@ -178,12 +173,10 @@ private:
     std::map<int, CADCurveSharedPtr> m_curves;
     /// map of surfaces
     std::map<int, CADSurfSharedPtr> m_surfs;
-    /// list of edge end vertices
+    /// map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
     /// occ master object
     TopoDS_Shape shape;
-
-    bool m_2d;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

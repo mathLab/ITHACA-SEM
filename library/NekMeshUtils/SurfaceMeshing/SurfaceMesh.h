@@ -34,15 +34,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NekMeshUtils_SURFACEMESHING_SURFACEMESH
-#define NekMeshUtils_SURFACEMESHING_SURFACEMESH
+#ifndef NEKMESHUTILS_SURFACEMESHING_SURFACEMESH
+#define NEKMESHUTILS_SURFACEMESHING_SURFACEMESH
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
-
 
 namespace Nektar
 {
@@ -61,11 +60,10 @@ class SurfaceMesh
          * @brief Default constructor, requires the cad and octree objects to
          * begin
          */
-        SurfaceMesh(   MeshSharedPtr m,
-                       CADSystemSharedPtr cad,
-                       OctreeSharedPtr octree,
-                       std::vector<unsigned int> sy, NekDouble b) :
-                          m_mesh(m), m_cad(cad), m_octree(octree), m_symsurfs(sy), m_bl(b)
+        SurfaceMesh(MeshSharedPtr m, CADSystemSharedPtr cad,
+                    OctreeSharedPtr octree,  std::vector<unsigned int> sy,
+                    NekDouble b) :  m_mesh(m), m_cad(cad), m_octree(octree),
+                                    m_symsurfs(sy), m_bl(b)
         {
         };
 
@@ -88,7 +86,6 @@ class SurfaceMesh
          * @brief Print brief information to screen
          */
         void Report();
-
 
     private:
 
@@ -158,8 +155,9 @@ class SurfaceMesh
         std::map<int, FaceMeshSharedPtr> m_facemeshes;
         /// map of individual curve meshes of the curves in the domain
         std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-
+        /// list of sysmetry plane surfaces to build quads onto
         std::vector<unsigned int> m_symsurfs;
+        /// thickness of the boundary layer if needed
         NekDouble m_bl;
 };
 

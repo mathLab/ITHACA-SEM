@@ -710,10 +710,12 @@ void FaceMesh::BuildLocalMesh()
     /*************************
     // build a local set of nodes edges and elemenets for optimstaion prior to putting them into m_mesh
     */
+    int tricomp = m_mesh->m_numcomp++;
 
     //first build quads is bl surface
     if(m_makebl)
     {
+        int quadcomp = m_mesh->m_numcomp++;
         for(int i = 0; i < blpairs.size() - 1; i++)//this wont work for more than one sym plane loop
         {
             ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
@@ -723,7 +725,7 @@ void FaceMesh::BuildLocalMesh()
             ns.push_back(blpairs[i+1].second);
             ns.push_back(blpairs[i+1].first);
             vector<int> tags;
-            tags.push_back(10); //need to fix this
+            tags.push_back(quadcomp);
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
             E->CADSurfId = m_id;
@@ -737,7 +739,7 @@ void FaceMesh::BuildLocalMesh()
             ns.push_back(blpairs[0].second);
             ns.push_back(blpairs[0].first);
             vector<int> tags;
-            tags.push_back(10); //need to fix this
+            tags.push_back(quadcomp); 
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
             E->CADSurfId = m_id;
@@ -783,7 +785,7 @@ void FaceMesh::BuildLocalMesh()
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
-        tags.push_back(m_id);
+        tags.push_back(tricomp);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                                 LibUtilities::eTriangle, conf, m_connec[i], tags);
         E->CADSurfId = m_id;

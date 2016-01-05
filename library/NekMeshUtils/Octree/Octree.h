@@ -42,6 +42,7 @@
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/CurvaturePoint.hpp>
 #include <NekMeshUtils/Octree/Octant.h>
+#include <NekMeshUtils/MeshElements/MeshElements.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -77,10 +78,6 @@ public:
 
     /**
      * @brief executes octree building routines
-     *
-     * @param min minimum delta to be found in the octree
-     * @param max maximum delta to be found in the Octree
-     * @param eps curvature sensivity parameter
      */
     void Build();
 
@@ -90,8 +87,6 @@ public:
      *
      * @param loc array of x,y,z
      * @return mesh spacing parameter
-     * @todo improve this algorithm for both robustness and completness,
-     * functions just fine regardless
      */
     NekDouble Query(Array<OneD, NekDouble> loc);
 
@@ -102,13 +97,16 @@ public:
      */
     NekDouble GetMinDelta(){return m_minDelta;}
 
-    std::vector<Array<OneD, Array<OneD, NekDouble> > > GetOctantVerts();
+    /**
+     * @brief populates the mesh m with a invalid hexahedral mesh based on the
+     *        octree, used for visualisation
+     */
+    void GetOctreeMesh(MeshSharedPtr m);
 
 private:
 
     /**
-     * @brief Smooths specification over all octants to a
-     * gradation criteria
+     * @brief Smooths specification over all octants to a gradation criteria
      */
     void SmoothAllOctants();
 
@@ -118,32 +116,39 @@ private:
      */
     void CompileCuravturePointList();
 
+    /**
+     * @brief Function which initiates and controls the subdivision process
+     */
     void SubDivide();
 
     /**
-     * @brief Smooths specification over the surface octants to a
-     * gradation criteria
+     * @brief Smooths specification over the surface encompasing octants to a
+     *        gradation criteria
      */
     void SmoothSurfaceOctants();
 
     /**
      * @brief takes the mesh specification from surface octants and
-     * progates that through the domain so all octants have a specification
-     * using gradiation crieteria
+     *        progates that through the domain so all octants have a specification
+     *        using gradiation crieteria
      */
     void PropagateDomain();
 
     /**
-     * @brief estimates the number of elements to be creted in the mesh
+     * @brief estimates the number of elements to be created in the mesh
      */
     int CountElemt();
 
     /**
      * @brief Calculates the difference in delta divided by the difference
-     * in location between two octants i and j
+     *        in location between two octants i and j
      */
     NekDouble ddx(OctantSharedPtr i, OctantSharedPtr j);
 
+    /**
+     * @brief Looks over all leaf octants and checks that their neigbour
+     *        assigments are valid
+     */
     bool VerifyNeigbours();
 
     /// minimum delta in the octree
@@ -154,24 +159,20 @@ private:
     NekDouble m_eps;
     /// cad object
     CADSystemSharedPtr m_cad;
-    /// verbose output?
+    /// verbose output
     bool m_verbose;
-    /// max and min dimensions of the domain 6 varibles
-    Array<OneD, NekDouble> BoundingBox;
-    //
-    Array<OneD, NekDouble> centroid;
-    //
-    NekDouble dim;
+    /// x,y,z location of the center of the octree
+    Array<OneD, NekDouble> m_centroid;
+    /// physical size of the octree
+    NekDouble m_dim;
     /// list of curvature sample points
     std::vector<CurvaturePointSharedPtr> m_cpList;
-    /// list of octants
-    std::vector<OctantSharedPtr> Octants;
-    /// number which do not need subdivding, when this is 0 octree complete
-    int m_totNotDividing;
+    /// list of leaf octants
+    std::vector<OctantSharedPtr> m_octants;
     ///master octant for searching
     OctantSharedPtr m_masteroct;
-    ///
-    int numoct;
+    /// number of octants made, used for id index
+    int m_numoct;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

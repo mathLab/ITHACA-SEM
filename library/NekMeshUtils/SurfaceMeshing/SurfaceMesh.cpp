@@ -70,7 +70,6 @@ void SurfaceMesh::Mesh()
                             m_cad->GetCurve(i), m_octree);
 
         m_curvemeshes[i]->Mesh();
-
     }
 
     if(m_mesh->m_verbose)
@@ -102,7 +101,6 @@ void SurfaceMesh::Mesh()
         }
 
         m_facemeshes[i]->Mesh();
-
     }
 }
 

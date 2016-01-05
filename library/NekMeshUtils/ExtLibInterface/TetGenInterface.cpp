@@ -85,7 +85,6 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> tgidton,
     }
 
     tetrahedralize("pYzqQ", &surface, &output);
-    cout << output.numberofpoints << " " << output.numberoftetrahedra << endl;
 
 }
 
@@ -115,7 +114,6 @@ void TetGenInterface::RefineMesh(std::map<int, NekDouble> delta)
     }
 
     tetrahedralize("pYrmzqQO2/7o/120", &input, &output);
-    cout << output.numberofpoints << " " << output.numberoftetrahedra << endl;
 
 }
 

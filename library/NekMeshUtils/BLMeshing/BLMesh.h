@@ -57,11 +57,9 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m, const std::vector<unsigned int> &bl,
-                            const std::vector<unsigned int> &sym,
-                            const NekDouble &b,
-                            std::map<int, FaceSharedPtr> &stp)
-                : m_mesh(m), m_blsurfs(bl), m_symsurfs(sym), m_bl(b), surftopriface(stp)
+    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
+           std::vector<unsigned int> syms, NekDouble b) :
+           m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
     {
     };
 
@@ -71,15 +69,26 @@ public:
      */
     void Mesh();
 
+    /**
+     * @brief Get the map of surface element id to pseudo surface prism face
+     */
+    std::map<int, FaceSharedPtr> GetSurfToPri()
+    {
+        return m_surftopriface;
+    }
+
 private:
 
-    /// print stuff to screen?
+    /// mesh object containing surface mesh
     MeshSharedPtr m_mesh;
-
+    /// list of surfaces onto which boundary layers are placed
     std::vector<unsigned int> m_blsurfs;
+    /// list of symetry surfaces
     std::vector<unsigned int> m_symsurfs;
+    /// thickness of the boundary layer
     NekDouble m_bl;
-    std::map<int, FaceSharedPtr>& surftopriface;
+    /// map from surface element id to opposite face of prism
+    std::map<int, FaceSharedPtr> m_surftopriface;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

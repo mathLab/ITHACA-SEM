@@ -45,6 +45,7 @@
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <NekMeshUtils/BLMeshing/BLMesh.h>
 
 namespace Nektar{
 namespace NekMeshUtils{
@@ -55,12 +56,21 @@ public:
     friend class MemoryManager<TetMesh>;
 
     /**
-     *@brief default constructor
+     * @brief default constructor
      */
-    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct,
-                std::map<int, FaceSharedPtr> &stp)
-                : m_mesh(m), m_octree(oct), surftopriface(stp)
+    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct)
+                : m_mesh(m), m_octree(oct)
     {
+        m_pseudosurface = false;
+    };
+
+    /**
+     *  @brief constructor for pseudo surface
+     */
+    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct, BLMeshSharedPtr b)
+                : m_mesh(m), m_octree(oct), m_blmesh(b)
+    {
+        m_pseudosurface = true;
     };
 
     /**
@@ -70,16 +80,19 @@ public:
 
 private:
 
-    /// print stuff to screen?
     MeshSharedPtr m_mesh;
     /// octree object
     OctreeSharedPtr m_octree;
+    /// bl mesh
+    BLMeshSharedPtr m_blmesh;
+    ///
+    bool m_pseudosurface;
     /// number of tetrahedra
-    int numtet;
+    int m_numtet;
     /// conncetivity of the tets from the interface
-    std::vector<Array<OneD, int> > tetconnect;
+    std::vector<Array<OneD, int> > m_tetconnect;
 
-    std::map<int, FaceSharedPtr>& surftopriface;
+    std::map<int, FaceSharedPtr> m_surftopriface;
 };
 
 typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

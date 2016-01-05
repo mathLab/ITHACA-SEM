@@ -33,10 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
-#include <limits>
-
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
+//#include <algorithm>
+//#include <limits>
 
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
@@ -49,7 +47,7 @@ namespace NekMeshUtils
 
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
-    //starting at master octant 0 move through succsesive octants which contain
+    //starting at master octant 0 move through succsesive m_octants which contain
     //the point loc until a leaf is found
     OctantSharedPtr n = m_masteroct;
     int quad;
@@ -123,72 +121,53 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return n->GetDelta();
 }
 
-vector<Array<OneD, Array<OneD, NekDouble> > > Octree::GetOctantVerts()
+void Octree::GetOctreeMesh(MeshSharedPtr m)
 {
-    vector<Array<OneD, Array<OneD, NekDouble> > > out;
-    for(int i = 0; i < Octants.size(); i++)
+    for(int i = 0; i < m_octants.size(); i++)
     {
-        /*if(Octants[i]->GetLocation() != eOnBoundary)
+        /*if(m_octants[i]->GetLocation() != eOnBoundary)
         {
             continue;
         }*/
-        Array<OneD, Array<OneD, NekDouble> > oct(8);
-        Array<OneD, NekDouble> p1(3);
-        p1[0] = Octants[i]->FX(eBack);
-        p1[1] = Octants[i]->FX(eDown);
-        p1[2] = Octants[i]->FX(eRight);
-        oct[0] = p1;
 
-        Array<OneD, NekDouble> p2(3);
-        p2[0] = Octants[i]->FX(eForward);
-        p2[1] = Octants[i]->FX(eDown);
-        p2[2] = Octants[i]->FX(eRight);
-        oct[1] = p2;
+        vector<NodeSharedPtr> ns(8);
 
-        Array<OneD, NekDouble> p3(3);
-        p3[0] = Octants[i]->FX(eForward);
-        p3[1] = Octants[i]->FX(eUp);
-        p3[2] = Octants[i]->FX(eRight);
-        oct[2] = p3;
+        ns[0] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                        m_octants[i]->FX(eDown), m_octants[i]->FX(eRight)));
 
-        Array<OneD, NekDouble> p4(3);
-        p4[0] = Octants[i]->FX(eBack);
-        p4[1] = Octants[i]->FX(eUp);
-        p4[2] = Octants[i]->FX(eRight);
-        oct[3] = p4;
+        ns[1] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                        m_octants[i]->FX(eDown), m_octants[i]->FX(eRight)));
 
-        Array<OneD, NekDouble> p5(3);
-        p5[0] = Octants[i]->FX(eBack);
-        p5[1] = Octants[i]->FX(eDown);
-        p5[2] = Octants[i]->FX(eLeft);
-        oct[4] = p5;
+        ns[2] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                        m_octants[i]->FX(eUp), m_octants[i]->FX(eRight)));
 
-        Array<OneD, NekDouble> p6(3);
-        p6[0] = Octants[i]->FX(eForward);
-        p6[1] = Octants[i]->FX(eDown);
-        p6[2] = Octants[i]->FX(eLeft);
-        oct[5] = p6;
+        ns[3] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                        m_octants[i]->FX(eUp), m_octants[i]->FX(eRight)));
 
-        Array<OneD, NekDouble> p7(3);
-        p7[0] = Octants[i]->FX(eForward);
-        p7[1] = Octants[i]->FX(eUp);
-        p7[2] = Octants[i]->FX(eLeft);
-        oct[6] = p7;
+        ns[4] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                        m_octants[i]->FX(eDown), m_octants[i]->FX(eLeft)));
 
-        Array<OneD, NekDouble> p8(3);
-        p8[0] = Octants[i]->FX(eBack);
-        p8[1] = Octants[i]->FX(eUp);
-        p8[2] = Octants[i]->FX(eLeft);
-        oct[7] = p8;
+        ns[5] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                        m_octants[i]->FX(eDown), m_octants[i]->FX(eLeft)));
 
-        out.push_back(oct);
+        ns[6] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
+                        m_octants[i]->FX(eUp), m_octants[i]->FX(eLeft)));
+
+        ns[7] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
+                        m_octants[i]->FX(eUp), m_octants[i]->FX(eLeft)));
+
+        vector<int> tags;
+        tags.push_back(0);
+        ElmtConfig conf(LibUtilities::eHexahedron,1,false,false);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                LibUtilities::eHexahedron,conf,ns,tags);
+        m->m_element[3].push_back(E);
     }
-    return out;
 }
 
 void Octree::Build()
 {
-    BoundingBox = m_cad->GetBoundingBox();
+    Array<OneD, NekDouble> boundingBox = m_cad->GetBoundingBox();
 
     if(m_verbose)
         cout << endl << "Octree system" << endl;
@@ -199,29 +178,31 @@ void Octree::Build()
     if(m_verbose)
         cout << "\tCurvature samples: " << m_cpList.size() << endl;
 
-    dim = (BoundingBox[1]-BoundingBox[0])/2 >
-                           (BoundingBox[3]-BoundingBox[2])/2 ?
-                           (BoundingBox[1]-BoundingBox[0])/2 :
-                           (BoundingBox[3]-BoundingBox[2])/2;
-    dim = dim > (BoundingBox[5]-BoundingBox[4])/2 ?
-                        dim : (BoundingBox[5]-BoundingBox[4])/2;
+    m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
+                (boundingBox[3] - boundingBox[2]) / 2.0);
 
-    centroid = Array<OneD, NekDouble>(3);
-    centroid[0] = (BoundingBox[1]+BoundingBox[0])/2.0;
-    centroid[1] = (BoundingBox[3]+BoundingBox[2])/2.0;
-    centroid[2] = (BoundingBox[5]+BoundingBox[4])/2.0;
+
+    m_dim = max(m_dim,
+                (boundingBox[5] - boundingBox[4]) / 2.0);
+
+    m_centroid = Array<OneD, NekDouble>(3);
+    m_centroid[0] = (boundingBox[1] + boundingBox[0]) / 2.0;
+    m_centroid[1] = (boundingBox[3] + boundingBox[2]) / 2.0;
+    m_centroid[2] = (boundingBox[5] + boundingBox[4]) / 2.0;
+
     //make master octant based on the bounding box of the domain
-    m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(0,
-                        centroid[0], centroid[1], centroid[2], dim, m_cpList);
-
-
+    m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
+               0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_cpList);
 
     SubDivide();
 
-    Octants.clear();
-    m_masteroct->CompileLeaves(Octants);
+    m_octants.clear();
+    m_masteroct->CompileLeaves(m_octants);
 
-    cout << "Octants " <<  Octants.size() << endl;
+    if(m_verbose)
+    {
+        cout << "\tOctants: " <<  m_octants.size() << endl;
+    }
 
     SmoothSurfaceOctants();
 
@@ -232,32 +213,39 @@ void Octree::Build()
     if(m_verbose)
     {
         int elem = CountElemt();
-        printf("\tPredicted mesh: %.2d elements\n", elem);
+        cout << "\tPredicted mesh: " << elem << endl;
     }
 }
 
 void Octree::SubDivide()
 {
     bool repeat;
-    vector<OctantSharedPtr> Octants;
     int ct = 1;
 
-    numoct = 1;
-    m_masteroct->Subdivide(m_masteroct, numoct);
+    m_numoct = 1;
+    m_masteroct->Subdivide(m_masteroct, m_numoct);
+
+    if(m_verbose)
+    {
+        cout << "\tSubdivide iteration: ";
+    }
 
     do
     {
         ct++;
-        //if(ct == 9)  break;
-        cout << "loop " << ct << endl;
+        if(m_verbose)
+        {
+            cout << ct << " ";
+            cout.flush();
+        }
         repeat = false;
-        Octants.clear();
+        m_octants.clear();
         //grab a list of the leaves curently in the octree
-        m_masteroct->CompileLeaves(Octants);
+        m_masteroct->CompileLeaves(m_octants);
 
         VerifyNeigbours();
 
-        //neeed to create a divide list, in the first list will be octants which need to
+        //neeed to create a divide list, in the first list will be m_octants which need to
         //subdivide based on curvature,
         //in the next list will be ocants which need to subdivide to make sure
         //level criteria is statisified for the previous list and so on
@@ -268,12 +256,12 @@ void Octree::SubDivide()
         //build initial list
         {
             vector<OctantSharedPtr> sublist;
-            for(int i = 0; i < Octants.size(); i++)
+            for(int i = 0; i < m_octants.size(); i++)
             {
-                if(Octants[i]->NeedDivide() && Octants[i]->DX() / 4.0 > m_minDelta)
+                if(m_octants[i]->NeedDivide() && m_octants[i]->DX() / 4.0 > m_minDelta)
                 {
-                    sublist.push_back(Octants[i]);
-                    inlist.insert(Octants[i]->GetId());
+                    sublist.push_back(m_octants[i]);
+                    inlist.insert(m_octants[i]->GetId());
                     repeat = true; //if there is a subdivision this whole process needs to be repeated
                 }
             }
@@ -321,21 +309,26 @@ void Octree::SubDivide()
             vector<OctantSharedPtr> currentlist = *rit;
             for(int i = 0; i < currentlist.size(); i++)
             {
-                currentlist[i]->Subdivide(currentlist[i], numoct);
+                currentlist[i]->Subdivide(currentlist[i], m_numoct);
             }
         }
     }
     while(repeat);
+
+    if(m_verbose)
+    {
+        cout << endl;
+    }
 }
 
 bool Octree::VerifyNeigbours()
 {
     //check all neibours
     bool error = false;
-    for(int i = 0; i < Octants.size(); i++)
+    for(int i = 0; i < m_octants.size(); i++)
     {
         bool valid = true;
-        map<OctantFace, vector<OctantSharedPtr> > nlist = Octants[i]->GetNeigbours();
+        map<OctantFace, vector<OctantSharedPtr> > nlist = m_octants[i]->GetNeigbours();
         map<OctantFace, vector<OctantSharedPtr> >::iterator it;
         for(it = nlist.begin(); it != nlist.end(); it++)
         {
@@ -345,47 +338,47 @@ bool Octree::VerifyNeigbours()
                 switch (it->first)
                 {
                     case eUp:
-                        expectedfx = centroid[1] + dim;
+                        expectedfx = m_centroid[1] + m_dim;
                         break;
                     case eDown:
-                        expectedfx = centroid[1] - dim;
+                        expectedfx = m_centroid[1] - m_dim;
                         break;
                     case eLeft:
-                        expectedfx = centroid[2] + dim;
+                        expectedfx = m_centroid[2] + m_dim;
                         break;
                     case eRight:
-                        expectedfx = centroid[2] - dim;
+                        expectedfx = m_centroid[2] - m_dim;
                         break;
                     case eForward:
-                        expectedfx = centroid[0] + dim;
+                        expectedfx = m_centroid[0] + m_dim;
                         break;
                     case eBack:
-                        expectedfx = centroid[0] - dim;
+                        expectedfx = m_centroid[0] - m_dim;
                         break;
                 }
-                if(fabs(Octants[i]->FX(it->first) - expectedfx) > 1E-6)
+                if(fabs(m_octants[i]->FX(it->first) - expectedfx) > 1E-6)
                 {
                     valid = false;
                     cout << "wall neigbour error" << endl;
-                    cout << expectedfx << " " << Octants[i]->FX(it->first) << " " << it->first << endl;
+                    cout << expectedfx << " " << m_octants[i]->FX(it->first) << " " << it->first << endl;
                 }
             }
             else if(it->second.size() == 1)
             {
-                if(!(Octants[i]->DX() == it->second[0]->DX() || it->second[0]->DX() == 2.0 * Octants[i]->DX()))
+                if(!(m_octants[i]->DX() == it->second[0]->DX() || it->second[0]->DX() == 2.0 * m_octants[i]->DX()))
                 {
                     valid = false;
                     cout << " 1 neigbour error" << endl;
-                    cout << Octants[i]->DX() << " " <<  it->second[0]->DX() << endl;
+                    cout << m_octants[i]->DX() << " " <<  it->second[0]->DX() << endl;
                 }
             }
             else if(it->second.size() == 4)
             {
-                if(!(Octants[i]->DX() / 2.0 == it->second[0]->DX()))
+                if(!(m_octants[i]->DX() / 2.0 == it->second[0]->DX()))
                 {
                     valid = false;
                     cout << "4 neibour error" << endl;
-                    cout << Octants[i]->DX() << " " <<  it->second[0]->DX() << endl;
+                    cout << m_octants[i]->DX() << " " <<  it->second[0]->DX() << endl;
                 }
             }
         }
@@ -400,7 +393,7 @@ bool Octree::VerifyNeigbours()
 
 void Octree::SmoothSurfaceOctants()
 {
-    //for all the octants which are surface containing and know their delta
+    //for all the m_octants which are surface containing and know their delta
     //specification, look over all neighbours and ensure the specification
     //between them is smooth
     int ct = 0;
@@ -408,9 +401,9 @@ void Octree::SmoothSurfaceOctants()
     do
     {
         ct=0;
-        for(int i = 0; i < Octants.size(); i++)
+        for(int i = 0; i < m_octants.size(); i++)
         {
-            OctantSharedPtr oct = Octants[i];
+            OctantSharedPtr oct = m_octants[i];
 
             if(oct->IsDeltaKnown())
             {
@@ -456,17 +449,17 @@ void Octree::SmoothSurfaceOctants()
 
 void Octree::PropagateDomain()
 {
-    //until all octants know their delta specifcation and orientaion
-    //look over all octants and if their neighours know either their orientation
+    //until all m_octants know their delta specifcation and orientaion
+    //look over all m_octants and if their neighours know either their orientation
     //or specifcation calculate one for this octant
     int ct=0;
 
     do
     {
         ct=0;
-        for(int i = 0; i < Octants.size(); i++)
+        for(int i = 0; i < m_octants.size(); i++)
         {
-            OctantSharedPtr oct = Octants[i];
+            OctantSharedPtr oct = m_octants[i];
 
             if(!oct->IsDeltaKnown())
             { //if delta has not been asigned
@@ -597,9 +590,9 @@ void Octree::PropagateDomain()
 
     }while(ct>0);
 
-    for(int i = 0; i < Octants.size(); i++)
+    for(int i = 0; i < m_octants.size(); i++)
     {
-        ASSERTL0(Octants[i]->IsDeltaKnown(),"does not know delta after propergation");
+        ASSERTL0(m_octants[i]->IsDeltaKnown(),"does not know delta after propergation");
     }
 
 }
@@ -607,15 +600,15 @@ void Octree::PropagateDomain()
 void Octree::SmoothAllOctants()
 {
     //until no more changes occur smooth the mesh specification between all
-    //octants not particualrly strictly
+    //m_octants not particualrly strictly
     int ct = 0;
 
     do
     {
         ct=0;
-        for(int i = 0; i < Octants.size(); i++)
+        for(int i = 0; i < m_octants.size(); i++)
         {
-            OctantSharedPtr oct = Octants[i];
+            OctantSharedPtr oct = m_octants[i];
 
             vector<OctantSharedPtr> check;
             map<OctantFace, vector<OctantSharedPtr> > nList = oct->GetNeigbours();
@@ -658,9 +651,9 @@ int Octree::CountElemt()
 
     NekDouble total = 0.0;
 
-    for(int i = 0; i < Octants.size(); i++)
+    for(int i = 0; i < m_octants.size(); i++)
     {
-        OctantSharedPtr oct = Octants[i];
+        OctantSharedPtr oct = m_octants[i];
         if(oct->GetLocation() == eInside)
         {
             total += 8.0*oct->DX()*oct->DX()*oct->DX() /

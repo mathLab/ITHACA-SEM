@@ -33,8 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <limits>
-
 #include <NekMeshUtils/Octree/Octant.h>
 
 using namespace std;
@@ -117,7 +115,7 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
     //look over the curvature point list provided by the parent,
     //firstly look to see if it is in the new octant and if so
     //add it to the conserdation of the delta specification
-    for(int i = 0; i<CurvaturePointList.size(); i++)
+    for(int i = 0; i < CurvaturePointList.size(); i++)
     {
         Array<OneD, NekDouble> cploc = CurvaturePointList[i]->GetLoc();
         if(!(cploc[0] > m_loc[0] + m_hd ||
@@ -127,19 +125,19 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
              cploc[2] > m_loc[2] + m_hd ||
              cploc[2] < m_loc[2] - m_hd ))
         {
-            m_localCPIDList.push_back(CurvaturePointList[i]);
+            m_localCPList.push_back(CurvaturePointList[i]);
+
             if(CurvaturePointList[i]->IsValid())
             {
-                if(CurvaturePointList[i]->GetDelta()>maxDif)
+                if(CurvaturePointList[i]->GetDelta() > maxDif)
                 {
                     maxDif = CurvaturePointList[i]->GetDelta();
                 }
 
-                if(CurvaturePointList[i]->GetDelta()<minDif)
+                if(CurvaturePointList[i]->GetDelta() < minDif)
                 {
                     minDif = CurvaturePointList[i]->GetDelta();
                 }
-
                 m_numValidPoints++;
             }
         }
@@ -186,11 +184,11 @@ Octant::Octant(int i, NekDouble x, NekDouble y, NekDouble z, NekDouble dx,
     m_loc[1] = y;
     m_loc[2] = z;
 
-    m_localCPIDList = cplist;
+    m_localCPList = cplist;
 
-    for(int i = 0; i < m_localCPIDList.size(); i++)
+    for(int i = 0; i < m_localCPList.size(); i++)
     {
-        if(m_localCPIDList[i]->IsValid())
+        if(m_localCPList[i]->IsValid())
         {
             m_numValidPoints++;
         }

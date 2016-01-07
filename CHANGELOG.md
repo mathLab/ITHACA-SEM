@@ -3,7 +3,18 @@ Changelog
 
 v4.3.0
 ------
+**Library:**
+- Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
+- Fix range with variable p option (!522)
+- Fix bug with hexahedra of heterogeneous order (!520)
+- Fix history point output formatting (!518)
+- Fix for OS X 10.11 (!512)
 
+**APESolver:**
+- Fix restarting from checkpoint file (!517)
+
+**FieldConvert:**
+- Small fixes in interpolation routine (!515)
 
 v4.2.0
 ------
@@ -24,7 +35,8 @@ v4.2.0
   when running a 3DH1D simulation (!502)
 
 **IncNavierStokesSolver:**
-- Various fixes for the coupled stability solver (!508)
+- A range of fixes for the coupled stability solver, which now works in parallel
+  (!508)
 
 **MeshConvert:**
 - Add module to extract prismatic boundary layer elements from mixed prism-tet

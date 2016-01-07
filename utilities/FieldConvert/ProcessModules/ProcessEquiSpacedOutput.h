@@ -65,6 +65,8 @@ class ProcessEquiSpacedOutput : public ProcessModule
         ProcessEquiSpacedOutput(){};
         void SetupEquiSpacedField(void);
 
+        void SetHomogeneousConnectivity(void);
+
         void GenOrthoModes(int n,
                            const Array<OneD,const NekDouble> &phys,
                            Array<OneD, NekDouble> &coeffs);

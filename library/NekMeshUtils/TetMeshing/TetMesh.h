@@ -47,9 +47,14 @@
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
 
-namespace Nektar{
-namespace NekMeshUtils{
+namespace Nektar
+{
+namespace NekMeshUtils
+{
 
+/**
+ * @brief class for taking surface mesh and octree spec and making a 3d tet mesh
+ */
 class TetMesh
 {
 public:

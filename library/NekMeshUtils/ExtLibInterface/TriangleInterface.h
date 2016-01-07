@@ -53,12 +53,14 @@ extern "C"{
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
+/**
+ * @brief class for interfacing with external library triangle
+ */
 class TriangleInterface
 {
 public:

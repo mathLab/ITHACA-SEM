@@ -47,6 +47,9 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+/**
+ * @brief class for surface meshes on individual surfaces (paramter plane meshes)
+ */
 class FaceMesh
 {
 public:
@@ -68,6 +71,9 @@ public:
         m_makebl = false;
     };
 
+    /**
+     * @brief constructor for building with boundary layer
+     */
     FaceMesh(   const int id,
                 MeshSharedPtr m,
                 CADSurfSharedPtr cad,
@@ -127,10 +133,13 @@ private:
     void OrientateCurves();
 
     /**
-     * @brief addes a new stiener point to the triangulation for meshing
+     * @brief adds a new stiener point to the triangulation for meshing
      */
     void AddNewPoint(Array<OneD, NekDouble> uv);
 
+    /**
+     * @brief adds a quad layer around any interior loops
+     */
     void MakeBL();
 
     ///mesh pointer
@@ -159,8 +168,11 @@ private:
     EdgeSet m_localEdges;
     ///local list of elements
     std::vector<ElementSharedPtr> m_localElements;
+    /// boundary layer thickness
     NekDouble m_bl;
+    /// should build boundary layer
     bool  m_makebl;
+    /// list of node links between node on loop and its corresponding interior node in quads
     std::vector<std::pair<NodeSharedPtr, NodeSharedPtr> > blpairs;
 };
 

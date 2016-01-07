@@ -47,7 +47,9 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-
+/**
+ * @brief class for meshing individual curves (1d meshing)
+ */
 namespace Nektar
 {
 namespace NekMeshUtils

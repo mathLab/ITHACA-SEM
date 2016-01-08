@@ -739,7 +739,7 @@ void FaceMesh::BuildLocalMesh()
             ns.push_back(blpairs[0].second);
             ns.push_back(blpairs[0].first);
             vector<int> tags;
-            tags.push_back(quadcomp); 
+            tags.push_back(quadcomp);
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
             E->CADSurfId = m_id;

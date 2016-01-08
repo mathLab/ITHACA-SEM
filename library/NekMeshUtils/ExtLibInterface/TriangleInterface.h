@@ -71,7 +71,6 @@ public:
      */
     TriangleInterface()
     {
-        meshloaded = false;
     };
 
     /**
@@ -81,10 +80,6 @@ public:
                 std::vector<Array<OneD, NekDouble> > &centers, int i,
                 NekDouble str = 1.0)
     {
-        if(meshloaded)
-        {
-            freetri();
-        }
         m_boundingloops = boundingloops;
         m_centers = centers;
         m_str = str;
@@ -101,8 +96,6 @@ public:
      */
     ~TriangleInterface()
     {
-        if(meshloaded)
-            freetri();
     }
 
     /**
@@ -120,7 +113,7 @@ private:
     /**
      * @brief clear memory
      */
-    void freetri();
+    void SetUp();
 
     /// list of bounding nodes to the surface
     std::vector<std::vector<NodeSharedPtr> > m_boundingloops;
@@ -132,8 +125,6 @@ private:
     std::map<int, NodeSharedPtr> nodemap;
     /// id of the surface
     int sid;
-    /// has mesh been run before
-    bool meshloaded;
     /// Stretching factor of parameter plane
     NekDouble m_str;
     /// triangle data strucutres

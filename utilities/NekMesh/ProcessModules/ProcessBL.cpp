@@ -598,6 +598,11 @@ void ProcessBL::Process()
                 HOedge->m_curveType = pt;
             }
 
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //THIS IS WHERE FACES NEEDS TO GO
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            
+
             // Change the surface elements to match the layers of
             // elements on the boundary of the domain.
             map<int,int>::iterator it;

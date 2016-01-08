@@ -243,8 +243,6 @@ void InputCAD::Process()
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
     }
 
-
-
     m_tet->Mesh();
 
     ClearElementLinks();

@@ -121,7 +121,7 @@ private:
     std::vector<NodeSharedPtr> m_stienerpoints;
     /// coordinates of the centers of the loops
     std::vector<Array<OneD, NekDouble> > m_centers;
-    /// map from meshconvert id to triangle id
+    /// map from NekMesh id to triangle id
     std::map<int, NodeSharedPtr> nodemap;
     /// id of the surface
     int sid;

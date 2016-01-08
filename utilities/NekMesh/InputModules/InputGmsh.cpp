@@ -792,7 +792,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     if (order > 2)
     {
         cerr << "Gmsh prisms of order > 2 with face curvature "
-             << "not supported in MeshConvert (or indeed Gmsh at"
+             << "not supported in NekMesh (or indeed Gmsh at"
              << "time of writing)." << endl;
         abort();
     }

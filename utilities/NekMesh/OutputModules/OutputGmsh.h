@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_OUTPUTGMSH
-#define UTILITIES_MESHCONVERT_OUTPUTGMSH
+#ifndef UTILITIES_NEKMESH_OUTPUTGMSH
+#define UTILITIES_NEKMESH_OUTPUTGMSH
 
 #include "../Module.h"
 

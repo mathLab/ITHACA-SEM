@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_INPUTPLY
-#define UTILITIES_MESHCONVERT_INPUTPLY
+#ifndef UTILITIES_NEKMESH_INPUTPLY
+#define UTILITIES_NEKMESH_INPUTPLY
 
 #include "../Module.h"
 

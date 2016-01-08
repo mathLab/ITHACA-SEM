@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_INPUTCAD
-#define UTILITIES_MESHCONVERT_INPUTCAD
+#ifndef UTILITIES_NEKMESH_INPUTCAD
+#define UTILITIES_NEKMESH_INPUTCAD
 
 #include "../Module.h"
 

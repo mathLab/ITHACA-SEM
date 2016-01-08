@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshConvert.cpp
+//  File: NekMesh.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     }
 
     if (vm.count("help") || vm.count("input-file") != 1) {
-        cerr << "Usage: MeshConvert [options] inputfile.ext1 outputfile.ext2"
+        cerr << "Usage: NekMesh [options] inputfile.ext1 outputfile.ext2"
              << endl;
         cout << desc;
         return 1;

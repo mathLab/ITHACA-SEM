@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_INPUTVTK
-#define UTILITIES_MESHCONVERT_INPUTVTK
+#ifndef UTILITIES_NEKMESH_INPUTVTK
+#define UTILITIES_NEKMESH_INPUTVTK
 
 #include "../Module.h"
 

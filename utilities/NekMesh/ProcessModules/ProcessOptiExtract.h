@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_PROCESSOPTIEXTRACT
-#define UTILITIES_MESHCONVERT_PROCESSOPTIEXTRACT
+#ifndef UTILITIES_NEKMESH_PROCESSOPTIEXTRACT
+#define UTILITIES_NEKMESH_PROCESSOPTIEXTRACT
 
 #include "../Module.h"
 

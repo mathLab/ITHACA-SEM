@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_PROCESSSCALAR
-#define UTILITIES_MESHCONVERT_PROCESSSCALAR
+#ifndef UTILITIES_NEKMESH_PROCESSSCALAR
+#define UTILITIES_NEKMESH_PROCESSSCALAR
 
 #include "../Module.h"
 

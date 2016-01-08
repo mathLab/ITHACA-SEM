@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSTAR
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSTAR
+#ifndef UTILITIES_NEKMESH_INPUTSTAR
+#define UTILITIES_NEKMESH_INPUTSTAR
 
 #include "../Module.h"
 

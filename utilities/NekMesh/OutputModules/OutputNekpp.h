@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_OUTPUTNEKPP
-#define UTILITIES_MESHCONVERT_OUTPUTNEKPP
+#ifndef UTILITIES_NEKMESH_OUTPUTNEKPP
+#define UTILITIES_NEKMESH_OUTPUTNEKPP
 
 #include <tinyxml.h>
 

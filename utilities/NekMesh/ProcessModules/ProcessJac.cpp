@@ -117,28 +117,6 @@ void ProcessJac::Process()
                      << ")" << endl;
             }
 
-            if(RemoveCurveIfSingular)
-            {
-                vector<FaceSharedPtr> f = el[i]->GetFaceList();
-                for(int j = 0; j < f.size(); j++)
-                {
-                    if(f[j]->m_faceNodes.size())
-                    {
-                        vector<NodeSharedPtr> zeroNodes;
-                        f[j]->m_faceNodes = zeroNodes;
-                    }
-                    vector<EdgeSharedPtr> e = f[j]->m_edgeList;
-                    for(int k = 0; k < e.size(); k++)
-                    {
-                        if(e[k]->m_edgeNodes.size())
-                        {
-                            vector<NodeSharedPtr> zeroNodes;
-                            e[k]->m_edgeNodes = zeroNodes;
-                        }
-                    }
-                }
-            }
-
             if (extract)
             {
                 m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);

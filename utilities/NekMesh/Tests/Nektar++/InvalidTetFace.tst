@@ -11,7 +11,7 @@
             <regex>^Total negative Jacobians: (\d+)</regex>
             <matches>
                 <match>
-                    <field id="0">1</field>
+                    <field id="0">0</field>
                 </match>
             </matches>
         </metric>

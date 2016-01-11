@@ -148,6 +148,7 @@ namespace Nektar
                 std::vector<std::string> pFieldNames,
                 Array<OneD, Array<OneD, NekDouble> > &pFields,
                 const std::string& pName,
+                const NekDouble& pTime = 0.0,
                 const int domain = 0);
             
             /// Populate given fields with the function from session.
@@ -155,6 +156,7 @@ namespace Nektar
                 std::vector<std::string> pFieldNames,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const std::string& pName,
+                const NekDouble& pTime = 0.0,
                 const int domain = 0);
             
             // Populate an array with a function variable from session.
@@ -439,6 +441,8 @@ namespace Nektar
             NekDouble                                   m_timestep;
             /// Lambda constant in real system if one required.
             NekDouble                                   m_lambda;
+
+            std::set<std::string>                       m_loadedFields;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
             /// Number of steps to take.

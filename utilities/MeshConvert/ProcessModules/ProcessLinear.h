@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessEquiSpacedOutput.h
+//  File: ProcessLinear.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Set up fields as interpolation to equispaced output.
+//  Description: Removes high-order information from the mesh.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
+#ifndef UTILITIES_MESHCONVERT_PROCESSLINEAR
+#define UTILITIES_MESHCONVERT_PROCESSLINEAR
 
 #include "../Module.h"
 
@@ -42,38 +42,25 @@ namespace Nektar
 {
 namespace Utilities
 {
-
-/**
- * @brief This processing module interpolates one field to another
- */
-class ProcessEquiSpacedOutput : public ProcessModule
-{
+    /**
+     * @brief This processing module removes all the high-order information
+     * from the mesh leaving just the linear elements
+     */
+    class ProcessLinear : public ProcessModule
+    {
     public:
         /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessEquiSpacedOutput>::
-                                                    AllocateSharedPtr(f);
+        static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+            return MemoryManager<ProcessLinear>::AllocateSharedPtr(m);
         }
         static ModuleKey className;
 
-        ProcessEquiSpacedOutput(FieldSharedPtr f);
-        virtual ~ProcessEquiSpacedOutput();
+        ProcessLinear(MeshSharedPtr m);
+        virtual ~ProcessLinear();
 
         /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
-    protected:
-        ProcessEquiSpacedOutput(){};
-        void SetupEquiSpacedField(void);
-
-        void SetHomogeneousConnectivity(void);
-
-        void GenOrthoModes(int n,
-                           const Array<OneD,const NekDouble> &phys,
-                           Array<OneD, NekDouble> &coeffs);
-
-    private:
-};
-
+        virtual void Process();
+    };
 }
 }
 

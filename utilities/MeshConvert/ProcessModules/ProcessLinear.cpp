@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessEquiSpacedOutput.h
+//  File: ProcessLinear.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,52 +29,61 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Set up fields as interpolation to equispaced output.
+//  Description: linearises mesh.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
+#include "../MeshElements.h"
+#include "ProcessLinear.h"
 
-#include "../Module.h"
+#include <vector>
+using namespace std;
 
 namespace Nektar
 {
 namespace Utilities
 {
+ModuleKey ProcessLinear::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "linearise"), ProcessLinear::create,
+        "Linearises mesh.");
 
-/**
- * @brief This processing module interpolates one field to another
- */
-class ProcessEquiSpacedOutput : public ProcessModule
+ProcessLinear::ProcessLinear(MeshSharedPtr m) : ProcessModule(m)
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessEquiSpacedOutput>::
-                                                    AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
 
-        ProcessEquiSpacedOutput(FieldSharedPtr f);
-        virtual ~ProcessEquiSpacedOutput();
+}
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
-    protected:
-        ProcessEquiSpacedOutput(){};
-        void SetupEquiSpacedField(void);
+ProcessLinear::~ProcessLinear()
+{
 
-        void SetHomogeneousConnectivity(void);
+}
 
-        void GenOrthoModes(int n,
-                           const Array<OneD,const NekDouble> &phys,
-                           Array<OneD, NekDouble> &coeffs);
+void ProcessLinear::Process()
+{
+    if (m_mesh->m_verbose)
+    {
+        cout << "ProcessLinear: Linearising mesh... " << endl;
+    }
 
-    private:
-};
+    EdgeSet::iterator eit;
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        (*eit)->m_edgeNodes.clear();
+    }
+
+    FaceSet::iterator fit;
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+    {
+        (*fit)->m_faceNodes.clear();
+    }
+
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        vector<NodeSharedPtr> empty;
+        m_mesh->m_element[m_mesh->m_expDim][i]->SetVolumeNodes(empty);
+    }
+
+}
 
 }
 }
-
-#endif

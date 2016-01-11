@@ -89,6 +89,12 @@ class SurfaceMesh
 
     private:
 
+        void CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
+                          CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes);
+
+        void FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
+                         Array<OneD, NekDouble> z, CADSurfSharedPtr s,
+                         DNekMat &Jac, DNekMat &Hes);
         /**
          * @brief get the gadient of the edge spring energy optimsation function
          */

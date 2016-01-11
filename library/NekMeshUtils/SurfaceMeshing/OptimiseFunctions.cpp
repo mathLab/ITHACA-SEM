@@ -41,170 +41,142 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-Array<OneD, NekDouble> SurfaceMesh::EdgeGrad(NekDouble ux, NekDouble vx,
-                                                vector<Array<OneD,NekDouble> > bcs,
-                                                vector<NekDouble> weights,
-                                                int surf, bool &valid)
+NekDouble Dot(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
 {
-    ASSERTL0(bcs.size()==2,"need two bc for edge optmisation");
-
-    Array<OneD, NekDouble> df(2);
-
-    Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
-
-    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(bcs[0]);
-    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(bcs[1]);
-    Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->D1(uvx);
-
-    NekDouble dfdu,dfdv;
-
-    dfdu     = ((rm[0] - rb[0])*rm[3] +
-                (rm[1] - rb[1])*rm[4] +
-                (rm[2] - rb[2])*rm[5]) * 2.0*weights[0]
-                +
-               ((rm[0] - ra[0])*rm[3] +
-                (rm[1] - ra[1])*rm[4] +
-                (rm[2] - ra[2])*rm[5]) * 2.0*weights[1];
-
-    dfdv     = ((rm[0] - rb[0])*rm[6] +
-                (rm[1] - rb[1])*rm[7] +
-                (rm[2] - rb[2])*rm[8]) * 2.0*weights[0]
-                +
-               ((rm[0] - ra[0])*rm[6] +
-                (rm[1] - ra[1])*rm[7] +
-                (rm[2] - ra[2])*rm[8]) * 2.0*weights[1];
-
-    df[0] = dfdu; df[1] = dfdv;
-
-    NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
-    df[0] = df[0]/dfmag; df[1] = df[1]/dfmag;
-
-    if(dfmag < 1E-15)
-    {
-        valid = false;
-    }
-    else
-    {
-        valid = true;
-    }
-    return df;
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+Array<OneD, NekDouble> Take(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
+{
+    Array<OneD, NekDouble> ret(3);
+    ret[0] = a[0] - b[0];
+    ret[1] = a[1] - b[1];
+    ret[2] = a[2] - b[2];
+    return ret;
 }
 
-NekDouble SurfaceMesh::EdgeF(NekDouble ux, NekDouble vx,
-                                vector<Array<OneD,NekDouble> > bcs,
-                                vector<NekDouble> weights,
-                                int surf, bool &valid)
+void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
+                                  CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes)
 {
-    ASSERTL0(bcs.size()==2,"need two bc for edge optmisation");
+    vector<Array<OneD, NekDouble> > r;
+    vector<Array<OneD, NekDouble> > dr;
+    vector<Array<OneD, NekDouble> > d2r;
+    for(int i = 0; i < t.num_elements(); i++)
+    {
+        Array<OneD, NekDouble> ri(3), dri(3), d2ri(3);
+        Array<OneD, NekDouble> d2 = c->D2(t[i]);
+        for(int j = 0; j < 3; j++)
+        {
+            ri[j] = d2[j];
+            dri[j] = d2[j+3];
+            d2ri[j] = d2[j+6];
+        }
+        r.push_back(ri);
+        dr.push_back(dri);
+        d2r.push_back(d2ri);
+    }
 
-    NekDouble F;
+    DNekMat J(t.num_elements() - 2 , 1, 0.0);
+    for(int i = 0; i < t.num_elements() - 2; i++)
+    {
+        J(i,0) = 2.0/(z[i+1] - z[i]) * Dot(dr[i+1],Take(r[i+1],r[i])) +
+                 2.0/(z[i+2] - z[i+1]) * Dot(dr[i+1],Take(r[i+1],r[i+2]));
+    }
 
-    Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
-
-    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(bcs[0]);
-    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(bcs[1]);
-    Array<OneD, NekDouble> rm = m_cad->GetSurf(surf)->P(uvx);
-
-    F        = ((rb[0] - rm[0])*(rb[0] - rm[0]) +
-                (rb[1] - rm[1])*(rb[1] - rm[1]) +
-                (rb[2] - rm[2])*(rb[2] - rm[2])) * weights[0]
-                +
-               ((rm[0] - ra[0])*(rm[0] - ra[0]) +
-                (rm[1] - ra[1])*(rm[1] - ra[1]) +
-                (rm[2] - ra[2])*(rm[2] - ra[2])) * weights[1];
-
-    return F;
-
+    DNekMat H(t.num_elements() - 2, t.num_elements() - 2, 0.0);
+    for(int i = 0; i < t.num_elements() - 2; i++)
+    {
+        for(int j = 0; j < t.num_elements() - 2; j++)
+        {
+            if(i == j)
+            {
+                H(i,j) = 2.0/(z[i+1] - z[i]) * (Dot(dr[i+1], dr[i+1]) +
+                                                Dot(d2r[i+1], Take(r[i+1],r[i]))) +
+                         2.0/(z[i+2] - z[i+1]) * (Dot(dr[i+1], dr[i+1]) +
+                                                         Dot(d2r[i+1], Take(r[i+1],r[i+2])));
+            }
+            else if(abs(i-j) == 1)
+            {
+                int k = max(i,j);
+                H(i,j) = -2.0/(z[k+1] - z[k]) * Dot(dr[k], dr[k+1]);
+            }
+        }
+    }
+    Jac = J;
+    Hes = H;
 }
 
-Array<OneD, NekDouble> SurfaceMesh::FaceGrad(NekDouble ux, NekDouble vx,
-                                                vector<Array<OneD,NekDouble> > bcs,
-                                                vector<NekDouble> weights,
-                                                int surf, bool &valid)
+void SurfaceMesh::FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
+                              Array<OneD, NekDouble> z, CADSurfSharedPtr s,
+                              DNekMat &Jac, DNekMat &Hes)
 {
-    ASSERTL0(bcs.size()==6,"face optimsation needs 6 boundary springs");
-    Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
-    Array<OneD, NekDouble> df(2);
-
-    Array<OneD, NekDouble> rx = m_cad->GetSurf(surf)->D1(uvx);
-    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(bcs[0]);
-    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(bcs[1]);
-    Array<OneD, NekDouble> rc = m_cad->GetSurf(surf)->P(bcs[2]);
-    Array<OneD, NekDouble> rd = m_cad->GetSurf(surf)->P(bcs[3]);
-    Array<OneD, NekDouble> re = m_cad->GetSurf(surf)->P(bcs[4]);
-    Array<OneD, NekDouble> rf = m_cad->GetSurf(surf)->P(bcs[5]);
-
-    NekDouble dfdu,dfdv;
-
-    dfdu = ((rx[0] - 0.5*(ra[0] + rb[0]))*rx[3] +
-            (rx[1] - 0.5*(ra[1] + rb[1]))*rx[4] +
-            (rx[2] - 0.5*(ra[2] + rb[2]))*rx[5])* 2.0*weights[0]
-           +
-           ((rx[0] - 0.5*(rc[0] + rd[0]))*rx[3] +
-            (rx[1] - 0.5*(rc[1] + rd[1]))*rx[4] +
-            (rx[2] - 0.5*(rc[2] + rd[2]))*rx[5])* 2.0*weights[1]
-           +
-           ((rx[0] - 0.5*(re[0] + rf[0]))*rx[3] +
-            (rx[1] - 0.5*(re[1] + rf[1]))*rx[4] +
-            (rx[2] - 0.5*(re[2] + rf[2]))*rx[5])* 2.0*weights[2];
-
-    dfdv = ((rx[0] - 0.5*(ra[0] + rb[0]))*rx[6] +
-            (rx[1] - 0.5*(ra[1] + rb[1]))*rx[7] +
-            (rx[2] - 0.5*(ra[2] + rb[2]))*rx[8])* 2.0*weights[0]
-           +
-           ((rx[0] - 0.5*(rc[0] + rd[0]))*rx[6] +
-            (rx[1] - 0.5*(rc[1] + rd[1]))*rx[7] +
-            (rx[2] - 0.5*(rc[2] + rd[2]))*rx[8])* 2.0*weights[1]
-           +
-           ((rx[0] - 0.5*(re[0] + rf[0]))*rx[6] +
-            (rx[1] - 0.5*(re[1] + rf[1]))*rx[7] +
-            (rx[2] - 0.5*(re[2] + rf[2]))*rx[8])* 2.0*weights[2];
-
-    df[0] = dfdu; df[1] = dfdv;
-    NekDouble dfmag = sqrt(df[0]*df[0] + df[1]*df[1]);
-    df[0] = df[0]/dfmag; df[1] = df[1]/dfmag;
-    if(dfmag < 1E-30)
+    vector<Array<OneD, NekDouble> > r;
+    vector<Array<OneD, NekDouble> > dru, drv;
+    vector<Array<OneD, NekDouble> > d2ru, d2ruv, d2rv;
+    for(int i = 0; i < uv.num_elements(); i++)
     {
-        valid = false;
+        Array<OneD, NekDouble> ri(3), drui(3), drvi(3), d2rui(3), d2rvi(3), d2ruvi(3);
+        Array<OneD, NekDouble> d2 = s->D2(uv[i]);
+        for(int j = 0; j < 3; j++)
+        {
+            ri[j] = d2[j];
+            drui[j] = d2[j+3];
+            drvi[j] = d2[j+6];
+            d2rui[j] = d2[j+9];
+            d2rui[j] = d2[j+12];
+            d2ruvi[j] = d2[j+15];
+        }
+        r.push_back(ri);
+        dru.push_back(drui);
+        drv.push_back(drvi);
+        d2ru.push_back(d2rui);
+        d2rv.push_back(d2rvi);
+        d2ruv.push_back(d2ruvi);
     }
-    else
+
+    DNekMat J(2*(uv.num_elements() - 2), 1, 0.0);
+    for(int i = 0; i < uv.num_elements() - 2; i++)
     {
-        valid = true;
+        J(2*i+0,0) = 2.0/(z[i+1]-z[i]) * Dot(dru[i+1], Take(r[i+1], r[i])) +
+                     2.0/(z[i+2]-z[i+1]) * Dot(dru[i+1], Take(r[i+1], r[i+2]));
+
+        J(2*i+1,0) = 2.0/(z[i+1]-z[i]) * Dot(drv[i+1], Take(r[i+1], r[i])) +
+                     2.0/(z[i+2]-z[i+1]) * Dot(drv[i+1], Take(r[i+1], r[i+2]));
     }
-    return df;
-}
 
-NekDouble SurfaceMesh::FaceF(NekDouble ux, NekDouble vx,
-                                vector<Array<OneD,NekDouble> > bcs,
-                                vector<NekDouble> weights,
-                                int surf, bool &valid)
-{
-    ASSERTL0(bcs.size()==6,"face optimsation needs 6 boundary springs");
-    NekDouble F;
+    DNekMat H(2*(uv.num_elements() - 2), 2*(uv.num_elements() - 2), 0.0);
+    for(int i = 0; i < uv.num_elements() - 2; i++)
+    {
+        for(int j = 0; j < uv.num_elements() - 2; j++)
+        {
+            if(i == j)
+            {
+                H(2*i+0,2*j+0) = 2.0/(z[i+1]-z[i]) * (Dot(d2ru[i+1],Take(r[i+1],r[i])) + Dot(dru[i+1],dru[i+1])) +
+                                 2.0/(z[i+2]-z[i+1]) * (Dot(d2ru[i+1],Take(r[i+1],r[i+2])) + Dot(dru[i+1],dru[i+1]));
 
-    Array<OneD, NekDouble> uvx(2); uvx[0] = ux; uvx[1] = vx;
+                H(2*i+1,2*j+1) = 2.0/(z[i+1]-z[i]) * (Dot(d2rv[i+1],Take(r[i+1],r[i])) + Dot(drv[i+1],drv[i+1])) +
+                                 2.0/(z[i+2]-z[i+1]) * (Dot(d2rv[i+1],Take(r[i+1],r[i+2])) + Dot(drv[i+1],drv[i+1]));
 
-    Array<OneD, NekDouble> rx = m_cad->GetSurf(surf)->P(uvx);
-    Array<OneD, NekDouble> ra = m_cad->GetSurf(surf)->P(bcs[0]);
-    Array<OneD, NekDouble> rb = m_cad->GetSurf(surf)->P(bcs[1]);
-    Array<OneD, NekDouble> rc = m_cad->GetSurf(surf)->P(bcs[2]);
-    Array<OneD, NekDouble> rd = m_cad->GetSurf(surf)->P(bcs[3]);
-    Array<OneD, NekDouble> re = m_cad->GetSurf(surf)->P(bcs[4]);
-    Array<OneD, NekDouble> rf = m_cad->GetSurf(surf)->P(bcs[5]);
+                H(2*i+1,2*j+0) = 2.0/(z[i+1]-z[i]) * (Dot(d2ruv[i+1],Take(r[i+1],r[i])) + Dot(dru[i+1],drv[i+1])) +
+                                 2.0/(z[i+2]-z[i+1]) * (Dot(d2ruv[i+1],Take(r[i+1],r[i+2])) + Dot(dru[i+1],drv[i+1]));
 
-    F = ((rx[0] - 0.5*(ra[0] + rb[0]))*(rx[0] - 0.5*(ra[0] + rb[0])) +
-         (rx[1] - 0.5*(ra[1] + rb[1]))*(rx[1] - 0.5*(ra[1] + rb[1])) +
-         (rx[2] - 0.5*(ra[2] + rb[2]))*(rx[2] - 0.5*(ra[2] + rb[2])))*weights[0]
-        +
-        ((rx[0] - 0.5*(rc[0] + rd[0]))*(rx[0] - 0.5*(rc[0] + rd[0])) +
-         (rx[1] - 0.5*(rc[1] + rd[1]))*(rx[1] - 0.5*(rc[1] + rd[1])) +
-         (rx[2] - 0.5*(rc[2] + rd[2]))*(rx[2] - 0.5*(rc[2] + rd[2])))*weights[1]
-        +
-        ((rx[0] - 0.5*(re[0] + rf[0]))*(rx[0] - 0.5*(re[0] + rf[0])) +
-         (rx[1] - 0.5*(re[1] + rf[1]))*(rx[1] - 0.5*(re[1] + rf[1])) +
-         (rx[2] - 0.5*(re[2] + rf[2]))*(rx[2] - 0.5*(re[2] + rf[2])))*weights[2];
+                H(2*i+0,2*j+1) = H(2*i+1,2*j+0);
+            }
+            else if(abs(i-j) == 1)
+            {
+                int k = max(i,j);
+                H(2*i+0,2*j+0) = -2.0/(z[k+1]-z[k]) * Dot(dru[k], dru[k+1]);
 
-    return F;
+                H(2*i+1,2*j+1) = -2.0/(z[k+1]-z[k]) * Dot(drv[k], drv[k+1]);
+
+                H(2*i+1,2*j+0) = -2.0/(z[k+1]-z[k]) * Dot(dru[k], drv[k+1]);
+
+                H(2*i+0,2*j+1) = -2.0/(z[k+1]-z[k]) * Dot(drv[k], dru[k+1]);
+            }
+        }
+    }
+
+    Jac = J;
+    Hes = H;
 
 }
 

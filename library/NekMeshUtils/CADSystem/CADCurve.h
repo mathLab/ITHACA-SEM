@@ -92,6 +92,10 @@ public:
      */
     Array<OneD, NekDouble> P(NekDouble t);
 
+    Array<OneD, NekDouble> D2(NekDouble t);
+
+
+    
     /**
      * @brief Calculates the parametric coordinate and arclength location
      * defined by \p s.

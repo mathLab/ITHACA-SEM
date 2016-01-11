@@ -369,6 +369,22 @@ namespace Nektar
             vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
             m_mesh->m_element[m_mesh->m_expDim].clear();
 
+            map<int, SpatialDomains::Geometry3DSharedPtr> geomMap;
+            for (int i = 0; i < el.size(); ++i)
+            {
+                const int elId = el[i]->GetId();
+                sIt = splitEls.find(elId);
+                if (sIt == splitEls.end())
+                {
+                    continue;
+                }
+
+                // Get elemental geometry object and put into map.
+                geomMap[elId] =
+                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                        el[i]->GetGeom(m_mesh->m_spaceDim));
+            }
+
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
@@ -380,6 +396,8 @@ namespace Nektar
                     m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
                     continue;
                 }
+
+                SpatialDomains::Geometry3DSharedPtr geom = geomMap[elId];
 
                 const int faceNum = sIt->second;
                 LibUtilities::ShapeType elType = el[i]->GetConf().m_e;
@@ -398,10 +416,6 @@ namespace Nektar
                     }
                 }
 
-                // Get elemental geometry object.
-                SpatialDomains::Geometry3DSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
-                        el[i]->GetGeom(m_mesh->m_spaceDim));
 
                 // Determine whether to use reverse points.
                 LibUtilities::PointsType t =
@@ -630,7 +644,6 @@ namespace Nektar
                             m_mesh->m_element[m_mesh->m_expDim-1].push_back(boundaryElmt);
                         }
                     }
-
                     m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
             }

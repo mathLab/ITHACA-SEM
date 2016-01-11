@@ -269,7 +269,7 @@ namespace Nektar
                     geomIt != (*compIt->second).end();
                         ++geomIt)
                 {
-                    ElmtConfig conf((*geomIt)->GetShapeType(),1,true,true);
+                    ElmtConfig conf((*geomIt)->GetShapeType(),1,true,true,false);
                     
                     // Get hold of geometry
                     vector<NodeSharedPtr> nodeList;

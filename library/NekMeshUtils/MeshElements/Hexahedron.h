@@ -63,15 +63,15 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Hexahedron(ElmtConfig                 pConf,
-                   std::vector<NodeSharedPtr> pNodeList,
-                   std::vector<int>           pTagList);
-        Hexahedron(const Hexahedron& pSrc);
-        virtual ~Hexahedron() {}
+        NEKMESHUTILS_EXPORT Hexahedron(ElmtConfig                 pConf,
+                                       std::vector<NodeSharedPtr> pNodeList,
+                                       std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Hexahedron(const Hexahedron& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Hexahedron() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     };
 
 }

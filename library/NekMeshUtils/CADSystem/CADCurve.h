@@ -46,6 +46,8 @@
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -65,14 +67,14 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADCurve(int i, TopoDS_Shape in);
+    NEKMESHUTILS_EXPORT CADCurve(int i, TopoDS_Shape in);
 
     /**
      * @brief Returns the minimum and maximum parametric coords t of the curve.
      *
      * @return Array of two entries, min and max parametric coordinate.
      */
-    Array<OneD, NekDouble> Bounds();
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> Bounds();
 
     /**
      * @brief Calculates the arclength between the two paremetric points \p ti
@@ -82,7 +84,7 @@ public:
      * @param tf Second parametric coordinate.
      * @return Arc length between \p ti and \p tf.
      */
-    NekDouble Length(NekDouble ti, NekDouble tf);
+    NEKMESHUTILS_EXPORT NekDouble Length(NekDouble ti, NekDouble tf);
 
     /**
      * @brief Gets the location (x,y,z) in an array out of the curve at point \p t.
@@ -90,7 +92,7 @@ public:
      * @param t Parametric coordinate
      * @return Array of x,y,z
      */
-    Array<OneD, NekDouble> P(NekDouble t);
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> P(NekDouble t);
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -101,43 +103,49 @@ public:
      *
      * @todo This really needs improving for accuracy.
      */
-    NekDouble tAtArcLength(NekDouble s);
+    NEKMESHUTILS_EXPORT NekDouble tAtArcLength(NekDouble s);
 
     /**
      * @brief Gets the start and end of the curve.
      *
      * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
      */
-    Array<OneD, NekDouble> GetMinMax();
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetMinMax();
 
     /// return the id of the curve
-    int GetID()
+    NEKMESHUTILS_EXPORT int GetID()
     {
         return m_ID;
     }
 
     ///set the ids of the surfaces either side of the curve
-    void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
+    NEKMESHUTILS_EXPORT void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
     {
         m_adjSurfs = i;
     }
 
     /// returns the ids of neigbouring surfaces
-    std::vector<CADSurfSharedPtr> GetAdjSurf()
+    NEKMESHUTILS_EXPORT std::vector<CADSurfSharedPtr> GetAdjSurf()
     {
         return m_adjSurfs;
     }
 
     /// returns lenght of the curve
-    NekDouble GetTotLength(){return m_length;}
+    NEKMESHUTILS_EXPORT NekDouble GetTotLength(){return m_length;}
 
     /*
      * @brief assign ids of end vertices in main cad
      */
-    void SetVert(std::vector<CADVertSharedPtr> &falVert){m_mainVerts = falVert;}
+    NEKMESHUTILS_EXPORT void SetVert(std::vector<CADVertSharedPtr> &falVert)
+    {
+        m_mainVerts = falVert;
+    }
 
     /// get the ids of the vertices that are the ends of the curve, which are in the main cad list
-    std::vector<CADVertSharedPtr> GetVertex(){return m_mainVerts;}
+    NEKMESHUTILS_EXPORT std::vector<CADVertSharedPtr> GetVertex()
+    {
+        return m_mainVerts;
+    }
 
 private:
     /// ID of the curve.

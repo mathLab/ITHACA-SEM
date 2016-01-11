@@ -47,7 +47,7 @@ namespace NekMeshUtils
      */
     class Composite {
     public:
-        Composite() : m_reorder(true) {}
+        NEKMESHUTILS_EXPORT Composite() : m_reorder(true) {}
 
         /**
          * @brief Generate a Nektar++ string describing the composite.
@@ -55,7 +55,7 @@ namespace NekMeshUtils
          * The list of composites may include individual element IDs or ranges
          * of element IDs.
          */
-        std::string GetXmlString(bool doSort=true)
+        NEKMESHUTILS_EXPORT std::string GetXmlString(bool doSort=true)
         {
 
 #if 0 // turn this option off since causes problem with InputNekpp.cpp

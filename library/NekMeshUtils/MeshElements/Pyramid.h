@@ -63,14 +63,14 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType type;
 
-        Pyramid(ElmtConfig                 pConf,
-                std::vector<NodeSharedPtr> pNodeList,
-                std::vector<int>           pTagList);
-        Pyramid(const Pyramid& pSrc);
-        virtual ~Pyramid() {}
+        NEKMESHUTILS_EXPORT Pyramid(ElmtConfig                 pConf,
+                                    std::vector<NodeSharedPtr> pNodeList,
+                                    std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Pyramid(const Pyramid& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Pyramid() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 
         /**
          * Orientation of pyramid.

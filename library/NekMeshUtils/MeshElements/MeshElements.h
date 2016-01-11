@@ -68,6 +68,8 @@ namespace NekMeshUtils
 #include <SpatialDomains/Curve.hpp>
 #include <SpatialDomains/MeshComponents.h>
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 #include "Node.h"
 #include "Edge.h"
 #include "Face.h"

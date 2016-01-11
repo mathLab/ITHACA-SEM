@@ -63,16 +63,16 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Tetrahedron(ElmtConfig                 pConf,
-                    std::vector<NodeSharedPtr> pNodeList,
-                    std::vector<int>           pTagList);
-        Tetrahedron(const Tetrahedron& pSrc);
-        virtual ~Tetrahedron() {}
+        NEKMESHUTILS_EXPORT Tetrahedron(ElmtConfig                 pConf,
+                                        std::vector<NodeSharedPtr> pNodeList,
+                                        std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Tetrahedron(const Tetrahedron& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Tetrahedron() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        virtual void Complete(int order);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual void Complete(int order);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 
         int m_orientationMap[4];
         int m_origVertMap[4];

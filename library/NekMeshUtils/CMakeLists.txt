@@ -32,6 +32,7 @@ IF(NEKTAR_USE_MESH)
 ENDIF()
 
 SET(NEKMESHUTILS_HEADERS
+    NekMeshUtilsDeclspec.h
     MeshElements/MeshElements.h
     MeshElements/Node.h
     MeshElements/Edge.h

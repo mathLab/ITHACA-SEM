@@ -42,7 +42,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-ElementFactory& GetElementFactory()
+NEKMESHUTILS_EXPORT ElementFactory& GetElementFactory()
 {
     typedef Loki::SingletonHolder<ElementFactory,
         Loki::CreateUsingNew,

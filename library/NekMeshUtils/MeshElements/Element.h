@@ -481,7 +481,8 @@ namespace NekMeshUtils
     /// Element factory definition.
     typedef Nektar::LibUtilities::NekFactory<LibUtilities::ShapeType, Element,
         ElmtConfig, std::vector<NodeSharedPtr>, std::vector<int> > ElementFactory;
-    ElementFactory& GetElementFactory();
+
+    NEKMESHUTILS_EXPORT ElementFactory& GetElementFactory();
 
     /// Define element ordering based on ID.
     struct element_id_less_than

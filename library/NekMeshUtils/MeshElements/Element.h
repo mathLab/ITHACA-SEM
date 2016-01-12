@@ -104,7 +104,7 @@ namespace NekMeshUtils
         LibUtilities::PointsType m_faceCurveType;
     };
 
-    bool operator==(ElmtConfig const &c1, ElmtConfig const &c2);
+    NEKMESHUTILS_EXPORT bool operator==(ElmtConfig const &c1, ElmtConfig const &c2);
 
     /**
      * @brief Base class for element definitions.

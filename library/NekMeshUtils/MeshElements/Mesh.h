@@ -74,7 +74,7 @@ namespace NekMeshUtils
     typedef boost::shared_ptr<Condition> ConditionSharedPtr;
     typedef std::map<int,ConditionSharedPtr> ConditionMap;
 
-    bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2);
+    NEKMESHUTILS_EXPORT bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2);
 
     class Mesh
     {

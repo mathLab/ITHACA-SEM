@@ -235,7 +235,7 @@ namespace NekMeshUtils
         }
     };
 
-    bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2);
 
     typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
 

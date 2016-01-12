@@ -32,6 +32,7 @@ IF(NEKTAR_USE_MESH)
 ENDIF()
 
 SET(NEKMESHUTILS_HEADERS
+    NekMeshUtilsDeclspec.h
     MeshElements/MeshElements.h
     MeshElements/Node.h
     MeshElements/Edge.h
@@ -68,6 +69,8 @@ IF(NEKTAR_USE_MESH)
         CADSystem/OpenCascade.h
     )
 ENDIF()
+
+ADD_DEFINITIONS(-DNEKMESHUTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})

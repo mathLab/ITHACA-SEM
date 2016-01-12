@@ -311,7 +311,9 @@ void ProcessOptiExtract::Process()
         {
             if(nmap.count((*nit)->m_id) == 1)
             {
-                NodeSharedPtr n = nmap.at((*nit)->m_id);
+                map<int, NodeSharedPtr>::iterator s;
+                s = nmap.find((*nit)->m_id);
+                NodeSharedPtr n = s->second;
                 (*nit)->m_x = n->m_x;
                 (*nit)->m_y = n->m_y;
                 (*nit)->m_z = n->m_z;

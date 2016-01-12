@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_POINT
-#define NekMeshUtils_MESHELEMENTS_POINT
+#ifndef NEKMESHUTILS_MESHELEMENTS_POINT
+#define NEKMESHUTILS_MESHELEMENTS_POINT
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -57,13 +59,13 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Point(ElmtConfig                 pConf,
+        NEKMESHUTILS_EXPORT Point(ElmtConfig                 pConf,
               std::vector<NodeSharedPtr> pNodeList,
               std::vector<int>           pTagList);
-        Point(const Point& pSrc);
-        virtual ~Point() {}
+        NEKMESHUTILS_EXPORT Point(const Point& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Point() {}
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     };
 
 }

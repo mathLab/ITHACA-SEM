@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_QUAD
 #define NekMeshUtils_MESHELEMENTS_QUAD
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -63,16 +65,16 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Quadrilateral(ElmtConfig                 pConf,
-                      std::vector<NodeSharedPtr> pNodeList,
-                      std::vector<int>           pTagList);
-        Quadrilateral(const Quadrilateral& pSrc);
-        virtual ~Quadrilateral() {}
+        NEKMESHUTILS_EXPORT Quadrilateral(ElmtConfig                 pConf,
+                                         std::vector<NodeSharedPtr> pNodeList,
+                                         std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Quadrilateral(const Quadrilateral& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Quadrilateral() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        virtual void Complete(int order);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual void Complete(int order);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     };
 
 }

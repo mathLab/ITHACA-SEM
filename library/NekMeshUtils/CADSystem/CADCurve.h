@@ -138,10 +138,16 @@ public:
     /*
      * @brief assign ids of end vertices in main cad
      */
-    void SetVert(std::vector<CADVertSharedPtr> &falVert){m_mainVerts = falVert;}
+    void SetVert(std::vector<CADVertSharedPtr> &falVert)
+    {
+        m_mainVerts = falVert;
+    }
 
     /// get the ids of the vertices that are the ends of the curve, which are in the main cad list
-    std::vector<CADVertSharedPtr> GetVertex(){return m_mainVerts;}
+    std::vector<CADVertSharedPtr> GetVertex()
+    {
+        return m_mainVerts;
+    }
 
 private:
     /// ID of the curve.

@@ -92,13 +92,6 @@ public:
     }
 
     /**
-     * @brief destructor, clear mesh to prevent memory leak
-     */
-    ~TriangleInterface()
-    {
-    }
-
-    /**
      * @brief execute meshing
      */
     void Mesh(bool Quiet = true, bool Quality = false);

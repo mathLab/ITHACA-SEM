@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_MESH
-#define NekMeshUtils_MESHELEMENTS_MESH
+#ifndef NEKMESHUTILS_MESHELEMENTS_MESH
+#define NEKMESHUTILS_MESHELEMENTS_MESH
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -72,12 +74,12 @@ namespace NekMeshUtils
     typedef boost::shared_ptr<Condition> ConditionSharedPtr;
     typedef std::map<int,ConditionSharedPtr> ConditionMap;
 
-    bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2);
+    NEKMESHUTILS_EXPORT bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2);
 
     class Mesh
     {
     public:
-        Mesh() : m_verbose(false), m_nummode(0) {}
+        NEKMESHUTILS_EXPORT Mesh() : m_verbose(false), m_nummode(0) {}
 
         /// Verbose flag
         bool                            m_verbose;
@@ -117,12 +119,12 @@ namespace NekMeshUtils
 
         /// Returns the total number of elements in the mesh with
         /// dimension expDim.
-        unsigned int                    GetNumElements();
+        NEKMESHUTILS_EXPORT unsigned int                    GetNumElements();
         /// Returns the total number of elements in the mesh with
         /// dimension < expDim.
-        unsigned int                    GetNumBndryElements();
+        NEKMESHUTILS_EXPORT unsigned int                    GetNumBndryElements();
         /// Returns the total number of entities in the mesh.
-        unsigned int                    GetNumEntities();
+        NEKMESHUTILS_EXPORT unsigned int                    GetNumEntities();
 
     };
     /// Shared pointer to a mesh.

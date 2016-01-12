@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_LINE
 #define NekMeshUtils_MESHELEMENTS_LINE
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -57,15 +59,15 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Line(ElmtConfig                 pConf,
+        NEKMESHUTILS_EXPORT Line(ElmtConfig                 pConf,
              std::vector<NodeSharedPtr> pNodeList,
              std::vector<int>           pTagList);
-        Line(const Point& pSrc);
-        virtual ~Line() {}
+        NEKMESHUTILS_EXPORT Line(const Point& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Line() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     };
 
 

@@ -75,7 +75,8 @@ namespace Nektar
         void PreconditionerBlock::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,
+            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond ||
+                     solvertype == MultiRegions::ePETScStaticCond,
                      "Solver type not valid");
         }
 

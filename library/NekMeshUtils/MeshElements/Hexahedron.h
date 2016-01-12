@@ -48,10 +48,10 @@ namespace NekMeshUtils
     class Hexahedron : public Element {
     public:
         /// Creates an instance of this class
-        static ElementSharedPtr create(
-            ElmtConfig                 pConf,
-            std::vector<NodeSharedPtr> pNodeList,
-            std::vector<int>           pTagList)
+        NEKMESHUTILS_EXPORT static ElementSharedPtr create(
+                                        ElmtConfig                 pConf,
+                                        std::vector<NodeSharedPtr> pNodeList,
+                                        std::vector<int>           pTagList)
         {
             ElementSharedPtr e = boost::shared_ptr<Element>(
                 new Hexahedron(pConf, pNodeList, pTagList));

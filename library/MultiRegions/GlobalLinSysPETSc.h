@@ -81,6 +81,8 @@ namespace Nektar
             Vec          m_x, m_b, m_locVec;
             /// KSP object that represents solver system.
             KSP          m_ksp;
+            /// PCShell for preconditioner.
+            PC           m_pc;
             /// Enumerator to select matrix multiplication type.
             PETScMatMult m_matMult;
             /// Reordering that takes universal IDs to a unique row in the PETSc
@@ -91,6 +93,8 @@ namespace Nektar
             VecScatter   m_ctx;
             /// Number of unique degrees of freedom on this process.
             int          m_nLocal;
+
+            PreconditionerSharedPtr m_precon;
 
             /**
              * @brief Internal struct for MatShell call to store current
@@ -106,6 +110,16 @@ namespace Nektar
              * @see GlobalLinSysPETSc::DoMatrixMultiply
              */
             struct MatShellCtx
+            {
+                /// Number of global degrees of freedom.
+                int nGlobal;
+                /// Number of Dirichlet degrees of freedom.
+                int nDir;
+                /// Pointer to the original calling object.
+                GlobalLinSysPETSc *linSys;
+            };
+
+            struct PCShellCtx
             {
                 /// Number of global degrees of freedom.
                 int nGlobal;
@@ -131,6 +145,7 @@ namespace Nektar
             static std::string matMultIds[];
 
             static PetscErrorCode DoMatrixMultiply(Mat M, Vec in, Vec out);
+            static PetscErrorCode DoPreconditioner(PC pc, Vec in, Vec out);
         };
     }
 }

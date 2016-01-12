@@ -122,7 +122,7 @@ void SurfaceMesh::FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
             drui[j] = d2[j+3];
             drvi[j] = d2[j+6];
             d2rui[j] = d2[j+9];
-            d2rui[j] = d2[j+12];
+            d2rvi[j] = d2[j+12];
             d2ruvi[j] = d2[j+15];
         }
         r.push_back(ri);
@@ -156,21 +156,24 @@ void SurfaceMesh::FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
                 H(2*i+1,2*j+1) = 2.0/(z[i+1]-z[i]) * (Dot(d2rv[i+1],Take(r[i+1],r[i])) + Dot(drv[i+1],drv[i+1])) +
                                  2.0/(z[i+2]-z[i+1]) * (Dot(d2rv[i+1],Take(r[i+1],r[i+2])) + Dot(drv[i+1],drv[i+1]));
 
-                H(2*i+1,2*j+0) = 2.0/(z[i+1]-z[i]) * (Dot(d2ruv[i+1],Take(r[i+1],r[i])) + Dot(dru[i+1],drv[i+1])) +
+                H(2*i+0,2*j+1) = 2.0/(z[i+1]-z[i]) * (Dot(d2ruv[i+1],Take(r[i+1],r[i])) + Dot(dru[i+1],drv[i+1])) +
                                  2.0/(z[i+2]-z[i+1]) * (Dot(d2ruv[i+1],Take(r[i+1],r[i+2])) + Dot(dru[i+1],drv[i+1]));
 
-                H(2*i+0,2*j+1) = H(2*i+1,2*j+0);
+                H(2*i+1,2*j+0) = H(2*i+0,2*j+1);
             }
-            else if(abs(i-j) == 1)
+            else if(i-j == 1)
             {
-                int k = max(i,j);
-                H(2*i+0,2*j+0) = -2.0/(z[k+1]-z[k]) * Dot(dru[k], dru[k+1]);
+                //matrix is symmetric about i==j therefore i and j are interchangable and only need to be calculated for the i > j case
+                H(2*i+0,2*j+0) = -2.0/(z[i+1]-z[i]) * Dot(dru[i], dru[i+1]);
+                H(2*i+1,2*j+1) = -2.0/(z[i+1]-z[i]) * Dot(drv[i], drv[i+1]);
+                H(2*j+0,2*i+0) = H(2*i+0,2*j+0);
+                H(2*j+1,2*i+1) = H(2*i+1,2*j+1);
 
-                H(2*i+1,2*j+1) = -2.0/(z[k+1]-z[k]) * Dot(drv[k], drv[k+1]);
+                H(2*i+0,2*j+1) = -2.0/(z[i+1]-z[i])*Dot(dru[i+1], drv[i]);
+                H(2*j+1,2*i+0) = H(2*i+0,2*j+1);
 
-                H(2*i+1,2*j+0) = -2.0/(z[k+1]-z[k]) * Dot(dru[k], drv[k+1]);
-
-                H(2*i+0,2*j+1) = -2.0/(z[k+1]-z[k]) * Dot(drv[k], dru[k+1]);
+                H(2*i+1,2*j+0) = -2.0/(z[i+1]-z[i])*Dot(drv[i+1], dru[i]);
+                H(2*j+0,2*i+1) = H(2*i+1,2*j+0);
             }
         }
     }

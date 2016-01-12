@@ -341,9 +341,7 @@ void SurfaceMesh::HOSurf()
                 }
 
                 bool repeat = true;
-                bool hit = false;
-                int ct = 0;
-                /*while(repeat)
+                while(repeat)
                 {
                     NekDouble Norm = 0;
                     for(int k = 0; k < 2.0*(m_mesh->m_nummode - 2); k++)
@@ -357,13 +355,6 @@ void SurfaceMesh::HOSurf()
                         repeat = false;
                         break;
                     }
-                    else if(!(Norm < 1E-6) && !hit)
-                    {
-                        hit = true;
-                        cout << s->GetId() << " Norm: ";
-                    }
-
-                    cout << Norm << " ";
 
                     gsOptimise(x, H, J);
 
@@ -374,16 +365,7 @@ void SurfaceMesh::HOSurf()
                     }
 
                     FaceEdgeJac(uvi, gll, s, J, H);
-
-                    ct++;
-                    if(ct > 15)
-                    {
-                        cout << "exceeded iteration" << endl;
-                        break;
-                    }
-                }*/
-                if(hit)
-                    cout << endl;
+                }
 
                 vector<NodeSharedPtr> honodes(m_mesh->m_nummode-2);
                 for(int k = 1; k < m_mesh->m_nummode -1; k++)
@@ -399,8 +381,6 @@ void SurfaceMesh::HOSurf()
                 e->m_curveType = LibUtilities::eGaussLobattoLegendre;
                 completedEdges.insert(e);
             }
-
-
         }
 
         /*

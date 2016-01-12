@@ -48,8 +48,6 @@
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
-#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -69,26 +67,26 @@ public:
     /**
      * @brief Default constructor.
      */
-    NEKMESHUTILS_EXPORT CADSystem(const std::string &name) : m_name(name)
+    CADSystem(const std::string &name) : m_name(name)
     {
     }
 
     /**
      * @brief Return the name of the CAD system.
      */
-    NEKMESHUTILS_EXPORT std::string GetName();
+    std::string GetName();
 
     /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
      * @return true if completed successfully
      */
-    NEKMESHUTILS_EXPORT bool LoadCAD();
+    bool LoadCAD();
 
     /**
      * @brief Reports basic properties to screen.
      */
-    NEKMESHUTILS_EXPORT void Report();
+    void Report();
 
     /**
      * @brief Returns bounding box of the domain.
@@ -98,12 +96,12 @@ public:
      *
      * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetBoundingBox();
+    Array<OneD, NekDouble> GetBoundingBox();
 
     /**
      * @brief Get the number of surfaces.
      */
-    NEKMESHUTILS_EXPORT int GetNumSurf()
+    int GetNumSurf()
     {
         return m_surfs.size();
     }
@@ -111,7 +109,7 @@ public:
     /**
      * @brief Get the number of curves.
      */
-    NEKMESHUTILS_EXPORT int GetNumCurve()
+    int GetNumCurve()
     {
         return m_curves.size();
     }
@@ -119,7 +117,7 @@ public:
     /**
      * @brief Gets a curve from the map.
      */
-    NEKMESHUTILS_EXPORT CADCurveSharedPtr GetCurve(int i)
+    CADCurveSharedPtr GetCurve(int i)
     {
         std::map<int,CADCurveSharedPtr>::iterator
                                 search = m_curves.find(i);
@@ -131,7 +129,7 @@ public:
     /**
      * @brief Gets a suface from the map.
      */
-    NEKMESHUTILS_EXPORT CADSurfSharedPtr GetSurf(int i)
+    CADSurfSharedPtr GetSurf(int i)
     {
         std::map<int,CADSurfSharedPtr>::iterator
                         search = m_surfs.find(i);
@@ -143,7 +141,7 @@ public:
     /**
      * @brief Gets map of all vertices
      */
-    NEKMESHUTILS_EXPORT std::map<int, CADVertSharedPtr> GetVerts()
+    std::map<int, CADVertSharedPtr> GetVerts()
     {
         return m_verts;
     }
@@ -151,7 +149,7 @@ public:
     /**
      * @brief Gets number of vertices
      */
-    NEKMESHUTILS_EXPORT int GetNumVerts(){return m_verts.size();}
+    int GetNumVerts(){return m_verts.size();}
 
     /**
      * @brief based on location in space, uses opencascade routines to
@@ -159,7 +157,7 @@ public:
      * and should be used sparingly, it is smart enough to take and form
      * of geometry
      */
-    NEKMESHUTILS_EXPORT bool InsideShape(Array<OneD, NekDouble> loc);
+    bool InsideShape(Array<OneD, NekDouble> loc);
 
 private:
 

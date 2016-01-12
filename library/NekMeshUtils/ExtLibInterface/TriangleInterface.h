@@ -53,8 +53,6 @@ extern "C"{
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -71,14 +69,14 @@ public:
     /**
      * @brief default constructor
      */
-    NEKMESHUTILS_EXPORT TriangleInterface()
+    TriangleInterface()
     {
     };
 
     /**
      * @brief assign meshing paramters
      */
-    NEKMESHUTILS_EXPORT void Assign(std::vector<std::vector<NodeSharedPtr> > &boundingloops,
+    void Assign(std::vector<std::vector<NodeSharedPtr> > &boundingloops,
                 std::vector<Array<OneD, NekDouble> > &centers, int i,
                 NekDouble str = 1.0)
     {
@@ -88,7 +86,7 @@ public:
         sid = i;
     }
 
-    NEKMESHUTILS_EXPORT void AssignStiener(std::vector<NodeSharedPtr> stiner)
+    void AssignStiener(std::vector<NodeSharedPtr> stiner)
     {
         m_stienerpoints = stiner;
     }
@@ -96,12 +94,12 @@ public:
     /**
      * @brief execute meshing
      */
-    NEKMESHUTILS_EXPORT void Mesh(bool Quiet = true, bool Quality = false);
+    void Mesh(bool Quiet = true, bool Quality = false);
 
     /**
      * @brief extract mesh
      */
-    NEKMESHUTILS_EXPORT void Extract(std::vector<std::vector<NodeSharedPtr> > &Connec);
+    void Extract(std::vector<std::vector<NodeSharedPtr> > &Connec);
 
 private:
 

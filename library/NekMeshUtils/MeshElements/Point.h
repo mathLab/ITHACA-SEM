@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_POINT
-#define NekMeshUtils_MESHELEMENTS_POINT
+#ifndef NEKMESHUTILS_MESHELEMENTS_POINT
+#define NEKMESHUTILS_MESHELEMENTS_POINT
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {

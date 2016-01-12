@@ -44,8 +44,6 @@
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 
-#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -59,7 +57,7 @@ public:
     /**
      *@brief default constructor
      */
-    NEKMESHUTILS_EXPORT BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
+    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
                                std::vector<unsigned int> syms, NekDouble b) :
                                m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
     {
@@ -69,12 +67,12 @@ public:
     /**
      *@brief execute tet meshing
      */
-    NEKMESHUTILS_EXPORT void Mesh();
+    void Mesh();
 
     /**
      * @brief Get the map of surface element id to pseudo surface prism face
      */
-    NEKMESHUTILS_EXPORT std::map<int, FaceSharedPtr> GetSurfToPri()
+    std::map<int, FaceSharedPtr> GetSurfToPri()
     {
         return m_surftopriface;
     }

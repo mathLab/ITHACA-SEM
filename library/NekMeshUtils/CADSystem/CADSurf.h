@@ -45,8 +45,6 @@
 
 #include <NekMeshUtils/CADSystem/CADVert.h>
 
-#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -78,7 +76,7 @@ public:
     /**
      * @brief Default constructor.
      */
-    NEKMESHUTILS_EXPORT CADSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    CADSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
 
     /**
      * @brief Get the IDs of the edges which bound the surface.
@@ -89,7 +87,7 @@ public:
      * integer that indicates whether this edge is orientated forwards or
      * backwards on this surface to form the loop.
      */
-    NEKMESHUTILS_EXPORT std::vector<EdgeLoop> GetEdges()
+    std::vector<EdgeLoop> GetEdges()
     {
         return m_edges;
     }
@@ -99,7 +97,7 @@ public:
      *
      * @return Array of 4 entries with parametric umin,umax,vmin,vmax.
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetBounds()
+    Array<OneD, NekDouble> GetBounds()
     {
         Array<OneD,NekDouble> b(4);
 
@@ -117,7 +115,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz components of normal vector.
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
 
     /**
      * @brief Get the set of first derivatives at parametric point u,v
@@ -125,7 +123,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz copmonents of first derivatives.
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
 
     /**
      * @brief Get the set of second derivatives at parametric point u,v
@@ -133,7 +131,7 @@ public:
      * @param uv array of u and v parametric coords
      * @return array of xyz copmonents of second derivatives
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
 
     /**
      * @brief Get the x,y,z at parametric point u,v.
@@ -141,7 +139,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz location.
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
 
     /**
      * @brief Performs a reverse look up to find u,v and x,y,z.
@@ -149,24 +147,24 @@ public:
      * @param p Array of xyz location
      * @return The parametric location of xyz on this surface
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
     /**
      * @brief returns true if the surface is flat (2D)
      */
-    NEKMESHUTILS_EXPORT bool IsPlane();
+    bool IsPlane();
 
     /**
      * @brief sets the flag to reverse the normal for this suface,
      * this is determined in cadsystem and ensures all surface normals,
      * point internaly
      */
-    NEKMESHUTILS_EXPORT void SetReverseNomral()
+    void SetReverseNomral()
     {
         m_correctNormal = false;
     }
 
-    NEKMESHUTILS_EXPORT bool IsReversedNormal()
+    bool IsReversedNormal()
     {
         return !m_correctNormal;
     }
@@ -174,7 +172,7 @@ public:
     /**
      * @brief surface needs to know if it is bounded by only two curves
      */
-    NEKMESHUTILS_EXPORT void SetTwoC()
+    void SetTwoC()
     {
         m_hasTwoCurves = true;
     }
@@ -182,24 +180,24 @@ public:
     /**
      * @brief query two curves
      */
-    NEKMESHUTILS_EXPORT bool GetTwoC(){return m_hasTwoCurves;}
+    bool GetTwoC(){return m_hasTwoCurves;}
 
     /**
      * @brief return id
      */
-    NEKMESHUTILS_EXPORT int GetId(){return m_ID;}
+    int GetId(){return m_ID;}
 
     /**
      * @brief does unconstrained locuv to project point from anywhere
      */
-    NEKMESHUTILS_EXPORT NekDouble DistanceTo(Array<OneD, NekDouble> p);
+    NekDouble DistanceTo(Array<OneD, NekDouble> p);
 
-    NEKMESHUTILS_EXPORT void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
+    void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
 
     /**
      * @brief returns curvature at point uv
      */
-    NEKMESHUTILS_EXPORT NekDouble Curvature(Array<OneD, NekDouble> uv);
+    NekDouble Curvature(Array<OneD, NekDouble> uv);
 
 private:
 

@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_EDGE
 #define NekMeshUtils_MESHELEMENTS_EDGE
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils

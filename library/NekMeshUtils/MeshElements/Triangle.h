@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_TRIANGLE
 #define NekMeshUtils_MESHELEMENTS_TRIANGLE
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils

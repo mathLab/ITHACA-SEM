@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_QUAD
 #define NekMeshUtils_MESHELEMENTS_QUAD
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils

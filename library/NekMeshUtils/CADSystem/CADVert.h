@@ -45,8 +45,6 @@
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 
-#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -66,7 +64,7 @@ public:
     /**
      * @brief Default constructor.
      */
-    NEKMESHUTILS_EXPORT CADVert(int i, TopoDS_Shape in)
+    CADVert(int i, TopoDS_Shape in)
     {
         gp_Trsf transform;
         gp_Pnt ori(0.0, 0.0, 0.0);
@@ -85,7 +83,7 @@ public:
     /**
      * @brief Get x,y,z location of the vertex
      */
-    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetLoc()
+    Array<OneD, NekDouble> GetLoc()
     {
         Array<OneD, NekDouble> out(3);
         out[0] = m_occVert.X(); out[1] = m_occVert.Y(); out[2] = m_occVert.Z();
@@ -95,17 +93,17 @@ public:
     /**
      * @brief Return ID of the vertex
      */
-    NEKMESHUTILS_EXPORT int GetId(){return m_ID;}
+    int GetId(){return m_ID;}
 
     /**
      * @brief returns a node object of the cad vertex
      */
-    NEKMESHUTILS_EXPORT NodeSharedPtr GetNode(){return m_node;}
+    NodeSharedPtr GetNode(){return m_node;}
 
     /**
      * @brief if the vertex is degenerate manually set uv for that surface
      */
-    NEKMESHUTILS_EXPORT void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
+    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
     {
         degen = true;
         degensurf = s;
@@ -118,7 +116,7 @@ public:
     /**
      * @brief query is degenerate
      */
-    NEKMESHUTILS_EXPORT int IsDegen()
+    int IsDegen()
     {
         if(degen)
         {

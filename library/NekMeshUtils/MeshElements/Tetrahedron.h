@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_TET
 #define NekMeshUtils_MESHELEMENTS_TET
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils

@@ -46,8 +46,6 @@
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 
-#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -64,35 +62,35 @@ class TetGenInterface
         /**
          * @brief default constructor
          */
-        NEKMESHUTILS_EXPORT TetGenInterface()
+        TetGenInterface()
         {
         };
 
         /**
          * @brief assign parameters for meshing
          */
-        NEKMESHUTILS_EXPORT void InitialMesh(std::map<int, NodeSharedPtr> tgidton,
+        void InitialMesh(std::map<int, NodeSharedPtr> tgidton,
                          std::vector<Array<OneD, int> > tri);
 
         /**
          * @brief gets the locations of the stiener points added by tetgen
          */
-        NEKMESHUTILS_EXPORT void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
+        void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
 
         /**
          * @brief refines a previously made tetmesh with node delta information from the Octree
          */
-        NEKMESHUTILS_EXPORT void RefineMesh(std::map<int, NekDouble> delta);
+        void RefineMesh(std::map<int, NekDouble> delta);
 
         /**
          * @brief get the list of connectivites of the nodes
          */
-        NEKMESHUTILS_EXPORT std::vector<Array<OneD, int> > Extract();
+        std::vector<Array<OneD, int> > Extract();
 
         /**
          * @brief clear previous mesh
          */
-        NEKMESHUTILS_EXPORT void freetet();
+        void freetet();
 
     private:
 

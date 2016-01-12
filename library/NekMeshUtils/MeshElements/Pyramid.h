@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_PYM
-#define NekMeshUtils_MESHELEMENTS_PYM
+#ifndef NEKMESHUTILS_MESHELEMENTS_PYM
+#define NEKMESHUTILS_MESHELEMENTS_PYM
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {

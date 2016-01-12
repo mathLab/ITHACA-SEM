@@ -195,7 +195,7 @@ namespace Nektar
 
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(
-                m_linSysKey, pInput, pOutput, eGlobal);
+                m_linSysKey, input, output, eGlobal);
         }
     }
 }

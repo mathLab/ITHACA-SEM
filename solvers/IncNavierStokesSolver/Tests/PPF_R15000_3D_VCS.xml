@@ -50,7 +50,7 @@
       <V ID="43">	0.75 1 0.0  </V>
       <V ID="44">	1 1 0.0  </V>
     </VERTEX>
-    
+
     <EDGE>
       <E ID="0">	0  1  </E>
       <E ID="1">	1  2  </E>
@@ -129,7 +129,7 @@
       <E ID="74">	42  43  </E>
       <E ID="75">	43  44  </E>
     </EDGE>
-    
+
     <ELEMENT>
       <Q ID="0">	0  5   9  4  </Q>
       <Q ID="1">	1  6   10  5  </Q>
@@ -164,7 +164,7 @@
       <Q ID="30">	65  70   74  69  </Q>
       <Q ID="31">	66  71   75  70  </Q>
     </ELEMENT>
-    
+
     <COMPOSITE>
       <C ID="0"> Q[0-31] </C>
       <C ID="1"> E[0,1,2,3] </C>                  // south border
@@ -178,7 +178,7 @@
   <EXPANSIONS>
     <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,w,p" TYPE="MODIFIED" />
   </EXPANSIONS>
-  
+
   <CONDITIONS>
     <SOLVERINFO>
       <I PROPERTY="SolverType"        VALUE="VelocityCorrectionScheme" />
@@ -191,7 +191,7 @@
       <I PROPERTY="Driver"            VALUE="ModifiedArnoldi" />
       <I PROPERTY="InitialVector" VALUE="File" />
     </SOLVERINFO>
-    
+
     <PARAMETERS>
       <P> TimeStep      = 0.001  </P>
       <P> NumSteps      = 1000    </P>
@@ -206,21 +206,21 @@
       <P> nits          = 5000   </P>
       <P> LZ            = 6*PI/sqrt(5) </P>
     </PARAMETERS>
-    
+
     <VARIABLES>
       <V ID="0"> u </V>
       <V ID="1"> v </V>
       <V ID="2"> w </V>
       <V ID="3"> p </V>
     </VARIABLES>
-    
+
     <BOUNDARYREGIONS>
       <B ID="0"> C[1] </B>
       <B ID="1"> C[2] </B>
       <B ID="2"> C[3] </B>
       <B ID="3"> C[4] </B>
     </BOUNDARYREGIONS>
-    
+
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="u" VALUE="0" />
@@ -247,7 +247,7 @@
         <P VAR="p" VALUE="[1]" />
       </REGION>
     </BOUNDARYCONDITIONS>
-    
+
     <FUNCTION NAME="BaseFlow">
       <E VAR="u" VALUE="1-y*y" />
       <E VAR="v" VALUE="0" />
@@ -259,5 +259,5 @@
       <F VAR="u,v,w,p" FILE="PPF_R15000_3D_VCS.rst" />
     </FUNCTION>
   </CONDITIONS>
-  
+
 </NEKTAR>

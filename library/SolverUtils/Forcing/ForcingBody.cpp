@@ -69,32 +69,32 @@ namespace SolverUtils
         if(!funcNameElmt)
         {
             funcNameElmt = pForce->FirstChildElement("FIELDFORCE");
-            
+
             ASSERTL0(funcNameElmt, "Requires BODYFORCE of FIELDFORCE tag "
                      "specifying function name which prescribes body force.");
         }
-        
+
         string funcName = funcNameElmt->GetText();
         ASSERTL0(m_session->DefinesFunction(funcName),
                  "Function '" + funcName + "' not defined.");
-        
+
         funcNameElmt = pForce->FirstChildElement("BODYFORCETIMEFCN");
         if(!funcNameElmt)
         {
             funcNameElmt = pForce->FirstChildElement("FIELDFORCETIMEFCN");
-            
+
             if(funcNameElmt)
             {
                 std::string funcNameTime = funcNameElmt->GetText();
-                
+
                 ASSERTL0(!funcNameTime.empty(),
                          "Expression must be given in BODYFORCETIMEFCN or "
                          "FIELDFORCETIMEFCN.");
-                
+
                 m_session->SubstituteExpressions(funcNameTime);
-                m_timeFcnEqn = MemoryManager<LibUtilities::Equation>::AllocateSharedPtr 
+                m_timeFcnEqn = MemoryManager<LibUtilities::Equation>::AllocateSharedPtr
                     (m_session,funcNameTime);
-                
+
                 m_hasTimeFcnScaling = true;
                 cout << "Read Fcn Time Scaling: " << funcNameTime << endl;
             }
@@ -141,13 +141,13 @@ namespace SolverUtils
         if(m_hasTimeFcnScaling)
         {
             Array<OneD, NekDouble>  TimeFcn(1);
-            
+
             for (int i = 0; i < m_NumVariable; i++)
             {
                 EvaluateTimeFunction(time, m_timeFcnEqn, TimeFcn);
-                
+
                 Vmath::Svtvp(outarray[i].num_elements(), TimeFcn[0],
-                             m_Forcing[i], 1, 
+                             m_Forcing[i], 1,
                              outarray[i],  1,
                              outarray[i],  1);
             }

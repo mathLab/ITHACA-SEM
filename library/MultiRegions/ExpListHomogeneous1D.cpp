@@ -627,7 +627,7 @@ namespace Nektar
             int IDoffset = 0;
 
             // introduce a 2 plane offset for single mode case so can
-            // be post-processed or used in MultiMode expansion. 
+            // be post-processed or used in MultiMode expansion.
             if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
             {
                 IDoffset  = 2;

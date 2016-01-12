@@ -250,55 +250,55 @@ void LinearisedAdvection::v_Advect(
 
     Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nPointsTot*nConvectiveFields);
 
-    
+
     Array<OneD, NekDouble> grad0,grad1,grad2;
-    
+
     // Evaluation of the gradient of each component of the base flow
     // \nabla U
     Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
-    
+
     // \nabla V
     Array<OneD, NekDouble> grad_base_v0,grad_base_v1,grad_base_v2;
-    
+
     // \nabla W
     Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
-    
+
     grad0        = Array<OneD, NekDouble> (nPointsTot);
     grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
     grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
     grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
-    
+
     // Evaluation of the base flow for periodic cases
     if (m_slices > 1)
     {
         ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
                  == LibUtilities::eFunctionTypeFile,
                  "Base flow should be a sequence of files.");
-        
+
         for (int i = 0; i < ndim; ++i)
         {
             UpdateBase(m_slices, m_interp[i], m_baseflow[i],
                        time, m_period);
         }
     }
-    
-    
+
+
     //Evaluate the linearised advection term
     switch(ndim)
     {
     case 1:         // 1D
         ASSERTL0(false,"Not set up for 1D");
-        break;        
+        break;
     case 2:  //2D
         {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-                
+
             //Derivates of the base flow
             fields[0]-> PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1);
             fields[0]-> PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1);
-            
+
             //x-equation
             fields[0]->PhysDeriv(inarray[0],grad0,grad1);
             // Evaluate U du'/dx
@@ -313,7 +313,7 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,outarray[0],1,
                          outarray[0],1);
             Vmath::Neg(nPointsTot,outarray[0],1);
-            
+
             //y-equation
             fields[0]->PhysDeriv(inarray[1],grad0,grad1);
             // Evaluate U dv'/dx
@@ -334,15 +334,15 @@ void LinearisedAdvection::v_Advect(
         {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad2 = Array<OneD, NekDouble> (nPointsTot);
-            
+
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_w1 = Array<OneD, NekDouble> (nPointsTot,0.0);
-            
+
             grad_base_u2 = Array<OneD, NekDouble> (nPointsTot,0.0);
             grad_base_v2 = Array<OneD, NekDouble> (nPointsTot,0.0);
             grad_base_w2 = Array<OneD, NekDouble> (nPointsTot,0.0);
-            
+
             // note base flow should be moved to GetBaseFlow method
             if(m_halfMode) // can assume W = 0 and  d/dz == 0
             {
@@ -359,28 +359,28 @@ void LinearisedAdvection::v_Advect(
                     // Differentiate base flow in physical space
                     bool oldwavespace = fields[0]->GetWaveSpace();
                     fields[0]->SetWaveSpace(false);
-                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, 
+                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
                                          grad_base_u1,  grad_base_u2);
-                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, 
+                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
                                          grad_base_v1,  grad_base_v2);
-                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, 
+                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
                                          grad_base_w1,  grad_base_w2);
                     fields[0]->SetWaveSpace(oldwavespace);
-                    
-                    
+
+
                 }
                 else // has to be single mode where d/dz = 0
                 {
-                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, 
+                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
                                          grad_base_u1);
-                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, 
+                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
                                          grad_base_v1);
-                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, 
+                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
                                          grad_base_w1);
                 }
             }
-            
-            //x-equation 
+
+            //x-equation
             //
             // Could probably clean up independent looping if clean up
             // base flow derivative evaluation
@@ -415,14 +415,14 @@ void LinearisedAdvection::v_Advect(
             //Evaluate and add: v' dU/dy
             Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,
                          outarray[0],1,outarray[0],1);
-            
+
             if(!m_halfMode)
             {
                 //Evaluate an add W du'/dz
-                Vmath::Vvtvp(nPointsTot, grad2, 1, m_baseflow[2], 
+                Vmath::Vvtvp(nPointsTot, grad2, 1, m_baseflow[2],
                              1,outarray[0], 1, outarray[0], 1);
             }
-            
+
             if(m_multipleModes)
             {
                 //Evaluate and add w' dU/dz
@@ -465,7 +465,7 @@ void LinearisedAdvection::v_Advect(
             //Evaluate v' dV/dy
             Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,
                          outarray[1],1,outarray[1],1);
-            
+
             if(!m_halfMode)
             {
                 //Evaluate  W du'/dz
@@ -480,7 +480,7 @@ void LinearisedAdvection::v_Advect(
                              outarray[1],1,outarray[1],1);
                 fields[0]->HomogeneousFwdTrans(outarray[1],outarray[1]);
             }
-            
+
             Vmath::Neg(nPointsTot,outarray[1],1);
 
             //z-equation ------------
@@ -503,7 +503,7 @@ void LinearisedAdvection::v_Advect(
                     fields[0]->PhysDeriv(inarray[2], grad0, grad1, grad2);
                 }
             }
-            
+
             //Evaluate U dw'/dx
             Vmath::Vmul (nPointsTot, grad0,      1, m_baseflow[0], 1,
                          outarray[2],  1);
@@ -518,7 +518,7 @@ void LinearisedAdvection::v_Advect(
                              outarray[2],1,outarray[2],1);
                 //Evaluate v' dW/dy
                 Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[1],1,
-                             outarray[2],1,outarray[2],1);                
+                             outarray[2],1,outarray[2],1);
 
                 //Evaluate W dw'/dz
                 Vmath::Vvtvp(nPointsTot, grad2,       1, m_baseflow[2], 1,
@@ -533,7 +533,7 @@ void LinearisedAdvection::v_Advect(
                 fields[0]->HomogeneousFwdTrans(outarray[2],outarray[2]);
             }
             Vmath::Neg(nPointsTot,outarray[2],1);
-        }       
+        }
     }
 }
 
@@ -595,7 +595,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     LibUtilities::FieldIOSharedPtr fld =
     MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
                                                     m_session->GetComm());
-    fld->Import(pInfile, FieldDef, FieldData, 
+    fld->Import(pInfile, FieldDef, FieldData,
                 LibUtilities::NullFieldMetaDataMap,
                 ElementGIDs);
 
@@ -645,7 +645,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
                                 &tmp_coeff[2*ncplane], 1);
                 }
             }
-            // 2D cases 
+            // 2D cases
             else
             {
                 bool flag = FieldDef[i]->m_fields[j] ==
@@ -675,7 +675,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
                 Vmath::Vcopy(ncplane,&m_baseflow[j][0],1,&m_baseflow[j][ncplane],1);
             }
         }
-        else // fully 3D base flow - put in physical space. 
+        else // fully 3D base flow - put in physical space.
         {
             bool oldwavespace = pFields[j]->GetWaveSpace();
             pFields[j]->SetWaveSpace(false);

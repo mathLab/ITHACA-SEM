@@ -48,11 +48,134 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-/**
- * @todo write a optimistaion algorithm for edges on curves, not stricly
- * needed because OCC curves are not distorted, but should be included for
- * completness
- */
+map<int, vector<int> > nodeToSixAround(int nq)
+{
+    map<pair<int,int>, int> nodeorder;
+    map<int, pair<int, int> > nodeorderRev;
+    pair<int, int> id;
+
+    id.first = 0;
+    id.second  = 0;
+    nodeorder[id] = 0;
+    nodeorderRev[0] = id;
+
+    id.first = nq-1;
+    id.second  = 0;
+    nodeorder[id] = 1;
+    nodeorderRev[1] = id;
+
+
+    id.first = 0;
+    id.second  = nq-1;
+    nodeorder[id] = 2;
+    nodeorderRev[2] = id;
+
+    for(int i = 0; i < nq -2; i++)
+    {
+        id.second = 0;
+        id.first  = i+1;
+        nodeorder[id] = i+3;
+        nodeorderRev[i+3] = id;
+    }
+    for(int i = 0; i < nq -2; i++)
+    {
+        id.first = nq-2 - i;
+        id.second = 1 + i;
+        nodeorder[id] = nq + 1 + i;
+        nodeorderRev[nq + 1 + i] = id;
+    }
+    for(int i = 0; i < nq-2; i++)
+    {
+        id.first = 0;
+        id.second = nq-2 - i;
+        nodeorder[id] = nq + nq-1 + i;
+        nodeorderRev[nq + nq-1 + i] = id;
+    }
+
+    int i = 1;
+    int j = 1;
+    int limit = nq-3;
+    for(int k = 0; k < (nq-3)*(nq-2)/2; k++)
+    {
+        id.first = i;
+        id.second = j;
+        nodeorder[id] = 3*(nq-1) + k;
+        nodeorderRev[3*(nq-1) + k] = id;
+        i++;
+        if(i > limit)
+        {
+            limit--;
+            j++;
+            i=1;
+        }
+    }
+
+    map<int, vector<int> > ret;
+
+    for(int i = (nq+1)*nq/2 - (nq-3)*(nq-2)/2; i < (nq+1)*nq/2; i++)
+    {
+        vector<int> ids;
+
+        pair<int,int> p = nodeorderRev[i];
+        p.first -= 1;
+        ids.push_back(nodeorder[p]);
+
+        p = nodeorderRev[i];
+        p.second -=1;
+        ids.push_back(nodeorder[p]);
+
+        p = nodeorderRev[i];
+        p.first +=1;
+        p.second -=1;
+        ids.push_back(nodeorder[p]);
+
+        p = nodeorderRev[i];
+        p.first +=1;
+        ids.push_back(nodeorder[p]);
+
+        p = nodeorderRev[i];
+        p.second +=1;
+        ids.push_back(nodeorder[p]);
+
+        p = nodeorderRev[i];
+        p.first -=1;
+        p.second +=1;
+        ids.push_back(nodeorder[p]);
+
+        ret[i] = ids;
+    }
+
+    return ret;
+}
+
+map<int, vector<NekDouble> > weights(map<int, vector<int> > near, Array<OneD, NekDouble> u, Array<OneD, NekDouble> v)
+{
+    map<int, vector<NekDouble> > ret;
+
+    map<int, vector<int> >::iterator it;
+    for(it = near.begin(); it != near.end(); it++)
+    {
+        vector<NekDouble> zs;
+
+        NekDouble z1u = 0.5*(u[it->second[0]] + u[it->second[1]]);
+        NekDouble z1v = 0.5*(v[it->second[0]] + v[it->second[1]]);
+
+        NekDouble z2u = 0.5*(u[it->second[2]] + u[it->second[3]]);
+        NekDouble z2v = 0.5*(v[it->second[2]] + v[it->second[3]]);
+
+        NekDouble z3u = 0.5*(u[it->second[4]] + u[it->second[5]]);
+        NekDouble z3v = 0.5*(v[it->second[4]] + v[it->second[5]]);
+
+        zs.push_back((u[it->first] - z2u)*(v[it->first] - z3v) - (v[it->first] - z2v)*(u[it->first] - z3u));
+        zs.push_back(-1.0*((u[it->first] - z1u)*(v[it->first] - z3v) - (v[it->first] - z1v)*(u[it->first] - z3u)));
+        zs.push_back((u[it->first] - z1u)*(v[it->first] - z2v) - (v[it->first] - z1v)*(u[it->first] - z2u));
+
+        ret[it->first] = zs;
+    }
+
+    return ret;
+}
+
 void SurfaceMesh::HOSurf()
 {
     if(m_mesh->m_verbose)
@@ -67,7 +190,7 @@ void SurfaceMesh::HOSurf()
 
     LibUtilities::PointsManager()[ekey]->GetPoints(gll);
 
-    /*LibUtilities::PointsKey pkey(m_mesh->m_nummode,
+    LibUtilities::PointsKey pkey(m_mesh->m_nummode,
                                  LibUtilities::eNodalTriFekete);
     Array<OneD, NekDouble> u,v;
 
@@ -97,91 +220,8 @@ void SurfaceMesh::HOSurf()
         p(2,j) = 1.0;
     }
 
-    map<pair<int,int>, int> nodeorder;
-    pair<int, int> id;
-    id.first = 1;
-    id.second  = 1;
-    nodeorder[id] = 0;
-    id.first = m_mesh->m_nummode;
-    id.second  = 1;
-    nodeorder[id] = 1;
-    id.first = 1;
-    id.second  = m_mesh->m_nummode;
-    nodeorder[id] = 2;
-
-    for(int i = 1; i < m_mesh->m_nummode -1; i++)
-    {
-        id.second = 1;
-        id.first  = i+1;
-        nodeorder[id] = i+2;
-    }
-    for(int i = 0; i < m_mesh->m_nummode-2; i++)
-    {
-        id.first = m_mesh->m_nummode-1 - i;
-        id.second = 2 + i;
-        nodeorder[id] = m_mesh->m_nummode + 1 + i;
-    }
-    for(int i = 0; i < m_mesh->m_nummode-2; i++)
-    {
-        id.first = 1;
-        id.second = m_mesh->m_nummode-1 - i;
-        nodeorder[id] = m_mesh->m_nummode + m_mesh->m_nummode-1 + i;
-    }
-    int i = 2;
-    int j = 2;
-    int limit = m_mesh->m_nummode-1 - 1;
-    for(int k = 0; k < numInteriorPoints; k++)
-    {
-        id.first = i;
-        id.second = j;
-        nodeorder[id] = 3*(m_mesh->m_nummode-1) + k;
-        i++;
-        if(i > limit)
-        {
-            limit--;
-            j++;
-            i=2;
-        }
-    }
-
-    map<pair<int,int>, vector<NekDouble> > nodeweight;
-
-    //calculates spring weights from the standard triangle
-    for(j = 2; j <= m_mesh->m_nummode-1-1; j++)
-    {
-        for(i = 2; i <= m_mesh->m_nummode -j; i++)
-        {
-            NekDouble Zu,Zv,Z1u,Z1v,Z2u,Z2v,Z3u,Z3v;
-
-            Z1u = 0.0; Z1v = 0.0;
-            id.first = i-1; id.second = j;
-            Z1u += 0.5*u[nodeorder[id]]; Z1v += 0.5*v[nodeorder[id]];
-            id.first = i; id.second = j-1;
-            Z1u += 0.5*u[nodeorder[id]]; Z1v += 0.5*v[nodeorder[id]];
-
-            Z2u = 0.0; Z2v = 0.0;
-            id.first = i+1; id.second = j-1;
-            Z2u += 0.5*u[nodeorder[id]]; Z2v += 0.5*v[nodeorder[id]];
-            id.first = i+1; id.second = j;
-            Z2u += 0.5*u[nodeorder[id]]; Z2v += 0.5*v[nodeorder[id]];
-
-            Z3u = 0.0; Z3v = 0.0;
-            id.first = i; id.second = j+1;
-            Z3u += 0.5*u[nodeorder[id]]; Z3v += 0.5*v[nodeorder[id]];
-            id.first = i-1; id.second = j+1;
-            Z3u += 0.5*u[nodeorder[id]]; Z3v += 0.5*v[nodeorder[id]];
-
-            id.first = i; id.second = j;
-            Zu = u[nodeorder[id]]; Zv = v[nodeorder[id]];
-
-            vector<NekDouble> K(3);
-            K[0] = (Zu - Z2u)*(Zv - Z3v) - (Zv - Z2v)*(Zu - Z3u);
-            K[1] = -1.0*((Zu - Z1u)*(Zv - Z3v) - (Zv - Z1v)*(Zu - Z3u));
-            K[2] = (Zu - Z1u)*(Zv - Z2v) - (Zv - Z1v)*(Zu - Z2u);
-
-            nodeweight[id] = K;
-        }
-    }*/
+    map<int, vector<int> > near = nodeToSixAround(m_mesh->m_nummode);
+    map<int, vector<NekDouble> > z = weights(near, u, v);
 
     //because edges are listed twice need a method to not repeat over them
     EdgeSet completedEdges;
@@ -383,7 +423,6 @@ void SurfaceMesh::HOSurf()
             }
         }
 
-        /*
         vector<NodeSharedPtr> vertices = f->m_vertexList;
         Array<OneD, NekDouble> uv1,uv2,uv3;
         uv1 = vertices[0]->GetCADSurfInfo(surf);
@@ -404,137 +443,46 @@ void SurfaceMesh::HOSurf()
         DNekMat M = a*c;
         DNekMat result = M*p;
 
+        //build an array of all uvs
+        Array<OneD, Array<OneD, NekDouble> > uvi(TotNumPoints);
+        int ctr = 0;
+        for(int j = 0; j < vertices.size(); j++)
+        {
+            uvi[ctr++] = vertices[j]->GetCADSurfInfo(surf);
+        }
+        for(int j = 0; j < edges.size(); j++)
+        {
+            vector<NodeSharedPtr> ns = edges[j]->m_edgeNodes;
+            if(!(edges[j]->m_n1 == vertices[j]))
+            {
+                reverse(ns.begin(),ns.end());
+            }
+            for(int k = 0; k < ns.size(); k++)
+            {
+                uvi[ctr++] = ns[k]->GetCADSurfInfo(surf);
+            }
+        }
+        for(int j = 0; j < numInteriorPoints; j++)
+        {
+            Array<OneD, NekDouble> uv(2);
+            uv[0] = result(0,j);
+            uv[1] = result(1,j);
+            uvi[ctr++] = uv;
+        }
+
         CADSurfSharedPtr s = m_cad->GetSurf(surf);
-        vector<NodeSharedPtr> honodes(numInteriorPoints);
-        for(int i = 0; i < numInteriorPoints; i++)
+        vector<NodeSharedPtr> honodes;
+        for(int j = TotNumPoints - numInteriorPoints; j < TotNumPoints; j++)
         {
             Array<OneD, NekDouble> loc;
-            Array<OneD, NekDouble> uv(2);
-            uv[0] = result(0,i);
-            uv[1] = result(1,i);
-            loc = s->P(uv);
+            loc = s->P(uvi[j]);
             NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,loc[0],loc[1],loc[2]));
-            nn->SetCADSurf(surf, s, uv);
-            honodes[i] = nn;
-        }
-
-        //construct a vector of all the uv coords of the triangle in nektar order to form boundary conditions
-        vector<Array<OneD, NekDouble> > uvList;
-        uvList.push_back(uv1); uvList.push_back(uv2); uvList.push_back(uv3);
-        for(int j = 0; j < 3; j++)
-        {
-            vector<NodeSharedPtr> hon = egs[j]->m_edgeNodes;
-            if(egs[j]->m_n1 != vertices[j])
-                reverse(hon.begin(),hon.end());
-
-            for(int k = 0; k < hon.size(); k++)
-            {
-                uvList.push_back(hon[k]->GetCADSurfInfo(surf));
-            }
-        }
-        for(int j = 0; j < honodes.size(); j++)
-        {
-            uvList.push_back(honodes[j]->GetCADSurfInfo(surf));
-        }
-
-        bool repeatoverallnodes = true;
-
-        NekDouble tol = 1E-12;
-
-        while(repeatoverallnodes)
-        {
-            int converged = 0;
-
-            Array<OneD, NekDouble> uvi;
-
-            Array<OneD, NekDouble> bounds = s->GetBounds();
-            int node;
-            int hocnt = 0;
-
-            for(int j = 2; j <= m_mesh->m_nummode-1 -1; j++)
-            {
-                for(int i = 2; i <= m_mesh->m_nummode -j; i++)
-                {
-                    vector<Array<OneD, NekDouble> > bcs;
-                    id.first = i-1;
-                    id.second = j;
-                    node = nodeorder[id];
-                    bcs.push_back(uvList[node]);
-
-                    id.first = i;
-                    id.second = j-1;
-                    node = nodeorder[id];
-                    bcs.push_back(uvList[node]);
-
-                    id.first = i+1;
-                    id.second = j-1;
-                    node = nodeorder[id];
-                    bcs.push_back(uvList[node]);
-
-                    id.first = i+1;
-                    id.second = j;
-                    node = nodeorder[id];
-                    bcs.push_back(uvList[node]);
-
-                    id.first = i;
-                    id.second = j+1;
-                    node = nodeorder[id];
-                    bcs.push_back(uvList[node]);
-
-                    id.first = i-1;
-                    id.second = j+1;
-                    node = nodeorder[id];
-                    bcs.push_back(uvList[node]);
-
-                    id.first = i;
-                    id.second = j;
-                    node = nodeorder[id];
-                    uvi = uvList[node];
-                    vector<NekDouble> weights = nodeweight[id];
-
-                    bool valid;
-                    Array<OneD, NekDouble> df = FaceGrad(uvi[0],uvi[1],bcs,
-                                                         weights,surf,
-                                                         valid);
-                    if(!valid)
-                    {
-                        converged++;
-                        continue;
-                    }
-
-                    NekDouble a,b;
-                    Find1DBounds(a,b,uvi,df,bounds);
-
-                    NekDouble fxi = FaceF(uvi[0],uvi[1],bcs,weights,surf,valid);
-                    NekDouble fx= fxi;
-
-                    NekDouble xmin = BrentOpti(a,0,b,fx,tol,surf,
-                                               uvi,df,bounds,bcs,weights,
-                                               &SurfaceMesh::FaceF);
-
-                    if(fabs(fx - fxi) < tol)
-                    {
-                        converged++;
-                    }
-                    else
-                    {
-                        uvi[0]+=xmin*df[0]; uvi[1]+=xmin*df[1];
-                        Array<OneD, NekDouble> loc = s->P(uvi);
-                        uvList[node] = uvi;
-                        honodes[hocnt]->Move(loc,surf,uvi);
-                    }
-
-                    hocnt++;
-                }
-            }
-            if(converged == honodes.size())
-            {
-                repeatoverallnodes = false;
-            }
+            nn->SetCADSurf(surf, s, uvi[j]);
+            honodes.push_back(nn);
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;*/
+        f->m_curveType = LibUtilities::eNodalTriFekete;
     }
 
     //if(m_mesh->m_verbose)

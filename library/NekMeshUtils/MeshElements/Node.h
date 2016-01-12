@@ -305,9 +305,9 @@ namespace NekMeshUtils
     };
     /// Shared pointer to a Node.
 
-    bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
-    bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
-    bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
     std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
 
     /**

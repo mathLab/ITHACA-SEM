@@ -163,8 +163,8 @@ namespace NekMeshUtils
     /// Shared pointer to an edge.
     typedef boost::shared_ptr<Edge> EdgeSharedPtr;
 
-    bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
-    bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
 
     /**
      * @brief Defines a hash function for edges.

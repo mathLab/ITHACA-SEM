@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/Preconditioner.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -206,6 +207,21 @@ namespace Nektar
                 Loki::SingleThreaded> Type;
             return Type::Instance();
         }
+
+        /**
+         * @brief Create a preconditioner object from the parameters defined in
+         * the supplied assembly map.
+         *
+         * @param asmMap  Assembly map used to construct the global system.
+         */
+        PreconditionerSharedPtr GlobalLinSys::CreatePrecon(AssemblyMapSharedPtr asmMap)
+        {
+            PreconditionerType pType = asmMap->GetPreconType();
+            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+            return GetPreconFactory().CreateInstance(
+                PreconType, GetSharedThisPtr(), asmMap);
+        }
+
 
         /**
          * @brief Get the number of blocks in this system. 

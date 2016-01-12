@@ -152,12 +152,7 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-            MultiRegions::PreconditionerType pType
-                = m_locToGloMap->GetPreconType();
-            std::string PreconType
-                = MultiRegions::PreconditionerTypeMap[pType];
-            m_precon = GetPreconFactory().CreateInstance(
-                PreconType,GetSharedThisPtr(),m_locToGloMap);
+            m_precon = CreatePrecon(m_locToGloMap);
 
             // Allocate memory for top-level structure
             SetupTopLevel(m_locToGloMap);
@@ -244,14 +239,10 @@ namespace Nektar
 
             // Build precon again if we in multi-level static condensation (a
             // bit of a hack)
-            if (m_linSysKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond)
+            if (m_linSysKey.GetGlobalSysSolnType() ==
+                    eIterativeMultiLevelStaticCond)
             {
-                MultiRegions::PreconditionerType pType
-                    = m_locToGloMap->GetPreconType();
-                std::string PreconType
-                    = MultiRegions::PreconditionerTypeMap[pType];
-                m_precon = GetPreconFactory().CreateInstance(
-                    PreconType,GetSharedThisPtr(),m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap);
                 m_precon->BuildPreconditioner();
             }
 
@@ -543,12 +534,7 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    MultiRegions::PreconditionerType pType
-                        = m_locToGloMap->GetPreconType();
-                    std::string PreconType
-                        = MultiRegions::PreconditionerTypeMap[pType];
-                    m_precon = GetPreconFactory().CreateInstance(
-                        PreconType, GetSharedThisPtr(), m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap);
                     m_precon->BuildPreconditioner();
                 }
 

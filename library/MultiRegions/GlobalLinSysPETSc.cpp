@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysPETSc.h>
+#include <MultiRegions/Preconditioner.h>
 
 #include "petscis.h"
 #include "petscversion.h"
@@ -47,12 +48,10 @@ namespace Nektar
                 "PETScMatMult", "Sparse");
         std::string GlobalLinSysPETSc::matMultIds[] = {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "PETScMatMult",
-                "Sparse",
+                "PETScMatMult", "Sparse",
                 MultiRegions::ePETScMatMultSparse),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "PETScMatMult",
-                "Shell",
+                "PETScMatMult", "Shell",
                 MultiRegions::ePETScMatMultShell)
         };
 
@@ -104,6 +103,12 @@ namespace Nektar
             const int                          pNumDir)
         {
             const int nHomDofs = pNumRows - pNumDir;
+
+            if (!m_precon && m_matMult == ePETScMatMultShell)
+            {
+                m_precon = CreatePrecon(locToGloMap);
+                m_precon->BuildPreconditioner();
+            }
 
             // Populate RHS vector from input
             VecSetValues(m_b, nHomDofs, &m_reorderedMap[0],
@@ -274,6 +279,19 @@ namespace Nektar
                                      (void *)ctx, &m_matrix);
                 MatShellSetOperation(m_matrix, MATOP_MULT,
                                      (void(*)(void))DoMatrixMultiply);
+
+                // Create a Nektar++ preconditioner which we'll wrap inside a
+                // PCShell.
+                PCShellCtx *ctx2 = new PCShellCtx();
+                ctx2->nGlobal = nGlobal;
+                ctx2->nDir    = nDir;
+                ctx2->linSys  = this;
+
+                PCCreate         (PETSC_COMM_WORLD, &m_pc);
+                PCSetOperators   (m_pc, m_matrix, m_matrix);
+                PCSetType        (m_pc, PCSHELL);
+                PCShellSetApply  (m_pc, DoPreconditioner);
+                PCShellSetContext(m_pc, ctx2);
             }
             else
             {
@@ -344,6 +362,47 @@ namespace Nektar
             return 0;
         }
 
+        PetscErrorCode GlobalLinSysPETSc::DoPreconditioner(
+            PC pc, Vec in, Vec out)
+        {
+            // Grab our MatShell context from M.
+            void *ptr;
+            PCShellGetContext(pc, &ptr);
+            PCShellCtx *ctx = (PCShellCtx *)ptr;
+
+            const int          nGlobal  = ctx->nGlobal;
+            const int          nDir     = ctx->nDir;
+            const int          nHomDofs = nGlobal - nDir;
+            GlobalLinSysPETSc *linSys   = ctx->linSys;
+
+            // Scatter from PETSc ordering to our local ordering. It's actually
+            // unclear whether this step might also do some communication in
+            // parallel, which is probably not ideal.
+            VecScatterBegin(linSys->m_ctx, in, linSys->m_locVec,
+                            INSERT_VALUES, SCATTER_FORWARD);
+            VecScatterEnd  (linSys->m_ctx, in, linSys->m_locVec,
+                            INSERT_VALUES, SCATTER_FORWARD);
+
+            // Temporary storage to pass to Nektar++
+            Array<OneD, NekDouble> tmpIn(nHomDofs), tmpOut(nHomDofs);
+
+            // Get values from input vector and copy to tmpIn.
+            PetscScalar *tmpLocIn;
+            VecGetArray    (linSys->m_locVec, &tmpLocIn);
+            Vmath::Vcopy   (nHomDofs, tmpLocIn, 1, &tmpIn[0], 1);
+            VecRestoreArray(linSys->m_locVec, &tmpLocIn);
+
+            // Do matrix multiply in Nektar++, store in tmpOut.
+            linSys->m_precon->DoPreconditioner(tmpIn, tmpOut);
+
+            // Scatter back to PETSc ordering and put in out.
+            VecSetValues(out, nHomDofs, &linSys->m_reorderedMap[0],
+                         &tmpOut[0], INSERT_VALUES);
+
+            // Must return 0, otherwise PETSc complains.
+            return 0;
+        }
+
         /**
          * @brief Set up KSP solver object.
          *
@@ -363,6 +422,11 @@ namespace Nektar
 #else
             KSPSetOperators(m_ksp, m_matrix, m_matrix, SAME_NONZERO_PATTERN);
 #endif
+
+            if (m_matMult == ePETScMatMultShell)
+            {
+                KSPSetPC(m_ksp, m_pc);
+            }
         }
     }
 }

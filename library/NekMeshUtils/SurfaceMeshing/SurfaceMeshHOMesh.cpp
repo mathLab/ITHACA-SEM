@@ -235,8 +235,8 @@ void SurfaceMesh::HOSurf()
     {
         if(m_mesh->m_verbose)
         {
-            //LibUtilities::PrintProgressbar(i,m_mesh->m_element[2].size(),
-            //                               "\t\tSurface elements");
+            LibUtilities::PrintProgressbar(i,m_mesh->m_element[2].size(),
+                                           "\t\tSurface elements");
         }
 
         if(m_mesh->m_element[2][i]->GetConf().m_e == LibUtilities::eQuadrilateral)
@@ -470,7 +470,17 @@ void SurfaceMesh::HOSurf()
             uvi[ctr++] = uv;
         }
 
-        CADSurfSharedPtr s = m_cad->GetSurf(surf);
+        /*CADSurfSharedPtr s = m_cad->GetSurf(surf);
+
+        DNekMat H, J;
+
+        FaceFaceJac(uvi, z, near, s, J, H);
+
+        if(s->GetId() == 9)
+        {
+            cout << endl << J << endl << endl;
+        }
+
         vector<NodeSharedPtr> honodes;
         for(int j = TotNumPoints - numInteriorPoints; j < TotNumPoints; j++)
         {
@@ -482,11 +492,11 @@ void SurfaceMesh::HOSurf()
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;
+        f->m_curveType = LibUtilities::eNodalTriFekete;*/
     }
 
-    //if(m_mesh->m_verbose)
-        //cout << endl;
+    if(m_mesh->m_verbose)
+        cout << endl;
 }
 
 }

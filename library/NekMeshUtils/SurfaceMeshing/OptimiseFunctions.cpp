@@ -53,6 +53,22 @@ Array<OneD, NekDouble> Take(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
     ret[2] = a[2] - b[2];
     return ret;
 }
+Array<OneD, NekDouble> Times(NekDouble t, Array<OneD, NekDouble> a)
+{
+    Array<OneD, NekDouble> ret(3);
+    ret[0] = a[0] *t;
+    ret[1] = a[1] *t;
+    ret[2] = a[2] *t;
+    return ret;
+}
+Array<OneD, NekDouble> Add(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
+{
+    Array<OneD, NekDouble> ret(3);
+    ret[0] = a[0] + b[0];
+    ret[1] = a[1] + b[1];
+    ret[2] = a[2] + b[2];
+    return ret;
+}
 
 void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
                                   CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes)
@@ -181,6 +197,92 @@ void SurfaceMesh::FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
     Jac = J;
     Hes = H;
 
+}
+
+void SurfaceMesh::FaceFaceJac(Array<OneD, Array<OneD, NekDouble> > uv,
+                              map<int, vector<NekDouble> > z, map<int, vector<int> > n, CADSurfSharedPtr s,
+                              DNekMat &Jac, DNekMat &Hes)
+{
+    int np = uv.num_elements();
+    int nq = 0.5*(sqrt(1+8*np)-1);
+    int numint = (nq-3)*(nq-2)/2;
+
+    DNekMat J(numint*2,1,0.0);
+    DNekMat H(numint*2,numint*2,0.0);
+
+    vector<Array<OneD, NekDouble> > r;
+    vector<Array<OneD, NekDouble> > dru, drv;
+    vector<Array<OneD, NekDouble> > d2ru, d2ruv, d2rv;
+    for(int i = 0; i < uv.num_elements(); i++)
+    {
+        Array<OneD, NekDouble> ri(3), drui(3), drvi(3), d2rui(3), d2rvi(3), d2ruvi(3);
+        Array<OneD, NekDouble> d2 = s->D2(uv[i]);
+        for(int j = 0; j < 3; j++)
+        {
+            ri[j] = d2[j];
+            drui[j] = d2[j+3];
+            drvi[j] = d2[j+6];
+            d2rui[j] = d2[j+9];
+            d2rvi[j] = d2[j+12];
+            d2ruvi[j] = d2[j+15];
+        }
+        r.push_back(ri);
+        dru.push_back(drui);
+        drv.push_back(drvi);
+        d2ru.push_back(d2rui);
+        d2rv.push_back(d2rvi);
+        d2ruv.push_back(d2ruvi);
+    }
+
+    // index the derivatives for each point such that 0 is du1 1 is dv1 2 is du2 and so on.
+    map<int, vector<Array<OneD, NekDouble> > > deriv;
+    for(int i = 0; i < np - numint; i++)
+    {
+        vector<Array<OneD, NekDouble> > der;
+        for(int j = 0; j < numint; j++)
+        {
+            Array<OneD, NekDouble> u(3,0.0), v(3,0.0);
+            der.push_back(u);
+            der.push_back(v);
+        }
+        deriv[i] = der;
+    }
+    for(int i = 0; i < numint; i++)
+    {
+        vector<Array<OneD, NekDouble> > der;
+        for(int j = 0; j < numint; j++)
+        {
+            Array<OneD, NekDouble> u(3,0.0), v(3,0.0);
+            if(i == j)
+            {
+                u = dru[i+numint];
+                v = drv[i+numint];
+            }
+            der.push_back(u);
+            der.push_back(v);
+        }
+        deriv[i+np-numint] = der;
+    }
+
+    for(int i = 0; i < numint; i++)
+    {
+        for(int j = 0; j < numint; j++)
+        {
+            for(int k = 0; k < 3; k++)
+            {
+                Array<OneD, NekDouble> drui = Times(0.5, Add(deriv[n[i+np-numint][k*2+0]][2*j+0], deriv[n[i+np-numint][k*2+1]][2*j+0]) );
+                Array<OneD, NekDouble> drvi = Times(0.5, Add(deriv[n[i+np-numint][k*2+0]][2*j+1], deriv[n[i+np-numint][k*2+1]][2*j+1]) );
+                Array<OneD, NekDouble> ri  = Times(0.5, Add(r[n[i+np-numint][k*2+0]], r[n[i+np-numint][k*2+1]]) );
+                J(2*i+0,0) = z[i+np-numint][k*2+0]*Dot(Take(deriv[i+np-numint][2*j+0],drui),Take(r[i+np-numint], ri));
+                J(2*i+1,0) = z[i+np-numint][k*2+0]*Dot(Take(deriv[i+np-numint][2*j+1],drvi),Take(r[i+np-numint], ri));
+            }
+        }
+    }
+
+
+
+    Jac = J;
+    Hes = H;
 }
 
 }

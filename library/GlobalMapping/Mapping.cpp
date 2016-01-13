@@ -1203,194 +1203,66 @@ void Mapping::v_UpdateBCs( const NekDouble time)
             BndConds   = m_fields[i]->GetBndConditions();
             BndExp     = m_fields[i]->GetBndCondExpansions();
 
-            switch (m_fields[0]->GetExpType())
+            // Loop boundary conditions again to get correct
+            //    values for cnt
+            int cnt = 0;
+            for(int m = 0 ; m < nbnds; ++m)
             {
-                case MultiRegions::e2D:
-                case MultiRegions::e3D:
+                int exp_size = BndExp[m]->GetExpSize();
+                if (m==n && isDirichlet[i])
                 {
-                    // Loop boundary conditions again to get correct
-                    //    values for cnt
-                    int cnt = 0;
-                    for(int m = 0 ; m < nbnds; ++m)
+                    for (int j = 0; j < exp_size; ++j, cnt++)
                     {
-                        int exp_size = BndExp[m]->GetExpSize();
-                        if (m==n && isDirichlet[i])
-                        {
-                            for (int j = 0; j < exp_size; ++j, cnt++)
-                            {
-                                m_fields[i]->GetBoundaryToElmtMap(BCtoElmtID,
-                                                                  BCtoTraceID);
-                                /// Casting the bnd exp to the specific case
-                                Bc =  boost::dynamic_pointer_cast<
-                                        StdRegions::StdExpansion> 
-                                        (BndExp[n]->GetExp(j));
-                                // Get element expansion
-                                elmt = m_fields[i]->GetExp(BCtoElmtID[cnt]);
-                                // Get values on the element
-                                ElmtVal  = values[i] + 
-                                           m_fields[i]->GetPhys_Offset(
-                                                            BCtoElmtID[cnt]);
-                                // Get values on boundary
-                                switch (m_fields[i]->GetExpType())
-                                {
-                                    case MultiRegions::e2D:
-                                    {
-                                        elmt->GetEdgePhysVals(BCtoTraceID[cnt], 
-                                                           Bc, ElmtVal, BndVal);
-                                    }
-                                    break;
-
-                                    case MultiRegions::e3D:
-                                    {
-                                        elmt->GetFacePhysVals(BCtoTraceID[cnt], 
-                                                           Bc, ElmtVal, BndVal);
-                                    }
-                                    break;
-
-                                    default:
-                                        ASSERTL0(0,"Dimension not supported");
-                                    break;
-                                }
-                                // Pointer to value that should be updated
-                                Vals = BndExp[n]->UpdatePhys()
-                                            + BndExp[n]->GetPhys_Offset(j);
-
-                                // Copy result
-                                Vmath::Vcopy(Bc->GetTotPoints(), 
-                                                        BndVal, 1, Vals, 1);
-
-                                // Apply MovingBody correction
-                                if (  (i<nvel) && 
-                                      BndConds[n]->GetUserDefined() == 
-                                      "MovingBody" )
-                                {
-                                    // get coordVel in the element
-                                    coordVelElmt  = coordVel[i] + 
-                                                    m_fields[i]->GetPhys_Offset(
-                                                        BCtoElmtID[cnt]);
-
-                                    // Get values on boundary
-                                    switch (m_fields[i]->GetExpType())
-                                    {
-                                        case MultiRegions::e2D:
-                                        {
-                                            elmt->GetEdgePhysVals(
-                                                BCtoTraceID[cnt], Bc,
-                                                coordVelElmt, coordVelBnd);
-
-                                        }
-                                        break;
-
-                                        case MultiRegions::e3D:
-                                        {
-                                            elmt->GetFacePhysVals(
-                                                BCtoTraceID[cnt], Bc, 
-                                                coordVelElmt, coordVelBnd);
-                                        }
-                                        break;
-
-                                        default:
-                                            ASSERTL0(0,
-                                                    "Dimension not supported");
-                                        break;
-                                    }
-                                    // Apply correction
-                                    Vmath::Vadd(Bc->GetTotPoints(), 
-                                                        coordVelBnd, 1, 
-                                                        Vals, 1, Vals, 1);
-                                }
-                            }
-                        }
-                        else // setting if m!=n
-                        {
-                            cnt += exp_size;
-                        }
-                    }
-                }
-                break;
-
-                case MultiRegions::e3DH1D:
-                {
-                    Array<OneD, unsigned int> planes;
-                    planes = m_fields[0]->GetZIDs();
-                    int num_planes = planes.num_elements();
-                    // Loop boundary conditions again to get correct
-                    //    values for cnt
-                    int cnt = 0;
-                    for(int k = 0; k < num_planes; k++)
-                    {
-                        for(int m = 0 ; m < nbnds; ++m)
-                        {
-                            int exp_size = BndExp[m]->GetExpSize();
-                            int exp_size_per_plane = exp_size/num_planes;
-                            if (m==n && isDirichlet[i])
-                            {
-                                for (int j=0; j<exp_size_per_plane; ++j, cnt++)
-                                {
-                                    int bndElmtOffset = j+k*exp_size_per_plane;
-
-                                    BndConds  = 
-                                            m_fields[i]->GetBndConditions();
-                                    BndExp    = 
-                                            m_fields[i]->GetBndCondExpansions();
-                                    
-                                    m_fields[i]->GetBoundaryToElmtMap(
-                                                    BCtoElmtID,BCtoTraceID);
-                                    /// Cast the bnd expn to the specific case
-                                    Bc =  boost::dynamic_pointer_cast<
-                                            StdRegions::StdExpansion> 
-                                            (BndExp[n]->GetExp(bndElmtOffset));
-                                    // Get element expansion
-                                    elmt = m_fields[i]->GetExp(BCtoElmtID[cnt]);
-                                    // Get velocity on the element
-                                    ElmtVal  = values[i] + 
-                                                m_fields[i]->GetPhys_Offset(
-                                                            BCtoElmtID[cnt]);
-
-                                    // Get values on boundary
-                                    elmt->GetEdgePhysVals(BCtoTraceID[cnt], Bc,
-                                                          ElmtVal, BndVal);
-
-                                    // Pointer to value that should be updated
-                                    Vals = BndExp[n]->UpdatePhys()
-                                         + BndExp[n]->GetPhys_Offset(
-                                                                bndElmtOffset);
-
-                                    // Copy result
-                                    Vmath::Vcopy(Bc->GetTotPoints(), 
-                                                    BndVal, 1, Vals, 1);
-
-                                    // Apply coordinate velocity correction
-                                    if (  (i<nvel) && 
-                                          BndConds[n]->GetUserDefined() ==
-                                          "MovingBody" )
-                                    {
-                                        // Get coordinate vel on the element
-                                        coordVelElmt  = coordVel[i] 
-                                                  + m_fields[i]->GetPhys_Offset(
+                        m_fields[i]->GetBoundaryToElmtMap(BCtoElmtID,
+                                                          BCtoTraceID);
+                        /// Casting the bnd exp to the specific case
+                        Bc =  boost::dynamic_pointer_cast<
+                                StdRegions::StdExpansion> 
+                                (BndExp[n]->GetExp(j));
+                        // Get element expansion
+                        elmt = m_fields[i]->GetExp(BCtoElmtID[cnt]);
+                        // Get values on the element
+                        ElmtVal  = values[i] + 
+                                   m_fields[i]->GetPhys_Offset(
                                                     BCtoElmtID[cnt]);
-                                        // Get values on boundary
-                                        elmt->GetEdgePhysVals(BCtoTraceID[cnt], 
-                                                Bc, coordVelElmt, coordVelBnd);
-                                        // Apply correction
-                                        Vmath::Vadd(Bc->GetTotPoints(), 
+                        // Get values on boundary
+                        elmt->GetTracePhysVals(BCtoTraceID[cnt], 
+                                                   Bc, ElmtVal, BndVal);
+
+                        // Pointer to value that should be updated
+                        Vals = BndExp[n]->UpdatePhys()
+                                    + BndExp[n]->GetPhys_Offset(j);
+
+                        // Copy result
+                        Vmath::Vcopy(Bc->GetTotPoints(), 
+                                                BndVal, 1, Vals, 1);
+
+                        // Apply MovingBody correction
+                        if (  (i<nvel) && 
+                              BndConds[n]->GetUserDefined() == 
+                              "MovingBody" )
+                        {
+                            // get coordVel in the element
+                            coordVelElmt  = coordVel[i] + 
+                                            m_fields[i]->GetPhys_Offset(
+                                                BCtoElmtID[cnt]);
+
+                            // Get values on boundary
+                            elmt->GetTracePhysVals(
+                                        BCtoTraceID[cnt], Bc,
+                                        coordVelElmt, coordVelBnd);
+
+                            // Apply correction
+                            Vmath::Vadd(Bc->GetTotPoints(), 
                                                 coordVelBnd, 1, 
                                                 Vals, 1, Vals, 1);
-                                    }
-                                }
-                            }
-                            else // setting if m!=n
-                            {
-                                cnt += exp_size_per_plane;
-                            }
                         }
                     }
                 }
-                break;
-
-                default:
-                    ASSERTL0(0,"Dimension not supported");
-                break;
+                else // setting if m!=n
+                {
+                    cnt += exp_size;
+                }
             }
         }
     }

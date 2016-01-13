@@ -55,7 +55,7 @@ namespace Nektar
             ePETScMatMultShell
         };
 
-        /// A global linear system.
+        /// A PETSc global linear system.
         class GlobalLinSysPETSc : virtual public GlobalLinSys
         {
         public:
@@ -97,29 +97,19 @@ namespace Nektar
             PreconditionerSharedPtr m_precon;
 
             /**
-             * @brief Internal struct for MatShell call to store current
-             * context for callback.
+             * @brief Internal struct for MatShell and PCShell calls to store
+             * current context for callback.
              *
-             * To use the MatShell representation inside PETSc KSP objects (so
-             * that we can use the local spectral element approach) requires the
-             * use of a callback function, which must be static. This is a
-             * lightweight wrapper allowing us to call a virtual function so
-             * that we can handle the static condensation/full variants of the
-             * global system.
+             * To use the MatShell/PCShell representation inside PETSc KSP and
+             * PC objects (so that we can use the local spectral element
+             * approach) requires the use of a callback function, which must be
+             * static. This is a lightweight wrapper allowing us to call a
+             * virtual function so that we can handle the static
+             * condensation/full variants of the global system.
              *
              * @see GlobalLinSysPETSc::DoMatrixMultiply
              */
-            struct MatShellCtx
-            {
-                /// Number of global degrees of freedom.
-                int nGlobal;
-                /// Number of Dirichlet degrees of freedom.
-                int nDir;
-                /// Pointer to the original calling object.
-                GlobalLinSysPETSc *linSys;
-            };
-
-            struct PCShellCtx
+            struct ShellCtx
             {
                 /// Number of global degrees of freedom.
                 int nGlobal;
@@ -146,6 +136,8 @@ namespace Nektar
 
             static PetscErrorCode DoMatrixMultiply(Mat M, Vec in, Vec out);
             static PetscErrorCode DoPreconditioner(PC pc, Vec in, Vec out);
+            static void DoNekppOperation(
+                Vec &in, Vec &out, ShellCtx *ctx, bool precon);
         };
     }
 }

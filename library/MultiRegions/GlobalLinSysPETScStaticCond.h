@@ -95,6 +95,26 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETScStaticCond();
 
         protected:
+            DNekScalBlkMatSharedPtr                  m_S1Blk;
+
+            virtual void v_InitObject();
+
+            /// Assemble the Schur complement matrix.
+            virtual void v_AssembleSchurComplement(
+                boost::shared_ptr<AssemblyMap> locToGloMap);
+            virtual void v_DoMatrixMultiply(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output);
+            virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
+            virtual DNekScalBlkMatSharedPtr v_PreSolve(
+                int                     scLevel,
+                NekVector<NekDouble>   &F_GlobBnd);
+            virtual void v_BasisTransform(
+                Array<OneD, NekDouble>& pInOut,
+                int                     offset);
+            virtual void v_BasisInvTransform(
+                Array<OneD, NekDouble>& pInOut);
+
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
                 const GlobalLinSysKey                &mkey,
                 const boost::weak_ptr<ExpList>       &pExpList,
@@ -103,14 +123,6 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
                 const boost::shared_ptr<AssemblyMap> &locToGloMap);
-
-            /// Assemble the Schur complement matrix.
-            virtual void v_AssembleSchurComplement(
-                boost::shared_ptr<AssemblyMap> locToGloMap);
-
-            virtual void v_DoMatrixMultiply(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output);
 
         };
     }

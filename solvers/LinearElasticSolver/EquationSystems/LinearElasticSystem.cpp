@@ -43,12 +43,15 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <MultiRegions/GlobalLinSysPETScStaticCond.h>
 #include <MultiRegions/GlobalLinSysXxtStaticCond.h>
 #include <MultiRegions/Preconditioner.h>
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
+
+#ifdef NEKTAR_USE_PETSC
+#include <MultiRegions/GlobalLinSysPETScStaticCond.h>
+#endif
 
 namespace Nektar
 {
@@ -413,6 +416,7 @@ void LinearElasticSystem::v_DoSolve()
                 key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
                 m_assemblyMap, MultiRegions::NullPreconditionerSharedPtr);
     }
+#ifdef NEKTAR_USE_PETSC
     else if (m_assemblyMap->GetGlobalSysSolnType() ==
              MultiRegions::ePETScStaticCond)
     {
@@ -421,6 +425,7 @@ void LinearElasticSystem::v_DoSolve()
                 key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
                 m_assemblyMap);
     }
+#endif
     else if (m_assemblyMap->GetGlobalSysSolnType() ==
              MultiRegions::eXxtStaticCond)
     {

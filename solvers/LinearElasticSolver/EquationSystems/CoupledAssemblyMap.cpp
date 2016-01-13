@@ -45,6 +45,8 @@
 namespace Nektar
 {
 
+using SpatialDomains::BoundaryConditionShPtr;
+
 /**
  * @brief Take an existing assembly map and create a coupled version suitable
  * for use in the linear elasticity solver.
@@ -56,11 +58,12 @@ namespace Nektar
  * [ D E F ] [ v ]   [ f_v ]
  * [ G H I ] [ w ]   [ f_w ]
  */
+
 CoupledAssemblyMap::CoupledAssemblyMap(
     const LibUtilities::SessionReaderSharedPtr        &pSession,
     const SpatialDomains::MeshGraphSharedPtr          &graph,
     const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
-    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &boundaryConditions,
+    const Array<OneD, const BoundaryConditionShPtr>   &boundaryConditions,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields) :
     AssemblyMapCG(pSession)
 {

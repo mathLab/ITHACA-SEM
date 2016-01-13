@@ -43,11 +43,14 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <MultiRegions/GlobalLinSysXxtStaticCond.h>
 #include <MultiRegions/Preconditioner.h>
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
+
+#ifdef NEKTAR_USE_MPI
+#include <MultiRegions/GlobalLinSysXxtStaticCond.h>
+#endif
 
 #ifdef NEKTAR_USE_PETSC
 #include <MultiRegions/GlobalLinSysPETScStaticCond.h>
@@ -426,6 +429,7 @@ void LinearElasticSystem::v_DoSolve()
                 m_assemblyMap);
     }
 #endif
+#ifdef NEKTAR_USE_MPI
     else if (m_assemblyMap->GetGlobalSysSolnType() ==
              MultiRegions::eXxtStaticCond)
     {
@@ -434,6 +438,7 @@ void LinearElasticSystem::v_DoSolve()
                 key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
                 m_assemblyMap);
     }
+#endif
 
     linSys->Initialise(m_assemblyMap);
 
@@ -634,7 +639,6 @@ void LinearElasticSystem::v_DoSolve()
     Array<OneD, NekDouble> inout    (nGlobDofs, 0.0);
     Array<OneD, NekDouble> rhs      (nGlobDofs, 0.0);
 
-    /*
     for (nv = 0; nv < nVel; ++nv)
     {
         // Take the inner product of the forcing function.
@@ -661,7 +665,6 @@ void LinearElasticSystem::v_DoSolve()
             }
         }
     }
-    */
 
     // -- Impose Dirichlet boundary conditions.
 

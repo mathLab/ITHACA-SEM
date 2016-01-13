@@ -152,7 +152,9 @@ namespace Nektar
                 }
                 else
                 {
-                    ASSERTL0(false,"Compressed formats do not match. Expected :" + LibUtilities::CompressData::GetCompressString() + " but got " + boost::lexical_cast<std::string>(IsCompressed));
+                    ASSERTL0(false,"Compressed formats do not match. Expected :"
+                             + LibUtilities::CompressData::GetCompressString()
+                             + " but got " + std::string(IsCompressed));
                 }
             }
             else
@@ -360,7 +362,9 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false,"Compressed formats do not match. Expected :" + LibUtilities::CompressData::GetCompressString() + " but got " + boost::lexical_cast<std::string>(IsCompressed));
+                        ASSERTL0(false,"Compressed formats do not match. Expected :"
+                                 + LibUtilities::CompressData::GetCompressString()
+                                 + " but got " + std::string(IsCompressed));
                     }
                 }
                 else

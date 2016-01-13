@@ -774,10 +774,12 @@ namespace Nektar
                             if(!boost::iequals(attr->Value(),
                                                CompressData::GetCompressString()))
                             {
-                                WARNINGL0(false,"Endianness of file does not match");
+                                WARNINGL0(false,"Compressed formats do not match. Expected: "
+                                          + CompressData::GetCompressString()
+                                          + " but got "+ string(attr->Value()));
                             }
                         }
-                        else if (attrName == "BITSIZE")
+                        else if (attrName =="BITSIZE")
                         {
                             // do nothing
                         }
@@ -982,7 +984,9 @@ namespace Nektar
                     {
                         if(!boost::iequals(CompressStr,CompressData::GetCompressString()))
                         {
-                            WARNINGL0(false,"Endianness of file does not match");
+                            WARNINGL0(false,"Compressed formats do not match. Expected: "
+                                      + CompressData::GetCompressString()
+                                      + " but got "+ string(CompressStr));
                         }
                     }
                                                                               

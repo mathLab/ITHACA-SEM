@@ -294,7 +294,6 @@ namespace Nektar
                 // Initialise equation
                 m_equ[0]->SetTime(startTime + i*period);
                 m_equ[0]->SetBoundaryConditions(startTime + i*period);
-                m_equ[0]->SetInitialConditions(startTime + i*period, false);
                 
                 // Project solution to new expansion 
                 //    (ExtractCoeffsToCoeffs would be simpler, but did not work)

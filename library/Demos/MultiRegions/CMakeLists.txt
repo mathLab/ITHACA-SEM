@@ -96,6 +96,7 @@ ADD_NEKTAR_TEST(Helmholtz2D_CG_varP_Modes)
 
 
 ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex)
+ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_Heterogeneous)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_sc_cont)

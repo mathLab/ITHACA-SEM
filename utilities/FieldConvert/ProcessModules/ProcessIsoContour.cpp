@@ -295,10 +295,10 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
 {
     vector<IsoSharedPtr> returnval;
 
-    int coordim = m_f->m_exp[0]->GetCoordim(0);
+    int coordim = m_f->m_fieldPts->GetDim();
     int nfields = m_f->m_fieldPts->GetNFields() + coordim;
 
-    ASSERTL0(coordim == 3,
+    ASSERTL0(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTetBlock,
              "This methods is currently only set up for 3D fields");
     ASSERTL1(coordim + fieldid < nfields,
              "field id is larger than number contained in FieldPts");

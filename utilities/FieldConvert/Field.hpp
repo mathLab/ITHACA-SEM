@@ -68,6 +68,7 @@ struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
+              m_declareAsNewField(false),
               m_writeBndFld(false),
               m_fldToBnd(false),
               m_addNormals(false),
@@ -88,6 +89,7 @@ struct Field {
 
     bool                                    m_declareExpansionAsContField;
     bool                                    m_declareExpansionAsDisContField;
+    bool                                    m_declareAsNewField;
 
     bool                                    m_useFFT;
 
@@ -392,6 +394,11 @@ struct Field {
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
     {
+        if (m_declareAsNewField)
+        {
+            NewField = true;
+            var = m_session->GetVariables()[0];
+        }
         MultiRegions::ExpListSharedPtr tmp;
         switch (m_graph->GetMeshDimension())
         {
@@ -399,8 +406,8 @@ struct Field {
             {
                 if (NumHomogeneousDir == 1)
                 {
-                    ASSERTL0(m_declareExpansionAsContField ||
-                             m_declareExpansionAsDisContField,
+                    ASSERTL0( !(m_declareExpansionAsContField ||
+                             m_declareExpansionAsDisContField),
                              "ContField2DHomogeneous1D or "
                              "DisContField2DHomogenenous1D has not been "
                              "implemented");

@@ -367,7 +367,7 @@ namespace Nektar
 
         int HexGeom::v_GetDir(const int faceidx, const int facedir) const
         {
-            if (faceidx == 0 || faceidx == 1)
+            if (faceidx == 0 || faceidx == 5)
             {
                 return facedir;
             }

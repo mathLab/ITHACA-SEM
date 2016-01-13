@@ -773,6 +773,8 @@ namespace Nektar
                     {
                         // increase offset for correct FieldData access
                         offset += datalen*nzmodes;
+                        modes_offset += (*m_exp)[0]->GetNumBases() +
+                                        fielddef->m_numHomogeneousDir;
                         continue;
                     }
                     

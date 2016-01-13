@@ -147,9 +147,9 @@ namespace Nektar
 
             // Create local and global numbering systems for vector
             IS isGlobal, isLocal;
-            ISCreateGeneral(PETSC_COMM_SELF, nHomDofs, &m_reorderedMap[0],
-                            PETSC_COPY_VALUES, &isGlobal);
-            ISCreateStride (PETSC_COMM_SELF, nHomDofs, 0, 1, &isLocal);
+            ISCreateGeneral  (PETSC_COMM_SELF, nHomDofs, &m_reorderedMap[0],
+                              PETSC_COPY_VALUES, &isGlobal);
+            ISCreateStride   (PETSC_COMM_SELF, nHomDofs, 0, 1, &isLocal);
 
             // Create local vector for output
             VecCreate        (PETSC_COMM_SELF, &m_locVec);
@@ -264,11 +264,11 @@ namespace Nektar
             // CREATE MATRICES
             if (m_matMult == ePETScMatMultShell)
             {
-                // Create MatShell context object which will store the matrix
+                // Create ShellCtx context object which will store the matrix
                 // size and a pointer to the linear system. We do this so that
-                // we can call a member function to the matrix-vector
-                // multiplication in a subclass.
-                MatShellCtx *ctx = new MatShellCtx();
+                // we can call a member function to the matrix-vector and
+                // preconditioning multiplication in a subclass.
+                ShellCtx *ctx = new ShellCtx();
                 ctx->nGlobal = nGlobal;
                 ctx->nDir    = nDir;
                 ctx->linSys  = this;
@@ -280,18 +280,16 @@ namespace Nektar
                 MatShellSetOperation(m_matrix, MATOP_MULT,
                                      (void(*)(void))DoMatrixMultiply);
 
-                // Create a Nektar++ preconditioner which we'll wrap inside a
-                // PCShell.
-                PCShellCtx *ctx2 = new PCShellCtx();
-                ctx2->nGlobal = nGlobal;
-                ctx2->nDir    = nDir;
-                ctx2->linSys  = this;
-
+                // Create a PCShell to go alongside the MatShell.
                 PCCreate         (PETSC_COMM_WORLD, &m_pc);
+#if PETSC_VERSION_GE(3,5,0)
                 PCSetOperators   (m_pc, m_matrix, m_matrix);
+#else
+                PCSetOperators   (m_pc, m_matrix, m_matrix, SAME_NONZERO_PATTERN);
+#endif
                 PCSetType        (m_pc, PCSHELL);
                 PCShellSetApply  (m_pc, DoPreconditioner);
-                PCShellSetContext(m_pc, ctx2);
+                PCShellSetContext(m_pc, ctx);
             }
             else
             {
@@ -307,7 +305,8 @@ namespace Nektar
         }
 
         /**
-         * @brief Perform matrix multiplication using Nektar++ routines.
+         * @brief Perform either matrix multiplication or preconditioning using
+         * Nektar++ routines.
          *
          * This static function uses Nektar++ routines to calculate the
          * matrix-vector product of @p M with @p in, storing the output in @p
@@ -316,7 +315,63 @@ namespace Nektar
          * @todo There's a lot of scatters and copies that might possibly be
          *       eliminated to make this more efficient.
          *
-         * @param M    Original MatShell matrix, which stores the MatShellCtx
+         * @param in      Input vector.
+         * @param out     Output vector.
+         * @param ctx     ShellCtx object that points to our instance of
+         *                GlobalLinSysPETSc.
+         * @param precon  If true, we apply a preconditioner, if false, we
+         *                perform a matrix multiplication.
+         */
+        void GlobalLinSysPETSc::DoNekppOperation(
+            Vec &in, Vec &out, ShellCtx *ctx, bool precon)
+        {
+            const int          nGlobal  = ctx->nGlobal;
+            const int          nDir     = ctx->nDir;
+            const int          nHomDofs = nGlobal - nDir;
+            GlobalLinSysPETSc *linSys   = ctx->linSys;
+
+            // Scatter from PETSc ordering to our local ordering. It's actually
+            // unclear whether this step might also do some communication in
+            // parallel, which is probably not ideal.
+            VecScatterBegin(linSys->m_ctx, in, linSys->m_locVec,
+                            INSERT_VALUES, SCATTER_FORWARD);
+            VecScatterEnd  (linSys->m_ctx, in, linSys->m_locVec,
+                            INSERT_VALUES, SCATTER_FORWARD);
+
+            // Temporary storage to pass to Nektar++
+            Array<OneD, NekDouble> tmpIn(nHomDofs), tmpOut(nHomDofs);
+
+            // Get values from input vector and copy to tmpIn.
+            PetscScalar *tmpLocIn;
+            VecGetArray    (linSys->m_locVec, &tmpLocIn);
+            Vmath::Vcopy   (nHomDofs, tmpLocIn, 1, &tmpIn[0], 1);
+            VecRestoreArray(linSys->m_locVec, &tmpLocIn);
+
+            // Do matrix multiply in Nektar++, store in tmpOut.
+            if (precon)
+            {
+                linSys->m_precon->DoPreconditioner(tmpIn, tmpOut);
+            }
+            else
+            {
+                linSys->v_DoMatrixMultiply(tmpIn, tmpOut);
+            }
+
+            // Scatter back to PETSc ordering and put in out.
+            VecSetValues(out, nHomDofs, &linSys->m_reorderedMap[0],
+                         &tmpOut[0], INSERT_VALUES);
+            VecAssemblyBegin(out);
+            VecAssemblyEnd  (out);
+        }
+
+        /**
+         * @brief Perform matrix multiplication using Nektar++ routines.
+         *
+         * This static function uses Nektar++ routines to calculate the
+         * matrix-vector product of @p M with @p in, storing the output in @p
+         * out.
+         *
+         * @param M    Original MatShell matrix, which stores the ShellCtx
          *             object.
          * @param in   Input vector.
          * @param out  Output vector.
@@ -324,80 +379,37 @@ namespace Nektar
         PetscErrorCode GlobalLinSysPETSc::DoMatrixMultiply(
             Mat M, Vec in, Vec out)
         {
-            // Grab our MatShell context from M.
+            // Grab our shell context from M.
             void *ptr;
             MatShellGetContext(M, &ptr);
-            MatShellCtx *ctx = (MatShellCtx *)ptr;
+            ShellCtx *ctx = (ShellCtx *)ptr;
 
-            const int          nGlobal  = ctx->nGlobal;
-            const int          nDir     = ctx->nDir;
-            const int          nHomDofs = nGlobal - nDir;
-            GlobalLinSysPETSc *linSys   = ctx->linSys;
-
-            // Scatter from PETSc ordering to our local ordering. It's actually
-            // unclear whether this step might also do some communication in
-            // parallel, which is probably not ideal.
-            VecScatterBegin(linSys->m_ctx, in, linSys->m_locVec,
-                            INSERT_VALUES, SCATTER_FORWARD);
-            VecScatterEnd  (linSys->m_ctx, in, linSys->m_locVec,
-                            INSERT_VALUES, SCATTER_FORWARD);
-
-            // Temporary storage to pass to Nektar++
-            Array<OneD, NekDouble> tmpIn(nHomDofs), tmpOut(nHomDofs);
-
-            // Get values from input vector and copy to tmpIn.
-            PetscScalar *tmpLocIn;
-            VecGetArray    (linSys->m_locVec, &tmpLocIn);
-            Vmath::Vcopy   (nHomDofs, tmpLocIn, 1, &tmpIn[0], 1);
-            VecRestoreArray(linSys->m_locVec, &tmpLocIn);
-
-            // Do matrix multiply in Nektar++, store in tmpOut.
-            linSys->v_DoMatrixMultiply(tmpIn, tmpOut);
-
-            // Scatter back to PETSc ordering and put in out.
-            VecSetValues(out, nHomDofs, &linSys->m_reorderedMap[0],
-                         &tmpOut[0], INSERT_VALUES);
+            DoNekppOperation(in, out, ctx, false);
 
             // Must return 0, otherwise PETSc complains.
             return 0;
         }
 
+        /**
+         * @brief Apply preconditioning using Nektar++ routines.
+         *
+         * This static function uses Nektar++ routines to apply the
+         * preconditioner stored in GlobalLinSysPETSc::m_precon from the context
+         * of @p pc to the vector @p in, storing the output in @p out.
+         *
+         * @param pc   Preconditioner object that stores the ShellCtx.
+         * @param in   Input vector.
+         * @param out  Output vector.
+         */
         PetscErrorCode GlobalLinSysPETSc::DoPreconditioner(
             PC pc, Vec in, Vec out)
         {
-            // Grab our MatShell context from M.
+            // Grab our PCShell context from pc.
             void *ptr;
             PCShellGetContext(pc, &ptr);
-            PCShellCtx *ctx = (PCShellCtx *)ptr;
+            ShellCtx *ctx = (ShellCtx *)ptr;
 
-            const int          nGlobal  = ctx->nGlobal;
-            const int          nDir     = ctx->nDir;
-            const int          nHomDofs = nGlobal - nDir;
-            GlobalLinSysPETSc *linSys   = ctx->linSys;
-
-            // Scatter from PETSc ordering to our local ordering. It's actually
-            // unclear whether this step might also do some communication in
-            // parallel, which is probably not ideal.
-            VecScatterBegin(linSys->m_ctx, in, linSys->m_locVec,
-                            INSERT_VALUES, SCATTER_FORWARD);
-            VecScatterEnd  (linSys->m_ctx, in, linSys->m_locVec,
-                            INSERT_VALUES, SCATTER_FORWARD);
-
-            // Temporary storage to pass to Nektar++
-            Array<OneD, NekDouble> tmpIn(nHomDofs), tmpOut(nHomDofs);
-
-            // Get values from input vector and copy to tmpIn.
-            PetscScalar *tmpLocIn;
-            VecGetArray    (linSys->m_locVec, &tmpLocIn);
-            Vmath::Vcopy   (nHomDofs, tmpLocIn, 1, &tmpIn[0], 1);
-            VecRestoreArray(linSys->m_locVec, &tmpLocIn);
-
-            // Do matrix multiply in Nektar++, store in tmpOut.
-            linSys->m_precon->DoPreconditioner(tmpIn, tmpOut);
-
-            // Scatter back to PETSc ordering and put in out.
-            VecSetValues(out, nHomDofs, &linSys->m_reorderedMap[0],
-                         &tmpOut[0], INSERT_VALUES);
+            DoNekppOperation(in, out, ctx, true);
 
             // Must return 0, otherwise PETSc complains.
             return 0;

@@ -133,6 +133,50 @@ namespace Nektar
 
         }
 
+        void GlobalLinSysPETScStaticCond::v_InitObject()
+        {
+            m_precon = CreatePrecon(m_locToGloMap);
+
+            // Allocate memory for top-level structure
+            SetupTopLevel(m_locToGloMap);
+
+            // Setup Block Matrix systems
+            int n, n_exp = m_expList.lock()->GetNumElmts();
+
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            const Array<OneD,const unsigned int>& nbdry_size
+                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+            m_S1Blk = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
+
+            // Preserve original matrix in m_S1Blk
+            for (n = 0; n < n_exp; ++n)
+            {
+                DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
+                m_S1Blk->SetBlock(n, n, mat);
+            }
+
+            // Build preconditioner
+            m_precon->BuildPreconditioner();
+
+            // Do transform of Schur complement matrix
+            for (n = 0; n < n_exp; ++n)
+            {
+                if (m_linSysKey.GetMatrixType() !=
+                        StdRegions::eHybridDGHelmBndLam)
+                {
+                    DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    m_schurCompl->SetBlock(n, n, t);
+                }
+            }
+
+            // Construct this level
+            Initialise(m_locToGloMap);
+        }
+
         /**
          * Assemble the schur complement matrix from the block matrices stored
          * in #m_blkMatrices and the given local to global mapping information.
@@ -207,6 +251,59 @@ namespace Nektar
             // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
+        }
+
+        DNekScalBlkMatSharedPtr GlobalLinSysPETScStaticCond::
+            v_GetStaticCondBlock(unsigned int n)
+        {
+            DNekScalBlkMatSharedPtr schurComplBlock;
+            int  scLevel           = m_locToGloMap->GetStaticCondLevel();
+            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
+            DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
+            unsigned int nbdry    = localMat->GetRows();
+            unsigned int nblks    = 1;
+            unsigned int esize[1] = {nbdry};
+
+            schurComplBlock = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nblks, nblks, esize, esize);
+            schurComplBlock->SetBlock(0, 0, localMat);
+
+            return schurComplBlock;
+        }
+
+        DNekScalBlkMatSharedPtr GlobalLinSysPETScStaticCond::v_PreSolve(
+            int                     scLevel,
+            NekVector<NekDouble>   &F_GlobBnd)
+        {
+            if (scLevel == 0)
+            {
+                // When matrices are supplied to the constructor at the top
+                // level, the preconditioner is never set up.
+                if (!m_precon)
+                {
+                    m_precon = CreatePrecon(m_locToGloMap);
+                    m_precon->BuildPreconditioner();
+                }
+
+                return m_S1Blk;
+            }
+            else
+            {
+                return m_schurCompl;
+            }
+        }
+
+        void GlobalLinSysPETScStaticCond::v_BasisTransform(
+            Array<OneD, NekDouble>& pInOut,
+            int                     offset)
+        {
+            m_precon->DoTransformToLowEnergy(pInOut, offset);
+        }
+
+        void GlobalLinSysPETScStaticCond::v_BasisInvTransform(
+            Array<OneD, NekDouble>& pInOut)
+        {
+            m_precon->DoTransformFromLowEnergy(pInOut);
         }
 
         /**

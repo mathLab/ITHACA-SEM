@@ -49,14 +49,14 @@ namespace Nektar
  */
 class CoupledAssemblyMap : public MultiRegions::AssemblyMapCG
 {
-public:
-    using SpatialDomains::BoundaryConditionShPtr;
+    typedef SpatialDomains::BoundaryConditionShPtr BoundaryCondShPtr;
 
+public:
     CoupledAssemblyMap(
         const LibUtilities::SessionReaderSharedPtr        &pSession,
         const SpatialDomains::MeshGraphSharedPtr          &graph,
         const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
-        const Array<OneD, const BoundaryConditionShPtr>   &boundaryConditions,
+        const Array<OneD, const BoundaryCondShPtr>        &boundaryConditions,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 };
 

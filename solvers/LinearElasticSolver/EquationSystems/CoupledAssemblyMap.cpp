@@ -63,7 +63,7 @@ CoupledAssemblyMap::CoupledAssemblyMap(
     const LibUtilities::SessionReaderSharedPtr        &pSession,
     const SpatialDomains::MeshGraphSharedPtr          &graph,
     const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
-    const Array<OneD, const BoundaryConditionShPtr>   &boundaryConditions,
+    const Array<OneD, const BoundaryCondShPtr>        &boundaryConditions,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields) :
     AssemblyMapCG(pSession)
 {

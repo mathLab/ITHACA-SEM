@@ -138,6 +138,8 @@ namespace Nektar
             static PetscErrorCode DoPreconditioner(PC pc, Vec in, Vec out);
             static void DoNekppOperation(
                 Vec &in, Vec &out, ShellCtx *ctx, bool precon);
+            static PetscErrorCode DoDestroyMatCtx(Mat M);
+            static PetscErrorCode DoDestroyPCCtx (PC pc);
         };
     }
 }

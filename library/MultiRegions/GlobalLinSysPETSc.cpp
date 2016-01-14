@@ -81,8 +81,28 @@ namespace Nektar
             MatCreate(PETSC_COMM_WORLD, &m_matrix);
         }
 
+        /**
+         * @brief Clean up PETSc objects.
+         *
+         * Note that if SessionReader::Finalize is called before the end of the
+         * program, PETSc may have been finalized already, at which point we
+         * cannot deallocate our objects. If that's the case we do nothing and
+         * let the kernel clear up after us.
+         */
         GlobalLinSysPETSc::~GlobalLinSysPETSc()
         {
+            PetscBool isFinalized;
+            PetscFinalized(&isFinalized);
+
+            if (!isFinalized)
+            {
+                KSPDestroy(&m_ksp);
+                PCDestroy (&m_pc);
+                MatDestroy(&m_matrix);
+                VecDestroy(&m_x);
+                VecDestroy(&m_b);
+                VecDestroy(&m_locVec);
+            }
         }
 
         /**
@@ -279,6 +299,8 @@ namespace Nektar
                                      (void *)ctx, &m_matrix);
                 MatShellSetOperation(m_matrix, MATOP_MULT,
                                      (void(*)(void))DoMatrixMultiply);
+                MatShellSetOperation(m_matrix, MATOP_DESTROY,
+                                     (void(*)(void))DoDestroyMatCtx);
 
                 // Create a PCShell to go alongside the MatShell.
                 PCCreate         (PETSC_COMM_WORLD, &m_pc);
@@ -289,6 +311,7 @@ namespace Nektar
 #endif
                 PCSetType        (m_pc, PCSHELL);
                 PCShellSetApply  (m_pc, DoPreconditioner);
+                PCShellSetDestroy(m_pc, DoDestroyPCCtx);
                 PCShellSetContext(m_pc, ctx);
             }
             else
@@ -412,6 +435,52 @@ namespace Nektar
             DoNekppOperation(in, out, ctx, true);
 
             // Must return 0, otherwise PETSc complains.
+            return 0;
+        }
+
+        /**
+         * @brief Destroy matrix shell context object.
+         *
+         * Note the matrix shell and preconditioner share a common context so
+         * this might have already been deallocated below, in which case we do
+         * nothing.
+         *
+         * @param M  Matrix shell object
+         */
+        PetscErrorCode GlobalLinSysPETSc::DoDestroyMatCtx(Mat M)
+        {
+            void *ptr;
+            MatShellGetContext(M, &ptr);
+            ShellCtx *ctx = (ShellCtx *)ptr;
+
+            if (ctx)
+            {
+                delete ctx;
+            }
+
+            return 0;
+        }
+
+        /**
+         * @brief Destroy preconditioner context object.
+         *
+         * Note the matrix shell and preconditioner share a common context so
+         * this might have already been deallocated above, in which case we do
+         * nothing.
+         *
+         * @param pc  Preconditioner object
+         */
+        PetscErrorCode GlobalLinSysPETSc::DoDestroyPCCtx(PC pc)
+        {
+            void *ptr;
+            PCShellGetContext(pc, &ptr);
+            ShellCtx *ctx = (ShellCtx *)ptr;
+
+            if (ctx)
+            {
+                delete ctx;
+            }
+
             return 0;
         }
 

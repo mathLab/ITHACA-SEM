@@ -46,16 +46,14 @@ example,
 \end{lstlisting}
 
 The list of available solvers in Nektar++ can be found in
-Chapter~\ref{c:solvers}.
+Part~\ref{p:applications}.
 
 \subsubsection{Drivers}
 Drivers are defined under the \inltt{CONDITIONS} section as properties of the 
 \inltt{SOLVERINFO} XML element. The role of a driver is to manage the solver 
 execution from an upper level. 
 
-\paragraph{Standard Driver}
-The default driver is called \inltt{Standard} 
-and executes the following steps:
+The default driver is called \inltt{Standard} and executes the following steps:
 \begin{enumerate}
 \item Prints out on screen a summary of all the conditions defined in the input file.
 \item Sets up the initial and boundary conditions.
@@ -81,13 +79,13 @@ specific applications. As described in Sec.
 \ref{SectionIncNS_SolverInfo} and  \ref{SectionIncNS_SolverInfo_Stab}, 
 the other possibilities are:
 \begin{itemize}
-\item \inltt{SteadyState} - uses the Selective Frequency Damping method 
-(see Sec. \ref{SectionSFD}) to obtain a steady-state solution of the 
-Navier-Stokes equations (compressible or incompressible).
 \item \inltt{ModifiedArnoldi}  - computes of the leading eigenvalues and 
 eigenmodes using modified Arnoldi method.
 \item \inltt{Arpack} - computes of eigenvalues/eigenmodes using Implicitly 
 Restarted Arnoldi Method (ARPACK).
+\item \inltt{SteadyState} - uses the Selective Frequency Damping method 
+(see Sec. \ref{SectionSFD}) to obtain a steady-state solution of the 
+Navier-Stokes equations (compressible or incompressible).
 \end{itemize}
 
 
@@ -113,13 +111,13 @@ section is as follows:
 \begin{lstlisting}[style=XMLStyle]
 <GLOBALSYSSOLNINFO>
   <V VAR="u,v,w">
-    <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
-    <I PROPERTY="Preconditioner"   VALUE="LowEnergyBlock"/>
+    <I PROPERTY="GlobalSysSoln"             VALUE="IterativeStaticCond" />
+    <I PROPERTY="Preconditioner"            VALUE="LowEnergyBlock"/>
     <I PROPERTY="IterativeSolverTolerance"  VALUE="1e-8"/>
   </V>
   <V VAR="p">
-    <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
-    <I PROPERTY="Preconditioner"   VALUE="FullLinearSpaceWithLowEnergyBlock"/>
+    <I PROPERTY="GlobalSysSoln"             VALUE="IterativeStaticCond" />
+    <I PROPERTY="Preconditioner"     VALUE="FullLinearSpaceWithLowEnergyBlock"/>
     <I PROPERTY="IterativeSolverTolerance"  VALUE="1e-6"/>
   </V>
 </GLOBALSYSSOLNINFO>
@@ -293,12 +291,26 @@ the Incompressible Navier-Stokes solver,
 </REGION>
 \end{lstlisting}
 
+Boundary conditions can also be loaded simultaneously from a file and from an 
+analytic expression. For example in the scenario where a spatial boundary 
+condition is read from a file, but needs to be modulated by a time-dependent 
+analytic expression:
+\begin{lstlisting}[style=XMLStyle]
+<REGION REF="1">
+  <D VAR="u" VALUE="USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))"
+             FILE="bcsfromfiles_u_1.bc" />
+</REGION>
+\end{lstlisting}
+
+In the case where both \inltt{VALUE} and \inltt{FILE} are specified, the values
+are multiplied together to give the final value for the boundary condition. 
+
 \subsection{Functions}
 
 Finally, multi-variable functions such as initial conditions and analytic
 solutions may be specified for use in, or comparison with, simulations. These
 may be specified using expressions (\inltt{<E>}) or imported from a file
-(\inltt{<F>}) using the Nektar++ .fld or .pts file formats
+(\inltt{<F>}) using the Nektar++ FLD file format
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="ExactSolution">
@@ -309,10 +321,10 @@ may be specified using expressions (\inltt{<E>}) or imported from a file
 </FUNCTION>
 \end{lstlisting}
 
-An .fld  file is a solution file (in other words an .fld renamed as .rst) where
+A restart file is a solution file (in other words an .fld renamed as .rst) where
 the field data is specified. The expansion order used to generate the .rst file
 must be the same as that for the simulation.
-.pts files contain scattered point data which needs to be interpolated to the field. 
+.pts files contain scattered point data which needs to be interpolated to the field.
 For further information on the file format and the different interpolation schemes, see
 section~\ref{s:utilities:fieldconvert:sub:interppointdatatofld}.
 All filenames must be specified relative to the location of the .xml file.
@@ -326,7 +338,7 @@ where the step time is used as variable. For example, the function
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="Baseflow">
-	<F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8E.fld"/>
+       <F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8E.fld"/>
 </FUNCTION>
 \end{lstlisting}
 
@@ -334,6 +346,7 @@ For .pts files, the time consuming computation of interpolation weights in only
 performed for the first timestep. The weights are stored and reused in all subsequent steps, 
 which is why all consecutive .pts files must use the same ordering, number and location of
 data points.
+
 Other examples of this input feature can be the insertion of a forcing term,
 
 \begin{lstlisting}[style=XMLStyle]
@@ -424,12 +437,12 @@ homogeneouns dimension; here an example
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme"/>
-  <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-  <I PROPERTY="AdvectionForm" VALUE="Convective"/>
-  <I PROPERTY="Projection" VALUE="Galerkin"/>
+  <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme"/>
+  <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"/>
+  <I PROPERTY="AdvectionForm"         VALUE="Convective"/>
+  <I PROPERTY="Projection"            VALUE="Galerkin"/>
   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-  <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
+  <I PROPERTY="HOMOGENEOUS"           VALUE="1D"/>
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -457,11 +470,11 @@ for two harmonic directions (in Y and Z direction). For Example,
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
-  <I PROPERTY="Projection" VALUE="Continuous"/>
-  <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
-  <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
-  <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
+  <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
+  <I PROPERTY="Projection"            VALUE="Continuous"/>
+  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"/>
+  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"/>
+  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"/>
   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
 </SOLVERINFO>
 <PARAMETERS>
@@ -488,13 +501,13 @@ below:
 
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
-  <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
-  <I PROPERTY="Projection" VALUE="Continuous"/>
-  <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
-  <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
-  <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
+  <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
+  <I PROPERTY="Projection"            VALUE="Continuous"/>
+  <I PROPERTY="HOMOGENEOUS"           VALUE="2D"/>
+  <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"/>
+  <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"/>
   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-  <I PROPERTY="USEFFT" VALUE="FFTW"/>
+  <I PROPERTY="USEFFT"                VALUE="FFTW"/>
 </SOLVERINFO>
 \end{lstlisting}
 

@@ -147,7 +147,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            NekDouble resid = 0.0;
+            NekDouble ptdist = 1e6;
             int i;
 
             v_FillGeom();
@@ -190,6 +190,14 @@ namespace Nektar
                 Lcoords[0] =  2*xi0/len0-1.0;
                 Lcoords[1] =  2*xi1/len1-1.0;
                 Lcoords[2] =  2*xi2/len2-1.0;
+
+                // Set ptdist to distance to nearest vertex 
+                // Point inside tetrahedron
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                for(int i = 0; i < 8; ++i)
+                {
+                    ptdist = min(ptdist,r.dist(*m_verts[i]));
+                }
             }
             else
             {
@@ -216,6 +224,9 @@ namespace Nektar
                           
                 int min_i = Vmath::Imin(npts,tmp1,1);
                 
+                // distance from coordinate to nearest point for return value. 
+                ptdist = sqrt(tmp1[min_i]);
+
                 // Get Local coordinates
                 int qa = za.num_elements(), qb = zb.num_elements();
                 Lcoords[2] = zc[min_i/(qa*qb)];
@@ -224,10 +235,11 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // Perform newton iteration to find local coordinates 
+                NekDouble resid = 0.0;
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,
                                            resid);
             }
-            return resid;
+            return ptdist;
         }
 
         /**
@@ -302,6 +314,24 @@ namespace Nektar
             {
                 return true;
             }
+
+            // If out of range clamp locCoord to be within [-1,1]^3
+            // since any larger value will be very oscillatory if
+            // called by 'returnNearestElmt' option in
+            // ExpList::GetExpIndex
+            for(int i = 0; i < 3; ++i)
+            {
+                if(locCoord[i] <-(1+tol))
+                {
+                    locCoord[i] = -(1+tol);
+                }
+
+                if(locCoord[i] > (1+tol))
+                {
+                    locCoord[i] = 1+tol;
+                }
+            }
+
             return false;
         }
 
@@ -337,7 +367,7 @@ namespace Nektar
 
         int HexGeom::v_GetDir(const int faceidx, const int facedir) const
         {
-            if (faceidx == 0 || faceidx == 1)
+            if (faceidx == 0 || faceidx == 5)
             {
                 return facedir;
             }

@@ -1,4 +1,4 @@
-\chapter{ADRSolver}
+\chapter{Advection-Diffusion-Reaction Solver}
 
 %3.4/UserGuide/Tutorial/ADRSolver
 %3.4/UserGuide/Examples/ADRSolver/1DAdvection
@@ -78,10 +78,10 @@ The solver info are listed below:
 \textbf{EqType} & \textbf{Explicit} & \textbf{Diagonally Implicit} &
     \textbf{ IMEX} & \textbf{Implicit}   \\
 \midrule
-\inltt{UnstedayAdvection} &  \checkmark 	 &	 & 	&\\
-\inltt{UnstedayDifusion} &  \checkmark 	 & \checkmark 	 & 	&\\
-\inltt{UnstedayAdvectionDiffusion} &  	 &   	& \checkmark	&\\
-\inltt{UnstedayInviscidBurger} &  \checkmark 	 &	 & 	&\\
+\inltt{UnsteadyAdvection} &  \checkmark 	 &	 & 	&\\
+\inltt{UnsteadyDiffusion} &  \checkmark 	 & \checkmark 	 & 	&\\
+\inltt{UnsteadyAdvectionDiffusion} &  	 &   	& \checkmark	&\\
+\inltt{UnsteadyInviscidBurger} &  \checkmark 	 &	 & 	&\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -95,7 +95,7 @@ The solver info are listed below:
 \begin{itemize}
 	\item \inltt{Explicit} Requires the use of an explicit time integration
 	scheme.
-	\item \inltt{Implcit} Requires the use of a diagonally implicit, IMEX or
+	\item \inltt{Implicit} Requires the use of a diagonally implicit, IMEX or
 	Implicit scheme.
 \end{itemize}
 \item \textbf{AdvectionAdvancement}: This specifies how to treat the advection term. This will be restricted by the choice of time integration scheme:
@@ -242,8 +242,8 @@ ADRSolver Advection1D.xml
 
 To visualise the output, we can convert it into either TecPlot or VTK formats
 \begin{lstlisting}[style=BashInputStyle]
-FldToTecplot Advection1D.xml Advection1D.fld
-FldToVtk Advection1D.xml Advection1D.fld
+FieldConvert Advection1D.xml Advection1D.fld Advection1D.dat
+FieldConvert Advection1D.xml Advection1D.fld Advection1D.vtu
 \end{lstlisting}
 
 
@@ -370,7 +370,7 @@ Fig.~\ref{f:adrsolver:helmholtz2D}
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=6cm]{Figures/Helmholtz2D}
+\includegraphics[width=6cm]{img/Helmholtz2D}
 \caption{Solution of the 2D Helmholtz Problem.}
 \label{f:adrsolver:helmholtz2D}
 \end{center}
@@ -429,7 +429,7 @@ The geometry under consideration is a pipe of radius, $R = 0.5$ and length $l =
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[width=6cm]{Figures/pipe}
+\includegraphics[width=6cm]{img/pipe}
 \caption{Pipe.}
 \end{center}
 \end{figure}
@@ -544,7 +544,7 @@ streamwise direction, as shown in Fig.~\ref{f:adrsolver:masstransport}.
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[width=7cm]{Figures/graetz-nusselt}
+\includegraphics[width=7cm]{img/graetz-nusselt}
 \caption{Concentration gradient at the surface of the pipe.}
 \label{f:adrsolver:masstransport}
 \end{center}

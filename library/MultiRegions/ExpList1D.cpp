@@ -1176,7 +1176,7 @@ namespace Nektar
          *
          * @param   outfile     Output stream to write data to.
          */
-        void ExpList1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
+        void ExpList1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int)
         {
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -1184,9 +1184,9 @@ namespace Nektar
             int ntotminus = (nquad0-1);
 
             Array<OneD,NekDouble> coords[3];
-            coords[0] = Array<OneD,NekDouble>(ntot);
-            coords[1] = Array<OneD,NekDouble>(ntot);
-            coords[2] = Array<OneD,NekDouble>(ntot);
+            coords[0] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[1] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[2] = Array<OneD,NekDouble>(ntot, 0.0);
             (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
 
             outfile << "    <Piece NumberOfPoints=\""

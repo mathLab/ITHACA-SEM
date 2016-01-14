@@ -168,8 +168,8 @@ namespace Nektar
             m_ncoeffs = ncoeffs_per_plane*nzplanes;
             m_npoints = npoints_per_plane*nzplanes;
 
-            m_coeffs = Array<OneD, NekDouble> (m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble> (m_npoints);
+            m_coeffs = Array<OneD, NekDouble> (m_ncoeffs, 0.0);
+            m_phys   = Array<OneD, NekDouble> (m_npoints, 0.0);
 
             int nel = m_planes[0]->GetExpSize();
             m_coeff_offset   = Array<OneD,int>(nel*nzplanes);
@@ -362,7 +362,8 @@ namespace Nektar
 
         void ExpList2DHomogeneous1D::v_WriteVtkPieceHeader(
             std::ostream &outfile,
-            int expansion)
+            int expansion,
+            int istrip)
         {
             int i, j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

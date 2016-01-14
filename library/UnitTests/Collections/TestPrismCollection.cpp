@@ -258,10 +258,11 @@ namespace Nektar
             Collections::OperatorImpMap          impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection              c(CollExp, impTypes);
 
-            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
-            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
-            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),   1.0);
+            Array<OneD, NekDouble> phys1 (nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> phys2 (nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> tmp;
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -321,9 +322,10 @@ namespace Nektar
             Collections::OperatorImpMap          impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection              c(CollExp, impTypes);
 
-            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
-            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
-            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> tmp;
             
             for(int i = 0; i < nelmts; ++i)
             {
@@ -385,10 +387,11 @@ namespace Nektar
             Collections::OperatorImpMap          impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection              c(CollExp, impTypes);
 
-            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
-            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
-            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> tmp;
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -449,10 +452,11 @@ namespace Nektar
             Collections::OperatorImpMap          impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection              c(CollExp, impTypes);
 
-            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
-            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
-            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
-            
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> tmp;
+
             for(int i = 0; i < nelmts; ++i)
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
@@ -511,9 +515,10 @@ namespace Nektar
             Collections::OperatorImpMap          impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection              c(CollExp, impTypes);
 
-            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
-            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
-            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> tmp;
             
             for(int i = 0; i < nelmts; ++i)
             {
@@ -577,10 +582,10 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
-            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
-            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
-
+            Array<OneD, NekDouble> phys(nelmts*nq, 0.0);
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             
             Exp->GetCoords(xc, yc, zc);
@@ -589,9 +594,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
@@ -657,10 +662,10 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
-            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
-            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
-
+            Array<OneD, NekDouble> phys(nelmts*nq, 0.0);
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             
             Exp->GetCoords(xc, yc, zc);
@@ -669,9 +674,10 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
@@ -737,10 +743,10 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
-            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
-            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
-
+            Array<OneD, NekDouble> phys(nelmts*nq, 0.0);
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             
             Exp->GetCoords(xc, yc, zc);
@@ -749,8 +755,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
@@ -817,10 +824,10 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
-            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
-            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
-
+            Array<OneD, NekDouble> phys(nelmts*nq, 0.0);
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             
             Exp->GetCoords(xc, yc, zc);
@@ -829,8 +836,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
@@ -897,10 +905,10 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
-            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
-            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
-
+            Array<OneD, NekDouble> phys(nelmts*nq, 0.0);
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             
             Exp->GetCoords(xc, yc, zc);
@@ -909,8 +917,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
@@ -977,10 +986,10 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
-            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
-            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
-            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
-
+            Array<OneD, NekDouble> phys(nelmts*nq, 0.0);
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs(), 0.0);
+            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             
             Exp->GetCoords(xc, yc, zc);
@@ -989,8 +998,9 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
+            Exp->IProductWRTBase(phys, coeffs1);
 
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
@@ -1068,7 +1078,11 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1,
+                           tmp1 = diff1+(nelmts)*nq, 
+                           tmp2 = diff1+(2*nelmts)*nq);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->PhysDeriv(phys, tmp = diff1+i*nq,
@@ -1147,7 +1161,11 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1,
+                           tmp1 = diff1+(nelmts)*nq, 
+                           tmp2 = diff1+(2*nelmts)*nq);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->PhysDeriv(phys, tmp = diff1+i*nq,
@@ -1228,7 +1246,11 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1,
+                           tmp1 = diff1+(nelmts)*nq, 
+                           tmp2 = diff1+(2*nelmts)*nq);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->PhysDeriv(phys, tmp = diff1+i*nq,
@@ -1307,7 +1329,11 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, diff1,
+                           tmp1 = diff1+(nelmts)*nq, 
+                           tmp2 = diff1+(2*nelmts)*nq);
+
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->PhysDeriv(phys, tmp = diff1+i*nq,
@@ -1391,7 +1417,10 @@ namespace Nektar
             {
                 phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
             }
-            for(int i = 0; i < nelmts; ++i)
+            Exp->PhysDeriv(phys, tmp = diff1,
+                           tmp1 = diff1+(nelmts)*nq, 
+                           tmp2 = diff1+(2*nelmts)*nq);
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
                 Exp->PhysDeriv(phys, tmp = diff1+i*nq,
@@ -1473,14 +1502,16 @@ namespace Nektar
                 phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
                 phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
             }
-
-            // Standard routines
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
                 Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
-                
+            }
+
+            // Standard routines
+            for(int i = 0; i < nelmts; ++i)
+            {
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffs1 + i*nm);
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
@@ -1564,14 +1595,16 @@ namespace Nektar
                 phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
                 phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
             }
-
-            // Standard routines
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
                 Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
-                
+            }
+
+            // Standard routines
+            for(int i = 0; i < nelmts; ++i)
+            {
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffs1 + i*nm);
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
@@ -1656,14 +1689,16 @@ namespace Nektar
                 phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
                 phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
             }
-
-            // Standard routines
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
                 Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
-                
+            }
+
+            // Standard routines
+            for(int i = 0; i < nelmts; ++i)
+            {
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffs1 + i*nm);
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
@@ -1749,14 +1784,16 @@ namespace Nektar
                 phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
                 phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
             }
-
-            // Standard routines
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
                 Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
-                
+            }
+
+            // Standard routines
+            for(int i = 0; i < nelmts; ++i)
+            {
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffs1 + i*nm);
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
@@ -1842,14 +1879,16 @@ namespace Nektar
                 phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
                 phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
             }
-
-            // Standard routines
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
                 Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
-                
+            }
+
+            // Standard routines
+            for(int i = 0; i < nelmts; ++i)
+            {
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffs1 + i*nm);
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
@@ -1934,14 +1973,16 @@ namespace Nektar
                 phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
                 phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
             }
-
-            // Standard routines
-            for(int i = 0; i < nelmts; ++i)
+            for(int i = 1; i < nelmts; ++i)
             {
                 Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
                 Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
-                
+            }
+
+            // Standard routines
+            for(int i = 0; i < nelmts; ++i)
+            {
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffs1 + i*nm);
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs2 + i*nm);
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);

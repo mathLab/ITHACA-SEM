@@ -690,7 +690,9 @@ namespace Nektar
                 // Multiply by svv tensor
                 if(mkey.ConstFactorExists(eFactorSVVCutoffRatio))
                 {
+                    Vmath::Vcopy(nq, dtmp, 1, tmp, 1);
                     SVVLaplacianFilter(dtmp,mkey);
+                    Vmath::Vadd(nq, tmp, 1, dtmp, 1, dtmp, 1);
                 }
                 v_IProductWRTDerivBase(k1, dtmp, outarray);
             }

@@ -40,50 +40,58 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterHistoryPoints : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterHistoryPoints>;
+namespace SolverUtils
+{
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterHistoryPoints>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
+class FilterHistoryPoints : public Filter
+{
+    public:
+        friend class MemoryManager<FilterHistoryPoints>;
 
-            ///Name of the class
-            static std::string className;
+        /// Creates an instance of this class
+        static FilterSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::map<std::string, std::string> &pParams) {
+            FilterSharedPtr p = MemoryManager<FilterHistoryPoints>
+                ::AllocateSharedPtr(pSession, pParams);
+            return p;
+        }
 
-            SOLVER_UTILS_EXPORT FilterHistoryPoints(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT virtual ~FilterHistoryPoints();
+        ///Name of the class
+        static std::string className;
 
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
+        SOLVER_UTILS_EXPORT FilterHistoryPoints(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const ParamMap                             &pParams);
+        SOLVER_UTILS_EXPORT ~FilterHistoryPoints();
 
-        private:
-            SpatialDomains::PointGeomVector         m_historyPoints;
-            unsigned int                            m_index;
-            unsigned int                            m_outputFrequency;
-            unsigned int                            m_outputPlane; // plane to take history point from if using a homogeneous1D expansion
-            bool                                    m_isHomogeneous1D;
-            std::string                             m_outputFile;
-            std::ofstream                           m_outputStream;
-            std::stringstream                       m_historyPointStream;
-            std::list<std::pair<SpatialDomains::PointGeomSharedPtr,
-                                Array<OneD, NekDouble> > > m_historyList;
-            std::map<int, int >                     m_historyLocalPointMap;
-        };
-    }
+    protected:
+        SOLVER_UTILS_EXPORT virtual void v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+        SOLVER_UTILS_EXPORT virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+        SOLVER_UTILS_EXPORT virtual void v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+        SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
+
+        SpatialDomains::PointGeomVector         m_historyPoints;
+        unsigned int                            m_index;
+        unsigned int                            m_outputFrequency;
+         /// plane to take history point from if using a homogeneous1D expansion
+        unsigned int                            m_outputPlane;
+        bool                                    m_isHomogeneous1D;
+        std::string                             m_outputFile;
+        std::ofstream                           m_outputStream;
+        std::stringstream                       m_historyPointStream;
+        std::list<std::pair<SpatialDomains::PointGeomSharedPtr,
+                            Array<OneD, NekDouble> > > m_historyList;
+        std::map<int, int >                     m_historyLocalPointMap;
+};
+
+}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

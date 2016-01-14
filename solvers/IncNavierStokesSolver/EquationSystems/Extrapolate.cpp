@@ -49,7 +49,8 @@ namespace Nektar
     {
         typedef Loki::SingletonHolder<ExtrapolateFactory,
                                       Loki::CreateUsingNew,
-                                      Loki::NoDestroy > Type;
+                                      Loki::NoDestroy,
+                                      Loki::SingleThreaded > Type;
         return Type::Instance();
     }
 
@@ -330,7 +331,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-        
         static bool init = true;
         static bool noHOBC = false;
 
@@ -357,8 +357,8 @@ namespace Nektar
                 return;
             }
   
-            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_bnd_dim);
-            for(int i = 0; i < m_bnd_dim; ++i)
+            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+            for(int i = 0; i < m_curl_dim; ++i)
             {
                 m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
                 for(int j = 0; j < m_curl_dim; ++j)
@@ -370,9 +370,9 @@ namespace Nektar
 
             if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
             {
-                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_bnd_dim);
+                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
 
-                for(int i = 0; i < m_bnd_dim; ++i)
+                for(int i = 0; i < m_curl_dim; ++i)
                 {
                     m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
                     for(int j = 0; j < m_curl_dim; ++j)
@@ -386,8 +386,8 @@ namespace Nektar
                 m_nonlinearterm_coeffs = Array<OneD, NekDouble> (totbndpts,0.0);
 
                 m_PBndCoeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_bnd_dim);
-                for(int i = 0; i < m_bnd_dim; ++i)
+                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
+                for(int i = 0; i < m_curl_dim; ++i)
                 {
                     m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
                 }
@@ -420,14 +420,14 @@ namespace Nektar
             UBndExp[i]   = m_fields[m_velocity[i]]->GetBndCondExpansions();
         }
 
-        Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
-        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_bnd_dim);
-        Array<OneD, Array<OneD, NekDouble> > nGradu(m_bnd_dim);
+        Array<OneD, Array<OneD, NekDouble> > BndValues(m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > nGradu   (m_curl_dim);
         Array<OneD, NekDouble > gradtmp (m_pressureBCsElmtMaxPts),
                                 fgradtmp(m_pressureBCsElmtMaxPts);
-
-        nGradu[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
-        for(int i = 0; i < m_bnd_dim; ++i)
+        
+        nGradu[0] = Array<OneD, NekDouble>(m_curl_dim*m_pressureBCsMaxPts);
+        for(int i = 0; i < m_curl_dim; ++i)
         {
             BndElmt[i]   = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,
                                                    0.0);
@@ -440,7 +440,7 @@ namespace Nektar
                 RollOver(m_PhyoutfVel[i]);
             }
         }
-
+            
         int nbc,cnt,cnt_start;
         int veloffset = 0;
         int  nint    = min(m_pressureCalls,m_intSteps);
@@ -473,7 +473,6 @@ namespace Nektar
         m_session->LoadParameter("Delta_HighOrderBC",delta,1/20.0);
 
         cnt = 0;
-        int count = 0;
         for(int n = 0; n < m_PBndConds.num_elements(); ++n)
         {
             cnt_start = cnt;
@@ -484,17 +483,9 @@ namespace Nektar
 
                 if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
                 {
-                    int cnt_exp   = 0; int cnt_plane = 0;
                     int veloffset = 0;
-                    for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
+                    for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt++)
                     {
-                        // count the expansion order in each plane for e3DH1D case
-                        if(cnt_exp == m_expsize_per_plane[n])
-                        {
-                            cnt_exp = 0; cnt_plane++;
-                        }
-                        int cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
-
                         // find element and edge of this expansion.
                         Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion>
                             (m_PBndExp[n]->GetExp(i));
@@ -512,7 +503,7 @@ namespace Nektar
                         // previously have obtained value from m_integrationSoln
                         Array<OneD, NekDouble> veltmp;
 
-                        for(int j = 0; j < m_bnd_dim; ++j)
+                        for(int j = 0; j < m_curl_dim; ++j)
                         {
                             Vmath::Vcopy(nq, &fields[m_velocity[j]][offset], 1,
                                          &BndElmt[j][0],                 1);
@@ -525,23 +516,17 @@ namespace Nektar
                     // for velocity on the outflow boundary in e3DH1D,
                     // we need to make a backward fourier transformation
                     // to get the physical coeffs at the outflow BCs.
-                    for(int j = 0; j < m_bnd_dim; ++j)
+                    for(int j = 0; j < m_curl_dim; ++j)
                     {
                         m_PBndExp[n]->HomogeneousBwdTrans(
                                 m_outflowVel[j][0],
                                 m_PhyoutfVel[j][0]);
                     }
 
-                    cnt_plane = 0; cnt_exp = 0;
+                    cnt = cnt_start;
                     veloffset = 0;
-                    for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt_exp++)
+                    for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt++)
                     {
-                        // count the expansion order for each plane for e3DH1D
-                        if(cnt_exp == m_expsize_per_plane[n])
-                        {
-                            cnt_exp = 0; cnt_plane++;
-                        }
-                        cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
 
                         int elmtid = m_pressureBCtoElmtID[cnt];
                         elmt       = m_fields[0]->GetExp(elmtid);
@@ -555,7 +540,7 @@ namespace Nektar
                         // extrapolate velocity
                         if(nint <= 1)
                         {
-                            for(int j = 0; j < m_bnd_dim; ++j)
+                            for(int j = 0; j < m_curl_dim; ++j)
                             {
                                 Vmath::Vcopy(nbc,
                                         veltmp = m_PhyoutfVel[j][0] +veloffset, 1,
@@ -564,7 +549,7 @@ namespace Nektar
                         }
                         else // only set up for 2nd order extrapolation
                         {
-                            for(int j = 0; j < m_bnd_dim; ++j)
+                            for(int j = 0; j < m_curl_dim; ++j)
                             {
                                 Vmath::Smul(nbc, 2.0,
                                         veltmp = m_PhyoutfVel[j][0] + veloffset, 1,
@@ -577,14 +562,17 @@ namespace Nektar
                         }
 
                         // Set up |u|^2, n.u in physical space
-                        for(int j = 0; j < m_bnd_dim; ++j)
+                        for(int j = 0; j < m_curl_dim; ++j)
                         {
                             Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
                                               utot,         1, utot,         1);
+                        }
+                        for(int j = 0; j < m_bnd_dim; ++j)
+                        {
                             Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
                                               normDotu,     1, normDotu,     1);
                         }
-
+                        
                         int Offset = m_PBndExp[n]->GetPhys_Offset(i);
 
                         for(int k = 0; k < nbc; ++k)
@@ -607,33 +595,22 @@ namespace Nektar
                     // for e3DH1D, we need to make a forward fourier transformation
                     // for Dirichlet pressure boundary condition that is from input file
                     m_PBndExp[n]->HomogeneousFwdTrans(
-                            m_PBndExp[n]->GetPhys(),
+                            m_PBndExp[n]->UpdatePhys(),
                             m_PBndCoeffs);
                     // for e3DH1D, we need to make a forward fourier transformation
                     // for Neumann velocity boundary condition that is from input file
-                    for (int j = 0; j < m_bnd_dim; ++j)
+                    for (int j = 0; j < m_curl_dim; ++j)
                     {
                         UBndExp[j][n]->HomogeneousFwdTrans(
-                            UBndExp[j][n]->GetPhys(),
+                            UBndExp[j][n]->UpdatePhys(),
                             m_UBndCoeffs[j]);
                     }
                 }
 
+                cnt = cnt_start;
                 veloffset = 0;
-                int cnt_exp = 0; int cnt_plane = 0; //only useful in e3DH1D case
                 for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
-                    if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-                    {
-                        // count the expansion order for e3DH1D
-                        if(cnt_exp == m_expsize_per_plane[n])
-                        {
-                            cnt_exp = 0; cnt_plane++;
-                        }
-                        cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
-                        cnt_exp++;
-                    }
-
                     // find element and edge of this expansion. 
                     Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
                         (m_PBndExp[n]->GetExp(i));
@@ -697,8 +674,9 @@ namespace Nektar
                             // store in ptmp (m_UBndCoeffs contains Fourier Coeffs of the
                             // function from the input file )
 
-                            ptmp[k] =  kinvis * ptmp[k] - m_nonlinearterm_coeffs[k + p_offset]
-                                                        - m_PBndCoeffs[k + p_offset];
+                            ptmp[k] =  kinvis * ptmp[k] 
+                                        - m_nonlinearterm_coeffs[k + p_offset]
+                                                  - m_PBndCoeffs[k + p_offset];
                         }
 
                         int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
@@ -709,10 +687,22 @@ namespace Nektar
                             {
                                 ubc[j][k + u_offset] = (1.0 / kinvis)
                                                 * (m_UBndCoeffs[j][k + u_offset]
-                                                            + m_nonlinearterm_coeffs[k + u_offset]
-                                                            * normals[j][k]);
+                                          + m_nonlinearterm_coeffs[k + u_offset]
+                                                                * normals[j][k]);
                             }
                         }
+
+                        // boundary condition for velocity in homogenous direction
+                        for(int k = 0; k < nbc; ++k)
+                        {
+                            ubc[m_bnd_dim][k + u_offset] = (1.0 / kinvis)
+                                                * m_UBndCoeffs[m_bnd_dim][k + u_offset];
+                        }
+
+                        u_offset = UBndExp[m_bnd_dim][n]->GetPhys_Offset(i);
+                        UBCvals  = UBndExp[m_bnd_dim][n]->UpdateCoeffs()
+                                    + UBndExp[m_bnd_dim][n]->GetCoeff_Offset(i);
+                        Bc->IProductWRTBase(ubc[m_bnd_dim] + u_offset, UBCvals);
                     }
                     else
                     {
@@ -808,23 +798,9 @@ namespace Nektar
                     if(boost::iequals(UBndConds[j][n]->GetUserDefined(),"HOutflow"))
                     {
                         cnt = cnt_start;
-
-                        int cnt_exp = 0; int cnt_plane = 0; //only useful in e3DH1D case    
                         for(int i = 0; i < UBndExp[0][n]->GetExpSize();
                                        ++i, cnt++)
                         {
-                            if(m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-                            {
-                            
-                                // count the expansion order for e3DH1D
-                                if(cnt_exp == m_expsize_per_plane[n])
-                                {
-                                    cnt_exp = 0; cnt_plane++;
-                                }
-                                cnt = cnt_plane * m_totexps_per_plane + cnt_exp + count;
-                                cnt_exp++;
-                            }
-
                             Pbc =  StdRegions::StdExpansionSharedPtr
                                             (m_PBndExp[n]->GetExp(i));
                             Bc  =  StdRegions::StdExpansionSharedPtr
@@ -863,10 +839,6 @@ namespace Nektar
             else
             {
                 cnt += m_PBndExp[n]->GetExpSize();
-                if(m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-                {
-                    count  += m_expsize_per_plane[n];
-                }
             }
         }
     }
@@ -1178,7 +1150,7 @@ namespace Nektar
                 m_negWavenumberSq = Array<OneD, NekDouble>(HBCnumber);
         
                 int exp_size, exp_size_per_plane;
-                int j=0;
+                int i, j, k, n;
                 int K;
                 NekDouble sign = -1.0;
                 int cnt = 0;
@@ -1216,31 +1188,19 @@ namespace Nektar
                     m_npointsZ = m_session->GetParameter("HomModesZ");
                 }
 
-                   Array<OneD, int> coeff_count(m_PBndConds.num_elements(),0);
-                   Array<OneD, int> coeffPlaneOffset(m_PBndConds.num_elements(),0);
+                int coeff_count = 0;
 
-                   cnt = 0;
-                   for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
-                   {
-                       coeffPlaneOffset[n] = cnt;
-                       if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                       {
-                           cnt += m_PBndExp[n]->GetNcoeffs();
-                       }
-                   }
-
-                cnt = 0;
-                for(int k = 0; k < num_planes; k++)
+                for(n = 0, j= 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
                 {
-                    K = planes[k]/2;
-                    for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
+                    exp_size = m_PBndExp[n]->GetExpSize();
+                    exp_size_per_plane = exp_size/num_planes;
+
+                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                     {
-                        exp_size = m_PBndExp[n]->GetExpSize();
-                        exp_size_per_plane = exp_size/num_planes;
-            
-                        if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+                        for(k = 0; k < num_planes; k++)
                         {
-                            for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
+                            K = planes[k]/2;
+                            for(i = 0; i < exp_size_per_plane; ++i, ++j, ++cnt)
                             {
                                 m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
                                 elmt        = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
@@ -1249,8 +1209,8 @@ namespace Nektar
                                 m_HBCdata[j].m_bndElmtOffset = i+k*exp_size_per_plane;       
                                 m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
                                 m_HBCdata[j].m_bndryElmtID = n;
-                                m_HBCdata[j].m_coeffOffset = coeffPlaneOffset[n] + coeff_count[n];
-                                   coeff_count[n] += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
+                                m_HBCdata[j].m_coeffOffset = coeff_count;
+                                coeff_count += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
     
                                 if(m_SingleMode)
                                 {
@@ -1267,15 +1227,15 @@ namespace Nektar
                                     m_wavenumber[j]     = 2*M_PI*sign*(NekDouble(K))/m_LhomZ; 
                                     m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                                 }
-                                
+
                                 int assElmtID;
-                
+
                                 if(k%2==0)
                                 {
                                     if(m_HalfMode)
                                     {
                                         assElmtID = m_HBCdata[j].m_globalElmtID;
-                                        
+
                                     }
                                     else
                                     {
@@ -1286,18 +1246,16 @@ namespace Nektar
                                 {
                                     assElmtID = m_HBCdata[j].m_globalElmtID - num_elm_per_plane;
                                 }
-                
+
                                 m_HBCdata[j].m_assPhysOffset = m_pressure->GetPhys_Offset(assElmtID);
-                
-                                j = j+1;
                             }
-                        }
-                        else // setting if just standard BC no High order
-                        {
-                            cnt += exp_size_per_plane;
+                            sign = -1.0*sign;
                         }
                     }
-                    sign = -1.0*sign;
+                    else
+                    {
+                        cnt += exp_size;
+                    }
                 }
             }
             break;

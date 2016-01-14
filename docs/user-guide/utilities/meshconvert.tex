@@ -1,4 +1,4 @@
-\section{MeshConvert}
+\chapter{MeshConvert}
 \label{s:utilities:meshconvert}
 
 \newcommand{\mc}{\texttt{MeshConvert}\xspace}
@@ -16,7 +16,7 @@ There is also some limited support for other output formats. We begin by running
 through a basic example to show how a mesh can be converted from the widely-used
 mesh-generator \gmsh to the XML file format.
 
-\subsection{Exporting a mesh from \gmsh}
+\section{Exporting a mesh from \gmsh}
 
 To demonstrate how \mc works, we will define a simple channel-like 3D geometry.
 First, we must define the \gmsh geometry to be used. The \gmsh definition is
@@ -41,12 +41,12 @@ prismatic mesh and both occurances to generate a tetrahedral mesh. Increasing
 the \texttt{Layers} numbers refines the mesh in the radial and azimuthal
 direction respectively.
 
-\subsection{Defining physical surfaces and volumes}
+\section{Defining physical surfaces and volumes}
 
 \begin{figure}
   \begin{center}
-    \includegraphics[width=0.4\textwidth]{utilities/Figures/mc-example-gmsh}
-    \includegraphics[width=0.4\textwidth]{utilities/Figures/mc-example-mesh}
+    \includegraphics[width=0.4\textwidth]{img/mc-example-gmsh}
+    \includegraphics[width=0.4\textwidth]{img/mc-example-mesh}
   \end{center}
   \caption{Geometry definition in Gmsh (left) and resulting high-order mesh
     visualised in ParaView (right).}
@@ -71,26 +71,26 @@ We also need to define the physical volumes, which can be done in a similar
 fashion. For this example, there is only one volume having ID 1. Adding these
 groups to the end of the \texttt{.geo} file is very straightforward:
 
-\begin{lstlisting}[style=XmlStyle] 
+\begin{lstlisting}[style=XmlStyle]
 Physical Volume(0) = {1};
 Physical Surface(1)= {7,8,28,29};
 Physical Surface(2) = {16};
 Physical Surface(3) = {24};
 \end{lstlisting}
 Either choose the option \inlsh{File->Save Mesh} or, assuming this is saved in
-a file named \inlsh{test.geo}, run the command 
+a file named \inlsh{test.geo}, run the command
 \begin{lstlisting}[style=BashInputStyle]
 gmsh -3 test.geo
 \end{lstlisting}
 which will produce the resulting MSH file \inlsh{test.msh}. One can generate a
 high-order mesh by specifying the order on the command line, for example
-\begin{lstlisting}[style=BashInputStyle] 
+\begin{lstlisting}[style=BashInputStyle]
 gmsh -3 -order 6 test.geo
 \end{lstlisting}
 will generate a sixth-order mesh. Note that you will need to use a current
 version of \gmsh in order to do this, most likely from subversion.
 
-\subsection{Converting the MSH to Nektar++ format}
+\section{Converting the MSH to Nektar++ format}
 Assuming that you have compiled \nekpp according to the compilation
 instructions, run the command
 %
@@ -98,7 +98,7 @@ instructions, run the command
 MeshConvert test.msh test.xml
 \end{lstlisting}
 %
-to generate the XML file. 
+to generate the XML file.
 %
 \begin{notebox}
   This file contains only the geometry definition (and a default
@@ -129,7 +129,7 @@ the element. Whilst a resulting simulation may run, the results may not be valid
 because of this problem, or excessively large amounts of time may be needed to
 solve the resulting linear system.
 
-\subsection{MeshConvert modules}
+\section{MeshConvert modules}
 
 \mc is designed to provide a pipeline approach to mesh generation. To do this,
 we break up tasks into three different types. Each task is called a
@@ -177,7 +177,7 @@ arguments, or not.
 To list all available modules use the \inltt{-l} command line argument:
 %
 \begin{lstlisting}[style=BashInputStyle]
-  Available classes: 
+  Available classes:
     Input: dat:
       Reads Tecplot polyhedron ascii format converted from Star CCM (.dat).
   ...
@@ -190,14 +190,14 @@ line argument:
   Options for module detect:
           vol: Tag identifying surface to process.
 \end{lstlisting}
-% 
+%
 \begin{notebox}
   Module names change when you use the \inltt{-p} option. Input modules should
   be preceded by \inltt{in:}, processing modules by \inltt{proc:} and output
   modules by \inltt{out:}.
 \end{notebox}
 
-\subsubsection{Input modules}
+\subsection{Input modules}
 
 Input and output modules use file extension names to determine the correct
 module to use. Not every module is capable of reading high-order information,
@@ -213,7 +213,8 @@ where it exists. The table below indicates support currently implemented.
     Nektar++ & \texttt{xml} & \cmark & Fully supported. \\
     PLY & \texttt{ply} & \xmark & Reads only the ASCII format.. \\
     Semtex & \texttt{sem} & \cmark & Reads elements and boundary conditions. In order to read high-order information, run \inltt{meshpr session.sem > session.msh} and place in the same directory as the session file.\\
-    Star-CCM+ & \texttt{dat} & \xmark & Reads mesh only, only support for quads and triangles (2D) and hexes, prisms, tetrahedra (3D).\\
+    Star-CCM+ & \texttt{dat} & \xmark & Star outputs plt file which currently needs to be coverted to ascii using Tecplot. Reads mesh only, only support for quads and triangles (2D) and hexes, prisms, tetrahedra (3D).\\
+    Star-CCM+ & \texttt{ccm} & \xmark & Reads start ccm format. Reads mesh only, only support for quads and triangles (2D) and hexes, prisms, tetrahedra (3D). Requires NEKTAR\_USE\_CCM option to be activated in cmake and then requires ccmio library to be compiled by user.  \\
     VTK & \texttt{vtk} & \xmark & Experimental support. Only ASCII triangular data is supported. \\
     \bottomrule
   \end{tabularx}
@@ -245,7 +246,7 @@ The resulting file therefore has two composites of IDs \inltt{150} and
 \inltt{151} respectively, containing the triangular and quadrilateral elements
 of the original mesh.
 
-\subsubsection{Output modules}
+\subsection{Output modules}
 
 The following output formats are supported:
 
@@ -268,7 +269,7 @@ meshes since robustness is not guaranteed.
 In the rest of these subsections, we discuss the various processing modules
 available within \mc.
 
-\subsubsection{Negative Jacobian detection}
+\subsection{Negative Jacobian detection}
 
 To detect elements with negative Jacobian determinant, use the \inltt{jac}
 module:
@@ -291,7 +292,16 @@ use the \inltt{extract} boolean parameter:
 MeshConvert -m jac:extract Mesh.xml MeshWithNegativeElements.xml
 \end{lstlisting}
 
-\subsubsection{Spherigon patches}
+To turn off curvature associated with negative jacobians one can try to use the \inltt{removecurveifsingular} boolean parameter:
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m jac:removecurveifsingular  Mesh.xml output.xml
+\end{lstlisting}
+This option will remove the high order curvature on prismatic faces
+with singular jacobians. This does not guarantee a non-singular mesh
+since it is possible for neighbouring element then to have singular
+jacobians. Multiple calls to the module might help with this scenario.
+
+\subsection{Spherigon patches}
 
 Where high-order information is not available (e.g. when using meshes from
 imaging software), various techniques can be used to apply a smoothing to the
@@ -329,7 +339,7 @@ If you have a high-resolution mesh of the surfaces 11 and 12 in \inltt{ply}
 format it can be used to improve the normal definition of the spherigons. Run:
 \begin{lstlisting}[style=BashInputStyle]
 MeshConvert -m spherigon:surf=11,12:usenormalfile=Surf_11-12_Mesh.ply \
-    MeshWithStraighEdges.xml MeshWithSpherigons.xml 
+    MeshWithStraighEdges.xml MeshWithSpherigons.xml
 \end{lstlisting}
 
 This can be useful, for example, when meshing the Leading edge of an
@@ -338,14 +348,14 @@ the surface elements producing leading edge closer to the underlying geometry:
 
 \begin{figure}[!htbp]
   \begin{center}
-    \includegraphics[width = 0.47 \textwidth]{Figures/noSphnoBL.jpg}
-    \includegraphics[width = 0.47 \textwidth]{Figures/SphnoBL.jpg}
+    \includegraphics[width = 0.47 \textwidth]{img/noSphnoBL.jpg}
+    \includegraphics[width = 0.47 \textwidth]{img/SphnoBL.jpg}
     \caption{(a) Leading edge without spherigons, (b) Leading edge with
       spherigons}
   \end{center}
 \end{figure}
 
-\subsubsection{Periodic boundary condition alignment}
+\subsection{Periodic boundary condition alignment}
 
 When using periodic boundary conditions, the order of the elements within the
 boundary composite determines which element edges are periodic with the
@@ -386,7 +396,7 @@ MeshConvert -m peralign:surf1=11:surf2=12:dir=y:orient input.dat output.xml
   \inltt{peralign} module before the \inltt{spherigon} module.
 \end{notebox}
 
-\subsubsection{Boundary layer splitting}
+\subsection{Boundary layer splitting}
 
 Often it is the case that one can generate a coarse boundary layer grid of a
 mesh. \mc has a method for splitting prismatic and hexahedral elements into
@@ -408,9 +418,9 @@ in figure~\ref{fig:util:mc:split}.
   \begin{center}
     \begin{tikzpicture}
       \node[above right] at (0,0){%
-        \includegraphics{utilities/Figures/stdprism_split}};
+        \includegraphics{img/stdprism_split}};
       \node[above right] at (6,0){%
-        \includegraphics[width=5cm]{utilities/Figures/prism_split}};
+        \includegraphics[width=5cm]{img/prism_split}};
       \draw[-latex,thick,bend left] (4.5,3.75) to[bend left]
       node[midway,above] {$\chi^e(\mathbf{\xi})$} (8.5,3.75);
     \end{tikzpicture}
@@ -429,8 +439,8 @@ of 2 and 7 integration points per element use the following command:
 %
 \begin{figure}[!htbp]
   \begin{center}
-    \includegraphics[width = 0.47 \textwidth]{Figures/SphnoBL.jpg}
-    \includegraphics[width = 0.47 \textwidth]{Figures/SphBL.jpg}
+    \includegraphics[width = 0.47 \textwidth]{img/SphnoBL.jpg}
+    \includegraphics[width = 0.47 \textwidth]{img/SphBL.jpg}
     \caption{(a) LE with Spherigons but only one prism layer for resolving the
       boundary layer, (b) LE with Spherigons with 3 growing layers of prisms for
       better resolving the boundary layer.}
@@ -444,7 +454,7 @@ of 2 and 7 integration points per element use the following command:
   self-intersecting.
 \end{notebox}
 
-\subsubsection{High-order cylinder generation}
+\subsection{High-order cylinder generation}
 
 Generating accurate high-order curved geometries in \gmsh is quite challenging.
 This module processes an existing linear cylindrical mesh, with axis aligned
@@ -470,7 +480,7 @@ The module parameters are:
   are not self-intersecting.
 \end{notebox}
 
-\subsubsection{Surface extraction}
+\subsection{Surface extraction}
 
 Often one wants to visualise a particular surface of a 3D mesh. \mc supports
 extraction of two-dimensional surfaces which can be converted using
@@ -486,7 +496,40 @@ To extract a surface use the command:
 
 where the integers are surface IDs to be extracted.
 
-\subsubsection{Boundary identification}
+\subsection{Linearisation}
+
+The ability to remove all the high-order information in a mesh can be useful
+at times.
+
+To do this in MeshConvert use the command:
+
+\begin{lstlisting}[style=BashInputStyle]
+  MeshConvert -m linearise high-order-mesh.xml linear-mesh.xml
+\end{lstlisting}
+
+The output will contain only the linear mesh information, all curved information
+is removed.
+
+\subsection{Extracting interface between tetrahedra and prismatic elements}
+
+When the mesh is three-dimensional and comprised of a prismatic boundary layer
+with tetrahedra in the interior of the domain, this module extracts the
+prismatic elements only, and constructs a boundary region for the interface
+between the tetrahedra and prisms. This is useful in, for example, the study of
+aortic flows, where the prismatic boundary layer can be extracted and refined to
+study unsteady advection-diffusion problems on a more refined grid inside the
+boundary layer.
+
+To use this module you therefore use the command:
+
+\begin{lstlisting}[style=BashInputStyle]
+  MeshConvert -m extracttetprisminterface input.xml output.xml
+\end{lstlisting}
+
+There are no configuration options for this module, as it is highly specific to
+a certain class of meshes.
+
+\subsection{Boundary identification}
 
 Some mesh formats lack the ability to identify boundaries of the domain they
 discretise. \mc has a rudimentary boundary identification routine for conformal
@@ -498,7 +541,7 @@ module:
   MeshConvert -m detect volume.xml volumeWithBoundaryComposite.xml
 \end{lstlisting}
 
-\subsubsection{Scalar function curvature}
+\subsection{Scalar function curvature}
 
 This module imposes curvature on a surface given a scalar function
 $z=f(x,y)$. For example, if on surface 1 we wish to apply a surface defined by a
@@ -516,7 +559,7 @@ may issue the command
   module in combination with the splitting module described earlier.
 \end{notebox}
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../user-guide"
-%%% End: 
+%%% End:

@@ -66,6 +66,8 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST        (Advection_m12_DG_periodic)
     ADD_NEKTAR_TEST        (Advection2D_m12_DG_quad_VarP)
     ADD_NEKTAR_TEST        (Advection2D_m12_DG_tri_VarP)	
+    ADD_NEKTAR_TEST        (Advection2D_ISO_regular_SSPRK2)
+    ADD_NEKTAR_TEST        (Advection2D_ISO_regular_SSPRK3)
 
     # 2D continuous advection (non-conservative)
     ADD_NEKTAR_TEST        (Advection_m12_Order1)

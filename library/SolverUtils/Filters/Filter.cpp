@@ -37,25 +37,26 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        FilterFactory& GetFilterFactory()
-        {
-            typedef Loki::SingletonHolder<FilterFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy > Type;
-            return Type::Instance();
-        }
+namespace SolverUtils
+{
+FilterFactory& GetFilterFactory()
+{
+    typedef Loki::SingletonHolder<FilterFactory,
+                                  Loki::CreateUsingNew,
+                                  Loki::NoDestroy,
+                                  Loki::SingleThreaded> Type;
+    return Type::Instance();
+}
 
 
-        Filter::Filter(const LibUtilities::SessionReaderSharedPtr& pSession) :
-            m_session(pSession)
-        {
-        }
+Filter::Filter(const LibUtilities::SessionReaderSharedPtr& pSession) :
+    m_session(pSession)
+{
+}
 
-        Filter::~Filter()
-        {
-        }
+Filter::~Filter()
+{
+}
 
-    }
+}
 }

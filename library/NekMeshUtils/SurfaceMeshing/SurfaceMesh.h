@@ -89,12 +89,32 @@ class SurfaceMesh
 
     private:
 
+        void EdgeOnCurve(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
+                         CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes,
+                         NekDouble &alpha);
+
+        NekDouble CurveEdgeF(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
+                             CADCurveSharedPtr c);
+
         void CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
                           CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes);
+
+
+
+        void EdgeOnFace(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
+                         CADSurfSharedPtr s, DNekMat &Jac, DNekMat &Hes,
+                         NekDouble &alpha);
+
+        NekDouble FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
+                            CADSurfSharedPtr s);
+
 
         void FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
                          Array<OneD, NekDouble> z, CADSurfSharedPtr s,
                          DNekMat &Jac, DNekMat &Hes);
+
+
+
 
         void FaceFaceJac(Array<OneD, Array<OneD, NekDouble> > uv,
                          std::map<int, vector<NekDouble> > z, map<int, vector<int> > n, CADSurfSharedPtr s,

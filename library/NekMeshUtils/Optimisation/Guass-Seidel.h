@@ -42,7 +42,7 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-    void gsOptimise(Array<OneD, NekDouble> &x, DNekMat H, DNekMat J);
+    Array<OneD, NekDouble> gsOptimise(NekDouble alpha, Array<OneD, NekDouble> x, DNekMat H, DNekMat J);
 }
 }
 #endif

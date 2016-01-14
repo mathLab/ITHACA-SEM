@@ -303,7 +303,7 @@ void FaceMesh::Smoothing()
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
                     NodeSharedPtr dn = boost::shared_ptr<Node>(new Node(0,locd[0],locd[1],locd[2]));
                     dn->SetCADSurf(m_id, m_cadsurf, ud);
-                    
+
                     nodesystem.push_back(dn);
                     lamp.push_back(lambda[0]);
                 }

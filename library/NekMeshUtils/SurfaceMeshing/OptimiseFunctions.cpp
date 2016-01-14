@@ -70,8 +70,88 @@ Array<OneD, NekDouble> Add(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
     return ret;
 }
 
+void SurfaceMesh::EdgeOnCurve(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
+                              CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes,
+                              NekDouble &alpha)
+{
+    CurveEdgeJac(t, z, c, Jac, Hes);
+
+    NekDouble Norm = 0.0;
+    for(int i = 0; i < t.num_elements() -2; i++)
+    {
+        Norm += Jac(i,0)*Jac(i,0);
+    }
+    Norm = sqrt(Norm);
+    if(Norm < 1E-4) // wont need optimising anyways
+    {
+        alpha = 1;
+        return;
+    }
+
+    NekDouble c1 = 1E-4;
+    NekDouble r = 0.5;
+    alpha = 2;
+
+    NekDouble f, fprime, modifier;
+
+    do
+    {
+        alpha *= r;
+
+        if(alpha < 1E-4)
+        {
+            cout << "warning, backtrace line search failed, may struggle to optimise" << endl;
+            alpha = 1;
+            break;
+        }
+
+        f = CurveEdgeF(t, z, c);
+
+        Array<OneD, NekDouble> tprime(t.num_elements());
+        for(int i = 0; i < t.num_elements(); i++)
+        {
+            tprime[i] = t[i];
+            if(i == 0 || i == t.num_elements() -1)
+            {
+                continue;
+            }
+            tprime[i] -= alpha * Jac(i-1,0) / Norm;
+        }
+
+        fprime = CurveEdgeF(tprime, z, c);
+
+        modifier = 0.0;
+        for(int i = 0; i < t.num_elements() -2; i++)
+        {
+            modifier -= c1*alpha*Jac(i,0)*Jac(i,0)/Norm;
+        }
+
+    }while(fprime > f + modifier);
+
+}
+
+NekDouble SurfaceMesh::CurveEdgeF(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
+                                  CADCurveSharedPtr c)
+{
+    vector<Array<OneD, NekDouble> > r;
+    for(int i = 0; i < t.num_elements(); i++)
+    {
+        Array<OneD, NekDouble> p = c->P(t[i]);
+        r.push_back(p);
+    }
+
+    NekDouble ret = 0.0;
+    for(int i = 0; i < t.num_elements() - 1; i++)
+    {
+        Array<OneD, NekDouble> dis = Take(r[i+1], r[i]);
+        NekDouble norm = sqrt(dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2]);
+        ret += norm/(z[i+1] - z[i]);
+    }
+    return ret;
+}
+
 void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
-                                  CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes)
+                               CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes)
 {
     vector<Array<OneD, NekDouble> > r;
     vector<Array<OneD, NekDouble> > dr;
@@ -98,6 +178,8 @@ void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> 
                  2.0/(z[i+2] - z[i+1]) * Dot(dr[i+1],Take(r[i+1],r[i+2]));
     }
 
+    Jac = J;
+
     DNekMat H(t.num_elements() - 2, t.num_elements() - 2, 0.0);
     for(int i = 0; i < t.num_elements() - 2; i++)
     {
@@ -117,8 +199,108 @@ void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> 
             }
         }
     }
-    Jac = J;
+
     Hes = H;
+}
+
+void SurfaceMesh::EdgeOnFace(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
+                             CADSurfSharedPtr s, DNekMat &Jac, DNekMat &Hes,
+                             NekDouble &alpha)
+{
+    FaceEdgeJac(uv, z, s, Jac, Hes);
+
+    NekDouble Norm = 0.0;
+    for(int i = 0; i < 2*(uv.num_elements() -2); i++)
+    {
+        Norm += Jac(i,0)*Jac(i,0);
+    }
+    Norm = sqrt(Norm);
+    if(Norm < 1E-4) // wont need optimising anyways
+    {
+        alpha = 1;
+        return;
+    }
+
+    NekDouble c1 = 1E-4;
+    NekDouble r = 0.5;
+    alpha = 2;
+
+    NekDouble f, fprime, modifier;
+
+    Array<OneD, NekDouble> bounds = s->GetBounds();
+
+    f = FaceEdgeF(uv, z, s);
+
+    do
+    {
+        alpha *= r;
+
+        if(alpha < 1E-4)
+        {
+            cout << "warning, backtrace line search failed, may struggle to optimise" << endl;
+            alpha = 1;
+            break;
+        }
+
+        Array<OneD, Array<OneD, NekDouble> > uvprime(uv.num_elements());
+        for(int i = 0; i < uv.num_elements(); i++)
+        {
+            uvprime[i] = Array<OneD, NekDouble>(2);
+            uvprime[i][0] = uv[i][0];
+            uvprime[i][1] = uv[i][1];
+            if(i == 0 || i == uv.num_elements() -1)
+            {
+                continue;
+            }
+            uvprime[i][0] -= alpha * Jac(2*(i-1)+0,0)/Norm;
+            uvprime[i][1] -= alpha * Jac(2*(i-1)+1,0)/Norm;
+        }
+
+        bool pointoverlimits = false;
+        for(int i = 0; i < uvprime.num_elements(); i++)
+        {
+            if(uvprime[i][0] < bounds[0] || uvprime[i][0] > bounds[1] ||
+               uvprime[i][1] < bounds[2] || uvprime[i][1] > bounds[3])
+            {
+                pointoverlimits = true;
+                break;
+            }
+        }
+        if(pointoverlimits)
+        {
+            continue;
+        }
+
+        fprime = FaceEdgeF(uvprime, z, s);
+
+        modifier = 0.0;
+        for(int i = 0; i < 2*(uv.num_elements() -2); i++)
+        {
+            modifier -= c1*alpha*Jac(i,0)*Jac(i,0)/Norm;
+        }
+
+    }while(fprime > f + modifier);
+}
+
+NekDouble SurfaceMesh::FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
+                                 CADSurfSharedPtr s)
+{
+    vector<Array<OneD, NekDouble> > r;
+    for(int i = 0; i < uv.num_elements(); i++)
+    {
+        Array<OneD, NekDouble> ri = s->P(uv[i]);
+        r.push_back(ri);
+    }
+
+    NekDouble ret = 0.0;
+    for(int i = 0; i < uv.num_elements() - 1; i++)
+    {
+        Array<OneD, NekDouble> dis = Take(r[i+1], r[i]);
+        NekDouble d = sqrt(dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2]);
+        ret += d/(z[i+1] - z[i]);
+    }
+
+    return ret;
 }
 
 void SurfaceMesh::FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,

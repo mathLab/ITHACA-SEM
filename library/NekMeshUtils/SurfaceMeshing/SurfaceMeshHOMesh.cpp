@@ -235,8 +235,8 @@ void SurfaceMesh::HOSurf()
     {
         if(m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i,m_mesh->m_element[2].size(),
-                                           "\t\tSurface elements");
+            //LibUtilities::PrintProgressbar(i,m_mesh->m_element[2].size(),
+            //                               "\t\tSurface elements");
         }
 
         if(m_mesh->m_element[2][i]->GetConf().m_e == LibUtilities::eQuadrilateral)
@@ -286,6 +286,7 @@ void SurfaceMesh::HOSurf()
 
             if(e->onCurve)
             {
+                cout << "\rCurve" << e->m_id;
                 int cid = e->CADCurveId;
                 CADCurveSharedPtr c = e->CADCurve;
                 NekDouble tb = e->m_n1->GetCADCurveInfo(cid);
@@ -305,7 +306,8 @@ void SurfaceMesh::HOSurf()
                 }
 
                 DNekMat J, H;
-                CurveEdgeJac(ti, gll, c, J, H);
+                NekDouble alpha;
+                EdgeOnCurve(ti, gll, c, J, H, alpha);
 
                 bool repeat = true;
                 while(repeat)
@@ -317,20 +319,21 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if(Norm < 1E-6)
+                    if(Norm < 1E-4)
                     {
                         repeat = false;
                         break;
                     }
 
-                    gsOptimise(x, H, J);
+                    Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
 
                     for(int k = 1; k < m_mesh->m_nummode -1; k++)
                     {
+                        x[k-1] += dx[k-1];
                         ti[k] = x[k-1];
                     }
 
-                    CurveEdgeJac(ti, gll, c, J, H);
+                    EdgeOnCurve(ti, gll, c, J, H, alpha);
                 }
 
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
@@ -357,6 +360,7 @@ void SurfaceMesh::HOSurf()
             }
             else
             {
+                cout << "\rEdge" << e->m_id;
                 //edge is on surface and needs 2d optimisation
                 CADSurfSharedPtr s = m_cad->GetSurf(surf);
                 Array<OneD, NekDouble> uvb,uve;
@@ -372,7 +376,8 @@ void SurfaceMesh::HOSurf()
                 }
 
                 DNekMat J, H;
-                FaceEdgeJac(uvi, gll, s, J, H);
+                NekDouble alpha;
+                EdgeOnFace(uvi, gll, s, J, H, alpha);
                 Array<OneD, NekDouble> x(2*(m_mesh->m_nummode - 2));
                 for(int k = 1; k < m_mesh->m_nummode -1; k++)
                 {
@@ -390,21 +395,23 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if(Norm < 1E-6)
+                    if(Norm < 1E-4)
                     {
                         repeat = false;
                         break;
                     }
 
-                    gsOptimise(x, H, J);
+                    Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
 
                     for(int k = 1; k < m_mesh->m_nummode - 1; k++)
                     {
+                        x[(k-1)*2+0] += dx[(k-1)*2+0];
+                        x[(k-1)*2+1] += dx[(k-1)*2+1];
                         uvi[k][0] = x[(k-1)*2+0];
                         uvi[k][1] = x[(k-1)*2+1];
                     }
 
-                    FaceEdgeJac(uvi, gll, s, J, H);
+                    EdgeOnFace(uvi, gll, s, J, H, alpha);
                 }
 
                 vector<NodeSharedPtr> honodes(m_mesh->m_nummode-2);
@@ -423,7 +430,13 @@ void SurfaceMesh::HOSurf()
             }
         }
 
-        vector<NodeSharedPtr> vertices = f->m_vertexList;
+        if(m_mesh->m_nummode == 3)
+        {
+            //no interior points
+            continue;
+        }
+
+        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
         Array<OneD, NekDouble> uv1,uv2,uv3;
         uv1 = vertices[0]->GetCADSurfInfo(surf);
         uv2 = vertices[1]->GetCADSurfInfo(surf);
@@ -470,13 +483,13 @@ void SurfaceMesh::HOSurf()
             uvi[ctr++] = uv;
         }
 
-        /*CADSurfSharedPtr s = m_cad->GetSurf(surf);
+        CADSurfSharedPtr s = m_cad->GetSurf(surf);
 
         DNekMat H, J;
 
         FaceFaceJac(uvi, z, near, s, J, H);
 
-        if(s->GetId() == 9)
+        /*if(s->GetId() == 9)
         {
             cout << endl << J << endl << endl;
         }

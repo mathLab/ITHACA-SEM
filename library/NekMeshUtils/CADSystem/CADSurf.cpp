@@ -382,6 +382,8 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
         }
     }
 
+    error << " On Surface: " << GetId();
+
     ASSERTL0(passed, error.str());
 
 }

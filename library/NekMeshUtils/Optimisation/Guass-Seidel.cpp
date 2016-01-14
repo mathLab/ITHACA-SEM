@@ -41,11 +41,11 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-    void gsOptimise(Array<OneD, NekDouble> &x, DNekMat H, DNekMat J)
+    Array<OneD, NekDouble> gsOptimise(NekDouble alpha, Array<OneD, NekDouble> x, DNekMat H, DNekMat J)
     {
         Array<OneD, NekDouble> dx(x.num_elements(),0.0);
         NekDouble Diff;
-
+        int ct = 0;
         do
         {
             Array<OneD, NekDouble> dxn(x.num_elements(),0.0);
@@ -63,7 +63,7 @@ namespace NekMeshUtils
                     postsum += H(i,j)*dx[j];
                 }
 
-                dxn[i] = 1.0/H(i,i) * (-J(i,0) - presum - postsum);
+                dxn[i] = alpha*1.0/H(i,i) * (-J(i,0) - presum - postsum);
             }
 
             Diff = 0.0;
@@ -78,13 +78,18 @@ namespace NekMeshUtils
                 dx[i] = dxn[i];
             }
 
+            if(ct>1000000)
+            {
+                cout << endl << endl << J << endl << endl << H << endl;
+                cout << "Failed to converge" << endl;
+                abort();
+            }
+            ct++;
+
         }
         while(Diff > 1E-6);
 
-        for(int i = 0; i < x.num_elements(); i++)
-        {
-            x[i] += dx[i];
-        }
+        return dx;
     }
 
 }

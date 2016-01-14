@@ -116,8 +116,8 @@ namespace Nektar
             
             int nFields = m_equ[0]->UpdateFields().num_elements();
             
-            NekDouble period  = m_session->GetParameter("TimeStep")* 
-                                m_session->GetParameter("NumSteps");
+            int numSteps = m_session->GetParameter("NumSteps");
+            NekDouble period  = m_session->GetParameter("TimeStep")* numSteps;
             
             Array< OneD, NekDouble> coeffs;
             Array< OneD, NekDouble> phys; 
@@ -292,6 +292,8 @@ namespace Nektar
                 Driver::v_InitObject(out);
 
                 // Initialise equation
+                m_equ[0]->SetInitialStep(i*numSteps);
+                m_equ[0]->SetSteps(i*numSteps+numSteps);
                 m_equ[0]->SetTime(startTime + i*period);
                 m_equ[0]->SetBoundaryConditions(startTime + i*period);
                 

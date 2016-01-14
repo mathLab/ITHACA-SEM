@@ -85,10 +85,9 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
-                     const GlobalLinSysKey &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
-                     const boost::shared_ptr<AssemblyMap>
-                     &pLocToGloMap)
+                     const GlobalLinSysKey                &pKey,
+                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -107,14 +106,14 @@ namespace Nektar
          *
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
-                     const GlobalLinSysKey &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
-                     const DNekScalBlkMatSharedPtr pSchurCompl,
-                     const DNekScalBlkMatSharedPtr pBinvD,
-                     const DNekScalBlkMatSharedPtr pC,
-                     const DNekScalBlkMatSharedPtr pInvD,
-                     const boost::shared_ptr<AssemblyMap>
-                                                            &pLocToGloMap)
+                     const GlobalLinSysKey                &pKey,
+                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const DNekScalBlkMatSharedPtr         pSchurCompl,
+                     const DNekScalBlkMatSharedPtr         pBinvD,
+                     const DNekScalBlkMatSharedPtr         pC,
+                     const DNekScalBlkMatSharedPtr         pInvD,
+                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+                     const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -123,6 +122,7 @@ namespace Nektar
             m_BinvD      = pBinvD;
             m_C          = pC;
             m_invD       = pInvD;
+            m_precon     = pPrecon;
         }
 
         /**
@@ -195,6 +195,15 @@ namespace Nektar
             DNekScalBlkMatSharedPtr C          = m_C;
             DNekScalBlkMatSharedPtr invD       = m_invD;
             DNekScalMatSharedPtr    loc_mat;
+
+            // Build precon again if we in multi-level static condensation (a
+            // bit of a hack)
+            if (m_linSysKey.GetGlobalSysSolnType() ==
+                    ePETScMultiLevelStaticCond)
+            {
+                m_precon = CreatePrecon(m_locToGloMap);
+                m_precon->BuildPreconditioner();
+            }
 
             // CALCULATE REORDERING MAPPING
             CalculateReordering(pLocToGloMap->GetGlobalToUniversalBndMap(),
@@ -322,7 +331,6 @@ namespace Nektar
                   Array<OneD,       NekDouble> &output)
         {
             int nLocBndDofs = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nBndDofs    = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirDofs    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
             NekVector<NekDouble> in(nLocBndDofs), out(nLocBndDofs);
@@ -342,7 +350,8 @@ namespace Nektar
         {
             GlobalLinSysPETScStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysPETScStaticCond>::AllocateSharedPtr(
-                    mkey, pExpList, pSchurCompl, pBinvD, pC, pInvD, l2gMap);
+                    mkey, pExpList, pSchurCompl, pBinvD, pC, pInvD, l2gMap,
+                    m_precon);
             sys->Initialise(l2gMap);
             return sys;
         }

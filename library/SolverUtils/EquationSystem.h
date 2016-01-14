@@ -359,7 +359,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void CopyToPhysField(const int i,
                                                             Array<OneD, NekDouble> &output);
             
-            SOLVER_UTILS_EXPORT inline void SetStepsToOne();
+            SOLVER_UTILS_EXPORT inline void SetSteps( const int steps);
             
             SOLVER_UTILS_EXPORT void ZeroPhysFields();
             
@@ -413,6 +413,12 @@ namespace Nektar
                 m_time = time;
             }
             
+            SOLVER_UTILS_EXPORT void SetInitialStep(
+                const int step)
+            {
+                m_initialStep = step;
+            }
+            
             /// Evaluates the boundary conditions at the given time.
             SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
                 
@@ -444,6 +450,8 @@ namespace Nektar
             std::string                                 m_sessionName;
             /// Current time of simulation.
             NekDouble                                   m_time;
+            /// Number of the step where the simulation should begin
+            int                                         m_initialStep;
             /// Finish time of the simulation.
             NekDouble                                   m_fintime;
             /// Time step size
@@ -865,9 +873,9 @@ namespace Nektar
             return m_timestep;
         }
         
-        inline void EquationSystem::SetStepsToOne(void)
+        inline void EquationSystem::SetSteps( const int steps)
         {
-            m_steps=1;
+            m_steps= steps;
         }
         
         inline void EquationSystem::CopyFromPhysField(const int i,

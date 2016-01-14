@@ -153,7 +153,7 @@ void DriverSteadyState::v_Execute(ostream &out)
 
     // m_steps is set to 1. Then "m_equ[m_nequ - 1]->DoSolve()" will run
     // for only one time step
-    m_equ[m_nequ - 1]->SetStepsToOne();
+    m_equ[m_nequ - 1]->SetSteps(1);
     ofstream m_file("ConvergenceHistory.txt", ios::out | ios::trunc);
 
     Array<OneD, Array<OneD, NekDouble> > q0(NumVar_SFD);

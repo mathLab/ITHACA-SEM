@@ -2243,9 +2243,9 @@ namespace Nektar
             }
             else
             {
-                std::vector<unsigned int> nummodes;
                 for(i = 0; i < (*m_exp).size(); ++i)
                 {
+                    std::vector<unsigned int> nummodes;
                     int eid = m_offset_elmt_id[i];
                     for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
                     {

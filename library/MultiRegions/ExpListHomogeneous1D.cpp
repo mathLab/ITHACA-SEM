@@ -841,11 +841,12 @@ namespace Nektar
         {
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
+            int toNcoeffs_per_plane = m_planes[0]->GetNcoeffs();
             Array<OneD, NekDouble> tocoeffs_tmp, fromcoeffs_tmp; 
             
             for(i = 0; i < m_planes.num_elements(); ++i)
             {
-                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + m_ncoeffs*i);
+                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + toNcoeffs_per_plane*i);
             }
         }
 

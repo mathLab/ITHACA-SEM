@@ -296,28 +296,12 @@ namespace Nektar
                 m_equ[0]->SetBoundaryConditions(startTime + i*period);
                 
                 // Project solution to new expansion 
-                //    (ExtractCoeffsToCoeffs would be simpler, but did not work)
-                std::vector<std::string> fieldNames = m_session->GetVariables();
-                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                            = fields[0]->GetFieldDefinitions();
-                std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-                for (int j = 0; j < FieldDef.size(); ++j)
-                {
-                    for (int n = 0; n<nFields; n++)
-                    {
-                        FieldDef[j]->m_fields.push_back(fieldNames[n]);
-                        fields[n]->AppendFieldData(FieldDef[j], FieldData[j]);
-                    }
-                }                                
                 for (int n = 0; n<nFields; n++)
                 {                   
-                    for (int j = 0; j < FieldDef.size(); ++j)
-                    {
-                        m_equ[0]->UpdateFields()[n]->ExtractDataToCoeffs(
-                                FieldDef[j], FieldData[j],
-                                fieldNames[n], 
-                                m_equ[0]->UpdateFields()[n]->UpdateCoeffs());
-                    }
+                    m_equ[0]->UpdateFields()[n]->ExtractCoeffsToCoeffs(
+                                    fields[n], fields[n]->GetCoeffs(),
+                                    m_equ[0]->UpdateFields()[n]->UpdateCoeffs());
+
                     m_equ[0]->UpdateFields()[n]->BwdTrans_IterPerExp(
                                     m_equ[0]->UpdateFields()[n]->GetCoeffs(),
                                     m_equ[0]->UpdateFields()[n]->UpdatePhys());

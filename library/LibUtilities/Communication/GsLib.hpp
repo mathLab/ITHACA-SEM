@@ -202,9 +202,12 @@ namespace Gs
     static inline void Finalise (gs_data *pGsh)
     {
 #ifdef NEKTAR_USE_MPI
-        if (pGsh)
+        int finalized;
+        MPI_Finalized(&finalized);
+        if (pGsh && !finalized)
         {
             nektar_gs_free(pGsh);
+            pGsh = 0;
         }
 #endif
     }

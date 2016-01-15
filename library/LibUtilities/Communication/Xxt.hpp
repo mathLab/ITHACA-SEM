@@ -198,9 +198,12 @@ namespace Xxt
     static inline void Finalise (crs_data* pCrs)
     {
 #ifdef NEKTAR_USE_MPI
-        if (pCrs)
+        int finalized;
+        MPI_Finalized(&finalized);
+        if (pCrs && !finalized)
         {
-            //nektar_crs_free(pCrs);
+            nektar_crs_free(pCrs);
+            pCrs = 0;
         }
 #endif
     }

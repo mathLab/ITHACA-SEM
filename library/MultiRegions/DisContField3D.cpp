@@ -1717,7 +1717,6 @@
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
              
-#if 0 // blocked routine
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->
                                             GetNLocTracePts());
             m_locTraceToTraceMap->LocTracesFromField(field,facevals);
@@ -1726,47 +1725,6 @@
             Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
             m_locTraceToTraceMap->InterpLocFacesToTrace(1, invals, Bwd);
-#else
-            // Loop over elements and collect forward and backward expansions.
-            int nexp = GetExpSize();
-            int offset, phys_offset;
-            Array<OneD,NekDouble> e_tmp;
-            
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            set<int>::iterator    it;
-            PeriodicMap::iterator it2;
-            boost::unordered_map<int,pair<int,int> >::iterator it3;
-
-            LocalRegions::Expansion3DSharedPtr exp3d;
-            bool fwd;
-
-            for(cnt = n = 0; n < nexp; ++n)
-            {
-                exp3d = (*m_exp)[n]->as<LocalRegions::Expansion3D>();
-                phys_offset = GetPhys_Offset(n);
-                for(e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
-                {
-                    offset = m_trace->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-
-                    fwd = m_leftAdjacentFaces[cnt];
-                    if (fwd)
-                    {
-                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
-                                                     field + phys_offset,
-                                                     e_tmp = Fwd + offset);
-                    }
-                    else
-                    {
-                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
-                                                     field + phys_offset,
-                                                     e_tmp = Bwd + offset);
-                    }
-                }
-            }
-#endif
             
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;

@@ -156,8 +156,8 @@ namespace Nektar
             m_LocTraceToTraceMap[0] = Array<OneD, int>(nFwdPts);
             m_LocTraceToTraceMap[1] = Array<OneD, int>(nBwdPts);
             
-            m_nTraceCoeffs[0]           = nFwdCoeffs;
-            m_nTraceCoeffs[1]           = nBwdCoeffs;
+            m_nTraceCoeffs[0]        = nFwdCoeffs;
+            m_nTraceCoeffs[1]        = nBwdCoeffs;
             
             m_traceCoeffsToElmtMap[0]   = Array<OneD, int>(
                                             nFwdCoeffs+nBwdCoeffs);
@@ -665,7 +665,6 @@ namespace Nektar
                     
                     pair<int, int> epf(n, e);
                     TraceInterpMap[fpoint].push_back(epf);
-                    
                     TraceOrder[n][e] = cnt;
                     
                     // Setup for coefficient mapping from trace normal

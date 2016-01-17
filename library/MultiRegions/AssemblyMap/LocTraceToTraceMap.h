@@ -78,9 +78,18 @@ namespace Nektar
                     return true;
                 }
 
+                if (b.get<0>() < a.get<0>())
+                {
+                    return false;
+                }
+
                 if (a.get<1>() < b.get<1>())
                 {
                     return true;
+                }
+                if (b.get<1>() < a.get<1>())
+                {
+                    return false;
                 }
 
                 if (a.get<2>() < b.get<2>())
@@ -88,11 +97,17 @@ namespace Nektar
                     return true;
                 }
 
+                if (b.get<2>() < a.get<2>())
+                {
+                    return false;
+                }
+
                 if (a.get<3>() < b.get<3>())
                 {
                     return true;
                 }
 
+                
                 return false;
             }
         };

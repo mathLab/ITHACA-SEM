@@ -151,35 +151,95 @@ void InputPYFR::Process()
         {
             st = LibUtilities::eQuadrilateral;
         }
+        else if(boost::iequals(tmp[1], "tri"))
+        {
+            st = LibUtilities::eTriangle;
+        }
         else
         {
             ASSERTL0(false,"element type not recognised");
         }
 
         map<int, int> nodemap; //nektar order to pyfr
+        int nv;
         if(st == LibUtilities::eQuadrilateral)
         {
             nodemap[0] = 0;
             nodemap[1] = 1;
             nodemap[2] = 3;
             nodemap[3] = 2;
+            nv = 4;
+        }
+        else if(st == LibUtilities::eTriangle)
+        {
+            nodemap[0] = 0;
+            nodemap[1] = 1;
+            nodemap[2] = 2;
+            nv = 3;
         }
 
         for(int j = 0; j < dims_out[1]; j++) //loop over all elements
         {
-            vector<NodeSharedPtr> ns(4);
-            for(int k = 0; k < 4; k++)
+            vector<NodeSharedPtr> ns(nv);
+            for(int k = 0; k < nv; k++)
             {
                 ns[k] = boost::shared_ptr<Node>(new Node(0, dataArray[nodemap[k]][j][0],
                                                 dataArray[nodemap[k]][j][1], 0.0));
             }
             vector<int> tags;
-            tags.push_back(0);
-            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+            tags.push_back(i);
+            ElmtConfig conf(st, 1, false, false);
             ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                    LibUtilities::eQuadrilateral, conf, ns, tags);
+                                    st, conf, ns, tags);
             m_mesh->m_element[m_mesh->m_expDim].push_back(E);
         }
+    }
+
+    typedef struct conec
+    {
+        char      el[4];
+        int       id;
+        int       fc;
+        int       bl;
+    } conec;
+    StrType strdatatype(PredType::C_S1, 4);
+
+    //con
+    {
+        // all this is to just get the data out of hdf5, why so complicated!!!
+        DataSet d = g.openDataSet(con);
+        DataSpace s = d.getSpace();
+        int rank = s.getSimpleExtentNdims();
+        hsize_t* dims_out = new hsize_t[rank];
+        int ndims = s.getSimpleExtentDims( dims_out, NULL);
+        hsize_t* offset = new hsize_t[ndims];	// hyperslab offset in the file
+        memset(offset, 0, rank * sizeof(hsize_t)) ;
+        s.selectHyperslab( H5S_SELECT_SET, dims_out, offset);
+        DataSpace memspace( ndims, dims_out); //describe hyperslab in memory space
+        memspace.selectHyperslab( H5S_SELECT_SET, dims_out, offset);
+
+        CompType cn( sizeof(conec) );
+        cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
+        cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT);
+        cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT);
+        cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT);
+
+        hsize_t totSize = 1 ;
+        for(int j = 0 ; j < ndims ; j++)
+        {
+            totSize *= dims_out[j];
+        }
+        conec* data = new conec[totSize];
+        d.read( data, cn );
+
+        for(int j = 0; j < dims_out[0]; j++)
+        {
+            for(int k = 0; k < 2; k++)
+            {
+                cout << data[j*dims_out[1] + k].el << " " << data[j*dims_out[1] + k].id << " " << data[j*dims_out[1] + k].fc << endl;
+            }
+        }
+
     }
 
     ProcessVertices();

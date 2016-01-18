@@ -292,6 +292,7 @@ std::string PtsIO::SetUpOutput(const std::string outname)
                      "Filesystem error: " + string(e.what()));
         }
     }
+    m_comm->Block();
 
     // serial processing just add ending.
     if (nprocs == 1)
@@ -313,7 +314,6 @@ std::string PtsIO::SetUpOutput(const std::string outname)
         {
             ASSERTL0(false, "Filesystem error: " + string(e.what()));
         }
-        m_comm->Block();
 
         // Set up output names
         std::vector<std::string> filenames;
@@ -331,6 +331,7 @@ std::string PtsIO::SetUpOutput(const std::string outname)
         cout << "Writing: " << specPath << endl;
         WriteMultiFldFileIDs(infofile, filenames);
     }
+    m_comm->Block();
 
     // Pad rank to 8char filenames, e.g. P0000000.pts
     boost::format pad("P%1$07d.pts");

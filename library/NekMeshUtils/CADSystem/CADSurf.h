@@ -53,6 +53,9 @@ namespace NekMeshUtils
 class CADCurve;
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
+/**
+ * @brief struct which descibes a collection of cad edges which for a loop on the cad surface
+ */
 struct EdgeLoop
 {
     std::vector<CADCurveSharedPtr> edges;
@@ -60,6 +63,10 @@ struct EdgeLoop
     Array<OneD, NekDouble> center;
     NekDouble area;
 };
+
+/**
+ * @brief class for handleing a cad surface
+ */
 
 class CADSurf
 {

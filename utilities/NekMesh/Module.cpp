@@ -193,13 +193,14 @@ void Module::ProcessEdges(bool ReprocessEdges)
                                     e2->m_edgeNodes.end());
                         }
                     }
-
+#ifdef MESHGEN
                     if(ed->onCurve)
                     {
                         e2->onCurve = ed->onCurve;
                         e2->CADCurveId = ed->CADCurveId;
                         e2->CADCurve = ed->CADCurve;
                     }
+#endif
 
                     // Update edge to element map.
                     e2->m_elLink.push_back(

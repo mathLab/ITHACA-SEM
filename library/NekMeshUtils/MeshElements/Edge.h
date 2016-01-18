@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_EDGE
 #define NekMeshUtils_MESHELEMENTS_EDGE
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -49,9 +51,9 @@ namespace NekMeshUtils
     class Edge {
     public:
         /// Creates a new edge.
-        Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2,
-             std::vector<NodeSharedPtr> pEdgeNodes,
-             LibUtilities::PointsType pCurveType)
+        NEKMESHUTILS_EXPORT Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2,
+                                 std::vector<NodeSharedPtr> pEdgeNodes,
+                                 LibUtilities::PointsType pCurveType)
             : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
               m_curveType(pCurveType), m_geom()
         {
@@ -60,7 +62,7 @@ namespace NekMeshUtils
 #endif
         }
         /// Creates a new linear edge.
-        Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
+        NEKMESHUTILS_EXPORT Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
             : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(),
               m_curveType(), m_geom()
         {
@@ -69,21 +71,21 @@ namespace NekMeshUtils
 #endif
         }
         /// Copies an existing edge.
-        Edge(const Edge& pSrc)
+        NEKMESHUTILS_EXPORT Edge(const Edge& pSrc)
             : m_n1(pSrc.m_n1), m_n2(pSrc.m_n2), m_edgeNodes(pSrc.m_edgeNodes),
               m_curveType(pSrc.m_curveType), m_geom(pSrc.m_geom) {}
-        ~Edge()
+        NEKMESHUTILS_EXPORT ~Edge()
         {}
 
         /// Returns the total number of nodes defining the edge.
-        unsigned int GetNodeCount() const
+        NEKMESHUTILS_EXPORT unsigned int GetNodeCount() const
         {
             return m_edgeNodes.size() + 2;
         }
 
         /// Creates a Nektar++ string listing the coordinates of all the
         /// nodes.
-        std::string GetXmlCurveString() const
+        NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
         {
             std::stringstream s;
             std::string str;
@@ -100,7 +102,7 @@ namespace NekMeshUtils
         }
 
         /// Generate a SpatialDomains::SegGeom object for this edge.
-        SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
+        NEKMESHUTILS_EXPORT SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
         {
             // Create edge vertices.
             SpatialDomains::PointGeomSharedPtr p[2];
@@ -161,8 +163,8 @@ namespace NekMeshUtils
     /// Shared pointer to an edge.
     typedef boost::shared_ptr<Edge> EdgeSharedPtr;
 
-    bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
-    bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
 
     /**
      * @brief Defines a hash function for edges.

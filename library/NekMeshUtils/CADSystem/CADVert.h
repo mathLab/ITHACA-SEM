@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_CADSYSTEM_CADVERT
-#define NekMeshUtils_CADSYSTEM_CADVERT
+#ifndef NEKMESHUTILS_CADSYSTEM_CADVERT
+#define NEKMESHUTILS_CADSYSTEM_CADVERT
 
 #include <boost/shared_ptr.hpp>
 

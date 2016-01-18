@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_PROCESSJAC
-#define UTILITIES_MESHCONVERT_PROCESSJAC
+#ifndef UTILITIES_NEKMESH_PROCESSBL
+#define UTILITIES_NEKMESH_PROCESSBL
 
 #include "../Module.h"
 

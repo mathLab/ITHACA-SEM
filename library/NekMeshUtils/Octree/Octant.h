@@ -46,6 +46,9 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+/**
+ * @brief enumeration of the 6 faces of a cube/octant
+ */
 enum OctantFace
 {
     eUp,
@@ -56,6 +59,9 @@ enum OctantFace
     eRight
 };
 
+/**
+ * @brief enumeration of the possible locations of the octree with respect to the CAD
+ */
 enum OctantLocation
 {
     eInside,

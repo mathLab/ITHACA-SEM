@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
+#ifndef UTILITIES_NEKMESH_INPUTTEC
+#define UTILITIES_NEKMESH_INPUTTEC
 
 #include "../Module.h"
 

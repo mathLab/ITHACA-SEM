@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_INPUTNEKPP
-#define UTILITIES_MESHCONVERT_INPUTNEKPP
+#ifndef UTILITIES_NEKMESH_INPUTNEKPP
+#define UTILITIES_NEKMESH_INPUTNEKPP
 
 #include "../Module.h"
 

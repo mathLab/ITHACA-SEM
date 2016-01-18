@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_OUTPUTVTK
-#define UTILITIES_MESHCONVERT_OUTPUTVTK
+#ifndef UTILITIES_NEKMESH_OUTPUTVTK
+#define UTILITIES_NEKMESH_OUTPUTVTK
 
 #include "../Module.h"
 

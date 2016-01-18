@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_PROCESSLINEAR
-#define UTILITIES_MESHCONVERT_PROCESSLINEAR
+#ifndef UTILITIES_NEKMESH_PROCESSLINEAR
+#define UTILITIES_NEKMESH_PROCESSLINEAR
 
 #include "../Module.h"
 

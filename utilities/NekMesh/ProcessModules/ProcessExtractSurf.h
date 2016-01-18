@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_PROCESSEXTRACTSURF
-#define UTILITIES_MESHCONVERT_PROCESSEXTRACTSURF
+#ifndef UTILITIES_NEKMESH_PROCESSEXTRACTSURF
+#define UTILITIES_NEKMESH_PROCESSEXTRACTSURF
 
 #include "../Module.h"
 

@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSCHECK
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSCHECK
+#ifndef UTILITIES_NEKMESH_PROCESSCHECK
+#define UTILITIES_NEKMESH_PROCESSCHECK
 
 #include "../Module.h"
 

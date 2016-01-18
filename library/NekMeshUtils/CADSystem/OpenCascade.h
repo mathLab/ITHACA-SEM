@@ -34,8 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NekMeshUtils_CADSYSTEM_OCC
-#define NekMeshUtils_CADSYSTEM_OCC
+#ifndef NEKMESHUTILS_CADSYSTEM_OCC
+#define NEKMESHUTILS_CADSYSTEM_OCC
+
+/// This is a list of OpenCascade headers required for use with nektar
 
 #include <STEPControl_Reader.hxx>
 #include <IGESControl_Reader.hxx>

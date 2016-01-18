@@ -45,11 +45,7 @@ namespace NekMeshUtils
 
 void TriangleInterface::Mesh(bool Quiet, bool Quality)
 {
-    if(meshloaded)
-    {
-        freetri();
-    }
-    ASSERTL0(meshloaded==false,"Mesh must be cleared before meshing");
+    SetUp();
 
     int numPoints = 0;
     int numSeg = 0;
@@ -117,17 +113,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         in.holelist[(i-1)*2+1] = m_centers[i][1];
     }
 
-    out.pointlist = (REAL *) NULL;
-    out.pointattributelist = (REAL *) NULL;
-    out.pointmarkerlist = (int *) NULL;
-    out.trianglelist = (int *) NULL;
-    out.trianglearealist = (REAL *) NULL;
-    out.triangleattributelist = (REAL *) NULL;
-    out.neighborlist = (int *) NULL;
-    out.segmentlist = (int *) NULL;
-    out.segmentmarkerlist = (int *) NULL;
-    out.edgelist = (int *) NULL;
-    out.edgemarkerlist = (int *) NULL;
+
 
     if(Quiet && Quality)
     {
@@ -155,41 +141,85 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
 }
 
+void TriangleInterface::SetUp()
+{
+    in.pointlist = (REAL *) NULL;
+    in.pointattributelist = (REAL *) NULL;
+    in.pointmarkerlist = (int *) NULL;
+    in.numberofpoints = 0;
+    in.numberofpointattributes = 0;
+
+    in.trianglelist = (int *) NULL;
+    in.triangleattributelist = (REAL *) NULL;
+    in.trianglearealist = (REAL *) NULL;
+    in.neighborlist = (int *) NULL;
+    in.numberoftriangles = 0;
+    in.numberofcorners = 0;
+    in.numberoftriangleattributes = 0;
+
+    in.segmentlist = (int *) NULL;
+    in.segmentmarkerlist = (int *) NULL;
+    in.numberofsegments = 0;
+
+    in.holelist = (REAL *) NULL;
+    in.numberofholes = 0;
+
+    in.regionlist = (REAL *) NULL;
+    in.numberofregions = 0;
+
+    in.edgelist = (int *) NULL;
+    in.edgemarkerlist = (int *) NULL;
+    in.normlist = (REAL *) NULL;
+    in.numberofedges = 0;
+
+    out.pointlist = (REAL *) NULL;
+    out.pointattributelist = (REAL *) NULL;
+    out.pointmarkerlist = (int *) NULL;
+    out.numberofpoints = 0;
+    out.numberofpointattributes = 0;
+
+    out.trianglelist = (int *) NULL;
+    out.triangleattributelist = (REAL *) NULL;
+    out.trianglearealist = (REAL *) NULL;
+    out.neighborlist = (int *) NULL;
+    out.numberoftriangles = 0;
+    out.numberofcorners = 0;
+    out.numberoftriangleattributes = 0;
+
+    out.segmentlist = (int *) NULL;
+    out.segmentmarkerlist = (int *) NULL;
+    out.numberofsegments = 0;
+
+    out.holelist = (REAL *) NULL;
+    out.numberofholes = 0;
+
+    out.regionlist = (REAL *) NULL;
+    out.numberofregions = 0;
+
+    out.edgelist = (int *) NULL;
+    out.edgemarkerlist = (int *) NULL;
+    out.normlist = (REAL *) NULL;
+    out.numberofedges = 0;
+}
+
 void TriangleInterface::Extract(std::vector<std::vector<NodeSharedPtr> > &Connec)
 {
     Connec.clear();
     for(int i = 0; i < out.numberoftriangles; i++)
     {
+        map<int, NodeSharedPtr>::iterator n1,n2,n3;
+        n1 = nodemap.find(out.trianglelist[i*3+0]);
+        n2 = nodemap.find(out.trianglelist[i*3+1]);
+        n3 = nodemap.find(out.trianglelist[i*3+2]);
+
+        ASSERTL0(n1!=nodemap.end() && n2!=nodemap.end() && n3!=nodemap.end(),"node index error");
+
         vector<NodeSharedPtr> tri(3);
-        tri[0] = nodemap[out.trianglelist[i*3+0]];
-        tri[1] = nodemap[out.trianglelist[i*3+1]];
-        tri[2] = nodemap[out.trianglelist[i*3+2]];
+        tri[0] = n1->second;
+        tri[1] = n2->second;
+        tri[2] = n3->second;
         Connec.push_back(tri);
     }
-}
-
-void TriangleInterface::freetri()
-{
-    if(meshloaded)
-    {
-        free(in.pointlist);
-        free(in.pointmarkerlist);
-        free(in.segmentlist);
-        free(in.holelist);
-
-        free(out.pointlist);
-        free(out.pointattributelist);
-        free(out.pointmarkerlist);
-        free(out.trianglelist);
-        free(out.triangleattributelist);
-        free(out.trianglearealist);
-        free(out.neighborlist);
-        free(out.segmentlist);
-        free(out.segmentmarkerlist);
-        free(out.edgelist);
-        free(out.edgemarkerlist);
-    }
-    meshloaded = false;
 }
 
 }

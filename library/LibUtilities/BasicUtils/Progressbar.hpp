@@ -69,7 +69,7 @@ namespace LibUtilities
  */
 inline void PrintProgressbar(const int position, const int goal, const string message)
 {
-    std::cout.unsetf ( std::ios::floatfield ); 
+    std::cout.unsetf ( std::ios::floatfield );
     if (ISTTY)
     {
         // carriage return
@@ -91,7 +91,7 @@ inline void PrintProgressbar(const int position, const int goal, const string me
     else
     {
         // print only every 2 percent
-        if (int(ceil(100 * position / goal)) % 2 ==  0)
+        if (int(ceil(double(100 * position / goal))) % 2 ==  0)
         {
             cout << "." <<  flush;
         }

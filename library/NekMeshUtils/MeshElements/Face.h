@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_FACE
-#define NekMeshUtils_MESHELEMENTS_FACE
+#ifndef NEKMESHUTILS_MESHELEMENTS_FACE
+#define NEKMESHUTILS_MESHELEMENTS_FACE
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -351,8 +353,8 @@ namespace NekMeshUtils
     /// Shared pointer to a face.
     typedef boost::shared_ptr<Face> FaceSharedPtr;
 
-    bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2);
-    bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2);
 
     struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
     {

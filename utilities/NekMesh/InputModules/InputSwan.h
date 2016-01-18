@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_INPUTSWAN
-#define UTILITIES_MESHCONVERT_INPUTSWAN
+#ifndef UTILITIES_NEKMESH_INPUTSWAN
+#define UTILITIES_NEKMESH_INPUTSWAN
 
 #include "../Module.h"
 

@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_TRIANGLE
 #define NekMeshUtils_MESHELEMENTS_TRIANGLE
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -195,16 +197,16 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Triangle(ElmtConfig                 pConf,
-                 std::vector<NodeSharedPtr> pNodeList,
-                 std::vector<int>           pTagList);
-        Triangle(const Triangle& pSrc);
-        virtual ~Triangle() {}
+        NEKMESHUTILS_EXPORT Triangle(ElmtConfig                 pConf,
+                                     std::vector<NodeSharedPtr> pNodeList,
+                                     std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Triangle(const Triangle& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Triangle() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        virtual void Complete(int order);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual void Complete(int order);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     };
 
     typedef HOTriangle<NodeSharedPtr> HOSurf;
@@ -233,7 +235,7 @@ namespace NekMeshUtils
         }
     };
 
-    bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2);
 
     typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
 

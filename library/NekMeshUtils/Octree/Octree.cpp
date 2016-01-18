@@ -651,6 +651,8 @@ int Octree::CountElemt()
 
     NekDouble total = 0.0;
 
+    Array<OneD, NekDouble> boundingBox = m_cad->GetBoundingBox();
+
     for(int i = 0; i < m_octants.size(); i++)
     {
         OctantSharedPtr oct = m_octants[i];
@@ -661,7 +663,88 @@ int Octree::CountElemt()
         }
         else if(oct->GetLocation() == eOnBoundary)
         {
+            NekDouble vol = 1.0;
+            if(oct->FX(eBack) < boundingBox[1] && oct->FX(eForward) > boundingBox[0])
+            {
+                //then there is some over lap in x
+                NekDouble min, max;
+                if(oct->FX(eBack) > boundingBox[0])
+                {
+                    min = oct->FX(eBack);
+                }
+                else
+                {
+                    min = boundingBox[0];
+                }
+                if(boundingBox[1] < oct->FX(eForward))
+                {
+                    max = boundingBox[1];
+                }
+                else
+                {
+                    max = oct->FX(eForward);
+                }
+                vol *= (max - min);
+            }
+            else
+            {
+                vol *= 0.0;
+            }
 
+            if(oct->FX(eDown) < boundingBox[3] && oct->FX(eUp) > boundingBox[2])
+            {
+                //then there is some over lap in x
+                NekDouble min, max;
+                if(oct->FX(eDown) > boundingBox[2])
+                {
+                    min = oct->FX(eDown);
+                }
+                else
+                {
+                    min = boundingBox[2];
+                }
+                if(boundingBox[3] < oct->FX(eUp))
+                {
+                    max = boundingBox[3];
+                }
+                else
+                {
+                    max = oct->FX(eUp);
+                }
+                vol *= (max - min);
+            }
+            else
+            {
+                vol *= 0.0;
+            }
+
+            if(oct->FX(eRight) < boundingBox[5] && oct->FX(eLeft) > boundingBox[4])
+            {
+                //then there is some over lap in x
+                NekDouble min, max;
+                if(oct->FX(eRight) > boundingBox[4])
+                {
+                    min = oct->FX(eRight);
+                }
+                else
+                {
+                    min = boundingBox[4];
+                }
+                if(boundingBox[5] < oct->FX(eLeft))
+                {
+                    max = boundingBox[5];
+                }
+                else
+                {
+                    max = oct->FX(eLeft);
+                }
+                vol *= (max - min);
+            }
+            else
+            {
+                vol *= 0.0;
+            }
+            total += vol/2.0 / (oct->GetDelta()*oct->GetDelta()*oct->GetDelta()/6.0/sqrt(2));
         }
     }
 

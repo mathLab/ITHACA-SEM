@@ -51,6 +51,9 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+/**
+ * @brief class for interacting with the external library tetgen
+ */
 class TetGenInterface
 {
     public:
@@ -79,6 +82,9 @@ class TetGenInterface
          */
         void RefineMesh(std::map<int, NekDouble> delta);
 
+        /**
+         * @brief get the list of connectivites of the nodes
+         */
         std::vector<Array<OneD, int> > Extract();
 
         /**

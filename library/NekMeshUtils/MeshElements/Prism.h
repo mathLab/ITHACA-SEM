@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_PRISM
-#define NekMeshUtils_MESHELEMENTS_PRISM
+#ifndef NEKMESHUTILS_MESHELEMENTS_PRISM
+#define NEKMESHUTILS_MESHELEMENTS_PRISM
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -64,16 +66,16 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Prism(ElmtConfig                 pConf,
-              std::vector<NodeSharedPtr> pNodeList,
-              std::vector<int>           pTagList);
-        Prism(const Prism& pSrc);
-        virtual ~Prism() {}
+        NEKMESHUTILS_EXPORT Prism(ElmtConfig                 pConf,
+                                  std::vector<NodeSharedPtr> pNodeList,
+                                  std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Prism(const Prism& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Prism() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        virtual void Complete(int order);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual void Complete(int order);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 
         /**
          * Orientation of prism; unchanged = 0; clockwise = 1;

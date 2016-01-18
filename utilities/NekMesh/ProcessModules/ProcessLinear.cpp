@@ -36,7 +36,6 @@
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 #include "ProcessLinear.h"
 
-#include <vector>
 using namespace std;
 
 namespace Nektar
@@ -50,7 +49,10 @@ ModuleKey ProcessLinear::className =
 
 ProcessLinear::ProcessLinear(MeshSharedPtr m) : ProcessModule(m)
 {
-
+    m_config["all"] = ConfigOption(
+        true, "0", "remove curve nodes for all elements.");
+    m_config["invalid"] = ConfigOption(
+        true, "0", "remove curve nodes if element is invalid.");
 }
 
 ProcessLinear::~ProcessLinear()
@@ -65,24 +67,75 @@ void ProcessLinear::Process()
         cout << "ProcessLinear: Linearising mesh... " << endl;
     }
 
-    EdgeSet::iterator eit;
-    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-    {
-        (*eit)->m_edgeNodes.clear();
-    }
+    bool all = m_config["all"].as<bool>();
+    bool invalid = m_config["invalid"].as<bool>();
 
-    FaceSet::iterator fit;
-    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
-    {
-        (*fit)->m_faceNodes.clear();
-    }
+    ASSERTL0(all || invalid, "must specify option all or invalid");
 
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    if(all)
     {
-        vector<NodeSharedPtr> empty;
-        m_mesh->m_element[m_mesh->m_expDim][i]->SetVolumeNodes(empty);
-    }
+        EdgeSet::iterator eit;
+        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+        {
+            (*eit)->m_edgeNodes.clear();
+        }
 
+        FaceSet::iterator fit;
+        for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+        {
+            (*fit)->m_faceNodes.clear();
+        }
+
+        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+        {
+            vector<NodeSharedPtr> empty;
+            m_mesh->m_element[m_mesh->m_expDim][i]->SetVolumeNodes(empty);
+        }
+    }
+    else if(invalid)
+    {
+        if(m_mesh->m_expDim == 3)
+        {
+            FaceSet::iterator fit;
+            for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+            {
+                ASSERTL0((*fit)->m_faceNodes.size() == 0, "has not be setup to handle face curvature yet");
+            }
+        }
+
+        vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+        // Iterate over list of elements of expansion dimension.
+        for (int i = 0; i < el.size(); ++i)
+        {
+            // Create elemental geometry.
+            SpatialDomains::GeometrySharedPtr geom =
+                el[i]->GetGeom(m_mesh->m_spaceDim);
+
+            // Generate geometric factors.
+            SpatialDomains::GeomFactorsSharedPtr gfac =
+                geom->GetGeomFactors();
+
+            // Get the Jacobian and, if it is negative, print a warning
+            // message.
+            if (!gfac->IsValid())
+            {
+
+                vector<FaceSharedPtr> f = el[i]->GetFaceList();
+                for(int j = 0; j < f.size(); j++)
+                {
+                    vector<EdgeSharedPtr> e = f[j]->m_edgeList;
+                    for(int k = 0; k < e.size(); k++)
+                    {
+                        if(e[k]->m_edgeNodes.size())
+                        {
+                            vector<NodeSharedPtr> zeroNodes;
+                            e[k]->m_edgeNodes = zeroNodes;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 }

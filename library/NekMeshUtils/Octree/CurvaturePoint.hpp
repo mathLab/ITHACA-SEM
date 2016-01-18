@@ -106,25 +106,14 @@ public:
      */
     Array<OneD, NekDouble> GetLoc(){return m_loc;}
 
+    /**
+     * @brief gets the corresponding cad information for the point
+     */
     void GetCAD(int &surf, Array<OneD, NekDouble> &uv)
     {
         surf = sid;
         uv = m_uv;
     }
-
-    bool IsMinLimited(NekDouble &d)
-    {
-        if(m_minlimited)
-        {
-            d = m_deltaIdeal;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
 
 private:
 

@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_MODULE
-#define UTILITIES_PREPROCESSING_MESHCONVERT_MODULE
+#ifndef UTILITIES_NEKMESH_MODULE
+#define UTILITIES_NEKMESH_MODULE
 
 #include <map>
 #include <vector>

@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_ELEMENT
 #define NekMeshUtils_MESHELEMENTS_ELEMENT
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -102,7 +104,7 @@ namespace NekMeshUtils
         LibUtilities::PointsType m_faceCurveType;
     };
 
-    bool operator==(ElmtConfig const &c1, ElmtConfig const &c2);
+    NEKMESHUTILS_EXPORT bool operator==(ElmtConfig const &c1, ElmtConfig const &c2);
 
     /**
      * @brief Base class for element definitions.
@@ -113,71 +115,71 @@ namespace NekMeshUtils
      */
     class Element {
     public:
-        Element(ElmtConfig   pConf,
+        NEKMESHUTILS_EXPORT Element(ElmtConfig   pConf,
                 unsigned int pNumNodes,
                 unsigned int pGotNodes);
 
         /// Returns the ID of the element (or associated edge or face for
         /// boundary elements).
-        unsigned int GetId() const {
+        NEKMESHUTILS_EXPORT unsigned int GetId() const {
             if (m_faceLink.get() != 0) return m_faceLink->m_id;
             if (m_edgeLink.get() != 0) return m_edgeLink->m_id;
             return m_id;
         }
         /// Returns the expansion dimension of the element.
-        unsigned int GetDim() const {
+        NEKMESHUTILS_EXPORT unsigned int GetDim() const {
             return m_dim;
         }
         /// Returns the configuration of the element.
-        ElmtConfig GetConf() const {
+        NEKMESHUTILS_EXPORT ElmtConfig GetConf() const {
             return m_conf;
         }
         /// Returns the tag which defines the element shape.
-        std::string GetTag() const {
+        NEKMESHUTILS_EXPORT std::string GetTag() const {
             if (m_faceLink.get() != 0) return "F";
             if (m_edgeLink.get() != 0) return "E";
             return m_tag;
         }
         /// Access a vertex node.
-        NodeSharedPtr GetVertex(unsigned int i) const {
+        NEKMESHUTILS_EXPORT NodeSharedPtr GetVertex(unsigned int i) const {
             return m_vertex[i];
         }
         /// Access an edge.
-        EdgeSharedPtr GetEdge(unsigned int i) const {
+        NEKMESHUTILS_EXPORT EdgeSharedPtr GetEdge(unsigned int i) const {
             return m_edge[i];
         }
         /// Access a face.
-        FaceSharedPtr GetFace(unsigned int i) const {
+        NEKMESHUTILS_EXPORT FaceSharedPtr GetFace(unsigned int i) const {
             return m_face[i];
         }
         /// Access the list of vertex nodes.
-        std::vector<NodeSharedPtr> GetVertexList() const {
+        NEKMESHUTILS_EXPORT std::vector<NodeSharedPtr> GetVertexList() const {
             return m_vertex;
         }
         /// Access the list of edges.
-        std::vector<EdgeSharedPtr> GetEdgeList() const {
+        NEKMESHUTILS_EXPORT std::vector<EdgeSharedPtr> GetEdgeList() const {
             return m_edge;
         }
         /// Access the list of faces.
-        std::vector<FaceSharedPtr> GetFaceList() const {
+        NEKMESHUTILS_EXPORT std::vector<FaceSharedPtr> GetFaceList() const {
             return m_face;
         }
         /// Access the list of volume nodes.
-        std::vector<NodeSharedPtr> GetVolumeNodes() const {
+        NEKMESHUTILS_EXPORT std::vector<NodeSharedPtr> GetVolumeNodes() const {
             return m_volumeNodes;
         }
-        void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes) {
+        NEKMESHUTILS_EXPORT void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes) {
             m_volumeNodes = nodes;
         }
-        LibUtilities::PointsType GetCurveType() const {
+        NEKMESHUTILS_EXPORT LibUtilities::PointsType GetCurveType() const {
             return m_curveType;
         }
-        void SetCurveType(LibUtilities::PointsType cT) {
+        NEKMESHUTILS_EXPORT void SetCurveType(LibUtilities::PointsType cT) {
             m_curveType = cT;
         }
         /// Returns the total number of nodes (vertices, edge nodes and
         /// face nodes and volume nodes).
-        unsigned int GetNodeCount() const
+        NEKMESHUTILS_EXPORT unsigned int GetNodeCount() const
         {
             unsigned int n = m_volumeNodes.size();
             if (m_dim == 1)
@@ -200,56 +202,56 @@ namespace NekMeshUtils
             return n;
         }
         /// Access the list of tags associated with this element.
-        std::vector<int> GetTagList() const {
+        NEKMESHUTILS_EXPORT std::vector<int> GetTagList() const {
             return m_taglist;
         }
         /// Returns the number of vertices.
-        unsigned int GetVertexCount() const {
+        NEKMESHUTILS_EXPORT unsigned int GetVertexCount() const {
             return m_vertex.size();
         }
         /// Returns the number of edges.
-        unsigned int GetEdgeCount() const {
+        NEKMESHUTILS_EXPORT unsigned int GetEdgeCount() const {
             return m_edge.size();
         }
         /// Returns the number of faces.
-        unsigned int GetFaceCount() const {
+        NEKMESHUTILS_EXPORT unsigned int GetFaceCount() const {
             return m_face.size();
         }
         /// Change the ID of the element.
-        void SetId(unsigned int p) {
+        NEKMESHUTILS_EXPORT void SetId(unsigned int p) {
             m_id = p;
         }
         /// Replace a vertex with another vertex object.
-        void SetVertex(unsigned int p, NodeSharedPtr pNew);
+        NEKMESHUTILS_EXPORT void SetVertex(unsigned int p, NodeSharedPtr pNew);
         /// Replace an edge with another edge object.
-        void SetEdge(unsigned int p, EdgeSharedPtr pNew);
+        NEKMESHUTILS_EXPORT void SetEdge(unsigned int p, EdgeSharedPtr pNew);
         /// Replace a face with another face object.
-        void SetFace(unsigned int p, FaceSharedPtr pNew);
+        NEKMESHUTILS_EXPORT void SetFace(unsigned int p, FaceSharedPtr pNew);
         /// Set a correspondence between this element and an edge
         /// (2D boundary element).
-        void SetEdgeLink(EdgeSharedPtr pLink) {
+        NEKMESHUTILS_EXPORT void SetEdgeLink(EdgeSharedPtr pLink) {
             m_edgeLink = pLink;
         }
         /// Get correspondence between this element and an edge.
-        EdgeSharedPtr GetEdgeLink() {
+        NEKMESHUTILS_EXPORT EdgeSharedPtr GetEdgeLink() {
             return m_edgeLink;
         }
         /// Set a correspondence between this element and a face
         /// (3D boundary element).
-        void SetFaceLink(FaceSharedPtr pLink) {
+        NEKMESHUTILS_EXPORT void SetFaceLink(FaceSharedPtr pLink) {
             m_faceLink = pLink;
         }
         /// Get correspondence between this element and a face.
-        FaceSharedPtr GetFaceLink() {
+        NEKMESHUTILS_EXPORT FaceSharedPtr GetFaceLink() {
             return m_faceLink;
         }
         /// Set a correspondence between edge or face i and its
         /// representative boundary element m->element[expDim-1][j].
-        void SetBoundaryLink(int i, int j) {
+        NEKMESHUTILS_EXPORT void SetBoundaryLink(int i, int j) {
             m_boundaryLinks[i] = j;
         }
         /// Get the location of the boundary face/edge i for this element.
-        int GetBoundaryLink(int i) {
+        NEKMESHUTILS_EXPORT int GetBoundaryLink(int i) {
             std::map<int,int>::iterator it = m_boundaryLinks.find(i);
             if (it == m_boundaryLinks.end())
             {
@@ -261,12 +263,12 @@ namespace NekMeshUtils
             }
         }
         /// Set the list of tags associated with this element.
-        void SetTagList(const std::vector<int> &tags)
+        NEKMESHUTILS_EXPORT void SetTagList(const std::vector<int> &tags)
         {
             m_taglist = tags;
         }
         /// Generate a list of vertices (1D), edges (2D), or faces (3D).
-        virtual std::string GetXmlString() const
+        NEKMESHUTILS_EXPORT virtual std::string GetXmlString() const
         {
             std::stringstream s;
             switch (m_dim)
@@ -295,7 +297,7 @@ namespace NekMeshUtils
 
         /// Generates a string listing the coordinates of all nodes
         /// associated with this element.
-        std::string GetXmlCurveString() const
+        NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
         {
             // Temporary node list for reordering
             std::vector<NodeSharedPtr> nodeList;
@@ -402,18 +404,18 @@ namespace NekMeshUtils
         }
 
         /// Generate a Nektar++ geometry object for this element.
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
         {
             ASSERTL0(false, "This function should be implemented at a shape level.");
             return boost::shared_ptr<SpatialDomains::Geometry>();
         }
-        int GetMaxOrder();
+        NEKMESHUTILS_EXPORT int GetMaxOrder();
         /// Complete this object.
-        virtual void Complete(int order)
+        NEKMESHUTILS_EXPORT virtual void Complete(int order)
         {
             ASSERTL0(false, "This function should be implemented at a shape level.");
         }
-        void Print()
+        NEKMESHUTILS_EXPORT void Print()
         {
             int i, j;
             for (i = 0; i < m_vertex.size(); ++i)
@@ -479,7 +481,8 @@ namespace NekMeshUtils
     /// Element factory definition.
     typedef Nektar::LibUtilities::NekFactory<LibUtilities::ShapeType, Element,
         ElmtConfig, std::vector<NodeSharedPtr>, std::vector<int> > ElementFactory;
-    ElementFactory& GetElementFactory();
+
+    NEKMESHUTILS_EXPORT ElementFactory& GetElementFactory();
 
     /// Define element ordering based on ID.
     struct element_id_less_than

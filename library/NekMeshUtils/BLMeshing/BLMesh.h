@@ -58,8 +58,8 @@ public:
      *@brief default constructor
      */
     BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
-           std::vector<unsigned int> syms, NekDouble b) :
-           m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
+                               std::vector<unsigned int> syms, NekDouble b) :
+                               m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
     {
     };
 

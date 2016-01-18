@@ -303,8 +303,8 @@ void FaceMesh::Smoothing()
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
                     NodeSharedPtr dn = boost::shared_ptr<Node>(new Node(0,locd[0],locd[1],locd[2]));
                     dn->SetCADSurf(m_id, m_cadsurf, ud);
+                    
                     nodesystem.push_back(dn);
-
                     lamp.push_back(lambda[0]);
                 }
                 else
@@ -739,7 +739,7 @@ void FaceMesh::BuildLocalMesh()
             ns.push_back(blpairs[0].second);
             ns.push_back(blpairs[0].first);
             vector<int> tags;
-            tags.push_back(quadcomp); 
+            tags.push_back(quadcomp);
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
             E->CADSurfId = m_id;

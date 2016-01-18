@@ -36,6 +36,8 @@
 #ifndef NekMeshUtils_MESHELEMENTS_HEX
 #define NekMeshUtils_MESHELEMENTS_HEX
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -46,10 +48,10 @@ namespace NekMeshUtils
     class Hexahedron : public Element {
     public:
         /// Creates an instance of this class
-        static ElementSharedPtr create(
-            ElmtConfig                 pConf,
-            std::vector<NodeSharedPtr> pNodeList,
-            std::vector<int>           pTagList)
+        NEKMESHUTILS_EXPORT static ElementSharedPtr create(
+                                        ElmtConfig                 pConf,
+                                        std::vector<NodeSharedPtr> pNodeList,
+                                        std::vector<int>           pTagList)
         {
             ElementSharedPtr e = boost::shared_ptr<Element>(
                 new Hexahedron(pConf, pNodeList, pTagList));
@@ -63,15 +65,15 @@ namespace NekMeshUtils
         /// Element type
         static LibUtilities::ShapeType m_type;
 
-        Hexahedron(ElmtConfig                 pConf,
-                   std::vector<NodeSharedPtr> pNodeList,
-                   std::vector<int>           pTagList);
-        Hexahedron(const Hexahedron& pSrc);
-        virtual ~Hexahedron() {}
+        NEKMESHUTILS_EXPORT Hexahedron(ElmtConfig                 pConf,
+                                       std::vector<NodeSharedPtr> pNodeList,
+                                       std::vector<int>           pTagList);
+        NEKMESHUTILS_EXPORT Hexahedron(const Hexahedron& pSrc);
+        NEKMESHUTILS_EXPORT virtual ~Hexahedron() {}
 
-        virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
-        static unsigned int GetNumNodes(ElmtConfig pConf);
+        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     };
 
 }

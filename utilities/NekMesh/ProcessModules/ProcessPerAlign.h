@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_PROCESSPERALIGN
-#define UTILITIES_MESHCONVERT_PROCESSPERALIGN
+#ifndef UTILITIES_NEKMESH_PROCESSPERALIGN
+#define UTILITIES_NEKMESH_PROCESSPERALIGN
 
 #include "../Module.h"
 

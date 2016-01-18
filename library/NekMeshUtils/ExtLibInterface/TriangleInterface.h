@@ -53,12 +53,14 @@ extern "C"{
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
+/**
+ * @brief class for interfacing with external library triangle
+ */
 class TriangleInterface
 {
 public:
@@ -69,7 +71,6 @@ public:
      */
     TriangleInterface()
     {
-        meshloaded = false;
     };
 
     /**
@@ -79,10 +80,6 @@ public:
                 std::vector<Array<OneD, NekDouble> > &centers, int i,
                 NekDouble str = 1.0)
     {
-        if(meshloaded)
-        {
-            freetri();
-        }
         m_boundingloops = boundingloops;
         m_centers = centers;
         m_str = str;
@@ -92,15 +89,6 @@ public:
     void AssignStiener(std::vector<NodeSharedPtr> stiner)
     {
         m_stienerpoints = stiner;
-    }
-
-    /**
-     * @brief destructor, clear mesh to prevent memory leak
-     */
-    ~TriangleInterface()
-    {
-        if(meshloaded)
-            freetri();
     }
 
     /**
@@ -118,7 +106,7 @@ private:
     /**
      * @brief clear memory
      */
-    void freetri();
+    void SetUp();
 
     /// list of bounding nodes to the surface
     std::vector<std::vector<NodeSharedPtr> > m_boundingloops;
@@ -126,12 +114,10 @@ private:
     std::vector<NodeSharedPtr> m_stienerpoints;
     /// coordinates of the centers of the loops
     std::vector<Array<OneD, NekDouble> > m_centers;
-    /// map from meshconvert id to triangle id
+    /// map from NekMesh id to triangle id
     std::map<int, NodeSharedPtr> nodemap;
     /// id of the surface
     int sid;
-    /// has mesh been run before
-    bool meshloaded;
     /// Stretching factor of parameter plane
     NekDouble m_str;
     /// triangle data strucutres

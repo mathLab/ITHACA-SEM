@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_MESHCONVERT_INPUTNEK
-#define UTILITIES_MESHCONVERT_INPUTNEK
+#ifndef UTILITIES_NEKMESH_INPUTNEK
+#define UTILITIES_NEKMESH_INPUTNEK
 
 #include <algorithm>
 #include <boost/unordered_set.hpp>

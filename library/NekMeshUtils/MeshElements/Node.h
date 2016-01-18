@@ -33,8 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_NODE
-#define NekMeshUtils_MESHELEMENTS_NODE
+#ifndef NEKMESHUTILS_MESHELEMENTS_NODE
+#define NEKMESHUTILS_MESHELEMENTS_NODE
+
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -58,102 +60,102 @@ namespace NekMeshUtils
     class Node {
     public:
         /// Create a new node at a specified coordinate.
-        Node(int pId, NekDouble pX, NekDouble pY, NekDouble pZ)
+        NEKMESHUTILS_EXPORT Node(int pId, NekDouble pX, NekDouble pY, NekDouble pZ)
             : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
         /// Copy an existing node.
         //Node(const Node& pSrc)
         //    : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y),
         //      m_z(pSrc.m_z), m_geom() {}
-        Node() : m_id(0), m_x(0.0), m_y(0.0), m_z(0.0), m_geom() {}
-        ~Node() {}
+        NEKMESHUTILS_EXPORT Node() : m_id(0), m_x(0.0), m_y(0.0), m_z(0.0), m_geom() {}
+        NEKMESHUTILS_EXPORT ~Node() {}
 
         /// Reset the local id;
-        void SetID(int pId)
+        NEKMESHUTILS_EXPORT void SetID(int pId)
         {
             m_id = pId;
         }
 
         /// Get the local id;
-        int GetID(void)
+        NEKMESHUTILS_EXPORT int GetID(void)
         {
             return m_id;
         }
 
         /// Define node ordering based on ID.
-        bool operator<(const Node& pSrc)
+        NEKMESHUTILS_EXPORT bool operator<(const Node& pSrc)
         {
             return (m_id < pSrc.m_id);
         }
         /// Define node equality based on coordinate.
-        bool operator==(const Node& pSrc)
+        NEKMESHUTILS_EXPORT bool operator==(const Node& pSrc)
         {
             return m_x == pSrc.m_x && m_y == pSrc.m_y && m_z == pSrc.m_z;
         }
 
-        Node operator+(const Node &pSrc) const
+        NEKMESHUTILS_EXPORT Node operator+(const Node &pSrc) const
         {
             return Node(m_id, m_x+pSrc.m_x, m_y+pSrc.m_y, m_z+pSrc.m_z);
         }
 
-        Node operator-(const Node &pSrc) const
+        NEKMESHUTILS_EXPORT Node operator-(const Node &pSrc) const
         {
             return Node(m_id, m_x-pSrc.m_x, m_y-pSrc.m_y, m_z-pSrc.m_z);
         }
 
-        Node operator*(const Node &pSrc) const
+        NEKMESHUTILS_EXPORT Node operator*(const Node &pSrc) const
         {
             return Node(m_id, m_x*pSrc.m_x, m_y*pSrc.m_y, m_z*pSrc.m_z);
         }
 
-        Node operator*(const NekDouble &alpha) const
+        NEKMESHUTILS_EXPORT Node operator*(const NekDouble &alpha) const
         {
             return Node(m_id, alpha*m_x, alpha*m_y, alpha*m_z);
         }
 
-        Node operator/(const NekDouble &alpha) const
+        NEKMESHUTILS_EXPORT Node operator/(const NekDouble &alpha) const
         {
             return Node(m_id, m_x/alpha, m_y/alpha, m_z/alpha);
         }
 
-        void operator+=(const Node &pSrc)
+        NEKMESHUTILS_EXPORT void operator+=(const Node &pSrc)
         {
             m_x += pSrc.m_x;
             m_y += pSrc.m_y;
             m_z += pSrc.m_z;
         }
 
-        void operator*=(const NekDouble &alpha)
+        NEKMESHUTILS_EXPORT void operator*=(const NekDouble &alpha)
         {
             m_x *= alpha;
             m_y *= alpha;
             m_z *= alpha;
         }
 
-        void operator/=(const NekDouble &alpha)
+        NEKMESHUTILS_EXPORT void operator/=(const NekDouble &alpha)
         {
             m_x /= alpha;
             m_y /= alpha;
             m_z /= alpha;
         }
 
-        NekDouble abs2() const
+        NEKMESHUTILS_EXPORT NekDouble abs2() const
         {
             return m_x*m_x+m_y*m_y+m_z*m_z;
         }
 
-        NekDouble dot(const Node &pSrc) const
+        NEKMESHUTILS_EXPORT NekDouble dot(const Node &pSrc) const
         {
             return m_x*pSrc.m_x + m_y*pSrc.m_y + m_z*pSrc.m_z;
         }
 
 
-        Node curl(const Node &pSrc) const
+        NEKMESHUTILS_EXPORT Node curl(const Node &pSrc) const
         {
             return Node(m_id, m_y*pSrc.m_z - m_z*pSrc.m_y,
                         m_z*pSrc.m_x-m_x*pSrc.m_z, m_x*pSrc.m_y-m_y*pSrc.m_x);
         }
 
-        Array<OneD, NekDouble> GetLoc()
+        NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetLoc()
         {
             Array<OneD, NekDouble> out(3);
             out[0] = m_x; out[1] = m_y; out[2] = m_z;
@@ -161,7 +163,7 @@ namespace NekMeshUtils
         }
 
         /// Generate a %SpatialDomains::PointGeom for this node.
-        SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
+        NEKMESHUTILS_EXPORT SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
         {
             SpatialDomains::PointGeomSharedPtr ret =
                 MemoryManager<SpatialDomains::PointGeom>
@@ -170,13 +172,13 @@ namespace NekMeshUtils
             return ret;
         }
 
-        NekDouble Distance(NodeSharedPtr &p)
+        NEKMESHUTILS_EXPORT NekDouble Distance(NodeSharedPtr &p)
         {
             return sqrt((m_x-p->m_x)*(m_x-p->m_x)+(m_y-p->m_y)*(m_y-p->m_y)
                         +(m_z-p->m_z)*(m_z-p->m_z));
         }
 
-        NekDouble Angle(NodeSharedPtr &a, NodeSharedPtr &b)
+        NEKMESHUTILS_EXPORT NekDouble Angle(NodeSharedPtr &a, NodeSharedPtr &b)
         {
             Array<OneD,NekDouble> va(3),vb(3),cn(3);
             va[0] = a->m_x - m_x;
@@ -303,9 +305,9 @@ namespace NekMeshUtils
     };
     /// Shared pointer to a Node.
 
-    bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
-    bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
-    bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+    NEKMESHUTILS_EXPORT bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
     std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
 
     /**

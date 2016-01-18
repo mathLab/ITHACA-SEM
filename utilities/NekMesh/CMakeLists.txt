@@ -55,8 +55,8 @@ IF (NEKTAR_USE_CCM)
 ENDIF (NEKTAR_USE_CCM)
 
 IF(NEKTAR_USE_HDF5)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputPYFR.h)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputPYFR.cpp)
+    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputPYFR.h OutputModules/OutputPYFR.h)
+    SET(NekMeshSources ${NekMeshSources} InputModules/InputPYFR.cpp OutputModules/OutputPYFR.cpp)
 ENDIF (NEKTAR_USE_HDF5)
 
 

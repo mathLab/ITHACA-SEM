@@ -135,11 +135,11 @@ void InputPYFR::Process()
         d.read( data, PredType::NATIVE_FLOAT, memspace, s );
 
         Array<ThreeD, NekDouble> dataArray(dims_out[0],dims_out[1],dims_out[2]);
-        for(int j = 0; j < dims_out[0]; j++)
+        for(int j = 0; j < dims_out[0]; j++) //verteices
         {
-            for(int k = 0; k < dims_out[1]; k++)
+            for(int k = 0; k < dims_out[1]; k++) //elements
             {
-                for(int l = 0; l < dims_out[2]; l++)
+                for(int l = 0; l < dims_out[2]; l++) //dims
                 {
                     dataArray[j][k][l] = data[j*dims_out[1]*dims_out[2] + k*dims_out[2] + l];
                 }

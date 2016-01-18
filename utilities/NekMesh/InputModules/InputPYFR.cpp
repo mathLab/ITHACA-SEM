@@ -110,6 +110,9 @@ void InputPYFR::Process()
     m_mesh->m_spaceDim = 2;
     m_mesh->m_nummode = 2;
 
+    map<string, vector<ElementSharedPtr> > elmap;
+
+    int nct = 0;
     for(int i = 0; i < elements.size(); i++)
     {
         // all this is to just get the data out of hdf5, why so complicated!!!
@@ -183,7 +186,7 @@ void InputPYFR::Process()
             vector<NodeSharedPtr> ns(nv);
             for(int k = 0; k < nv; k++)
             {
-                ns[k] = boost::shared_ptr<Node>(new Node(0, dataArray[nodemap[k]][j][0],
+                ns[k] = boost::shared_ptr<Node>(new Node(nct++, dataArray[nodemap[k]][j][0],
                                                 dataArray[nodemap[k]][j][1], 0.0));
             }
             vector<int> tags;
@@ -192,17 +195,18 @@ void InputPYFR::Process()
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     st, conf, ns, tags);
             m_mesh->m_element[m_mesh->m_expDim].push_back(E);
+            elmap[tmp[1]].push_back(E);
         }
     }
 
     typedef struct conec
     {
-        char      el[4];
+        char      el[5];
         int       id;
         int       fc;
         int       bl;
     } conec;
-    StrType strdatatype(PredType::C_S1, 4);
+    StrType strdatatype(PredType::C_S1, 5);
 
     //con
     {
@@ -232,14 +236,66 @@ void InputPYFR::Process()
         conec* data = new conec[totSize];
         d.read( data, cn );
 
-        for(int j = 0; j < dims_out[0]; j++)
+        for(int k = 0; k < dims_out[1]; k++)
         {
-            for(int k = 0; k < 2; k++)
-            {
-                cout << data[j*dims_out[1] + k].el << " " << data[j*dims_out[1] + k].id << " " << data[j*dims_out[1] + k].fc << endl;
-            }
+            ElementSharedPtr e1 = elmap[data[0*dims_out[1] + k].el][data[0*dims_out[1] + k].id];
+            ElementSharedPtr e2 = elmap[data[1*dims_out[1] + k].el][data[1*dims_out[1] + k].id];
+
+            e2->SetEdge(data[1*dims_out[1] + k].fc, e1->GetEdge(data[0*dims_out[1] + k].fc));
         }
 
+    }
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
+    ProcessComposites();
+
+    for(int i = 0; i < bcs.size(); i++)
+    {
+        // all this is to just get the data out of hdf5, why so complicated!!!
+        DataSet d = g.openDataSet(bcs[i]);
+        DataSpace s = d.getSpace();
+        int rank = s.getSimpleExtentNdims();
+        hsize_t* dims_out = new hsize_t[rank];
+        int ndims = s.getSimpleExtentDims( dims_out, NULL);
+        hsize_t* offset = new hsize_t[ndims];	// hyperslab offset in the file
+        memset(offset, 0, rank * sizeof(hsize_t)) ;
+        s.selectHyperslab( H5S_SELECT_SET, dims_out, offset);
+        DataSpace memspace( ndims, dims_out); //describe hyperslab in memory space
+        memspace.selectHyperslab( H5S_SELECT_SET, dims_out, offset);
+
+        CompType cn( sizeof(conec) );
+        cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
+        cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT);
+        cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT);
+        cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT);
+
+        hsize_t totSize = 1 ;
+        for(int j = 0 ; j < ndims ; j++)
+        {
+            totSize *= dims_out[j];
+        }
+
+        conec* data = new conec[totSize];
+        d.read( data, cn );
+
+        for(int k = 0; k < dims_out[0]; k++)
+        {
+            ElementSharedPtr e1 = elmap[data[k].el][data[k].id];
+            EdgeSharedPtr e = e1->GetEdge(data[k].fc);
+
+            vector<NodeSharedPtr> ns(2);
+            ns[0] = e->m_n1;
+            ns[1] = e->m_n2;
+
+            vector<int> tags;
+            tags.push_back(elements.size()+i);
+            ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                    LibUtilities::eSegment, conf, ns, tags);
+            m_mesh->m_element[m_mesh->m_expDim-1].push_back(E);
+        }
     }
 
     ProcessVertices();

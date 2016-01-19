@@ -411,6 +411,11 @@ void APE::v_ExtraFldOutput(
         m_fields[0]->FwdTrans(m_basefield[i], tmpFwd);
         fieldcoeffs.push_back(tmpFwd);
     }
+
+    variables.push_back("S");
+    Array<OneD, NekDouble> FwdS(nCoeffs);
+    m_fields[0]->FwdTrans(m_sourceTerms, FwdS);
+    fieldcoeffs.push_back(FwdS);
 }
 
 

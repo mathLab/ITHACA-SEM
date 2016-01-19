@@ -96,6 +96,8 @@ class APE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
+        virtual bool v_PostIntegrate(int step);
+
         void AddSource(Array< OneD, Array< OneD, NekDouble > >& outarray);
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
@@ -108,9 +110,6 @@ class APE : public UnsteadySystem
         const Array<OneD, const Array<OneD, NekDouble> > &GetBasefield();
 
         NekDouble GetGamma();
-
-        void UpdateBasefield();
-        void UpdateSourceTerms();
 
     private:
 

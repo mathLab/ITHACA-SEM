@@ -83,8 +83,12 @@ void APE::v_InitObject()
     // Resize the advection velocities vector to dimension of the problem
     m_basefield_names.resize(m_spacedim + 2);
 
+    // Initialize basefield
+    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
+
     //  Initialize the sourceterm
     m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints());
+    EvaluateFunction("S", m_sourceTerms, "Source", m_time);
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -157,8 +161,6 @@ void APE::GetFluxVector(
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
 {
-    UpdateBasefield();
-
     int nq = physfield[0].num_elements();
     Array<OneD, NekDouble> tmp1(nq);
     Array<OneD, NekDouble> tmp2(nq);
@@ -214,6 +216,19 @@ void APE::GetFluxVector(
             }
         }
     }
+}
+
+
+/**
+ * @brief v_PostIntegrate
+ */
+bool APE::v_PostIntegrate(int step)
+{
+
+    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
+    EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+
+    return UnsteadySystem::v_PostIntegrate(step);
 }
 
 
@@ -378,7 +393,6 @@ void APE::WallBC(int bcRegion, int cnt,
  */
 void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
-    UpdateSourceTerms();
     Vmath::Vadd(GetTotPoints(), m_sourceTerms, 1, outarray[0], 1, outarray[0], 1);
 }
 
@@ -387,8 +401,6 @@ void APE::v_ExtraFldOutput(
     std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     std::vector<std::string>             &variables)
 {
-    UpdateBasefield();
-
     const int nCoeffs = m_fields[0]->GetNcoeffs();
 
     for (int i = 0; i < m_spacedim + 2; i++)
@@ -440,37 +452,6 @@ NekDouble APE::GetGamma()
 {
     return m_gamma;
 }
-
-
-void APE::UpdateBasefield()
-{
-    static NekDouble last_update = -1.0;
-
-    if (m_time > last_update)
-    {
-        last_update = m_time;
-        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
-    }
-}
-
-void APE::UpdateSourceTerms()
-{
-    static NekDouble last_update = -1.0;
-
-    if (m_time > last_update)
-    {
-        Array<OneD, NekDouble> sourceC(m_fields[0]->GetNcoeffs());
-
-        EvaluateFunction("S", m_sourceTerms, "Source", m_time);
-
-        m_fields[0]->IProductWRTBase(m_sourceTerms, sourceC);
-        m_fields[0]->MultiplyByElmtInvMass(sourceC, sourceC);
-        m_fields[0]->BwdTrans(sourceC, m_sourceTerms);
-
-        last_update = m_time;
-    }
-}
-
 
 } //end of namespace
 

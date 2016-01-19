@@ -602,7 +602,20 @@ void SurfaceMesh::HOSurf()
                        uvi[j][1] + dx[1] > bnds[3])
                     {
                         fail = true;
-                        break;
+                        cout << endl << "failed a point" << endl;
+                        //cout << dx[0] << " " << uvi[j][0] << " " << bnds[0] << " " << bnds[1] << endl;
+                        //cout << dx[1] << " " << uvi[j][1] << " " << bnds[2] << " " << bnds[3] << endl << endl;
+                        //cout << J << endl << endl << H << endl << endl;
+                        //move point to centrioid of its spring system as a guess
+                        Array<OneD, NekDouble> ua(2,0.0);
+                        for(int l = 0; l < 6; l++)
+                        {
+                            ua[0] += uvi[near[j][l]][0] / 6.0;
+                            ua[1] += uvi[near[j][l]][1] / 6.0;
+                        }
+                        uvi[j][0] = ua[0];
+                        uvi[j][1] = ua[1];
+                        //break;
                     }
                     else
                     {
@@ -626,8 +639,7 @@ void SurfaceMesh::HOSurf()
                 }
                 if(fail)
                 {
-                    cout << "failed a point" << endl;
-                    converged++;
+                    //converged++;
                 }
             }
 

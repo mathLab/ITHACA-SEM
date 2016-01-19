@@ -116,9 +116,11 @@ class SurfaceMesh
 
 
 
-        void FaceFaceJac(Array<OneD, Array<OneD, NekDouble> > uv,
-                         std::map<int, vector<NekDouble> > z, map<int, vector<int> > n, CADSurfSharedPtr s,
-                         DNekMat &Jac, DNekMat &Hes);
+        void FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,
+                                      map<int, Array<OneD, NekDouble> > z,
+                                      map<int, vector<int> > n,
+                                      CADSurfSharedPtr s,
+                                      DNekMat &Jac, DNekMat &Hes);
 
         /// mesh object
         MeshSharedPtr m_mesh;

@@ -115,32 +115,45 @@ map<int, vector<int> > nodeToSixAround(int nq)
     for(int i = (nq+1)*nq/2 - (nq-3)*(nq-2)/2; i < (nq+1)*nq/2; i++)
     {
         vector<int> ids;
+        int pr;
 
         pair<int,int> p = nodeorderRev[i];
         p.first -= 1;
-        ids.push_back(nodeorder[p]);
+        pr = nodeorder[p];
+
+        ids.push_back(pr);
 
         p = nodeorderRev[i];
         p.second -=1;
-        ids.push_back(nodeorder[p]);
+        pr = nodeorder[p];
+
+        ids.push_back(pr);
 
         p = nodeorderRev[i];
         p.first +=1;
-        p.second -=1;
-        ids.push_back(nodeorder[p]);
+        pr = nodeorder[p];
 
-        p = nodeorderRev[i];
-        p.first +=1;
-        ids.push_back(nodeorder[p]);
+        ids.push_back(pr);
 
         p = nodeorderRev[i];
         p.second +=1;
-        ids.push_back(nodeorder[p]);
+        pr = nodeorder[p];
+
+        ids.push_back(pr);
+
+        p = nodeorderRev[i];
+        p.first +=1;
+        p.second -=1;
+        pr = nodeorder[p];
+
+        ids.push_back(pr);
 
         p = nodeorderRev[i];
         p.first -=1;
         p.second +=1;
-        ids.push_back(nodeorder[p]);
+        pr = nodeorder[p];
+
+        ids.push_back(pr);
 
         ret[i] = ids;
     }
@@ -148,29 +161,56 @@ map<int, vector<int> > nodeToSixAround(int nq)
     return ret;
 }
 
-map<int, vector<NekDouble> > weights(map<int, vector<int> > near, Array<OneD, NekDouble> u, Array<OneD, NekDouble> v)
+map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<OneD, NekDouble> u, Array<OneD, NekDouble> v)
 {
-    map<int, vector<NekDouble> > ret;
+    map<int, Array<OneD, NekDouble> > ret;
+
+    DNekMat A(3,3,1.0);
+    A(0,0) = -1.0; A(1,0) = -1.0;
+    A(0,1) =  1.0; A(1,1) = -1.0;
+    A(0,2) =  0.0; A(1,2) = -1.0+sqrt(3.0);
+
+    DNekMat B(3,3,1.0);
+    B(0,0) = -1.0; B(1,0) = -1.0;
+    B(0,1) =  1.0; B(1,1) = -1.0;
+    B(0,2) = -1.0; B(1,2) =  1.0;
+
+    B.Invert();
+
+    DNekMat M = A*B;
+
+    DNekMat C(3, u.num_elements(), 1.0);
+    for(int i = 0; i < u.num_elements(); i++)
+    {
+        C(0,i) = u[i];
+        C(1,i) = v[i];
+    }
+
+    DNekMat pts = M*C;
 
     map<int, vector<int> >::iterator it;
     for(it = near.begin(); it != near.end(); it++)
     {
-        vector<NekDouble> zs;
+        Array<OneD, NekDouble> s(6);
 
-        NekDouble z1u = 0.5*(u[it->second[0]] + u[it->second[1]]);
-        NekDouble z1v = 0.5*(v[it->second[0]] + v[it->second[1]]);
+        NekDouble zu = pts(0,it->first);
+        NekDouble zv = pts(1,it->first);
 
-        NekDouble z2u = 0.5*(u[it->second[2]] + u[it->second[3]]);
-        NekDouble z2v = 0.5*(v[it->second[2]] + v[it->second[3]]);
+        s[0] = sqrt((zu-pts(0,it->second[0]))*(zu-pts(0,it->second[0]))+(zv-pts(1,it->second[0]))*(zv-pts(1,it->second[0])));
+        s[1] = sqrt((zu-pts(0,it->second[1]))*(zu-pts(0,it->second[1]))+(zv-pts(1,it->second[1]))*(zv-pts(1,it->second[1])));
+        s[2] = sqrt((zu-pts(0,it->second[2]))*(zu-pts(0,it->second[2]))+(zv-pts(1,it->second[2]))*(zv-pts(1,it->second[2])));
+        s[3] = sqrt((zu-pts(0,it->second[3]))*(zu-pts(0,it->second[3]))+(zv-pts(1,it->second[3]))*(zv-pts(1,it->second[3])));
+        s[4] = sqrt((zu-pts(0,it->second[4]))*(zu-pts(0,it->second[4]))+(zv-pts(1,it->second[4]))*(zv-pts(1,it->second[4])));
+        s[5] = sqrt((zu-pts(0,it->second[5]))*(zu-pts(0,it->second[5]))+(zv-pts(1,it->second[5]))*(zv-pts(1,it->second[5])));
 
-        NekDouble z3u = 0.5*(u[it->second[4]] + u[it->second[5]]);
-        NekDouble z3v = 0.5*(v[it->second[4]] + v[it->second[5]]);
+        /*cout << it->first << endl;
+        for(int i = 0; i < 4; i++)
+        {
+            cout << it->second[i] << ": " << s[i] << ".  ";
+        }
+        cout << endl;*/
 
-        zs.push_back((u[it->first] - z2u)*(v[it->first] - z3v) - (v[it->first] - z2v)*(u[it->first] - z3u));
-        zs.push_back(-1.0*((u[it->first] - z1u)*(v[it->first] - z3v) - (v[it->first] - z1v)*(u[it->first] - z3u)));
-        zs.push_back((u[it->first] - z1u)*(v[it->first] - z2v) - (v[it->first] - z1v)*(u[it->first] - z2u));
-
-        ret[it->first] = zs;
+        ret[it->first] = s;
     }
 
     return ret;
@@ -221,7 +261,40 @@ void SurfaceMesh::HOSurf()
     }
 
     map<int, vector<int> > near = nodeToSixAround(m_mesh->m_nummode);
-    map<int, vector<NekDouble> > z = weights(near, u, v);
+    map<int, Array<OneD, NekDouble> > z = weights(near, u, v);
+
+    /*for(int i = 0; i < u.num_elements(); i++)
+    {
+        cout << u[i] << " " << v[i] << endl;
+    }
+    exit(-1);*/
+
+    /*map<int, vector<int> >::iterator it1;
+    for(it1 = near.begin(); it1 != near.end(); it1++)
+    {
+        cout << it1->first << endl;
+        for(int i = 0; i < it1->second.size(); i++)
+        {
+            cout << it1->second[i] << " ";
+        }
+        cout << endl;
+    }
+
+
+    cout << endl;
+    */
+    /*map<int, Array<OneD, NekDouble> >::iterator it;
+    for(it = z.begin(); it != z.end(); it++)
+    {
+        cout << it->first << endl;
+        for(int i = 0; i < 3; i++)
+        {
+            cout << it->second[i] << " ";
+        }
+        cout << endl;
+    }
+
+    exit(-1);*/
 
     //because edges are listed twice need a method to not repeat over them
     EdgeSet completedEdges;
@@ -430,13 +503,19 @@ void SurfaceMesh::HOSurf()
             }
         }
 
+        cout << "\rFace" << f->m_id;
+
         if(m_mesh->m_nummode == 3)
         {
             //no interior points
             continue;
         }
+        if(m_mesh->m_nummode == 4)
+        {
+            //third order triangle only has one interior point so ordering is already correct
+        }
 
-        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
+        vector<NodeSharedPtr> vertices = f->m_vertexList;
         Array<OneD, NekDouble> uv1,uv2,uv3;
         uv1 = vertices[0]->GetCADSurfInfo(surf);
         uv2 = vertices[1]->GetCADSurfInfo(surf);
@@ -487,11 +566,75 @@ void SurfaceMesh::HOSurf()
 
         DNekMat H, J;
 
-        FaceFaceJac(uvi, z, near, s, J, H);
+        Array<OneD, NekDouble> bnds = s->GetBounds();
 
-        /*if(s->GetId() == 9)
+        bool repeat = true;
+        NekDouble alpha = 1.0;
+        while(repeat)
         {
-            cout << endl << J << endl << endl;
+            int converged = 0;
+
+            for(int j = TotNumPoints - numInteriorPoints; j < TotNumPoints; j++)
+            {
+                FaceFaceJac(j, uvi, z, near, s, J, H);
+
+                NekDouble Norm = 0;
+                for(int k = 0; k < 2.0; k++)
+                {
+                    Norm += J(k,0)*J(k,0);
+                }
+                Norm = sqrt(Norm);
+
+                if(Norm < 1E-8)
+                {
+                    converged++;
+                }
+
+                bool repeatNode = true;
+                bool fail = false;
+                while(repeatNode)
+                {
+                    Array<OneD, NekDouble> dx = gsOptimise(alpha, uvi[j], H, J);
+
+                    if(uvi[j][0] + dx[0] < bnds[0] ||
+                       uvi[j][0] + dx[0] > bnds[1] ||
+                       uvi[j][1] + dx[1] < bnds[2] ||
+                       uvi[j][1] + dx[1] > bnds[3])
+                    {
+                        fail = true;
+                        break;
+                    }
+                    else
+                    {
+                        uvi[j][0] += dx[0];
+                        uvi[j][1] += dx[1];
+                    }
+
+                    FaceFaceJac(j, uvi, z, near, s, J, H);
+
+                    Norm = 0;
+                    for(int k = 0; k < 2.0; k++)
+                    {
+                        Norm += J(k,0)*J(k,0);
+                    }
+                    Norm = sqrt(Norm);
+
+                    if(Norm < 1E-8)
+                    {
+                        repeatNode = false;
+                    }
+                }
+                if(fail)
+                {
+                    cout << "failed a point" << endl;
+                    converged++;
+                }
+            }
+
+            if(converged == numInteriorPoints)
+            {
+                repeat = false;
+            }
         }
 
         vector<NodeSharedPtr> honodes;
@@ -505,7 +648,7 @@ void SurfaceMesh::HOSurf()
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;*/
+        f->m_curveType = LibUtilities::eNodalTriFekete;
     }
 
     if(m_mesh->m_verbose)

@@ -85,10 +85,19 @@ void APE::v_InitObject()
 
     // Initialize basefield
     EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
+    Array<OneD, NekDouble> tmpC(GetNcoeffs());
+    for (int i = 0; i < m_spacedim + 2; ++i)
+    {
+        m_fields[0]->FwdTrans(m_basefield[i], tmpC);
+        m_fields[0]->BwdTrans(tmpC, m_basefield[i]);
+    }
 
     //  Initialize the sourceterm
-    m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints());
+    m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
+
     EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+    m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
+    m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -227,6 +236,17 @@ bool APE::v_PostIntegrate(int step)
 
     EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
     EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+
+    Array<OneD, NekDouble> tmpC(GetNcoeffs());
+
+    m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
+    m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
+
+    for (int i = 0; i < m_spacedim + 2; ++i)
+    {
+        m_fields[0]->FwdTrans(m_basefield[i], tmpC);
+        m_fields[0]->BwdTrans(tmpC, m_basefield[i]);
+    }
 
     return UnsteadySystem::v_PostIntegrate(step);
 }

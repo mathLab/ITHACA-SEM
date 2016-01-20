@@ -56,10 +56,13 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     //  Init Coupling
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
 
+    SpatialDomains::MeshGraphSharedPtr graph = m_field->GetGraph();
+    int spacedim = graph->GetSpaceDimension();
+
     cwipi_create_coupling(m_name.c_str(),
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
                           m_distAppname.c_str(),
-                          3,
+                          spacedim,
                           m_geomTol,
                           CWIPI_STATIC_MESH,
                           solver_type,
@@ -67,26 +70,45 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                           m_outputFormat.c_str(),
                           m_outputFormatOption.c_str());
 
-    SpatialDomains::MeshGraphSharedPtr graph = m_field->GetGraph();
-
     // get Elements
-    SpatialDomains::TetGeomMap   tetgeom   = graph->GetAllTetGeoms();
-    SpatialDomains::PyrGeomMap   pyrgeom   = graph->GetAllPyrGeoms();
-    SpatialDomains::PrismGeomMap prismgeom = graph->GetAllPrismGeoms();
-    SpatialDomains::HexGeomMap   hexgeom   = graph->GetAllHexGeoms();
+    SpatialDomains::SegGeomMap   seggeom;
+    SpatialDomains::TriGeomMap   trigeom;
+    SpatialDomains::QuadGeomMap  quadgeom;
+    SpatialDomains::TetGeomMap   tetgeom;
+    SpatialDomains::PyrGeomMap   pyrgeom;
+    SpatialDomains::PrismGeomMap prismgeom;
+    SpatialDomains::HexGeomMap   hexgeom;
+    if (spacedim == 1)
+    {
+        seggeom   = graph->GetAllSegGeoms();
+    }
+    else if (spacedim == 2)
+    {
+        trigeom   = graph->GetAllTriGeoms();
+        quadgeom  = graph->GetAllQuadGeoms();
+    }
+    else if (spacedim == 3)
+    {
+        tetgeom   = graph->GetAllTetGeoms();
+        pyrgeom   = graph->GetAllPyrGeoms();
+        prismgeom = graph->GetAllPrismGeoms();
+        hexgeom   = graph->GetAllHexGeoms();
+    };
 
     int nVerts = graph->GetNvertices();
-    int nElts = tetgeom.size() + pyrgeom.size() + prismgeom.size() + hexgeom.size();
+    int nElts = seggeom.size() + trigeom.size() + quadgeom.size() +
+                tetgeom.size() + pyrgeom.size() + prismgeom.size() +
+                hexgeom.size();
     m_nPoints = m_field->GetTotPoints();
-
 
     // allocate CWIPI arrays
     m_coords = (double *) malloc(sizeof(double) * 3 * nVerts);
     ASSERTL1(m_coords != NULL, "malloc failed for m_coords");
     m_points = (double *) malloc(sizeof(double) * 3 * m_nPoints);
     ASSERTL1(m_points != NULL, "malloc failed for m_points");
-    int tmp = 4 * tetgeom.size() + 5 * pyrgeom.size() +
-              6 * prismgeom.size() + 8 * hexgeom.size();
+    int tmp = 2 * seggeom.size() + 3 * trigeom.size() + 4 * quadgeom.size() +
+              4 * tetgeom.size() + 5 * pyrgeom.size() + 6 * prismgeom.size() +
+              8 * hexgeom.size();
     m_connec = (int *) malloc(sizeof(int) * tmp);
     ASSERTL1(m_connec != NULL, "malloc failed for m_connec");
     m_connecIdx = (int *) malloc(sizeof(int) * (nElts + 1));
@@ -97,6 +119,9 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     int connecPos = 0;
     int conidxPos = 0;
 
+    AddElementsToMesh(seggeom,   coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(trigeom,   coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(quadgeom,  coordsPos, connecPos, conidxPos);
     AddElementsToMesh(tetgeom,   coordsPos, connecPos, conidxPos);
     AddElementsToMesh(pyrgeom,   coordsPos, connecPos, conidxPos);
     AddElementsToMesh(prismgeom, coordsPos, connecPos, conidxPos);
@@ -274,7 +299,7 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     const int *notLoc = &tmp;
     if (nNotLoc !=  0)
     {
-        cout << "WARNING: relocating " << nNotLoc << " points" <<  endl;
+        cout << "WARNING: relocating " << nNotLoc << " of " << nPoints << " points" <<  endl;
         notLoc = cwipi_get_not_located_points(m_coupling->GetName().c_str());
     }
 

@@ -40,8 +40,9 @@ namespace Nektar
 {
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                                   string name, int outputFreq, double geomTol) :
+                                   string name, string distAppname, int outputFreq, double geomTol) :
     Coupling(field, name),
+    m_distAppname(distAppname),
     m_outputFormat("Ensight Gold"),
     m_outputFormatOption("text"),
     m_outputFreq(outputFreq),
@@ -54,7 +55,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
 
     cwipi_create_coupling(m_name.c_str(),
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
-                          "precise",
+                          m_distAppname.c_str(),
                           3,
                           m_geomTol,
                           CWIPI_STATIC_MESH,

@@ -50,12 +50,13 @@ public:
     };
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                     string name, int outputFreq, double geomTol);
+                     string name, string distAppname, int outputFreq, double geomTol);
 
     ~CwipiCoupling();
 
 protected:
 
+    string m_distAppname;
     string m_outputFormat;
     string m_outputFormatOption;
     int m_outputFreq;

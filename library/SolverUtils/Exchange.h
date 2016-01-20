@@ -67,6 +67,11 @@ public:
     {
     };
 
+    MultiRegions::ExpListSharedPtr GetField()
+    {
+        return m_field;
+    };
+
     string GetName()
     {
         return m_name;

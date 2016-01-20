@@ -91,10 +91,11 @@ public:
     };
 
     CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string name,
-                     int nEVars);
+                     int nEVars, NekDouble filtWidth = 0.0);
 
     ~CwipiExchange();
 
+    void PrintProgressbar(const int position, const int goal) const;
 
 
 protected:
@@ -106,11 +107,19 @@ protected:
 
     double *m_rValsInterl;
 
+    NekDouble m_filtWidth;
+
+
     virtual void v_SendFields(const int step, const NekDouble time,
                               Array<OneD, Array<OneD, NekDouble> > &field);
 
     virtual void v_ReceiveFields(const int step, const NekDouble time,
                                  Array<OneD, Array<OneD, NekDouble> > &field);
+
+private:
+
+    Array<OneD, Array<OneD, float> > m_weights;
+    Array<OneD, Array<OneD, unsigned int> > m_neighbourInds;
 
 };
 

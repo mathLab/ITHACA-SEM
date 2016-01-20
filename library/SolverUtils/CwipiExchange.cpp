@@ -33,6 +33,8 @@
 
 #include "CwipiExchange.h"
 
+#include <LibUtilities/BasicUtils/PtsField.h>
+
 #include <cwipi.h>
 
 
@@ -247,10 +249,11 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
 
 
 CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling,
-                                   string name, int nEVars) :
+                             string name, int nEVars, NekDouble filtWidth) :
     Exchange(coupling,  name),
     m_nEVars(nEVars),
-    m_rValsInterl(NULL)
+    m_rValsInterl(NULL),
+    m_filtWidth(filtWidth)
 {
     int nPoints = m_coupling->GetNPoints();
 
@@ -332,6 +335,68 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
         }
     }
 
+    if (m_filtWidth > NekConstants::kNekZeroTol)
+    {
+        MultiRegions::ExpListSharedPtr cf = m_coupling->GetField();
+        int dim = cf->GetGraph()->GetSpaceDimension();
+
+        Array<OneD, Array<OneD,  NekDouble> > pts(dim + field.num_elements());
+        pts[0] = Array<OneD, NekDouble> (nPoints);
+        pts[1] = Array<OneD, NekDouble> (nPoints);
+        pts[2] = Array<OneD, NekDouble> (nPoints);
+        cf->GetCoords(pts[0], pts[1], pts[2]);
+        for (int j = 0; j < m_nEVars; ++j)
+        {
+            pts[dim + j] = field[j];
+        }
+
+        // apply spatial filtering
+        LibUtilities::PtsFieldSharedPtr ptsField =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
+
+        if (m_weights.num_elements() > 0)
+        {
+            ptsField->SetWeights_f(m_weights, m_neighbourInds);
+        }
+        else
+        {
+            ptsField->setProgressCallback(&CwipiExchange::PrintProgressbar, this);
+            cout << "Computing Filter Weights: ";
+            ptsField->CalcWeights_f(m_filtWidth);
+            cout << endl;
+
+            ptsField->GetWeights_f(m_weights, m_neighbourInds);
+        }
+
+        Array<OneD, Array<OneD,  NekDouble> > filtFields;
+        ptsField->Filter(filtFields);
+
+        ASSERTL0(field.num_elements() == filtFields.num_elements(), "filtFields dimension mismatch");
+        ASSERTL0(field[0].num_elements() == filtFields[0].num_elements(), "filtFields dimension mismatch");
+
+        for (int j = 0; j < m_nEVars; ++j)
+        {
+            Vmath::Zero(nPoints, field[j], 1);
+        }
+
+        for (int j = 0; j < m_nEVars; ++j)
+        {
+            for (int i = 0; i < nPoints; ++i)
+            {
+                field[j][i] = filtFields[j][i];
+            }
+        }
+    }
+}
+
+
+void CwipiExchange::PrintProgressbar(const int position, const int goal) const
+{
+    // print only every 2 percent
+    if (int(100 * position / goal) % 2 ==  0)
+    {
+        cout << "." <<  flush;
+    }
 }
 
 

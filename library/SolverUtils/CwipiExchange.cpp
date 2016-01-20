@@ -183,6 +183,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     m_interpolator.CalcWeights(m_recvMesh, tmpPts);
 
     cout << endl;
+    m_interpolator.PrintStatistics();
 
     // finally, define the quadrature points at which we want to receive data
     m_nPoints = m_recvMesh->GetNpoints();

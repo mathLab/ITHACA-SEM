@@ -265,15 +265,9 @@ void CwipiExchange::v_SendFields(const int step, const NekDouble time,
 void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                                        Array<OneD, Array<OneD, NekDouble> > &field)
 {
-    static int lastUdate = -1;
-
-    if (step <= lastUdate)
-    {
-        cout <<  "returning" << endl;
-        return;
-    }
-
-    lastUdate = step;
+    static NekDouble lastUdate = -1;
+    ASSERTL0(time > lastUdate, "CwipiExchange::v_ReceiveFields called twice in this timestep")
+    lastUdate = time;
 
     int nPoints = m_coupling->GetNPoints();
     ASSERTL1(nPoints ==  field[0].num_elements(), "field size mismatch");

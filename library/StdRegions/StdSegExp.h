@@ -215,6 +215,15 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                     const StdMatrixKey &mkey);
 
+            //---------------------------------------
+            // Operator evaluation functions
+            //---------------------------------------
+
+	    STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                    int numMin,
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
         private:
 
         };

@@ -23,6 +23,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
     ProcessModules/ProcessMeanMode.h
+    ProcessModules/ProcessNumModes.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
     ProcessModules/ProcessScaleInFld.h
@@ -59,8 +60,12 @@ SET(FieldConvertSources
     ProcessModules/ProcessInterpPointDataToFld.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+<<<<<<< 86fcdf5a9683ed2befeeb47e759e89136abef331
     ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessMeanMode.cpp
+=======
+    ProcessModules/ProcessNumModes.cpp
+>>>>>>> Create a FieldConvert module to obtain polynomial order distribution
     ProcessModules/ProcessPrintFldNorms.cpp
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp

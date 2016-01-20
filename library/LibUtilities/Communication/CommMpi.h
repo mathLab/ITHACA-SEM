@@ -76,6 +76,16 @@ namespace Nektar
             MPI_Comm GetComm();
 
         protected:
+            MPI_Comm m_comm;
+
+            int m_rank;
+
+            CommMpi(MPI_Comm pComm);
+
+            CommMpi()
+            {
+            };
+
             virtual void v_Finalise();
             virtual int  v_GetRank();
             virtual void v_Block();
@@ -128,11 +138,6 @@ namespace Nektar
 									Array<OneD, int>& pRecvDataOffsetMap);
             virtual void v_SplitComm(int pRows, int pColumns);
 
-        private:
-            MPI_Comm m_comm;
-            int m_rank;
-
-            CommMpi(MPI_Comm pComm);
         };
     }
 }

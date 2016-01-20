@@ -191,6 +191,14 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 
+set(OPENPALM_DIR "/home/lackhove/code/OpenPalm/PALM_MP/linux64r4openmpi_debug" CACHE PATH "openPALM base path")
+find_package(OpenPALM)
+include_directories(${OPENPALM_INCLUDE_DIRS})
+
+set(CWIPI_DIR "/home/lackhove/code/OpenPalm/cwipi-0.8.1/dist" CACHE PATH "CWIPI base path")
+find_package(Cwipi)
+include_directories(${CWIPI_INCLUDE_DIRS})
+
 INCLUDE (Doxygen)
 
 IF( NEKTAR_USE_MKL )

@@ -66,6 +66,7 @@ SET(SOLVER_UTILS_HEADERS
   DriverStandard.h
   DriverSteadyState.h
   EquationSystem.h
+  Exchange.h
   Filters/Filter.h
   Filters/FilterAeroForces.h
   Filters/FilterAverageFields.h

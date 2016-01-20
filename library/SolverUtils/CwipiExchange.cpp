@@ -163,7 +163,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     coords[2] = Array<OneD, NekDouble>(nq);
     m_field->GetCoords(coords[0], coords[1], coords[2]);
 
-    NekDouble thres = 1.96 * 0.4246609001 * m_filtWidth;
+    NekDouble thres = 4 * 0.4246609001 * m_filtWidth;
     Array<OneD, Array<OneD, NekDouble> > bbox(3);
     for (int i = 0; i < bbox.num_elements(); ++i)
     {

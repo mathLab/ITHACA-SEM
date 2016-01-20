@@ -292,6 +292,7 @@ namespace Nektar
                 Driver::v_InitObject(out);
 
                 // Initialise equation
+                m_equ[0]->DoInitialise();
                 m_equ[0]->SetInitialStep(i*numSteps);
                 m_equ[0]->SetSteps(i*numSteps+numSteps);
                 m_equ[0]->SetTime(startTime + i*period);

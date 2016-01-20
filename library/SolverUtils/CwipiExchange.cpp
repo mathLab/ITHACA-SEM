@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// File: OpenPalmExchange.cpp
+// File: CwipiExchange.cpp
 //
 // For more information, please see: http://www.nektar.info/
 //
@@ -27,20 +27,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: openPALM Exchange class
+// Description: CWIPI Exchange class
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "OpenPalmExchange.h"
+#include "CwipiExchange.h"
 
-#include <palmlibc.h>
 #include <cwipi.h>
 
 
 namespace Nektar
 {
 
-OpenPalmCoupling::OpenPalmCoupling(MultiRegions::ExpListSharedPtr field,
+CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                                    string name, int outputFreq, double geomTol) :
     Coupling(field, name),
     m_outputFormat("Ensight Gold"),
@@ -48,23 +47,21 @@ OpenPalmCoupling::OpenPalmCoupling(MultiRegions::ExpListSharedPtr field,
     m_outputFreq(outputFreq),
     m_geomTol(geomTol)
 {
-    // Init OpenPALM
-    int retVal = PCW_Init();
-
-    PCW_Dump_application_properties();
+    cwipi_dump_application_properties();
 
     //  Init Coupling
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
-    retVal = PCW_Create_coupling(m_name.c_str(),
-                                 CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
-                                 3,
-                                 m_geomTol,
-                                 CWIPI_STATIC_MESH,
-                                 solver_type,
-                                 m_outputFreq,
-                                 m_outputFormat.c_str(),
-                                 m_outputFormatOption.c_str());
-    ASSERTL0(retVal == 0, "ERROR: PCW_Create_coupling failed with code" + retVal);
+
+    cwipi_create_coupling(m_name.c_str(),
+                          CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
+                          "precise",
+                          3,
+                          m_geomTol,
+                          CWIPI_STATIC_MESH,
+                          solver_type,
+                          m_outputFreq,
+                          m_outputFormat.c_str(),
+                          m_outputFormatOption.c_str());
 
     SpatialDomains::MeshGraphSharedPtr graph = m_field->GetGraph();
 
@@ -79,13 +76,13 @@ OpenPalmCoupling::OpenPalmCoupling(MultiRegions::ExpListSharedPtr field,
     m_nPoints = m_field->GetTotPoints();
 
 
-    // allocate openPALM arrays
-    m_coords = (double *) malloc(sizeof(double) * 3 * nVerts );
+    // allocate CWIPI arrays
+    m_coords = (double *) malloc(sizeof(double) * 3 * nVerts);
     ASSERTL1(m_coords != NULL, "malloc failed for m_coords");
-    m_points = (double *) malloc(sizeof(double) * 3 * m_nPoints );
+    m_points = (double *) malloc(sizeof(double) * 3 * m_nPoints);
     ASSERTL1(m_points != NULL, "malloc failed for m_points");
-    int tmp = 4*tetgeom.size() + 5*pyrgeom.size() +
-              6*prismgeom.size() + 8*hexgeom.size();
+    int tmp = 4 * tetgeom.size() + 5 * pyrgeom.size() +
+              6 * prismgeom.size() + 8 * hexgeom.size();
     m_connec = (int *) malloc(sizeof(int) * tmp);
     ASSERTL1(m_connec != NULL, "malloc failed for m_connec");
     m_connecIdx = (int *) malloc(sizeof(int) * (nElts + 1));
@@ -120,50 +117,42 @@ OpenPalmCoupling::OpenPalmCoupling(MultiRegions::ExpListSharedPtr field,
     }
     */
 
-    retVal = PCW_Define_mesh(m_name.c_str(),
-                             nVerts,
-                             nElts,
-                             m_coords,
-                             m_connecIdx,
-                             m_connec);
-    ASSERTL0(retVal == 0,  "ERROR: PCW_Define_mesh failed with code" + retVal);
+    cwipi_define_mesh(m_name.c_str(),
+                      nVerts,
+                      nElts,
+                      m_coords,
+                      m_connecIdx,
+                      m_connec);
 
-
-    Array<OneD,NekDouble> x0(m_nPoints);
-    Array<OneD,NekDouble> x1(m_nPoints);
-    Array<OneD,NekDouble> x2(m_nPoints);
+    Array<OneD, NekDouble> x0(m_nPoints);
+    Array<OneD, NekDouble> x1(m_nPoints);
+    Array<OneD, NekDouble> x2(m_nPoints);
     m_field->GetCoords(x0, x1, x2);
+
     for (int i = 0; i < m_nPoints; ++i)
     {
-        m_points[3*i + 0] = double(x0[i]);
-        m_points[3*i + 1] = double(x1[i]);
-        m_points[3*i + 2] = double(x2[i]);
+        m_points[3 * i + 0] = double(x0[i]);
+        m_points[3 * i + 1] = double(x1[i]);
+        m_points[3 * i + 2] = double(x2[i]);
     }
 
-    retVal = PCW_Set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
-    ASSERTL0(retVal == 0,  "ERROR: PCW_Set_points_to_locate failed with code" + retVal);
+    cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
 }
 
 
-OpenPalmCoupling::~OpenPalmCoupling()
+CwipiCoupling::~CwipiCoupling()
 {
     free(m_coords);
     free(m_points);
     free(m_connec);
     free(m_connecIdx);
 
-    int retVal;
-
-    retVal = PCW_Delete_coupling(m_name.c_str());
-    ASSERTL0(retVal == 0, "ERROR: PCW_Delete_coupling failed with code" + retVal);
-
-    retVal = PCW_Finalize();
-    ASSERTL0(retVal == 0, "ERROR: PCW_Finalize failed with code" + retVal);
+    cwipi_delete_coupling(m_name.c_str());
 }
 
 
 template <typename T>
-void OpenPalmCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
+void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
         int &conidxPos)
 {
     // helper variables
@@ -173,7 +162,9 @@ void OpenPalmCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
 
     // iterate over all elements
     typename T::iterator it;
-    for(it = geom.begin(); it != geom.end(); it++) {
+
+    for (it = geom.begin(); it != geom.end(); it++)
+    {
         //  iterate over the elements vertices
         for (int j = 0; j < it->second->kNverts; ++j)
         {
@@ -181,13 +172,13 @@ void OpenPalmCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
             vertID = vert->GetVid();
 
             // check if we already stored the vertex
-            if (m_vertMap.count( vertID ) ==  0)
+            if (m_vertMap.count(vertID) ==  0)
             {
                 //  store the vertex
                 vert->GetCoords(x[0], x[1], x[2]);
-                m_coords[3*coordsPos + 0] = double(x[0]);
-                m_coords[3*coordsPos + 1] = double(x[1]);
-                m_coords[3*coordsPos + 2] = double(x[2]);
+                m_coords[3 * coordsPos + 0] = double(x[0]);
+                m_coords[3 * coordsPos + 1] = double(x[1]);
+                m_coords[3 * coordsPos + 2] = double(x[2]);
 
                 // store the vertex position in the m_coords array
                 m_vertMap[vertID] = coordsPos;
@@ -198,7 +189,7 @@ void OpenPalmCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
             connecPos++;
         }
 
-        m_connecIdx[conidxPos+1] = m_connecIdx[conidxPos] + it->second->kNverts;
+        m_connecIdx[conidxPos + 1] = m_connecIdx[conidxPos] + it->second->kNverts;
         conidxPos++;
     }
 }
@@ -210,7 +201,7 @@ void OpenPalmCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
 
 
 
-OpenPalmExchange::OpenPalmExchange(SolverUtils::CouplingSharedPointer coupling,
+CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling,
                                    string name, int nEVars) :
     Exchange(coupling,  name),
     m_nEVars(nEVars)
@@ -218,24 +209,24 @@ OpenPalmExchange::OpenPalmExchange(SolverUtils::CouplingSharedPointer coupling,
     int nPoints = m_coupling->GetNPoints();
 
     m_rValsInterl = (double *) malloc(sizeof(double) * nPoints * m_nEVars);
-    ASSERTL1(recvValues != NULL, "malloc failed for m_rValsInterl");
+    ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
 }
 
 
-OpenPalmExchange::~OpenPalmExchange()
+CwipiExchange::~CwipiExchange()
 {
     free(m_rValsInterl);
 }
 
 
-void OpenPalmExchange::v_SendFields(const int step, const NekDouble time,
+void CwipiExchange::v_SendFields(const int step, const NekDouble time,
                                     Array<OneD, Array<OneD, NekDouble> > &field)
 {
     ASSERTL0(false, "not implemented yet")
 }
 
 
-void OpenPalmExchange::v_ReceiveFields(const int step, const NekDouble time,
+void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                                        Array<OneD, Array<OneD, NekDouble> > &field)
 {
     static int lastUdate = -1;
@@ -245,6 +236,7 @@ void OpenPalmExchange::v_ReceiveFields(const int step, const NekDouble time,
         cout <<  "returning" << endl;
         return;
     }
+
     lastUdate = step;
 
     int nPoints = m_coupling->GetNPoints();
@@ -253,22 +245,17 @@ void OpenPalmExchange::v_ReceiveFields(const int step, const NekDouble time,
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
 
-    int retVal;
     int nNotLoc;
-    char varrec[PL_LNAME];
-    sprintf(varrec, m_recvFieldName.c_str());
-    char cp_name[PL_LNAME];
-    sprintf(cp_name, m_coupling->GetName().c_str());
-
-    retVal = PCW_Recv(cp_name,
-                      m_name.c_str(),
-                      m_nEVars,
-                      step,
-                      double(time),
-                      varrec,
-                      m_rValsInterl,
-                      &nNotLoc);
-    ASSERTL0(retVal == 0, "ERROR: PCW_Recv failed with code" + retVal);
+    cwipi_exchange(m_coupling->GetName().c_str(),
+                   m_name.c_str(),
+                   m_nEVars,
+                   step,
+                   time,
+                   "",
+                   NULL,
+                   m_recvFieldName.c_str(),
+                   m_rValsInterl,
+                   &nNotLoc);
 
     if (nNotLoc !=  0)
     {
@@ -278,10 +265,10 @@ void OpenPalmExchange::v_ReceiveFields(const int step, const NekDouble time,
         notLoc = (int *) malloc(sizeof(int) * nNotLoc);
         ASSERTL1(notLoc != NULL, "malloc failed for notLoc");
 
-        retVal = PCW_Get_not_located_points(cp_name, nNotLoc, notLoc);
-        ASSERTL0(retVal == 0, "ERROR: PCW_Get_not_located_points failed with code" + retVal);
-        retVal = PCW_Reorder(m_rValsInterl, nPoints, m_nEVars, 0.0, notLoc, nNotLoc);
-        ASSERTL0(retVal == 0, "ERROR: PCW_Reorder failed with code" + retVal);
+//         retVal = PCW_Get_not_located_points(cp_name, nNotLoc, notLoc);
+//         ASSERTL0(retVal == 0, "ERROR: PCW_Get_not_located_points failed with code" + retVal);
+//         retVal = PCW_Reorder(m_rValsInterl, nPoints, m_nEVars, 0.0, notLoc, nNotLoc);
+//         ASSERTL0(retVal == 0, "ERROR: PCW_Reorder failed with code" + retVal);
 
         free(notLoc);
     }

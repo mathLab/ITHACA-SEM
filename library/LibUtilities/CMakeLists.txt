@@ -82,9 +82,14 @@ IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders}
         ./Communication/CommMpi.h)
     SET(CommunicationSources ${CommunicationSources}
-        ./Communication/CommMpi.cpp
-        ./Communication/CommOpenPalm.cpp)
+        ./Communication/CommMpi.cpp)
 ENDIF(NEKTAR_USE_MPI)
+IF ( NEKTAR_USE_CWIPI )
+    SET(CommunicationHeaders ${CommunicationHeaders}
+        ./Communication/CommCwipi.h)
+    SET(CommunicationSources ${CommunicationSources}
+        ./Communication/CommCwipi.cpp)
+ENDIF ()
 
 SET(FFTHeaders
        ./FFT/NektarFFT.h

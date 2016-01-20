@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File OpenPalmExchange.h
+// File CwipiExchange.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -27,12 +27,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: openPALM Exchange class
+// Description: CWIPI Exchange class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_OPENPALMEXCHANGE
-#define NEKTAR_OPENPALMEXCHANGE
+#ifndef NEKTAR_CWIPIEXCHANGE
+#define NEKTAR_CWIPIEXCHANGE
 
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Exchange.h>
@@ -40,19 +40,19 @@
 namespace Nektar
 {
 
-class OpenPalmCoupling : public SolverUtils::Coupling
+class CwipiCoupling : public SolverUtils::Coupling
 {
 
 public:
 
-    OpenPalmCoupling()
+    CwipiCoupling()
     {
     };
 
-    OpenPalmCoupling(MultiRegions::ExpListSharedPtr field,
+    CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                      string name, int outputFreq, double geomTol);
 
-    ~OpenPalmCoupling();
+    ~CwipiCoupling();
 
 protected:
 
@@ -76,21 +76,21 @@ private:
 
 
 
-typedef boost::shared_ptr<OpenPalmCoupling> OpenPalmCouplingSharedPointer;
+typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
 
 
-class OpenPalmExchange : public SolverUtils::Exchange
+class CwipiExchange : public SolverUtils::Exchange
 {
 public:
 
-    OpenPalmExchange()
+    CwipiExchange()
     {
     };
 
-    OpenPalmExchange(SolverUtils::CouplingSharedPointer coupling, string name,
+    CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string name,
                      int nEVars);
 
-    ~OpenPalmExchange();
+    ~CwipiExchange();
 
 
 
@@ -112,7 +112,7 @@ protected:
 };
 
 
-typedef boost::shared_ptr<OpenPalmExchange> OpenPalmExchangeSharedPtr;
+typedef boost::shared_ptr<CwipiExchange> CwipiExchangeSharedPtr;
 
 }
 #endif

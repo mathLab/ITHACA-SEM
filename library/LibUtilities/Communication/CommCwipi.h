@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CommOpenPalm.h
+// File CommCwipi.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,11 +30,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: CommOpenPalm header
+// Description: CommCwipi header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_UTILITIES_COMMOPENPALM_H
-#define NEKTAR_LIB_UTILITIES_COMMOPENPALM_H
+#ifndef NEKTAR_LIB_UTILITIES_COMMCWIPI_H
+#define NEKTAR_LIB_UTILITIES_COMMCWIPI_H
 
 #include <string>
 #include <mpi.h>
@@ -46,35 +47,32 @@ namespace Nektar
 namespace LibUtilities
 {
 // Forward declarations
-class CommOpenPalm;
+class CommCwipi;
 
 /// Pointer to a Communicator object.
-typedef boost::shared_ptr<CommOpenPalm> CommOpenPalmSharedPtr;
+typedef boost::shared_ptr<CommCwipi> CommCwipiSharedPtr;
 
 /// A global linear system.
-class CommOpenPalm : public CommMpi
+class CommCwipi : public CommMpi
 {
 
 public:
     /// Creates an instance of this class
     static CommSharedPtr create(int narg, char* arg[])
     {
-        return MemoryManager<CommOpenPalm>::AllocateSharedPtr(narg, arg);
+        return MemoryManager<CommCwipi>::AllocateSharedPtr(narg, arg);
     }
 
     /// Name of class
     static std::string className;
 
-    CommOpenPalm(int narg, char* arg[]);
+    CommCwipi(int narg, char* arg[]);
 
-    virtual ~CommOpenPalm();
+    virtual ~CommCwipi();
 
 protected:
     virtual void v_Finalise();
 
-private:
-
-    CommOpenPalm(MPI_Comm pComm);
 };
 
 

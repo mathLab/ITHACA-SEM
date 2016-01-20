@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CommOpenPalm.cpp
+// File CommCwipi.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -33,63 +34,60 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Communication/CommOpenPalm.h>
+#include <LibUtilities/Communication/CommCwipi.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
-#include <palmlibc.h>
+#include <cwipi.h>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
 
-std::string CommOpenPalm::className
-    = GetCommFactory().RegisterCreatorFunction("OpenPalm", CommOpenPalm::create,
-          "Parallel communication using MPI with OpenPalm.");
+std::string CommCwipi::className
+    = GetCommFactory().RegisterCreatorFunction("CWIPI", CommCwipi::create,
+          "Parallel communication using MPI with CWIPI.");
 
 /**
  *
  */
-CommOpenPalm::CommOpenPalm(int narg, char* arg[])
+CommCwipi::CommCwipi(int narg, char* arg[])
     : CommMpi()
 {
+    int init = 0;
+    MPI_Initialized(&init);
+    ASSERTL0(!init, "MPI has already been initialised.");
 
-    m_comm = PL_COMM_EXEC;
+    int retval = MPI_Init(&narg, &arg);
+    if (retval != MPI_SUCCESS)
+    {
+        ASSERTL0(false, "Failed to initialise MPI");
+    }
+
+    MPI_Comm localComm;
+    cwipi_init(MPI_COMM_WORLD, "nektar", &localComm);
+    m_comm = localComm;
+
     MPI_Comm_size( m_comm, &m_size );
     MPI_Comm_rank( m_comm, &m_rank );
 
-    m_type = "Parallel MPI with OpenPalm";
+    m_type = "Parallel MPI with CWIPI";
 }
 
 
 /**
  *
  */
-CommOpenPalm::CommOpenPalm(MPI_Comm pComm)
-    : CommMpi()
+CommCwipi::~CommCwipi()
 {
-    m_comm = pComm;
-    MPI_Comm_size( m_comm, &m_size );
-    MPI_Comm_rank( m_comm, &m_rank );
-
-    m_type = "Parallel MPI with OpenPalm";
-}
-
-
-/**
- *
- */
-CommOpenPalm::~CommOpenPalm()
-{
-
 }
 
 /**
  *
  */
-void CommOpenPalm::v_Finalise()
+void CommCwipi::v_Finalise()
 {
-    //  do nothing
+    cwipi_finalize();
 }
 
 

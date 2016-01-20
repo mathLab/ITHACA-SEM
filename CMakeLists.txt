@@ -191,13 +191,15 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 
-set(OPENPALM_DIR "/home/lackhove/code/OpenPalm/PALM_MP/linux64r4openmpi_debug" CACHE PATH "openPALM base path")
-find_package(OpenPALM)
-include_directories(${OPENPALM_INCLUDE_DIRS})
+OPTION(NEKTAR_USE_CWIPI
+    "Use CWIPI." OFF)
 
-set(CWIPI_DIR "/home/lackhove/code/OpenPalm/cwipi-0.8.1/dist" CACHE PATH "CWIPI base path")
-find_package(Cwipi)
-include_directories(${CWIPI_INCLUDE_DIRS})
+IF ( NEKTAR_USE_CWIPI )
+    set(CWIPI_DIR "/usr/local/cwipi" CACHE PATH "CWIPI base path")
+    find_package(Cwipi)
+    include_directories(${CWIPI_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DNEKTAR_USE_CWIPI)
+ENDIF ( NEKTAR_USE_CWIPI )
 
 INCLUDE (Doxygen)
 

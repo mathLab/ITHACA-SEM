@@ -1581,9 +1581,9 @@ namespace Nektar
             else
             {
                 string vCommModule("Serial");
-                if (GetCommFactory().ModuleExists("ParallelMPI"))
+                if (GetCommFactory().ModuleExists("CWIPI"))
                 {
-                    vCommModule = "ParallelMPI";
+                    vCommModule = "CWIPI";
                 }
 
                 m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);

@@ -7,6 +7,7 @@ SET(SOLVER_UTILS_SOURCES
   Advection/AdvectionFR.cpp
   Advection/AdvectionNonConservative.cpp
   Advection/AdvectionWeakDG.cpp
+  CwipiExchange.cpp
   Diffusion/Diffusion.cpp
   Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
@@ -53,6 +54,7 @@ SET(SOLVER_UTILS_HEADERS
   Advection/Advection3DHomogeneous1D.h
   Advection/AdvectionNonConservative.h
   Advection/AdvectionWeakDG.h
+  CwipiExchange.h
   Diffusion/Diffusion.h
   Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h

@@ -40,6 +40,10 @@
     using namespace H5;
 #endif
 
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+
 #include "OutputPYFR.h"
 
 using namespace std;
@@ -87,12 +91,15 @@ void OutputPYFR::Process()
     H5std_string FILE_NAME( filename );
     H5File* file = new H5File( filename, H5F_ACC_TRUNC );
 
+    int numtri = 0;
+    int numquad = 0;
+
+    map<int, int> nekidtopyid;
+
     CompositeMap cm = m_mesh->m_composite;
     CompositeMap::iterator it;
     for(it = cm.begin(); it != cm.end(); it++)
     {
-        cout << it->first << " " << it->second->m_tag << endl;
-
         int nv=0;
         map<int, int> nodemap;
         string dsname;
@@ -128,6 +135,15 @@ void OutputPYFR::Process()
 
         for(int i = 0; i < it->second->m_items.size(); i++)
         {
+            if(it->second->m_tag == "T")
+            {
+                nekidtopyid[it->second->m_items[i]->GetId()] = numtri++;
+            }
+            else if(it->second->m_tag == "Q")
+            {
+                nekidtopyid[it->second->m_items[i]->GetId()] = numquad++;
+            }
+
             vector<NodeSharedPtr> ns = it->second->m_items[i]->GetVertexList();
             for(int j = 0; j < nv; j++)
             {
@@ -141,12 +157,12 @@ void OutputPYFR::Process()
 
     typedef struct conec
     {
-        char      el[5];
+        char      el[4];
         int       id;
         int       fc;
         int       bl;
     } conec;
-    StrType strdatatype(PredType::C_S1, 5);
+    StrType strdatatype(PredType::C_S1, 4);
 
     { //con
         EdgeSet::iterator eit;
@@ -175,11 +191,126 @@ void OutputPYFR::Process()
 
         conec* cons = new conec[2*interiorcons.size()];
 
+        int ct = 0;
         for(eit = interiorcons.begin(); eit != interiorcons.end(); eit++)
         {
-            
+            conec c1,c2;
+            ElementSharedPtr e1 = (*eit)->m_elLink[0].first;
+            ElementSharedPtr e2 = (*eit)->m_elLink[1].first;
+
+            string str1, str2;
+
+            if(e1->GetConf().m_e == LibUtilities::eTriangle)
+            {
+                str1 = "tri";
+            }
+            else if(e1->GetConf().m_e == LibUtilities::eQuadrilateral)
+            {
+                str1 = "quad";
+            }
+
+            if(e2->GetConf().m_e == LibUtilities::eTriangle)
+            {
+                str2 = "tri";
+            }
+            else if(e2->GetConf().m_e == LibUtilities::eQuadrilateral)
+            {
+                str2 = "quad";
+            }
+
+            strcpy(c1.el, str1.c_str());
+            strcpy(c2.el, str2.c_str());
+
+            c1.id = nekidtopyid[e1->GetId()];
+            c2.id = nekidtopyid[e2->GetId()];
+
+            c1.fc = (*eit)->m_elLink[0].second;
+            c2.fc = (*eit)->m_elLink[1].second;
+
+            c1.bl = 0; c2.bl = 0;
+
+            cons[ct] = c1;
+            cons[ct + interiorcons.size()] = c2;
+            ct++;
         }
+
+        dataset->write( cons, cn );
     }
+
+    StrType strdatatypevar(PredType::C_S1, H5T_VARIABLE);
+    { //uuid
+        hsize_t dimsf[] = {1};
+
+        DataSpace dataspace( 1, dimsf );
+
+        DataSet* dataset = new DataSet(file->createDataSet("mesh_uuid", strdatatypevar, dataspace));
+
+        boost::uuids::uuid uuid = boost::uuids::random_generator()();
+        string uuidstr =  boost::uuids::to_string(uuid);
+
+        dataset->write( H5std_string(uuidstr), strdatatypevar );
+    }
+
+    //bcons
+    for(it = cm.begin(); it != cm.end(); it++)
+    {
+        string dsname;
+        if(it->second->m_tag == "E")
+        {
+            stringstream ss;
+            ss << "bcon_C" << it->first << "_p0";
+            dsname = ss.str();
+        }
+        else
+        {
+            continue;
+        }
+
+        hsize_t dimsf[] = {it->second->m_items.size()};
+
+        DataSpace dataspace( 1, dimsf );
+
+        CompType cn( sizeof(conec) );
+        cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
+        cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT32);
+        cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT8);
+        cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT8);
+
+        DataSet* dataset = new DataSet(file->createDataSet(dsname, cn, dataspace));
+
+        conec* cons = new conec[it->second->m_items.size()];
+
+        for(int i = 0; i < it->second->m_items.size(); i++)
+        {
+            ASSERTL0(it->second->m_items[i]->GetEdgeLink()->m_elLink.size()==1,"el link makes no sense");
+            pair<ElementSharedPtr,int> el = it->second->m_items[i]->GetEdgeLink()->m_elLink[0];
+
+            conec c;
+
+            string str;
+
+            if(el.first->GetConf().m_e == LibUtilities::eTriangle)
+            {
+                str = "tri";
+            }
+            else if(el.first->GetConf().m_e == LibUtilities::eQuadrilateral)
+            {
+                str = "quad";
+            }
+
+            strcpy(c.el, str.c_str());
+
+            c.id = nekidtopyid[el.first->GetId()];
+            c.fc = el.second;
+            c.bl = 0;
+
+            cons[i] = c;
+        }
+
+        dataset->write( cons, cn );
+    }
+
+
 
 
 }

@@ -147,7 +147,11 @@ CwipiCoupling::~CwipiCoupling()
     free(m_points);
     free(m_connec);
     free(m_connecIdx);
+}
 
+
+void CwipiCoupling::v_FinalizeCoupling(void)
+{
     cwipi_delete_coupling(m_name.c_str());
 }
 

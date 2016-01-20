@@ -81,8 +81,10 @@ public:
         points = m_points;
     }
 
-
-    void FinalizeCoupling();
+    inline void FinalizeCoupling()
+    {
+        v_FinalizeCoupling();
+    }
 
 protected:
 
@@ -91,6 +93,11 @@ protected:
     double *m_points = NULL;
 
     string m_name;
+
+    virtual void v_FinalizeCoupling(void)
+    {
+        ASSERTL0(false, "This method is not valid for the base class");
+    };
 };
 
 typedef boost::shared_ptr<Coupling> CouplingSharedPointer;

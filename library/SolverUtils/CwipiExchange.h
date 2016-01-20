@@ -68,6 +68,8 @@ protected:
 
     map< int, int > m_vertMap;
 
+    virtual void v_FinalizeCoupling(void);
+
 private:
 
     template <typename T>

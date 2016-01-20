@@ -39,6 +39,8 @@
 
 namespace Nektar
 {
+namespace SolverUtils
+{
 
 class CwipiCoupling : public SolverUtils::Coupling
 {
@@ -50,12 +52,15 @@ public:
     };
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                     string name, string distAppname, int outputFreq, double geomTol);
+                     string name, string distAppname, int outputFreq, double geomTol, NekDouble filtWidth = 0.0);
 
     ~CwipiCoupling();
 
+    void PrintProgressbar(const int position, const int goal) const;
+
 protected:
 
+    NekDouble m_filtWidth;
     string m_distAppname;
     string m_outputFormat;
     string m_outputFormatOption;
@@ -74,6 +79,10 @@ private:
 
     template <typename T>
     void AddElementsToMesh(T geom, int& coordsPos, int& connecPos, int& conidxPos);
+    void SetupRecvMesh(Array<OneD, Array<OneD, NekDouble> > bbox);
+
+    Array<OneD, Array<OneD, float> > m_weights;
+    Array<OneD, Array<OneD, unsigned int> > m_neighbourInds;
 
 };
 
@@ -91,11 +100,9 @@ public:
     };
 
     CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string name,
-                     int nEVars, NekDouble filtWidth = 0.0);
+                     int nEVars);
 
     ~CwipiExchange();
-
-    void PrintProgressbar(const int position, const int goal) const;
 
 
 protected:
@@ -107,8 +114,6 @@ protected:
 
     double *m_rValsInterl;
 
-    NekDouble m_filtWidth;
-
 
     virtual void v_SendFields(const int step, const NekDouble time,
                               Array<OneD, Array<OneD, NekDouble> > &field);
@@ -116,15 +121,11 @@ protected:
     virtual void v_ReceiveFields(const int step, const NekDouble time,
                                  Array<OneD, Array<OneD, NekDouble> > &field);
 
-private:
-
-    Array<OneD, Array<OneD, float> > m_weights;
-    Array<OneD, Array<OneD, unsigned int> > m_neighbourInds;
-
 };
 
 
 typedef boost::shared_ptr<CwipiExchange> CwipiExchangeSharedPtr;
 
+}
 }
 #endif

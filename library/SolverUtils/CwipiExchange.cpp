@@ -40,10 +40,13 @@
 
 namespace Nektar
 {
+namespace SolverUtils
+{
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                                   string name, string distAppname, int outputFreq, double geomTol) :
+                                   string name, string distAppname, int outputFreq, double geomTol, NekDouble filtWidth) :
     Coupling(field, name),
+    m_filtWidth(filtWidth),
     m_distAppname(distAppname),
     m_outputFormat("Ensight Gold"),
     m_outputFormatOption("text"),
@@ -101,13 +104,10 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     int nElts = seggeom.size() + trigeom.size() + quadgeom.size() +
                 tetgeom.size() + pyrgeom.size() + prismgeom.size() +
                 hexgeom.size();
-    m_nPoints = m_field->GetTotPoints();
 
     // allocate CWIPI arrays
     m_coords = (double *) malloc(sizeof(double) * 3 * nVerts);
     ASSERTL1(m_coords != NULL, "malloc failed for m_coords");
-    m_points = (double *) malloc(sizeof(double) * 3 * m_nPoints);
-    ASSERTL1(m_points != NULL, "malloc failed for m_points");
     int tmp = 2 * seggeom.size() + 3 * trigeom.size() + 4 * quadgeom.size() +
               4 * tetgeom.size() + 5 * pyrgeom.size() + 6 * prismgeom.size() +
               8 * hexgeom.size();
@@ -155,26 +155,62 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                       m_connecIdx,
                       m_connec);
 
-    Array<OneD, NekDouble> x0(m_nPoints);
-    Array<OneD, NekDouble> x1(m_nPoints);
-    Array<OneD, NekDouble> x2(m_nPoints);
-    m_field->GetCoords(x0, x1, x2);
 
-    // for seome reason, x2 can contain nan when dim < 3
-    if (spacedim < 3)
+    int nq = m_field->GetTotPoints();
+    Array <OneD,  Array<OneD,  NekDouble> > coords(3);
+    coords[0] = Array<OneD, NekDouble>(nq);
+    coords[1] = Array<OneD, NekDouble>(nq);
+    coords[2] = Array<OneD, NekDouble>(nq);
+    m_field->GetCoords(coords[0], coords[1], coords[2]);
+
+    NekDouble thres = 1.96 * 0.4246609001 * m_filtWidth;
+    Array<OneD, Array<OneD, NekDouble> > bbox(3);
+    for (int i = 0; i < bbox.num_elements(); ++i)
     {
-        Vmath::Zero(m_nPoints, x2, 1);
+        bbox[i] = Array<OneD, NekDouble>(2);
+        bbox[i][0] = Vmath::Vmin(nq, coords[i], 1) - thres;
+        bbox[i][1] = Vmath::Vmax(nq, coords[i], 1) + thres;
     }
-    if (spacedim < 2)
-    {
-        Vmath::Zero(m_nPoints, x1, 1);
-    }
+
+    SetupRecvMesh(bbox);
+
+    // use gauss filtering to reduce the receive-Fields order
+    cout << "Computing Filter Weights: ";
+
+    m_interpolator =  SolverUtils::Interpolator (SolverUtils::eGauss, -1, m_filtWidth);
+    m_interpolator.SetProgressCallback(&CwipiCoupling::PrintProgressbar, this);
+    LibUtilities::PtsFieldSharedPtr tmpPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, coords);
+    m_interpolator.CalcWeights(m_recvMesh, tmpPts);
+
+    cout << endl;
+
+    // finally, define the quadrature points at which we want to receive data
+    m_nPoints = m_recvMesh->GetNpoints();
+    m_points = (double *) malloc(sizeof(double) * 3 * m_nPoints);
+    ASSERTL1(m_points != NULL, "malloc failed for m_points");
+
 
     for (int i = 0; i < m_nPoints; ++i)
     {
-        m_points[3 * i + 0] = double(x0[i]);
-        m_points[3 * i + 1] = double(x1[i]);
-        m_points[3 * i + 2] = double(x2[i]);
+        m_points[3 * i + 0] = double(m_recvMesh->GetPointVal(0,i));
+
+        if (spacedim > 1)
+        {
+            m_points[3 * i + 1] = double(m_recvMesh->GetPointVal(1,i));
+        }
+        else
+        {
+            m_points[3 * i + 1] = 0.0;
+        }
+
+        if (spacedim > 2)
+        {
+            m_points[3 * i + 2] = double(m_recvMesh->GetPointVal(2,i));
+        }
+        else
+        {
+            m_points[3 * i + 2] = 0.0;
+        }
     }
 
     cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
@@ -243,22 +279,73 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
 
 
 
+void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
+{
+    // print only every 2 percent
+    if (int(100 * position / goal) % 2 ==  0)
+    {
+        cout << "." <<  flush;
+    }
+}
 
 
+void CwipiCoupling::SetupRecvMesh(Array<OneD, Array<OneD, NekDouble> > bbox)
+{
+    LibUtilities::PtsIO ptsIO(m_field->GetSession()->GetComm());
+    ptsIO.Import("recvPts.pts", m_recvMesh);
+    ASSERTL0(m_recvMesh->GetDim() == bbox.num_elements(), "recvPts.pts and bbox size mismatch");
+
+    std::vector<unsigned int> matchInds;
+    for (int i = 0; i < m_recvMesh->GetNpoints(); ++i)
+    {
+        bool isInside = true;
+        for (int j = 0; j < m_recvMesh->GetDim(); ++j)
+        {
+            if (isInside && (m_recvMesh->GetPointVal(j, i) < bbox[j][0] ||
+                bbox[j][1] < m_recvMesh->GetPointVal(j, i)))
+            {
+                isInside = false;
+            }
+        }
+
+        if (isInside)
+        {
+            matchInds.push_back(i);
+        }
+    }
+
+    Array<OneD, Array<OneD, NekDouble> > tmpPts(m_recvMesh->GetDim());
+    for (int i = 0; i < tmpPts.num_elements(); ++i)
+    {
+        tmpPts[i] = Array<OneD, NekDouble>(matchInds.size());
+        for (int j = 0; j < tmpPts[i].num_elements(); ++j)
+        {
+            tmpPts[i][j] = m_recvMesh->GetPointVal(i, matchInds[j]);
+        }
+    }
+
+    // replace the receive mesh with a smalller one
+    m_recvMesh = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_recvMesh->GetDim(), tmpPts);
+}
 
 
-
-CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling,
-                             string name, int nEVars, NekDouble filtWidth) :
+CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string name,
+                     int nEVars) :
     Exchange(coupling,  name),
     m_nEVars(nEVars),
-    m_rValsInterl(NULL),
-    m_filtWidth(filtWidth)
+    m_rValsInterl(NULL)
 {
     int nPoints = m_coupling->GetNPoints();
 
     m_rValsInterl = (double *) malloc(sizeof(double) * nPoints * m_nEVars);
     ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
+
+    for (int j = 0; j < m_nEVars; ++j)
+    {
+        m_coupling->GetRecvMesh()->AddField(Array<OneD, NekDouble> (nPoints, 0.0), "foobar");
+    }
+
+    // TODO: delete the points from the receivemesh ASAP
 }
 
 
@@ -283,7 +370,6 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     lastUdate = time;
 
     int nPoints = m_coupling->GetNPoints();
-    ASSERTL1(nPoints ==  field[0].num_elements(), "field size mismatch");
     ASSERTL1(m_nEVars ==  field.num_elements(), "field size mismatch");
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
@@ -312,12 +398,19 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
         notLoc = cwipi_get_not_located_points(m_coupling->GetName().c_str());
     }
 
+    // store received values in a ptsField
+    LibUtilities::PtsFieldSharedPtr recvMesh = m_coupling->GetRecvMesh();
+    Array<OneD, Array<OneD,  NekDouble> > pts(recvMesh->GetDim() +  m_nEVars);
+    recvMesh->GetPts(pts);
+
     int locPos = 0;
     int intPos = 0;
     for (int j = 0; j < m_nEVars; ++j)
     {
         locPos = 0;
         intPos = 0;
+
+        pts[recvMesh->GetDim() + j] = Array<OneD, NekDouble> (nPoints, 0.0);
 
         for (int i = 0; i < nPoints; ++i)
         {
@@ -329,76 +422,17 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
             }
             else
             {
-                field[j][i] = m_rValsInterl[intPos * m_nEVars + j];
+                pts[recvMesh->GetDim() + j][i] = m_rValsInterl[intPos * m_nEVars + j];
                 intPos++;
             }
         }
     }
 
-    if (m_filtWidth > NekConstants::kNekZeroTol)
-    {
-        MultiRegions::ExpListSharedPtr cf = m_coupling->GetField();
-        int dim = cf->GetGraph()->GetSpaceDimension();
+    recvMesh->SetPts(pts);
 
-        Array<OneD, Array<OneD,  NekDouble> > pts(dim + field.num_elements());
-        pts[0] = Array<OneD, NekDouble> (nPoints);
-        pts[1] = Array<OneD, NekDouble> (nPoints);
-        pts[2] = Array<OneD, NekDouble> (nPoints);
-        cf->GetCoords(pts[0], pts[1], pts[2]);
-        for (int j = 0; j < m_nEVars; ++j)
-        {
-            pts[dim + j] = field[j];
-        }
-
-        // apply spatial filtering
-        LibUtilities::PtsFieldSharedPtr ptsField =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-
-        if (m_weights.num_elements() > 0)
-        {
-            ptsField->SetWeights_f(m_weights, m_neighbourInds);
-        }
-        else
-        {
-            ptsField->setProgressCallback(&CwipiExchange::PrintProgressbar, this);
-            cout << "Computing Filter Weights: ";
-            ptsField->CalcWeights_f(m_filtWidth);
-            cout << endl;
-
-            ptsField->GetWeights_f(m_weights, m_neighbourInds);
-        }
-
-        Array<OneD, Array<OneD,  NekDouble> > filtFields;
-        ptsField->Filter(filtFields);
-
-        ASSERTL0(field.num_elements() == filtFields.num_elements(), "filtFields dimension mismatch");
-        ASSERTL0(field[0].num_elements() == filtFields[0].num_elements(), "filtFields dimension mismatch");
-
-        for (int j = 0; j < m_nEVars; ++j)
-        {
-            Vmath::Zero(nPoints, field[j], 1);
-        }
-
-        for (int j = 0; j < m_nEVars; ++j)
-        {
-            for (int i = 0; i < nPoints; ++i)
-            {
-                field[j][i] = filtFields[j][i];
-            }
-        }
-    }
+    LibUtilities::PtsFieldSharedPtr tmpPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(0, field);
+    m_coupling->GetInterpolator().Interpolate(recvMesh, tmpPts);
 }
 
-
-void CwipiExchange::PrintProgressbar(const int position, const int goal) const
-{
-    // print only every 2 percent
-    if (int(100 * position / goal) % 2 ==  0)
-    {
-        cout << "." <<  flush;
-    }
 }
-
-
-
 }

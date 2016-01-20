@@ -38,6 +38,7 @@
 
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/EquationSystem.h>
+#include <SolverUtils/Interpolator.h>
 
 using namespace std;
 
@@ -72,6 +73,16 @@ public:
         return m_field;
     };
 
+    SolverUtils::Interpolator GetInterpolator()
+    {
+        return m_interpolator;
+    };
+
+    LibUtilities::PtsFieldSharedPtr GetRecvMesh()
+    {
+        return m_recvMesh;
+    };
+
     string GetName()
     {
         return m_name;
@@ -94,7 +105,10 @@ public:
 
 protected:
 
-    MultiRegions::ExpListSharedPtr m_field;
+    MultiRegions::ExpListSharedPtr  m_field;
+    LibUtilities::PtsFieldSharedPtr m_recvMesh;
+    SolverUtils::Interpolator       m_interpolator;
+
     int m_nPoints;
     double *m_points;
 

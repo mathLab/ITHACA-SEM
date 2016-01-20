@@ -359,10 +359,18 @@ void OutputPYFR::Process()
                 {
                     str1 = "tet";
                 }
+                else if(e1->GetConf().m_e == LibUtilities::ePrism)
+                {
+                    str1 = "pri";
+                }
 
                 if(e2->GetConf().m_e == LibUtilities::eTetrahedron)
                 {
                     str2 = "tet";
+                }
+                else if(e2->GetConf().m_e == LibUtilities::ePrism)
+                {
+                    str2 = "pri";
                 }
 
                 strcpy(c1.el, str1.c_str());
@@ -474,6 +482,10 @@ void OutputPYFR::Process()
             else if(el.first->GetConf().m_e == LibUtilities::eTetrahedron)
             {
                 str = "tet";
+            }
+            else if(el.first->GetConf().m_e == LibUtilities::ePrism)
+            {
+                str = "pri";
             }
 
             strcpy(c.el, str.c_str());

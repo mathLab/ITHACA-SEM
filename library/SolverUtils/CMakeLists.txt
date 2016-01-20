@@ -7,7 +7,6 @@ SET(SOLVER_UTILS_SOURCES
   Advection/AdvectionFR.cpp
   Advection/AdvectionNonConservative.cpp
   Advection/AdvectionWeakDG.cpp
-  CwipiExchange.cpp
   Diffusion/Diffusion.cpp
   Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
@@ -54,7 +53,6 @@ SET(SOLVER_UTILS_HEADERS
   Advection/Advection3DHomogeneous1D.h
   Advection/AdvectionNonConservative.h
   Advection/AdvectionWeakDG.h
-  CwipiExchange.h
   Diffusion/Diffusion.h
   Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h
@@ -101,6 +99,13 @@ IF (NEKTAR_USE_ARPACK)
   SET(SOLVER_UTILS_HEADERS ${SOLVER_UTILS_HEADERS}
     DriverArpack.h)
 ENDIF (NEKTAR_USE_ARPACK)
+
+IF (NEKTAR_USE_CWIPI)
+  SET(SOLVER_UTILS_SOURCES ${SOLVER_UTILS_SOURCES}
+    CwipiExchange.cpp)
+  SET(SOLVER_UTILS_HEADERS ${SOLVER_UTILS_HEADERS}
+    CwipiExchange.h)
+ENDIF (NEKTAR_USE_CWIPI)
 
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 

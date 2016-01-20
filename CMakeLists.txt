@@ -191,8 +191,9 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 
-OPTION(NEKTAR_USE_CWIPI
-    "Use CWIPI." OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_CWIPI
+    "Use CWIPI for Coupling." OFF
+    "NEKTAR_USE_MPI" OFF)
 
 IF ( NEKTAR_USE_CWIPI )
     set(CWIPI_DIR "/usr/local/cwipi" CACHE PATH "CWIPI base path")

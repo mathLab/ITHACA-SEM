@@ -382,6 +382,9 @@ namespace Nektar
                 ("part-only-overlapping",    po::value<int>(),
                                  "only partition mesh into N overlapping partitions.")
                 ("part-info",    "Output partition information")
+#ifdef NEKTAR_USE_CWIPI
+                ("cwipi",        "use CWIPI")
+#endif
             ;
 
             CmdLineArgMap::const_iterator cmdIt;
@@ -1581,12 +1584,16 @@ namespace Nektar
             else
             {
                 string vCommModule("Serial");
-                if (GetCommFactory().ModuleExists("CWIPI"))
+                if (GetCommFactory().ModuleExists("ParallelMPI"))
+                {
+                    vCommModule = "ParallelMPI";
+                }
+                if (m_cmdLineOptions.count("cwipi") && GetCommFactory().ModuleExists("CWIPI"))
                 {
                     vCommModule = "CWIPI";
                 }
 
-                m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
+                m_comm = GetCommFactory().CreateInstance(vCommModule, argc, argv);
             }
         }
 

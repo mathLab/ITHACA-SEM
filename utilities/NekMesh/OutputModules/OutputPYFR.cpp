@@ -94,35 +94,95 @@ void OutputPYFR::Process()
     int numtri = 0;
     int numquad = 0;
 
+    int numhex = 0;
+    int numpri = 0;
+    int numpry = 0;
+    int numtet = 0;
+
     map<int, int> nekidtopyid;
 
     CompositeMap cm = m_mesh->m_composite;
     CompositeMap::iterator it;
     for(it = cm.begin(); it != cm.end(); it++)
     {
+        cout << it->first << " " << it->second->m_tag << endl;
+
         int nv=0;
         map<int, int> nodemap;
         string dsname;
-        if(it->second->m_tag == "Q")
+        if(m_mesh->m_expDim == 2)
         {
-            nv = 4;
-            dsname = "spt_quad_p0";
-            nodemap[0] = 0;
-            nodemap[1] = 1;
-            nodemap[2] = 3;
-            nodemap[3] = 2;
+            if(it->second->m_tag == "Q")
+            {
+                nv = 4;
+                dsname = "spt_quad_p0";
+                nodemap[0] = 0;
+                nodemap[1] = 1;
+                nodemap[2] = 3;
+                nodemap[3] = 2;
+            }
+            else if(it->second->m_tag == "T")
+            {
+                nv = 3;
+                dsname = "spt_tri_p0";
+                nodemap[0] = 0;
+                nodemap[1] = 1;
+                nodemap[2] = 2;
+            }
+            else
+            {
+                continue;
+            }
         }
-        else if(it->second->m_tag == "T")
+        else if(m_mesh->m_expDim == 3)
         {
-            nv = 3;
-            dsname = "spt_tri_p0";
-            nodemap[0] = 0;
-            nodemap[1] = 1;
-            nodemap[2] = 2;
-        }
-        else
-        {
-            continue;
+            if(it->second->m_tag == "H")
+            {
+                nv = 8;
+                dsname = "spt_hex_p0";
+                nodemap[0] = 0;
+                nodemap[1] = 1;
+                nodemap[2] = 3;
+                nodemap[3] = 2;
+                nodemap[4] = 4;
+                nodemap[5] = 5;
+                nodemap[6] = 7;
+                nodemap[7] = 6;
+            }
+            else if(it->second->m_tag == "R")
+            {
+                nv = 6;
+                dsname = "spt_pri_p0";
+                nodemap[0] = 3;
+                nodemap[1] = 4;
+                nodemap[2] = 1;
+                nodemap[3] = 0;
+                nodemap[4] = 5;
+                nodemap[5] = 2;
+            }
+            else if(it->second->m_tag == "P")
+            {
+                nv = 5;
+                dsname = "spt_pyr_p0";
+                nodemap[0] = 0;
+                nodemap[1] = 1;
+                nodemap[2] = 3;
+                nodemap[3] = 2;
+                nodemap[4] = 4;
+            }
+            else if(it->second->m_tag == "A")
+            {
+                nv = 4;
+                dsname = "spt_tet_p0";
+                nodemap[0] = 0;
+                nodemap[1] = 1;
+                nodemap[2] = 2;
+                nodemap[3] = 3;
+            }
+            else
+            {
+                continue;
+            }
         }
 
         hsize_t dimsf[] = {nv, it->second->m_items.size(), m_mesh->m_expDim};
@@ -143,12 +203,32 @@ void OutputPYFR::Process()
             {
                 nekidtopyid[it->second->m_items[i]->GetId()] = numquad++;
             }
+            else if(it->second->m_tag == "H")
+            {
+                nekidtopyid[it->second->m_items[i]->GetId()] = numhex++;
+            }
+            else if(it->second->m_tag == "R")
+            {
+                nekidtopyid[it->second->m_items[i]->GetId()] = numpri++;
+            }
+            else if(it->second->m_tag == "P")
+            {
+                nekidtopyid[it->second->m_items[i]->GetId()] = numpry++;
+            }
+            else if(it->second->m_tag == "A")
+            {
+                nekidtopyid[it->second->m_items[i]->GetId()] = numtet++;
+            }
 
             vector<NodeSharedPtr> ns = it->second->m_items[i]->GetVertexList();
             for(int j = 0; j < nv; j++)
             {
                 data[j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim + 0] = ns[nodemap[j]]->m_x;
                 data[j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim + 1] = ns[nodemap[j]]->m_y;
+                if(m_mesh->m_expDim == 3)
+                {
+                    data[j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim + 2] = ns[nodemap[j]]->m_z;
+                }
             }
         }
 
@@ -165,76 +245,145 @@ void OutputPYFR::Process()
     StrType strdatatype(PredType::C_S1, 4);
 
     { //con
-        EdgeSet::iterator eit;
-        EdgeSet interiorcons;
-        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+        if(m_mesh->m_expDim == 2)
         {
-            ASSERTL0((*eit)->m_elLink.size() == 2 || (*eit)->m_elLink.size() == 1, "not enough element links");
-
-            if((*eit)->m_elLink.size() == 2)
+            EdgeSet::iterator eit;
+            EdgeSet interiorcons;
+            for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
             {
-                interiorcons.insert(*eit);
+                ASSERTL0((*eit)->m_elLink.size() == 2 || (*eit)->m_elLink.size() == 1, "not enough element links");
+
+                if((*eit)->m_elLink.size() == 2)
+                {
+                    interiorcons.insert(*eit);
+                }
             }
+
+            hsize_t dimsf[] = {2, interiorcons.size()};
+
+            DataSpace dataspace( 2, dimsf );
+
+            CompType cn( sizeof(conec) );
+            cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
+            cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT32);
+            cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT8);
+            cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT8);
+
+            DataSet* dataset = new DataSet(file->createDataSet("con_p0", cn, dataspace));
+
+            conec* cons = new conec[2*interiorcons.size()];
+
+            int ct = 0;
+            for(eit = interiorcons.begin(); eit != interiorcons.end(); eit++)
+            {
+                conec c1,c2;
+                ElementSharedPtr e1 = (*eit)->m_elLink[0].first;
+                ElementSharedPtr e2 = (*eit)->m_elLink[1].first;
+
+                string str1, str2;
+
+                if(e1->GetConf().m_e == LibUtilities::eTriangle)
+                {
+                    str1 = "tri";
+                }
+                else if(e1->GetConf().m_e == LibUtilities::eQuadrilateral)
+                {
+                    str1 = "quad";
+                }
+
+                if(e2->GetConf().m_e == LibUtilities::eTriangle)
+                {
+                    str2 = "tri";
+                }
+                else if(e2->GetConf().m_e == LibUtilities::eQuadrilateral)
+                {
+                    str2 = "quad";
+                }
+
+                strcpy(c1.el, str1.c_str());
+                strcpy(c2.el, str2.c_str());
+
+                c1.id = nekidtopyid[e1->GetId()];
+                c2.id = nekidtopyid[e2->GetId()];
+
+                c1.fc = (*eit)->m_elLink[0].second;
+                c2.fc = (*eit)->m_elLink[1].second;
+
+                c1.bl = 0; c2.bl = 0;
+
+                cons[ct] = c1;
+                cons[ct + interiorcons.size()] = c2;
+                ct++;
+            }
+
+            dataset->write( cons, cn );
+        }
+        else if(m_mesh->m_expDim == 3)
+        {
+            FaceSet::iterator fit;
+            FaceSet interiorcons;
+            for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+            {
+                ASSERTL0((*fit)->m_elLink.size() == 2 || (*fit)->m_elLink.size() == 1, "not enough element links");
+
+                if((*fit)->m_elLink.size() == 2)
+                {
+                    interiorcons.insert(*fit);
+                }
+            }
+
+            hsize_t dimsf[] = {2, interiorcons.size()};
+
+            DataSpace dataspace( 2, dimsf );
+
+            CompType cn( sizeof(conec) );
+            cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
+            cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT32);
+            cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT8);
+            cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT8);
+
+            DataSet* dataset = new DataSet(file->createDataSet("con_p0", cn, dataspace));
+
+            conec* cons = new conec[2*interiorcons.size()];
+
+            int ct = 0;
+            for(fit = interiorcons.begin(); fit != interiorcons.end(); fit++)
+            {
+                conec c1,c2;
+                ElementSharedPtr e1 = (*fit)->m_elLink[0].first;
+                ElementSharedPtr e2 = (*fit)->m_elLink[1].first;
+
+                string str1, str2;
+
+                if(e1->GetConf().m_e == LibUtilities::eTetrahedron)
+                {
+                    str1 = "tet";
+                }
+
+                if(e2->GetConf().m_e == LibUtilities::eTetrahedron)
+                {
+                    str2 = "tet";
+                }
+
+                strcpy(c1.el, str1.c_str());
+                strcpy(c2.el, str2.c_str());
+
+                c1.id = nekidtopyid[e1->GetId()];
+                c2.id = nekidtopyid[e2->GetId()];
+
+                c1.fc = (*fit)->m_elLink[0].second;
+                c2.fc = (*fit)->m_elLink[1].second;
+
+                c1.bl = 0; c2.bl = 0;
+
+                cons[ct] = c1;
+                cons[ct + interiorcons.size()] = c2;
+                ct++;
+            }
+
+            dataset->write( cons, cn );
         }
 
-        hsize_t dimsf[] = {2, interiorcons.size()};
-
-        DataSpace dataspace( 2, dimsf );
-
-        CompType cn( sizeof(conec) );
-        cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
-        cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT32);
-        cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT8);
-        cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT8);
-
-        DataSet* dataset = new DataSet(file->createDataSet("con_p0", cn, dataspace));
-
-        conec* cons = new conec[2*interiorcons.size()];
-
-        int ct = 0;
-        for(eit = interiorcons.begin(); eit != interiorcons.end(); eit++)
-        {
-            conec c1,c2;
-            ElementSharedPtr e1 = (*eit)->m_elLink[0].first;
-            ElementSharedPtr e2 = (*eit)->m_elLink[1].first;
-
-            string str1, str2;
-
-            if(e1->GetConf().m_e == LibUtilities::eTriangle)
-            {
-                str1 = "tri";
-            }
-            else if(e1->GetConf().m_e == LibUtilities::eQuadrilateral)
-            {
-                str1 = "quad";
-            }
-
-            if(e2->GetConf().m_e == LibUtilities::eTriangle)
-            {
-                str2 = "tri";
-            }
-            else if(e2->GetConf().m_e == LibUtilities::eQuadrilateral)
-            {
-                str2 = "quad";
-            }
-
-            strcpy(c1.el, str1.c_str());
-            strcpy(c2.el, str2.c_str());
-
-            c1.id = nekidtopyid[e1->GetId()];
-            c2.id = nekidtopyid[e2->GetId()];
-
-            c1.fc = (*eit)->m_elLink[0].second;
-            c2.fc = (*eit)->m_elLink[1].second;
-
-            c1.bl = 0; c2.bl = 0;
-
-            cons[ct] = c1;
-            cons[ct + interiorcons.size()] = c2;
-            ct++;
-        }
-
-        dataset->write( cons, cn );
     }
 
     StrType strdatatypevar(PredType::C_S1, H5T_VARIABLE);
@@ -255,15 +404,31 @@ void OutputPYFR::Process()
     for(it = cm.begin(); it != cm.end(); it++)
     {
         string dsname;
-        if(it->second->m_tag == "E")
+        if(m_mesh->m_expDim == 2)
         {
-            stringstream ss;
-            ss << "bcon_C" << it->first << "_p0";
-            dsname = ss.str();
+            if(it->second->m_tag == "E")
+            {
+                stringstream ss;
+                ss << "bcon_C" << it->first << "_p0";
+                dsname = ss.str();
+            }
+            else
+            {
+                continue;
+            }
         }
-        else
+        else if(m_mesh->m_expDim == 3)
         {
-            continue;
+            if(it->second->m_tag == "F")
+            {
+                stringstream ss;
+                ss << "bcon_C" << it->first << "_p0";
+                dsname = ss.str();
+            }
+            else
+            {
+                continue;
+            }
         }
 
         hsize_t dimsf[] = {it->second->m_items.size()};
@@ -282,8 +447,17 @@ void OutputPYFR::Process()
 
         for(int i = 0; i < it->second->m_items.size(); i++)
         {
-            ASSERTL0(it->second->m_items[i]->GetEdgeLink()->m_elLink.size()==1,"el link makes no sense");
-            pair<ElementSharedPtr,int> el = it->second->m_items[i]->GetEdgeLink()->m_elLink[0];
+            pair<ElementSharedPtr,int> el;
+            if(m_mesh->m_expDim ==2 )
+            {
+                ASSERTL0(it->second->m_items[i]->GetEdgeLink()->m_elLink.size()==1,"el link makes no sense");
+                el = it->second->m_items[i]->GetEdgeLink()->m_elLink[0];
+            }
+            else if(m_mesh->m_expDim == 3)
+            {
+                ASSERTL0(it->second->m_items[i]->GetFaceLink()->m_elLink.size()==1,"el link makes no sense");
+                el = it->second->m_items[i]->GetFaceLink()->m_elLink[0];
+            }
 
             conec c;
 
@@ -296,6 +470,10 @@ void OutputPYFR::Process()
             else if(el.first->GetConf().m_e == LibUtilities::eQuadrilateral)
             {
                 str = "quad";
+            }
+            else if(el.first->GetConf().m_e == LibUtilities::eTetrahedron)
+            {
+                str = "tet";
             }
 
             strcpy(c.el, str.c_str());

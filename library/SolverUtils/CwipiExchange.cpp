@@ -278,19 +278,19 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
         notLoc = cwipi_get_not_located_points(m_coupling->GetName().c_str());
     }
 
-    int n = 0;
+    int locPos = 0;
     int intPos = 0;
     for (int j = 0; j < m_nEVars; ++j)
     {
-        n = 0;
+        locPos = 0;
         intPos = 0;
 
         for (int i = 0; i < nPoints; ++i)
         {
-            if (notLoc[n] == i)
+            if (notLoc[locPos] == i)
             {
-                field[j][i] = 0.0;
-                n++;
+                // keep the original value of field[j][i]
+                locPos++;
             }
             else
             {

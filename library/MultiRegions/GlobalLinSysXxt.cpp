@@ -54,6 +54,7 @@ namespace Nektar
                                                         &pLocToGloMap)
                 : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
+            m_crsData = 0;
         }
 
         GlobalLinSysXxt::~GlobalLinSysXxt()

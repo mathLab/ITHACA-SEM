@@ -207,7 +207,6 @@ namespace Gs
         if (pGsh && !finalized)
         {
             nektar_gs_free(pGsh);
-            pGsh = 0;
         }
 #endif
     }

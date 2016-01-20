@@ -158,6 +158,16 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     Array<OneD, NekDouble> x2(m_nPoints);
     m_field->GetCoords(x0, x1, x2);
 
+    // for seome reason, x2 can contain nan when dim < 3
+    if (spacedim < 3)
+    {
+        Vmath::Zero(m_nPoints, x2, 1);
+    }
+    if (spacedim < 2)
+    {
+        Vmath::Zero(m_nPoints, x1, 1);
+    }
+
     for (int i = 0; i < m_nPoints; ++i)
     {
         m_points[3 * i + 0] = double(x0[i]);

@@ -203,7 +203,6 @@ namespace Xxt
         if (pCrs && !finalized)
         {
             nektar_crs_free(pCrs);
-            pCrs = 0;
         }
 #endif
     }

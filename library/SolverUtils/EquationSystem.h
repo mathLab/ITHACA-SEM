@@ -49,7 +49,6 @@
 #include <SolverUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
-#include <SolverUtils/Exchange.h>
 
 namespace Nektar
 {
@@ -443,16 +442,6 @@ namespace Nektar
             
             /// Evaluates the boundary conditions at the given time.
             SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
-
-            CouplingSharedPointer GetCoupling()
-            {
-                return m_coupling;
-            }
-
-            void SetCoupling(CouplingSharedPointer coupling)
-            {
-                m_coupling = coupling;
-            }
                 
             /// Virtual function to identify if operator is negated in DoSolve
             SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
@@ -533,7 +522,6 @@ namespace Nektar
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
             /// External tool connector
-            CouplingSharedPointer                       m_coupling;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

@@ -165,6 +165,7 @@ map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<One
 {
     map<int, Array<OneD, NekDouble> > ret;
 
+    //setup map from right angled reference triangle to equilateral reference triangle
     DNekMat A(3,3,1.0);
     A(0,0) = -1.0; A(1,0) = -1.0;
     A(0,1) =  1.0; A(1,1) = -1.0;
@@ -203,13 +204,6 @@ map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<One
         s[4] = sqrt((zu-pts(0,it->second[4]))*(zu-pts(0,it->second[4]))+(zv-pts(1,it->second[4]))*(zv-pts(1,it->second[4])));
         s[5] = sqrt((zu-pts(0,it->second[5]))*(zu-pts(0,it->second[5]))+(zv-pts(1,it->second[5]))*(zv-pts(1,it->second[5])));
 
-        /*cout << it->first << endl;
-        for(int i = 0; i < 4; i++)
-        {
-            cout << it->second[i] << ": " << s[i] << ".  ";
-        }
-        cout << endl;*/
-
         ret[it->first] = s;
     }
 
@@ -234,82 +228,27 @@ void SurfaceMesh::HOSurf()
                                  LibUtilities::eNodalTriFekete);
     Array<OneD, NekDouble> u,v;
 
-    int TotNumPoints = LibUtilities::PointsManager()[pkey]->
-                                                    GetTotNumPoints();
-    int numInteriorPoints = (m_mesh->m_nummode-3)*(m_mesh->m_nummode-2)/2;
+    int np = LibUtilities::PointsManager()[pkey]->GetTotNumPoints();
+    int nq = m_mesh->m_nummode;
+    int ni = (nq-3)*(nq-2)/2;
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
 
-    DNekMat c (3,3,1.0);
-    c(0,0) = u[0];
-    c(1,0) = v[0];
-    c(2,0) = 1.0;
-    c(0,1) = u[1];
-    c(1,1) = v[1];
-    c(2,1) = 1.0;
-    c(0,2) = u[2];
-    c(1,2) = v[2];
-    c(2,2) = 1.0;
-    c.Invert();
-
-    DNekMat p (3,numInteriorPoints,1.0);
-    for(int j = 0; j < numInteriorPoints; j++)
-    {
-        p(0,j) = u[TotNumPoints-numInteriorPoints+j];
-        p(1,j) = v[TotNumPoints-numInteriorPoints+j];
-        p(2,j) = 1.0;
-    }
-
     map<int, vector<int> > near = nodeToSixAround(m_mesh->m_nummode);
     map<int, Array<OneD, NekDouble> > z = weights(near, u, v);
-
-    /*for(int i = 0; i < u.num_elements(); i++)
-    {
-        cout << u[i] << " " << v[i] << endl;
-    }
-    exit(-1);*/
-
-    /*map<int, vector<int> >::iterator it1;
-    for(it1 = near.begin(); it1 != near.end(); it1++)
-    {
-        cout << it1->first << endl;
-        for(int i = 0; i < it1->second.size(); i++)
-        {
-            cout << it1->second[i] << " ";
-        }
-        cout << endl;
-    }
-
-
-    cout << endl;
-    */
-    /*map<int, Array<OneD, NekDouble> >::iterator it;
-    for(it = z.begin(); it != z.end(); it++)
-    {
-        cout << it->first << endl;
-        for(int i = 0; i < 3; i++)
-        {
-            cout << it->second[i] << " ";
-        }
-        cout << endl;
-    }
-
-    exit(-1);*/
 
     //because edges are listed twice need a method to not repeat over them
     EdgeSet completedEdges;
 
     //loop over all the faces in the surface mesh, check all three edges for high
     //order info, if nothing high-order the edge.
-    //skip edges which are entirely on planar surfaces
-    //if all three edges have no high-order information skip the face
 
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         if(m_mesh->m_verbose)
         {
-            //LibUtilities::PrintProgressbar(i,m_mesh->m_element[2].size(),
-            //                               "\t\tSurface elements");
+            LibUtilities::PrintProgressbar(i,m_mesh->m_element[2].size(),
+                                           "\t\tSurface elements");
         }
 
         if(m_mesh->m_element[2][i]->GetConf().m_e == LibUtilities::eQuadrilateral)
@@ -318,9 +257,11 @@ void SurfaceMesh::HOSurf()
             continue;
         }
 
+        int surf = m_mesh->m_element[2][i]->CADSurfId;
+        CADSurfSharedPtr s = m_cad->GetSurf(surf);
+
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
         vector<EdgeSharedPtr> surfedges = m_mesh->m_element[2][i]->GetEdgeList();
-        int surf = m_mesh->m_element[2][i]->CADSurfId;
 
         vector<EdgeSharedPtr> edges = f->m_edgeList;
         for(int j = 0; j < edges.size(); j++)
@@ -356,10 +297,8 @@ void SurfaceMesh::HOSurf()
             }
             ASSERTL0(foundsurfaceedge,"cannot find corresponding surface edge");
 
-
             if(e->onCurve)
             {
-                cout << "\rCurve" << e->m_id;
                 int cid = e->CADCurveId;
                 CADCurveSharedPtr c = e->CADCurve;
                 NekDouble tb = e->m_n1->GetCADCurveInfo(cid);
@@ -433,13 +372,12 @@ void SurfaceMesh::HOSurf()
             }
             else
             {
-                cout << "\rEdge" << e->m_id;
                 //edge is on surface and needs 2d optimisation
                 CADSurfSharedPtr s = m_cad->GetSurf(surf);
                 Array<OneD, NekDouble> uvb,uve;
                 uvb = e->m_n1->GetCADSurfInfo(surf);
                 uve = e->m_n2->GetCADSurfInfo(surf);
-                Array<OneD, Array<OneD, NekDouble> > uvi(m_mesh->m_nummode);
+                Array<OneD, Array<OneD, NekDouble> > uvi(nq);
                 for(int k = 0; k < m_mesh->m_nummode; k++)
                 {
                         Array<OneD, NekDouble> uv(2);
@@ -451,7 +389,7 @@ void SurfaceMesh::HOSurf()
                 DNekMat J, H;
                 NekDouble alpha;
                 EdgeOnFace(uvi, gll, s, J, H, alpha);
-                Array<OneD, NekDouble> x(2*(m_mesh->m_nummode - 2));
+                Array<OneD, NekDouble> x(2*(nq - 2));
                 for(int k = 1; k < m_mesh->m_nummode -1; k++)
                 {
                     x[(k-1)*2+0] = uvi[k][0];
@@ -462,7 +400,7 @@ void SurfaceMesh::HOSurf()
                 while(repeat)
                 {
                     NekDouble Norm = 0;
-                    for(int k = 0; k < 2.0*(m_mesh->m_nummode - 2); k++)
+                    for(int k = 0; k < 2.0*(nq - 2); k++)
                     {
                         Norm += J(k,0)*J(k,0);
                     }
@@ -476,7 +414,7 @@ void SurfaceMesh::HOSurf()
 
                     Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
 
-                    for(int k = 1; k < m_mesh->m_nummode - 1; k++)
+                    for(int k = 1; k < nq - 1; k++)
                     {
                         x[(k-1)*2+0] += dx[(k-1)*2+0];
                         x[(k-1)*2+1] += dx[(k-1)*2+1];
@@ -487,8 +425,8 @@ void SurfaceMesh::HOSurf()
                     EdgeOnFace(uvi, gll, s, J, H, alpha);
                 }
 
-                vector<NodeSharedPtr> honodes(m_mesh->m_nummode-2);
-                for(int k = 1; k < m_mesh->m_nummode -1; k++)
+                vector<NodeSharedPtr> honodes(nq-2);
+                for(int k = 1; k < nq -1; k++)
                 {
                     Array<OneD, NekDouble> loc;
                     loc = s->P(uvi[k]);
@@ -503,40 +441,28 @@ void SurfaceMesh::HOSurf()
             }
         }
 
-        cout << "\rFace" << f->m_id;
-
-        if(m_mesh->m_nummode == 3)
-        {
-            //no interior points
-            continue;
-        }
-        if(m_mesh->m_nummode == 4)
-        {
-            //third order triangle only has one interior point so ordering is already correct
-        }
+        ASSERTL0(nq <= 5,"not setup for high-orders yet");
 
         vector<NodeSharedPtr> vertices = f->m_vertexList;
-        Array<OneD, NekDouble> uv1,uv2,uv3;
-        uv1 = vertices[0]->GetCADSurfInfo(surf);
-        uv2 = vertices[1]->GetCADSurfInfo(surf);
-        uv3 = vertices[2]->GetCADSurfInfo(surf);
 
-        DNekMat a (3,3,1.0);
-        a(0,0) = uv1[0];
-        a(1,0) = uv1[1];
-        a(2,0) = 1.0;
-        a(0,1) = uv2[0];
-        a(1,1) = uv2[1];
-        a(2,1) = 1.0;
-        a(0,2) = uv3[0];
-        a(1,2) = uv3[1];
-        a(2,2) = 1.0;
+        SpatialDomains::Geometry2DSharedPtr geom = f->GetGeom(3);
+        geom->FillGeom();
+        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
+        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
+        Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
 
-        DNekMat M = a*c;
-        DNekMat result = M*p;
+        Array<OneD, NekDouble> xc(nq*nq);
+        Array<OneD, NekDouble> yc(nq*nq);
+        Array<OneD, NekDouble> zc(nq*nq);
+
+        xmap->BwdTrans(coeffs0,xc);
+        xmap->BwdTrans(coeffs1,yc);
+        xmap->BwdTrans(coeffs2,zc);
+
 
         //build an array of all uvs
-        Array<OneD, Array<OneD, NekDouble> > uvi(TotNumPoints);
+        Array<OneD, Array<OneD, NekDouble> > uvi(np);
         int ctr = 0;
         for(int j = 0; j < vertices.size(); j++)
         {
@@ -554,15 +480,21 @@ void SurfaceMesh::HOSurf()
                 uvi[ctr++] = ns[k]->GetCADSurfInfo(surf);
             }
         }
-        for(int j = 0; j < numInteriorPoints; j++)
+        for(int j = np-ni; j < np; j++)
         {
+            Array<OneD, NekDouble> xp(2);
+            xp[0] = u[j];
+            xp[1] = v[j];
+
+            Array<OneD, NekDouble> xyz(3);
+            xyz[0] = xmap->PhysEvaluate(xp, xc);
+            xyz[1] = xmap->PhysEvaluate(xp, yc);
+            xyz[2] = xmap->PhysEvaluate(xp, zc);
+
             Array<OneD, NekDouble> uv(2);
-            uv[0] = result(0,j);
-            uv[1] = result(1,j);
+            s->ProjectTo(xyz,uv);
             uvi[ctr++] = uv;
         }
-
-        CADSurfSharedPtr s = m_cad->GetSurf(surf);
 
         DNekMat H, J;
 
@@ -574,7 +506,7 @@ void SurfaceMesh::HOSurf()
         {
             int converged = 0;
 
-            for(int j = TotNumPoints - numInteriorPoints; j < TotNumPoints; j++)
+            for(int j = np - ni; j < np; j++)
             {
                 FaceFaceJac(j, uvi, z, near, s, J, H);
 
@@ -602,11 +534,6 @@ void SurfaceMesh::HOSurf()
                        uvi[j][1] + dx[1] > bnds[3])
                     {
                         fail = true;
-                        cout << endl << "failed a point" << endl;
-                        //cout << dx[0] << " " << uvi[j][0] << " " << bnds[0] << " " << bnds[1] << endl;
-                        //cout << dx[1] << " " << uvi[j][1] << " " << bnds[2] << " " << bnds[3] << endl << endl;
-                        //cout << J << endl << endl << H << endl << endl;
-                        //move point to centrioid of its spring system as a guess
                         Array<OneD, NekDouble> ua(2,0.0);
                         for(int l = 0; l < 6; l++)
                         {
@@ -615,7 +542,6 @@ void SurfaceMesh::HOSurf()
                         }
                         uvi[j][0] = ua[0];
                         uvi[j][1] = ua[1];
-                        //break;
                     }
                     else
                     {
@@ -637,20 +563,16 @@ void SurfaceMesh::HOSurf()
                         repeatNode = false;
                     }
                 }
-                if(fail)
-                {
-                    //converged++;
-                }
             }
 
-            if(converged == numInteriorPoints)
+            if(converged == ni)
             {
                 repeat = false;
             }
         }
 
         vector<NodeSharedPtr> honodes;
-        for(int j = TotNumPoints - numInteriorPoints; j < TotNumPoints; j++)
+        for(int j = np - ni; j < np; j++)
         {
             Array<OneD, NekDouble> loc;
             loc = s->P(uvi[j]);

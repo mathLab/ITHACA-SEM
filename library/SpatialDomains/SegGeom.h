@@ -105,6 +105,8 @@ namespace Nektar
                 StdRegions::Orientation                           m_porient[kNverts];
 
 
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetShapeDim() const;
+
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
                 SPATIAL_DOMAINS_EXPORT virtual PointGeomSharedPtr

@@ -61,15 +61,15 @@ namespace Nektar
 
         private:
             /// Writes the <NODES> section of the XML file.
-            void WriteXmlNodes(TiXmlElement * pRoot);
+            void WriteXmlNodes(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <EDGES> section of the XML file.
-            void WriteXmlEdges(TiXmlElement * pRoot);
+            void WriteXmlEdges(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <FACES> section of the XML file if needed.
-            void WriteXmlFaces(TiXmlElement * pRoot);
+            void WriteXmlFaces(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <ELEMENTS> section of the XML file.
-            void WriteXmlElements(TiXmlElement * pRoot);
+            void WriteXmlElements(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <CURVES> section of the XML file if needed.
-            void WriteXmlCurves(TiXmlElement * pRoot);
+            void WriteXmlCurves(TiXmlElement * pRoot, bool UnCompressed);
             /// Writes the <COMPOSITES> section of the XML file.
             void WriteXmlComposites(TiXmlElement * pRoot);
             /// Writes the <DOMAIN> section of the XML file.

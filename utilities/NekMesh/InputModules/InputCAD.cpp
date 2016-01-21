@@ -47,6 +47,8 @@
 
 #include "InputCAD.h"
 
+#include <boost/filesystem.hpp>
+
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
@@ -125,6 +127,17 @@ void InputCAD::Process()
         ASSERTL0(blsurfs.size() > 0, "No surfaces selected to make boundary layer on");
     }
 
+    if(pSession->DefinesSolverInfo("UserDefinedSpacing"))
+    {
+        m_udsName = pSession->GetSolverInfo("UserDefinedSpacing");
+        ASSERTL0(boost::filesystem::exists(m_udsName.c_str()),
+                "UserDefinedSpacing file does not exist");
+    }
+    else
+    {
+        m_udsName = "N";
+    }
+
     CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
                                             AllocateSharedPtr(m_CADName);
 
@@ -164,7 +177,7 @@ void InputCAD::Process()
     //create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
                                     m_mesh->m_verbose, m_minDelta,
-                                    m_maxDelta, m_eps);
+                                    m_maxDelta, m_eps, m_udsName);
 
     m_octree->Build();
 
@@ -215,6 +228,9 @@ void InputCAD::Process()
     ProcessComposites();
 
     m_surfacemesh->Report();
+
+    m_mesh->m_nummode = 2;
+    return;
 
     m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");

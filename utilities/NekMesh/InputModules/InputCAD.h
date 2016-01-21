@@ -59,7 +59,7 @@ public:
 private:
     NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
     int m_order;
-    string m_CADName;
+    string m_CADName, m_udsName;
     bool m_makeBL, m_writeoctree;
 };
 

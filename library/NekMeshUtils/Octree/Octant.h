@@ -304,6 +304,11 @@ class Octant
             return m_children[q];
         }
 
+        int GetNumBoundary()
+        {
+            return m_numBoundaryPoints;
+        }
+
     private:
 
         ///id
@@ -322,6 +327,7 @@ class Octant
         std::vector<CurvaturePointSharedPtr> m_localCPList;
         /// number of valid cp points
         int m_numValidPoints;
+        int m_numBoundaryPoints;
         /// mesh sizing parameter
         std::pair<bool, NekDouble> m_delta;
         /// idenify if division is needed

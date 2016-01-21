@@ -132,7 +132,6 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         {
             string infile = bodystr + "_" + boost::lexical_cast<string>(multiFldIds[i])
                 + endstr;
-            cout << infile << endl;
             fromfiles.push_back(infile);
         }
     }
@@ -185,7 +184,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout <<"Inner Product: " << totiprod << endl;
+            cout <<"Inner Product WRT " << fromfiles[f] << " : "  << totiprod << endl;
         }
     }
 

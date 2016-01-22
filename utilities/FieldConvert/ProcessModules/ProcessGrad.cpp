@@ -97,35 +97,47 @@ void ProcessGrad::Process(po::variables_map &vm)
     // Get velocity and convert to Cartesian system,
     //      if it is still in transformed system
     Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
-    if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
+    if (m_f->m_fieldMetaDataMap.count("MappingCartesianVel"))
     {
-        // Initialize arrays and copy velocity
-        for ( int i =0; i<spacedim; ++i )
+        if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
         {
-            vel[i] = Array<OneD, NekDouble> (npoints);      
+            // Initialize arrays and copy velocity
+            for ( int i =0; i<spacedim; ++i )
+            {
+                vel[i] = Array<OneD, NekDouble> (npoints);      
+                if (m_f->m_exp[0]->GetWaveSpace())
+                {
+                    m_f->m_exp[0]->HomogeneousBwdTrans(
+                                            m_f->m_exp[i]->GetPhys(),
+                                            vel[i]);
+                }
+                else
+                {
+                    Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(),1,
+                                            vel[i],1);
+                }
+
+            }
+            // Convert velocity to cartesian system
+            mapping->ContravarToCartesian(vel, vel);            
+            // Convert back to wavespace if necessary
             if (m_f->m_exp[0]->GetWaveSpace())
             {
-                m_f->m_exp[0]->HomogeneousBwdTrans(
-                                        m_f->m_exp[i]->GetPhys(),
-                                        vel[i]);
-            }
-            else
-            {
-                Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(),1,
-                                        vel[i],1);
-            }
-
+                for ( int i =0; i<spacedim; ++i )
+                {
+                    m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
+                }
+            }        
         }
-        // Convert velocity to cartesian system
-        mapping->ContravarToCartesian(vel, vel);            
-        // Convert back to wavespace if necessary
-        if (m_f->m_exp[0]->GetWaveSpace())
+        else
         {
             for ( int i =0; i<spacedim; ++i )
             {
-                m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
+                vel[i] = Array<OneD, NekDouble> (npoints); 
+                Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1,
+                                            vel[i], 1);
             }
-        }        
+        }
     }
     else
     {
@@ -134,7 +146,7 @@ void ProcessGrad::Process(po::variables_map &vm)
             vel[i] = Array<OneD, NekDouble> (npoints); 
             Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1,
                                         vel[i], 1);
-        }
+        }        
     }
 
     // Calculate Gradient

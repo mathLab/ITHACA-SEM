@@ -271,7 +271,10 @@ void InputCAD::Process()
     m_surfacemesh->HOSurf();
 
     if(m_mesh->m_verbose)
+    {
         cout << endl;
+        cout << m_mesh->m_element[3].size() << endl;
+    }
 }
 
 }

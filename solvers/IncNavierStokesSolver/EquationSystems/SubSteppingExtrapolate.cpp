@@ -118,6 +118,7 @@ namespace Nektar
             break;
             case LibUtilities::eBDFImplicitOrder2:
             {
+<<<<<<< HEAD
                 std::string vSubStepIntScheme = "RungeKutta2_ImprovedEuler";
                 
                 if(m_session->DefinesSolverInfo("SubStepIntScheme"))
@@ -126,6 +127,10 @@ namespace Nektar
                 }
 
                 m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
+=======
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                //m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("AdamsBashforthOrder2");
+>>>>>>> feature/DGopt
                     
                 int nvel = m_velocity.num_elements();
                 
@@ -345,8 +350,11 @@ namespace Nektar
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
         nsubsteps = max(m_minsubsteps, nsubsteps);
+<<<<<<< HEAD
 
         ASSERTL0(nsubsteps < m_maxsubsteps,"Number of substeps has exceeded maximum");
+=======
+>>>>>>> feature/DGopt
 
         dt = m_timestep/nsubsteps;
         

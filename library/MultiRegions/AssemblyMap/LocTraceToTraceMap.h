@@ -36,8 +36,13 @@
 #ifndef MULTIREGIONS_LOCTRACETOTRACEMAP_H
 #define MULTIREGIONS_LOCTRACETOTRACEMAP_H
 
+#include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <MultiRegions/ExpList.h>
+#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
 
 namespace Nektar
@@ -56,22 +61,35 @@ namespace Nektar
             eInterpEndPtDir0InterpDir1
         };
 
-        typedef boost::tuple<LibUtilities::PointsKey,
-            LibUtilities::PointsKey, LibUtilities::PointsKey,
+        typedef boost::tuple<
+            LibUtilities::PointsKey,
+            LibUtilities::PointsKey,
+            LibUtilities::PointsKey,
             LibUtilities::PointsKey> TraceInterpPoints;
         
         struct cmpop
         {
-            bool operator()(TraceInterpPoints const &a, TraceInterpPoints const &b) const
+            bool operator()(
+                TraceInterpPoints const &a,
+                TraceInterpPoints const &b) const
             {
                 if (a.get<0>() < b.get<0>())
                 {
                     return true;
                 }
 
+                if (b.get<0>() < a.get<0>())
+                {
+                    return false;
+                }
+
                 if (a.get<1>() < b.get<1>())
                 {
                     return true;
+                }
+                if (b.get<1>() < a.get<1>())
+                {
+                    return false;
                 }
 
                 if (a.get<2>() < b.get<2>())
@@ -79,11 +97,17 @@ namespace Nektar
                     return true;
                 }
 
+                if (b.get<2>() < a.get<2>())
+                {
+                    return false;
+                }
+
                 if (a.get<3>() < b.get<3>())
                 {
                     return true;
                 }
 
+                
                 return false;
             }
         };
@@ -91,25 +115,58 @@ namespace Nektar
         class LocTraceToTraceMap
         {
         public:
-            MULTI_REGIONS_EXPORT LocTraceToTraceMap(const ExpList &locExp,
-                                 const ExpListSharedPtr &trace,
-                                 const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >&elmtToTrace,
-                                 const vector<bool> &LeftAdjacentFaces);
+            // Constructor
+            MULTI_REGIONS_EXPORT LocTraceToTraceMap(
+                const ExpList &locExp,
+                const ExpListSharedPtr &trace,
+                const Array<OneD, Array<OneD, LocalRegions::
+                    ExpansionSharedPtr> >&elmtToTrace,
+                const vector<bool> &LeftAdjacents);
             
-            /// Destructor.
+            // Destructor
             MULTI_REGIONS_EXPORT virtual ~LocTraceToTraceMap();
             
-            MULTI_REGIONS_EXPORT void LocTracesFromField(const Array<OneD, const NekDouble> &field, Array<OneD, NekDouble> faces);
+            MULTI_REGIONS_EXPORT void Setup2D(
+                const ExpList &locExp,
+                const ExpListSharedPtr &trace,
+                const Array<OneD, Array<OneD, LocalRegions::
+                    ExpansionSharedPtr> >&elmtToTrace,
+                const vector<bool> &LeftAdjacents);
+            
+            MULTI_REGIONS_EXPORT void Setup3D(
+                const ExpList &locExp,
+                const ExpListSharedPtr &trace,
+                const Array<OneD, Array<OneD, LocalRegions::
+                    ExpansionSharedPtr> >&elmtToTrace,
+                const vector<bool> &LeftAdjacents);
+            
+            MULTI_REGIONS_EXPORT void LocTracesFromField(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> faces);
 
             
-            MULTI_REGIONS_EXPORT void FwdLocTracesFromField(const Array<OneD, const NekDouble> &field, Array<OneD, NekDouble> faces);
-                                                        
-            MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(const int dir, const Array<OneD, const NekDouble> &locfaces, Array<OneD, NekDouble> faces);
+            MULTI_REGIONS_EXPORT void FwdLocTracesFromField(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> faces);
+            
+            MULTI_REGIONS_EXPORT void InterpLocEdgesToTrace(
+                const int dir,
+                const Array<OneD, const NekDouble> &locfaces,
+                      Array<OneD,       NekDouble> edges);
+            
+            MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(
+                const int dir,
+                const Array<OneD, const NekDouble> &locfaces,
+                      Array<OneD,       NekDouble> faces);
 
+            MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(
+                const Array<OneD, const NekDouble> &trace,
+                      Array<OneD,       NekDouble> &field);
 
-            MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(const Array<OneD, const NekDouble> &trace,  Array<OneD, NekDouble> &field);
-
-            MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(const int dir, const Array<OneD, const NekDouble> &race, Array<OneD, NekDouble> &field);
+            MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(
+                const int dir,
+                const Array<OneD, const NekDouble> &race,
+                      Array<OneD,       NekDouble> &field);
 
             MULTI_REGIONS_EXPORT inline int GetNFwdLocTracePts()
             {
@@ -121,12 +178,14 @@ namespace Nektar
                 return m_nLocTracePts; 
             }
         private:
-            /// the number of data points in m_fieldtoLocTraceMap that are associated with Fwd Trace
+            // the number of data points in m_fieldtoLocTraceMap
+            // that are associated with Fwd Trace
             int m_nFwdLocTracePts;  
             int m_nLocTracePts;
             int m_nTracePts;
+            int m_expdim;
             
-            /// mapping from field to local trace
+            // mapping from field to local trace
             Array<OneD, int> m_fieldToLocTraceMap; 
             
             Array<OneD, Array<OneD, int> > m_LocTraceToTraceMap;
@@ -144,7 +203,8 @@ namespace Nektar
             Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
         };
 
-        typedef boost::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;
+        typedef boost::shared_ptr<LocTraceToTraceMap>
+            LocTraceToTraceMapSharedPtr;
 
     } // end of namespace
 } // end of namespace

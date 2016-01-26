@@ -3271,7 +3271,7 @@ namespace Nektar
                             const LibUtilities::PointsKey pkey1(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
                             LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
                             returnval.push_back(bkey1);
-                            
+
                             if(type == eModifiedGLLRadau10)
                             {
                                 const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);

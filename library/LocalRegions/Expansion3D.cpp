@@ -1942,19 +1942,33 @@ namespace Nektar
             GetFacePhysMap(face,faceids);
             Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
             
+
+            int to_id0,to_id1;
+
+            if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+            {
+                to_id0 = 0; 
+                to_id1 = 1;
+            }
+            else // transpose points key evaluation 
+            {
+                to_id0 = 1;
+                to_id1 = 0;
+            }
+
             // interpolate to points distrbution given in FaceExp
             LibUtilities::Interp2D(m_base[dir0]->GetPointsKey(), 
                                    m_base[dir1]->GetPointsKey(), 
                                    o_tmp.get(),
-                                   FaceExp->GetBasis(0)->GetPointsKey(),
-                                   FaceExp->GetBasis(1)->GetPointsKey(),
+                                   FaceExp->GetBasis(to_id0)->GetPointsKey(),
+                                   FaceExp->GetBasis(to_id1)->GetPointsKey(),
                                    o_tmp2.get());
             
             // Reshuffule points as required and put into outarray. 
             ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
             Vmath::Scatr(nq0*nq1,o_tmp2,faceids,outarray);
         }
-
+        
         void Expansion3D::ReOrientFacePhysMap(const int nvert, 
                                               const StdRegions::Orientation orient,
                                               const int nq0, const int nq1,
@@ -1968,7 +1982,6 @@ namespace Nektar
             {
                 ReOrientQuadFacePhysMap(orient,nq0,nq1,idmap);
             }
-
         }
 
         void Expansion3D::ReOrientTriFacePhysMap(const StdRegions::Orientation orient,

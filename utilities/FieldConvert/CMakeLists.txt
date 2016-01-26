@@ -22,6 +22,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessInterpPointDataToFld.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
+    ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
     ProcessModules/ProcessScaleInFld.h
@@ -58,7 +59,11 @@ SET(FieldConvertSources
     ProcessModules/ProcessInterpPointDataToFld.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+<<<<<<< HEAD
     ProcessModules/ProcessPointDataToFld.cpp
+=======
+    ProcessModules/ProcessMeanMode.cpp
+>>>>>>> feature/DGopt
     ProcessModules/ProcessPrintFldNorms.cpp
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp
@@ -83,6 +88,7 @@ ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
 ADD_NEKTAR_TEST(pointdatatofld)
 # ADD_NEKTAR_TEST(chan3D_pts)
+ADD_NEKTAR_TEST(chan3DH1D_meanmode)
 
 # windows produces slightly differently formatted files which results in
 # different hashes

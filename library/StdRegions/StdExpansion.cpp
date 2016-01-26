@@ -1487,6 +1487,14 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
+        
+            void StdExpansion::v_GetEdgePhysMap(
+                const int  edge,
+                Array<OneD, int>   &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+            }
 
             void StdExpansion::v_GetFacePhysMap(const int  face,
                                                 Array<OneD, int>   &outarray)
@@ -1685,7 +1693,7 @@ namespace Nektar
         {
             ASSERTL0(false, "Not implemented.");
         }
-        
+
         bool StdExpansion::v_FaceNormalNegated(const int face)
         {
             ASSERTL0(false, "Not implemented.");

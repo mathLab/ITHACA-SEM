@@ -584,7 +584,6 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-            
             int nq0 = 0; 
             int nq1 = 0; 
 
@@ -597,7 +596,7 @@ namespace Nektar
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
-                
+
                 //Directions A and B positive
                 for(int i = 0; i < nquad0*nquad1; ++i)
                 {

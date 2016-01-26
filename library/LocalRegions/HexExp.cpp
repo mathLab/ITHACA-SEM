@@ -710,13 +710,12 @@ namespace Nektar
                 case 1:
                     nq0 = nquad0;
                     nq1 = nquad2;
-
                     //Direction A and B positive
                     if(outarray.num_elements()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    
+
                     //Direction A and B positive
                     for (int k = 0; k < nquad2; k++)
                     {
@@ -793,8 +792,8 @@ namespace Nektar
                     ASSERTL0(false,"face value (> 5) is out of range");
                     break;
             }
-
         }
+
         void HexExp::v_ComputeFaceNormal(const int face)
         {
             int i;

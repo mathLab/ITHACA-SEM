@@ -485,9 +485,9 @@ void Octree::PropagateDomain()
                     {
                         NekDouble r = oct->Distance(known[j]);
 
-                        if(0.099*r + known[j]->GetDelta() < m_maxDelta)
+                        if(0.14*r + known[j]->GetDelta() < m_maxDelta)
                         {
-                            deltaPrime.push_back(0.099 * r + known[j]->GetDelta());
+                            deltaPrime.push_back(0.14 * r + known[j]->GetDelta());
                         }
                         else
                         {
@@ -776,7 +776,9 @@ struct linesource
         NekDouble dist = sqrt(dev[0]*dev[0] + dev[1]*dev[1] + dev[2]*dev[2]) /
                          sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
-        if(dist < R)
+        NekDouble t = -1.0*((x1[0]-p[0])*s[0] + (x1[1]-p[1])*s[1] + (x1[1]-p[1])*s[1]) / Length() / Length();
+
+        if(dist < R && !(t > 1) && !(t < 0))
         {
             return true;
         }
@@ -962,16 +964,26 @@ void Octree::CompileCuravturePointList()
     }
     fle.close();
 
+    for(int j = 0; j < lsources.size(); j++)
+    {
+        cout << lsources[j].x1[0] << " " << lsources[j].x1[1] << " " << lsources[j].x1[2] << endl;
+        cout << lsources[j].x2[0] << " " << lsources[j].x2[1] << " " << lsources[j].x2[2] << endl;
+        cout << lsources[j].Length() << endl;
+    }
+
+    int ct = 0;
     for(int i = 0; i < m_cpList.size(); i++)
     {
         for(int j = 0; j < lsources.size(); j++)
         {
             if(lsources[j].withinRange(m_cpList[i]->GetLoc()))
             {
+                ct++;
                 m_cpList[i]->SetDelta(lsources[j].delta);
             }
         }
     }
+    cout << ct << endl;
 
     ///@TODO need to add curvature points with the false tag to make octree modification work
     //off surfaces

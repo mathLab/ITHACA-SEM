@@ -179,6 +179,7 @@ class Octant
         {
             ASSERTL0(m_delta.first, "Tried to acsess delta of octant"
                                     "which has not been set");
+
             return m_delta.second;
         }
 

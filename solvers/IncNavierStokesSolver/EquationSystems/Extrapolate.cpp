@@ -1223,7 +1223,7 @@ namespace Nektar
                                 m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
                                 m_HBCdata[j].m_bndElmtID = i+k*exp_size_per_plane;       
                                 m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
-                                m_HBCdata[j].m_bndryElmtID = n;
+                                m_HBCdata[j].m_bndryID = n;
                                 m_HBCdata[j].m_coeffOffset = coeff_count;
                                 coeff_count += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
     

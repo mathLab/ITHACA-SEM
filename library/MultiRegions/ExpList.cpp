@@ -2189,27 +2189,19 @@ namespace Nektar
             int i;
             int offset = 0;
 
-            // check if the same and if so just copy over coeffs
-            if(fromExpList->GetNcoeffs() == m_ncoeffs)
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
-                Vmath::Vcopy(m_ncoeffs,fromCoeffs,1,toCoeffs,1);
-            }
-            else
-            {
-                for(i = 0; i < (*m_exp).size(); ++i)
+                std::vector<unsigned int> nummodes;
+                int eid = m_offset_elmt_id[i];
+                for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
                 {
-                    std::vector<unsigned int> nummodes;
-                    int eid = m_offset_elmt_id[i];
-                    for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
-                    {
-                        nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
-                    }
-
-                    (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                       &toCoeffs[m_coeff_offset[eid]]);
-
-                    offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                    nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
                 }
+
+                (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
+                                                   &toCoeffs[m_coeff_offset[eid]]);
+
+                offset += fromExpList->GetExp(eid)->GetNcoeffs();
             }
         }
 

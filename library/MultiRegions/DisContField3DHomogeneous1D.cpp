@@ -350,14 +350,26 @@ namespace Nektar
                 // If this mesh (or partition) has no BCs, skip this step
                 if (MapSize > 0)
                 {
-                    for(int i = 0; i < nplanes; i++)
+                    int i ,j, n, cnt;
+                    int cntPlane = 0;
+                    for (cnt=n=0; n < m_bndCondExpansions.num_elements(); ++n)
                     {
-                        for(int j = 0; j < MapSize; j++)
+                        int planeExpSize = m_planes[0]
+                                                ->GetBndCondExpansions()[n]
+                                                ->GetExpSize();
+                        for (i = 0; i < planeExpSize ; ++i, ++cntPlane)
                         {
-                            ElmtID[j+i*MapSize] = ElmtID_tmp[j]+i*nel_per_plane;
-                            EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+                            for(j = 0; j < nplanes; j++)
+                            {
+                                ElmtID[cnt+i+j*planeExpSize] = 
+                                        ElmtID_tmp[cntPlane]+j*nel_per_plane;
+                                EdgeID[cnt+i+j*planeExpSize] = 
+                                        EdgeID_tmp[cntPlane];
+                            }
                         }
+                        cnt += m_bndCondExpansions[n]->GetExpSize();
                     }
+
                     m_BCtoElmMap = Array<OneD, int>(nplanes*MapSize);
                     m_BCtoEdgMap = Array<OneD, int>(nplanes*MapSize);
 

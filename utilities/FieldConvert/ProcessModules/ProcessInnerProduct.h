@@ -64,6 +64,9 @@ class ProcessInnerProduct : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
+        NekDouble IProduct(vector<unsigned int>  &processFields,
+                          FieldSharedPtr         &fromField,
+                          Array<OneD, const Array<OneD, NekDouble> > &SaveFld);
 };
 
 }

@@ -61,6 +61,8 @@ ProcessInnerProduct::ProcessInnerProduct(FieldSharedPtr f) : ProcessModule(f)
     m_config["multifldids"] = ConfigOption(false, "NotSet",
                                        "Take inner product of multiple field fields with "
                                        "ids given in string. i.e. file_0.chk file_1.chk ...");
+    m_config["allfromflds"] = ConfigOption(true,"NotSet",
+                                           "Take inner product between all fromflds, requires multifldids to be set");
 }
 
 ProcessInnerProduct::~ProcessInnerProduct()
@@ -102,6 +104,8 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     string multifldidsstr = m_config["multifldids"].as<string>();
     vector<unsigned int> multiFldIds;
     vector<string> fromfiles; 
+    bool allfromflds = m_config["allfromflds"].m_beenSet;
+
     if(fields.compare("All") == 0)
     {
         for(int i = 0; i < nfields; ++i)
@@ -111,7 +115,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     }
     else
     {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(fields.c_str(),
+        ASSERTL0(ParseUtils::GenerateSeqVector(fields.c_str(),
                                                    processFields),
                  "Failed to interpret field string in module innerproduct");
     }
@@ -122,7 +126,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     }
     else
     {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(multifldidsstr.c_str(),
+        ASSERTL0(ParseUtils::GenerateSeqVector(multifldidsstr.c_str(),
                                                    multiFldIds),
                  "Failed to interpret multifldids string in module innerproduct");
         int end = fromfld.find_first_of('.',0);
@@ -135,6 +139,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
             fromfiles.push_back(infile);
         }
     }
+
     
     
     Array<OneD, Array<OneD, NekDouble> > SaveFld(processFields.size());
@@ -145,49 +150,113 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         m_f->m_exp[fid]->BwdTrans(m_f->m_exp[fid]->GetCoeffs(),SaveFld[j]);
     }
 
-    for(int f = 0; f < fromfiles.size(); ++f)
+
+    if(allfromflds == false)
     {
-        totiprod = 0.0;
-        m_f->m_fld->Import(fromfiles[f],fromField->m_fielddef,
-                           fromField->m_data,
-                           LibUtilities::NullFieldMetaDataMap,
-                           ElementGIDs);
-
-        for (int j = 0; j < processFields.size(); ++j)
+        
+        for(int f = 0; f < fromfiles.size(); ++f)
         {
-            int fid = processFields[j];
-
-            // load new field
-            for (int i = 0; i < fromField->m_data.size(); ++i)
+            m_f->m_fld->Import(fromfiles[f],fromField->m_fielddef,
+                               fromField->m_data,
+                               LibUtilities::NullFieldMetaDataMap,
+                               ElementGIDs);
+            
+            totiprod = IProduct(processFields, fromField, SaveFld);
+            
+            
+            if(m_f->m_comm->GetRank() == 0)
             {
-                m_f->m_exp[fid]->ExtractDataToCoeffs(
-                                                     fromField->m_fielddef[i],
-                                                     fromField->m_data[i],
-                                                     fromField->m_fielddef[i]->m_fields[fid],
-                                                     m_f->m_exp[fid]->UpdateCoeffs());
+                cout <<"Inner Product WRT " << fromfiles[f] << " : "  << totiprod << endl;
             }
-            
-            m_f->m_exp[fid]->BwdTrans(m_f->m_exp[fid]->GetCoeffs(),
-                                      m_f->m_exp[fid]->UpdatePhys());
-            
-            
-            Vmath::Vmul(nphys,SaveFld[j],1,m_f->m_exp[fid]->GetPhys(),1,
-                        m_f->m_exp[fid]->UpdatePhys(),1);
-            
-            NekDouble iprod = m_f->m_exp[fid]->PhysIntegral(m_f->m_exp[fid]->UpdatePhys());
-        
-            // put in parallel summation
-            m_f->m_comm->AllReduce(iprod,Nektar::LibUtilities::ReduceSum);
-            
-            totiprod += iprod;
-        }
-        
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            cout <<"Inner Product WRT " << fromfiles[f] << " : "  << totiprod << endl;
         }
     }
+    else // evaluate all from fields, first by loading them all up and then calling IProduct
+    {
+        
 
+        // Load all from fields. 
+        Array<OneD, FieldSharedPtr> allFromField(fromfiles.size());
+        for(int i = 0; i < fromfiles.size(); ++i)
+        {
+            allFromField[i] = boost::shared_ptr<Field>(new Field());
+            m_f->m_fld->Import(fromfiles[i],allFromField[i]->m_fielddef,
+                               allFromField[i]->m_data,
+                               LibUtilities::NullFieldMetaDataMap,
+                               ElementGIDs);
+        }
+        
+        for(int g = 0; g < fromfiles.size(); ++g)
+        {
+            for (int j = 0; j < processFields.size(); ++j)
+            {
+                int fid = processFields[j];
+
+                
+                // load new field
+                for (int i = 0; i < allFromField[g]->m_data.size(); ++i)
+                {
+                    m_f->m_exp[fid]->ExtractDataToCoeffs(
+                                                         allFromField[g]->m_fielddef[i],
+                                                         allFromField[g]->m_data[i],
+                                                         allFromField[g]->m_fielddef[i]->m_fields[fid],
+                                                         m_f->m_exp[fid]->UpdateCoeffs());
+                }
+                
+                m_f->m_exp[fid]->BwdTrans(m_f->m_exp[fid]->GetCoeffs(),
+                                          SaveFld[j]);
+            }
+            
+            // take inner product from this g field with all other above 
+            for(int f = g; f < fromfiles.size(); ++f)
+            {
+                totiprod = IProduct(processFields, allFromField[f], SaveFld);
+                
+                
+                if(m_f->m_comm->GetRank() == 0)
+                {
+                    cout <<"Inner Product of " << fromfiles[g] <<" WRT " << fromfiles[f] << " : "  << totiprod << endl;
+                }
+            }
+        }
+    }
+}
+
+NekDouble ProcessInnerProduct::IProduct(vector<unsigned int>  &processFields,
+                                        FieldSharedPtr        &fromField,
+                                     Array<OneD, const Array<OneD, NekDouble> > &SaveFld)
+{
+    int nphys = m_f->m_exp[0]->GetTotPoints();
+    NekDouble totiprod = 0.0;
+    
+    for (int j = 0; j < processFields.size(); ++j)
+    {
+        int fid = processFields[j];
+        
+        // load new field
+        for (int i = 0; i < fromField->m_data.size(); ++i)
+        {
+            m_f->m_exp[fid]->ExtractDataToCoeffs(
+                                                 fromField->m_fielddef[i],
+                                                 fromField->m_data[i],
+                                                 fromField->m_fielddef[i]->m_fields[fid],
+                                                 m_f->m_exp[fid]->UpdateCoeffs());
+        }
+        
+        m_f->m_exp[fid]->BwdTrans(m_f->m_exp[fid]->GetCoeffs(),
+                                  m_f->m_exp[fid]->UpdatePhys());
+        
+        
+        Vmath::Vmul(nphys,SaveFld[j],1,m_f->m_exp[fid]->GetPhys(),1,
+                    m_f->m_exp[fid]->UpdatePhys(),1);
+        
+        NekDouble iprod = m_f->m_exp[fid]->PhysIntegral(m_f->m_exp[fid]->UpdatePhys());
+        
+        // put in parallel summation
+        m_f->m_comm->AllReduce(iprod,Nektar::LibUtilities::ReduceSum);
+        
+        totiprod += iprod;
+    }
+    return totiprod;
 }
 
 }

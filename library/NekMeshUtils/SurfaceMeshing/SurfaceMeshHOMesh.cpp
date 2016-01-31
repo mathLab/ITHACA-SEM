@@ -319,8 +319,8 @@ void SurfaceMesh::HOSurf()
 
                 DNekMat J, H;
                 NekDouble alpha;
-                EdgeOnCurve(ti, gll, c, J, H, alpha);
-
+                CurveEdgeJac(ti, gll, c, J, H);
+                alpha = 1.0;
                 bool repeat = true;
                 while(repeat)
                 {
@@ -345,7 +345,7 @@ void SurfaceMesh::HOSurf()
                         ti[k] = x[k-1];
                     }
 
-                    EdgeOnCurve(ti, gll, c, J, H, alpha);
+                    CurveEdgeJac(ti, gll, c, J, H);
                 }
 
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
@@ -387,8 +387,9 @@ void SurfaceMesh::HOSurf()
                 }
 
                 DNekMat J, H;
-                NekDouble alpha;
-                EdgeOnFace(uvi, gll, s, J, H, alpha);
+                Array<OneD, NekDouble> bnds = s->GetBounds();
+                NekDouble alpha=1.0;
+                FaceEdgeJac(uvi, gll, s, J, H);
                 Array<OneD, NekDouble> x(2*(nq - 2));
                 for(int k = 1; k < m_mesh->m_nummode -1; k++)
                 {
@@ -397,6 +398,7 @@ void SurfaceMesh::HOSurf()
                 }
 
                 bool repeat = true;
+                int itct = 0;
                 while(repeat)
                 {
                     NekDouble Norm = 0;
@@ -411,18 +413,40 @@ void SurfaceMesh::HOSurf()
                         repeat = false;
                         break;
                     }
+                    if(itct > 10000)
+                    {
+                        cout << "failed to optmise" << endl;
+                        repeat = false;
+                        break;
+                    }
+                    itct++;
 
                     Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
 
+                    int failed = 0;
                     for(int k = 1; k < nq - 1; k++)
                     {
-                        x[(k-1)*2+0] += dx[(k-1)*2+0];
-                        x[(k-1)*2+1] += dx[(k-1)*2+1];
-                        uvi[k][0] = x[(k-1)*2+0];
-                        uvi[k][1] = x[(k-1)*2+1];
+                        if(uvi[k][0] + dx[(k-1)*2+0] < bnds[0] ||
+                           uvi[k][0] + dx[(k-1)*2+0] > bnds[1] ||
+                           uvi[k][1] + dx[(k-1)*2+1] < bnds[2] ||
+                           uvi[k][1] + dx[(k-1)*2+1] > bnds[3])
+                        {
+                            failed++;
+                        }
+                        else
+                        {
+                            x[(k-1)*2+0] += dx[(k-1)*2+0];
+                            x[(k-1)*2+1] += dx[(k-1)*2+1];
+                            uvi[k][0] = x[(k-1)*2+0];
+                            uvi[k][1] = x[(k-1)*2+1];
+                        }
+                    }
+                    if(failed == nq - 2)
+                    {
+                        cout << "failed to update any" << endl;
                     }
 
-                    EdgeOnFace(uvi, gll, s, J, H, alpha);
+                    FaceEdgeJac(uvi, gll, s, J, H);
                 }
 
                 vector<NodeSharedPtr> honodes(nq-2);
@@ -443,7 +467,7 @@ void SurfaceMesh::HOSurf()
 
         ASSERTL0(nq <= 5,"not setup for high-orders yet");
 
-        vector<NodeSharedPtr> vertices = f->m_vertexList;
+        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::Geometry2DSharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -582,7 +606,7 @@ void SurfaceMesh::HOSurf()
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;
+        f->m_curveType = LibUtilities::eNodalTriFekete;*/
     }
 
     if(m_mesh->m_verbose)

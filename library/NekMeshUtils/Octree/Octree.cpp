@@ -937,6 +937,11 @@ void Octree::CompileCuravturePointList()
         }
     }
 
+    if(m_udsfile == "N")
+    {
+        return;
+    }
+
     //now deal with the user defined spacing
     vector<linesource> lsources;
     fstream fle;

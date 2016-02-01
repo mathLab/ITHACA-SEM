@@ -322,6 +322,7 @@ void SurfaceMesh::HOSurf()
                 CurveEdgeJac(ti, gll, c, J, H);
                 alpha = 1.0;
                 bool repeat = true;
+                int itct = 0;
                 while(repeat)
                 {
                     NekDouble Norm = 0;
@@ -336,6 +337,17 @@ void SurfaceMesh::HOSurf()
                         repeat = false;
                         break;
                     }
+                    if(itct > 10000)
+                    {
+                        cout << "failed to optimise on curve" << endl;
+                        for(int k = 0; k < m_mesh->m_nummode; k++)
+                        {
+                            ti[k] = tb*(1.0 -  gll[k])/2.0 +
+                                    te*(1.0 +  gll[k])/2.0;
+                        }
+                        break;
+                    }
+                    itct++;
 
                     Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
 
@@ -467,7 +479,7 @@ void SurfaceMesh::HOSurf()
 
         ASSERTL0(nq <= 5,"not setup for high-orders yet");
 
-        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
+        vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::Geometry2DSharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -526,8 +538,16 @@ void SurfaceMesh::HOSurf()
 
         bool repeat = true;
         NekDouble alpha = 1.0;
-        while(repeat)
+        int itct = 0;
+        /*while(repeat)
         {
+            if(itct > 10000)
+            {
+                cout << "failed to converge on face" << endl;
+                break;
+            }
+            itct++;
+
             int converged = 0;
 
             for(int j = np - ni; j < np; j++)
@@ -548,8 +568,15 @@ void SurfaceMesh::HOSurf()
 
                 bool repeatNode = true;
                 bool fail = false;
+                int noitct = 0;
                 while(repeatNode)
                 {
+                    if(noitct > 100)
+                    {
+                        break;
+                    }
+                    noitct++;
+
                     Array<OneD, NekDouble> dx = gsOptimise(alpha, uvi[j], H, J);
 
                     if(uvi[j][0] + dx[0] < bnds[0] ||

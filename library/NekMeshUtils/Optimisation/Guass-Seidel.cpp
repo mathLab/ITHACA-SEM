@@ -43,6 +43,13 @@ namespace NekMeshUtils
 
     Array<OneD, NekDouble> gsOptimise(NekDouble alpha, Array<OneD, NekDouble> x, DNekMat H, DNekMat J)
     {
+        //Array<OneD, NekDouble> eig_r(x.num_elements());
+        //Array<OneD, NekDouble> eig_i(x.num_elements());
+
+        //H.EigenSolve(eig_r, eig_i);
+
+        //cout << eig_r[0] << " " << eig_r[1] << " " << eig_r[2] << endl;
+
         Array<OneD, NekDouble> dx(x.num_elements(),0.0);
         NekDouble Diff;
         int ct = 0;
@@ -63,7 +70,7 @@ namespace NekMeshUtils
                     postsum += H(i,j)*dx[j];
                 }
 
-                dxn[i] = alpha*1.0/H(i,i) * (-J(i,0) - presum - postsum);
+                dxn[i] = 1.0/H(i,i) * (-J(i,0) - presum - postsum);
             }
 
             Diff = 0.0;

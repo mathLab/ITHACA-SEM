@@ -156,6 +156,7 @@ void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> 
     vector<Array<OneD, NekDouble> > r;
     vector<Array<OneD, NekDouble> > dr;
     vector<Array<OneD, NekDouble> > d2r;
+
     for(int i = 0; i < t.num_elements(); i++)
     {
         Array<OneD, NekDouble> ri(3), dri(3), d2ri(3);

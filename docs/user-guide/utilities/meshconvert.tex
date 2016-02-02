@@ -19,10 +19,10 @@ mesh-generator \gmsh to the XML file format.
 \begin{notebox}
   The default since Jan 2016 is to output the .xml files in a
   compressed form where the VERTEX, EDGES, FACES, ELEMENTS and CURVED
-  information is compressed into binrary format which is then
-  converted into base64. This is identified by the attribute
-  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output in ascii format
-  you need to add the extension ``:xml:uncompress'' to the .xml file,
+  information is compressed into binary format which is then
+  converted into base64. This is identified for each section by the attribute
+  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output
+  in ascii format add the module option ``:xml:uncompress'' to the .xml file,
   i.e. \\ \inltt{ MeshConvert file.msh newfile.xml:xml:uncompress}
 \end{notebox}
 

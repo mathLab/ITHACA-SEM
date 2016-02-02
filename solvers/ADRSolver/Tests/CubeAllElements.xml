@@ -6,25 +6,25 @@
             <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
             <I PROPERTY="Projection" VALUE="Continuous" />
       </SOLVERINFO>
-         
+
       <PARAMETERS>
-        <P> Lambda = 1 </P> 
-        <P> IterativeSolverTolerance = 1e-8 </P> 
+        <P> Lambda = 1 </P>
+        <P> IterativeSolverTolerance = 1e-8 </P>
       </PARAMETERS>
-      
+
       <VARIABLES>
         <V ID="0"> u </V>
       </VARIABLES>
-      
+
       <BOUNDARYREGIONS>
-        <B ID="0"> C[1]       </B>  
-        <B ID="1"> C[2]       </B>  
-        <B ID="2"> C[3]       </B>  
-        <B ID="3"> C[4]       </B>  
-        <B ID="4"> C[5]       </B>  
-        <B ID="5"> C[6]       </B>  
+        <B ID="0"> C[1]       </B>
+        <B ID="1"> C[2]       </B>
+        <B ID="2"> C[3]       </B>
+        <B ID="3"> C[4]       </B>
+        <B ID="4"> C[5]       </B>
+        <B ID="5"> C[6]       </B>
       </BOUNDARYREGIONS>
-      
+
       <BOUNDARYCONDITIONS>
         <REGION REF="0">
           <D VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y)" />
@@ -45,7 +45,7 @@
           <D VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y)" />
         </REGION>
       </BOUNDARYCONDITIONS>
-        
+
       <FUNCTION NAME="Forcing">
         <E VAR="u" VALUE="-(Lambda+PI*PI*6)*cos(PI*x)*cos(PI*z)*cos(2*PI*y)" />
       </FUNCTION>

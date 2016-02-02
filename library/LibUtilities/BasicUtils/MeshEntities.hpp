@@ -49,8 +49,8 @@ namespace Nektar
         // Note the MeshCurvedPts are exported as a list of NekInt64
         // and MeshVetexs and so the struct does not comply with the
         // above.
-       
-        
+
+
         struct MeshVertex
         {
             NekInt64 id;
@@ -58,7 +58,7 @@ namespace Nektar
             NekDouble y;
             NekDouble z;
         };
-        
+
         struct MeshEdge
         {
             NekInt64 id;
@@ -101,7 +101,7 @@ namespace Nektar
             NekInt64 id;
             NekInt64 f[6];
         };
-        
+
         struct MeshCurvedInfo
         {
             NekInt64        id;
@@ -112,16 +112,16 @@ namespace Nektar
             // Defined as an int (instead of a PointsType) so that we
             // are using a memory aligned structure which is suitable
             // for 32 and 64 bit machines.
-            NekInt64        ptype;    
+            NekInt64        ptype;
         };
-        
+
         struct MeshCurvedPts
         {
             NekInt64 id;
             std::vector<NekInt64>   index;
-            std::vector<MeshVertex> pts; 
+            std::vector<MeshVertex> pts;
         };
-            
+
 
     }
 }

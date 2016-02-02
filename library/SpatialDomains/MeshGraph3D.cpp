@@ -112,50 +112,49 @@ namespace Nektar
             const char *IsCompressed = field->Attribute("COMPRESSED");
             if(IsCompressed)
             {
-                if(boost::iequals(IsCompressed,LibUtilities::CompressData::GetCompressString()))
+                ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()),
+                         "Compressed formats do not match. Expected :"
+                         + LibUtilities::CompressData::GetCompressString()
+                         + " but got " + std::string(IsCompressed));
+                // Extract the edge body
+                TiXmlNode* edgeChild = field->FirstChild();
+                ASSERTL0(edgeChild, "Unable to extract the data from "
+                         "the compressed edge tag.");
+
+                std::string edgeStr;
+                if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    // Extract the edge body
-                    TiXmlNode* edgeChild = field->FirstChild();
-                    ASSERTL0(edgeChild, "Unable to extract the data from "
-                             "the compressed edge tag.");
-                    
-                    std::string edgeStr;
-                    if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
-                    {
-                        edgeStr += edgeChild->ToText()->ValueStr();
-                    }
-                    
-                    std::vector<LibUtilities::MeshEdge> edgeData;
-                    LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,edgeData);
-                    
-                    int indx;
-                    for(int i = 0; i < edgeData.size(); ++i)
-                    {
-                        indx = edgeData[i].id;
-                        
-                        
-                        PointGeomSharedPtr vertices[2] = {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
-                        SegGeomSharedPtr edge;
-                        
-                        it = m_curvedEdges.find(indx);
-                        
-                        if (it == m_curvedEdges.end())
-                        {
-                            edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
-                        }
-                        else
-                        {
-                            edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
-                        }
-                        
-                        m_segGeoms[indx] = edge;
-                    }
+                    edgeStr += edgeChild->ToText()->ValueStr();
                 }
-                else
+
+                std::vector<LibUtilities::MeshEdge> edgeData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,
+                                                                    edgeData);
+
+                int indx;
+                for(int i = 0; i < edgeData.size(); ++i)
                 {
-                    ASSERTL0(false,"Compressed formats do not match. Expected :"
-                             + LibUtilities::CompressData::GetCompressString() 
-                             + " but got " + std::string(IsCompressed));
+                    indx = edgeData[i].id;
+                    PointGeomSharedPtr vertices[2] = {
+                        GetVertex(edgeData[i].v0),
+                        GetVertex(edgeData[i].v1)
+                    };
+                    SegGeomSharedPtr edge;
+
+                    it = m_curvedEdges.find(indx);
+                    if (it == m_curvedEdges.end())
+                    {
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices);
+                    }
+                    else
+                    {
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices,
+                                            it->second);
+                    }
+                    m_segGeoms[indx] = edge;
                 }
             }
             else
@@ -260,109 +259,116 @@ namespace Nektar
                 const char *IsCompressed = element->Attribute("COMPRESSED");
                 if(IsCompressed)
                 {
-                    if(boost::iequals(IsCompressed,LibUtilities::CompressData::GetCompressString()))
+                    ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData:: GetCompressString()),
+                            "Compressed formats do not match. Expected :"
+                            + LibUtilities::CompressData::GetCompressString()
+                            + " but got "+ std::string(IsCompressed));
+
+                    // Extract the face body
+                    TiXmlNode* faceChild = element->FirstChild();
+                    ASSERTL0(faceChild, "Unable to extract the data from "
+                                        "the compressed face tag.");
+
+                    std::string faceStr;
+                    if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
-                        // Extract the face body
-                        TiXmlNode* faceChild = element->FirstChild();
-                        ASSERTL0(faceChild, "Unable to extract the data from "
-                                 "the compressed face tag.");
-                
-                        std::string faceStr;
-                        if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        faceStr += faceChild->ToText()->ValueStr();
+                    }
+
+                    int indx;
+                    if(elementType == "T")
+                    {
+                        std::vector<LibUtilities::MeshTri> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr,faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
                         {
-                            faceStr += faceChild->ToText()->ValueStr();
-                        }
-                        
-                        int indx;
-                        if(elementType == "T")
-                        {
-                            std::vector<LibUtilities::MeshTri> faceData;
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
-                            
-                            for(int i = 0; i < faceData.size(); ++i)
+                            indx = faceData[i].id;
+
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+
+                            /// Create a TriGeom to hold the new definition.
+                            SegGeomSharedPtr edges[TriGeom::kNedges] =
                             {
-                                indx = faceData[i].id;
-                                
-                                /// See if this face has curves.
-                                it = m_curvedFaces.find(indx);
-                                
-                                /// Create a TriGeom to hold the new definition.
-                                SegGeomSharedPtr edges[TriGeom::kNedges] =
-                                {
-                                    GetSegGeom(faceData[i].e[0]),
-                                    GetSegGeom(faceData[i].e[1]),
-                                    GetSegGeom(faceData[i].e[2])
-                                };
-                                
-                                StdRegions::Orientation edgeorient[TriGeom::kNedges] =
-                                {
-                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
-                                };
-                            
-                                TriGeomSharedPtr trigeom;
-                                
-                                if (it == m_curvedFaces.end())
-                                {
-                                    trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
-                                }
-                                else
-                                {
-                                    trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
-                                }
-                                
-                                trigeom->SetGlobalID(indx);
-                                m_triGeoms[indx] = trigeom;
-                            }
-                        }
-                        else if (elementType == "Q")
-                        {
-                            std::vector<LibUtilities::MeshQuad> faceData;
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
-                            
-                            for(int i = 0; i < faceData.size(); ++i)
+                                GetSegGeom(faceData[i].e[0]),
+                                GetSegGeom(faceData[i].e[1]),
+                                GetSegGeom(faceData[i].e[2])
+                            };
+
+                            StdRegions::Orientation edgeorient[TriGeom::kNedges] =
                             {
-                                indx = faceData[i].id;
-                                
-                                /// See if this face has curves.
-                                it = m_curvedFaces.find(indx);
-                                
-                                
-                                /// Create a QuadGeom to hold the new definition.
-                                SegGeomSharedPtr edges[QuadGeom::kNedges] =
-                                    {GetSegGeom(faceData[i].e[0]),GetSegGeom(faceData[i].e[1]),
-                                     GetSegGeom(faceData[i].e[2]),GetSegGeom(faceData[i].e[3])};
-                                
-                                StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
-                                {
-                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
-                                    SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
-                                };
-                                
-                                QuadGeomSharedPtr quadgeom;
-                                
-                                if (it == m_curvedEdges.end())
-                                {
-                                    quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
-                                }
-                                else
-                                {
-                                    quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
-                                }
-                                quadgeom->SetGlobalID(indx);
-                                
-                                m_quadGeoms[indx] = quadgeom;
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                            };
+
+                            TriGeomSharedPtr trigeom;
+                            if (it == m_curvedFaces.end())
+                            {
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
                             }
+                            else
+                            {
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
+                            }
+                            trigeom->SetGlobalID(indx);
+                            m_triGeoms[indx] = trigeom;
                         }
                     }
-                    else
+                    else if (elementType == "Q")
                     {
-                        ASSERTL0(false,"Compressed formats do not match. Expected :"
-                                 + LibUtilities::CompressData::GetCompressString()
-                                 + " but got "+ std::string(IsCompressed));
+                        std::vector<LibUtilities::MeshQuad> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr,faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
+
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+
+                            /// Create a QuadGeom to hold the new definition.
+                            SegGeomSharedPtr edges[QuadGeom::kNedges] = {
+                                GetSegGeom(faceData[i].e[0]),
+                                GetSegGeom(faceData[i].e[1]),
+                                GetSegGeom(faceData[i].e[2]),
+                                GetSegGeom(faceData[i].e[3])
+                            };
+
+                            StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                                SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
+                            };
+
+                            QuadGeomSharedPtr quadgeom;
+                            if (it == m_curvedEdges.end())
+                            {
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
+                            }
+                            quadgeom->SetGlobalID(indx);
+                            m_quadGeoms[indx] = quadgeom;
+                        }
                     }
                 }
                 else
@@ -523,167 +529,180 @@ namespace Nektar
                 const char *IsCompressed = element->Attribute("COMPRESSED");
                 if(IsCompressed)
                 {
-                    if(boost::iequals(IsCompressed,LibUtilities::CompressData::GetCompressString()))
+                    ASSERTL0(boost::iequals(IsCompressed,
+                             LibUtilities::CompressData:: GetCompressString()),
+                             "Compressed formats do not match. Expected :"
+                             + LibUtilities::CompressData::GetCompressString()
+                             + " but got " + std::string(IsCompressed));
+
+                    // Extract the face body
+                    TiXmlNode* child = element->FirstChild();
+                    ASSERTL0(child, "Unable to extract the data from "
+                             "the compressed face tag.");
+
+                    std::string str;
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
                     {
-                        // Extract the face body
-                        TiXmlNode* child = element->FirstChild();
-                        ASSERTL0(child, "Unable to extract the data from "
-                                 "the compressed face tag.");
-                        
-                        std::string str;
-                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
-                        {
-                            str += child->ToText()->ValueStr();
-                        }
-                        
-                        int indx;
-                        if(elementType == "A")
-                        {
-                            std::vector<LibUtilities::MeshTet> data;
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,data);
-                            
-                            TriGeomSharedPtr tfaces[4];
-                            
-                            for(int i = 0; i < data.size(); ++i)
-                            {
-                                indx = data[i].id;
-                                
-                                for(int j = 0; j < 4; ++j)
-                                {
-                                    Geometry2DSharedPtr face = GetGeometry2D(data[i].f[j]);
-                                    tfaces[j] =  boost::static_pointer_cast<TriGeom>(face);
-                                }
-                                
-                                TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
-                                tetgeom->SetGlobalID(indx);
-                                
-                                m_tetGeoms[indx] = tetgeom;
-                                PopulateFaceToElMap(tetgeom, 4);
-                                
-                            }
-                        }
-                        else if (elementType == "P")
-                        {
-                            std::vector<LibUtilities::MeshPyr> data;
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,data);
-                            
-                            Geometry2DSharedPtr faces[5];
-                            
-                            for(int i = 0; i < data.size(); ++i)
-                            {
-                                indx = data[i].id;
-                                int Ntfaces = 0;
-                                int Nqfaces = 0;
-                                
-                                for(int j = 0; j < 5; ++j)
-                                {
-                                    Geometry2DSharedPtr face = GetGeometry2D(data[i].f[j]);
-                                    
-                                    if (face == Geometry2DSharedPtr() ||
-                                        (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
-                                    {
-                                        std::stringstream errorstring;
-                                        errorstring << "Element " << indx << " has invalid face: " << j;
-                                        ASSERTL0(false, errorstring.str().c_str());
-                                    }
-                                    else if (face->GetShapeType() == LibUtilities::eTriangle)
-                                    {
-                                        faces[j] = boost::static_pointer_cast<TriGeom>(face);
-                                        Ntfaces++;
-                                    }
-                                    else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
-                                    {
-                                        faces[j] = boost::static_pointer_cast<QuadGeom>(face);
-                                        Nqfaces++;
-                                    }
-                                }
-                                ASSERTL0((Ntfaces == 4)&&(Nqfaces = 1),"Did not identify the correct number of triangular and "
-                                         "quadrilateral faces for a pyramid");
-                                
-                                PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(faces));
-                                pyrgeom->SetGlobalID(indx);
-                                
-                                m_pyrGeoms[indx] = pyrgeom;
-                                PopulateFaceToElMap(pyrgeom, 5);
-                                
-                            }
-                        }
-                        else if (elementType == "R")
-                        {
-                            std::vector<LibUtilities::MeshPrism> data;
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,data);
-                            
-                            Geometry2DSharedPtr faces[5];
-                            
-                            for(int i = 0; i < data.size(); ++i)
-                            {
-                                indx = data[i].id;
-                                int Ntfaces = 0;
-                                int Nqfaces = 0;
-                                
-                                for(int j = 0; j < 5; ++j)
-                                {
-                                    Geometry2DSharedPtr face = GetGeometry2D(data[i].f[j]);
-                                    
-                                    if (face == Geometry2DSharedPtr() ||
-                                        (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
-                                    {
-                                        std::stringstream errorstring;
-                                        errorstring << "Element " << indx << " has invalid face: " << j;
-                                        ASSERTL0(false, errorstring.str().c_str());
-                                    }
-                                    else if (face->GetShapeType() == LibUtilities::eTriangle)
-                                    {
-                                        faces[j] = boost::static_pointer_cast<TriGeom>(face);
-                                        Ntfaces++;
-                                    }
-                                    else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
-                                    {
-                                        faces[j] = boost::static_pointer_cast<QuadGeom>(face);
-                                        Nqfaces++;
-                                    }
-                                }
-                                ASSERTL0((Ntfaces == 2)&&(Nqfaces = 3),"Did not identify the correct number of triangular and "
-                                         "quadrilateral faces for a prism");
-                                
-                                PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(faces));
-                                prismgeom->SetGlobalID(indx);
-                                
-                                m_prismGeoms[indx] = prismgeom;
-                                PopulateFaceToElMap(prismgeom, 5);
-                            }
-                        }
-                        else if (elementType == "H")
-                        {
-                            std::vector<LibUtilities::MeshHex> data;
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,data);
-                            
-                            QuadGeomSharedPtr faces[6];
-                            
-                            for(int i = 0; i < data.size(); ++i)
-                            {
-                                indx = data[i].id;
-                                
-                                for(int j = 0; j < 6; ++j)
-                                {
-                                    Geometry2DSharedPtr face = GetGeometry2D(data[i].f[j]);
-                                    
-                                    faces[j] = boost::static_pointer_cast<QuadGeom>(face);
-                                }
-                                
-                                HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(faces));
-                                hexgeom->SetGlobalID(indx);
-                                
-                                m_hexGeoms[indx] = hexgeom;
-                                PopulateFaceToElMap(hexgeom, 6);
-                            }
-                        }                        
+                        str += child->ToText()->ValueStr();
                     }
-                    else
+
+                    int indx;
+                    if(elementType == "A")
                     {
-                        ASSERTL0(false,"Compressed formats do not match. Expected :"
-                                 + LibUtilities::CompressData::GetCompressString()
-                                 + " but got " + std::string(IsCompressed));
+                        std::vector<LibUtilities::MeshTet> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+                        TriGeomSharedPtr tfaces[4];
+                        for(int i = 0; i < data.size(); ++i)
+                        {
+                            indx = data[i].id;
+                            for(int j = 0; j < 4; ++j)
+                            {
+                                Geometry2DSharedPtr face =
+                                    GetGeometry2D(data[i].f[j]);
+                                tfaces[j] =
+                                    boost::static_pointer_cast<TriGeom>(face);
+                            }
+
+                            TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>
+                                                ::AllocateSharedPtr(tfaces));
+                            tetgeom->SetGlobalID(indx);
+                            m_tetGeoms[indx] = tetgeom;
+                            PopulateFaceToElMap(tetgeom, 4);
+                        }
+                    }
+                    else if (elementType == "P")
+                    {
+                        std::vector<LibUtilities::MeshPyr> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+                        Geometry2DSharedPtr faces[5];
+                        for(int i = 0; i < data.size(); ++i)
+                        {
+                            indx = data[i].id;
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            for(int j = 0; j < 5; ++j)
+                            {
+                                Geometry2DSharedPtr face =
+                                    GetGeometry2D(data[i].f[j]);
+
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() !=
+                                        LibUtilities::eTriangle &&
+                                     face->GetShapeType() !=
+                                        LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx
+                                                << " has invalid face: " << j;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() ==
+                                            LibUtilities::eTriangle)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<TriGeom>(face);
+                                    Ntfaces++;
+                                }
+                                else if (face->GetShapeType() ==
+                                            LibUtilities::eQuadrilateral)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<QuadGeom>(face);
+                                    Nqfaces++;
+                                }
+                            }
+                            ASSERTL0((Ntfaces == 4) && (Nqfaces = 1),
+                                     "Did not identify the correct number of "
+                                     "triangular and quadrilateral faces for a "
+                                     "pyramid");
+
+                            PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>
+                                                ::AllocateSharedPtr(faces));
+                            pyrgeom->SetGlobalID(indx);
+                            m_pyrGeoms[indx] = pyrgeom;
+                            PopulateFaceToElMap(pyrgeom, 5);
+                        }
+                    }
+                    else if (elementType == "R")
+                    {
+                        std::vector<LibUtilities::MeshPrism> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+                        Geometry2DSharedPtr faces[5];
+                        for(int i = 0; i < data.size(); ++i)
+                        {
+                            indx = data[i].id;
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            for(int j = 0; j < 5; ++j)
+                            {
+                                Geometry2DSharedPtr face =
+                                        GetGeometry2D(data[i].f[j]);
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() !=
+                                            LibUtilities::eTriangle &&
+                                     face->GetShapeType() !=
+                                            LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx
+                                                << " has invalid face: " << j;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() ==
+                                                LibUtilities::eTriangle)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<TriGeom>(face);
+                                    Ntfaces++;
+                                }
+                                else if (face->GetShapeType() ==
+                                                LibUtilities::eQuadrilateral)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<QuadGeom>(face);
+                                    Nqfaces++;
+                                }
+                            }
+                            ASSERTL0((Ntfaces == 2) && (Nqfaces = 3),
+                                     "Did not identify the correct number of "
+                                     "triangular and quadrilateral faces for a "
+                                     "prism");
+
+                            PrismGeomSharedPtr prismgeom(
+                                    MemoryManager<PrismGeom>
+                                            ::AllocateSharedPtr(faces));
+                            prismgeom->SetGlobalID(indx);
+                            m_prismGeoms[indx] = prismgeom;
+                            PopulateFaceToElMap(prismgeom, 5);
+                        }
+                    }
+                    else if (elementType == "H")
+                    {
+                        std::vector<LibUtilities::MeshHex> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+
+                        QuadGeomSharedPtr faces[6];
+                        for(int i = 0; i < data.size(); ++i)
+                        {
+                            indx = data[i].id;
+                            for(int j = 0; j < 6; ++j)
+                            {
+                                Geometry2DSharedPtr face =
+                                        GetGeometry2D(data[i].f[j]);
+                                faces[j] = boost
+                                        ::static_pointer_cast<QuadGeom>(face);
+                            }
+
+                            HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>
+                                                    ::AllocateSharedPtr(faces));
+                            hexgeom->SetGlobalID(indx);
+                            m_hexGeoms[indx] = hexgeom;
+                            PopulateFaceToElMap(hexgeom, 6);
+                        }
                     }
                 }
                 else

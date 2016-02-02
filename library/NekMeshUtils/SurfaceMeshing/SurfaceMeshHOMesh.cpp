@@ -317,16 +317,21 @@ void SurfaceMesh::HOSurf()
                     x[k-1] = ti[k];
                 }
 
-                DNekMat J, H;
-                NekDouble alpha;
-                CurveEdgeJac(ti, gll, c, J, H);
-                alpha = 1.0;
+                DNekMat B(nq-2,nq-2,0.0); //approximate inverse hessian (I to start)
+                for(int k = 0; k < nq -2; k++)
+                {
+                    B(k,k) = 1.0;
+                }
+
+                DNekMat J;
+                CurveEdgeJac(ti, gll, c, J);
+
                 bool repeat = true;
                 int itct = 0;
                 while(repeat)
                 {
                     NekDouble Norm = 0;
-                    for(int k = 0; k < m_mesh->m_nummode - 2; k++)
+                    for(int k = 0; k < nq - 2; k++)
                     {
                         Norm += J(k,0)*J(k,0);
                     }
@@ -337,27 +342,21 @@ void SurfaceMesh::HOSurf()
                         repeat = false;
                         break;
                     }
-                    if(itct > 10000)
+                    if(itct > 100)
                     {
                         cout << "failed to optimise on curve" << endl;
-                        for(int k = 0; k < m_mesh->m_nummode; k++)
+                        for(int k = 0; k < nq; k++)
                         {
                             ti[k] = tb*(1.0 -  gll[k])/2.0 +
                                     te*(1.0 +  gll[k])/2.0;
                         }
+                        exit(-1);
                         break;
                     }
                     itct++;
 
-                    Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
+                    EdgeOnCurveUpdate(ti, x, gll, c, B, J);
 
-                    for(int k = 1; k < m_mesh->m_nummode -1; k++)
-                    {
-                        x[k-1] += dx[k-1];
-                        ti[k] = x[k-1];
-                    }
-
-                    CurveEdgeJac(ti, gll, c, J, H);
                 }
 
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
@@ -385,7 +384,7 @@ void SurfaceMesh::HOSurf()
             else
             {
                 //edge is on surface and needs 2d optimisation
-                CADSurfSharedPtr s = m_cad->GetSurf(surf);
+                /*CADSurfSharedPtr s = m_cad->GetSurf(surf);
                 Array<OneD, NekDouble> uvb,uve;
                 uvb = e->m_n1->GetCADSurfInfo(surf);
                 uve = e->m_n2->GetCADSurfInfo(surf);
@@ -473,7 +472,7 @@ void SurfaceMesh::HOSurf()
 
                 e->m_edgeNodes = honodes;
                 e->m_curveType = LibUtilities::eGaussLobattoLegendre;
-                completedEdges.insert(e);
+                completedEdges.insert(e);*/
             }
         }
 

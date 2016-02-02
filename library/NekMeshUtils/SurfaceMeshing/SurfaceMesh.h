@@ -89,15 +89,17 @@ class SurfaceMesh
 
     private:
 
-        void EdgeOnCurve(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
-                         CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes,
-                         NekDouble &alpha);
-
         NekDouble CurveEdgeF(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
                              CADCurveSharedPtr c);
 
         void CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
-                          CADCurveSharedPtr c, DNekMat &Jac, DNekMat &Hes);
+                          CADCurveSharedPtr c, DNekMat &Jac);
+
+        void EdgeOnCurveUpdate(Array<OneD, NekDouble> ti,
+                                                  Array<OneD, NekDouble> x,
+                                                  Array<OneD, NekDouble> gll,
+                                                  CADCurveSharedPtr c,
+                                                  DNekMat &B, DNekMat &J);
 
 
 

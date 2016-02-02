@@ -351,10 +351,10 @@ namespace Nektar
                 elemTag->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
                 std::string base64string;
-                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f], 
-                                                                     base64string),
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
+                                                fielddata[f], base64string),
                          "Failed to compress field data.");
-                
+
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -772,9 +772,10 @@ namespace Nektar
                         else if (attrName == "COMPRESSED")
                         {
                             if(!boost::iequals(attr->Value(),
-                                               CompressData::GetCompressString()))
+                                            CompressData::GetCompressString()))
                             {
-                                WARNINGL0(false,"Compressed formats do not match. Expected: "
+                                WARNINGL0(false, "Compressed formats do not "
+                                          "match. Expected: "
                                           + CompressData::GetCompressString()
                                           + " but got "+ string(attr->Value()));
                             }
@@ -982,17 +983,18 @@ namespace Nektar
                     const char *CompressStr = element->Attribute("COMPRESSED");
                     if(CompressStr)
                     {
-                        if(!boost::iequals(CompressStr,CompressData::GetCompressString()))
+                        if(!boost::iequals(CompressStr,
+                                           CompressData::GetCompressString()))
                         {
-                            WARNINGL0(false,"Compressed formats do not match. Expected: "
+                            WARNINGL0(false, "Compressed formats do not match. "
+                                      "Expected: "
                                       + CompressData::GetCompressString()
                                       + " but got "+ string(CompressStr));
                         }
                     }
-                                                                              
 
                     ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
-                                                        elementStr, 
+                                                        elementStr,
                                                         elementFieldData),
                              "Failed to decompress field data.");
 

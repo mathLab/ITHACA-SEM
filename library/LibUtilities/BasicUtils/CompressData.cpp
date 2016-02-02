@@ -64,12 +64,12 @@ namespace LibUtilities
             boost::uint32_t value;
             boost::uint8_t  data[sizeof(boost::uint32_t)];
         } number;
-        
+
         number.data[0] = 0x00;
         number.data[1] = 0x01;
         number.data[2] = 0x02;
         number.data[3] = 0x03;
-        
+
         switch (number.value)
         {
         case UINT32_C(0x00010203): return eEndianBig;
@@ -97,7 +97,7 @@ namespace LibUtilities
         }
 
         /**
-         * Convert a binary string to Base 64 string 
+         * Convert a binary string to Base 64 string
          */
         void BinaryStrToBase64Str(std::string &compressedDataString,
                                   std::string &base64string)
@@ -114,7 +114,7 @@ namespace LibUtilities
                 compressedDataString += '\0';
                 break;
             }
-            
+
             // Convert from binary to base64.
             typedef boost::archive::iterators::base64_from_binary<
                 boost::archive::iterators::transform_width<

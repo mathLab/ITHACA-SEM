@@ -46,7 +46,7 @@ namespace Nektar
     typedef boost::int32_t  NekInt;
     typedef boost::int32_t  NekInt32;
     typedef boost::int64_t  NekInt64;
-    
+
     struct OneD
     {
         static const unsigned int Value = 1;

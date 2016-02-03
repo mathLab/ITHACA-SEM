@@ -92,11 +92,10 @@ namespace SolverUtils
                          "FIELDFORCETIMEFCN.");
 
                 m_session->SubstituteExpressions(funcNameTime);
-                m_timeFcnEqn = MemoryManager<LibUtilities::Equation>::AllocateSharedPtr
-                    (m_session,funcNameTime);
+                m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
+                                ::AllocateSharedPtr(m_session,funcNameTime);
 
                 m_hasTimeFcnScaling = true;
-                cout << "Read Fcn Time Scaling: " << funcNameTime << endl;
             }
         }
 

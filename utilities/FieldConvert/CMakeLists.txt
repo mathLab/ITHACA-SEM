@@ -17,6 +17,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
+    ProcessModules/ProcessHomogeneousPlane.h
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
     ProcessModules/ProcessInterpPointDataToFld.h
@@ -55,6 +56,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
+    ProcessModules/ProcessHomogeneousPlane.cpp
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
     ProcessModules/ProcessInterpPointDataToFld.cpp

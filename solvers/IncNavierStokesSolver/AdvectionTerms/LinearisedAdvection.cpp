@@ -99,28 +99,28 @@ void LinearisedAdvection::v_InitObject(
             m_LhomZ           = m_session->GetParameter("LZ");
             m_HomoDirec       = 1;
 
-            if(m_session->DefinesSolverInfo("ModeType"))
-            {
-                m_session->MatchSolverInfo("ModeType", "SingleMode",    m_singleMode,    false);
-                m_session->MatchSolverInfo("ModeType", "HalfMode",      m_halfMode,      false);
-                m_session->MatchSolverInfo("ModeType", "MultipleModes", m_multipleModes, false);
+            ASSERTL0(m_session->DefinesSolverInfo("ModeType"),
+                     "Need to specify ModeType as HalfMode,SingleMode or "
+                     "MultipleModes");
 
-                if(m_singleMode)
-                {
-                    m_npointsZ = 2;
-                }
-                else if(m_halfMode)
-                {
-                    m_npointsZ = 1;
-                }
-                else if(m_multipleModes)
-                {
-                    m_npointsZ = m_session->GetParameter("HomModesZ");
-                }
-            }
-            else
+            m_session->MatchSolverInfo("ModeType",      "SingleMode",
+                                       m_singleMode,    false);
+            m_session->MatchSolverInfo("ModeType",      "HalfMode",
+                                       m_halfMode,      false);
+            m_session->MatchSolverInfo("ModeType",      "MultipleModes",
+                                       m_multipleModes, false);
+
+            if(m_singleMode)
             {
-                ASSERTL0(false,"Need to specify ModeType as HalfMode,SingleMode or MultipleModes");
+                m_npointsZ = 2;
+            }
+            else if(m_halfMode)
+            {
+                m_npointsZ = 1;
+            }
+            else if(m_multipleModes)
+            {
+                m_npointsZ = m_session->GetParameter("HomModesZ");
             }
         }
 

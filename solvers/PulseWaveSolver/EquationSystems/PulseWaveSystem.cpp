@@ -505,7 +505,7 @@ namespace Nektar
             }
             
             // Transform data if needed
-            if (fmod((n+1), m_checksteps) < fmod(n, m_checksteps))
+            if(!((n+1)%m_checksteps))
             {
                 for (i = 0; i < m_nVariables; ++i)
                 {

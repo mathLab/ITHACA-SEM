@@ -465,7 +465,7 @@ namespace Nektar
             /// Number of steps to take.
             int                                         m_steps;
             /// Number of steps between checkpoints.
-            NekDouble                                   m_checksteps;
+            int                                         m_checksteps;
             /// Spatial dimension (>= expansion dim).
             int                                         m_spacedim;
             /// Expansion dimension.

@@ -733,8 +733,23 @@ namespace Nektar
                         m_isCompressed = true;
 
                         const char *entitytype = x->Value();
-
-                        // read in edge or face info
+                        // The compressed curved information is stored
+                        // in two parts: MeshCurvedInfo and
+                        // MeshCurvedPts.  MeshCurvedPts is just a
+                        // list of MeshVertex values of unique vertex
+                        // values from which we can make edges and
+                        // faces.
+                        //
+                        // Then there is a list of NekInt64 pieces of
+                        // information which make a MeshCurvedInfo
+                        // struct. This contains information such as
+                        // the curve id, the entity id, the number of
+                        // curved points and the offset of where these
+                        // points are stored in the pts vector of
+                        // MeshVertex values. Finally the point type
+                        // is also stored but in NekInt64 format
+                        // rather than an enum for binary stride
+                        // compatibility.
                         if(boost::iequals(entitytype,"E")||
                            boost::iequals(entitytype,"F"))
                         {

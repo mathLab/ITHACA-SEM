@@ -177,50 +177,6 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         bbox[i][1] = Vmath::Vmax(nq, coords[i], 1) + thres;
     }
 
-#ifndef READ_FROM_CWIPI
-    switch (m_field->GetSession()->GetComm()->GetRank())
-    {
-        case 0:
-            bbox[0][0] = -0.0687946;
-            bbox[0][1] = -0.0242054;
-            bbox[1][0] = -0.0217946;
-            bbox[1][1] = 0.00679457;
-            bbox[2][0] = -0.00679457;
-            bbox[2][1] = 0.00679457;
-            break;
-
-        case 1:
-            bbox[0][0] = -0.0687946;
-            bbox[0][1] = -0.0242054;
-            bbox[1][0] = -0.00679457;
-            bbox[1][1] = 0.0217946;
-            bbox[2][0] = -0.00679457;
-            bbox[2][1] = 0.00679457;
-            break;
-
-        case 2:
-            bbox[0][0] = -0.0245089;
-            bbox[0][1] = 0.00679457;
-            bbox[1][0] = -0.0217946;
-            bbox[1][1] = 0.0217946;
-            bbox[2][0] = -0.00679457;
-            bbox[2][1] = 0.00679457;
-            break;
-
-        case 3:
-            bbox[0][0] = -0.0377946;
-            bbox[0][1] = -0.00649114;
-            bbox[1][0] = -0.0217946;
-            bbox[1][1] = 0.0217946;
-            bbox[2][0] = -0.00679457;
-            bbox[2][1] = 0.00679457;
-            break;
-
-        default:
-            break;
-    }
-#endif
-
     SetupRecvMesh(bbox);
 
     // use gauss filtering to reduce the receive-Fields order

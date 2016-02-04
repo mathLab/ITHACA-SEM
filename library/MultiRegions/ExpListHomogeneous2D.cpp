@@ -604,7 +604,7 @@ namespace Nektar
                 }
             }
 
-            m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, 1, HomoBasis, 
+            m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, 
                                                     HomoLen, zIDs, yIDs);
             return returnval;
         }
@@ -635,7 +635,7 @@ namespace Nektar
             }
             
             // enforce NumHomoDir == 1 by direct call
-            m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, 1, HomoBasis, 
+            m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, HomoBasis, 
                                                     HomoLen, zIDs, yIDs);
         }
         

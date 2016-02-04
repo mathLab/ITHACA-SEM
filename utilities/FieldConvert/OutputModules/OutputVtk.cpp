@@ -77,12 +77,12 @@ void OutputVtk::Process(po::variables_map &vm)
     // amend for parallel output if required
     if(m_f->m_session->GetComm()->GetSize() != 1)
     {
-        int    dot  = filename.find_last_of('.');
+        int    dot = filename.find_last_of('.');
         string ext = filename.substr(dot,filename.length()-dot);
         string procId = "_P" + boost::lexical_cast<std::string>(
             m_f->m_session->GetComm()->GetRank());
         string start = filename.substr(0,dot);
-        filename = start + procId + ext;
+        filename = start + procId + ".vtu";
     }
 
     // Write solution.
@@ -119,6 +119,50 @@ void OutputVtk::Process(po::variables_map &vm)
     }
     m_f->m_exp[0]->WriteVtkFooter(outfile);
     cout << "Written file: " << filename << endl;
+
+
+    // output parallel outline info if necessary
+    if(m_f->m_comm->GetRank() == 0)
+    {
+        int nprocs = m_f->m_comm->GetSize();
+        if(nprocs != 1)
+        {
+            filename = m_config["outfile"].as<string>();
+            int    dot = filename.find_last_of('.');
+            string body = filename.substr(0,dot);
+            filename = body + ".pvtu";
+
+            ofstream outfile(filename.c_str());
+
+            outfile << "<?xml version=\"1.0\"?>" << endl;
+            outfile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" "
+                    << "byte_order=\"LittleEndian\">" << endl;
+            outfile << "<PPoints> " << endl;
+            outfile << "<PDataArray type=\"Float64\" NumberOfComponents=\""
+                    <<  m_f->m_exp[0]->GetExp(0)->GetCoordim() << "\"/> " << endl; 
+            outfile << "</PPoints>" << endl;
+            outfile << "<PCells>" << endl;
+            outfile << "<PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << endl; 
+            outfile << "<PDataArray type=\"Int32\" Name=\"offsets\"      NumberOfComponents=\"1\"/>" << endl;
+            outfile << "<PDataArray type=\"UInt8\" Name=\"types\"        NumberOfComponents=\"1\"/>" << endl;
+            outfile << "</PCells>" << endl;
+            outfile << "<PPointData Scalars=\"Material\">" << endl;
+            for(int i = 0; i < nfields; ++i)
+            {
+                outfile << "<PDataArray type=\"Float64\" Name=\"" <<
+                    m_f->m_fielddef[0]->m_fields[i] << "\"/>" << endl;
+            }
+            outfile << "</PPointData>" << endl;
+
+            for(int i = 0; i < nprocs; ++i)
+            {
+                outfile << "<Piece Source=\"" << body << "_P" << i << ".vtu" << "\"/>" <<endl;
+            }
+            outfile << "</PUnstructuredGrid>"  << endl;
+            outfile << "</VTKFile>" << endl;
+            cout << "Written file: " << filename << endl;
+        }
+    }
 }
 
 }

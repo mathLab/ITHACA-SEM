@@ -59,11 +59,8 @@ SET(FieldConvertSources
     ProcessModules/ProcessInterpPointDataToFld.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
-<<<<<<< HEAD
     ProcessModules/ProcessPointDataToFld.cpp
-=======
     ProcessModules/ProcessMeanMode.cpp
->>>>>>> feature/DGopt
     ProcessModules/ProcessPrintFldNorms.cpp
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp

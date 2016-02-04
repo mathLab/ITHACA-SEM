@@ -315,7 +315,7 @@ namespace Nektar
             // part of required surfaces and if not setting up a list
             // of boundary edges (identified by only being visited
             // once). This list is then compared against an earlier
-            // identification of boundary edges on the require
+            // identification of boundary edges on the required
             // surfaces and if the two overlap add a segment element
             // and put segmenent element in comnposite as well
             if(detectbnd)

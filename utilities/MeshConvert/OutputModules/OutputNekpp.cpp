@@ -94,11 +94,11 @@ namespace Nektar
             geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
             root->LinkEndChild( geomTag );
 
-            WriteXmlNodes     (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlEdges     (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlFaces     (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlElements  (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlCurves    (geomTag,m_config["uncompress"].as<bool>());
+            WriteXmlNodes     (geomTag);
+            WriteXmlEdges     (geomTag);
+            WriteXmlFaces     (geomTag);
+            WriteXmlElements  (geomTag);
+            WriteXmlCurves    (geomTag);
             WriteXmlComposites(geomTag);
             WriteXmlDomain    (geomTag);
             WriteXmlExpansions(root);
@@ -143,8 +143,10 @@ namespace Nektar
             }
         }
 
-        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+
             TiXmlElement* verTag = new TiXmlElement( "VERTEX" );
             std::set<NodeSharedPtr>::iterator it;
 
@@ -193,8 +195,10 @@ namespace Nektar
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+            
             if (m_mesh->m_expDim >= 2)
             {
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
@@ -242,8 +246,10 @@ namespace Nektar
             }
         }
 
-        void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot, bool Uncompressed)
+        void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+
             if (m_mesh->m_expDim == 3)
             {
                 TiXmlElement* verTag = new TiXmlElement( "FACE" );
@@ -252,7 +258,7 @@ namespace Nektar
                                             m_mesh->m_faceSet.begin(),
                                             m_mesh->m_faceSet.end());
 
-                if(Uncompressed)
+                if(UnCompressed)
                 {
                     for (it = tmp.begin(); it != tmp.end(); ++it)
                     {
@@ -352,8 +358,10 @@ namespace Nektar
             }
         }
             
-        void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+            
             TiXmlElement* verTag = new TiXmlElement( "ELEMENT" );
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
@@ -570,8 +578,10 @@ namespace Nektar
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlCurves(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlCurves(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+            
             int edgecnt = 0;
 
             bool curve = false;

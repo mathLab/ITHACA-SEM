@@ -740,7 +740,6 @@ namespace Nektar
                             const int kNtfaces = TetGeom::kNtfaces;
                             const int kNqfaces = TetGeom::kNqfaces;
                             TriGeomSharedPtr tfaces[kNtfaces];
-                            //QuadGeomSharedPtr qfaces[kNqfaces];
                             int Ntfaces = 0;
                             int Nqfaces = 0;
                             
@@ -766,7 +765,7 @@ namespace Nektar
                                 }
                                 else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                                 {
-                                    /////        ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                    ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
                                 }
                             }
                             

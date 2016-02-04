@@ -137,6 +137,7 @@ void OutputVtk::Process(po::variables_map &vm)
             outfile << "<?xml version=\"1.0\"?>" << endl;
             outfile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" "
                     << "byte_order=\"LittleEndian\">" << endl;
+            outfile << "<PUnstructuredGrid GhostLevel=\"0\">" << endl;
             outfile << "<PPoints> " << endl;
             outfile << "<PDataArray type=\"Float64\" NumberOfComponents=\""
                     <<  m_f->m_exp[0]->GetExp(0)->GetCoordim() << "\"/> " << endl; 

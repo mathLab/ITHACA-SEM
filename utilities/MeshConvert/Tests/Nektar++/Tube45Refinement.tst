@@ -2,9 +2,9 @@
 <test>
     <description>Test BL refinement from XML file</description>
     <executable>MeshConvert</executable>
-    <parameters>-m jac:list CubePrismRefinement.xml CubePrismRefined.xml:xml:test</parameters>
+    <parameters>-m bl:surf=2 -m jac:list Tube45Refinement.xml Tube45Refined.xml:xml:test</parameters>
     <files>
-        <file description="Input File">CubePrismRefinement.xml</file>
+        <file description="Input File">Tube45Refinement.xml</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

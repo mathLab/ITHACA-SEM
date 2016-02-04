@@ -617,33 +617,31 @@ namespace Nektar
                         int fid = it->first;
                         int bl  = it->second;
 
+                        vector<NodeSharedPtr> qNodeList(4);
+                        for (int k = 0; k < 4; ++k)
+                        {
+                            qNodeList[k] = nodeList[faceNodeMap[elType][fid][k]];
+                        }
+                        vector<int> tagBE;
+                        tagBE = m_mesh->m_element[m_mesh->m_expDim-1][bl]->GetTagList();
+                        ElmtConfig bconf(LibUtilities::eQuadrilateral,1,true,true,false);
+                        ElementSharedPtr boundaryElmt = GetElementFactory().
+                            CreateInstance(LibUtilities::eQuadrilateral,bconf,
+                                               qNodeList,tagBE);
+
+                        // Overwrite first layer boundary element with new
+                        // boundary element, otherwise push this back to end of
+                        // the boundary list
                         if (j == 0)
                         {
-                            // For first layer reuse existing 2D element.
-                            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim-1][bl];
-                            for (int k = 0; k < 4; ++k)
-                            {
-                                e->SetVertex(
-                                    k, nodeList[faceNodeMap[elType][fid][k]]);
-                            }
+                            m_mesh->m_element[m_mesh->m_expDim-1][bl] = boundaryElmt;
                         }
                         else
                         {
-                            // For all other layers create new element.
-                            vector<NodeSharedPtr> qNodeList(4);
-                            for (int k = 0; k < 4; ++k)
-                            {
-                                qNodeList[k] = nodeList[faceNodeMap[elType][fid][k]];
-                            }
-                            vector<int> tagBE;
-                            tagBE = m_mesh->m_element[m_mesh->m_expDim-1][bl]->GetTagList();
-                            ElmtConfig bconf(LibUtilities::eQuadrilateral,1,true,true,false);
-                            ElementSharedPtr boundaryElmt = GetElementFactory().
-                                CreateInstance(LibUtilities::eQuadrilateral,bconf,
-                                               qNodeList,tagBE);
                             m_mesh->m_element[m_mesh->m_expDim-1].push_back(boundaryElmt);
                         }
                     }
+
                     m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
             }

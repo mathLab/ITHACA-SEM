@@ -348,6 +348,10 @@ namespace Nektar
                 elemTag->SetAttribute("ID", idString);
                 elemTag->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
+
+                // Add this information for future compatibility
+                // issues, for exmaple in case we end up using a 128
+                // bit machine.
                 elemTag->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
                 std::string base64string;
@@ -782,7 +786,10 @@ namespace Nektar
                         }
                         else if (attrName =="BITSIZE")
                         {
-                            // do nothing
+                            // This information is for future
+                            // compatibility issues, for exmaple in
+                            // case we end up using a 128 bit machine.
+                            // Currently just do nothing
                         }
                         else
                         {

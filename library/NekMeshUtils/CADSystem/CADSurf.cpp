@@ -45,7 +45,7 @@ namespace NekMeshUtils
 {
 
 CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
-                : m_ID(i), m_edges(ein)
+                : m_edges(ein)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m
@@ -58,6 +58,8 @@ CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
     m_hasTwoCurves = false;
+    m_id = i;
+    m_type = surf;
 }
 
 Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)

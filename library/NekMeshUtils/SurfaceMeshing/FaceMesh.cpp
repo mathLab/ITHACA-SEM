@@ -70,7 +70,7 @@ void FaceMesh::Mesh()
     {
         for(int j = 0; j < m_edgeloops[i].edges.size(); j++)
         {
-            ss << m_edgeloops[i].edges[j]->GetID() << " ";
+            ss << m_edgeloops[i].edges[j]->GetId() << " ";
         }
     }
 
@@ -977,7 +977,7 @@ void FaceMesh::OrientateCurves()
         vector<NodeSharedPtr> cE;
         for(int j = 0; j < m_edgeloops[i].edges.size(); j++)
         {
-            int cid = m_edgeloops[i].edges[j]->GetID();
+            int cid = m_edgeloops[i].edges[j]->GetId();
             vector<NodeSharedPtr> edgePoints = m_curvemeshes[cid]->GetMeshPoints();
 
             int numPoints = m_curvemeshes[cid]->GetNumPoints();

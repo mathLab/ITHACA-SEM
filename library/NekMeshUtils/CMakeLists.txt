@@ -11,6 +11,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
     Optimisation/Guass-Seidel.cpp
+    Optimisation/BGFS-B.cpp
     )
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
@@ -49,6 +50,7 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
     Optimisation/Guass-Seidel.h
+    Optimisation/BGFS-B.h
     )
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
@@ -63,6 +65,7 @@ IF(NEKTAR_USE_MESH)
         TetMeshing/TetMesh.h
         BLMeshing/BLMesh.h
         CADSystem/CADSystem.h
+        CADSystem/CADObj.h
         CADSystem/CADVert.h
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h

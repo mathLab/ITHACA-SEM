@@ -36,7 +36,7 @@
 #include <list>
 #include <algorithm>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/Optimisation/Guass-Seidel.h>
+#include <NekMeshUtils/Optimisation/BGFS-B.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LocalRegions/MatrixKey.h>
@@ -188,6 +188,8 @@ map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<One
     }
 
     DNekMat pts = M*C;
+
+    cout << pts << endl << endl;
 
     map<int, vector<int> >::iterator it;
     for(it = near.begin(); it != near.end(); it++)
@@ -355,7 +357,7 @@ void SurfaceMesh::HOSurf()
                     }
                     itct++;
 
-                    EdgeOnCurveUpdate(ti, x, gll, c, B, J);
+                    BGFSUpdate(EdgeF, ti, gll, c, J, B);
 
                 }
 
@@ -397,10 +399,7 @@ void SurfaceMesh::HOSurf()
                         uvi[k] = uv;
                 }
 
-                DNekMat J, H;
                 Array<OneD, NekDouble> bnds = s->GetBounds();
-                NekDouble alpha=1.0;
-                FaceEdgeJac(uvi, gll, s, J, H);
                 Array<OneD, NekDouble> x(2*(nq - 2));
                 for(int k = 1; k < m_mesh->m_nummode -1; k++)
                 {
@@ -408,12 +407,21 @@ void SurfaceMesh::HOSurf()
                     x[(k-1)*2+1] = uvi[k][1];
                 }
 
+                DNekMat B(2*(nq - 2),2*(nq - 2),0.0); //approximate inverse hessian (I to start)
+                for(int k = 0; k < 2*(nq - 2); k++)
+                {
+                    B(k,k) = 1.0;
+                }
+
+                DNekMat J;
+                FaceEdgeJac(uvi, gll, s, J);
+
                 bool repeat = true;
                 int itct = 0;
                 while(repeat)
                 {
                     NekDouble Norm = 0;
-                    for(int k = 0; k < 2.0*(nq - 2); k++)
+                    for(int k = 0; k < 2*(nq - 2); k++)
                     {
                         Norm += J(k,0)*J(k,0);
                     }
@@ -424,7 +432,7 @@ void SurfaceMesh::HOSurf()
                         repeat = false;
                         break;
                     }
-                    if(itct > 10000)
+                    if(itct > 100)
                     {
                         cout << "failed to optmise" << endl;
                         repeat = false;
@@ -432,32 +440,7 @@ void SurfaceMesh::HOSurf()
                     }
                     itct++;
 
-                    Array<OneD, NekDouble> dx = gsOptimise(alpha, x, H, J);
-
-                    int failed = 0;
-                    for(int k = 1; k < nq - 1; k++)
-                    {
-                        if(uvi[k][0] + dx[(k-1)*2+0] < bnds[0] ||
-                           uvi[k][0] + dx[(k-1)*2+0] > bnds[1] ||
-                           uvi[k][1] + dx[(k-1)*2+1] < bnds[2] ||
-                           uvi[k][1] + dx[(k-1)*2+1] > bnds[3])
-                        {
-                            failed++;
-                        }
-                        else
-                        {
-                            x[(k-1)*2+0] += dx[(k-1)*2+0];
-                            x[(k-1)*2+1] += dx[(k-1)*2+1];
-                            uvi[k][0] = x[(k-1)*2+0];
-                            uvi[k][1] = x[(k-1)*2+1];
-                        }
-                    }
-                    if(failed == nq - 2)
-                    {
-                        cout << "failed to update any" << endl;
-                    }
-
-                    FaceEdgeJac(uvi, gll, s, J, H);
+                    EdgeOnFaceUpdate(uvi, x, gll, s, B, J);
                 }
 
                 vector<NodeSharedPtr> honodes(nq-2);

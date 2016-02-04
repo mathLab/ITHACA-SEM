@@ -42,7 +42,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
+CADCurve::CADCurve(int i, TopoDS_Shape in)
 {
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
@@ -56,6 +56,9 @@ CADCurve::CADCurve(int i, TopoDS_Shape in) : m_ID(i)
     GProp_GProps System;
     BRepGProp::LinearProperties( m_occEdge, System);
     m_length = System.Mass();
+
+    m_id = i;
+    m_type = curve;
 }
 
 NekDouble CADCurve::tAtArcLength(NekDouble s)

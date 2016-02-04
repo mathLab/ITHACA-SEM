@@ -43,6 +43,7 @@
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
 
+#include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
@@ -57,7 +58,7 @@ namespace NekMeshUtils
  * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
  * Nektar++.
  */
-class CADCurve
+class CADCurve : public CADObj
 {
 public:
     friend class MemoryManager<CADCurve>;
@@ -95,7 +96,7 @@ public:
     Array<OneD, NekDouble> D2(NekDouble t);
 
 
-    
+
     /**
      * @brief Calculates the parametric coordinate and arclength location
      * defined by \p s.
@@ -113,12 +114,6 @@ public:
      * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
      */
     Array<OneD, NekDouble> GetMinMax();
-
-    /// return the id of the curve
-    int GetID()
-    {
-        return m_ID;
-    }
 
     ///set the ids of the surfaces either side of the curve
     void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
@@ -150,8 +145,7 @@ public:
     }
 
 private:
-    /// ID of the curve.
-    int m_ID;
+
     /// OpenCascade object of the curve.
     BRepAdaptor_Curve m_occCurve;
     /// OpenCascade edge

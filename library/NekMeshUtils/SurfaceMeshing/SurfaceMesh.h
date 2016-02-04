@@ -89,23 +89,17 @@ class SurfaceMesh
 
     private:
 
-        NekDouble CurveEdgeF(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
-                             CADCurveSharedPtr c);
+        static NekDouble EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
+                        CADObjSharedPtr o);
 
         void CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
                           CADCurveSharedPtr c, DNekMat &Jac);
 
         void EdgeOnCurveUpdate(Array<OneD, NekDouble> ti,
-                                                  Array<OneD, NekDouble> x,
-                                                  Array<OneD, NekDouble> gll,
-                                                  CADCurveSharedPtr c,
-                                                  DNekMat &B, DNekMat &J);
-
-
-
-        void EdgeOnFace(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
-                         CADSurfSharedPtr s, DNekMat &Jac, DNekMat &Hes,
-                         NekDouble &alpha);
+                               Array<OneD, NekDouble> x,
+                               Array<OneD, NekDouble> gll,
+                               CADCurveSharedPtr c,
+                               DNekMat &B, DNekMat &J);
 
         NekDouble FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
                             CADSurfSharedPtr s);
@@ -113,9 +107,13 @@ class SurfaceMesh
 
         void FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
                          Array<OneD, NekDouble> z, CADSurfSharedPtr s,
-                         DNekMat &Jac, DNekMat &Hes);
+                         DNekMat &Jac);
 
-
+        void EdgeOnFaceUpdate(Array<OneD, Array<OneD, NekDouble> > uv,
+                              Array<OneD, NekDouble> x,
+                              Array<OneD, NekDouble> gll,
+                              CADSurfSharedPtr s,
+                              DNekMat &B, DNekMat &J);
 
 
         void FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,

@@ -52,6 +52,8 @@ int main(int argc, char* argv[])
                 "Print the list of available modules.")
         ("output-points,n", po::value<int>(),
                 "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
+        ("output-points-hom-z", po::value<int>(),
+                "Number of planes in the z-direction for output of Homogeneous 1D expansion(for .dat, .vtk).")
         ("error,e",
                 "Write error of fields for regression checking")
         ("forceoutput,f",

@@ -288,15 +288,15 @@ namespace Nektar
                 // size and a pointer to the linear system. We do this so that
                 // we can call a member function to the matrix-vector and
                 // preconditioning multiplication in a subclass.
-                ShellCtx *ctx = new ShellCtx();
-                ctx->nGlobal = nGlobal;
-                ctx->nDir    = nDir;
-                ctx->linSys  = this;
+                ShellCtx *ctx1 = new ShellCtx(), ctx2 = new ShellCtx();
+                ctx1->nGlobal = ctx2->nGlobal = nGlobal;
+                ctx1->nDir    = ctx2->nDir    = nDir;
+                ctx1->linSys  = ctx2->linSys  = this;
 
                 // Set up MatShell object.
                 MatCreateShell      (PETSC_COMM_WORLD, m_nLocal, m_nLocal,
                                      PETSC_DETERMINE, PETSC_DETERMINE,
-                                     (void *)ctx, &m_matrix);
+                                     (void *)ctx1, &m_matrix);
                 MatShellSetOperation(m_matrix, MATOP_MULT,
                                      (void(*)(void))DoMatrixMultiply);
                 MatShellSetOperation(m_matrix, MATOP_DESTROY,
@@ -312,7 +312,7 @@ namespace Nektar
                 PCSetType        (m_pc, PCSHELL);
                 PCShellSetApply  (m_pc, DoPreconditioner);
                 PCShellSetDestroy(m_pc, DoDestroyPCCtx);
-                PCShellSetContext(m_pc, ctx);
+                PCShellSetContext(m_pc, ctx2);
             }
             else
             {
@@ -452,12 +452,7 @@ namespace Nektar
             void *ptr;
             MatShellGetContext(M, &ptr);
             ShellCtx *ctx = (ShellCtx *)ptr;
-
-            if (ctx)
-            {
-                delete ctx;
-            }
-
+            delete ctx;
             return 0;
         }
 
@@ -475,12 +470,7 @@ namespace Nektar
             void *ptr;
             PCShellGetContext(pc, &ptr);
             ShellCtx *ctx = (ShellCtx *)ptr;
-
-            if (ctx)
-            {
-                delete ctx;
-            }
-
+            delete ctx;
             return 0;
         }
 

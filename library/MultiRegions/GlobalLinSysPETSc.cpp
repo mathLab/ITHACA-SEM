@@ -288,7 +288,7 @@ namespace Nektar
                 // size and a pointer to the linear system. We do this so that
                 // we can call a member function to the matrix-vector and
                 // preconditioning multiplication in a subclass.
-                ShellCtx *ctx1 = new ShellCtx(), ctx2 = new ShellCtx();
+                ShellCtx *ctx1 = new ShellCtx(), *ctx2 = new ShellCtx();
                 ctx1->nGlobal = ctx2->nGlobal = nGlobal;
                 ctx1->nDir    = ctx2->nDir    = nDir;
                 ctx1->linSys  = ctx2->linSys  = this;

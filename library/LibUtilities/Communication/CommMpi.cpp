@@ -117,9 +117,8 @@ namespace Nektar
         {
 #ifdef NEKTAR_USING_PETSC
             PetscFinalize();
-#else
-            MPI_Finalize();
 #endif
+            MPI_Finalize();
         }
 
 

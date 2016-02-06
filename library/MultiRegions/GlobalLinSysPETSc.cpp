@@ -72,10 +72,15 @@ namespace Nektar
                 ->GetSolverInfoAsEnum<PETScMatMult>(
                     "PETScMatMult");
 
-            // Check PETSc is initialized
-            // For some reason, this is needed on OS X as logging is not
-            // initialized properly in the call within CommMpi.
-            PetscInitializeNoArguments();
+            // Check PETSc is initialized. For some reason, this is needed on
+            // OS X as logging is not initialized properly in the call within
+            // CommMpi.
+            PetscBool isInitialized;
+            PetscInitialized(&isInitialized);
+            if (!isInitialized)
+            {
+                PetscInitializeNoArguments();
+            }
 
             // Create matrix
             MatCreate(PETSC_COMM_WORLD, &m_matrix);
@@ -93,6 +98,17 @@ namespace Nektar
         {
             PetscBool isFinalized;
             PetscFinalized(&isFinalized);
+
+            // Sometimes, PetscFinalized returns false when (in fact) CommMpi's
+            // Finalise routine has been called. We therefore also need to check
+            // whether MPI has been finalised. This might arise from the
+            // additional call to PetscInitializeNoArguments in the constructor
+            // above.
+#ifdef NEKTAR_USE_MPI
+            int mpiFinal = 0;
+            MPI_Finalized(&mpiFinal);
+            isFinalized = isFinalized || mpiFinal ? PETSC_TRUE : PETSC_FALSE;
+#endif
 
             if (!isFinalized)
             {

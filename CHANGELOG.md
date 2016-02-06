@@ -4,6 +4,7 @@ Changelog
 v4.3.0
 ------
 **Library:**
+- Changed default XML format to compress mesh data (!533)
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
 - Fix range with variable p option (!522)
 - Fix bug with hexahedra of heterogeneous order (!520) and reading files (!522)

@@ -6,15 +6,29 @@ v4.3.0
 **Library:**
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
 - Fix range with variable p option (!522)
-- Fix bug with hexahedra of heterogeneous order (!520)
+- Fix bug with hexahedra of heterogeneous order (!520) and reading files (!522)
 - Fix history point output formatting (!518)
 - Fix for OS X 10.11 (!512)
+- Fix `HexGeom::v_GetDir` to support heterogeneous basis functions (!520)
+- Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
+- Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
+- Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **FieldConvert:**
 - Small fixes in interpolation routine (!515)
+- Add support for surface extraction in 3DH1D case (!521)
+- Add support for isocontour extraction for 3DH1D (!525)
+- Add module to enable mean mode of 3DH1D to be extracted (!530)
+- Fix bug in C^0 projection (!541))
+- Add command line option to set number of homogeneous planes (!540)
+
+**MeshConvert:**
+- Enable face curvature inside core MeshConvert objects (!511)
+- Add linearise processing module to remove all curvature from high order
+  elements (!509)
 
 v4.2.0
 ------
@@ -123,12 +137,81 @@ v4.1.0
 v4.0.1
 ------
 
+**Library:**
+- Change hybrid parallelisation to use command line options (!368)
+- Add support for multi-variable functions in expression evaluator: new
+  functions include rad and ang for polar coordinates (!375)
+- Add more documentation (!376, !383)
+- Various OS X (!377, !378, !382, !425), compiler warning (!432), documentation
+  (!434) Windows 7 (!391, !407), CMake (!392, !415), packaging (!435, !436) and
+  Intel compiler (!414, !416) fixes
+- Refactor of CG and DG assembly maps (!380)
+- Fixes for PETSc running in serial (!381, !420)
+- Fixes for running Arnoldi solver in parallel (!384)
+- Enable MPI tests on Cray machines such as ARCHER (!386)
+- Fix issues with extracting face physical values (!393)
+- Fix threshold filter (!395)
+- HDG can now use block preconditioner (!397)
+- Fix issue with singular vertices in parallel (!398)
+- Timing executables now use `Timer` class from LibUtilities (!402)
+- Fix manifold history points again (!410)
+- Fix time output inside energy filter (!412)
+- Fix GetExpIndex function (!417)
+- Fixes to external project compilation (!419)
+- Fixes from CPC paper review (!422)
+- Fixes for scotch partitioner tests (!423)
+- Fixes for ACML BLAS libraries (!424)
+- Allow prepartitioned meshes to be used (!426)
+- Enable variable names to be remapped inside files to different names in XML
+  functions (!428)
 
+**APESolver:**
+- Fixes for tests (!404)
+- Add support for advection classes (!408)
+
+**CardiacEPSolver:**
+- Add benchmark (!411)
+- Fix cardiac exmplaes (!418)
+
+**CompressibleFlowSolver:**
+- Add filter for kinetic energy/enstrophy calculation (!388)
+
+**FieldConvert:**
+- Support equi-spaced output for simplex elements to reduce storage (!421)
+
+**IncNavierStokesSolver:**
+- Unify advection classes with those in `SolverUtils` (!403, !408)
+
+**MeshConvert:**
+- Boundary layer refinement now supports hexahedra (!390)
+- Improve support for Gmsh high order elements (!401)
+- Many fixes for face-interior curvature (!401)
+- Add rudimentary test suite (!401)
+- New module for imposing curvature based on a scalar function (!401)
 
 v4.0.0
 ------
 
+**Library:**
+- Update boost to 1.55 (!289)
+- Fix parallel history points on manifold (!298)
+- Add support for scotch partitioner (!311)
+- Fixes for thirdparty builds (!319, !330, !353)
+- Fix CMake >= 3.0.0 warnings (!320)
+- Add support for PETSc library and tidy up global system classes (!322)
+- Fixes for 1D Helmholtz solver (!326)
+- Fixes for history points (!327) and solver output (!331)
+- Fix issue with mesh IDs that do not start from zero (!354)
 
+**CardiacEPSolver:**
+- Simplify support for global conductiity (!295)
+
+**FieldConvert:**
+- Fixes for parallel operation and interpolation of points (!351)
+
+**IncNavierStokesSolver:**
+- Fixes for sponge layer (!272)
+- Fix setting of initial conditions (!298)
 
 v3.4.0
 ------

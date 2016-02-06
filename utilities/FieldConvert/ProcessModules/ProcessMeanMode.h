@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessEquiSpacedOutput.h
+//  File: ProcessMeanMode.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Set up fields as interpolation to equispaced output.
+//  Description: Extract mean mode of 3DH1D field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMEANMODE
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMEANMODE
 
 #include "../Module.h"
 
@@ -42,36 +42,24 @@ namespace Nektar
 {
 namespace Utilities
 {
-
 /**
- * @brief This processing module interpolates one field to another
+ * @brief This processing module replaces all expansions by the mean mode
+ *             from 3DH1D fields
  */
-class ProcessEquiSpacedOutput : public ProcessModule
+class ProcessMeanMode : public ProcessModule
 {
     public:
         /// Creates an instance of this class
         static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessEquiSpacedOutput>::
-                                                    AllocateSharedPtr(f);
+            return MemoryManager<ProcessMeanMode>::AllocateSharedPtr(f);
         }
         static ModuleKey className;
 
-        ProcessEquiSpacedOutput(FieldSharedPtr f);
-        virtual ~ProcessEquiSpacedOutput();
+        ProcessMeanMode(FieldSharedPtr f);
+        virtual ~ProcessMeanMode();
 
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
-    protected:
-        ProcessEquiSpacedOutput(){};
-        void SetupEquiSpacedField(void);
-
-        void SetHomogeneousConnectivity(void);
-
-        void GenOrthoModes(int n,
-                           const Array<OneD,const NekDouble> &phys,
-                           Array<OneD, NekDouble> &coeffs);
-
-    private:
 };
 
 }

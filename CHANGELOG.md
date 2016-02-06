@@ -14,6 +14,8 @@ v4.3.0
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
+- Add support for PETSc matrix shell to use Nektar++ operations/preconditioners
+  (!537)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)

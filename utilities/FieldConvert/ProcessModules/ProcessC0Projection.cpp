@@ -132,10 +132,10 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         {
             cout << "\t Processing field: " << processFields[i] << endl;
         }
-        C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
-                                 m_f->m_exp[processFields[i]]->UpdatePhys());
         C0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
                                  m_f->m_exp[processFields[i]]->UpdateCoeffs());
+        C0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+                                 m_f->m_exp[processFields[i]]->UpdatePhys());
     }
 
     // reset FieldDef in case of serial input and parallel output

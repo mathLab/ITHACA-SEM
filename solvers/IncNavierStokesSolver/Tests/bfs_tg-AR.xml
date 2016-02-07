@@ -1702,7 +1702,7 @@
             <P> Kinvis          = 1.0/Re                </P>
             <P> kdim            = 4                     </P>
             <P> nvec            = 1                     </P>
-            <P> evtol           = 1e-4                  </P>
+            <P> evtol           = 1e-5                  </P>
 
         </PARAMETERS>
 

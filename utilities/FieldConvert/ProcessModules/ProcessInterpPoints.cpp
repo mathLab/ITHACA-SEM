@@ -277,9 +277,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
     string fromfld = m_config["fromfld"].as<string>();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,
-                  fromField->m_data,
-                  LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
+                             fromField->m_data,
+                             LibUtilities::NullFieldMetaDataMap,
+                             ElementGIDs);
 
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 
@@ -306,13 +306,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         for (i = 0; i < fromField->m_fielddef.size(); i++)
         {
             fromField->m_exp[j]->ExtractDataToCoeffs(
-                                        fromField->m_fielddef[i],
-                                        fromField->m_data[i],
-                                        fromField->m_fielddef[0]->m_fields[j],
-                                        fromField->m_exp[j]->UpdateCoeffs());
+                                                     fromField->m_fielddef[i],
+                                                     fromField->m_data[i],
+                                                     fromField->m_fielddef[0]->m_fields[j],
+                                                     fromField->m_exp[j]->UpdateCoeffs());
         }
         fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
-                                        fromField->m_exp[j]->UpdatePhys());
+                                      fromField->m_exp[j]->UpdatePhys());
 
         Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
         m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
@@ -338,11 +338,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(
-                         vector<MultiRegions::ExpListSharedPtr> &field0,
-                         Array<OneD, Array<OneD, NekDouble> >   &pts,
-                         NekDouble                              clamp_low,
-                         NekDouble                              clamp_up,
-                         NekDouble                              def_value)
+                                                vector<MultiRegions::ExpListSharedPtr> &field0,
+                                                Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                                NekDouble                              clamp_low,
+                                                NekDouble                              clamp_up,
+                                                NekDouble                              def_value)
 {
     int expdim = pts.num_elements();
 

@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADVERT
-#define NEKMESHUTILS_CADSYSTEM_CADVERT
+#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
+#define NEKMESHUTILS_CADSYSTEM_CADOBJ
 
 #include <boost/shared_ptr.hpp>
 
@@ -42,7 +42,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
-#include <NekMeshUtils/CADSystem/CADObj.h>
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 
@@ -51,96 +50,45 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+enum cadType { vert, curve, surf };
+
 /**
  * @brief class for CAD curves.
  *
  * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
  * Nektar++.
  */
-class CADVert : public CADObj
+class CADObj
 {
 public:
-    friend class MemoryManager<CADVert>;
+    friend class MemoryManager<CADObj>;
 
     /**
      * @brief Default constructor.
      */
-    CADVert(int i, TopoDS_Shape in)
+    CADObj()
     {
-        gp_Trsf transform;
-        gp_Pnt ori(0.0, 0.0, 0.0);
-        transform.SetScale(ori, 1.0 / 1000.0);
-        TopLoc_Location mv(transform);
-        in.Move(mv);
 
-        m_id = i;
-        m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
-
-        m_node = boost::shared_ptr<Node>(
-                new Node(i-1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
-        degen = false;
-
-        m_type = vert;
     }
 
-    ~CADVert(){};
+    virtual ~CADObj(){};
 
     /**
-     * @brief Get x,y,z location of the vertex
+     * @brief Return ID of the vertex
      */
-    Array<OneD, NekDouble> GetLoc()
-    {
-        Array<OneD, NekDouble> out(3);
-        out[0] = m_occVert.X(); out[1] = m_occVert.Y(); out[2] = m_occVert.Z();
-        return out;
-    }
+    int GetId(){return m_id;}
 
-    /**
-     * @brief returns a node object of the cad vertex
-     */
-    NodeSharedPtr GetNode(){return m_node;}
+    cadType GetType(){return m_type;}
 
-    /**
-     * @brief if the vertex is degenerate manually set uv for that surface
-     */
-    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
-    {
-        degen = true;
-        degensurf = s;
-        Array<OneD, NekDouble> uv(2);
-        uv[0] = u;
-        uv[1] = v;
-        m_node->SetCADSurf(s, su, uv);
-    }
+protected:
+    /// ID of the vert.
+    int m_id;
+    ///
+    cadType m_type;
 
-    /**
-     * @brief query is degenerate
-     */
-    int IsDegen()
-    {
-        if(degen)
-        {
-            return degensurf;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-
-private:
-
-    /// OpenCascade object of the curve.
-    gp_Pnt m_occVert;
-    /// mesh convert object of vert
-    NodeSharedPtr m_node;
-    ///degen marker
-    bool degen;
-    //degen surface
-    int degensurf;
 };
 
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
 
 }
 }

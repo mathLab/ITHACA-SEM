@@ -189,8 +189,6 @@ map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<One
 
     DNekMat pts = M*C;
 
-    cout << pts << endl << endl;
-
     map<int, vector<int> >::iterator it;
     for(it = near.begin(); it != near.end(); it++)
     {

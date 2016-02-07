@@ -84,11 +84,24 @@ NekDouble SurfaceMesh::EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> 
             NekDouble norm = dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2];
             ret += norm/(z[i+1] - z[i]);
         }
-        
     }
     else if(o->GetType() == surf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
+        //need to organise the all array
+        Array<OneD, Array<OneD, NekDouble> > uv(all.num_elements()/2);
+        for(int i = 0; i < all.num_elements()/2; i++)
+        {
+            uv[i] = Array<OneD, NekDouble>(2);
+            uv[i][0] = all[i*2+0];
+            uv[i][1] = all[i*2+1];
+        }
+        for(int i = 0; i < uv.num_elements() - 1; i++)
+        {
+            Array<OneD, NekDouble> dis = Take(s->P(uv[i+1]), s->P(uv[i]));
+            NekDouble norm = dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2];
+            ret += norm/(z[i+1] - z[i]);
+        }
     }
     return ret;
 }

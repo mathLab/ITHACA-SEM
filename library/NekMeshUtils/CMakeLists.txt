@@ -64,8 +64,8 @@ IF(NEKTAR_USE_MESH)
         ExtLibInterface/TetGenInterface.h
         TetMeshing/TetMesh.h
         BLMeshing/BLMesh.h
-        CADSystem/CADSystem.h
         CADSystem/CADObj.h
+        CADSystem/CADSystem.h
         CADSystem/CADVert.h
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h

@@ -78,6 +78,8 @@ public:
      */
     CADSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
 
+    ~CADSurf(){};
+
     /**
      * @brief Get the IDs of the edges which bound the surface.
      *

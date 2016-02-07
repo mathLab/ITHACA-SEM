@@ -68,6 +68,8 @@ public:
      */
     CADCurve(int i, TopoDS_Shape in);
 
+    ~CADCurve(){};
+
     /**
      * @brief Returns the minimum and maximum parametric coords t of the curve.
      *

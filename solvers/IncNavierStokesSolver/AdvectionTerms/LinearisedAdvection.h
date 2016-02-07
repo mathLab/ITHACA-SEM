@@ -71,20 +71,19 @@ public:
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
 
-//    MultiRegions::ProjectionType m_projectionType;
     int m_spacedim;
     int m_expdim;
 
     /// Storage for base flow
     Array<OneD, Array<OneD, NekDouble> >            m_baseflow;
 
-    //number of slices
+    /// number of slices
     int                                             m_slices;
-    //period length
+    /// period length
     NekDouble                                       m_period;
-    //interpolation vector
+    /// interpolation vector
     Array<OneD, Array<OneD, NekDouble> >            m_interp;
-    //auxiliary variables
+    /// auxiliary variables
     LibUtilities::NektarFFTSharedPtr                m_FFT;
     Array<OneD,NekDouble>                           m_tmpIN;
     Array<OneD,NekDouble>                           m_tmpOUT;

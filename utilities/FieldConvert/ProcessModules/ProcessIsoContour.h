@@ -138,14 +138,14 @@ class Iso
 
         void resize_fields(int size)
         {
-            if(size > m_x.size()) // add 100 element to vectors
+            if(size > m_x.size()) // add 1000 element to vectors
             {
                 m_x.resize(size+1000);
                 m_y.resize(size+1000);
                 m_z.resize(size+1000);;
                 for(int i = 0; i < m_fields.size(); ++i)
                 {
-                    m_fields[i].resize(size+100);
+                    m_fields[i].resize(size+1000);
                 }
 
             }

@@ -83,21 +83,36 @@ namespace NekMeshUtils
             return m_edgeNodes.size() + 2;
         }
 
+        NEKMESHUTILS_EXPORT void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+        {
+            nodeList.push_back(m_n1);
+            for (int k = 0; k < m_edgeNodes.size(); ++k)
+            {
+                nodeList.push_back(m_edgeNodes[k]);
+            }
+            nodeList.push_back(m_n2);
+        }
+
         /// Creates a Nektar++ string listing the coordinates of all the
         /// nodes.
         NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
         {
+            std::vector<NodeSharedPtr> nodeList;
+
+            GetCurvedNodes(nodeList);
+
             std::stringstream s;
             std::string str;
-            s << std::scientific << std::setprecision(8) << "     "
-              <<  m_n1->m_x << "  " << m_n1->m_y << "  " << m_n1->m_z << "     ";
-            for (int k = 0; k < m_edgeNodes.size(); ++k) {
-                s << std::scientific << std::setprecision(8) << "     "
-                  <<  m_edgeNodes[k]->m_x << "  " << m_edgeNodes[k]->m_y
-                  << "  " << m_edgeNodes[k]->m_z << "     ";
+
+            // put them into a string and return
+            for (int k = 0; k < nodeList.size(); ++k)
+            {
+                s << std::scientific << std::setprecision(8) << "    "
+                  <<  nodeList[k]->m_x << "  " << nodeList[k]->m_y
+                  << "  " << nodeList[k]->m_z << "    ";
+
             }
-            s << std::scientific << std::setprecision(8) << "     "
-              <<  m_n2->m_x << "  " << m_n2->m_y << "  " << m_n2->m_z;
+
             return s.str();
         }
 

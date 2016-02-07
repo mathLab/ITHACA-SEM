@@ -295,13 +295,8 @@ namespace NekMeshUtils
             return s.str();
         }
 
-        /// Generates a string listing the coordinates of all nodes
-        /// associated with this element.
-        NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
+        NEKMESHUTILS_EXPORT void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
         {
-            // Temporary node list for reordering
-            std::vector<NodeSharedPtr> nodeList;
-
             // Node orderings are different for different elements.
             // Triangle
             if (m_vertex.size() == 2)
@@ -388,6 +383,16 @@ namespace NekMeshUtils
                 cerr << "GetXmlCurveString for a " << m_vertex.size()
                      << "-vertex element is not yet implemented." << endl;
             }
+        }
+
+        /// Generates a string listing the coordinates of all nodes
+        /// associated with this element.
+        NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
+        {
+            // Temporary node list for reordering
+            std::vector<NodeSharedPtr> nodeList;
+
+            GetCurvedNodes(nodeList);
 
             // Finally generate the XML string corresponding to our new
             // node reordering.

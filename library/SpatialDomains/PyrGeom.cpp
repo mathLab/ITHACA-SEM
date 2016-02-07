@@ -190,6 +190,11 @@ namespace Nektar
             return 8;
         }
 
+        int PyrGeom::v_GetNumFaces() const
+        {
+            return 5;
+        }
+
         int PyrGeom::v_GetDir(const int faceidx, const int facedir) const
         {
             if (faceidx == 0)

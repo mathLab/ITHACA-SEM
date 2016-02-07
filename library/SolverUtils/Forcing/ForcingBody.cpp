@@ -70,7 +70,7 @@ namespace SolverUtils
         {
             funcNameElmt = pForce->FirstChildElement("FIELDFORCE");
 
-            ASSERTL0(funcNameElmt, "Requires BODYFORCE of FIELDFORCE tag "
+            ASSERTL0(funcNameElmt, "Requires BODYFORCE or FIELDFORCE tag "
                      "specifying function name which prescribes body force.");
         }
 
@@ -78,25 +78,27 @@ namespace SolverUtils
         ASSERTL0(m_session->DefinesFunction(funcName),
                  "Function '" + funcName + "' not defined.");
 
+        // Time function is optional
         funcNameElmt = pForce->FirstChildElement("BODYFORCETIMEFCN");
         if(!funcNameElmt)
         {
             funcNameElmt = pForce->FirstChildElement("FIELDFORCETIMEFCN");
+        }
 
-            if(funcNameElmt)
-            {
-                std::string funcNameTime = funcNameElmt->GetText();
+        // Load time function if specified
+        if(funcNameElmt)
+        {
+            std::string funcNameTime = funcNameElmt->GetText();
 
-                ASSERTL0(!funcNameTime.empty(),
-                         "Expression must be given in BODYFORCETIMEFCN or "
-                         "FIELDFORCETIMEFCN.");
+            ASSERTL0(!funcNameTime.empty(),
+                     "Expression must be given in BODYFORCETIMEFCN or "
+                     "FIELDFORCETIMEFCN.");
 
-                m_session->SubstituteExpressions(funcNameTime);
-                m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
-                                ::AllocateSharedPtr(m_session,funcNameTime);
+            m_session->SubstituteExpressions(funcNameTime);
+            m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
+                            ::AllocateSharedPtr(m_session,funcNameTime);
 
-                m_hasTimeFcnScaling = true;
-            }
+            m_hasTimeFcnScaling = true;
         }
 
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
@@ -126,7 +128,7 @@ namespace SolverUtils
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 pFields[0]->HomogeneousFwdTrans(m_Forcing[i],m_Forcing[i]);
-            }            
+            }
         }
     }
 

@@ -180,7 +180,8 @@ void LinearisedAdvection::v_InitObject(
         }
         else
         {
-            ASSERTL0(false,"Number of slices must be a positive number greater than 1");
+            ASSERTL0(false, "Number of slices must be a positive number "
+                            "greater than 1");
         }
     }
     //Steady base-flow
@@ -236,20 +237,21 @@ LinearisedAdvection::~LinearisedAdvection()
 //Advection function
 
 void LinearisedAdvection::v_Advect(
-    const int nConvectiveFields,
-    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-    Array<OneD, Array<OneD, NekDouble> >              &outarray,
-    const NekDouble                                   &time)
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray,
+        const NekDouble                                   &time)
 {
-    ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+    ASSERTL1(nConvectiveFields == inarray.num_elements(),
+             "Number of convective fields and Inarray are not compatible");
 
     int nPointsTot = fields[0]->GetNpoints();
     int ndim       = advVel.num_elements();
 
-    Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nPointsTot*nConvectiveFields);
-
+    Array<OneD, NekDouble > Deriv
+                = Array<OneD, NekDouble> (nPointsTot*nConvectiveFields);
 
     Array<OneD, NekDouble> grad0,grad1,grad2;
 
@@ -286,10 +288,10 @@ void LinearisedAdvection::v_Advect(
     //Evaluate the linearised advection term
     switch(ndim)
     {
-    case 1:         // 1D
-        ASSERTL0(false,"Not set up for 1D");
-        break;
-    case 2:  //2D
+        case 1:         // 1D
+            ASSERTL0(false,"Not set up for 1D");
+            break;
+        case 2:  //2D
         {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
@@ -330,7 +332,7 @@ void LinearisedAdvection::v_Advect(
             Vmath::Neg(nPointsTot,outarray[1],1);
         }
         break;
-    case 3:  //3D
+        case 3:  //3D
         {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad2 = Array<OneD, NekDouble> (nPointsTot);
@@ -538,7 +540,7 @@ void LinearisedAdvection::v_Advect(
 }
 
 void LinearisedAdvection::v_SetBaseFlow(
-    const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
 {
     if (m_session->GetSolverInfo("EqType") == "UnsteadyNavierStokes")
     {

@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>

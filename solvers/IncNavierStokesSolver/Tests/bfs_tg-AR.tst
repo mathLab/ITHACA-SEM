@@ -10,7 +10,7 @@
     </files>
     <metrics>
         <metric type="Eigenvalue" id="0">
-            <value tolerance="0.001">0.0477584,0</value>
+            <value tolerance="0.001">1.1398,0</value>
         </metric>
     </metrics>
 </test>

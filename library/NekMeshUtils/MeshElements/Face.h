@@ -97,43 +97,30 @@ namespace NekMeshUtils
             return n;
         }
 
-        /// Generates a string listing the coordinates of all nodes
-        /// associated with this face.
-        std::string GetXmlCurveString() const
+        /// Assemble a list of nodes on curved face
+        void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
         {
-            std::stringstream s;
-            std::string str;
-
             // Treat 2D point distributions differently to 3D.
             if (m_curveType == LibUtilities::eNodalTriFekete       ||
                 m_curveType == LibUtilities::eNodalTriEvenlySpaced ||
                 m_curveType == LibUtilities::eNodalTriElec)
             {
-                vector<NodeSharedPtr> tmp;
                 int n = m_edgeList[0]->GetNodeCount();
 
-                tmp.insert(tmp.end(), m_vertexList.begin(), m_vertexList.end());
+                nodeList.insert(nodeList.end(), m_vertexList.begin(), m_vertexList.end());
                 for (int k = 0; k < m_edgeList.size(); ++k)
                 {
-                    tmp.insert(tmp.end(), m_edgeList[k]->m_edgeNodes.begin(),
+                    nodeList.insert(nodeList.end(), m_edgeList[k]->m_edgeNodes.begin(),
                                m_edgeList[k]->m_edgeNodes.end());
                     if (m_edgeList[k]->m_n1 != m_vertexList[k])
                     {
                         // If edge orientation is reversed relative to node
                         // ordering, we need to reverse order of nodes.
-                        std::reverse(tmp.begin() + 3 + k*(n-2),
-                                     tmp.begin() + 3 + (k+1)*(n-2));
+                        std::reverse(nodeList.begin() + 3 + k*(n-2),
+                                     nodeList.begin() + 3 + (k+1)*(n-2));
                     }
                 }
-                tmp.insert(tmp.end(), m_faceNodes.begin(), m_faceNodes.end());
-
-                for (int k = 0; k < tmp.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "    "
-                      <<  tmp[k]->m_x << "  " << tmp[k]->m_y
-                      << "  " << tmp[k]->m_z << "    ";
-                }
-
-                return s.str();
+                nodeList.insert(nodeList.end(), m_faceNodes.begin(), m_faceNodes.end());
             }
             else
             {
@@ -143,15 +130,15 @@ namespace NekMeshUtils
                          "for quadrilaterals.");
 
                 int n = (int)sqrt((NekDouble)GetNodeCount());
-                vector<NodeSharedPtr> tmp(n*n);
+                nodeList.resize(n*n);
 
                 ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");
 
                 // Write vertices
-                tmp[0]       = m_vertexList[0];
-                tmp[n-1]     = m_vertexList[1];
-                tmp[n*n-1]   = m_vertexList[2];
-                tmp[n*(n-1)] = m_vertexList[3];
+                nodeList[0]       = m_vertexList[0];
+                nodeList[n-1]     = m_vertexList[1];
+                nodeList[n*n-1]   = m_vertexList[2];
+                nodeList[n*(n-1)] = m_vertexList[3];
 
                 // Write edge-interior
                 int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
@@ -163,7 +150,7 @@ namespace NekMeshUtils
                     {
                         for (int j = 1; j < n-1; ++j)
                         {
-                            tmp[skips[i][0] + j*skips[i][1]] =
+                            nodeList[skips[i][0] + j*skips[i][1]] =
                                 m_edgeList[i]->m_edgeNodes[n-2-j];
                         }
                     }
@@ -171,7 +158,7 @@ namespace NekMeshUtils
                     {
                         for (int j = 1; j < n-1; ++j)
                         {
-                            tmp[skips[i][0] + j*skips[i][1]] =
+                            nodeList[skips[i][0] + j*skips[i][1]] =
                                 m_edgeList[i]->m_edgeNodes[j-1];
                         }
                     }
@@ -182,18 +169,32 @@ namespace NekMeshUtils
                 {
                     for (int j = 1; j < n-1; ++j)
                     {
-                        tmp[i*n+j] = m_faceNodes[(i-1)*(n-2)+(j-1)];
+                        nodeList[i*n+j] = m_faceNodes[(i-1)*(n-2)+(j-1)];
                     }
                 }
-
-                for (int k = 0; k < tmp.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "    "
-                      <<  tmp[k]->m_x << "  " << tmp[k]->m_y
-                      << "  " << tmp[k]->m_z << "    ";
-                }
-
-                return s.str();
             }
+        }
+
+        /// Generates a string listing the coordinates of all nodes
+        /// associated with this face.
+        std::string GetXmlCurveString() const
+        {
+            std::stringstream s;
+            std::string str;
+            vector<NodeSharedPtr> nodeList;
+
+            // assemble listof nodes
+            GetCurvedNodes(nodeList);
+
+            // put them into a string
+            for (int k = 0; k < nodeList.size(); ++k)
+            {
+                s << std::scientific << std::setprecision(8) << "    "
+                  <<  nodeList[k]->m_x << "  " << nodeList[k]->m_y
+                  << "  " << nodeList[k]->m_z << "    ";
+            }
+
+            return s.str();
         }
 
         /// Generate either SpatialDomains::TriGeom or

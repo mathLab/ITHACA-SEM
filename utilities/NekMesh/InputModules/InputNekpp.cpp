@@ -33,20 +33,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <string>
+#include <iostream>
+using namespace std;
 
 #include <SpatialDomains/MeshGraph.h>
 
+#include <NekMeshUtils/MeshElements/MeshElements.h>
 #include "InputNekpp.h"
-
-using namespace std;
-using namespace Nektar::NekMeshUtils;
 
 namespace Nektar
 {
 namespace Utilities
 {
-
 ModuleKey InputNekpp::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eInputModule, "xml"), InputNekpp::create,
@@ -66,14 +65,7 @@ InputNekpp::~InputNekpp()
 }
 
 /**
- * Gmsh file contains a list of nodes and their coordinates, along with
- * a list of elements and those nodes which define them. We read in and
- * store the list of nodes in #m_node and store the list of elements in
- * #m_element. Each new element is supplied with a list of entries from
- * #m_node which defines the element. Finally some mesh statistics are
- * printed.
  *
- * @param   pFilename           Filename of Gmsh file to read.
  */
 void InputNekpp::Process()
 {
@@ -90,32 +82,16 @@ void InputNekpp::Process()
 
     // Copy vertices.
     map<int, NodeSharedPtr> vIdMap;
-    /*int nVerts = graph->GetNvertices();
-    for (int i = 0; i < nVerts; ++i)
+    const SpatialDomains::PointGeomMap vertset = graph->GetVertSet();
+    SpatialDomains::PointGeomMap::const_iterator vit;
+
+    for(vit=vertset.begin(); vit != vertset.end(); ++vit)
     {
-        SpatialDomains::PointGeomSharedPtr vert =
-            graph->GetVertex(i);
+        SpatialDomains::PointGeomSharedPtr vert = vit->second;
         NodeSharedPtr n(new Node(vert->GetVid(),
             (*vert)(0), (*vert)(1), (*vert)(2)));
         m_mesh->m_vertexSet.insert(n);
         vIdMap[vert->GetVid()] = n;
-    }*/
-
-    {
-        int nel=0;
-        SpatialDomains::PointGeomMap tmp = graph->GetAllPointGeoms();
-        SpatialDomains::PointGeomMap::iterator it;
-        nel+= tmp.size();
-
-        for(it = tmp.begin(); it != tmp.end(); ++it)
-        {
-            SpatialDomains::PointGeomSharedPtr vert =
-            graph->GetVertex(it->second->GetVid());
-            NodeSharedPtr n = boost::shared_ptr<Node>(new Node(vert->GetVid(),
-                                 (*vert)(0), (*vert)(1), (*vert)(2)));
-            m_mesh->m_vertexSet.insert(n);
-            vIdMap[vert->GetVid()] = n;
-        }
     }
 
     map<int, EdgeSharedPtr> eIdMap;
@@ -261,6 +237,7 @@ void InputNekpp::Process()
         else // quad face.
         {
             int N    = (int)sqrt((double)Ntot);
+
             for(int j = 1; j < N-1; ++j)
             {
                 for(int k = 1; k < N-1; ++k)
@@ -276,32 +253,12 @@ void InputNekpp::Process()
     }
 
     // Get hold of mesh composites and set up m_mesh->m_elements
-
     SpatialDomains::CompositeMap       GraphComps= graph->GetComposites();
     SpatialDomains::CompositeMapIter   compIt;
     SpatialDomains::GeometryVectorIter geomIt;
 
-
-    // calculate the number of element of dimension
-    // m_mesh->m_expDim in composite list so we can set up
-    // element vector of this size to allow for
-    // non-consecutive insertion to list (Might consider
-    // setting element up as a map)?
-    int nel = 0;
-    for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
-    {
-        // Get hold of dimension
-        int dim = (*compIt->second)[0]->GetShapeDim();
-
-        if(dim == m_mesh->m_expDim)
-        {
-            nel += (*compIt->second).size();
-        }
-    }
-    m_mesh->m_element[m_mesh->m_expDim].resize(nel);
-    int ele_counter=0;
-
-    // loop over all composites and set up elements with edges and faces from the maps above.
+    // loop over all composites and set up elements with edges
+    // and faces from the maps above.
     for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
     {
         // Get hold of dimension
@@ -328,15 +285,12 @@ void InputNekpp::Process()
                 CreateInstance((*geomIt)->GetShapeType(),conf,nodeList,tags);
 
             E->SetId((*geomIt)->GetGlobalID());
+            m_mesh->m_element[dim].push_back(E);
 
-            if(dim == m_mesh->m_expDim) // load mesh into location baded on globalID
+            if(dim == 1)
             {
-                m_mesh->m_element[dim][ele_counter] = E;
-                ele_counter++;
-            }
-            else // push onto vector for later usage as composite region
-            {
-                m_mesh->m_element[dim].push_back(E);
+                EdgeSharedPtr edg = eIdMap[(*geomIt)->GetGlobalID()];
+                E->SetVolumeNodes(edg->m_edgeNodes);
             }
 
             if(dim > 1)
@@ -348,6 +302,12 @@ void InputNekpp::Process()
                     E->SetEdge(i,edg);
                     // set up link back to this element
                     edg->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
+                }
+
+                if(dim == 2)
+                {
+                    FaceSharedPtr fac = fIdMap[(*geomIt)->GetGlobalID()];
+                    E->SetVolumeNodes(fac->m_faceNodes);
                 }
             }
 
@@ -368,6 +328,5 @@ void InputNekpp::Process()
     ProcessFaces(false);
     ProcessComposites();
 }
-
 }
 }

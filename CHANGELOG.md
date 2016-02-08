@@ -19,6 +19,7 @@ v4.3.0
 - Fix restarting from checkpoint file (!517)
 
 **FieldConvert:**
+- Extended surface distance module to support hexahedra and quads (!524)
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)

@@ -37,6 +37,7 @@
 #include <string>
 using namespace std;
 
+#include <iomanip>
 #include "OutputVtk.h"
 
 namespace Nektar
@@ -60,7 +61,10 @@ OutputVtk::~OutputVtk()
 
 void OutputVtk::Process(po::variables_map &vm)
 {
-    if(!m_f->m_exp.size()) // do nothing if no expansion defined
+    LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
+
+    // Do nothing if no expansion defined
+    if (fPts == LibUtilities::NullPtsField && !m_f->m_exp.size())
     {
         return;
     }
@@ -88,37 +92,175 @@ void OutputVtk::Process(po::variables_map &vm)
     // Write solution.
     ofstream outfile(filename.c_str());
     m_f->m_exp[0]->WriteVtkHeader(outfile);
+    
+   if(fPts == LibUtilities::NullPtsField) // standard output in collapsed coordinates 
+   {
+       
+       int nfields, nstrips;
+       if (m_f->m_fielddef.size() == 0)
+       {
+           nfields = 0;
+       }
+       else
+       {
+           nfields = m_f->m_fielddef[0]->m_fields.size();
+       }
+       m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
+       
+       // Homogeneous strip variant
+       for(int s = 0; s < nstrips; ++s)
+       {
+           // For each field write out field data for each expansion.
+           for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
+           {
+               m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
+               
+               // For this expansion write out each field.
+               for (j = 0; j < nfields; ++j)
+               {
+                   m_f->m_exp[s*nfields+j]->WriteVtkPieceData(
+                                    outfile, i, m_f->m_fielddef[0]->m_fields[j]);
+               }
+               m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
+           }
+       }
+   }
+   else  // write out data stored in fPts (for example if equispaced output is called). 
+   {
+        int i   = 0;
+        int j   = 0;
+        int dim = fPts->GetDim();
 
-    int nfields, nstrips;
-    if (m_f->m_fielddef.size() == 0)
-    {
-        nfields = 0;
-    }
-    else
-    {
-        nfields = m_f->m_fielddef[0]->m_fields.size();
-    }
-    m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
-
-    // Homogeneous strip variant
-    for(int s = 0; s < nstrips; ++s)
-    {
-        // For each field write out field data for each expansion.
-        for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
+        if(fPts->GetNpoints() == 0)
         {
-            m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i,s);
-
-            // For this expansion write out each field.
-            for (j = 0; j < nfields; ++j)
-            {
-                m_f->m_exp[s*nfields+j]->WriteVtkPieceData(
-                    outfile, i, m_f->m_fielddef[0]->m_fields[j]);
-            }
-            m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
+            return;
         }
-    }
-    m_f->m_exp[0]->WriteVtkFooter(outfile);
-    cout << "Written file: " << filename << endl;
+
+        int nvert, vtktype; 
+        switch(fPts->GetPtsType())
+        {
+            case LibUtilities::ePtsFile:
+            case LibUtilities::ePtsLine:
+            {
+                ASSERTL0(false,"VTK output needs settig up for PtsFile or Pts Line");
+                break;
+            }
+            case LibUtilities::ePtsPlane:
+            {
+                ASSERTL0(false,"VTK output needs settig up for PtsPlane");
+                break;
+            }
+            case LibUtilities::ePtsTriBlock:
+            {
+                nvert = 3;
+                vtktype = 5;
+                break;
+            }
+            case LibUtilities::ePtsTetBlock:
+            {
+                nvert = 4;
+                vtktype = 10;
+                break;
+            }
+            default:
+                ASSERTL0(false, "ptsType not supported yet.");
+        }
+
+        vector<Array<OneD, int> > ptsConn;
+        fPts->GetConnectivity(ptsConn);
+        
+        int nPts =  fPts->GetNpoints();
+        int numBlocks = 0;
+        for(i = 0; i < ptsConn.size(); ++i)
+        {
+            numBlocks += ptsConn[i].num_elements()/nvert;
+        }
+        
+        // write out pieces of data. 
+        outfile << "    <Piece NumberOfPoints=\""
+                << nPts << "\" NumberOfCells=\""
+                << numBlocks << "\">" << endl;
+        outfile << "      <Points>" << endl;
+        outfile << "        <DataArray type=\"Float64\" "
+                << "NumberOfComponents=\""<<dim<<"\" format=\"ascii\">" << endl;
+        for(i = 0; i < nPts; ++i)
+        {
+            for(j = 0; j < dim; ++j)
+            {
+                outfile << "          "  << setprecision(8)     << scientific 
+                        <<  fPts->GetPointVal(j, i) << " ";
+            }
+            outfile << endl;
+        }
+        outfile << endl;
+        outfile << "        </DataArray>" << endl;
+        outfile << "      </Points>" << endl;
+        outfile << "      <Cells>" << endl;
+        outfile << "        <DataArray type=\"Int32\" "
+                << "Name=\"connectivity\" format=\"ascii\">" << endl;
+        
+        // dump connectivity data if it exists
+        outfile << "          ";
+        int cnt = 1; 
+        for(i = 0; i < ptsConn.size();++i)
+        {
+            for(j = 0; j < ptsConn[i].num_elements(); ++j)
+            {
+                outfile << ptsConn[i][j] << " ";
+                if( (!(cnt % nvert)) && cnt )
+                {
+                    outfile << std::endl;
+                    outfile << "          ";
+                }
+                cnt ++;
+            }
+        }
+        outfile << endl;
+        outfile << "        </DataArray>" << endl;
+        outfile << "        <DataArray type=\"Int32\" "
+                << "Name=\"offsets\" format=\"ascii\">" << endl;
+
+        outfile << "          ";
+                for (i = 0; i < numBlocks; ++i)
+        {
+            outfile << i*nvert+nvert << " ";
+        }
+        outfile << endl;
+        outfile << "        </DataArray>" << endl;
+        outfile << "        <DataArray type=\"UInt8\" "
+                << "Name=\"types\" format=\"ascii\">" << endl;
+        outfile << "          ";
+        for (i = 0; i < numBlocks; ++i)
+        {
+            outfile << vtktype <<" ";
+        }
+        outfile << endl;
+        outfile << "        </DataArray>" << endl;
+        outfile << "      </Cells>" << endl;
+        outfile << "      <PointData>" << endl;
+        
+        // printing the fields
+        for(j = 0; j < fPts->GetNFields(); ++j)
+        {
+            outfile << "        <DataArray type=\"Float64\" Name=\""
+                    << fPts->GetFieldName(j) << "\">" << endl;
+            outfile << "          ";
+            for(i = 0; i < fPts->GetNpoints(); ++i)
+            {
+                outfile <<  fPts->GetPointVal(dim+j, i) << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+        }
+        
+        outfile << "      </PointData>" << endl;
+        outfile << "    </Piece>" << endl;
+   }
+
+
+   m_f->m_exp[0]->WriteVtkFooter(outfile);
+   cout << "Written file: " << filename << endl;
+   
 }
 
 }

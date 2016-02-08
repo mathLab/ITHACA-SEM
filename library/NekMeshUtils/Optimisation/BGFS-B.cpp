@@ -44,16 +44,17 @@ namespace NekMeshUtils
 {
 
     void BGFSUpdate(function<NekDouble(Array<OneD, NekDouble>, Array<OneD, NekDouble>, CADObjSharedPtr)> F,
-                    Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
+                    function<DNekMat(Array<OneD, NekDouble>, Array<OneD, NekDouble>, CADObjSharedPtr)> Jac,
+                    Array<OneD, NekDouble> &all, Array<OneD, NekDouble> z,
                     CADObjSharedPtr o,
-                    DNekMat J, DNekMat &B)
+                    DNekMat &J, DNekMat &B, DNekMat &H)
     {
-        cout << endl;
 
         Array<OneD, NekDouble> xi;
         Array<OneD, NekDouble> gi;
         Array<OneD, NekDouble> ui;
         Array<OneD, NekDouble> li;
+        Array<OneD, NekDouble> bnds;
         //reduce all data down to xi vector
         switch (o->GetType())
         {
@@ -62,7 +63,7 @@ namespace NekMeshUtils
                 gi = Array<OneD, NekDouble>(all.num_elements()-2);
                 li = Array<OneD, NekDouble>(all.num_elements()-2);
                 ui = Array<OneD, NekDouble>(all.num_elements()-2);
-                Array<OneD, NekDouble> bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+                bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
                 for(int i = 1; i < all.num_elements() - 1; i++)
                 {
                     li[i-1] = bnds[0];
@@ -70,6 +71,31 @@ namespace NekMeshUtils
                     xi[i-1] = all[i];
                 }
                 break;
+
+            case surf:
+                xi = Array<OneD, NekDouble>(all.num_elements()-4);
+                gi = Array<OneD, NekDouble>(all.num_elements()-4);
+                li = Array<OneD, NekDouble>(all.num_elements()-4);
+                ui = Array<OneD, NekDouble>(all.num_elements()-4);
+                bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
+                for(int i = 2; i < all.num_elements() - 2; i++)
+                {
+                    if(i % 2 == 0)
+                    {
+                        li[i-2] = bnds[0];
+                        ui[i-2] = bnds[1];
+                    }
+                    else
+                    {
+                        li[i-2] = bnds[2];
+                        ui[i-2] = bnds[3];
+                    }
+                    xi[i-2] = all[i];
+                }
+                break;
+
+            case vert:
+                ASSERTL0(false,"Should not be able to pass vert");
         }
 
         set<int> Fset;
@@ -135,29 +161,17 @@ namespace NekMeshUtils
             }
         }
 
-
-        cout << endl;
-        for(int i = 0; i < xci.num_elements(); i++)
-        {
-            cout << xci[i] << endl;
-        }
-
-        DNekMat ZT(Fset.size(), xci.num_elements(), 0.0);
-        DNekMat Z(Fset.size(), xci.num_elements(), 0.0);
+        DNekMat Z(xci.num_elements(), xci.num_elements() , 0.0);
 
         set<int>::iterator it;
-        int ct = 0;
-        for(it = Fset.begin(); it != Fset.end(); it++)
+        for(int i = 0; i < xci.num_elements(); i++)
         {
-            ZT(ct,(*it)) = 1.0;
-            Z(ct,(*it)) = 1.0;
-            ct++;
+            it = Fset.find(i);
+            if(it != Fset.end())
+            {
+                Z(i,i) = 1.0;
+            }
         }
-        ZT.Transpose();
-
-        cout << endl << Z << endl << endl << ZT << endl << endl;
-
-        DNekMat rB = ZT * B * Z;
 
         DNekMat dx(xci.num_elements(), 1, 0.0);
         for(int i = 0; i < xci.num_elements(); i++)
@@ -165,10 +179,139 @@ namespace NekMeshUtils
             dx(i,0) = xci[i] - xi[i];
         }
 
-        DNekMat rg = ZT * (J + B * dx);
+        DNekMat rg = Z * (J + B * dx);
 
-        exit(-1);
+        cout << endl <<rg << endl << endl;
 
+        DNekMat du = -1.0 * H * rg;
+
+        NekDouble alpha = 1.0;
+        for(it = Fset.begin(); it != Fset.end(); it++)
+        {
+            int i = (*it);
+            if(li[i] - xci[i] > alpha * du(i,0))
+            {
+                alpha = min(alpha, (li[i] - xci[i])/du(i,0));
+            }
+            else if(ui[i] - xci[i] < alpha * du(i,0))
+            {
+                alpha = min(alpha, (ui[i] - xci[i])/du(i,0));
+            }
+        }
+
+        DNekMat grad = alpha * du;
+
+        Array<OneD, NekDouble> dk(xci.num_elements()), xibar(xci.num_elements());
+        for(int i = 0; i < xci.num_elements(); i++)
+        {
+            set<int>::iterator f = Fset.find(i);
+            if(f != Fset.end())
+            {
+                xibar[i] = xci[i] + grad(i,0);
+            }
+            else
+            {
+                xibar[i] = xci[i];
+            }
+        }
+
+        Vmath::Vsub(xci.num_elements(),&xibar[0],1,&xi[0],1,&dk[0],1);
+
+        NekDouble c = 0.0;
+        for(int i = 0; i < dk.num_elements(); i++)
+        {
+            c += 1E-4 * J(i,0) * dk[i];
+        }
+
+        cout << H << endl << endl;
+        for(int i = 0; i < dk.num_elements(); i++)
+        {
+            cout << dk[i] << endl;
+        }
+        cout << endl;
+
+        //this section needs a case evaluation for edges on faces
+        NekDouble lam = 2.0;
+        int iterct = 0;
+        NekDouble fo = F(all,z,o);
+        NekDouble fn;
+        Array<OneD, NekDouble> tst(all.num_elements());
+        cout << "begining line search: " << fo << endl;
+        do
+        {
+            if(iterct > 20)
+            {
+                cout << "failed line search" << endl;
+                abort();
+            }
+            iterct++;
+
+            lam*=0.5;
+
+            switch (o->GetType())
+            {
+                case curve:
+                    tst[0] = all[0];
+                    for(int i = 0; i < xi.num_elements(); i++)
+                    {
+                        tst[i+1] = xi[i] + lam * dk[i];
+                    }
+                    tst[tst.num_elements()-1] = all[tst.num_elements()-1];
+                    break;
+
+                case surf:
+                    tst[0] = all[0];
+                    tst[1] = all[1];
+                    for(int i = 0; i < xi.num_elements(); i++)
+                    {
+                        tst[i+2] = xi[i] + lam * dk[i];
+                    }
+                    tst[tst.num_elements()-2] = all[tst.num_elements()-2];
+                    tst[tst.num_elements()-1] = all[tst.num_elements()-1];
+                    break;
+
+                case vert:
+                    ASSERTL0(false, "what");
+            }
+
+            fn = F(tst,z,o);
+            cout << fn << endl;
+        }while(fn > fo + c);
+        cout << "lam " << lam << endl;
+
+        //tst at this point is the new all vector
+        //now need to update hessians
+        DNekMat Jn = Jac(tst,z,o);
+        DNekMat y = Jn - J;
+        DNekMat yT = Jn - J;
+        yT.Transpose();
+        DNekMat s(dk.num_elements(),1,0.0);
+        for(int i = 0; i < dk.num_elements(); i++)
+        {
+            s(i,0) = lam * dk[i];
+        }
+        DNekMat sT = s;
+        sT.Transpose();
+
+        DNekMat d1 = yT * s;
+        DNekMat d2 = sT * B * s;
+        DNekMat d3 = sT * y;
+        DNekMat n1 = yT * H * y;
+
+        NekDouble ynorm = 0.0;
+        for(int i = 0; i < dk.num_elements(); i++)
+        {
+            ynorm += y(i,0)*y(i,0);
+        }
+
+        if(d3(0,0) > 2.2E-16 * ynorm)
+        {
+            B = B + y * yT * (1.0 / d1(0,0)) - B * s * sT * B * (1.0 / d2(0,0));
+            H = H + (d3(0,0) + n1(0,0)) / d3(0,0) / d3(0,0) * s * sT - 1.0/d3(0,0) * (H * y * sT + s * yT * H);
+        }
+
+        J = Jn;
+        all = tst;
 
     }
 

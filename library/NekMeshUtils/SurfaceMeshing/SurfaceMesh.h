@@ -92,14 +92,8 @@ class SurfaceMesh
         static NekDouble EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
                         CADObjSharedPtr o);
 
-        void CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
-                          CADCurveSharedPtr c, DNekMat &Jac);
-
-        void EdgeOnCurveUpdate(Array<OneD, NekDouble> ti,
-                               Array<OneD, NekDouble> x,
-                               Array<OneD, NekDouble> gll,
-                               CADCurveSharedPtr c,
-                               DNekMat &B, DNekMat &J);
+        static DNekMat EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
+                             CADObjSharedPtr o);
 
         NekDouble FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
                             CADSurfSharedPtr s);

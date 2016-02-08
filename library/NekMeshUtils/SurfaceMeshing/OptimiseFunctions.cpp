@@ -106,152 +106,79 @@ NekDouble SurfaceMesh::EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> 
     return ret;
 }
 
-void SurfaceMesh::CurveEdgeJac(Array<OneD, NekDouble> t, Array<OneD, NekDouble> z,
-                               CADCurveSharedPtr c, DNekMat &Jac)
+DNekMat SurfaceMesh::EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
+                     CADObjSharedPtr o)
 {
-    vector<Array<OneD, NekDouble> > r;
-    vector<Array<OneD, NekDouble> > dr;
-
-    for(int i = 0; i < t.num_elements(); i++)
+    if(o->GetType() == curve)
     {
-        Array<OneD, NekDouble> ri(3), dri(3);
-        Array<OneD, NekDouble> d2 = c->D2(t[i]);
-        for(int j = 0; j < 3; j++)
+        CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(o);
+        vector<Array<OneD, NekDouble> > r;
+        vector<Array<OneD, NekDouble> > dr;
+
+        for(int i = 0; i < all.num_elements(); i++)
         {
-            ri[j] = d2[j];
-            dri[j] = d2[j+3];
+            Array<OneD, NekDouble> ri(3), dri(3);
+            Array<OneD, NekDouble> d2 = c->D2(all[i]);
+            for(int j = 0; j < 3; j++)
+            {
+                ri[j] = d2[j];
+                dri[j] = d2[j+3];
+            }
+            r.push_back(ri);
+            dr.push_back(dri);
         }
-        r.push_back(ri);
-        dr.push_back(dri);
-    }
 
-    DNekMat J(t.num_elements() - 2 , 1, 0.0);
-    for(int i = 0; i < t.num_elements() - 2; i++)
+        DNekMat J(all.num_elements() - 2 , 1, 0.0);
+        for(int i = 0; i < all.num_elements() - 2; i++)
+        {
+            J(i,0) = 2.0/(z[i+1] - z[i]) * Dot(dr[i+1],Take(r[i+1],r[i])) -
+                     2.0/(z[i+2] - z[i+1]) * Dot(dr[i+1],Take(r[i+2],r[i+1]));
+        }
+
+        return J;
+    }
+    else if(o->GetType() == surf)
     {
-        J(i,0) = 2.0/(z[i+1] - z[i]) * Dot(dr[i+1],Take(r[i+1],r[i])) -
-                 2.0/(z[i+2] - z[i+1]) * Dot(dr[i+1],Take(r[i+2],r[i+1]));
-    }
+        CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
+        //need to organise the all array
+        Array<OneD, Array<OneD, NekDouble> > uv(all.num_elements()/2);
+        for(int i = 0; i < all.num_elements()/2; i++)
+        {
+            uv[i] = Array<OneD, NekDouble>(2);
+            uv[i][0] = all[i*2+0];
+            uv[i][1] = all[i*2+1];
+        }
 
-    Jac = J;
+        vector<Array<OneD, NekDouble> > r;
+        vector<Array<OneD, NekDouble> > dru, drv;
+        for(int i = 0; i < uv.num_elements(); i++)
+        {
+            Array<OneD, NekDouble> ri(3), drui(3), drvi(3);
+            Array<OneD, NekDouble> d2 = s->D1(uv[i]);
+            for(int j = 0; j < 3; j++)
+            {
+                ri[j] = d2[j];
+                drui[j] = d2[j+3];
+                drvi[j] = d2[j+6];
+            }
+            r.push_back(ri);
+            dru.push_back(drui);
+            drv.push_back(drvi);
+        }
+
+        DNekMat J(2*(uv.num_elements() - 2), 1, 0.0);
+        for(int i = 0; i < uv.num_elements() - 2; i++)
+        {
+            J(2*i+0,0) = 2.0/(z[i+1]-z[i]) * Dot(dru[i+1], Take(r[i+1], r[i])) +
+                         2.0/(z[i+2]-z[i+1]) * Dot(dru[i+1], Take(r[i+1], r[i+2]));
+
+            J(2*i+1,0) = 2.0/(z[i+1]-z[i]) * Dot(drv[i+1], Take(r[i+1], r[i])) +
+                         2.0/(z[i+2]-z[i+1]) * Dot(drv[i+1], Take(r[i+1], r[i+2]));
+        }
+
+        return J;
+    }
 }
-
-/*void SurfaceMesh::EdgeOnCurveUpdate(Array<OneD, NekDouble> ti,
-                                                       Array<OneD, NekDouble> x,
-                                                       Array<OneD, NekDouble> gll,
-                                                       CADCurveSharedPtr c,
-                                                       DNekMat &B, DNekMat &J)
-{
-    for(int i = 0; i < x.num_elements(); i++)
-    {
-        J(i,0) *= -1.0; //minimise not maximise
-    }
-    DNekMat P = B*J;
-
-    NekDouble pnorm = 0;
-    for(int i = 0; i < x.num_elements(); i++)
-    {
-        pnorm += P(i,0)*P(i,0);
-    }
-    pnorm = sqrt(pnorm);
-
-    if(pnorm < 1E-6)
-    {
-        B = DNekMat(x.num_elements(), x.num_elements(), 0.0);
-        for(int k = 0; k < x.num_elements(); k++)
-        {
-            B(k,k) = 1.0;
-        }
-        return;
-    }
-
-    NekDouble F = CurveEdgeF(ti, gll, c);
-    NekDouble f = F*2.0;
-
-    NekDouble alpha = 2.0;
-    int ct = 0;
-    //perform line search to obtain alpha
-    while(f > F)
-    {
-        if(ct > 15)
-            break;
-        ct++;
-
-        alpha*=0.5;
-        Array<OneD, NekDouble> tst(ti.num_elements());
-        int i;
-        tst[0] = ti[0];
-        for(i = 1; i < tst.num_elements() -1; i++)
-        {
-            tst[i] = ti[i] + alpha*P(i-1,0);
-        }
-        tst[i] = ti[i];
-
-        f = CurveEdgeF(tst, gll, c);
-    }
-
-    for(int i = 1; i < ti.num_elements() - 1; i++)
-    {
-        ti[i] += alpha*P(i-1,0);
-    }
-
-    //now need to update the inverse hessian B
-    //update J
-    DNekMat Jn;
-    CurveEdgeJac(ti, gll, c, Jn);
-
-    DNekMat y(x.num_elements(),1);
-    DNekMat s(x.num_elements(),1);
-    DNekMat yt(x.num_elements(),1);
-    DNekMat st(x.num_elements(),1);
-
-    for(int i = 0; i < x.num_elements(); i++)
-    {
-        s(i,0) = alpha*P(i,0);
-        y(i,0) = Jn(i,0) - J(i,0);
-        st(i,0) = alpha*P(i,0);
-        yt(i,0) = Jn(i,0) - J(i,0);
-    }
-
-    st.Transpose();
-    yt.Transpose();
-    //get scalars
-
-    DNekMat s1 = yt * B * y;
-    DNekMat s2 = st * y;
-
-    DNekMat sst = s * st;
-
-    NekDouble mul = (s1(0,0) + s2(0,0))/s2(0,0)/s2(0,0);
-    for(int i = 0; i < sst.GetRows(); i++)
-    {
-        for(int j = 0; j < sst.GetColumns(); j++)
-        {
-            sst(i,j) *= mul;
-        }
-    }
-
-    DNekMat r1 = B * y * st;
-    DNekMat r2 = s * yt * B;
-
-    for(int i = 0; i < r1.GetRows(); i++)
-    {
-        for(int j = 0; j < r1.GetColumns(); j++)
-        {
-            r1(i,j) = (r1(i,j) + r2(i,j)) / s2(0,0);
-        }
-    }
-
-    for(int i = 0; i < r1.GetRows(); i++)
-    {
-        for(int j = 0; j < r1.GetColumns(); j++)
-        {
-            B(i,j) = B(i,j) + sst(i,j) - r1(i,j);
-        }
-    }
-
-    J = Jn;
-
-}*/
 
 NekDouble SurfaceMesh::FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
                                  CADSurfSharedPtr s)

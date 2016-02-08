@@ -45,9 +45,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
     void BGFSUpdate(function<NekDouble(Array<OneD, NekDouble>, Array<OneD, NekDouble>, CADObjSharedPtr)> F,
-                    Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
+                    function<DNekMat(Array<OneD, NekDouble>, Array<OneD, NekDouble>, CADObjSharedPtr)> Jac,
+                    Array<OneD, NekDouble> &all, Array<OneD, NekDouble> z,
                     CADObjSharedPtr o,
-                    DNekMat J, DNekMat &B);
+                    DNekMat &J, DNekMat &B, DNekMat &H);
 }
 }
 #endif

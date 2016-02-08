@@ -16,6 +16,7 @@ v4.3.0
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
 - Add support for PETSc matrix shell to use Nektar++ operations/preconditioners
   (!537)
+- Fix bug with initial conditions of CG simulations using variable P (!543)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)

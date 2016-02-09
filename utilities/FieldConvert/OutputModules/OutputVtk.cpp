@@ -92,11 +92,11 @@ void OutputVtk::Process(po::variables_map &vm)
     // Write solution.
     ofstream outfile(filename.c_str());
     m_f->m_exp[0]->WriteVtkHeader(outfile);
-    
+    int nfields; 
    if(fPts == LibUtilities::NullPtsField) // standard output in collapsed coordinates 
    {
        
-       int nfields, nstrips;
+       int nstrips;
        if (m_f->m_fielddef.size() == 0)
        {
            nfields = 0;
@@ -170,6 +170,7 @@ void OutputVtk::Process(po::variables_map &vm)
         fPts->GetConnectivity(ptsConn);
         
         int nPts =  fPts->GetNpoints();
+        int nfields = fPts->GetNFields();
         int numBlocks = 0;
         for(i = 0; i < ptsConn.size(); ++i)
         {
@@ -240,7 +241,7 @@ void OutputVtk::Process(po::variables_map &vm)
         outfile << "      <PointData>" << endl;
         
         // printing the fields
-        for(j = 0; j < fPts->GetNFields(); ++j)
+        for(j = 0; j < nfields; ++j)
         {
             outfile << "        <DataArray type=\"Float64\" Name=\""
                     << fPts->GetFieldName(j) << "\">" << endl;
@@ -261,6 +262,50 @@ void OutputVtk::Process(po::variables_map &vm)
    m_f->m_exp[0]->WriteVtkFooter(outfile);
    cout << "Written file: " << filename << endl;
    
+
+    // output parallel outline info if necessary
+    if(m_f->m_comm->GetRank() == 0)
+    {
+        int nprocs = m_f->m_comm->GetSize();
+        if(nprocs != 1)
+        {
+            filename = m_config["outfile"].as<string>();
+            int    dot = filename.find_last_of('.');
+            string body = filename.substr(0,dot);
+            filename = body + ".pvtu";
+
+            ofstream outfile(filename.c_str());
+
+            outfile << "<?xml version=\"1.0\"?>" << endl;
+            outfile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" "
+                    << "byte_order=\"LittleEndian\">" << endl;
+            outfile << "<PUnstructuredGrid GhostLevel=\"0\">" << endl;
+            outfile << "<PPoints> " << endl;
+            outfile << "<PDataArray type=\"Float64\" NumberOfComponents=\""
+                    <<  m_f->m_exp[0]->GetExp(0)->GetCoordim() << "\"/> " << endl; 
+            outfile << "</PPoints>" << endl;
+            outfile << "<PCells>" << endl;
+            outfile << "<PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << endl; 
+            outfile << "<PDataArray type=\"Int32\" Name=\"offsets\"      NumberOfComponents=\"1\"/>" << endl;
+            outfile << "<PDataArray type=\"UInt8\" Name=\"types\"        NumberOfComponents=\"1\"/>" << endl;
+            outfile << "</PCells>" << endl;
+            outfile << "<PPointData Scalars=\"Material\">" << endl;
+            for(int i = 0; i < nfields; ++i)
+            {
+                outfile << "<PDataArray type=\"Float64\" Name=\"" <<
+                    m_f->m_fielddef[0]->m_fields[i] << "\"/>" << endl;
+            }
+            outfile << "</PPointData>" << endl;
+
+            for(int i = 0; i < nprocs; ++i)
+            {
+                outfile << "<Piece Source=\"" << body << "_P" << i << ".vtu" << "\"/>" <<endl;
+            }
+            outfile << "</PUnstructuredGrid>"  << endl;
+            outfile << "</VTKFile>" << endl;
+            cout << "Written file: " << filename << endl;
+        }
+    }
 }
 
 }

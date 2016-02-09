@@ -408,6 +408,13 @@ void InputXml::Process(po::variables_map &vm)
         }
     }
 
+    // Override number of planes with value from cmd line
+    if(NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
+    {
+        int expdim = m_f->m_graph->GetMeshDimension();
+        m_f->m_fielddef[0]->m_numModes[expdim] = vm["output-points-hom-z"].as<int>();
+    }
+
     m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
 
 

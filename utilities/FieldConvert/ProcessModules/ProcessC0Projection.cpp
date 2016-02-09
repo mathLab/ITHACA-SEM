@@ -120,7 +120,7 @@ void ProcessC0Projection::Process(po::variables_map &vm)
     }
     else
     {
-        // generate an C0 expansion field with no boundary conditions.
+        // generate a C0 expansion field with no boundary conditions.
         bool savedef = m_f->m_declareExpansionAsContField;
         m_f->m_declareExpansionAsContField = true;
         C0ProjectExp[0] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,

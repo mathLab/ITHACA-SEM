@@ -393,21 +393,25 @@ namespace Nektar
             const char *IsCompressed = element->Attribute("COMPRESSED");
             if(IsCompressed)
             {
-                if(boost::iequals(IsCompressed,LibUtilities::CompressData::GetCompressString()))
+                if(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()))
                 {
                     // Extract the vertex body
                     TiXmlNode* vertexChild = element->FirstChild();
-                    ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
-                    
+                    ASSERTL0(vertexChild,
+                             "Unable to extract the data from the compressed "
+                             "vertex tag.");
+
                     std::string vertexStr;
                     if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         vertexStr += vertexChild->ToText()->ValueStr();
                     }
-                    
+
                     std::vector<LibUtilities::MeshVertex> vertData;
-                    LibUtilities::CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
-                    
+                    LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        vertexStr,vertData);
+
                     int indx;
                     NekDouble xval, yval, zval;
                     for(int i = 0; i < vertData.size(); ++i)
@@ -416,20 +420,25 @@ namespace Nektar
                         xval = vertData[i].x;
                         yval = vertData[i].y;
                         zval = vertData[i].z;
-                        
+
                         xval = xval*xscale + xmove;
                         yval = yval*yscale + ymove;
                         zval = zval*zscale + zmove;
-                        
-                        PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+
+                        PointGeomSharedPtr vert(
+                            MemoryManager<PointGeom>::AllocateSharedPtr(
+                                m_spaceDimension, indx, xval, yval, zval));
+
                         vert->SetGlobalID(indx);
                         m_vertSet[indx] = vert;
                     }
                 }
                 else
                 {
-                    ASSERTL0(false,"Compressed formats do not match. Expected :" + LibUtilities::CompressData::GetCompressString() + " but got " + boost::lexical_cast<std::string>(IsCompressed));
-                }                
+                    ASSERTL0(false,"Compressed formats do not match. Expected :"
+                             + LibUtilities::CompressData::GetCompressString()
+                             + " but got " + std::string(IsCompressed));
+                }
             }
             else
             {
@@ -1241,7 +1250,7 @@ namespace Nektar
 
             /// Look for elements in CURVE block.
             field = mesh->FirstChildElement("CURVED");
-            
+
             if(!field) //return if no curved entities
             {
                 return;
@@ -1251,144 +1260,158 @@ namespace Nektar
 
             if(IsCompressed)
             {
-                if(boost::iequals(IsCompressed,LibUtilities::CompressData::GetCompressString()))
-                {
-                    std::vector<LibUtilities::MeshCurvedInfo> edginfo;
-                    std::vector<LibUtilities::MeshCurvedInfo> facinfo;
-                    LibUtilities::MeshCurvedPts cpts; 
-                    
-                    // read edge, face info and curved poitns. 
-                    TiXmlElement *x = field->FirstChildElement();
-                    while(x)
-                    {
-                        const char *entitytype = x->Value(); 
-                        // read in edge or face info
-                        if(boost::iequals(entitytype,"E"))
-                        {
-                            // read in data
-                            std::string elmtStr;             
-                            TiXmlNode* child = x->FirstChild();
-                            
-                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
-                            {
-                                elmtStr += child->ToText()->ValueStr();
-                            }
-                            
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,edginfo);
-                        }
-                        else if(boost::iequals(entitytype,"F"))
-                        {
-                            // read in data
-                            std::string elmtStr;             
-                            TiXmlNode* child = x->FirstChild();
-                            
-                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
-                            {
-                                elmtStr += child->ToText()->ValueStr();
-                            }
-                            
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,facinfo);
-                    }
-                        else  if(boost::iequals(entitytype,"DATAPOINTS"))
-                        {
-                            NekInt id;
-                            ASSERTL0(x->Attribute("ID", &id),
-                                     "Failed to get ID from PTS section");
-                            cpts.id = id;
-                            
-                            // read in data
-                            std::string elmtStr;             
-                            
-                            TiXmlElement* DataIdx = 
-                                x->FirstChildElement("INDEX");
-                            ASSERTL0(DataIdx, "Cannot read data index tag in compressed curved section");
-                            
-                            TiXmlNode* child = DataIdx->FirstChild();
-                            
-                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
-                            {
-                                elmtStr = child->ToText()->ValueStr();
-                            }
-                            
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,cpts.index);
-                            
-                            TiXmlElement* DataPts = 
-                                x->FirstChildElement("POINTS");
-                            ASSERTL0(DataPts, "Cannot read data pts tag in compressed curved section");
-                            
-                            child = DataPts->FirstChild();
-                            
-                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
-                            {
-                                elmtStr = child->ToText()->ValueStr();
-                            }
-                            
-                            LibUtilities::CompressData::ZlibDecodeFromBase64Str(elmtStr,cpts.pts);
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Unknown tag in curved section");
-                        }
-                        
-                        x = x->NextSiblingElement();
-                    }                                                    
+                ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()),
+                         "Compressed formats do not match. Expected :"
+                         + LibUtilities::CompressData::GetCompressString()
+                         + " but got "
+                         + boost::lexical_cast<std::string>(IsCompressed));
 
-                    // rescale (x,y,z) points;
-                    for(int i = 0; i > cpts.pts.size(); ++i)
-                    {
-                        cpts.pts[i].x = xscale*cpts.pts[i].x + xmove;
-                        cpts.pts[i].y = yscale*cpts.pts[i].y + ymove;
-                        cpts.pts[i].z = zscale*cpts.pts[i].z + zmove;
-                    }
-                    
-                    for(int i = 0; i < edginfo.size(); ++i)
-                    {
-                        int edgeid = edginfo[i].entityid;
-                        LibUtilities::PointsType ptype; 
-                        
-                        CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, ptype = (LibUtilities::PointsType) edginfo[i].ptype));
-                        
-                        // load points
-                        int offset = edginfo[i].ptoffset;
-                        for(int j = 0; j < edginfo[i].npoints; ++j)
-                        {
-                            int idx = cpts.index[offset+j];
-                            
-                            PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, edginfo[i].id, cpts.pts[idx].x, cpts.pts[idx].y, cpts.pts[idx].z));
-                            curve->m_points.push_back(vert);
-                        }
-                        
-                        m_curvedEdges[edgeid] = curve;
-                    }
-                    
-                    
-                    for(int i = 0; i < facinfo.size(); ++i)
-                    {
-                        int faceid = facinfo[i].entityid;
-                        LibUtilities::PointsType ptype;
-                        
-                        CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid,ptype = (LibUtilities::PointsType) facinfo[i].ptype)); 
-                        
-                        int offset = facinfo[i].ptoffset;
-                        for(int j = 0; j < facinfo[i].npoints; ++j)
-                        {
-                            int idx = cpts.index[offset+j];
-                            
-                            PointGeomSharedPtr vert(MemoryManager<PointGeom>::
-                                       AllocateSharedPtr(m_meshDimension, 
-                                                         facinfo[i].id, 
-                                                         cpts.pts[idx].x, 
-                                                         cpts.pts[idx].y, 
-                                                         cpts.pts[idx].z));
-                            curve->m_points.push_back(vert);
-                        }
-                        
-                        m_curvedFaces[faceid] = curve;
-                    }
-                }
-                else
+                std::vector<LibUtilities::MeshCurvedInfo> edginfo;
+                std::vector<LibUtilities::MeshCurvedInfo> facinfo;
+                LibUtilities::MeshCurvedPts cpts;
+
+                // read edge, face info and curved poitns.
+                TiXmlElement *x = field->FirstChildElement();
+                while(x)
                 {
-                    ASSERTL0(false,"Compressed formats do not match. Expected :" + LibUtilities::CompressData::GetCompressString() + " but got " + boost::lexical_cast<std::string>(IsCompressed));
+                    const char *entitytype = x->Value();
+                    // read in edge or face info
+                    if(boost::iequals(entitytype,"E"))
+                    {
+                        // read in data
+                        std::string elmtStr;
+                        TiXmlNode* child = x->FirstChild();
+
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr += child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        elmtStr,edginfo);
+                    }
+                    else if(boost::iequals(entitytype,"F"))
+                    {
+                        // read in data
+                        std::string elmtStr;
+                        TiXmlNode* child = x->FirstChild();
+
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr += child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        elmtStr,facinfo);
+                    }
+                    else if(boost::iequals(entitytype,"DATAPOINTS"))
+                    {
+                        NekInt id;
+                        ASSERTL0(x->Attribute("ID", &id),
+                                 "Failed to get ID from PTS section");
+                        cpts.id = id;
+
+                        // read in data
+                        std::string elmtStr;
+
+                        TiXmlElement* DataIdx =
+                            x->FirstChildElement("INDEX");
+                        ASSERTL0(DataIdx,
+                                 "Cannot read data index tag in compressed "
+                                 "curved section");
+
+                        TiXmlNode* child = DataIdx->FirstChild();
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr = child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                    elmtStr,cpts.index);
+
+                        TiXmlElement* DataPts =
+                            x->FirstChildElement("POINTS");
+                        ASSERTL0(DataPts,
+                                 "Cannot read data pts tag in compressed "
+                                 "curved section");
+
+                        child = DataPts->FirstChild();
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr = child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                    elmtStr,cpts.pts);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Unknown tag in curved section");
+                    }
+                    x = x->NextSiblingElement();
+                }
+
+                // rescale (x,y,z) points;
+                for(int i = 0; i > cpts.pts.size(); ++i)
+                {
+                    cpts.pts[i].x = xscale*cpts.pts[i].x + xmove;
+                    cpts.pts[i].y = yscale*cpts.pts[i].y + ymove;
+                    cpts.pts[i].z = zscale*cpts.pts[i].z + zmove;
+                }
+
+                for(int i = 0; i < edginfo.size(); ++i)
+                {
+                    int edgeid = edginfo[i].entityid;
+                    LibUtilities::PointsType ptype;
+
+                    CurveSharedPtr curve(
+                            MemoryManager<Curve>::AllocateSharedPtr(
+                                edgeid, ptype = (LibUtilities::PointsType)
+                                                    edginfo[i].ptype));
+
+                    // load points
+                    int offset = edginfo[i].ptoffset;
+                    for(int j = 0; j < edginfo[i].npoints; ++j)
+                    {
+                        int idx = cpts.index[offset+j];
+
+                        PointGeomSharedPtr vert(
+                            MemoryManager<PointGeom>::AllocateSharedPtr(
+                                m_meshDimension, edginfo[i].id,
+                                cpts.pts[idx].x, cpts.pts[idx].y,
+                                cpts.pts[idx].z));
+                        curve->m_points.push_back(vert);
+                    }
+
+                    m_curvedEdges[edgeid] = curve;
+                }
+
+                for(int i = 0; i < facinfo.size(); ++i)
+                {
+                    int faceid = facinfo[i].entityid;
+                    LibUtilities::PointsType ptype;
+
+                    CurveSharedPtr curve(
+                            MemoryManager<Curve>::AllocateSharedPtr(
+                                faceid, ptype = (LibUtilities::PointsType)
+                                                    facinfo[i].ptype));
+
+                    int offset = facinfo[i].ptoffset;
+                    for(int j = 0; j < facinfo[i].npoints; ++j)
+                    {
+                        int idx = cpts.index[offset+j];
+
+                        PointGeomSharedPtr vert(MemoryManager<PointGeom>::
+                                   AllocateSharedPtr(m_meshDimension,
+                                                     facinfo[i].id,
+                                                     cpts.pts[idx].x,
+                                                     cpts.pts[idx].y,
+                                                     cpts.pts[idx].z));
+                        curve->m_points.push_back(vert);
+                    }
+
+                    m_curvedFaces[faceid] = curve;
                 }
             }
             else
@@ -1568,7 +1591,7 @@ namespace Nektar
                             while(!elementDataStrm.fail())
                             {
                                 elementDataStrm >> xval >> yval >> zval;
-                                
+
                                 // Need to check it here because we
                                 // may not be good after the read
                                 // indicating that there was nothing

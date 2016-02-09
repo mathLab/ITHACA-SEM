@@ -348,13 +348,17 @@ namespace Nektar
                 elemTag->SetAttribute("ID", idString);
                 elemTag->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
+
+                // Add this information for future compatibility
+                // issues, for exmaple in case we end up using a 128
+                // bit machine.
                 elemTag->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
                 std::string base64string;
-                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f], 
-                                                                     base64string),
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
+                                                fielddata[f], base64string),
                          "Failed to compress field data.");
-                
+
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -772,14 +776,20 @@ namespace Nektar
                         else if (attrName == "COMPRESSED")
                         {
                             if(!boost::iequals(attr->Value(),
-                                               CompressData::GetCompressString()))
+                                            CompressData::GetCompressString()))
                             {
-                                WARNINGL0(false,"Endianness of file does not match");
+                                WARNINGL0(false, "Compressed formats do not "
+                                          "match. Expected: "
+                                          + CompressData::GetCompressString()
+                                          + " but got "+ string(attr->Value()));
                             }
                         }
-                        else if (attrName == "BITSIZE")
+                        else if (attrName =="BITSIZE")
                         {
-                            // do nothing
+                            // This information is for future
+                            // compatibility issues, for exmaple in
+                            // case we end up using a 128 bit machine.
+                            // Currently just do nothing
                         }
                         else
                         {
@@ -980,15 +990,18 @@ namespace Nektar
                     const char *CompressStr = element->Attribute("COMPRESSED");
                     if(CompressStr)
                     {
-                        if(!boost::iequals(CompressStr,CompressData::GetCompressString()))
+                        if(!boost::iequals(CompressStr,
+                                           CompressData::GetCompressString()))
                         {
-                            WARNINGL0(false,"Endianness of file does not match");
+                            WARNINGL0(false, "Compressed formats do not match. "
+                                      "Expected: "
+                                      + CompressData::GetCompressString()
+                                      + " but got "+ string(CompressStr));
                         }
                     }
-                                                                              
 
                     ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
-                                                        elementStr, 
+                                                        elementStr,
                                                         elementFieldData),
                              "Failed to decompress field data.");
 

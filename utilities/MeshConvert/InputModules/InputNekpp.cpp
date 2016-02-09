@@ -303,7 +303,7 @@ namespace Nektar
                             // set up link back to this element
                             edg->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
-                        
+
                         if(dim == 2)
                         {
                             FaceSharedPtr fac = fIdMap[(*geomIt)->GetGlobalID()];

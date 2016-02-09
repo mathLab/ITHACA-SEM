@@ -110,8 +110,8 @@ namespace Nektar
                 std::string type;
                 int npoints;
                 std::string data;
-                int ptid; 
-                int ptoffset; 
+                int ptid;
+                int ptoffset;
             };
 
             struct MeshComposite

@@ -258,12 +258,12 @@ namespace Nektar
             std::string GetXmlCurveString() const
             {
                 std::vector<NodeSharedPtr> nodeList;
-                
+
                 GetCurvedNodes(nodeList);
 
                 std::stringstream s;
                 std::string str;
-                
+
                 // put them into a string and return
                 for (int k = 0; k < nodeList.size(); ++k)
                 {
@@ -529,7 +529,7 @@ namespace Nektar
                 for (int i = 0; i < nEdge; ++i)
                 {
                     edgeo[i] = SpatialDomains::SegGeom::GetEdgeOrientation(
-                                                                           *edges[i], *edges[(i+1) % nEdge]);
+                                            *edges[i], *edges[(i+1) % nEdge]);
 
                 }
 
@@ -1042,9 +1042,9 @@ namespace Nektar
             {
                 // Temporary node list for reordering
                 std::vector<NodeSharedPtr> nodeList;
-                
+
                 GetCurvedNodes(nodeList);
-             
+
                 // Finally generate the XML string corresponding to our new
                 // node reordering.
                 std::stringstream s;

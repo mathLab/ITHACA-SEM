@@ -192,14 +192,19 @@ number of poinst. This produces much smaller output files. The points
 are then connected together by simplices (triangles and tetrahedrons).
 
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m equispacedouptput test.xml test.fld test-boundary.dat
+FieldConvert -m equispacedouptput test.xml test.fld test.dat
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m equispacedouptput test.xml test.fld test.vtu
 \end{lstlisting}
 
 
 \begin{notebox} 
 Currently this option is only set up for triangles, quadrilaterals,
-tetrahedrons and prisms. It also only is currently used in tecplot
-output.
+tetrahedrons and prisms.
 \end{notebox}
 
 \subsection{Extract a boundary region: \textit{extract} module}

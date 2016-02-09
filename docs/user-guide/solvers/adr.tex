@@ -1,11 +1,11 @@
-\chapter{Advection-Diffusion-Reaction Solver}
+\section{Advection-Diffusion-Reaction Solver}
 
 %3.4/UserGuide/Tutorial/ADRSolver
 %3.4/UserGuide/Examples/ADRSolver/1DAdvection
 %3.4/UserGuide/Examples/ADRSolver/3DAdvectionMassTransport
 %3.4/UserGuide/Examples/ADRSolver/Helmholtz2D
 
-\section{Synopsis}
+\subsection{Synopsis}
 
 The ADRSolver is designed to solve partial differential equations of the form:
 \begin{equation}
@@ -52,19 +52,19 @@ $\dfrac{\partial u}{\partial t}  + u\nabla u =  0$ &
 \label{t:ADR1}
 \end{table}
 
-\section{Usage}
+\subsection{Usage}
 
 \begin{lstlisting}[style=BashInputStyle]
 ADRSolver session.xml
 \end{lstlisting}
 
-\section{Session file configuration}
+\subsection{Session file configuration}
 
 The type of equation which is to be solved is specified through the EquationType 
 SOLVERINFO option in the session file. This can be set as in table \ref{t:ADR1}.
 At present, the Steady non-symmetric solvers cannot be used in parallel. \\
 
-\subsection{Solver Info}
+\subsubsection{Solver Info}
 
 The solver info are listed below:
 \begin{itemize}
@@ -119,9 +119,9 @@ The solver info are listed below:
 \end{itemize}
 \end{itemize}
 
-\subsection{Parameters}
+\subsubsection{Parameters}
 
-The following parameters can be specified in the \inltt{PARAMETERS} section of
+The following parameters can be specified in the \inltt{PARAMETERS} subsection of
 the session file:
 \begin{itemize}
 \item \inltt{epsilon}: sets the diffusion coefficient $\epsilon$.\\ 
@@ -136,9 +136,9 @@ diffusion tensor $D$. \\
 \textit{Default value}: 0.
 \end{itemize}
 
-\subsection{Functions}
+\subsubsection{Functions}
 
-The following functions can be specified inside the \inltt{CONDITIONS} section
+The following functions can be specified inside the \inltt{CONDITIONS} subsection
 of the session file:
 
 \begin{itemize}
@@ -147,23 +147,23 @@ of the session file:
 \item \inltt{Forcing}: specifies the forcing function f.
 \end{itemize}
 
-\section{Examples}
+\subsection{Examples}
 Example files for the ADRSolver are provided in
 \inltt{solvers/ADRSolver/Examples}
 
-\subsection{1D Advection equation}
+\subsubsection{1D Advection equation}
 
 In this example, it will be demonstrated how the Advection equation can be
 solved on a one-dimensional domain.
 
-\subsubsection{Advection equation}
+\subsubsubsection{Advection equation}
 We consider the hyperbolic partial differential equation:
 \begin{equation}
 \dfrac{\partial u}{\partial t} + \dfrac{\partial f}{\partial x} = 0,
 \end{equation}
-where $f =  a u$ i s the advection flux.
+where $f =  a u$ is the advection flux.
 
-\subsubsection{Input file}
+\subsubsubsection{Input file}
 The input for this example is given in the example file \inlsh{Advection1D.xml}
 
 The geometry section defines a 1D domain consisting of $10$ segments. On each
@@ -235,7 +235,7 @@ Finally, we specify the initial value of the solution on the domain
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Running the code}
+\subsubsubsection{Running the code}
 \begin{lstlisting}[style=BashInputStyle]
 ADRSolver Advection1D.xml
 \end{lstlisting}
@@ -247,11 +247,11 @@ FieldConvert Advection1D.xml Advection1D.fld Advection1D.vtu
 \end{lstlisting}
 
 
-\subsection{2D Helmholtz Problem}
+\subsubsection{2D Helmholtz Problem}
 
 In this example, it will be demonstrated how the Helmholtz equation can be solved on a two-dimensional domain.
 
-\subsubsection{Helmholtz equation}
+\subsubsubsection{Helmholtz equation}
 
 We consider the elliptic partial differential equation:
 
@@ -261,7 +261,7 @@ We consider the elliptic partial differential equation:
 
 where $\nabla^2$ is the Laplacian and $\lambda$ is a real positive constant.
 
-\subsubsection{Input file} 
+\subsubsubsection{Input file} 
 
 The input for this example is given in the example file
 \inlsh{Helmholtz2D\_modal.xml}
@@ -351,7 +351,7 @@ the correct solution is obtained by evaluating the $L_2$ and $L_{inf}$ errors.
 \end{lstlisting}
 
 
-\subsubsection{Running the code}
+\subsubsubsection{Running the code}
 \begin{lstlisting}[style=BashInputStyle]
 ADRSolver Test_Helmholtz2D_modal.xml
 \end{lstlisting}
@@ -359,7 +359,7 @@ ADRSolver Test_Helmholtz2D_modal.xml
 This execution should print out a summary of input file, the $L_2$ and 
 $L_{inf}$ errors and the time spent on the calculation.
 
-\subsubsection{Post-processing}
+\subsubsubsection{Post-processing}
 Simulation results are written in the file Helmholtz2D\_modal.fld. We can choose
 to visualise the output in Gmsh
 \begin{lstlisting}[style=BashInputStyle]
@@ -377,7 +377,7 @@ Fig.~\ref{f:adrsolver:helmholtz2D}
 \end{figure}
 
 
-\subsection{Advection dominated mass transport in a pipe}
+\subsubsection{Advection dominated mass transport in a pipe}
 
 The following example demonstrates the application of the ADRsolver for
 modelling advection dominated mass transport in a straight pipe.
@@ -386,7 +386,7 @@ in arteries. This is because the diffusion coefficient of small blood borne
 molecules, for example oxygen or adenosine triphosphate, is very small
 $O(10^{-10})$.
 
-\subsubsection{Background}
+\subsubsubsection{Background}
 The governing equation for modelling mass transport is the unsteady advection
 diffusion equation:
 \begin{align*}
@@ -423,7 +423,7 @@ the calculated mass transfer at the wall with the Graetz-Nusselt solution. The
 Peclet number of the transport regime under consideration is $750000$, which is
 physiologically relevant.
 
-\subsubsection{Input file}
+\subsubsubsection{Input file}
 The geometry under consideration is a pipe of radius, $R = 0.5$ and length $l =
 0.5$
 
@@ -536,7 +536,7 @@ same as the inlet. This is defined by,
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Results}
+\subsubsubsection{Results}
 To compare with the analytical expression we numerically calculate the
 concentration gradient at the surface of the pipe. This is then plotted against
 the analytical solution by extracting the solution along a line in the

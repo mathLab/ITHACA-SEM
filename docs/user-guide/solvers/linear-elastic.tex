@@ -1,7 +1,7 @@
-\chapter{Linear elasticity solver}
+\section{Linear elasticity solver}
 \label{s:elasticity}
 
-\section{Synopsis}
+\subsection{Synopsis}
 The LinearElasticSolver is a solver for solving the linear elasticity equations
 in two and three dimensions. Whilst this may be suitable for simple solid
 mechanics problems, its main purpose is for use for mesh deformation and
@@ -24,7 +24,7 @@ Currently the following equation systems are supported:
 \end{tabular}
 \end{center}
 
-\subsection{The linear elasticity equations}
+\subsubsection{The linear elasticity equations}
 
 The linear elasticity equations model how a solid body deforms under the
 application of a `small' deformation or strain. The formulation starts with the
@@ -78,13 +78,13 @@ The Poisson ratio, valid in the range $\nu < \tfrac{1}{2}$, is a measure of the
 compressibility of the body, and the Young's modulus $E > 0$ is a measure of its
 stiffness.
 
-\section{Usage}
+\subsection{Usage}
 \begin{lstlisting}[style=BashInputStyle]
 LinearElasticSolver [arguments] session.xml [another.xml] ...
 \end{lstlisting}
 
-\section{Session file configuration}
-\subsection{Solver Info}
+\subsection{Session file configuration}
+\subsubsection{Solver Info}
 \begin{itemize}
   \item \inltt{EqType} Specifies the PDE system to solve, based on the choices
   in the table above.
@@ -110,7 +110,7 @@ LinearElasticSolver [arguments] session.xml [another.xml] ...
   \end{itemize}
 \end{itemize}
 
-\subsection{Parameters}
+\subsubsection{Parameters}
 
 The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file:
@@ -126,9 +126,9 @@ the session file:
   \textit{Default value}: 0.
 \end{itemize}
 
-\section{Examples}
+\subsection{Examples}
 
-\subsection{L-shaped domain}
+\subsubsection{L-shaped domain}
 
 The first example is the classic L-shaped domain, in which an exact solution is
 known, which makes it an ideal test case~\cite{Ko07}. The domain is the polygon
@@ -186,7 +186,7 @@ a deformed XML file using the \inltt{deform} module in \inltt{FieldConvert}:
   FieldConvert -m deform L-domain.xml L-domain.fld L-domain-deformed.xml
 \end{lstlisting}
 
-\subsection{Boundary layer deformation}
+\subsubsection{Boundary layer deformation}
 
 In this example we use the iterative elastic system to apply a large deformation
 to a triangular boundary layer mesh of a square mesh $\Omega = [0,1]^2$. At the

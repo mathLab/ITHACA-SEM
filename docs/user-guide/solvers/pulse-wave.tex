@@ -1,6 +1,6 @@
-\chapter{Pulse Wave Solver}
+\section{Pulse Wave Solver}
 
-\section{Synopsis}
+\subsection{Synopsis}
 
 1D modelling of the vasculature (arterial network) represents and insightful and efficient tool for tackling problems encountered in arterial biomechanics as well as other engineering problems. In particular, 3D modelling of the vasculature is relatively expensive. 1D modelling provides an alternative in which the modelling assumptions provide a good balance between physiological accuracy and computational efficiency.To describe the flow and pressure in this network we consider the conservation of mass and momentum applied to an impermeable, deformable tube filled with an incompressible fluid, the nonlinear system of partial differential equations presented in non-conservative form is given by
 
@@ -25,14 +25,14 @@ where $p_{0}$ is the external pressure, $A_{0}$ is the initial cross-sectional a
 the usage of the blood flow solver on the basis of a single-artery problem and
 also on an arterial network consisting of $55$ arteries.
 
-\section{Usage}
+\subsection{Usage}
 \begin{lstlisting}[style=BashInputStyle]
 PulseWaveSolver session.xml
 \end{lstlisting}
 
-\section{Session file configuration}
+\subsection{Session file configuration}
 
-\subsection{Pulse Wave Sovler mesh connectivity}
+\subsubsection{Pulse Wave Sovler mesh connectivity}
 Typically 1D arterial networks are made up of a connection of different base units: segments, bifurcations and merging junctions. The input format in the PulseWaveSolver means these connections are handle naturally from the mesh topology; hence care must be taken when designing the 1D domain. The figure below outlines the structure of a bifurcation, which is a common reoccurring structure in the vasculature.
 
 \begin{figure}
@@ -116,7 +116,7 @@ Each of the segments can be then represented under the section \inltt{DOMAIN} by
 
 We will use the different domains later to define variable material properties and cross-sectional areas.
 
-\subsection{Session Info}
+\subsubsection{Session Info}
 The PulseWaveSolver is sqpecified through the \inltt{EquationType}
 option in the session file. This can be set as follows:
 \begin{itemize}
@@ -132,7 +132,7 @@ using the following option:
     \end{itemize}
 \end{itemize}
 
- \subsection{Parameters}
+ \subsubsection{Parameters}
 The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file. 
 \begin{itemize}
@@ -149,7 +149,7 @@ to screen;
 \item \inltt{h0} wall thickness Default value = 1.0;
 \end{itemize}
 
-\subsection{Boundary conditions}
+\subsubsection{Boundary conditions}
 In this section we can specify the boundary conditions for our problem.
 First we need to define the variables under the section \inltt{VARIABLES}.
 \begin{lstlisting}[style=XmlStyle]        
@@ -191,7 +191,7 @@ Two element windkessel (CR)  \inltt{CR-terminal}, and three element windkessel (
 \end{lstlisting}
 Where \inltt{RT} is the total peripheral resistance  used in the the  \inltt{R-terminal}, \inltt{CR-terminal} and \inltt{RCR-terminal}  models
 
-\subsection{Functions}
+\subsubsection{Functions}
 The following functions can be specified inside the \inltt{CONDITIONS} section
 of the session file:
 \begin{itemize}
@@ -213,9 +213,9 @@ As an example to specify the material properties for each domain in the previous
 \end{lstlisting}
 The values of \inltt{beta} are used in the pressure-area relationship (equation \ref{eqn:PA}). 
 
-\section{Examples}
+\subsection{Examples}
 
-\subsection{Human Vascular Network}
+\subsubsection{Human Vascular Network}
 The Pulse Wave Solver is also capable of handling more complex networks, such as
 a complete human arterial tree proposed by Westerhof et al. \cite{We69}.
 In this example, we will use the refined data from \cite{ShFoPeFr03} and set up
@@ -443,8 +443,8 @@ patient-specific planning of medical interventions.
 
 
 
-\subsection{Stented Artery}
-\subsection{Stented Artery}
+\subsubsection{Stented Artery}
+\subsubsection{Stented Artery}
 In the following we will explain the usage of the  \hyperref[PulseWaveSolver]{Pulse Wave solver} to model the flow and pressure variation through a stented artery - a cardiovascular procedure in which a small mesh tube is inserted into an artery to restore blood flow through a constricted region. Due to the implantation of the stent this region will have different material properties compared to the the surrounding unstented tissue; hence will influence the propagation of waves through this system. The stent scenario to be modelled is a straight arterial segment with a stent situated between $x=a_{1}$ and $x=a_{2}$ as shown below.
 
 \begin{figure}
@@ -605,7 +605,7 @@ and defined in the xml file by
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Simulation}
+\subsubsubsection{Simulation}
 The simulation is started by running
 \begin{lstlisting}[style=BashInputStyle]
 PulseWaveSolver Test_1.xml
@@ -613,7 +613,7 @@ PulseWaveSolver Test_1.xml
 It will take about 60 seconds on a 2.4GHz Intel Core 2 Duo processor and 
 therefore is computationally realisable at every clinical site.
 
-\subsubsection{Results}
+\subsubsubsection{Results}
 As a result we get a 3-dimensional interpretation of the aortic cross-sectional
 area varying in axial direction both for the stented and non-stented vessel. In
 case of the stent, the rigid metal mesh will restrict the deformation of the
@@ -639,13 +639,13 @@ there are losses for total pressure at the medial (M) and distal (D) point.
 	\includegraphics[width=0.49\linewidth]{img/pressure_stented_vessel.jpg}
 \end{figure}
 
-\section{Further Information}
+\subsection{Further Information}
 The PulseWaveSolver has beqen developed with contributions by various students
 and researchers at the Department of Aeronautics, Imperial College London. 
 Further information on the solver and its underlying mathematical framework 
 can be found in \cite{Ro12,Pi12}.
 
-\section{Future Development}
+\subsection{Future Development}
 The PulseWaveSolver is a useful tool for computational modelling of
 one-dimensional blood flow in the human body. However, there are several ideas
 for future development which include:

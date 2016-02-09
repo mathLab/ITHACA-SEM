@@ -33,19 +33,40 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
-#define NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
+#ifndef NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
+#define NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 
 #include <LocalRegions/MatrixKey.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Optimisation/OptimiseObj.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    void BGFSUpdate(OptiObjSharedPtr opti,
-                    DNekMat &J, DNekMat &B, DNekMat &H);
+
+class OptiObj
+{
+    public:
+
+        OptiObj(){};
+
+        virtual ~OptiObj(){};
+
+        virtual NekDouble F(Array<OneD, NekDouble> xitst){};
+
+        virtual DNekMat dF(Array<OneD, NekDouble> xitst){};
+
+        virtual Array<OneD, NekDouble> Getxi(){};
+
+        virtual Array<OneD, NekDouble> Getli(){};
+
+        virtual Array<OneD, NekDouble> Getui(){};
+
+        virtual void Update(Array<OneD, NekDouble> xinew){};
+
+        virtual Array<OneD, NekDouble> GetSolution(){};
+};
+typedef boost::shared_ptr<OptiObj> OptiObjSharedPtr;
+
 }
 }
 #endif

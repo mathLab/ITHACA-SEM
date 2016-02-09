@@ -89,33 +89,6 @@ class SurfaceMesh
 
     private:
 
-        static NekDouble EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
-                        CADObjSharedPtr o);
-
-        static DNekMat EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
-                             CADObjSharedPtr o);
-
-        NekDouble FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
-                            CADSurfSharedPtr s);
-
-
-        void FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
-                         Array<OneD, NekDouble> z, CADSurfSharedPtr s,
-                         DNekMat &Jac);
-
-        void EdgeOnFaceUpdate(Array<OneD, Array<OneD, NekDouble> > uv,
-                              Array<OneD, NekDouble> x,
-                              Array<OneD, NekDouble> gll,
-                              CADSurfSharedPtr s,
-                              DNekMat &B, DNekMat &J);
-
-
-        void FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,
-                                      map<int, Array<OneD, NekDouble> > z,
-                                      map<int, vector<int> > n,
-                                      CADSurfSharedPtr s,
-                                      DNekMat &Jac, DNekMat &Hes);
-
         /// mesh object
         MeshSharedPtr m_mesh;
         /// CAD object

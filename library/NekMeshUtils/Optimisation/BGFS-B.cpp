@@ -42,61 +42,15 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-    void BGFSUpdate(function<NekDouble(Array<OneD, NekDouble>, Array<OneD, NekDouble>, CADObjSharedPtr)> F,
-                    function<DNekMat(Array<OneD, NekDouble>, Array<OneD, NekDouble>, CADObjSharedPtr)> Jac,
-                    Array<OneD, NekDouble> &all, Array<OneD, NekDouble> z,
-                    CADObjSharedPtr o,
+    //this function will perform an update on the solution vector contained within
+    //opti
+    void BGFSUpdate(OptiObjSharedPtr opti,
                     DNekMat &J, DNekMat &B, DNekMat &H)
     {
 
-        Array<OneD, NekDouble> xi;
-        Array<OneD, NekDouble> gi;
-        Array<OneD, NekDouble> ui;
-        Array<OneD, NekDouble> li;
-        Array<OneD, NekDouble> bnds;
-        //reduce all data down to xi vector
-        switch (o->GetType())
-        {
-            case curve:
-                xi = Array<OneD, NekDouble>(all.num_elements()-2);
-                gi = Array<OneD, NekDouble>(all.num_elements()-2);
-                li = Array<OneD, NekDouble>(all.num_elements()-2);
-                ui = Array<OneD, NekDouble>(all.num_elements()-2);
-                bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
-                for(int i = 1; i < all.num_elements() - 1; i++)
-                {
-                    li[i-1] = bnds[0];
-                    ui[i-1] = bnds[1];
-                    xi[i-1] = all[i];
-                }
-                break;
-
-            case surf:
-                xi = Array<OneD, NekDouble>(all.num_elements()-4);
-                gi = Array<OneD, NekDouble>(all.num_elements()-4);
-                li = Array<OneD, NekDouble>(all.num_elements()-4);
-                ui = Array<OneD, NekDouble>(all.num_elements()-4);
-                bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
-                for(int i = 2; i < all.num_elements() - 2; i++)
-                {
-                    if(i % 2 == 0)
-                    {
-                        li[i-2] = bnds[0];
-                        ui[i-2] = bnds[1];
-                    }
-                    else
-                    {
-                        li[i-2] = bnds[2];
-                        ui[i-2] = bnds[3];
-                    }
-                    xi[i-2] = all[i];
-                }
-                break;
-
-            case vert:
-                ASSERTL0(false,"Should not be able to pass vert");
-        }
+        Array<OneD, NekDouble> xi = opti->Getxi();
+        Array<OneD, NekDouble> ui = opti->Getui();
+        Array<OneD, NekDouble> li = opti->Getli();
 
         set<int> Fset;
         Array<OneD, NekDouble> ti(xi.num_elements());
@@ -233,9 +187,9 @@ namespace NekMeshUtils
         //this section needs a case evaluation for edges on faces
         NekDouble lam = 2.0;
         int iterct = 0;
-        NekDouble fo = F(all,z,o);
+        NekDouble fo = opti->F(xi);
         NekDouble fn;
-        Array<OneD, NekDouble> tst(all.num_elements());
+        Array<OneD, NekDouble> tst(xi.num_elements());
         cout << "begining line search: " << fo << endl;
         do
         {
@@ -248,40 +202,21 @@ namespace NekMeshUtils
 
             lam*=0.5;
 
-            switch (o->GetType())
+            for(int i = 0; i < xi.num_elements(); i++)
             {
-                case curve:
-                    tst[0] = all[0];
-                    for(int i = 0; i < xi.num_elements(); i++)
-                    {
-                        tst[i+1] = xi[i] + lam * dk[i];
-                    }
-                    tst[tst.num_elements()-1] = all[tst.num_elements()-1];
-                    break;
-
-                case surf:
-                    tst[0] = all[0];
-                    tst[1] = all[1];
-                    for(int i = 0; i < xi.num_elements(); i++)
-                    {
-                        tst[i+2] = xi[i] + lam * dk[i];
-                    }
-                    tst[tst.num_elements()-2] = all[tst.num_elements()-2];
-                    tst[tst.num_elements()-1] = all[tst.num_elements()-1];
-                    break;
-
-                case vert:
-                    ASSERTL0(false, "what");
+                tst[i] = xi[i] + lam * dk[i];
             }
 
-            fn = F(tst,z,o);
+            fn = opti->F(tst);
             cout << fn << endl;
+
         }while(fn > fo + c);
+
         cout << "lam " << lam << endl;
 
         //tst at this point is the new all vector
         //now need to update hessians
-        DNekMat Jn = Jac(tst,z,o);
+        DNekMat Jn = opti->dF(tst);
         DNekMat y = Jn - J;
         DNekMat yT = Jn - J;
         yT.Transpose();
@@ -311,7 +246,7 @@ namespace NekMeshUtils
         }
 
         J = Jn;
-        all = tst;
+        opti->Update(tst);
 
     }
 

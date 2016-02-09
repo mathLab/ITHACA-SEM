@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <NekMeshUtils/SurfaceMeshing/OptimiseFunctions.h>
 
 using namespace std;
 namespace Nektar
@@ -70,9 +70,134 @@ Array<OneD, NekDouble> Add(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
     return ret;
 }
 
-NekDouble SurfaceMesh::EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
-                             CADObjSharedPtr o)
+Array<OneD, NekDouble> OptiEdge::Getxi()
 {
+    Array<OneD, NekDouble> xi;
+
+    switch (o->GetType())
+    {
+        case curve:
+            xi = Array<OneD, NekDouble>(all.num_elements()-2);
+            for(int i = 1; i < all.num_elements() - 1; i++)
+            {
+                xi[i-1] = all[i];
+            }
+            break;
+
+        case surf:
+            xi = Array<OneD, NekDouble>(all.num_elements()-4);
+            for(int i = 2; i < all.num_elements() - 2; i++)
+            {
+                xi[i-2] = all[i];
+            }
+            break;
+
+        case vert:
+            ASSERTL0(false,"Should not be able to pass vert");
+    }
+    return xi;
+}
+
+Array<OneD, NekDouble> OptiEdge::Getli()
+{
+    Array<OneD, NekDouble> li;
+    Array<OneD, NekDouble> bnds;
+    switch (o->GetType())
+    {
+        case curve:
+            li = Array<OneD, NekDouble>(all.num_elements()-2);
+            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+            for(int i = 1; i < all.num_elements() - 1; i++)
+            {
+                li[i-1] = bnds[0];
+            }
+            break;
+
+        case surf:
+            li = Array<OneD, NekDouble>(all.num_elements()-4);
+            bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
+            for(int i = 2; i < all.num_elements() - 2; i++)
+            {
+                if(i % 2 == 0)
+                {
+                    li[i-2] = bnds[0];
+                }
+                else
+                {
+                    li[i-2] = bnds[2];
+                }
+            }
+            break;
+
+        case vert:
+            ASSERTL0(false,"Should not be able to pass vert");
+    }
+    return li;
+}
+
+Array<OneD, NekDouble> OptiEdge::Getui()
+{
+    Array<OneD, NekDouble> ui;
+    Array<OneD, NekDouble> bnds;
+    switch (o->GetType())
+    {
+        case curve:
+            ui = Array<OneD, NekDouble>(all.num_elements()-2);
+            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+            for(int i = 1; i < all.num_elements() - 1; i++)
+            {
+                ui[i-1] = bnds[1];
+            }
+            break;
+
+        case surf:
+            ui = Array<OneD, NekDouble>(all.num_elements()-4);
+            bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
+            for(int i = 2; i < all.num_elements() - 2; i++)
+            {
+                if(i % 2 == 0)
+                {
+                    ui[i-2] = bnds[1];
+                }
+                else
+                {
+                    ui[i-2] = bnds[3];
+                }
+            }
+            break;
+
+        case vert:
+            ASSERTL0(false,"Should not be able to pass vert");
+    }
+    return ui;
+}
+
+
+NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
+{
+    Array<OneD, NekDouble> val(all.num_elements());
+
+    if(o->GetType() == curve)
+    {
+        val[0] = all[0];
+        for(int i = 0; i < xitst.num_elements(); i++)
+        {
+            val[i+1] = xitst[i];
+        }
+        val[all.num_elements()-1] = all[all.num_elements()-1];
+    }
+    else if(o->GetType() == surf)
+    {
+        val[0] = all[0];
+        val[1] = all[1];
+        for(int i = 0; i < xitst.num_elements(); i++)
+        {
+            val[i+2] = xitst[i];
+        }
+        val[all.num_elements()-2] = all[all.num_elements()-2];
+        val[all.num_elements()-1] = all[all.num_elements()-1];
+    }
+
     NekDouble ret = 0.0;
     if(o->GetType() == curve)
     {
@@ -80,7 +205,7 @@ NekDouble SurfaceMesh::EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> 
 
         for(int i = 0; i < all.num_elements() - 1; i++)
         {
-            Array<OneD, NekDouble> dis = Take(c->P(all[i+1]), c->P(all[i]));
+            Array<OneD, NekDouble> dis = Take(c->P(val[i+1]), c->P(val[i]));
             NekDouble norm = dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2];
             ret += norm/(z[i+1] - z[i]);
         }
@@ -88,13 +213,13 @@ NekDouble SurfaceMesh::EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> 
     else if(o->GetType() == surf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
-        //need to organise the all array
-        Array<OneD, Array<OneD, NekDouble> > uv(all.num_elements()/2);
-        for(int i = 0; i < all.num_elements()/2; i++)
+        //need to organise the val array
+        Array<OneD, Array<OneD, NekDouble> > uv(val.num_elements()/2);
+        for(int i = 0; i < val.num_elements()/2; i++)
         {
             uv[i] = Array<OneD, NekDouble>(2);
-            uv[i][0] = all[i*2+0];
-            uv[i][1] = all[i*2+1];
+            uv[i][0] = val[i*2+0];
+            uv[i][1] = val[i*2+1];
         }
         for(int i = 0; i < uv.num_elements() - 1; i++)
         {
@@ -106,9 +231,33 @@ NekDouble SurfaceMesh::EdgeF(Array<OneD, NekDouble> all, Array<OneD, NekDouble> 
     return ret;
 }
 
-DNekMat SurfaceMesh::EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble> z,
-                     CADObjSharedPtr o)
+DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 {
+    Array<OneD, NekDouble> val(all.num_elements());
+
+    if(o->GetType() == curve)
+    {
+        val[0] = all[0];
+        for(int i = 0; i < xitst.num_elements(); i++)
+        {
+            val[i+1] = xitst[i];
+        }
+        val[all.num_elements()-1] = all[all.num_elements()-1];
+    }
+    else if(o->GetType() == surf)
+    {
+        val[0] = all[0];
+        val[1] = all[1];
+        for(int i = 0; i < xitst.num_elements(); i++)
+        {
+            val[i+2] = xitst[i];
+        }
+        val[all.num_elements()-2] = all[all.num_elements()-2];
+        val[all.num_elements()-1] = all[all.num_elements()-1];
+    }
+
+    DNekMat ret;
+
     if(o->GetType() == curve)
     {
         CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(o);
@@ -118,7 +267,7 @@ DNekMat SurfaceMesh::EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble>
         for(int i = 0; i < all.num_elements(); i++)
         {
             Array<OneD, NekDouble> ri(3), dri(3);
-            Array<OneD, NekDouble> d2 = c->D2(all[i]);
+            Array<OneD, NekDouble> d2 = c->D2(val[i]);
             for(int j = 0; j < 3; j++)
             {
                 ri[j] = d2[j];
@@ -135,18 +284,18 @@ DNekMat SurfaceMesh::EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble>
                      2.0/(z[i+2] - z[i+1]) * Dot(dr[i+1],Take(r[i+2],r[i+1]));
         }
 
-        return J;
+        ret = J;
     }
     else if(o->GetType() == surf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
         //need to organise the all array
-        Array<OneD, Array<OneD, NekDouble> > uv(all.num_elements()/2);
-        for(int i = 0; i < all.num_elements()/2; i++)
+        Array<OneD, Array<OneD, NekDouble> > uv(val.num_elements()/2);
+        for(int i = 0; i < val.num_elements()/2; i++)
         {
             uv[i] = Array<OneD, NekDouble>(2);
-            uv[i][0] = all[i*2+0];
-            uv[i][1] = all[i*2+1];
+            uv[i][0] = val[i*2+0];
+            uv[i][1] = val[i*2+1];
         }
 
         vector<Array<OneD, NekDouble> > r;
@@ -176,207 +325,31 @@ DNekMat SurfaceMesh::EdgeGrad(Array<OneD, NekDouble> all, Array<OneD, NekDouble>
                          2.0/(z[i+2]-z[i+1]) * Dot(drv[i+1], Take(r[i+1], r[i+2]));
         }
 
-        return J;
-    }
-}
-
-NekDouble SurfaceMesh::FaceEdgeF(Array<OneD, Array<OneD, NekDouble> > uv, Array<OneD, NekDouble> z,
-                                 CADSurfSharedPtr s)
-{
-    NekDouble ret = 0.0;
-    for(int i = 0; i < uv.num_elements() - 1; i++)
-    {
-        Array<OneD, NekDouble> dis = Take(s->P(uv[i+1]), s->P(uv[i]));
-        NekDouble d = dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2];
-        ret += d/(z[i+1] - z[i]);
+        ret = J;
     }
 
     return ret;
 }
 
-void SurfaceMesh::FaceEdgeJac(Array<OneD, Array<OneD, NekDouble> > uv,
-                              Array<OneD, NekDouble> z, CADSurfSharedPtr s,
-                              DNekMat &Jac)
+void OptiEdge::Update(Array<OneD, NekDouble> xinew)
 {
-    vector<Array<OneD, NekDouble> > r;
-    vector<Array<OneD, NekDouble> > dru, drv;
-    for(int i = 0; i < uv.num_elements(); i++)
+    if(o->GetType() == curve)
     {
-        Array<OneD, NekDouble> ri(3), drui(3), drvi(3);
-        Array<OneD, NekDouble> d2 = s->D1(uv[i]);
-        for(int j = 0; j < 3; j++)
+        for(int i = 0; i < xinew.num_elements(); i++)
         {
-            ri[j] = d2[j];
-            drui[j] = d2[j+3];
-            drvi[j] = d2[j+6];
+            all[i+1] = xinew[i];
         }
-        r.push_back(ri);
-        dru.push_back(drui);
-        drv.push_back(drvi);
     }
-
-    DNekMat J(2*(uv.num_elements() - 2), 1, 0.0);
-    for(int i = 0; i < uv.num_elements() - 2; i++)
+    else if(o->GetType() == surf)
     {
-        J(2*i+0,0) = 2.0/(z[i+1]-z[i]) * Dot(dru[i+1], Take(r[i+1], r[i])) +
-                     2.0/(z[i+2]-z[i+1]) * Dot(dru[i+1], Take(r[i+1], r[i+2]));
-
-        J(2*i+1,0) = 2.0/(z[i+1]-z[i]) * Dot(drv[i+1], Take(r[i+1], r[i])) +
-                     2.0/(z[i+2]-z[i+1]) * Dot(drv[i+1], Take(r[i+1], r[i+2]));
+        for(int i = 0; i < xinew.num_elements(); i++)
+        {
+            all[i+2] = xinew[i];
+        }
     }
-
-    Jac = J;
 }
 
-/*void SurfaceMesh::EdgeOnFaceUpdate(Array<OneD, Array<OneD, NekDouble> > uv,
-                                                       Array<OneD, NekDouble> x,
-                                                       Array<OneD, NekDouble> gll,
-                                                       CADSurfSharedPtr s,
-                                                       DNekMat &B, DNekMat &J)
-{
-    for(int i = 0; i < x.num_elements(); i++)
-    {
-        J(i,0) *= -1.0; //minimise not maximise
-    }
-    DNekMat P = B*J;
-
-    NekDouble pnorm = 0;
-    for(int i = 0; i < x.num_elements(); i++)
-    {
-        pnorm += P(i,0)*P(i,0);
-    }
-    pnorm = sqrt(pnorm);
-
-    if(pnorm < 1E-6)
-    {
-        B = DNekMat(x.num_elements(), x.num_elements(), 0.0);
-        for(int k = 0; k < x.num_elements(); k++)
-        {
-            B(k,k) = 1.0;
-        }
-        return;
-    }
-
-    cout << endl << endl << P << endl;
-
-    Array<OneD, NekDouble> bnds = s->GetBounds();
-
-    NekDouble F = FaceEdgeF(uv, gll, s);
-    NekDouble f = F*2.0;
-
-    NekDouble alpha = 2.0;
-    int ct = 0;
-    //perform line search to obtain alpha
-    while(f > F)
-    {
-        if(ct > 15)
-            break;
-        ct++;
-
-        alpha*=0.5;
-        Array<OneD, Array<OneD, NekDouble> > tst(uv.num_elements());
-        int i;
-        tst[0] = uv[0];
-        for(i = 0; i < tst.num_elements() -2; i++)
-        {
-            tst[i+1] = Array<OneD, NekDouble>(2);
-            if(uv[i+1][0] + alpha*P(i*2+0,0) < bnds[0])
-            {
-                tst[i+1][0] = bnds[0];
-            }
-            else if(uv[i+1][0] + alpha*P(i*2+0,0) > bnds[1])
-            {
-                tst[i+1][0] = bnds[1];
-            }
-            else
-            {
-                tst[i+1][0] = uv[i+1][0] + alpha*P(i*2+1,0);
-            }
-
-            if(uv[i+1][1] + alpha*P(i*2+1,0) < bnds[2])
-            {
-                tst[i+1][1] = bnds[2];
-            }
-            else if(uv[i+1][1] + alpha*P(i*2+1,0) > bnds[3])
-            {
-                tst[i+1][1] = bnds[3];
-            }
-            else
-            {
-                tst[i+1][1] = uv[i+1][1] + alpha*P(i*2+1,0);
-            }
-        }
-        tst[i+1] = uv[i+1];
-
-        f = FaceEdgeF(tst, gll, s);
-    }
-    cout << alpha << endl;
-
-    //for(int i = 1; i < ti.num_elements() - 1; i++)
-    //{
-    //    ti[i] += alpha*P(i-1,0);
-    //}
-
-    //now need to update the inverse hessian B
-    //update J
-    DNekMat Jn;
-    CurveEdgeJac(ti, gll, c, Jn);
-
-    DNekMat y(x.num_elements(),1);
-    DNekMat s(x.num_elements(),1);
-    DNekMat yt(x.num_elements(),1);
-    DNekMat st(x.num_elements(),1);
-
-    for(int i = 0; i < x.num_elements(); i++)
-    {
-        s(i,0) = alpha*P(i,0);
-        y(i,0) = Jn(i,0) - J(i,0);
-        st(i,0) = alpha*P(i,0);
-        yt(i,0) = Jn(i,0) - J(i,0);
-    }
-
-    st.Transpose();
-    yt.Transpose();
-    //get scalars
-
-    DNekMat s1 = yt * B * y;
-    DNekMat s2 = st * y;
-
-    DNekMat sst = s * st;
-
-    NekDouble mul = (s1(0,0) + s2(0,0))/s2(0,0)/s2(0,0);
-    for(int i = 0; i < sst.GetRows(); i++)
-    {
-        for(int j = 0; j < sst.GetColumns(); j++)
-        {
-            sst(i,j) *= mul;
-        }
-    }
-
-    DNekMat r1 = B * y * st;
-    DNekMat r2 = s * yt * B;
-
-    for(int i = 0; i < r1.GetRows(); i++)
-    {
-        for(int j = 0; j < r1.GetColumns(); j++)
-        {
-            r1(i,j) = (r1(i,j) + r2(i,j)) / s2(0,0);
-        }
-    }
-
-    for(int i = 0; i < r1.GetRows(); i++)
-    {
-        for(int j = 0; j < r1.GetColumns(); j++)
-        {
-            B(i,j) = B(i,j) + sst(i,j) - r1(i,j);
-        }
-    }
-
-    J = Jn;
-
-}*/
-
-void SurfaceMesh::FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,
+/*void SurfaceMesh::FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,
                               map<int, Array<OneD, NekDouble> > z,
                               map<int, vector<int> > n,
                               CADSurfSharedPtr s,
@@ -432,7 +405,7 @@ void SurfaceMesh::FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,
 
     Jac = J;
     Hes = H;
-}
+}*/
 
 }
 }

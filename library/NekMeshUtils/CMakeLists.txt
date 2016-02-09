@@ -51,6 +51,7 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Hexahedron.h
     Optimisation/Guass-Seidel.h
     Optimisation/BGFS-B.h
+    Optimisation/OptimiseObj.h
     )
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
@@ -60,6 +61,7 @@ IF(NEKTAR_USE_MESH)
         Octree/Octree.h
         SurfaceMeshing/SurfaceMesh.h
         SurfaceMeshing/FaceMesh.h
+        SurfaceMeshing/OptimiseFunctions.h
         ExtLibInterface/TriangleInterface.h
         ExtLibInterface/TetGenInterface.h
         TetMeshing/TetMesh.h

@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
-#define NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
+#ifndef NEKTAR_MESHUTILS_SURFACEMESH_OPTIMISEFUNCTIONS_H
+#define NEKTAR_MESHUTILS_SURFACEMESH_OPTIMISEFUNCTIONS_H
 
 #include <LocalRegions/MatrixKey.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
@@ -44,8 +44,45 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-    void BGFSUpdate(OptiObjSharedPtr opti,
-                    DNekMat &J, DNekMat &B, DNekMat &H);
+
+class OptiEdge : public OptiObj
+{
+    public:
+        friend class MemoryManager<OptiEdge>;
+
+        OptiEdge(Array<OneD, NekDouble> a, Array<OneD, NekDouble> dis,
+                 CADObjSharedPtr ob)
+        {
+            all = a;
+            z = dis;
+            o = ob;
+        };
+
+        ~OptiEdge(){};
+
+        NekDouble F(Array<OneD, NekDouble> xitst);
+
+        DNekMat dF(Array<OneD, NekDouble> xitst);
+
+        Array<OneD, NekDouble> Getxi();
+
+        Array<OneD, NekDouble> Getli();
+
+        Array<OneD, NekDouble> Getui();
+
+        void Update(Array<OneD, NekDouble> xinew);
+
+        Array<OneD, NekDouble> GetSolution(){return all;};
+
+    private:
+
+        CADObjSharedPtr o;
+        Array<OneD, NekDouble> z;
+        Array<OneD, NekDouble> all;
+
+};
+typedef boost::shared_ptr<OptiEdge> OptiEdgeSharedPtr;
+
 }
 }
 #endif

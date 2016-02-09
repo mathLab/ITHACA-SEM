@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 #include <NekMeshUtils/Optimisation/BGFS-B.h>
+#include <NekMeshUtils/SurfaceMeshing/OptimiseFunctions.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LocalRegions/MatrixKey.h>
@@ -311,11 +312,15 @@ void SurfaceMesh::HOSurf()
                     ti[k] = tb*(1.0 -  gll[k])/2.0 +
                             te*(1.0 +  gll[k])/2.0;
                 }
-                Array<OneD, NekDouble> x(m_mesh->m_nummode - 2);
-                for(int k = 1; k < m_mesh->m_nummode -1; k++)
+
+                Array<OneD, NekDouble> xi(nq-2);
+                for(int k = 1; k < nq -1; k++)
                 {
-                    x[k-1] = ti[k];
+                    xi[k-1] = ti[k];
                 }
+
+                OptiEdgeSharedPtr opti = MemoryManager<OptiEdge>::
+                                                AllocateSharedPtr(ti, gll, c);
 
                 DNekMat B(nq-2,nq-2,0.0); //approximate hessian (I to start)
                 for(int k = 0; k < nq -2; k++)
@@ -328,7 +333,7 @@ void SurfaceMesh::HOSurf()
                     H(k,k) = 1.0;
                 }
 
-                DNekMat J = EdgeGrad(ti, gll, c);
+                DNekMat J = opti->dF(xi);
 
                 bool repeat = true;
                 int itct = 0;
@@ -342,7 +347,7 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if(Norm < 1E-6)
+                    if(Norm < 1E-8)
                     {
                         repeat = false;
                         break;
@@ -363,10 +368,12 @@ void SurfaceMesh::HOSurf()
                     cout << "new iter curve" << endl;
                     cout << endl << "Norm " << Norm << endl;
 
-                    BGFSUpdate(EdgeF, EdgeGrad, ti, gll, c, J, B, H); //ti will be updated
+                    BGFSUpdate(opti, J, B, H);
 
                 }
                 //if(hit) exit(-1);
+                //need to pull the solution out of opti
+                ti = opti->GetSolution();
 
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
 
@@ -414,6 +421,16 @@ void SurfaceMesh::HOSurf()
                     all[k*2+1] = uvi[k][1];
                 }
 
+                Array<OneD, NekDouble> xi(2*(nq-2));
+                for(int k = 1; k < nq -1; k++)
+                {
+                    xi[(k-1)*2+0] = all[k*2+0];
+                    xi[(k-1)*2+1] = all[k*2+1];
+                }
+
+                OptiEdgeSharedPtr opti = MemoryManager<OptiEdge>::
+                                                AllocateSharedPtr(all, gll, s);
+
                 DNekMat B(2*(nq-2),2*(nq-2),0.0); //approximate hessian (I to start)
                 for(int k = 0; k < 2*(nq -2); k++)
                 {
@@ -425,7 +442,7 @@ void SurfaceMesh::HOSurf()
                     H(k,k) = 1.0;
                 }
 
-                DNekMat J = EdgeGrad(all, gll, s);
+                DNekMat J = opti->dF(xi);
 
                 bool repeat = true;
                 int itct = 0;
@@ -439,7 +456,7 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if(Norm < 1E-6)
+                    if(Norm < 1E-8)
                     {
                         repeat = false;
                         break;
@@ -462,8 +479,10 @@ void SurfaceMesh::HOSurf()
                     cout << "new iter edge" << endl;
                     cout << endl << "Norm " << Norm << endl;
 
-                    BGFSUpdate(EdgeF, EdgeGrad, all, gll, s, J, B, H); //all will be updated
+                    BGFSUpdate(opti, J, B, H); //all will be updated
                 }
+
+                all = opti->GetSolution();
 
                 //need to put all backinto uv
                 for(int k = 0; k < nq; k++)

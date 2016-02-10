@@ -26,6 +26,7 @@ v4.3.0
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)
+- Add module to extract one of the planes of 3DH1D (!542)
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)

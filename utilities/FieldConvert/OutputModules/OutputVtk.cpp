@@ -92,10 +92,12 @@ void OutputVtk::Process(po::variables_map &vm)
     // Write solution.
     ofstream outfile(filename.c_str());
     m_f->m_exp[0]->WriteVtkHeader(outfile);
-    int nfields; 
-   if(fPts == LibUtilities::NullPtsField) // standard output in collapsed coordinates 
+    int nfields = 0;
+    int dim = 0; 
+
+    if(fPts == LibUtilities::NullPtsField) // standard output in collapsed coordinates 
    {
-       
+       dim =  m_f->m_exp[0]->GetExp(0)->GetCoordim();
        int nstrips;
        if (m_f->m_fielddef.size() == 0)
        {
@@ -129,7 +131,8 @@ void OutputVtk::Process(po::variables_map &vm)
    {
         int i   = 0;
         int j   = 0;
-        int dim = fPts->GetDim();
+
+        dim = fPts->GetDim();
 
         if(fPts->GetNpoints() == 0)
         {
@@ -263,13 +266,13 @@ void OutputVtk::Process(po::variables_map &vm)
    cout << "Written file: " << filename << endl;
    
 
-    // output parallel outline info if necessary
-    if(m_f->m_comm->GetRank() == 0)
-    {
-        int nprocs = m_f->m_comm->GetSize();
-        if(nprocs != 1)
-        {
-            filename = m_config["outfile"].as<string>();
+   // output parallel outline info if necessary
+   if(m_f->m_comm->GetRank() == 0)
+   {
+       int nprocs = m_f->m_comm->GetSize();
+       if(nprocs != 1)
+       {
+           filename = m_config["outfile"].as<string>();
             int    dot = filename.find_last_of('.');
             string body = filename.substr(0,dot);
             filename = body + ".pvtu";
@@ -282,7 +285,7 @@ void OutputVtk::Process(po::variables_map &vm)
             outfile << "<PUnstructuredGrid GhostLevel=\"0\">" << endl;
             outfile << "<PPoints> " << endl;
             outfile << "<PDataArray type=\"Float64\" NumberOfComponents=\""
-                    <<  m_f->m_exp[0]->GetExp(0)->GetCoordim() << "\"/> " << endl; 
+                    << dim << "\"/> " << endl; 
             outfile << "</PPoints>" << endl;
             outfile << "<PCells>" << endl;
             outfile << "<PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << endl; 

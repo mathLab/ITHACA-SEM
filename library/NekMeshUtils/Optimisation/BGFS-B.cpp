@@ -135,8 +135,6 @@ namespace NekMeshUtils
 
         DNekMat rg = Z * (J + B * dx);
 
-        cout << endl <<rg << endl << endl;
-
         DNekMat du = -1.0 * H * rg;
 
         NekDouble alpha = 1.0;
@@ -177,20 +175,12 @@ namespace NekMeshUtils
             c += 1E-4 * J(i,0) * dk[i];
         }
 
-        cout << H << endl << endl;
-        for(int i = 0; i < dk.num_elements(); i++)
-        {
-            cout << dk[i] << endl;
-        }
-        cout << endl;
-
         //this section needs a case evaluation for edges on faces
         NekDouble lam = 2.0;
         int iterct = 0;
         NekDouble fo = opti->F(xi);
         NekDouble fn;
         Array<OneD, NekDouble> tst(xi.num_elements());
-        cout << "begining line search: " << fo << endl;
         do
         {
             if(iterct > 20)
@@ -208,11 +198,8 @@ namespace NekMeshUtils
             }
 
             fn = opti->F(tst);
-            cout << fn << endl;
 
         }while(fn > fo + c);
-
-        cout << "lam " << lam << endl;
 
         //tst at this point is the new all vector
         //now need to update hessians

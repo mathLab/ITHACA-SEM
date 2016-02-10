@@ -49,7 +49,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-map<int, vector<int> > nodeToSixAround(int nq)
+set<pair<int, int> > ListOfFaceSpings(int nq)
 {
     map<pair<int,int>, int> nodeorder;
     map<int, pair<int, int> > nodeorderRev;
@@ -111,7 +111,7 @@ map<int, vector<int> > nodeToSixAround(int nq)
         }
     }
 
-    map<int, vector<int> > ret;
+    map<int, vector<int> > nodetosix;
 
     for(int i = (nq+1)*nq/2 - (nq-3)*(nq-2)/2; i < (nq+1)*nq/2; i++)
     {
@@ -156,15 +156,28 @@ map<int, vector<int> > nodeToSixAround(int nq)
 
         ids.push_back(pr);
 
-        ret[i] = ids;
+        nodetosix[i] = ids;
+    }
+
+    set<pair<int, int> > ret;
+    map<int,vector<int> >::iterator it;
+    for(it = nodetosix.begin(); it != nodetosix.end(); it++)
+    {
+        vector<int> ns = it->second;
+        for(int i = 0; i < ns.size(); i++)
+        {
+            pair<int, int> sp(min(it->first,ns[i]), max(it->first,ns[i]));
+            ret.insert(sp);
+        }
     }
 
     return ret;
 }
 
-map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<OneD, NekDouble> u, Array<OneD, NekDouble> v)
+map<pair<int, int>, NekDouble> weights(set<pair<int,int> > springs,
+                             Array<OneD, NekDouble> u, Array<OneD, NekDouble> v)
 {
-    map<int, Array<OneD, NekDouble> > ret;
+    map<pair<int, int>, NekDouble > ret;
 
     //setup map from right angled reference triangle to equilateral reference triangle
     DNekMat A(3,3,1.0);
@@ -190,24 +203,29 @@ map<int, Array<OneD, NekDouble> > weights(map<int, vector<int> > near, Array<One
 
     DNekMat pts = M*C;
 
-    map<int, vector<int> >::iterator it;
-    for(it = near.begin(); it != near.end(); it++)
+    /*for(int i = 0; i < u.num_elements(); i++)
     {
-        Array<OneD, NekDouble> s(6);
-
-        NekDouble zu = pts(0,it->first);
-        NekDouble zv = pts(1,it->first);
-
-        s[0] = sqrt((zu-pts(0,it->second[0]))*(zu-pts(0,it->second[0]))+(zv-pts(1,it->second[0]))*(zv-pts(1,it->second[0])));
-        s[1] = sqrt((zu-pts(0,it->second[1]))*(zu-pts(0,it->second[1]))+(zv-pts(1,it->second[1]))*(zv-pts(1,it->second[1])));
-        s[2] = sqrt((zu-pts(0,it->second[2]))*(zu-pts(0,it->second[2]))+(zv-pts(1,it->second[2]))*(zv-pts(1,it->second[2])));
-        s[3] = sqrt((zu-pts(0,it->second[3]))*(zu-pts(0,it->second[3]))+(zv-pts(1,it->second[3]))*(zv-pts(1,it->second[3])));
-        s[4] = sqrt((zu-pts(0,it->second[4]))*(zu-pts(0,it->second[4]))+(zv-pts(1,it->second[4]))*(zv-pts(1,it->second[4])));
-        s[5] = sqrt((zu-pts(0,it->second[5]))*(zu-pts(0,it->second[5]))+(zv-pts(1,it->second[5]))*(zv-pts(1,it->second[5])));
-
-        ret[it->first] = s;
+        cout << pts(0,i) << " " << pts(1,i) << endl;
     }
+    exit(-1);*/
 
+    set<pair<int, int> >::iterator it;
+    for(it = springs.begin(); it != springs.end(); it++)
+    {
+        ret[(*it)] = sqrt((pts(0,(*it).first)-pts(0,(*it).second))*
+                          (pts(0,(*it).first)-pts(0,(*it).second)) +
+                          (pts(1,(*it).first)-pts(1,(*it).second))*
+                          (pts(1,(*it).first)-pts(1,(*it).second)));
+
+        if((*it).first == 12 && (*it).second == 13)
+            ret[(*it)]*=1.2;
+
+        if((*it).first == 12 && (*it).second == 14)
+            ret[(*it)]*=1.2;
+
+        if((*it).first == 13 && (*it).second == 14)
+            ret[(*it)]*=1.2;
+    }
     return ret;
 }
 
@@ -235,8 +253,8 @@ void SurfaceMesh::HOSurf()
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
 
-    map<int, vector<int> > near = nodeToSixAround(m_mesh->m_nummode);
-    map<int, Array<OneD, NekDouble> > z = weights(near, u, v);
+    set<pair<int,int> > springs = ListOfFaceSpings(nq);
+    map<pair<int, int>, NekDouble > z = weights(springs, u, v);
 
     //because edges are listed twice need a method to not repeat over them
     EdgeSet completedEdges;
@@ -337,7 +355,6 @@ void SurfaceMesh::HOSurf()
 
                 bool repeat = true;
                 int itct = 0;
-                bool hit = false;
                 while(repeat)
                 {
                     NekDouble Norm = 0;
@@ -364,14 +381,10 @@ void SurfaceMesh::HOSurf()
                         break;
                     }
                     itct++;
-                    hit= true;
-                    cout << "new iter curve" << endl;
-                    cout << endl << "Norm " << Norm << endl;
 
                     BGFSUpdate(opti, J, B, H);
 
                 }
-                //if(hit) exit(-1);
                 //need to pull the solution out of opti
                 ti = opti->GetSolution();
 
@@ -475,9 +488,6 @@ void SurfaceMesh::HOSurf()
                         break;
                     }
                     itct++;
-                    hit= true;
-                    cout << "new iter edge" << endl;
-                    cout << endl << "Norm " << Norm << endl;
 
                     BGFSUpdate(opti, J, B, H); //all will be updated
                 }
@@ -509,7 +519,7 @@ void SurfaceMesh::HOSurf()
 
         ASSERTL0(nq <= 5,"not setup for high-orders yet");
 
-        vector<NodeSharedPtr> vertices = f->m_vertexList;
+        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::Geometry2DSharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -562,95 +572,58 @@ void SurfaceMesh::HOSurf()
             uvi[ctr++] = uv;
         }
 
-        DNekMat H, J;
+        OptiFaceSharedPtr opti = MemoryManager<OptiFace>::
+                                    AllocateSharedPtr(uvi, z, springs, s);
 
-        Array<OneD, NekDouble> bnds = s->GetBounds();
+        DNekMat B(2*ni,2*ni,0.0); //approximate hessian (I to start)
+        for(int k = 0; k < 2*ni; k++)
+        {
+            B(k,k) = 1.0;
+        }
+        DNekMat H(2*ni,2*ni,0.0); //approximate inverse hessian (I to start)
+        for(int k = 0; k < 2*ni; k++)
+        {
+            H(k,k) = 1.0;
+        }
+
+        Array<OneD,NekDouble> xi(ni*2);
+        for(int k = np - ni; k < np; k++)
+        {
+            xi[(k-np+ni)*2+0] = uvi[k][0];
+            xi[(k-np+ni)*2+1] = uvi[k][1];
+        }
+
+        DNekMat J = opti->dF(xi);
 
         bool repeat = true;
-        NekDouble alpha = 1.0;
         int itct = 0;
-        /*while(repeat)
+        while(repeat)
         {
-            if(itct > 10000)
+            NekDouble Norm = 0;
+            for(int k = 0; k < nq - 2; k++)
             {
-                cout << "failed to converge on face" << endl;
+                Norm += J(k,0)*J(k,0);
+            }
+            Norm = sqrt(Norm);
+
+            if(Norm < 1E-8)
+            {
+                repeat = false;
+                break;
+            }
+            if(itct > 100)
+            {
+                cout << "failed to optimise on face " << s->GetId() << endl;
+                exit(-1);
                 break;
             }
             itct++;
+            cout << "Norm " << Norm << endl;
 
-            int converged = 0;
-
-            for(int j = np - ni; j < np; j++)
-            {
-                FaceFaceJac(j, uvi, z, near, s, J, H);
-
-                NekDouble Norm = 0;
-                for(int k = 0; k < 2.0; k++)
-                {
-                    Norm += J(k,0)*J(k,0);
-                }
-                Norm = sqrt(Norm);
-
-                if(Norm < 1E-8)
-                {
-                    converged++;
-                }
-
-                bool repeatNode = true;
-                bool fail = false;
-                int noitct = 0;
-                while(repeatNode)
-                {
-                    if(noitct > 100)
-                    {
-                        break;
-                    }
-                    noitct++;
-
-                    Array<OneD, NekDouble> dx = gsOptimise(alpha, uvi[j], H, J);
-
-                    if(uvi[j][0] + dx[0] < bnds[0] ||
-                       uvi[j][0] + dx[0] > bnds[1] ||
-                       uvi[j][1] + dx[1] < bnds[2] ||
-                       uvi[j][1] + dx[1] > bnds[3])
-                    {
-                        fail = true;
-                        Array<OneD, NekDouble> ua(2,0.0);
-                        for(int l = 0; l < 6; l++)
-                        {
-                            ua[0] += uvi[near[j][l]][0] / 6.0;
-                            ua[1] += uvi[near[j][l]][1] / 6.0;
-                        }
-                        uvi[j][0] = ua[0];
-                        uvi[j][1] = ua[1];
-                    }
-                    else
-                    {
-                        uvi[j][0] += dx[0];
-                        uvi[j][1] += dx[1];
-                    }
-
-                    FaceFaceJac(j, uvi, z, near, s, J, H);
-
-                    Norm = 0;
-                    for(int k = 0; k < 2.0; k++)
-                    {
-                        Norm += J(k,0)*J(k,0);
-                    }
-                    Norm = sqrt(Norm);
-
-                    if(Norm < 1E-8)
-                    {
-                        repeatNode = false;
-                    }
-                }
-            }
-
-            if(converged == ni)
-            {
-                repeat = false;
-            }
+            BGFSUpdate(opti, J, B, H); //all will be updated
         }
+
+        uvi = opti->GetSolution();
 
         vector<NodeSharedPtr> honodes;
         for(int j = np - ni; j < np; j++)

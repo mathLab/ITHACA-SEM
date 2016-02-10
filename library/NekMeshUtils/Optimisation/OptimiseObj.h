@@ -51,19 +51,41 @@ class OptiObj
 
         virtual ~OptiObj(){};
 
-        virtual NekDouble F(Array<OneD, NekDouble> xitst){};
+        virtual NekDouble F(Array<OneD, NekDouble> xitst)
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return 0.0;
+        };
 
-        virtual DNekMat dF(Array<OneD, NekDouble> xitst){};
+        virtual DNekMat dF(Array<OneD, NekDouble> xitst)
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return DNekMat(1,1,0.0);
+        };
 
-        virtual Array<OneD, NekDouble> Getxi(){};
+        virtual Array<OneD, NekDouble> Getxi()
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return Array<OneD,NekDouble>();
+        };
 
-        virtual Array<OneD, NekDouble> Getli(){};
+        virtual Array<OneD, NekDouble> Getli()
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return Array<OneD,NekDouble>();
+        };
 
-        virtual Array<OneD, NekDouble> Getui(){};
+        virtual Array<OneD, NekDouble> Getui()
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return Array<OneD,NekDouble>();
+        };
 
-        virtual void Update(Array<OneD, NekDouble> xinew){};
+        virtual void Update(Array<OneD, NekDouble> xinew)
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+        };
 
-        virtual Array<OneD, NekDouble> GetSolution(){};
 };
 typedef boost::shared_ptr<OptiObj> OptiObjSharedPtr;
 

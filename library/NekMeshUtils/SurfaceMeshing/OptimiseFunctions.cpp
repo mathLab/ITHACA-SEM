@@ -349,63 +349,147 @@ void OptiEdge::Update(Array<OneD, NekDouble> xinew)
     }
 }
 
-/*void SurfaceMesh::FaceFaceJac(int p, Array<OneD, Array<OneD, NekDouble> > uv,
-                              map<int, Array<OneD, NekDouble> > z,
-                              map<int, vector<int> > n,
-                              CADSurfSharedPtr s,
-                              DNekMat &Jac, DNekMat &Hes)
+Array<OneD, NekDouble> OptiFace::Getxi()
 {
-    DNekMat J(2,1,0.0);
-    DNekMat H(2,2,0.0);
-
-    vector<Array<OneD, NekDouble> > r;
-    Array<OneD, NekDouble> d2;
-
-    for(int i = 0; i < uv.num_elements(); i++)
+    Array<OneD,NekDouble> ret(ni*2);
+    for(int i = np - ni; i < np; i++)
     {
-        Array<OneD, NekDouble> d2 = s->P(uv[i]);
-        r.push_back(d2);
+        ret[2*(i-np+ni)+0] = uv[i][0];
+        ret[2*(i-np+ni)+1] = uv[i][1];
     }
-    d2 = s->D2(uv[p]);
+    return ret;
+}
 
-    Array<OneD, NekDouble> du(3), dv(3), d2u(3), d2v(3), d2uv(3);
-    for(int i = 0; i < 3; i++)
+Array<OneD, NekDouble> OptiFace::Getli()
+{
+    Array<OneD, NekDouble> li(ni*2);
+    Array<OneD, NekDouble> bnds = s->GetBounds();
+    for(int i = np - ni; i < np; i++)
     {
-        du[i] = d2[i+3];
-        dv[i] = d2[i+6];
-        d2u[i] = d2[i+9];
-        d2v[i] = d2[i+12];
-        d2uv[i] = d2[i+15];
+        li[2*(i-np+ni)+0] = bnds[0];
+        li[2*(i-np+ni)+1] = bnds[2];
     }
+    return li;
+}
 
-    Array<OneD, NekDouble> zero(3,0.0);
-
-    for(int k = 0; k < 6; k++) //over number of directions of springs
+Array<OneD, NekDouble> OptiFace::Getui()
+{
+    Array<OneD, NekDouble> ui(ni*2);
+    Array<OneD, NekDouble> bnds = s->GetBounds();
+    for(int i = np - ni; i < np; i++)
     {
-
-        J(0,0) += 2.0/ z[p][k] * Dot(Take(zero, du), Take(r[n[p][k]], r[p]));
-        J(1,0) += 2.0/ z[p][k] * Dot(Take(zero, dv), Take(r[n[p][k]], r[p]));
+        ui[2*(i-np+ni)+0] = bnds[1];
+        ui[2*(i-np+ni)+1] = bnds[3];
     }
+    return ui;
+}
 
-
-    for(int k = 0; k < 6; k++)
+NekDouble OptiFace::F(Array<OneD, NekDouble> xitst)
+{
+    Array<OneD, Array<OneD, NekDouble> > val = uv;
+    for(int i = np - ni; i < np; i++)
     {
-        H(0,0) += 2.0 / z[p][k] * (Dot(Take(zero,du), Take(zero,du)) +
-                                   Dot(Take(r[n[p][k]], r[p]), Take(zero, d2u)));
-
-        H(1,1) += 2.0 / z[p][k] * (Dot(Take(zero,dv), Take(zero,dv)) +
-                                   Dot(Take(r[n[p][k]], r[p]), Take(zero, d2v)));
-
-        H(1,0) += 2.0 / z[p][k] * (Dot(Take(zero,dv), Take(zero,du)) +
-                                   Dot(Take(r[n[p][k]], r[p]), Take(zero, d2uv)));
-
-        H(0,1) += H(1,0);
+        val[i][0] = xitst[(i-np+ni)*2+0];
+        val[i][1] = xitst[(i-np+ni)*2+1];
     }
 
+    NekDouble ret = 0.0;
+    set<pair<int, int> >::iterator it;
+    for(it = spring.begin(); it != spring.end(); it++)
+    {
+        Array<OneD, NekDouble> dis = Take(s->P(uv[(*it).first]), s->P(uv[(*it).second]));
+        NekDouble norm = dis[0]*dis[0] + dis[1]*dis[1] + dis[2]*dis[2];
+        ret += norm / z[(*it)];
+    }
 
-    Jac = J;
-    Hes = H;
-}*/
+    return ret;
+}
+
+DNekMat OptiFace::dF(Array<OneD, NekDouble> xitst)
+{
+    Array<OneD, Array<OneD, NekDouble> > val = uv;
+    for(int i = np - ni; i < np; i++)
+    {
+        val[i][0] = xitst[(i-np+ni)*2+0];
+        val[i][1] = xitst[(i-np+ni)*2+1];
+    }
+
+    DNekMat ret(ni*2,1,0.0);
+
+    vector<Array<OneD, NekDouble> > r, dru, drv;
+
+    for(int i = 0; i < val.num_elements(); i++)
+    {
+        Array<OneD, NekDouble> ri(3), du(3), dv(3);
+        Array<OneD, NekDouble> d1 = s->D1(val[i]);
+        for(int i = 0; i < 3; i++)
+        {
+            ri[i] = d1[i];
+            du[i] = d1[i+3];
+            dv[i] = d1[i+6];
+        }
+        r.push_back(ri);
+        dru.push_back(du);
+        drv.push_back(dv);
+    }
+
+    for(int i = 0; i < ni*2; i++) //for each of the varibles
+    {
+        int var = floor(i/2) + np - ni;
+        int tp  = i % 2; //0 is a u 1 is a v
+
+        set<pair<int, int> >::iterator it;
+        for(it = spring.begin(); it != spring.end(); it++) //for each of the springs
+        {
+            Array<OneD, NekDouble> dr1, dr2;
+
+            if((*it).first == var)
+            {
+                if(tp == 0)
+                {
+                    dr1 = dru[(*it).first];
+                }
+                else
+                {
+                    dr1 = drv[(*it).first];
+                }
+            }
+            else
+            {
+                dr1 = Array<OneD, NekDouble>(3,0.0);
+            }
+
+            if((*it).second == var)
+            {
+                if(tp == 0)
+                {
+                    dr2 = dru[(*it).second];
+                }
+                else
+                {
+                    dr2 = drv[(*it).second];
+                }
+            }
+            else
+            {
+                dr2 = Array<OneD, NekDouble>(3,0.0);
+            }
+
+            ret(i,0) += 2.0 / z[(*it)] * Dot(Take(r[(*it).first],r[(*it).second]),
+                                             Take(dr1,dr2));
+        }
+    }
+    return ret;
+}
+
+void OptiFace::Update(Array<OneD, NekDouble> xinew)
+{
+    for(int i = np - ni; i < np; i++)
+    {
+        uv[i][0] = xinew[2*(i-np+ni)+0];
+        uv[i][1] = xinew[2*(i-np+ni)+1];
+    }
+}
 
 }
 }

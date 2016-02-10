@@ -68,88 +68,17 @@
     </CONDITIONS>
 
     <GEOMETRY DIM="2" SPACE="2">
-
-        <VERTEX>
-            <V ID="0">-5.000e-01 -5.000e-01 0.000e+00</V>
-            <V ID="1">-5.000e-01 1.500e+00 0.000e+00</V>
-            <V ID="2">1.000e+00 1.500e+00 0.000e+00</V>
-            <V ID="3">1.000e+00 -5.000e-01 0.000e+00</V>
-            <V ID="4">-5.000e-01 1.000e+00 0.000e+00</V>
-            <V ID="5">-5.000e-01 5.000e-01 0.000e+00</V>
-            <V ID="6">-5.000e-01 1.388e-12 0.000e+00</V>
-            <V ID="7">-1.619e-12 -5.000e-01 0.000e+00</V>
-            <V ID="8">5.000e-01 -5.000e-01 0.000e+00</V>
-            <V ID="9">1.000e+00 -1.388e-12 0.000e+00</V>
-            <V ID="10">1.000e+00 5.000e-01 0.000e+00</V>
-            <V ID="11">1.000e+00 1.000e+00 0.000e+00</V>
-            <V ID="12">5.000e-01 1.500e+00 0.000e+00</V>
-            <V ID="13">1.619e-12 1.500e+00 0.000e+00</V>
-            <V ID="14">5.000e-01 1.000e+00 0.000e+00</V>
-            <V ID="15">5.000e-01 5.000e-01 0.000e+00</V>
-            <V ID="16">5.000e-01 -4.626e-13 0.000e+00</V>
-            <V ID="17">8.097e-13 1.000e+00 0.000e+00</V>
-            <V ID="18">5.551e-17 5.000e-01 0.000e+00</V>
-            <V ID="19">-8.095e-13 4.626e-13 0.000e+00</V>
-        </VERTEX>
-
-        <EDGE>
-            <E ID="0">    2  12   </E>
-            <E ID="1">   12  14   </E>
-            <E ID="2">   14  11   </E>
-            <E ID="3">   11  2   </E>
-            <E ID="4">   14  15   </E>
-            <E ID="5">   15  10   </E>
-            <E ID="6">   10  11   </E>
-            <E ID="7">   15  16   </E>
-            <E ID="8">   16  9   </E>
-            <E ID="9">    9  10   </E>
-            <E ID="10">   16  8   </E>
-            <E ID="11">    8  3   </E>
-            <E ID="12">    3  9   </E>
-            <E ID="13">   12  13   </E>
-            <E ID="14">   13  17   </E>
-            <E ID="15">   17  14   </E>
-            <E ID="16">   17  18   </E>
-            <E ID="17">   18  15   </E>
-            <E ID="18">   18  19   </E>
-            <E ID="19">   19  16   </E>
-            <E ID="20">   19  7   </E>
-            <E ID="21">    7  8   </E>
-            <E ID="22">   13  1   </E>
-            <E ID="23">    1  4   </E>
-            <E ID="24">    4  17   </E>
-            <E ID="25">    4  5   </E>
-            <E ID="26">    5  18   </E>
-            <E ID="27">    5  6   </E>
-            <E ID="28">    6  19   </E>
-            <E ID="29">    6  0   </E>
-            <E ID="30">    0  7   </E>
-        </EDGE>
-
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGD/aj0gwMjFjlf9jDRJhQ5D/Yo8szY5VHmM+C1fwPcP2s2N0Hl2dDk18/MZnnf1aFLUyEHUpHO9a8Cq6u2YtuPweqfgz3caK5H2r+XpgIF5o8uvu4scoj/MeD1X5E+PGiut8WXZ4Pq36E+fxY5RHuE0CTdze//3OXWwLcf4JQ+vG+paKKtTm26OYLQemmsp+NV/7326CbL4zi/py9UPPh8QMANMBNrQAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kskSgjAQBUFckDUIigv6/5/pgelLVyWXV/3yMjWTpCj2dQjtQkvxoBzchlZickflx9CTuAk9i6l3UT6F1uJrRhupz7di5unE1Ou1Dw/iSX1PyiX5twyPYnTOKHUX+dzjXczcD/XPP1jFvOtTTN8v+bz3W8wcH/n8g03MHF/5rJ+Y+f7dGwRp</EDGE>
         <ELEMENT>
-            <Q ID="0">    0     1     2     3 </Q>
-            <Q ID="1">    2     4     5     6 </Q>
-            <Q ID="2">    5     7     8     9 </Q>
-            <Q ID="3">    8    10    11    12 </Q>
-            <Q ID="4">   13    14    15     1 </Q>
-            <Q ID="5">   15    16    17     4 </Q>
-            <Q ID="6">   17    18    19     7 </Q>
-            <Q ID="7">   19    20    21    10 </Q>
-            <Q ID="8">   22    23    24    14 </Q>
-            <Q ID="9">   24    25    26    16 </Q>
-            <Q ID="10">   26    27    28    18 </Q>
-            <Q ID="11">   28    29    30    20 </Q>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zskOgyAABmFsRaq0bl3t4vs/ppfh4CTl8iVDAn8I+1PhAY9/eo0RG92XnvCErd4tvcOMZ/1zwR4H7YrqI056p1Gf8aq9Sf2Gd+0t+x/4xJf2tuoLvrW3U//gV3uz+g9X7d0A9rcC/gAA</Q>
         </ELEMENT>
-
         <COMPOSITE>
-            <C ID="0"> Q[0-11]             </C>     <!-- Domain -->
-            <C ID="1"> E[23,25,27,29]      </C>     <!-- Inflow -->
-            <C ID="2"> E[3,6,9,12]         </C>     <!-- Outflow -->
-            <C ID="3"> E[0,11,13,21,22,30] </C>     <!-- Walls -->
+            <C ID="0"> Q[0-11] </C>
+            <C ID="1"> E[23,25,27,29] </C>
+            <C ID="2"> E[3,6,9,12] </C>
+            <C ID="3"> E[0,11,13,21-22,30] </C>
         </COMPOSITE>
-
         <DOMAIN> C[0] </DOMAIN>
-
     </GEOMETRY>
-
 </NEKTAR>

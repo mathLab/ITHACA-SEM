@@ -96,8 +96,8 @@ namespace Nektar
          *
          */
         MeshGraph::MeshGraph(
-                             const LibUtilities::SessionReaderSharedPtr &pSession,
-                             const DomainRangeShPtr &rng) :
+                       const LibUtilities::SessionReaderSharedPtr &pSession,
+                       const DomainRangeShPtr &rng):
             m_session(pSession),
             m_domainRange(rng)
         {
@@ -390,73 +390,126 @@ namespace Nektar
                 zmove = expEvaluator.Evaluate(expr_id);
             }
 
-            TiXmlElement *vertex = element->FirstChildElement("V");
-
-            int indx;
-            int nextVertexNumber = -1;
-
-            while (vertex)
+            const char *IsCompressed = element->Attribute("COMPRESSED");
+            if(IsCompressed)
             {
-                nextVertexNumber++;
-
-                TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
-                std::string attrName(vertexAttr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
-
-                err = vertexAttr->QueryIntValue(&indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-
-                // Now read body of vertex
-                std::string vertexBodyStr;
-
-                TiXmlNode *vertexBody = vertex->FirstChild();
-
-                while (vertexBody)
+                if(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()))
                 {
-                    // Accumulate all non-comment body data.
-                    if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
+                    // Extract the vertex body
+                    TiXmlNode* vertexChild = element->FirstChild();
+                    ASSERTL0(vertexChild,
+                             "Unable to extract the data from the compressed "
+                             "vertex tag.");
+
+                    std::string vertexStr;
+                    if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
-                        vertexBodyStr += vertexBody->ToText()->Value();
-                        vertexBodyStr += " ";
+                        vertexStr += vertexChild->ToText()->ValueStr();
                     }
 
-                    vertexBody = vertexBody->NextSibling();
-                }
+                    std::vector<LibUtilities::MeshVertex> vertData;
+                    LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        vertexStr,vertData);
 
-                ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
-
-                // Get vertex data from the data string.
-                NekDouble xval, yval, zval;
-                std::istringstream vertexDataStrm(vertexBodyStr.c_str());
-
-                try
-                {
-                    while(!vertexDataStrm.fail())
+                    int indx;
+                    NekDouble xval, yval, zval;
+                    for(int i = 0; i < vertData.size(); ++i)
                     {
-                        vertexDataStrm >> xval >> yval >> zval;
+                        indx = vertData[i].id;
+                        xval = vertData[i].x;
+                        yval = vertData[i].y;
+                        zval = vertData[i].z;
 
                         xval = xval*xscale + xmove;
                         yval = yval*yscale + ymove;
                         zval = zval*zscale + zmove;
 
-                        // Need to check it here because we may not be
-                        // good after the read indicating that there
-                        // was nothing to read.
-                        if (!vertexDataStrm.fail())
-                        {
-                            PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
-                            vert->SetGlobalID(indx);
-                            m_vertSet[indx] = vert;
-                        }
+                        PointGeomSharedPtr vert(
+                            MemoryManager<PointGeom>::AllocateSharedPtr(
+                                m_spaceDimension, indx, xval, yval, zval));
+
+                        vert->SetGlobalID(indx);
+                        m_vertSet[indx] = vert;
                     }
                 }
-                catch(...)
+                else
                 {
-                    ASSERTL0(false, "Unable to read VERTEX data.");
+                    ASSERTL0(false,"Compressed formats do not match. Expected :"
+                             + LibUtilities::CompressData::GetCompressString()
+                             + " but got " + std::string(IsCompressed));
                 }
+            }
+            else
+            {
+                TiXmlElement *vertex = element->FirstChildElement("V");
+                
+                int indx;
+                int nextVertexNumber = -1;
+                
+                while (vertex)
+                {
+                    nextVertexNumber++;
+                    
+                    TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
+                    std::string attrName(vertexAttr->Name());
+                    
+                    ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+                    
+                    err = vertexAttr->QueryIntValue(&indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
 
-                vertex = vertex->NextSiblingElement("V");
+                    // Now read body of vertex
+                    std::string vertexBodyStr;
+                    
+                    TiXmlNode *vertexBody = vertex->FirstChild();
+                    
+                    while (vertexBody)
+                    {
+                        // Accumulate all non-comment body data.
+                        if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            vertexBodyStr += vertexBody->ToText()->Value();
+                            vertexBodyStr += " ";
+                        }
+                        
+                        vertexBody = vertexBody->NextSibling();
+                    }
+                    
+                    ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
+                    
+                    // Get vertex data from the data string.
+                    NekDouble xval, yval, zval;
+                    std::istringstream vertexDataStrm(vertexBodyStr.c_str());
+                    
+                    try
+                    {
+                        while(!vertexDataStrm.fail())
+                        {
+                            vertexDataStrm >> xval >> yval >> zval;
+                            
+                            xval = xval*xscale + xmove;
+                            yval = yval*yscale + ymove;
+                            zval = zval*zscale + zmove;
+                            
+                            // Need to check it here because we may not be
+                            // good after the read indicating that there
+                            // was nothing to read.
+                            if (!vertexDataStrm.fail())
+                            {
+                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+                                vert->SetGlobalID(indx);
+                                m_vertSet[indx] = vert;
+                            }
+                        }
+                    }
+                    catch(...)
+                    {
+                        ASSERTL0(false, "Unable to read VERTEX data.");
+                    }
+                    
+                    vertex = vertex->NextSiblingElement("V");
+                }
             }
         }
 
@@ -1203,206 +1256,367 @@ namespace Nektar
                 return;
             }
 
-            /// All curves are of the form: "<? ID="#" TYPE="GLL OR other
-            /// points type" NUMPOINTS="#"> ... </?>", with ? being an
-            /// element type (either E or F).
+            const char *IsCompressed = field->Attribute("COMPRESSED");
 
-            TiXmlElement *edgelement = field->FirstChildElement("E");
-
-            int edgeindx, edgeid;
-            int nextEdgeNumber = -1;
-
-            while(edgelement)
+            if(IsCompressed)
             {
-                /// These should be ordered.
-                nextEdgeNumber++;
+                ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()),
+                         "Compressed formats do not match. Expected :"
+                         + LibUtilities::CompressData::GetCompressString()
+                         + " but got "
+                         + boost::lexical_cast<std::string>(IsCompressed));
 
-                std::string edge(edgelement->ValueStr());
-                ASSERTL0(edge == "E", (std::string("Unknown 3D curve type:") + edge).c_str());
+                std::vector<LibUtilities::MeshCurvedInfo> edginfo;
+                std::vector<LibUtilities::MeshCurvedInfo> facinfo;
+                LibUtilities::MeshCurvedPts cpts;
 
-                /// Read id attribute.
-                err = edgelement->QueryIntAttribute("ID", &edgeindx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-
-                /// Read edge id attribute.
-                err = edgelement->QueryIntAttribute("EDGEID", &edgeid);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute EDGEID.");
-
-                /// Read text edgelement description.
-                std::string elementStr;
-                TiXmlNode* elementChild = edgelement->FirstChild();
-
-                while(elementChild)
+                // read edge, face info and curved poitns.
+                TiXmlElement *x = field->FirstChildElement();
+                while(x)
                 {
-                    // Accumulate all non-comment element data
-                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                    const char *entitytype = x->Value();
+                    // read in edge or face info
+                    if(boost::iequals(entitytype,"E"))
                     {
-                        elementStr += elementChild->ToText()->ValueStr();
-                        elementStr += " ";
+                        // read in data
+                        std::string elmtStr;
+                        TiXmlNode* child = x->FirstChild();
+
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr += child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        elmtStr,edginfo);
                     }
-                    elementChild = elementChild->NextSibling();
+                    else if(boost::iequals(entitytype,"F"))
+                    {
+                        // read in data
+                        std::string elmtStr;
+                        TiXmlNode* child = x->FirstChild();
+
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr += child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        elmtStr,facinfo);
+                    }
+                    else if(boost::iequals(entitytype,"DATAPOINTS"))
+                    {
+                        NekInt id;
+                        ASSERTL0(x->Attribute("ID", &id),
+                                 "Failed to get ID from PTS section");
+                        cpts.id = id;
+
+                        // read in data
+                        std::string elmtStr;
+
+                        TiXmlElement* DataIdx =
+                            x->FirstChildElement("INDEX");
+                        ASSERTL0(DataIdx,
+                                 "Cannot read data index tag in compressed "
+                                 "curved section");
+
+                        TiXmlNode* child = DataIdx->FirstChild();
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr = child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                    elmtStr,cpts.index);
+
+                        TiXmlElement* DataPts =
+                            x->FirstChildElement("POINTS");
+                        ASSERTL0(DataPts,
+                                 "Cannot read data pts tag in compressed "
+                                 "curved section");
+
+                        child = DataPts->FirstChild();
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr = child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                    elmtStr,cpts.pts);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Unknown tag in curved section");
+                    }
+                    x = x->NextSiblingElement();
                 }
 
-                ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
-
-                /// Parse out the element components corresponding to type of element.
-                if (edge == "E")
+                // rescale (x,y,z) points;
+                for(int i = 0; i > cpts.pts.size(); ++i)
                 {
-                    int numPts=0;
-                    // Determine the points type
-                    std::string typeStr = edgelement->Attribute("TYPE");
-                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
+                    cpts.pts[i].x = xscale*cpts.pts[i].x + xmove;
+                    cpts.pts[i].y = yscale*cpts.pts[i].y + ymove;
+                    cpts.pts[i].z = zscale*cpts.pts[i].z + zmove;
+                }
 
-                    LibUtilities::PointsType type;
-                    const std::string* begStr = LibUtilities::kPointsTypeStr;
-                    const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
-                    const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+                for(int i = 0; i < edginfo.size(); ++i)
+                {
+                    int edgeid = edginfo[i].entityid;
+                    LibUtilities::PointsType ptype;
 
-                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
-                    type = (LibUtilities::PointsType)(ptsStr - begStr);
+                    CurveSharedPtr curve(
+                            MemoryManager<Curve>::AllocateSharedPtr(
+                                edgeid, ptype = (LibUtilities::PointsType)
+                                                    edginfo[i].ptype));
 
-                    //Determine the number of points
-                    err = edgelement->QueryIntAttribute("NUMPOINTS", &numPts);
-                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
-                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, type));
-
-                    // Read points (x, y, z)
-                    NekDouble xval, yval, zval;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-                    try
+                    // load points
+                    int offset = edginfo[i].ptoffset;
+                    for(int j = 0; j < edginfo[i].npoints; ++j)
                     {
-                        while(!elementDataStrm.fail())
-                        {
-                            elementDataStrm >> xval >> yval >> zval;
+                        int idx = cpts.index[offset+j];
 
-                            xval = xval*xscale + xmove;
-                            yval = yval*yscale + ymove;
-                            zval = zval*zscale + zmove;
-
-                            // Need to check it here because we may not be
-                            // good after the read indicating that there
-                            // was nothing to read.
-                            if (!elementDataStrm.fail())
-                            {
-                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, edgeindx, xval, yval, zval));
-
-                                curve->m_points.push_back(vert);
-                            }
-
-                        }
+                        PointGeomSharedPtr vert(
+                            MemoryManager<PointGeom>::AllocateSharedPtr(
+                                m_meshDimension, edginfo[i].id,
+                                cpts.pts[idx].x, cpts.pts[idx].y,
+                                cpts.pts[idx].z));
+                        curve->m_points.push_back(vert);
                     }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,
-                                (std::string("Unable to read curve data for EDGE: ") + elementStr).c_str());
-
-                    }
-
-                    ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
 
                     m_curvedEdges[edgeid] = curve;
-
-                    edgelement = edgelement->NextSiblingElement("E");
-
-                } // end if-loop
-
-            } // end while-loop
-
-
-            TiXmlElement *facelement = field->FirstChildElement("F");
-            int faceindx, faceid;
-
-            while(facelement)
-            {
-                std::string face(facelement->ValueStr());
-                ASSERTL0(face == "F", (std::string("Unknown 3D curve type: ") + face).c_str());
-
-                /// Read id attribute.
-                err = facelement->QueryIntAttribute("ID", &faceindx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-
-                /// Read face id attribute.
-                err = facelement->QueryIntAttribute("FACEID", &faceid);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute FACEID.");
-
-                /// Read text face element description.
-                std::string elementStr;
-                TiXmlNode* elementChild = facelement->FirstChild();
-
-                while(elementChild)
-                {
-                    // Accumulate all non-comment element data
-                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
-                    {
-                        elementStr += elementChild->ToText()->ValueStr();
-                        elementStr += " ";
-                    }
-                    elementChild = elementChild->NextSibling();
                 }
 
-                ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
-
-                /// Parse out the element components corresponding to type of element.
-                if(face == "F")
+                for(int i = 0; i < facinfo.size(); ++i)
                 {
-                    std::string typeStr = facelement->Attribute("TYPE");
-                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
-                    LibUtilities::PointsType type;
-                    const std::string* begStr = LibUtilities::kPointsTypeStr;
-                    const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
-                    const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+                    int faceid = facinfo[i].entityid;
+                    LibUtilities::PointsType ptype;
 
-                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
-                    type = (LibUtilities::PointsType)(ptsStr - begStr);
+                    CurveSharedPtr curve(
+                            MemoryManager<Curve>::AllocateSharedPtr(
+                                faceid, ptype = (LibUtilities::PointsType)
+                                                    facinfo[i].ptype));
 
-                    std::string numptsStr = facelement->Attribute("NUMPOINTS");
-                    ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
-                    int numPts=0;
-                    std::stringstream s;
-                    s << numptsStr;
-                    s >> numPts;
-
-                    CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid, type));
-
-                    ASSERTL0(numPts >= 3, "NUMPOINTS for face must be greater than 2");
-
-                    if(numPts == 3)
+                    int offset = facinfo[i].ptoffset;
+                    for(int j = 0; j < facinfo[i].npoints; ++j)
                     {
-                        ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                        int idx = cpts.index[offset+j];
+
+                        PointGeomSharedPtr vert(MemoryManager<PointGeom>::
+                                   AllocateSharedPtr(m_meshDimension,
+                                                     facinfo[i].id,
+                                                     cpts.pts[idx].x,
+                                                     cpts.pts[idx].y,
+                                                     cpts.pts[idx].z));
+                        curve->m_points.push_back(vert);
                     }
 
-                    // Read points (x, y, z)
-                    NekDouble xval, yval, zval;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-                    try
-                    {
-                        while(!elementDataStrm.fail())
-                        {
-                            elementDataStrm >> xval >> yval >> zval;
+                    m_curvedFaces[faceid] = curve;
+                }
+            }
+            else
+            {
+                /// All curves are of the form: "<? ID="#" TYPE="GLL OR other
+                /// points type" NUMPOINTS="#"> ... </?>", with ? being an
+                /// element type (either E or F).
+                
+                TiXmlElement *edgelement = field->FirstChildElement("E");
+                
+                int edgeindx, edgeid;
+                int nextEdgeNumber = -1;
+                
+                while(edgelement)
+                {
+                    /// These should be ordered.
+                    nextEdgeNumber++;
+                    
+                    std::string edge(edgelement->ValueStr());
+                    ASSERTL0(edge == "E", (std::string("Unknown 3D curve type:") + edge).c_str());
+                    
+                    /// Read id attribute.
+                    err = edgelement->QueryIntAttribute("ID", &edgeindx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
+                    
+                    /// Read edge id attribute.
+                    err = edgelement->QueryIntAttribute("EDGEID", &edgeid);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute EDGEID.");
 
-                            // Need to check it here because we may not be good after the read
-                            // indicating that there was nothing to read.
-                            if (!elementDataStrm.fail())
+                    /// Read text edgelement description.
+                    std::string elementStr;
+                    TiXmlNode* elementChild = edgelement->FirstChild();
+                    
+                    while(elementChild)
+                    {
+                        // Accumulate all non-comment element data
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elementStr += elementChild->ToText()->ValueStr();
+                            elementStr += " ";
+                        }
+                        elementChild = elementChild->NextSibling();
+                    }
+                    
+                    ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
+                    
+                    /// Parse out the element components corresponding to type of element.
+                    if (edge == "E")
+                    {
+                        int numPts=0;
+                        // Determine the points type
+                        std::string typeStr = edgelement->Attribute("TYPE");
+                        ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
+                        
+                        LibUtilities::PointsType type;
+                        const std::string* begStr = LibUtilities::kPointsTypeStr;
+                        const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                        const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+                        
+                        ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                        type = (LibUtilities::PointsType)(ptsStr - begStr);
+                        
+                        //Determine the number of points
+                        err = edgelement->QueryIntAttribute("NUMPOINTS", &numPts);
+                        ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
+                        CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, type));
+                        
+                        // Read points (x, y, z)
+                        NekDouble xval, yval, zval;
+                        std::istringstream elementDataStrm(elementStr.c_str());
+                        try
+                        {
+                            while(!elementDataStrm.fail())
                             {
-                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, faceindx, xval, yval, zval));
-                                curve->m_points.push_back(vert);
+                                elementDataStrm >> xval >> yval >> zval;
+                                
+                                xval = xval*xscale + xmove;
+                                yval = yval*yscale + ymove;
+                                zval = zval*zscale + zmove;
+                                
+                                // Need to check it here because we may not be
+                                // good after the read indicating that there
+                                // was nothing to read.
+                                if (!elementDataStrm.fail())
+                                {
+                                    PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, edgeindx, xval, yval, zval));
+                                    
+                                    curve->m_points.push_back(vert);
+                                }
+                                
                             }
                         }
-                    }
-                    catch(...)
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read curve data for EDGE: ") + elementStr).c_str());
+                            
+                        }
+                        
+                        ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
+
+                        m_curvedEdges[edgeid] = curve;
+                        
+                        edgelement = edgelement->NextSiblingElement("E");
+
+                    } // end if-loop
+
+                } // end while-loop
+
+                TiXmlElement *facelement = field->FirstChildElement("F");
+                int faceindx, faceid;
+                
+                while(facelement)
+                {
+                    std::string face(facelement->ValueStr());
+                    ASSERTL0(face == "F", (std::string("Unknown 3D curve type: ") + face).c_str());
+                    
+                    /// Read id attribute.
+                    err = facelement->QueryIntAttribute("ID", &faceindx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
+                    
+                    /// Read face id attribute.
+                    err = facelement->QueryIntAttribute("FACEID", &faceid);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute FACEID.");
+                    
+                    /// Read text face element description.
+                    std::string elementStr;
+                    TiXmlNode* elementChild = facelement->FirstChild();
+                    
+                    while(elementChild)
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                                (std::string("Unable to read curve data for FACE: ")
-                        + elementStr).c_str());
-                    }
-                    m_curvedFaces[faceid] = curve;
+                        // Accumulate all non-comment element data
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elementStr += elementChild->ToText()->ValueStr();
+                            elementStr += " ";
+                        }
+                        elementChild = elementChild->NextSibling();
+                }
+                    
+                    ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
+                    
+                    /// Parse out the element components corresponding to type of element.
+                    if(face == "F")
+                    {
+                        std::string typeStr = facelement->Attribute("TYPE");
+                        ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
+                        LibUtilities::PointsType type;
+                        const std::string* begStr = LibUtilities::kPointsTypeStr;
+                        const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                        const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+                        
+                        ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                        type = (LibUtilities::PointsType)(ptsStr - begStr);
+                        
+                        std::string numptsStr = facelement->Attribute("NUMPOINTS");
+                        ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
+                        int numPts=0;
+                        std::stringstream s;
+                        s << numptsStr;
+                        s >> numPts;
+                        
+                        CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid, type));
+                        
+                        ASSERTL0(numPts >= 3, "NUMPOINTS for face must be greater than 2");
+                        
+                        if(numPts == 3)
+                        {
+                            ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                        }
+                        
+                        // Read points (x, y, z)
+                        NekDouble xval, yval, zval;
+                        std::istringstream elementDataStrm(elementStr.c_str());
+                        try
+                        {
+                            while(!elementDataStrm.fail())
+                            {
+                                elementDataStrm >> xval >> yval >> zval;
 
-                    facelement = facelement->NextSiblingElement("F");
-
-                } // end if-loop
-            } // end while-loop
+                                // Need to check it here because we
+                                // may not be good after the read
+                                // indicating that there was nothing
+                                // to read.
+                                if (!elementDataStrm.fail())
+                                {
+                                    PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, faceindx, xval, yval, zval));
+                                    curve->m_points.push_back(vert);
+                                }
+                            }
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read curve data for FACE: ")
+                                      + elementStr).c_str());
+                        }
+                        m_curvedFaces[faceid] = curve;
+                        
+                        facelement = facelement->NextSiblingElement("F");
+                        
+                    } // end if-loop
+                } // end while-loop
+            } // end of compressed else
         } // end of ReadCurves()
-
 
         /**
          *

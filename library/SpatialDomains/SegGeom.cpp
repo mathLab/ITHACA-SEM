@@ -511,6 +511,12 @@ namespace Nektar
             return m_eid;
         }
 
+
+        int SegGeom::v_GetShapeDim() const
+        {
+            return 1;
+        }
+
         const LibUtilities::BasisSharedPtr SegGeom::v_GetBasis(const int i)
         {
             return m_xmap->GetBasis(i);

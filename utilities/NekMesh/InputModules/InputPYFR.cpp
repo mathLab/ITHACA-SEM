@@ -106,9 +106,24 @@ void InputPYFR::Process()
         }
     }
 
-    m_mesh->m_expDim = 2;
-    m_mesh->m_spaceDim = 2;
-    m_mesh->m_nummode = 2;
+    //there is no way to tell the dim of the mesh other than to figure out
+    //which element types are used
+    //will not be able to read mainfold meshes in this format
+    vector<string> tmp;
+    boost::split(tmp, elements[0], boost::is_any_of("_"));
+
+    LibUtilities::ShapeType st;
+    if(boost::iequals(tmp[1], "quad") || boost::iequals(tmp[1], "tri"))
+    {
+        m_mesh->m_expDim = 2;
+        m_mesh->m_spaceDim = 2;
+    }
+    else
+    {
+        m_mesh->m_expDim = 3;
+        m_mesh->m_spaceDim = 3;
+    }
+    m_mesh->m_nummode = 5; //cheaty needs to be removed
 
     map<string, vector<ElementSharedPtr> > elmap;
 
@@ -164,34 +179,30 @@ void InputPYFR::Process()
         }
 
         map<int, int> nodemap; //nektar order to pyfr
-        int nv;
+        int np = dims_out[0];
+        int nq;
         if(st == LibUtilities::eQuadrilateral)
         {
-            nodemap[0] = 0;
-            nodemap[1] = 1;
-            nodemap[2] = 3;
-            nodemap[3] = 2;
-            nv = 4;
+            nq = sqrt(np);
+            nodemap = GetQuadMap(sqrt(np));
         }
         else if(st == LibUtilities::eTriangle)
         {
-            nodemap[0] = 0;
-            nodemap[1] = 1;
-            nodemap[2] = 2;
-            nv = 3;
+            nq = 0.5*(-1+sqrt(1+8*np));
+            nodemap = GetTriMap(nq);
         }
 
         for(int j = 0; j < dims_out[1]; j++) //loop over all elements
         {
-            vector<NodeSharedPtr> ns(nv);
-            for(int k = 0; k < nv; k++)
+            vector<NodeSharedPtr> ns(np);
+            for(int k = 0; k < np; k++)
             {
                 ns[k] = boost::shared_ptr<Node>(new Node(nct++, dataArray[nodemap[k]][j][0],
                                                 dataArray[nodemap[k]][j][1], 0.0));
             }
             vector<int> tags;
             tags.push_back(i);
-            ElmtConfig conf(st, 1, false, false);
+            ElmtConfig conf(st, nq-1, true, false);
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     st, conf, ns, tags);
             m_mesh->m_element[m_mesh->m_expDim].push_back(E);
@@ -199,7 +210,8 @@ void InputPYFR::Process()
         }
     }
 
-    typedef struct conec
+
+    /*typedef struct conec
     {
         char      el[5];
         int       id;
@@ -244,14 +256,14 @@ void InputPYFR::Process()
             e2->SetEdge(data[1*dims_out[1] + k].fc, e1->GetEdge(data[0*dims_out[1] + k].fc));
         }
 
-    }
+    }*/
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
 
-    for(int i = 0; i < bcs.size(); i++)
+    /*for(int i = 0; i < bcs.size(); i++)
     {
         // all this is to just get the data out of hdf5, why so complicated!!!
         DataSet d = g.openDataSet(bcs[i]);
@@ -296,13 +308,93 @@ void InputPYFR::Process()
                                     LibUtilities::eSegment, conf, ns, tags);
             m_mesh->m_element[m_mesh->m_expDim-1].push_back(E);
         }
-    }
-
+    }*/
+    ClearElementLinks();
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+}
+
+map<int, int> InputPYFR::GetQuadMap(int n)
+{
+    map<int,int > nodeList;
+
+    // Vertices and edges
+    nodeList[0] = 0;
+    if (n > 1)
+    {
+        nodeList[1] = n-1;
+        nodeList[2] = n*n-1;
+        nodeList[3] = n*(n-1);
+    }
+    for (int i = 1; i < n-1; ++i)
+    {
+        nodeList[4+i-1] = i;
+    }
+    for (int i = 1; i < n-1; ++i)
+    {
+        nodeList[4+2*(n-2)+i-1] = n*n-1-i;
+    }
+    for (int i = 1; i < n-1; ++i)
+    {
+        nodeList[4+(n-2)+i-1] = 2*n-1+(i-1)*n;
+    }
+    for (int i = 1; i < n-1; ++i)
+    {
+        nodeList[4+3*(n-2)+i-1] = n*(n-2) - (i-1)*n;
+    }
+
+    if(n > 2)
+    {
+        //face interior
+        for(int j = 0; j < n -2; j++)
+        {
+            for (int i = 1; i < n-1; ++i)
+            {
+                nodeList[4+4*(n-2)+i-1 + j*(n-2)] = n*(j+1) + i;
+            }
+        }
+    }
+
+    return nodeList;
+}
+
+map<int, int> InputPYFR::GetTriMap(int n)
+{
+    map<int,int> nodeList;
+
+    nodeList[0] = 0;
+    if(n > 1)
+    {
+        nodeList[1] = n - 1;
+        nodeList[2] = n*(n+1)/2 - 1;
+    }
+
+    int cnt = n;
+    for (int i = 1; i < n-1; ++i)
+    {
+        nodeList[3+i-1] = i;
+        nodeList[3+3*(n-2)-i] = cnt;
+        nodeList[3+(n-2)+i-1] = cnt+n-i-1;
+        cnt += n-i;
+    }
+
+    int todo = n - 3;
+    int k = 3+3*(n-2);
+    int l = n + 1;
+    for(int j = 0; j < n - 3; j++)
+    {
+        for(int i = 0; i < todo; i++)
+        {
+            nodeList[k++] =  l++;
+
+        }
+        l += 2;
+        todo--;
+    }
+    return nodeList;
 }
 
 }

@@ -57,6 +57,11 @@ public:
     }
     /// %ModuleKey for class.
     static ModuleKey className;
+
+private:
+    map<int,int> GetQuadMap(int n);
+    map<int,int> GetTriMap(int n);
+
 };
 
 }

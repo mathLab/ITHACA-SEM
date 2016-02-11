@@ -213,25 +213,20 @@ void APE::GetFluxVector(
     ASSERTL1(flux[0].num_elements() == m_spacedim,
                  "Dimension of flux array and velocity array do not match");
 
-    // F_{adv,p',j} = \rho_0 u'_j + p' \bar{u}_j / c^2
+    // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
     for (int j = 0; j < m_spacedim; ++j)
     {
         Vmath::Zero(nq, flux[0][j], 1);
 
-        // construct rho_0 u'_j term
-        Vmath::Vmul(nq, m_basefield[1], 1, physfield[j + 1], 1, flux[0][j], 1);
+        // construct \gamma p_0 u'_j term
+        Vmath::Smul(nq, m_gamma, m_basefield[0], 1, tmp1, 1);
+        Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
 
-        // construct p' \bar{u}_j / c^2 term
-        // c^2
-        Vmath::Vdiv(nq, m_basefield[0], 1, m_basefield[1], 1, tmp1, 1);
-        Vmath::Smul(nq, m_gamma, tmp1, 1, tmp1, 1);
+        // construct p' \bar{u}_j term
+        Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+2], 1, tmp2, 1);
 
-        // p' \bar{u}_j / c^2 term
-        Vmath::Vmul(nq, physfield[0], 1, m_basefield[j + 2], 1, tmp2, 1);
-        Vmath::Vdiv(nq, tmp2, 1, tmp1, 1, tmp2, 1);
-
-        // \rho_0 u'_j + p' \bar{u}_j / c^2
-        Vmath::Vadd(nq, flux[0][j], 1, tmp2, 1, flux[0][j], 1);
+        // add both terms
+        Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[0][j], 1);
     }
 
     for (int i = 1; i < flux.num_elements(); ++i)
@@ -306,22 +301,14 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 {
     int nVariables = inarray.num_elements();
     int nq = GetTotPoints();
-    Array<OneD, NekDouble> tmp1(nq);
 
     // WeakDG does not use advVel, so we only provide a dummy array
     Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
     m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray, time);
 
+    // Negate the LHS terms
     for (int i = 0; i < nVariables; ++i)
     {
-        if (i ==  0)
-        {
-            // c^2 = gamma*p0/rho0
-            Vmath::Vdiv(nq, m_basefield[0], 1, m_basefield[1], 1, tmp1, 1);
-            Vmath::Smul(nq, m_gamma, tmp1, 1, tmp1, 1);
-            Vmath::Vmul(nq, tmp1, 1, outarray[i], 1, outarray[i], 1);
-        }
-
         Vmath::Neg(nq, outarray[i], 1);
     }
 

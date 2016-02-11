@@ -276,15 +276,6 @@ void OutputVtk::Process(po::variables_map &vm)
    cout << "Written file: " << filename << endl;
    
 
-<<<<<<< HEAD
-   // output parallel outline info if necessary
-   if(m_f->m_comm->GetRank() == 0)
-   {
-       int nprocs = m_f->m_comm->GetSize();
-       if(nprocs != 1)
-       {
-           filename = m_config["outfile"].as<string>();
-=======
     // output parallel outline info if necessary
     if(m_f->m_comm->GetRank() == 0)
     {
@@ -293,7 +284,6 @@ void OutputVtk::Process(po::variables_map &vm)
         if(nprocs != 1)
         {
             filename = m_config["outfile"].as<string>();
->>>>>>> origin/feature/FCEquispacedVtu
             int    dot = filename.find_last_of('.');
             string body = filename.substr(0,dot);
             filename = body + ".pvtu";

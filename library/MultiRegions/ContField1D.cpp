@@ -344,15 +344,6 @@ namespace Nektar
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
             v_ImposeDirichletConditions(inout);
-
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    inout[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
-                        = m_bndCondExpansions[i]->GetCoeff(0);
-                }
-            }
             
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)

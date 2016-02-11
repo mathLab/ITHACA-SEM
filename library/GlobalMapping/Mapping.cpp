@@ -40,9 +40,9 @@ namespace Nektar
 namespace GlobalMapping
 {
 
-MappingSharedPtr Mapping::m_mappingPtr;
-bool             Mapping::m_init      = false;
-bool             Mapping::m_isDefined = false;
+MappingSharedPtr Mapping::m_mappingPtr = MappingSharedPtr();
+bool             Mapping::m_init       = false;
+bool             Mapping::m_isDefined  = false;
 
 MappingFactory& GetMappingFactory()
 {
@@ -237,7 +237,7 @@ MappingSharedPtr Mapping::Load(
 {
     if (!m_init)
     {
-        TiXmlElement* vMapping;
+        TiXmlElement* vMapping = NULL;
         string vType;
         if (pSession->DefinesElement("Nektar/Mapping"))
         {                

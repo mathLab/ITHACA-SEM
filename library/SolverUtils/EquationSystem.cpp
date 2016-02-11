@@ -2086,7 +2086,7 @@ namespace Nektar
                     GlobalMapping::Mapping::Load(m_session, fields);
             LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
             mapping->Output( fieldMetaDataMap, outname);
-            
+
             m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap);
         }
 

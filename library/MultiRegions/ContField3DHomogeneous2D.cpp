@@ -90,8 +90,8 @@ namespace Nektar
                 (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
 
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
+            int nylines = m_homogeneousBasis_y->GetNumPoints();
+            int nzlines = m_homogeneousBasis_z->GetNumPoints();
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
@@ -164,24 +164,24 @@ namespace Nektar
             int cnt = 0;
             int cnt1 = 0;
             int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
-			int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
             NekDouble beta_y;
-			NekDouble beta_z;
-			NekDouble beta;
-			StdRegions::ConstFactorMap new_factors;
+            NekDouble beta_z;
+            NekDouble beta;
+            StdRegions::ConstFactorMap new_factors;
 
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
 			
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
-				// Fourier transform forcing function
-                            HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
-			}
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else
+            {
+                // Fourier transform forcing function
+                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+            }
 
             int l =0;
             for(n = 0; n < nhom_modes_z; ++n)

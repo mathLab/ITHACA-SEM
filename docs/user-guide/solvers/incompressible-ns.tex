@@ -1,8 +1,8 @@
-\section{Incompressible Navier-Stokes Solver}
+\chapter{Incompressible Navier-Stokes Solver}
 \label{IncNSsolver}
 
-\subsection{Synopsis}
-\subsubsection{Velocity Correction Scheme}
+\section{Synopsis}
+\subsection{Velocity Correction Scheme}
 \label{VCSscheme}
 A useful tool implemented in Nektar++ is the incompressible Navier
 Stokes solver that allows to solve the governing equation for viscid
@@ -109,7 +109,7 @@ are the stiffly stable time integration coefficients given in the table below.
  This multi-step implicit-explicit splitting scheme decouples the velocity field $\mathbf{V}$ from the pressure $p$, leading to an
 explicit treatment of the advection term and an implicit treatment of the pressure and the diffusion term.
 
-\subsubsection{Substepping the Velocity Correction Scheme}
+\subsection{Substepping the Velocity Correction Scheme}
 
 It is possible to use difference time steps in the velocity correction
 scheme using a substepping \cite{Sh03} or auxiliary semi-Lagrangian
@@ -150,7 +150,7 @@ exmaple the test cases \texttt{KovaFlow\_SubStep\_2order.xml},
 \texttt{Tet\_Kovasnay\_SubStep.xml}
 \end{notebox}
 
-\subsubsection{Direct solver (coupled approach)}
+\subsection{Direct solver (coupled approach)}
 \label{DirectSolv}
 The second approach consists of directly solving the matrix problem
 arising from the discretization of the Stokes problem.  The direct
@@ -227,7 +227,7 @@ obtain the system:
    terms in a similar manner to the splitting scheme and this term is
    then introduced as the forcing term $\boldsymbol{f}$. For more details see \cite{AiSh,ShAi}.
 
-\subsubsection{Linear Stability Analysis}
+\subsection{Linear Stability Analysis}
 
 Hydrodynamic stability is an important part of fluid-mechanics that has a relevant role in understanding how an unstable flow can evolve into a turbulent state of motion with chaotic three-dimensional vorticity fields and a broad spectrum of small temporal and spatial scales. The essential problems of hydrodynamic stability were recognised and formulated in 19th century, notably by Helmholtz, Kelvin, Rayleigh and Reynolds.
 
@@ -243,7 +243,7 @@ In Nektar++ it is then possible to use the following tools to perform stability 
 \item  transient growth analysis;
 \end{itemize}
 
-\subsubsubsection{Direct stability analysis}
+\subsubsection{Direct stability analysis}
 
 
 The equations that describe the evolution of an infinitesimal disturbance in the flow can be derived decomposing the solution into a basic state $(\mathbf{U}, p)$ and a perturbed state  $\mathbf{U}+\varepsilon \mathbf{u'}$ with $\varepsilon \ll 1$ that both satisfy the Navier-Stokes equations. Substituting into the Navier Stokes equations and considering that the quadratic terms $\mathbf{u'} \cdot \nabla \mathbf{u'}$can be neglected, we obtain the linearised Navier-Stokes equations:
@@ -281,7 +281,7 @@ Then we obtain the associated eigenproblem:
 
 The dominant eigenvalue determines the behaviour of the flow. If it the real part is positive there exists exponentially growing solutions, conversely if every single eigenvalues has negative real part then the flow is linearly stable. If the real part of the eigenvalue is zero, it is present a bifurcation point.
 
-\subsubsubsection{Adjoint Stability Analysis}
+\subsubsection{Adjoint Stability Analysis}
 
 The adjoint of a linear operator is one of the most important concept in functional analysis and has an it has important role to tackle the transition to turbulence. Let us write the linearised Navier-Stokes equation in a compact form:
 
@@ -315,7 +315,7 @@ Integrating by parts and employing the divergence theorem, it is possible to exp
 
 The adjoint fields are in fact related to the concept of \textbf{receptivity}. The value of the adjoint velocity at a point in the flow indicates the response that arises from an unsteady momentum source at that point. The adjoint pressure and the adjoint stream function play instead the same role for mass and vorticity sources respectively. Therefore, the adjoint modes can be seen as a powerful tool to understand where to act in order to ease/inhibit the transition.
 
-\subsubsubsection{Transient Growth Analysis}
+\subsubsection{Transient Growth Analysis}
 
 Transient growth  is a phenomenon that occurs when a flow that is linearly stable, but whose perturbations exhibit a non-negligible transient response due to regions of localised convective instabilities. This situation is common in many engineering applications, for example in open flows where the geometry is complex, producing a steep variation of the base flow. Therefore, the main question to answer is if it exists a bounded solution that exhibit large growth before inevitably decaying. Let us introduce a norm to quantify the size of a perturbation. It is physically meaningful to use the total kinetic energy of a perturbation on the domain $\Omega$. This is convenient because it is directly associated with the
 standard-$L2$ inner product:
@@ -348,7 +348,7 @@ produce in short term a growth in the norm of the perturbations.
 \end{figure}
 
 
-\subsubsection{Steady-state solver using Selective Frequency Damping}
+\subsection{Steady-state solver using Selective Frequency Damping}
 \label{SectionSFD}
 
 To compute linear stability analysis, the choice of the base flow,
@@ -375,13 +375,13 @@ Note that this method can not be applied for flows with a pure exponential growt
 
 
 
-\subsection{Usage}
+\section{Usage}
 
 \begin{lstlisting}[style=BashInputStyle]
 IncNavierStokesSolver session.xml
 \end{lstlisting}
 
-\subsection{Session file configuration}
+\section{Session file configuration}
 
 In the following the possible options are shown for the incompressible
 Navier-Stokes. The \texttt{Expansion} section for an incompressible flow
@@ -412,7 +412,7 @@ are:
 \end{tabular}
 \end{center}
 
-\subsubsection{Solver Info}
+\subsection{Solver Info}
 \label{SectionIncNS_SolverInfo}
 
 The following parameters can be specified in the \inltt{SOLVERINFO} section of
@@ -613,7 +613,7 @@ stabilize the simulation. This method is based on the work of Kirby and Sherwin 
 \end{itemize}
 
 
-\subsubsection{Parameters}
+\subsection{Parameters}
 The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file:
 
@@ -629,8 +629,8 @@ the session file:
 \item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1)
 \end{itemize}
 
-\subsubsection{Forcing}
-\subsubsubsection{MovingBody}
+\subsection{Forcing}
+\subsubsection{MovingBody}
 
 \begin{notebox}
 This force type is only supported for the Quasi-3D incompressible Navier-Stokes solver.
@@ -722,7 +722,7 @@ value of the aerodynamic forces on boundary 0, defined in the
 forces for each computational plane are projected along the Cartesian axes and the pressure and viscous contributions are computed in each direction.
 
 
-\subsection{Stability analysis Session file configuration}
+\section{Stability analysis Session file configuration}
 \label{SecStabFile}
 The type of equation which is to be solved is specified through the \inltt
 {EqType} option in the session file. This can be set to any of the following:
@@ -750,7 +750,7 @@ UnsteadyNavierStokes & 2D, Quasi-3D& Continuous &VCS,DS\\
 \end{tabular}
 \end{center}
 
-\subsubsection{Solver Info}
+\subsection{Solver Info}
 \label{SectionIncNS_SolverInfo_Stab}
 
 \begin{itemize}
@@ -812,7 +812,7 @@ table above.
 \end{itemize}
 
 
-\subsubsection{Parameters}
+\subsection{Parameters}
 The following parameters can be specified in the \texttt{PARAMETERS} section of the session file:
 
 \begin{itemize}
@@ -829,7 +829,7 @@ ltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
 \item \inltt{realShift}: provide a real shift to the direct sovler eigenvalue problem by the specified value. 
 \end{itemize}
 
-\subsubsection{Functions}
+\subsection{Functions}
 When using the direct solver for stability analysis it is necessary to specify a Forcing function ``StabilityCoupledLNS'' in the form:
 \begin{lstlisting}[style=XMLStyle]
 <FORCING>
@@ -852,7 +852,7 @@ regression test directory
 noting that some parameters are specified in the .tst files.
 \end{notebox}
 
-\subsection{Steady-state solver Session file configuration}
+\section{Steady-state solver Session file configuration}
 \label{SectionSFD_XML}
 
 In this section, we detail how to use the steady-state solver (that
@@ -866,9 +866,9 @@ the user (they will be automatically calculated all along the solver
 execution) but several session files must be defined in a very
 specific way.
 
-\subsubsection{Execution of the classical steady-state solver}
+\subsection{Execution of the classical steady-state solver}
 
-\subsubsubsection{Solver Info}
+\subsubsection{Solver Info}
 
 The definition of \inltt{Eqtype}, \inltt{TimeIntegrationMethod} and
 \inltt{Projection} is similar as what is explained in
@@ -878,7 +878,7 @@ is enforced through the definition of the \inltt{Driver} which has to be
 defined to run the unadapted SFD method (by default, it is set to
 \inltt{Nonlinear}).
 
-\subsubsubsection{Parameters}
+\subsubsection{Parameters}
 
 The following parameters can be specified in the \texttt{PARAMETERS} section of the session file:
 
@@ -893,7 +893,7 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 
 Note that for the steady-state solver, the parameter \inltt{NumSteps} is not taken into account. The solver will run until a steady-state solution is found and not for a pre-defined number of time steps.
 
-\subsubsection{Execution of the adaptive steady-state solver}
+\subsection{Execution of the adaptive steady-state solver}
 
 Running the adaptive selective frequency damping method requires to set up the session files in a very specific manner. First, the \inltt{Geometry} section must be in a separated archive file. If the test case studied is called "Session", the mesh file must be called \inlsh{Session.xml.gz} (the linux command "gzip" can be used to obtain this file).
 
@@ -921,9 +921,9 @@ IncNavierStokesSolver Session.xml.gz Session.xml
 
 
 
-\subsection{Examples}
+\section{Examples}
 
-\subsubsection{Kovasznay Flow 2D}
+\subsection{Kovasznay Flow 2D}
 \label{s:incns:kovasznay2D}
 This example demonstrates the use of the velocity correction
 \hyperref{VCSscheme}{velocity correction scheme} to solve the 2D Kovasznay flow
@@ -932,7 +932,7 @@ at Reynolds number $Re=40$.
 In the following we will numerically solve for the two dimensional velocity and
 pressure fields with steady boundary conditions.
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 The input for this example is given in the example file
 \inlsh{KovaFlow\_m8.xml}. The mesh consists of 12 quadrilateral elements.
 
@@ -1019,7 +1019,7 @@ use of the \inltt{E} tag.
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsubsection{Running the simulation}
+\subsubsection{Running the simulation}
 Launch the simulation using the following command
 \begin{lstlisting}[style=BashInputStyle]
 IncNavierStokesSolver KovaFlow_m8.xml
@@ -1054,7 +1054,7 @@ The result should look similar to that shown in Figure~\ref{f:incns:kovaflow}.
 \end{center}
 \end{figure}
 
-\subsubsection{Kovasznay Flow 2D using high-order outflow boundary conditions}
+\subsection{Kovasznay Flow 2D using high-order outflow boundary conditions}
 \label{s:incns:kovasznay2D_HOBC}
 In this example, we solve the same case of 2D Kovasznay flow on
 severely-truncated computational domain but using a high-order outflow
@@ -1105,7 +1105,7 @@ Instead of loading an initial condition from a specified file, we initialized th
     <E VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
 </FUNCTION>
 \end{lstlisting}
-\subsubsubsection{Running the simulation}
+\subsubsection{Running the simulation}
 We then launch the simulation by the same solver as that in the previous example
 \begin{lstlisting}[style=BashInputStyle]
 IncNavierStokesSolver KovaFlow_m8_short_HOBC.xml
@@ -1132,14 +1132,14 @@ Figure~\ref{f:incns:kovaflow2d_hobc}.
 \end{center}
 \end{figure}
 
-\subsubsection{Steady Kovasznay Oseen Flow using the direct solver}
+\subsection{Steady Kovasznay Oseen Flow using the direct solver}
 \label{s:incns:kovasznay2Ddirect}
 In this example, we instead compute the steadhy Kovasznay Oseen flow
 using the direct solver. In contrast to the velocity correction scheme in which
 we time-step the solution to the final time, the direct solver computes the
 solution with a single solve.
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 We can begin with the same input file as for the previous example, but with the
 following modifications. For reference, the modified version is provided in the
 example \inlsh{Oseen\_m8.xml}.
@@ -1177,7 +1177,7 @@ We must also provide an advection velocity.
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsubsection{Running the simulation}
+\subsubsection{Running the simulation}
 Run the simulation using
 \begin{lstlisting}[style=BashInputStyle]
 IncNavierStokesSolver Oseen_m8.xml
@@ -1186,12 +1186,12 @@ IncNavierStokesSolver Oseen_m8.xml
 The resulting flow field should match the solution from the previous example.
 
 
-\subsubsection{Laminar Channel Flow 2D}
+\subsection{Laminar Channel Flow 2D}
 \label{s:incns:LaminarChannelFlow2D}
 In this example, we will simulate the flow through a channel at Reynolds number
 1 with fixed boundary conditions.
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 The input file for this example is given in \inltt{ChanFlow\_m3\_SKS.xml}. The
 geometry is a square channel with height and length $D=1$, discretised using
 four quadrilateral elements. We use a quadratic expansion order, which is
@@ -1240,7 +1240,7 @@ allow verification of the calculation.
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsubsection{Running the solver}
+\subsubsection{Running the solver}
 \begin{lstlisting}[style=BashInputStyle]
 IncNaverStokesSolver ChanFlow_m3_SKS.xml
 \end{lstlisting}
@@ -1269,7 +1269,7 @@ Figure~\ref{f:incns:laminar2d}.
 
 
 
-\subsubsection{Laminar Channel Flow 3D}
+\subsection{Laminar Channel Flow 3D}
 We now solve the incompressible Navier-Stokes equations on a three-dimensional
 domain. In particular, we solver the three-dimensional equivalent of the
 previous example. We will also solve the problem in parallel.
@@ -1279,7 +1279,7 @@ In order to run the example, you must have a version of \nekpp compiled with
 MPI. This is the case for the packaged binary distributions.
 \end{notebox}
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 The input file for this example is given in \inlsh{Tet\_channel\_m8\_par.xml}.
 In this example we use tetrahedral elements, indicated by the \inltt{A} element
 tags in the geometry section. All dimensions have length $D=1$. We will use a
@@ -1347,7 +1347,7 @@ zero-Dirichlet conditions.
 
 Initial conditions and exact solutions are also prescribed.
 
-\subsubsubsection{Running the solver}
+\subsubsection{Running the solver}
 To run the solver in parallel, we use the \inltt{mpirun} command.
 \begin{lstlisting}[style=BashInputStyle]
 mpirun -np 2 IncNaverStokesSolver Tet_channel_m8_par.xml
@@ -1365,7 +1365,7 @@ The expected results are shown in Figure~\ref{f:incns:laminar3d}.
 \end{figure}
 
 
-\subsubsection{Laminar Channel Flow Quasi-3D}
+\subsection{Laminar Channel Flow Quasi-3D}
 For domains where at least one direction is geometrically homogeneous, a more
 efficient discretisation is to use a pure spectral discretisation, such as a
 Fourier expansion, in these directions. We use this approach to solve the same
@@ -1373,7 +1373,7 @@ problem as in the previous example. We reuse the two-dimensional spectral/hp
 element mesh from the \hyperref{s:incns:LaminarChannelFlow2D}{2D laminar flow
 example} and couple this with a Fourier expansion in the third component.
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 The input file for this example is \inlsh{ChanFlow\_3DH1D\_MVM.xml}. We indicate
 that we are coupling the spectral/hp element domain with a pure spectral
 expansion using the following solver information
@@ -1417,7 +1417,7 @@ the addition of the third velocity component) since the side walls are now
 implicitly periodic. The initial conditions and exact solution are prescribed as
 for the fully three-dimensional case.
 
-\subsubsubsection{Running the solver}
+\subsubsection{Running the solver}
 \begin{lstlisting}[style=BashInputStyle]
 IncNaverStokesSolver ChanFlow_3DH1D_MVM.xml
 \end{lstlisting}
@@ -1426,7 +1426,7 @@ three-dimensional case as shown in Figure~\ref{f:incns:laminar3d}.
 
 
 
-\subsubsection{Turbulent Channel Flow}
+\subsection{Turbulent Channel Flow}
 In this example we model turbulence in a three-dimensional square channel at a
 Reynolds number of 2000.
 
@@ -1435,7 +1435,7 @@ This example requires the FFTW Fast-Fourier transform library to be selected
 when compiling Nektar++.
 \end{notebox}
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 The input file for this example is \inlsh{TurbChFl\_3DH1D.xml}. The geometry
 makes used of the homogeneous extension discussed in the previous example. The
 channel has height $D=2$ and length $L=4\pi$ and is discretised using quadratic
@@ -1530,7 +1530,7 @@ this using
 \end{lstlisting}
 
 
-\subsubsubsection{Running the solver}
+\subsubsection{Running the solver}
 To run the solver, we use the following command
 \begin{lstlisting}[style=BashInputStyle]
 IncNaverStokesSolver TurbChFl_3DH1D.xml
@@ -1547,13 +1547,13 @@ Figure~\ref{f:incns:turbchanflow}.
 \end{figure}
 
 
-\subsubsection{Turbulent Pipe Flow}
+\subsection{Turbulent Pipe Flow}
 In this example we simulate flow in a pipe at Reynolds number 3000 using a mixed
 spectral/hp element and Fourier discretisation. The Fourier expansion is used in
 the streamwise direction in this case and the spectral/hp elements are used to
 capture the circular cross-section.
 
-\subsubsubsection{Input File}
+\subsubsection{Input File}
 The circular pipe has diameter $D=1$, the 2D mesh is composed of 64
 quadrilateral elements and the streamwise direction is discretised with 128
 Fourier modes. An illustrative diagram of the discretisation is given in
@@ -1579,7 +1579,7 @@ added to the initial condition, which is a plug profile, to help stimulate
 transition. Since the streamwise direction is the Fourier direction, we must
 necessarily use a body force to drive the flow.
 
-\subsubsubsection{Running the solver}
+\subsubsection{Running the solver}
 In this example we will run the solver in parallel. Due to the large number of
 Fourier modes and relatively few elements, it is more efficient to parallelise
 in the streamwise direction. We can specify this by providing an additional flag
@@ -1616,7 +1616,7 @@ Figure~\ref{f:incns:turbpipeflow}.
 
 
 
-\subsubsection{Aortic Blood Flow}
+\subsection{Aortic Blood Flow}
 The following example demonstrates the application of the
 \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
 \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling viscid
@@ -1652,7 +1652,7 @@ In order to capture the physics of the flow in the boundary layer, a thin layer 
 
 \textbf{Input parameters}
 
-\subsubsubsection{Expansion:~} In this example we will use a fourth order polynomial expansion. There are two composites defined here since we have both prismatic and tetrahedral elements.
+\subsubsection{Expansion:~} In this example we will use a fourth order polynomial expansion. There are two composites defined here since we have both prismatic and tetrahedral elements.
 \begin{lstlisting}[style=XMLStyle]
 <EXPANSIONS>
     <E COMPOSITE="C[0]" NUMMODES="5" TYPE="MODIFIED" FIELDS="u,v,w,p" />
@@ -1660,7 +1660,7 @@ In order to capture the physics of the flow in the boundary layer, a thin layer 
 </EXPANSIONS>
 \end{lstlisting}
 
-\subsubsubsection{Solver information:~}
+\subsubsection{Solver information:~}
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
     <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
@@ -1671,7 +1671,7 @@ In order to capture the physics of the flow in the boundary layer, a thin layer 
 </SOLVERINFO>
 \end{lstlisting}
 
-\subsubsubsection{Parameters:~} Since we are prescribing a Reynolds number of 300, and to simplify the problem definition, we set the mean inlet velocity to 1, this allows us to define the kinematic viscosity as $\nu = \frac{UD}{Re}=\frac{3.32}{300} = 1/90.36$.
+\subsubsection{Parameters:~} Since we are prescribing a Reynolds number of 300, and to simplify the problem definition, we set the mean inlet velocity to 1, this allows us to define the kinematic viscosity as $\nu = \frac{UD}{Re}=\frac{3.32}{300} = 1/90.36$.
 
 \begin{lstlisting}[style=XMLStyle]
 <PARAMETERS>
@@ -1683,7 +1683,7 @@ In order to capture the physics of the flow in the boundary layer, a thin layer 
 </PARAMETERS>
 \end{lstlisting}
 
-\subsubsubsection{Boundary conditions:~} For the purpose of this example a blunted inlet velocity profile has been prescribed. Ideally to obtain more significant results, the velocity profile at the inlet would be obtained from previous simulations on the complete rabbit aorta (including aortic root, aortic arch, and descending aorta with all 5 pairs of intercostal arteries), where a blunted profile at the aortic root is a better representation of reality.
+\subsubsection{Boundary conditions:~} For the purpose of this example a blunted inlet velocity profile has been prescribed. Ideally to obtain more significant results, the velocity profile at the inlet would be obtained from previous simulations on the complete rabbit aorta (including aortic root, aortic arch, and descending aorta with all 5 pairs of intercostal arteries), where a blunted profile at the aortic root is a better representation of reality.
 
 Dirichlet boundary conditions are imposed for the velocity at the inlet, as well as on the wall to account for the no-slip condition. Neumann boundary conditions are imposed for the velocity field at the outlets where fully developed flow is imposed.
 
@@ -1723,7 +1723,7 @@ Dirichlet boundary conditions are imposed for the velocity at the inlet, as well
 </BOUNDARYCONDITIONS>
 \end{lstlisting}
 
-\subsubsubsection{Functions:~}
+\subsubsection{Functions:~}
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="InitialConditions">
     <E VAR="u" VALUE="0" />
@@ -1733,7 +1733,7 @@ Dirichlet boundary conditions are imposed for the velocity at the inlet, as well
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsubsection{Results}
+\subsubsection{Results}
 We can visualise the internal velocity field by applying a volume render filter in ParaView.
 
 \begin{figure}
@@ -1752,11 +1752,11 @@ It is possible to visualise the wall shear stress distribution by running the Fl
 \end{center}
 \end{figure}
 
-\subsubsection{finite-strip modeling of flow past flexible cables}
+\subsection{finite-strip modeling of flow past flexible cables}
 
 As a computationally efficient model, strip theory-based modeling technique has been proposed previously to predict vortex-induced vibration (VIV) for higher Reynolds number flows. In the strip theory-based model, the fluid flow solution is obtained on a series of 2D computational planes (also called as “strips”) along the riser’s axis direction. These strips then are coupled with each other through structural dynamic model of the riser, and then VIV response prediction is achieved by the strip-structure interactions.In the 2D strip theory, it is assumed that the flow is purely two-dimensional without spanwise correlation, which allows the problems to be split into various 2D planes. A consequence of 2D strip solution under this assumption is that it is unable to reflect the influence of spanwise wake turbulence on the structural dynamics. In order to overcome this shortcoming, we proposed a new module in the framework of Nektar++, in which a spanwise scale is locally allocated to each one of the strips, so that the spanwise velocity correlation is reconstructed in the flow field within each strips. In particular, this model lets the fluid domain to be divided in $N$ strips with thickness ratio of $L_{z}/D$ and evenly distributed along the spanwise ($z$) direction. The gap between the neighboring strips, represented by $L_{g}$, satisfies relation $L_{c}=N(L_{z}+L_{g})$. Since the strip in this model has finite scale in the $z$-direction, we named it as finite strip to distinguish from traditional 2D strip plane. Next, the flow dynamics within each individual strips are modeled by viscous incompressible Navier-Stokes equations, while a tensioned beam model is employed to govern the dynamics of the flexible structures. In this example, we will show how to perform a finite-strip model to predict the vortex-induced vibration responses of flexible cables. Let us consider a vortex-induced vibration of a slender cable with an aspect ratio of $L_z/D$=4$\pi$, which is immersed in uniform flows at Re=100.
 
-\subsubsubsection{Input File}
+\subsubsection{Input File}
 
 The cable with a mass ratio (defined as the ratio of the total oscillating mass to the mass of displaced fluid) of 1 has diameter $D=1$, the 2D mesh is composed of 284 quadrilateral elements. The spanwise direction is split in 16 strips with thickness ratio of $L_c/D$=$\pi$/8 and one pair of complex Fourier modes for each one of the strips. We will use a sixth order polynomial expansion for the spectral element and the input file for this example is \inlsh{CylFlow\_HomoStrip.xml}.
 
@@ -1768,7 +1768,7 @@ The cable with a mass ratio (defined as the ratio of the total oscillating mass 
 
 To use the finite strip routines we need just to insert a flag of \inlsh{"HomoStrip"} in the solver information as below, in addition, we need to specify the types of vibration and support ends for the cables. In this case, the vibration type is specified as \inlsh{VALUE="CONSTRAINED"}, which means that the cable's vibration is constrained only in the crossflow direction. Other options include \inlsh{VALUE="FREE"} and \inlsh{"FORCED"}, respectively corresponding to the free vibrations in both streamwise and crossflow directions and forced vibration by specified functions given in input file. For the support ends of the cable, another option of \inlsh{VALUE="PINNED-PINNED"} is available for the simulations, which satisfies the condition of zero values of displacements on the support ends.
 
-\subsubsubsection{Solver information:~}
+\subsubsection{Solver information:~}
 \begin{lstlisting}[style=XMLStyle]
         <SOLVERINFO>
             <I PROPERTY="HomoStrip" VALUE="True"/>
@@ -1777,7 +1777,7 @@ To use the finite strip routines we need just to insert a flag of \inlsh{"HomoSt
         </SOLVERINFO>
 \end{lstlisting}
         
-\subsubsubsection{Parameters}
+\subsubsection{Parameters}
 
 All the simulation parameters are specified in the section as follows.
 
@@ -1799,7 +1799,7 @@ All the simulation parameters are specified in the section as follows.
         </PARAMETERS>
      \end{lstlisting}    
 
-\subsubsubsection{Running the solver}
+\subsubsection{Running the solver}
 In this example we will run the solver in parallel. We can specify the number of the strips by providing an additional flag to the solver, –nsz. In this example, we will run 16 strips, therefore it would be specified as –nsz 16. The solver can now be run as follows    
 
 \begin{lstlisting}[style=BashInputStyle]
@@ -1817,11 +1817,11 @@ The simulation results are illustrated in spanwise vorticity contours in Figure 
 \end{center}
 \end{figure}
 
- \subsubsection{2D direct stability analysis of the channel flow}
+ \subsection{2D direct stability analysis of the channel flow}
 
   In this example, it will be illustrated how to perform a direct stability analysis using Nektar++. Let us consider a canonical stability problem, the flow in a channel which is confined in the wall-normal direction between two infinite plates (Poiseuille flow) at Reynolds number 7500. This problem is a particular case of the stability solver for the IncNavierStokesSolver.
 
- \subsubsubsection{Background}
+ \subsubsection{Background}
 
   We consider the linearised Incompressible Navier-Stokes equations:
 
@@ -1837,11 +1837,11 @@ The simulation results are illustrated in spanwise vorticity contours in Figure 
 
   We are interested to compute the leading eigenvalue of the system using the Arnoldi method.
 
-  \subsubsubsection{Geometry}
+  \subsubsection{Geometry}
 
    The geometry under consideration is a 2D channel.
 
-   \subsubsubsection{Mesh Definition}
+   \subsubsection{Mesh Definition}
 
    In the \texttt{GEOMETRY} section, the dimensions of the problem are defined. Then, the coordinates (\texttt{XSCALE}, \texttt{YSCALE}, \texttt{ZSCALE}) of each vertices of each element are specified. As this input file defines a two-dimensional problem: \texttt{ZSCALE = 0}.
 
@@ -1888,7 +1888,7 @@ Finally, collections of elements are listed in the \texttt{COMPOSITE} section an
 </GEOMETRY>
   \end{lstlisting}
 
-  \subsubsubsection{Expansion}
+  \subsubsection{Expansion}
 
   This section defines the polynomial expansions used on each composites. For this example we will use a 10th order polynomial, i.e. $P=11$.
 
@@ -1898,7 +1898,7 @@ Finally, collections of elements are listed in the \texttt{COMPOSITE} section an
 </EXPANSIONS>
   \end{lstlisting}
 
-  \subsubsubsection{Solver Info}
+  \subsubsection{Solver Info}
 
   In this example the \texttt{EvolutionOperator} must be \texttt{Direct} to consider the linearised Navier-Stokes equations and the \texttt{Driver} was set up to \texttt{ModifiedArnoldi} for the solution of the eigenproblem.
 
@@ -1914,7 +1914,7 @@ Finally, collections of elements are listed in the \texttt{COMPOSITE} section an
       \end{lstlisting}
 
 
-\subsubsubsection{Parameters}
+\subsubsection{Parameters}
 
 All the stability parameters are specified in this section.
 
@@ -1934,7 +1934,7 @@ All the stability parameters are specified in this section.
          \end{lstlisting}
 
 
-\subsubsubsection{Boundary Conditions}
+\subsubsection{Boundary Conditions}
 
     \begin{lstlisting}[style=XMLStyle]
  <BOUNDARYREGIONS>
@@ -1962,7 +1962,7 @@ All the stability parameters are specified in this section.
         </BOUNDARYCONDITIONS>
                  \end{lstlisting}
 
-\subsubsubsection{Function}
+\subsubsection{Function}
 
 We need to set up the base flow that can be specified as a function \texttt{BaseFlow}. In case the base flow is not analytical, it can be generated by means of the \texttt{Nonlinear} evolution operator using the same mesh and polynomial expansion. The initial guess is specified in the \texttt{InitialConditions} functions and can be both analytical or a file. In this example it is read from a file.
 
@@ -1978,12 +1978,12 @@ We need to set up the base flow that can be specified as a function \texttt{Base
 
 
 
-\subsubsubsection{Usage}
+\subsubsection{Usage}
 
 \texttt{IncNavierStokesSolver ChanStability.xml}
 
 
-\subsubsubsection{Results}
+\subsubsection{Results}
 
 The stability simulation takes about 250 iterations to converge and the dominant eigenvalues (together with the respective eigenvectors) will be printed. In this case it was found $    \lambda_{1,2}=1.000224 \times e^{\pm 0.24984i}$. Therefore, since the magnitude of the eigenvalue is larger than 1, the flow is absolutely unstable. It is possible to visualise the eigenvectors using the post-processing utilities. The figure shows the profile of the two eigenmode component, which shows the typical Tollmien - Schlichting waves that arise in viscous boundary layers.
 
@@ -1999,11 +1999,11 @@ The stability simulation takes about 250 iterations to converge and the dominant
     \caption {}
 \end{figure}
 
- \subsubsection{2D adjoint stability analysis of the channel flow}
+ \subsection{2D adjoint stability analysis of the channel flow}
 
  In this example, it will be illustrated how to perform an adjoint stability analysis using Nektar++. Let us consider a canonical stability problem, the flow in a channel which is confined in the wall-normal direction between two infinite plates (Poiseuille flow) at Reynolds number 7500
 
- \subsubsubsection{Background}
+ \subsubsection{Background}
 
   We consider the equations:
 
@@ -2019,11 +2019,11 @@ The stability simulation takes about 250 iterations to converge and the dominant
 
   We are interested in computing the leading eigenvalue of the system using the Arnoldi method.
 
- \subsubsubsection{Geometry \& Mesh}
+ \subsubsection{Geometry \& Mesh}
 
  The geometry and mesh are the same ones used for the direct stability analysis in the previous example.
 
- \subsubsubsection{Solver Info}
+ \subsubsection{Solver Info}
 
  This sections defines the problem solved. In this example the \texttt{EvolutionOperator} must be \texttt{Adjoint} to consider the adjoint Navier-Stokes equations and the \texttt{Driver} was set up to \texttt{ModifiedArnoldi} for the solution of the eigenproblem.
 
@@ -2055,7 +2055,7 @@ The stability simulation takes about 250 iterations to converge and the dominant
 </PARAMETERS>
   \end{lstlisting}
 
-\subsubsubsection{Boundary Conditions}
+\subsubsection{Boundary Conditions}
 
     \begin{lstlisting}[style=XMLStyle]
  <BOUNDARYREGIONS>
@@ -2084,7 +2084,7 @@ The stability simulation takes about 250 iterations to converge and the dominant
   \end{lstlisting}
 
 
-\subsubsubsection{Functions}
+\subsubsection{Functions}
 
 We need to set up the base flow that can be specified as a function \texttt{BaseFlow}. In case the base flow is not analytical, it can be generated by means of the \texttt{Nonlinear} evolution operator using the same mesh and polynomial expansion.
 
@@ -2102,11 +2102,11 @@ We need to set up the base flow that can be specified as a function \texttt{Base
         </FUNCTION>
           \end{lstlisting}
 
-\subsubsubsection{Usage}
+\subsubsection{Usage}
 
 \texttt{IncNavierStokesSolver ChanStability\_adj.xml}
 
-\subsubsubsection{Results}
+\subsubsection{Results}
 
 The equations will then be evolved backwards in time (consistently with the negative sign in front of the time derivative) and the leading eigenvalues will be computed after about 300 iterations. It is interesting to note that their value is the same one computed for the direct problem, but the eigenmodes present a different shape.
 
@@ -2123,7 +2123,7 @@ The equations will then be evolved backwards in time (consistently with the nega
     \caption {}
 \end{figure}
 
-\subsubsection{2D Transient Growth analysis of a flow past a backward-facing step}
+\subsection{2D Transient Growth analysis of a flow past a backward-facing step}
 
 In this section it will be described how to perform a transient growth stability analysis using Nektar++. Let us consider a flow past a backward-facing step (figure \ref{bfs_geo}). This is an important case because it allows us to understand  the effects of separation caused by abrupt changes in the geometry and it is a common geometry in several studies of flow control and turbulence of separated flow.
 
@@ -2133,11 +2133,11 @@ In this section it will be described how to perform a transient growth stability
     \caption {}\label{bfs_geo}
 \end{figure}
 
-\subsubsubsection{Background}
+\subsubsection{Background}
 
 Transient growth analysis allows us to study the presence of convective instabilities that can arise in stable flows. Despite the fact that these instabilities will decay for a long time (due to the stability of the flow), they can produce significant increases in the energy of perturbations. The phenomenon of transient growth is associated with the non-normality of the linearised Navier-Stokes equations and it consists in computing the perturbation that leads to the highest energy growth for a fixed time horizon.
 
-\subsubsubsection{Input Parameters}
+\subsubsection{Input Parameters}
 
 In the \texttt{GEOMETRY} section, the dimensions of the problem are defined. Then, the coordinates (\texttt{XSCALE}, \texttt{YSCALE}, \texttt{ZSCALE}) of each vertices are specified. As this input file defines a two-dimensional problem: \texttt{ZSCALE = 0}.
 
@@ -2188,7 +2188,7 @@ Finally, collections of elements are listed in the \texttt{COMPOSITE} section an
 </GEOMETRY>
         \end{lstlisting}
 
-\subsubsubsection{Expansion}
+\subsubsection{Expansion}
 
 For this example we will use a 6th order polynomial, i.e. $P=7$:
 
@@ -2199,7 +2199,7 @@ For this example we will use a 6th order polynomial, i.e. $P=7$:
 </EXPANSIONS>
         \end{lstlisting}
 
-\subsubsubsection{Solver Information}
+\subsubsection{Solver Information}
 
 This sections defines the problem solved. In this example the \texttt{EvolutionOperator} must be \texttt{TransientGrowth} and the \texttt{Driver} was set up to \texttt{Arpack} for the solution of the eigenproblem.
 
@@ -2216,7 +2216,7 @@ This sections defines the problem solved. In this example the \texttt{EvolutionO
                 \end{lstlisting}
 
 
-\subsubsubsection{Parameters}
+\subsubsection{Parameters}
 
       \begin{lstlisting}[style=XMLStyle]
 <PARAMETERS>
@@ -2234,7 +2234,7 @@ This sections defines the problem solved. In this example the \texttt{EvolutionO
                         \end{lstlisting}
 
 
-\subsubsubsection{Boundary Conditions}
+\subsubsection{Boundary Conditions}
 
       \begin{lstlisting}[style=XMLStyle]
  <BOUNDARYREGIONS>
@@ -2262,7 +2262,7 @@ This sections defines the problem solved. In this example the \texttt{EvolutionO
         </BOUNDARYCONDITIONS>
                                 \end{lstlisting}
 
-\subsubsubsection{Functions}
+\subsubsection{Functions}
 
 We need to set up the base flow that can be specified as a function \texttt{BaseFlow}. In case the base flow is not analytical, it can be generated by means of the \texttt{Nonlinear} evolution operator using the same mesh and polynomial expansion.
 
@@ -2282,11 +2282,11 @@ The initial guess is specified in the \texttt{InitialConditions} functions and i
                                         \end{lstlisting}
 
 
-\subsubsubsection{Usage}
+\subsubsection{Usage}
 
 \texttt{IncNavierStokesSolver bfs\_tg-AR.xml}
 
-\subsubsubsection{Results}
+\subsubsection{Results}
 
 The solution will be evolved forward in time using the operator $\mathcal{A}$, then backward in time through the adjoint operator $\mathcal{A}^*$. The leading eigenvalue is $\lambda= 3.236204)$. This corresponds to the largest possible transient growth at the time horizon $\tau= 1$. The leading eigenmode is shown below. This is the optimal initial condition which will lead to the greatest growth when evolved under the linearised Navier-Stokes equations.
 
@@ -2312,7 +2312,7 @@ It is possible to visualise the transient growth plotting the energy evolution o
    \caption {}
 \end{figure}
 
-\subsubsection{BiGlobal Floquet analysis of a of flow past a cylinder}
+\subsection{BiGlobal Floquet analysis of a of flow past a cylinder}
 
  In this example it will be described how to run a BiGlobal stability analysis for a time-periodic base flow using Nektar++. Let us consider a flow past a circular cylinder at $Re=220$ has a 2D time-periodic wake that is unstable to a 3D synchronous "mode A" instability.
 
@@ -2323,15 +2323,15 @@ It is possible to visualise the transient growth plotting the energy evolution o
 \end{figure}
 
 
-\subsubsubsection{Background}
+\subsubsection{Background}
 
 The numerical solution of the fully three- dimensional linear eigenvalue problem is often computationally demanding and may not have significant advantages over performing a direct numerical simulation. Therefore, some simplifications are required; the most radical consist in considering that the base flow depends only on one spatial coordinate, assuming that the other two spatial coordinates are homogenous.  While this method offers a good prediction for the instability of boundary layers, it is not able to predict the instability of Hagen-Poiseuille flow in a pipe at all Reynolds numbers.  Between a flow that depends upon one and three-spatial directions, it is possible to consider a steady or time-periodic base flow depending upon two spatial directions and impose three-dimensional disturbances that are periodic in the the third homogeneous  spatial direction. This approach is known as BiGlobal stability analysis and it represents the extension of the classic linear stability theory; let us consider a base flow $\mathbf{U}$ that is function of only two spatial coordinates: $mathbf{U}(x, y,t)$. The perturbation velocity can $\mathbf{u'}$ can be expressed in a similar form, but with the dependence on the third homogeneous direction incorporated through the Fourier mode: $\mathbf{u'}=\mathbf{\hat{u}'}(x, y, t) e^{i \beta z}$, where $\beta=2\pi/L)$and $L$ is the length in the homogeneous direction.
 
-\subsubsubsection{Input parameters}
+\subsubsection{Input parameters}
 
 In this example we use a mesh of 500 quadrilateral elements with a 6th order polynomial expansion. The base flow has been computed using the \texttt{Nonlinear} evolution operator with appropriate boundary conditions. From its profile, it was possible to determine the periodicity of the flow sampling the velocity profile over time. In order to reconstruct the temporal behaviour of the flow, 32 time slices were considered over one period. Using these data it is possible to set up the stability simulation for a specified $\beta$, for example $\beta=1.7$. Let us note that while the base flow is 2D, the stability simulation that we are performing is 3D.
 
-\subsubsubsection{Expansion}
+\subsubsection{Expansion}
 
 In this example we will use a 6th order polynomial expansion, i.e. $P=7$.
 
@@ -2342,7 +2342,7 @@ In this example we will use a 6th order polynomial expansion, i.e. $P=7$.
                                             \end{lstlisting}
 
 
-\subsubsubsection{Parameters}
+\subsubsection{Parameters}
 
  \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>
@@ -2358,7 +2358,7 @@ In this example we will use a 6th order polynomial expansion, i.e. $P=7$.
                                             \end{lstlisting}
 
 
-\subsubsubsection{Functions}
+\subsubsection{Functions}
 
  \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="BaseFlow">
@@ -2367,11 +2367,11 @@ In this example we will use a 6th order polynomial expansion, i.e. $P=7$.
                                             \end{lstlisting}
 
 
-  \subsubsubsection{Usage}
+  \subsubsection{Usage}
 
 \texttt{IncNavierStokesSolver session.xml}
 
-\subsubsubsection{Results}
+\subsubsection{Results}
 
 The stability simulation takes about 20 cycles to converge and the leading eigenvalue is $\lambda=1.2670$ with a growth rate $\sigma=4.7694e-02$. The figure below shows the profile of the magnitude of the eigenmode at $z=2$.
 

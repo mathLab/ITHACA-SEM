@@ -1,6 +1,6 @@
-\section{Acoustic Perturbation Equations Solver}
+\chapter{Acoustic Perturbation Equations Solver}
 
-\subsection{Synopsis}
+\section{Synopsis}
 The aim of APESolver is to predict aerodynamic sound generation. Through
 the application of a splitting technique, the flow-induced acoustic field is
 totally decoupled from the underlying incompressible hydrodynamic field. The
@@ -28,14 +28,14 @@ be exclusively of acoustic nature.
 where $(\overline{u}_i,\overline{p}, \overline{\rho}, \overline{c}^2 = \gamma \overline{p} / \overline{\rho} )$ represents the base flow and $(u'_i,p')$ the perturbations.
 $\overline{c}^2 q_c$ is the acoustic source term.
 
-\subsection{Usage}
+\section{Usage}
 \begin{lstlisting}[style=BashInputStyle]
 APESolver session.xml
 \end{lstlisting}
 
-\subsection{Session file configuration}
+\section{Session file configuration}
 
-\subsubsection{Solver Info}
+\subsection{Solver Info}
 \begin{itemize}
 \item \inltt{Eqtype} Specifies the equation to solve. This should be set to
 \inltt{APE}.
@@ -43,12 +43,12 @@ APESolver session.xml
 Currently, only \inltt{APEUpwind} supported.
 \end{itemize}
 
-\subsubsection{Parameters}
+\subsection{Parameters}
 \begin{itemize}
 \item \inltt{Gamma}: Ratio of specific heats
 \end{itemize}
 
-\subsubsection{Functions}
+\subsection{Functions}
 \begin{itemize}
 \item \inltt{BaseFlow} Baseflow $(\overline{u}_i, \overline{p}, \overline{\rho})$ defined by the variables \inltt{u0,v0,w0,p0,rho0}
 \item \inltt{Source} Source term $\overline{c}^2 q_c$
@@ -56,8 +56,8 @@ Currently, only \inltt{APEUpwind} supported.
 \end{itemize}
 
 
-\subsection{Examples}
-\subsubsection{Aeroacoustic Wave Propagation}
+\section{Examples}
+\subsection{Aeroacoustic Wave Propagation}
 In this section we explain how to set up a simple simulation of aeroacoustics in
 Nektar++. We will study the propagation of an acoustic wave in the simple case
 where the base flow is $\overline{u}_i = 0, \, \overline{p}=p_{\infty}=10^6, \, \overline{\rho} = \rho_0 = 1.204$. The geometry consists
@@ -71,7 +71,7 @@ of $64$ quadrilateral elements, as shown in Fig.~\ref{f:apesolver:geometry}.
 	\label{f:apesolver:geometry}
 \end{figure}
 
-\subsubsubsection{Input file}
+\subsubsection{Input file}
 We require a discontinuous Galerkin projection and use an explicit
 fourth-order Runge-Kutta time integration scheme. We therefore set the following
 solver information:
@@ -120,12 +120,12 @@ eventual source terms using the following functions:
 </FUNCTION>
 \end{lstlisting}
 
-\subsubsubsection{Running the code}
+\subsubsection{Running the code}
 \begin{lstlisting}[style=BashInputStyle]
 APESolver Test_pulse.xml
 \end{lstlisting}
 
-\subsubsubsection{Results}
+\subsubsection{Results}
 Fig.~\ref{f:apesolver:results} shows the pressure profile at different
 time steps, showing the acoustic propagation.
 

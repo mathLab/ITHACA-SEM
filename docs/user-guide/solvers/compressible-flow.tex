@@ -1,13 +1,13 @@
-\section{Compressible Flow Solver}
+\chapter{Compressible Flow Solver}
 
-\subsection{Synopsis}
+\section{Synopsis}
 The CompressibleFlowSolver allows us to solve
 the unsteady compressible Euler and Navier-Stokes 
 equations for 1D/2D/3D problems using a discontinuous 
 representation of the variables. In the following we describe 
 both the compressible Euler and the Navier-Stokes equations.
 
-\subsubsection{Euler equations}
+\subsection{Euler equations}
 The Euler equations can be expressed as a hyperbolic 
 conservation law in the form 
 \begin{equation}\label{eq:euler}
@@ -63,7 +63,7 @@ E = \frac{p}{\gamma - 1} + \frac{1}{2} \rho(u^2 + v^2 + w^2),
 \label{energy}
 \end{equation}
 where $\gamma$ is the ratio of specific heats.
-\subsubsection{Compressible Navier-Stokes equations}
+\subsection{Compressible Navier-Stokes equations}
 The Navier-Stokes equations include the effects of fluid viscosity and heat 
 conduction and are consequently composed by an inviscid and a viscous 
 flux. They depend not only on the conserved variables but also, indirectly, 
@@ -136,7 +136,7 @@ hypothesis $\lambda = -2/3$.}
 where $\mu$ is the dynamic viscosity calculated using 
 the Sutherland's law and $k$ is the thermal conductivity.
 
-\subsubsection{Numerical discretisation}
+\subsection{Numerical discretisation}
 In Nektar++ the spatial discretisation of the Euler and of the Navier-Stokes 
 equations is projected in the polynomial space via a discontinuous projection.
 Specifically we make use either of the discontinuous Galerkin (DG) method 
@@ -176,16 +176,16 @@ interface fluxes just mentioned.
 For a more detailed description of the above the interested reader can refer 
 to \cite{DeGMen14} and \cite{MenDeG14}.
 
-\subsection{Usage}
+\section{Usage}
 \begin{lstlisting}[style=BashInputStyle]
 CompressibleFlowSolver session.xml
 \end{lstlisting}
 
 
-\subsection{Session file configuration}
+\section{Session file configuration}
 In the following we describe the session file configuration. Specifically we consider the
-subsections under the tag \inltt{<CONDITIONS>} in the session (.xml) file.
-\subsubsection*{Parameters}
+sections under the tag \inltt{<CONDITIONS>} in the session (.xml) file.
+\subsection*{Parameters}
 Under this section it is possible to set the parameters of the simulation.
 \begin{lstlisting}[style=XmlStyle]
 <PARAMETERS>
@@ -229,7 +229,7 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 \item \inltt{thermalConductivity} thermal conductivity (i.e. $\kappa_{\infty}$). Default value = 0.0257 $W / (K m)$;
 \end{itemize}
 
-\subsubsection*{Solver info}
+\subsection*{Solver info}
 Under this section it is possible to set the solver information.
 \begin{lstlisting}[style=XmlStyle]       
 <SOLVERINFO>
@@ -308,7 +308,7 @@ isentropic vortex or the Ringleb flow.
 \end{itemize}
 \end{itemize}
 
-\subsubsection*{Boundary conditions}
+\subsection*{Boundary conditions}
 In this section we can specify the boundary conditions for our problem.
 First we need to define the variables under the section \inltt{VARIABLES}.
 For a 1D problem we have:
@@ -414,7 +414,7 @@ In the following some examples for a 2D problem:
 \end{lstlisting}
 \end{itemize}
 
-\subsubsection*{Initial conditions and exact solution}
+\subsection*{Initial conditions and exact solution}
 Under the two following sections it is possible to define the initial conditions and the exact solution (if existent).
 \begin{lstlisting}[style=XmlStyle]           
 <FUNCTION NAME="InitialConditions">
@@ -434,14 +434,14 @@ Under the two following sections it is possible to define the initial conditions
 </FUNCTION>
 \end{lstlisting}
 
-\subsection{Examples}
-\subsubsection{Shock capturing}
+\section{Examples}
+\subsection{Shock capturing}
 Compressible flow is characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical fluctuations. These fluctuations in an element are identified using a sensor algorithm which quantifies the smoothness of the solution within an element. The value of the sensor in an element is defined as
 \begin{equation}\label{eq:sensor}
 S_e=\frac{||\rho^p_e-\rho^{p-1}_e||_{L_2}}{||\rho_e^p||_{L_2}}
 \end{equation}
 An artificial diffusion term is introduced locally to the Euler equations to deal with flow discontinuity and the consequential numerical oscillations. Two models are implemented, a non-smooth and a smooth artificial viscosity model. 
-\subsubsubsection{Non-smooth artificial viscosity model}
+\subsubsection{Non-smooth artificial viscosity model}
 For the non-smooth artificial viscosity model the added artificial viscosity is constant in each element and discontinuous between the elements. The Euler system is augmented by an added laplacian term on right hand side of equation \ref{eq:euler}. The diffusivity of the system is controlled by a variable viscosity coefficient $\epsilon$. The value of $\epsilon$ is dependent on $\epsilon_0$, which is the maximum viscosity that is dependent on the polynomial order ($p$), the mesh size ($h$) and the maximum wave speed and the local sensor value. Based on pre-defined sensor threshold values, the variable viscosity is set accordingly
 \begin{equation}
    \epsilon
@@ -460,7 +460,7 @@ For the non-smooth artificial viscosity model the added artificial viscosity is 
 \label{fig:}
 \end{center}
 \end{figure}
-\subsubsubsection{Smooth artificial viscosity model}
+\subsubsection{Smooth artificial viscosity model}
 For the smooth artificial viscosity model an extra PDE for the artificial viscosity is appended to the Euler system
 \begin{equation}\label{eq:eulerplusvis}\begin{split}
 \frac{\partial \epsilon}{\partial t} &= \nabla\cdot \left(\nabla \epsilon\right) + \frac{1}{\tau}\left(\frac{h}{p}\lambda_{max}S_\kappa - \epsilon\right)\	\	\	\	\	\	\textrm{on}\	\	\	\	\	\	\	\Omega\\
@@ -499,7 +499,7 @@ The following parameters can be set in the xml session file:
 </PARAMETERS>
 \end{lstlisting}
 where for now \inltt{FH} and \inltt{FL} are used to tune which range of the sensor is used as a forcing term and \inltt{C1} and \inltt{C2} are fixed constants which can be played around with to make the model more diffusive or not. However these constants are generally fixed.
-\subsubsection{Variable polynomial order}
+\subsection{Variable polynomial order}
 A sensor based $p$-adaptive algorithm is implemented to optimise the computational cost and accuracy. 
 The DG scheme allows one to use different polynomial orders since the fluxes over the elements are determined using a Riemann solver and there is now further coupling between the elements. Furthermore, the initial $p$-adaptive algorithm uses the same sensor as the shock capturing algorithm to identify the smoothness of the local solution so it rather straightforward to implement both algorithms at the same time.\\
 \\

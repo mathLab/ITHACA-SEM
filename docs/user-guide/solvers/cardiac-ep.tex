@@ -1,6 +1,6 @@
-\section{Cardiac Electrophysiology Solver}
+\chapter{Cardiac Electrophysiology Solver}
 
-\subsection{Synopsis}
+\section{Synopsis}
 
 The CardiacEPSolver is used to model the electrophysiology of cardiac
 tissue, specifically using the monodomain or bidomain model. These models are
@@ -9,7 +9,7 @@ cells. The system is a reaction-diffusion system, with the reaction term
 modeling the flow of current in and out of the cells using a separate set of
 ODEs.
 
-\subsubsection{Bidomain Model}
+\subsection{Bidomain Model}
 The Bidomain model is given by the following PDEs,
 \begin{align*}
 g_{ix}\frac{\partial^2 V_i}{\partial x^2} + g_{iy}\frac{\partial^2 V_i}{\partial y^2} &=  \chi \left[ C_m \frac{\partial(V_i-V_e)}{\partial t} + G_m(V_i-V_e) \right] \\
@@ -23,7 +23,7 @@ of the transmembrane potential and extracellular potential,
   &= -g_{ix} \frac{\partial^2 V_m}{\partial x^2} - g_{iy} \frac{\partial^2 V_m}{\partial y^2}
 \end{align*}
 
-\subsubsection{Monodomain Model}
+\subsection{Monodomain Model}
 In the case where the intracellular and extracellular conductivities are
 proportional, that is $g_{ix} = kg_{ex}$ for some $k$,
 then the above two PDEs can be reduced to a single PDE:
@@ -31,7 +31,7 @@ then the above two PDEs can be reduced to a single PDE:
 \chi\left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= \nabla \cdot (\sigma \nabla V_m)
 \end{align*}
 
-\subsubsection{Cell Models}
+\subsection{Cell Models}
 The action potential of a cardiac cell can be modelled at either a biophysical
 level of detail, including a number of transmembrane currents, or as a
 phenomenological model, to reproduce the features of the action potential, with
@@ -62,14 +62,14 @@ The monodomain equation:
 \chi \left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= \nabla \cdot (\sigma \nabla V_m)
 \end{align*}
 
-\subsection{Usage}
+\section{Usage}
 
 \begin{lstlisting}[style=BashInputStyle]
 CardiacEPSolver session.xml
 \end{lstlisting}
 
-\subsection{Session file configuration}
-\subsubsection{Solver Info}
+\section{Session file configuration}
+\subsection{Solver Info}
 \begin{itemize}
     \item \inltt{Eqtype} Specifies the PDE system to solve. The following values
         are supported:
@@ -113,7 +113,7 @@ CardiacEPSolver session.xml
 \end{itemize}
 
 
-\subsubsection{Parameters}
+\subsection{Parameters}
 The following parameters can be specified in the \inltt{PARAMETERS} section of
 the session file. Example values are taken from \cite{NiKeBeBeBe11}.
 \begin{itemize}
@@ -133,8 +133,8 @@ the session file. Example values are taken from \cite{NiKeBeBeBe11}.
 \end{align*}
 \end{itemize}
 
-\subsubsection{Functions}
-The following functions can be specified inside the \inltt{CONDITIONS} subsection
+\subsection{Functions}
+The following functions can be specified inside the \inltt{CONDITIONS} section
 of the session file. If both are specified, the effect is multiplicative.
 Example values are taken from \cite{NiKeBeBeBe11}.
 \begin{itemize}
@@ -157,7 +157,7 @@ $\mathbf{\sigma}$ of the tissue.
 \end{itemize}
 
 
-\subsubsection{Filters}
+\subsection{Filters}
 \begin{itemize}
     \item \inltt{CellHistoryPoints} writes all cell model states over time at
         fixed points. Can be used along with the \inltt{HistoryPoints} filter to
@@ -241,7 +241,7 @@ $\mathbf{\sigma}$ of the tissue.
 \end{itemize}
 
 
-\subsubsection{Stimuli}
+\subsection{Stimuli}
 Electrophysiological propagaion is initiated through the stimulus current 
 $I_{\mathrm{ion}}$. The \inltt{STIMULI} section describes one or more regions of
 stimulus and the time-dependent protocol with which they are applied.
@@ -252,7 +252,7 @@ stimulus and the time-dependent protocol with which they are applied.
 \end{lstlisting}
 A number of stimulus types are available
 
-\subsubsubsection{Stimulus types}
+\subsubsection{Stimulus types}
 \begin{itemize}
     \item \inltt{StimulusRect} stimulates a cuboid-shaped region of the domain,
     specified by two coordinates $(x_1,y_1,z_1)$ and $(x_2,y_2,z_2)$.
@@ -287,7 +287,7 @@ A number of stimulus types are available
 \end{itemize}
 
 
-\subsubsubsection{Protocols}
+\subsubsection{Protocols}
 A protocol specifies the time-dependent function indicating the strength of the
 stimulus and one such \inltt{PROTOCOL} section should be included within each
 \inltt{STIMULUS}. This can be expressed as one of:

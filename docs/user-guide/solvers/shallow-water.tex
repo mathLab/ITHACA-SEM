@@ -1,6 +1,6 @@
-\section{Shallow Water Solver}
+\chapter{Shallow Water Solver}
 
-\subsection{Synopsis}
+\section{Synopsis}
 The ShallowWaterSolver is a solver for depth-integrated wave 
 equations of shallow water type. Presently the following equations 
 are supported:
@@ -17,7 +17,7 @@ variables (constant still water depth) \\
 \end{tabular}
 \end{center}
 
-\subsubsection{The Shallow Water Equations}
+\subsection{The Shallow Water Equations}
 The shallow water equations (SWE) is a two-dimensional system of nonlinear partial
 differential equations of hyperbolic type that are fundamental in hydraulic, coastal
 and environmental engineering. In deriving the SWE the vertical velocity is 
@@ -54,14 +54,14 @@ friction, bed slope, Coriolis force and higher-order dispersive effects
 (Boussinesq terms). In the distributed version of the ShallowWaterSolver
 only the Coriolis force is included. 
 
-\subsection{Usage}
+\section{Usage}
 \begin{lstlisting}[style=BashInputStyle]
 ShallowWaterSolver session.xml
 \end{lstlisting}
 
-\subsection{Session file configuration}
+\section{Session file configuration}
 
-\subsubsection{Solver Info}
+\subsection{Solver Info}
 \begin{itemize}
 \item \inltt{Eqtype}: Specifies the equation to solve. This should be set
 to \inltt{NonlinearSWE}.
@@ -70,25 +70,25 @@ to \inltt{NonlinearSWE}.
 \item \inltt{TimeIntegrationScheme}
 \end{itemize}
 
-\subsubsection{Parameters}
+\subsection{Parameters}
 \begin{itemize}
 \item \inltt{Gravity}
 \end{itemize}
 
-\subsubsection{Functions}
+\subsection{Functions}
 \begin{itemize}
 \item \inltt{Coriolis}: Specifies the Coriolis force (variable name: `f`)
 \item \inltt{WaterDepth}: Specifies the water depth (variable name: `d`)
 \end{itemize}
 
-\subsection{Examples}
-\subsubsection{Rossby modon case}
+\section{Examples}
+\subsection{Rossby modon case}
 This example, provided in \inltt{RossbyModon\_Nonlinear\_DG.xml} is of a
 discontinuous Galerkin simulation of the westward propagation of an equatorial
 Rossby modon.
 
 
-\subsubsubsection{Input Options}
+\subsubsection{Input Options}
 
 For what concern the ShallowWaterSolver the
 \inltt{<SOLVERINFO>} section allows us to specify the solver, the type of
@@ -145,7 +145,7 @@ section:
   </BOUNDARYCONDITIONS>
 \end{lstlisting}
 
-\subsubsubsection{Running the code}
+\subsubsection{Running the code}
 
 After the input file has been copied to the build directory
 of the \inltt{ShallowWaterSolver} the code can be executed by:
@@ -153,7 +153,7 @@ of the \inltt{ShallowWaterSolver} the code can be executed by:
  ./ShallowWaterSolver Rossby_Nonlinear_DG.xml
 \end{lstlisting}
 
-\subsubsubsection{Post-proceesing}
+\subsubsection{Post-proceesing}
 After the final time step the solver will write an output file 
 \inltt{RossbyModon\_Nonlinear\_DG.fld}. We can convert it to tecplot
 format by using the \inltt{FieldConvert} utility. Thus we execute the

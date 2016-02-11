@@ -2,13 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project("pkg-@PKG_NAME@")
 
-set(CPACK_GENERATOR "TGZ")
-set(CPACK_OUTPUT_FILE_PREFIX "../..") # Put in builds dir.
-
-# Find out the machine architecture
-execute_process(COMMAND uname -m 
-                OUTPUT_VARIABLE ARCHITECTURE
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Put output in builds dir.
+set(CPACK_OUTPUT_FILE_PREFIX "../..")
 
 # Package details
 set(CPACK_PACKAGE_NAME "@PKG_NAME@")
@@ -23,9 +18,60 @@ set(CPACK_PACKAGE_VERSION_MAJOR "@NEKTAR_VERSION_MAJOR@")
 set(CPACK_PACKAGE_VERSION_MINOR "@NEKTAR_VERSION_MINOR@")
 set(CPACK_PACKAGE_VERSION_PATCH "@NEKTAR_VERSION_PATCH@")
 
+if(CMAKE_GENERATOR STREQUAL "DEB")
+    # Debian packages
+    execute_process(COMMAND dpkg --print-architecture 
+        OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(ARCHITECTURE ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
+
+    set(CPACK_DEBIAN_PACKAGE_DEBUG ON)
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER 
+        "Chris Cantwell <c.cantwell@imperial.ac.uk>")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.nektar.info")
+    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION 
+        "@PKG_SUMMARY@@PKG_DESCRIPTION@")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "@PKG_DEPENDS@")
+
+    if (INSTALL_BINS_FILES OR INSTALL_LIBS_FILES)
+        set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    endif ()
+elseif(CMAKE_GENERATOR STREQUAL "RPM")
+    execute_process(COMMAND rpm --eval %{_arch}
+                OUTPUT_VARIABLE CPACK_RPM_PACKAGE_ARCHITECTURE
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(ARCHITECTURE ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
+
+    set(CPACK_RPM_PACKAGE_SUMMARY "@PKG_SUMMARY@")
+    set(CPACK_RPM_PACKAGE_DESCRIPTION "@PKG_DESCRIPTION@")
+    set(CPACK_RPM_PACKAGE_REQUIRES "@PKG_DEPENDS@")
+    set(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
+    set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+    set(CPACK_RPM_PACKAGE_DEBUG 0)
+
+    set(CPACK_PACKAGE_FILE_NAME
+        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+elseif(CMAKE_GENERATOR STREQUAL "PackageMaker")
+    # OS X .pkg installer
+    set(CPACK_PACKAGE_DEFAULT_LOCATION "/usr/local/nektar++")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+else()
+endif()
+
+# Determine architecture if not detected by rpm/dpkg above
+if(NOT DEFINED ARCHITECTURE)
+    execute_process(COMMAND uname -m 
+        OUTPUT_VARIABLE ARCHITECTURE
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
 # Override the output filename to comply with Debian naming policy
-set(CPACK_PACKAGE_FILE_NAME 
-    "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
+if(NOT DEFINED CPACK_PACKAGE_FILE_NAME)
+    set(CPACK_PACKAGE_FILE_NAME
+        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
+endif()
 
 # Files to go in the package
 file(READ "targets/install_libs.txt" INSTALL_LIBS_FILES)

@@ -276,7 +276,6 @@ void OutputVtk::Process(po::variables_map &vm)
     // output parallel outline info if necessary
     if(m_f->m_comm->GetRank() == 0)
     {
-        cout << nfields << " " << fieldname.size() << endl;
         ASSERTL1(fieldname.size() == nfields, "fieldname not the same size as nfields");
         int nprocs = m_f->m_comm->GetSize();
         if(nprocs != 1)

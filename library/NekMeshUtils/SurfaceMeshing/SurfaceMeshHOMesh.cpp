@@ -353,6 +353,8 @@ void SurfaceMesh::HOSurf()
 
                 DNekMat J = opti->dF(xi);
 
+                Array<OneD, NekDouble> bnds = c->Bounds();
+
                 bool repeat = true;
                 int itct = 0;
                 while(repeat)
@@ -360,11 +362,11 @@ void SurfaceMesh::HOSurf()
                     NekDouble Norm = 0;
                     for(int k = 0; k < nq - 2; k++)
                     {
-                        Norm += J(k,0)*J(k,0);
+                        Norm += J(k,0)*J(k,0) / (bnds[1] - bnds[0]) / (bnds[1] - bnds[0]);
                     }
                     Norm = sqrt(Norm);
 
-                    if(Norm < 1E-8)
+                    if(Norm < 1E-5)
                     {
                         repeat = false;
                         break;
@@ -382,7 +384,11 @@ void SurfaceMesh::HOSurf()
                     }
                     itct++;
 
-                    BGFSUpdate(opti, J, B, H);
+                    if(!BGFSUpdate(opti, J, B, H))
+                    {
+                        cout << "BFGS reported no update, curve on " << c->GetId() << endl;
+                        break;
+                    }
 
                 }
                 //need to pull the solution out of opti
@@ -463,17 +469,26 @@ void SurfaceMesh::HOSurf()
                 while(repeat)
                 {
                     NekDouble Norm = 0;
-                    for(int k = 0; k < nq - 2; k++)
+                    for(int k = 0; k < 2*(nq - 2); k++)
                     {
-                        Norm += J(k,0)*J(k,0);
+                        if(k % 2 == 0)
+                        {
+                            Norm += J(k,0)*J(k,0) / (bnds[1] - bnds[0]) / (bnds[1] - bnds[0]);
+                        }
+                        else
+                        {
+                            Norm += J(k,0)*J(k,0) / (bnds[3] - bnds[2]) / (bnds[3] - bnds[2]);
+                        }
+
                     }
                     Norm = sqrt(Norm);
 
-                    if(Norm < 1E-8)
+                    if(Norm < 1E-5)
                     {
                         repeat = false;
                         break;
                     }
+
                     if(itct > 100)
                     {
                         cout << "failed to optimise on edge" << endl;
@@ -489,7 +504,13 @@ void SurfaceMesh::HOSurf()
                     }
                     itct++;
 
-                    BGFSUpdate(opti, J, B, H); //all will be updated
+                    if(!BGFSUpdate(opti, J, B, H))
+                    {
+                        cout << "BFGS reported no update, edge on " << surf << endl;
+                        //exit(-1);
+                        break;
+                    }
+
                 }
 
                 all = opti->GetSolution();

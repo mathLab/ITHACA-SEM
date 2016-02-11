@@ -44,7 +44,7 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-    void BGFSUpdate(OptiObjSharedPtr opti,
+    bool BGFSUpdate(OptiObjSharedPtr opti,
                     DNekMat &J, DNekMat &B, DNekMat &H);
 }
 }

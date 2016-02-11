@@ -44,7 +44,7 @@ namespace NekMeshUtils
 {
     //this function will perform an update on the solution vector contained within
     //opti
-    void BGFSUpdate(OptiObjSharedPtr opti,
+    bool BGFSUpdate(OptiObjSharedPtr opti,
                     DNekMat &J, DNekMat &B, DNekMat &H)
     {
 
@@ -90,6 +90,8 @@ namespace NekMeshUtils
 
         Array<OneD, NekDouble> xci(xi.num_elements());
 
+        bool hitbounded = false;
+
         for(int i = 0; i < xci.num_elements(); i++)
         {
             if(xi[i] + d(i,0) < li[i])
@@ -97,6 +99,8 @@ namespace NekMeshUtils
                 xci[i] = li[i];
                 Fset.erase(i);
                 cout << "hit bounded" << endl;
+                hitbounded = true;
+                continue;
             }
             else
             {
@@ -108,6 +112,8 @@ namespace NekMeshUtils
                 xci[i] = ui[i];
                 Fset.erase(i);
                 cout << "hit bounded" << endl;
+                hitbounded = true;
+                continue;
             }
             else
             {
@@ -167,13 +173,40 @@ namespace NekMeshUtils
             }
         }
 
+        /*if(hitbounded)
+        {
+            cout << endl << endl << Z << endl << endl;
+            cout << rg << endl << endl;
+            cout << du << endl << endl;
+            cout << alpha << endl << endl;
+            cout << grad << endl << endl;
+
+            for(int i = 0; i < xi.num_elements(); i++)
+            {
+                cout << xci[i] << " " << xibar[i] << endl;
+            }
+
+            exit(-1);
+        }*/
+
         Vmath::Vsub(xci.num_elements(),&xibar[0],1,&xi[0],1,&dk[0],1);
 
         NekDouble c = 0.0;
+        NekDouble r = 0.0;
+        NekDouble l = 0.0;
         for(int i = 0; i < dk.num_elements(); i++)
         {
             c += 1E-4 * J(i,0) * dk[i];
+            r += J(i,0) * dk[i];
         }
+
+        /*cout << endl << J << endl << endl;
+
+        for(int i = 0; i < dk.num_elements(); i++)
+        {
+            cout << dk[i] << endl;
+        }
+        cout << endl;*/
 
         //this section needs a case evaluation for edges on faces
         NekDouble lam = 2.0;
@@ -185,8 +218,8 @@ namespace NekMeshUtils
         {
             if(iterct > 20)
             {
-                cout << "failed line search" << endl;
-                abort();
+                //cout << "failed line search" << endl;
+                return false;
             }
             iterct++;
 
@@ -199,7 +232,17 @@ namespace NekMeshUtils
 
             fn = opti->F(tst);
 
-        }while(fn > fo + c);
+            DNekMat jn = opti->dF(tst);
+
+            l = 0.0;
+            for(int i = 0; i < dk.num_elements(); i++)
+            {
+                l += jn(i,0) * dk[i];
+            }
+
+            //cout << lam << ": " << fo << " " << fn << " : " << 0.9*fabs(r) << " " << fabs(l) << endl;
+
+        }while(fn > fo + c || fabs(l) > 0.9*fabs(r));
 
         //tst at this point is the new all vector
         //now need to update hessians
@@ -234,6 +277,8 @@ namespace NekMeshUtils
 
         J = Jn;
         opti->Update(tst);
+
+        return true;
 
     }
 

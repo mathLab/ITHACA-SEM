@@ -340,7 +340,16 @@ if (NEKTAR_BUILD_LIBRARY)
         SUMMARY "Nektar++ libraries and solvers"
         DESCRIPTION "This is all of Nektar++"
         INSTALL_LIBS "${nektar++_LIBS}"
-    )   
+        INSTALL_BINS "${nektar++_BINS}"
+    )
+
+    add_pkgmaker_package(
+        NAME nektar++
+        SUMMARY "Nektar++ libraries and solvers"
+        DESCRIPTION "This is all of Nektar++"
+        INSTALL_LIBS "${nektar++_LIBS}"
+        INSTALL_BINS "${nektar++_BINS}"
+    )
 endif (NEKTAR_BUILD_LIBRARY)
 
 # Configure source package

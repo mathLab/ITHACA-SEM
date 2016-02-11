@@ -12,8 +12,7 @@ function (write_lib_files PKG_INSTALL_LIBS OUTPUT_FILE)
         endif ()
         list(APPEND PKG_INSTALL_LIBS_FILES ${TARGET_LOCATION})
         if (APPLE)
-            list(APPEND PKG_INSTALL_LIBS_FILES 
-                        ${TARGET_LOCATION}.${VERSION_MAJOR_MINOR})
+            list(APPEND PKG_INSTALL_LIBS_FILES $<TARGET_FILE:${l}>)
         else ()
             list(APPEND PKG_INSTALL_LIBS_FILES 
                         ${TARGET_LOCATION}.${NEKTAR_VERSION})
@@ -152,6 +151,37 @@ macro (add_tgz_package)
     add_dependencies(pkg-tgz pkg-tgz-${PKG_NAME})
 endmacro (add_tgz_package)
 
+macro (add_pkgmaker_package)
+    set(options "")
+    set(oneValueArgs NAME SUMMARY DESCRIPTION)
+    set(multiValueArgs INSTALL_LIBS INSTALL_BINS BREAKS CONFLICTS DEPENDS)
+    cmake_parse_arguments(PKG "${options}"
+            "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+    set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-pkgmaker)
+
+    file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
+    write_lib_files("${PKG_INSTALL_LIBS}"
+                    "${BUILD_DIR}/targets/install_libs.txt")
+    write_bin_files("${PKG_INSTALL_BINS}"
+                    "${BUILD_DIR}/targets/install_bins.txt")
+
+    configure_file(CMakeListsPkgMaker.txt.in
+                ${BUILD_DIR}/CMakeLists.txt @ONLY)
+    add_custom_target(
+        pkg-pkgmaker-${PKG_NAME}
+        rm -f ${BUILD_DIR}/CPackConfig.cmake
+        COMMAND ${CMAKE_COMMAND} .
+        COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
+        WORKING_DIRECTORY ${BUILD_DIR}
+    )
+    if (PKG_INSTALL_LIBS OR PKG_INSTALL_BINS)
+        add_dependencies(pkg-pkgmaker-${PKG_NAME}
+            ${PKG_INSTALL_LIBS} ${PKG_INSTALL_BINS})
+    endif()
+    add_dependencies(pkg-pkgmaker pkg-pkgmaker-${PKG_NAME})
+endmacro (add_pkgmaker_package)
+
 # Base packaging target
 add_custom_target(pkg)
 
@@ -175,6 +205,9 @@ if (RPMBUILD)
     add_custom_target(pkg-rpm)
     add_dependencies(pkg pkg-rpm)
 endif (RPMBUILD)
+
+add_custom_target(pkg-pkgmaker)
+add_dependencies(pkg pkg-pkgmaker)
 
 # Binary archive target
 add_custom_target(pkg-tgz)

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project("pkg-@PKG_NAME@")
 
-set(CPACK_GENERATOR "TGZ")
+set(CPACK_GENERATOR "PackageMaker")
 set(CPACK_OUTPUT_FILE_PREFIX "../..") # Put in builds dir.
 
 # Find out the machine architecture
@@ -26,6 +26,9 @@ set(CPACK_PACKAGE_VERSION_PATCH "@NEKTAR_VERSION_PATCH@")
 # Override the output filename to comply with Debian naming policy
 set(CPACK_PACKAGE_FILE_NAME 
     "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
+
+set(CPACK_PACKAGE_DEFAULT_LOCATION "/usr/local/nektar++")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/")
 
 # Files to go in the package
 file(READ "targets/install_libs.txt" INSTALL_LIBS_FILES)

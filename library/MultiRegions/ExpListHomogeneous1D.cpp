@@ -70,7 +70,7 @@ namespace Nektar
                            m_comm->GetColumnComm();
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /
@@ -606,6 +606,10 @@ namespace Nektar
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
             
+            std::vector<unsigned int> StripsIDs;
+
+            StripsIDs.push_back(m_transposition->GetStripID());
+            
             std::vector<unsigned int> PlanesIDs;
             
             for(int i = 0; i < m_planes.num_elements(); i++)
@@ -613,11 +617,7 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
-            int NumHomoStrip;
-            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
- 
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, PlanesIDs);
-            
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, StripsIDs, PlanesIDs);
             return returnval;
         }
 
@@ -629,6 +629,10 @@ namespace Nektar
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
             
+            std::vector<unsigned int> StripsIDs;
+
+            StripsIDs.push_back(m_transposition->GetStripID());
+            
             std::vector<unsigned int> PlanesIDs;
             
             for(int i = 0; i < m_planes.num_elements(); i++)
@@ -636,11 +640,8 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
-            int NumHomoStrip;
-            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
-
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis,HomoLen,PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis, HomoLen, StripsIDs, PlanesIDs);
         }
 
 

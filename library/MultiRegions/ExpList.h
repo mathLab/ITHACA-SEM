@@ -737,6 +737,8 @@ namespace Nektar
                     LibUtilities::NullBasisSharedPtr1DArray,
                 std::vector<NekDouble> &HomoLen =
                     LibUtilities::NullNekDoubleVector,
+                std::vector<unsigned int> &HomoSIDs =
+                    LibUtilities::NullUnsignedIntVector,
                 std::vector<unsigned int> &HomoZIDs =
                     LibUtilities::NullUnsignedIntVector,
                 std::vector<unsigned int> &HomoYIDs =

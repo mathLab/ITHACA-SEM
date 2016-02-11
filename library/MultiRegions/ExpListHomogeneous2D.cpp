@@ -591,7 +591,10 @@ namespace Nektar
             
             int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
             int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
-            
+
+            std::vector<unsigned int> sIDs
+                = LibUtilities::NullUnsignedIntVector;
+ 
             std::vector<unsigned int> yIDs;
             std::vector<unsigned int> zIDs;
             
@@ -605,7 +608,7 @@ namespace Nektar
             }
 
             m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, 
-                                                    HomoLen, zIDs, yIDs);
+                                                     HomoLen, sIDs, zIDs, yIDs);
             return returnval;
         }
 
@@ -621,7 +624,10 @@ namespace Nektar
             
             int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
             int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
-            
+
+            std::vector<unsigned int> sIDs
+                =LibUtilities::NullUnsignedIntVector;
+
             std::vector<unsigned int> yIDs;
             std::vector<unsigned int> zIDs;
             
@@ -635,8 +641,8 @@ namespace Nektar
             }
             
             // enforce NumHomoDir == 1 by direct call
-            m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, HomoBasis, 
-                                                    HomoLen, zIDs, yIDs);
+             m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, HomoBasis, 
+                                                    HomoLen, sIDs, zIDs, yIDs);
         }
         
         void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)

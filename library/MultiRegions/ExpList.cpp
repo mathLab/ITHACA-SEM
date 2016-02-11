@@ -1938,9 +1938,10 @@ namespace Nektar
                                                   int NumHomoDir,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
+                                                  std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
-        {
+        {   
             int startenum = (int) LibUtilities::eSegment;
             int endenum   = (int) LibUtilities::eHexahedron;
             int s         = 0;
@@ -2029,8 +2030,8 @@ namespace Nektar
                         MemoryManager<LibUtilities::FieldDefinitions>::
                             AllocateSharedPtr(shape, elementIDs, basis,
                                             UniOrder, numModes,fields,
-                                            NumHomoDir, HomoLen, HomoZIDs,
-                                            HomoYIDs);
+                                            NumHomoDir, HomoLen, HomoSIDs,
+                                            HomoZIDs, HomoYIDs);
                     fielddef.push_back(fdef);
                 }
             }

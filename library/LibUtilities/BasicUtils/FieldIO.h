@@ -79,6 +79,8 @@ namespace Nektar
                     int NumHomoDir = 0,
                     const std::vector<NekDouble> &HomoLengths =
                     NullNekDoubleVector,
+                    const std::vector<unsigned int> &HomoSIDs =
+                    NullUnsignedIntVector,
                     const std::vector<unsigned int> &HomoZIDs =
                     NullUnsignedIntVector,
                     const std::vector<unsigned int> &HomoYIDs =
@@ -94,6 +96,7 @@ namespace Nektar
                 m_basis(basis),
                 m_numHomogeneousDir(NumHomoDir),
                 m_homogeneousLengths(HomoLengths),
+                m_homogeneousSIDs(HomoSIDs),
                 m_homogeneousZIDs(HomoZIDs),
                 m_homogeneousYIDs(HomoYIDs),
                 m_points(points),
@@ -111,6 +114,7 @@ namespace Nektar
             std::vector<LibUtilities::BasisType>    m_basis;
             int					                    m_numHomogeneousDir;
             std::vector<NekDouble>		            m_homogeneousLengths;
+            std::vector<unsigned int>               m_homogeneousSIDs;
             std::vector<unsigned int>		        m_homogeneousZIDs;
             std::vector<unsigned int>		        m_homogeneousYIDs;
             

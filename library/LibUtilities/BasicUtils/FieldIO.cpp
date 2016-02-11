@@ -298,6 +298,24 @@ namespace Nektar
                         }
                         elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
                     }
+                    
+                    if(fielddefs[f]->m_homogeneousSIDs.size() > 0)
+                    {
+                        std::string homoSIDsString;
+                        {
+                            std::stringstream homoSIDsStringStream;
+                            bool first = true;
+                            for(int i = 0; i < fielddefs[f]->m_homogeneousSIDs.size(); i++)
+                            {
+                                if (!first)
+                                    homoSIDsStringStream << ",";
+                                homoSIDsStringStream << fielddefs[f]->m_homogeneousSIDs[i];
+                                first = false;
+                            }
+                            homoSIDsString = homoSIDsStringStream.str();
+                        }
+                        elemTag->SetAttribute("HOMOGENEOUSSIDS", homoSIDsString);
+                    }
                 }
 
                 // Write NUMMODESPERDIR
@@ -730,6 +748,7 @@ namespace Nektar
                     std::string shapeString;
                     std::string basisString;
                     std::string homoLengthsString;
+                    std::string homoSIDsString;
                     std::string homoZIDsString;
                     std::string homoYIDsString;
                     std::string numModesString;
@@ -757,6 +776,10 @@ namespace Nektar
                         else if (attrName == "HOMOGENEOUSLENGTHS")
                         {
                             homoLengthsString.insert(0,attr->Value());
+                        }
+                        else if (attrName == "HOMOGENEOUSSIDS")
+                        {
+                            homoSIDsString.insert(0,attr->Value());
                         }
                         else if (attrName == "HOMOGENEOUSZIDS")
                         {
@@ -864,6 +887,13 @@ namespace Nektar
                         ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
                     }
 
+                    // Get Homogeneous strips IDs
+                    std::vector<unsigned int> homoSIDs;
+                    if(numHomoDir == 1)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(), homoSIDs);
+                        ASSERTL0(valid, "Unable to correctly parse homogeneous strips IDs.");
+                    }
                     // Get Homogeneous points IDs
                     std::vector<unsigned int> homoZIDs;
                     std::vector<unsigned int> homoYIDs;
@@ -933,7 +963,7 @@ namespace Nektar
                     valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
                     ASSERTL0(valid, "Unable to correctly parse the number of fields.");
 
-                    FieldDefinitionsSharedPtr fielddef  = MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
+                    FieldDefinitionsSharedPtr fielddef  = MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoSIDs, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
 
                     fielddefs.push_back(fielddef);
 

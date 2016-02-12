@@ -1145,7 +1145,12 @@ namespace Nektar
             {
                 try
                 {
-                    fs::remove_all(specPath);
+                    if (rank == 0)
+                    {
+                        fs::remove_all(specPath);
+                    }
+
+                    m_comm->Block();
                 }
                 catch (fs::filesystem_error& e)
                 {
@@ -1178,7 +1183,12 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                fs::create_directory(specPath);
+                if (rank == 0)
+                {
+                    fs::create_directory(specPath);
+                }
+
+                m_comm->Block();
             }
             catch (fs::filesystem_error& e)
             {

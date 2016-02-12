@@ -344,6 +344,7 @@ namespace Nektar
                 for (int i = 0; i < elmt.size(); ++i)
                 {
                     CompositeMap::iterator it;
+
                     unsigned int tagid = elmt[i]->GetTagList()[0];
 
                     it = m_mesh->m_composite.find(tagid);

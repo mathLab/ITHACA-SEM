@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_FIELDIO_H
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -225,12 +226,6 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr  &fielddefs);
 
-                LIB_UTILITIES_EXPORT int Deflate(
-                        std::vector<NekDouble>& in,
-                        string& out);
-
-                LIB_UTILITIES_EXPORT int Inflate(string& in,
-                        std::vector<NekDouble>& out);
         };
 
         typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;

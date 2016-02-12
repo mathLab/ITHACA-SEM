@@ -16,6 +16,16 @@ There is also some limited support for other output formats. We begin by running
 through a basic example to show how a mesh can be converted from the widely-used
 mesh-generator \gmsh to the XML file format.
 
+\begin{notebox}
+  The default since Jan 2016 is to output the .xml files in a
+  compressed form where the VERTEX, EDGES, FACES, ELEMENTS and CURVED
+  information is compressed into binary format which is then
+  converted into base64. This is identified for each section by the attribute
+  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output
+  in ascii format add the module option ``:xml:uncompress'' to the .xml file,
+  i.e. \\ \inltt{ MeshConvert file.msh newfile.xml:xml:uncompress}
+\end{notebox}
+
 \section{Exporting a mesh from \gmsh}
 
 To demonstrate how \mc works, we will define a simple channel-like 3D geometry.
@@ -265,6 +275,14 @@ The following output formats are supported:
 Note that for both \gmsh and \texttt{VTK}, it is highly likely that you will
 need to experiment with the source code in order to successfully generate
 meshes since robustness is not guaranteed.
+
+The default for \texttt{xml} is into binary data which has been
+converted into base64. If you wish to see an ascii output you need to
+specify the output module option \inltt{uncompress} by executing:
+
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert Mesh.msh output.xml:xml:uncompress
+\end{lstlisting}
 
 In the rest of these subsections, we discuss the various processing modules
 available within \mc.

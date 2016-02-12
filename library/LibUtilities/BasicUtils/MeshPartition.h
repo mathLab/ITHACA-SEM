@@ -39,6 +39,7 @@
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 
 class TiXmlElement;
 
@@ -87,35 +88,20 @@ namespace Nektar
                 char type;
                 std::vector<unsigned int> list;
             };
-
-            struct MeshVertex
-            {
-                int id;
-                NekDouble x;
-                NekDouble y;
-                NekDouble z;
-            };
-
-            struct MeshEdge
-            {
-                int id;
-                int v0;
-                int v1;
-            };
-
+            
             struct MeshFace
             {
                 int id;
                 std::vector<int> edgeList;
             };
-
+            
             struct MeshElement
             {
                 int id;
                 char type;
                 std::vector<int> list;
             };
-
+            
             struct MeshCurved
             {
                 int id;
@@ -124,9 +110,10 @@ namespace Nektar
                 std::string type;
                 int npoints;
                 std::string data;
+                int ptid;
+                int ptoffset;
             };
-            typedef std::pair<std::string, int> MeshCurvedKey;
-            
+
             struct MeshComposite
             {
                 int id;
@@ -134,6 +121,8 @@ namespace Nektar
                 std::vector<int> list;
             };
 
+            bool m_isCompressed; // Idenfity if input is compressed and if so set output to be compressed
+            typedef std::pair<std::string, int> MeshCurvedKey;
             typedef std::vector<unsigned int>   MultiWeight;
 
             // Element in a mesh
@@ -195,6 +184,7 @@ namespace Nektar
             std::map<int, MeshEntity>           m_meshFaces;
             std::map<int, MeshEntity>           m_meshElements;
             std::map<MeshCurvedKey, MeshCurved> m_meshCurved;
+            std::map<int, MeshCurvedPts>        m_meshCurvedPts;
             std::map<int, MeshEntity>           m_meshComposites;
             std::vector<unsigned int>           m_domain;
             std::map<std::string, std::string>  m_vertexAttributes;

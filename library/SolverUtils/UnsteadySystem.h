@@ -69,9 +69,6 @@ namespace Nektar
             LibUtilities::TimeIntegrationSolutionSharedPtr  m_intSoln;
             ///
             NekDouble                                       m_epsilon;
-
-            static int                                      m_nchk;
-
             /// Indicates if explicit or implicit treatment of diffusion is used.
             bool                                            m_explicitDiffusion;
             /// Indicates if explicit or implicit treatment of advection is used.

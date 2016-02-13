@@ -45,7 +45,6 @@ namespace Nektar
 {	
     namespace SolverUtils
     {
-        int UnsteadySystem::m_nchk = 1;
         /**
          * @class UnsteadySystem
          *

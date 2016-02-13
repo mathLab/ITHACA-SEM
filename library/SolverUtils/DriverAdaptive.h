@@ -41,48 +41,49 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+
+/// Base class for the adaptive polynomial order driver.
+class DriverAdaptive : public Driver
+{
+public:
+    friend class MemoryManager<DriverAdaptive>;
+
+    /// Creates an instance of this class
+    static DriverSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
     {
-        /// Base class for the development of solvers.
-        class DriverAdaptive: public Driver
-        {
-        public:
-            friend class MemoryManager<DriverAdaptive>;
+        DriverSharedPtr p =
+            MemoryManager<DriverAdaptive>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
 
-            /// Creates an instance of this class
-            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-                DriverSharedPtr p = MemoryManager<DriverAdaptive>::AllocateSharedPtr(pSession);
-                p->InitObject();
-                return p;
-            }
-	
-            ///Name of the class
-            static std::string className;
-	
-        protected:
-            /// Constructor
-            SOLVER_UTILS_EXPORT DriverAdaptive(const LibUtilities::SessionReaderSharedPtr pSession);
+    /// Name of the class
+    static std::string className;
 
-            /// Destructor
-            SOLVER_UTILS_EXPORT virtual ~DriverAdaptive();
-        
-            /// Second-stage initialisation
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
+protected:
+    /// Constructor
+    SOLVER_UTILS_EXPORT DriverAdaptive(
+        const LibUtilities::SessionReaderSharedPtr pSession);
 
-            /// Virtual function for solve implementation.
-            SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
-            
-            SOLVER_UTILS_EXPORT void ReplaceExpansion(
-                        Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
-                        map<int, int> deltaP);
-            
-            SOLVER_UTILS_EXPORT void GenerateSeqString(const std::vector<unsigned int> &elmtids,
-                                      std::string &idString);
-		
-            static std::string driverLookupId;
-	};
-    }	
-} //end of namespace
+    /// Destructor
+    SOLVER_UTILS_EXPORT virtual ~DriverAdaptive();
 
-#endif //NEKTAR_SOLVERUTILS_DRIVERADAPTIVE_H
+    /// Second-stage initialisation
+    SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
 
+    /// Virtual function for solve implementation.
+    SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
+
+    SOLVER_UTILS_EXPORT void ReplaceExpansion(
+        Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        map<int, int>                                deltaP);
+
+    static std::string driverLookupId;
+};
+}
+} // end of namespace
+
+#endif // NEKTAR_SOLVERUTILS_DRIVERADAPTIVE_H

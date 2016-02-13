@@ -359,7 +359,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void CopyToPhysField(const int i,
                                                             Array<OneD, NekDouble> &output);
             
-            SOLVER_UTILS_EXPORT inline void SetSteps( const int steps);
+            SOLVER_UTILS_EXPORT inline void SetSteps(const int steps);
             
             SOLVER_UTILS_EXPORT void ZeroPhysFields();
             
@@ -406,7 +406,17 @@ namespace Nektar
             /// Perform a case-insensitive string comparison.
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
                 const string & s1, const string& s2) ;
-            
+
+            SOLVER_UTILS_EXPORT int GetCheckpointNumber()
+            {
+                return m_nchk;
+            }
+
+            SOLVER_UTILS_EXPORT void SetCheckpointNumber(int num)
+            {
+                m_nchk = num;
+            }
+
             SOLVER_UTILS_EXPORT void SetTime(
                 const NekDouble time)
             {
@@ -462,6 +472,8 @@ namespace Nektar
             std::set<std::string>                       m_loadedFields;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+            /// Number of checkpoints written so far
+            int                                         m_nchk;
             /// Number of steps to take.
             int                                         m_steps;
             /// Number of steps between checkpoints.
@@ -873,9 +885,9 @@ namespace Nektar
             return m_timestep;
         }
         
-        inline void EquationSystem::SetSteps( const int steps)
+        inline void EquationSystem::SetSteps(const int steps)
         {
-            m_steps= steps;
+            m_steps = steps;
         }
         
         inline void EquationSystem::CopyFromPhysField(const int i,

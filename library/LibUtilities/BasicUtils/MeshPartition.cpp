@@ -1346,6 +1346,8 @@ namespace Nektar
             std::map<int, MeshVertex>::iterator vVertIt;
             std::map<std::string, std::string>::iterator vAttrIt;
 
+            std::vector<unsigned int> idxList;
+
             // Populate lists of elements, edges and vertices required.
             for (boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                  vertit != vertit_end;
@@ -1956,10 +1958,8 @@ namespace Nektar
             // which belong to this partition.
             for (vIt = m_meshComposites.begin(); vIt != m_meshComposites.end(); ++vIt)
             {
-                bool comma = false; // Set to true after first entity output
-                bool range = false; // True when entity IDs form a range
-                int last_idx = -2;  // Last entity ID output
-                std::string vCompositeStr = "";
+                idxList.clear();
+
                 for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
                 {
                     // Based on entity type, check if in this partition
@@ -1991,33 +1991,10 @@ namespace Nektar
                         break;
                     }
 
-                    // Condense consecutive entity IDs into ranges
-                    // last_idx initially -2 to avoid error for ID=0
-                    if (last_idx + 1 == vIt->second.list[j])
-                    {
-                        last_idx++;
-                        range = true;
-                        continue;
-                    }
-                    // This entity is not in range, so close previous range with
-                    // last_idx
-                    if (range)
-                    {
-                        vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
-                        range = false;
-                    }
-                    // Output ID, which is either standalone, or will start a
-                    // range.
-                    vCompositeStr += comma ? "," : "";
-                    vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
-                    last_idx = vIt->second.list[j];
-                    comma = true;
+                    idxList.push_back(vIt->second.list[j]);
                 }
-                // If last entity is part of a range, it must be output now
-                if (range)
-                {
-                    vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
-                }
+
+                std::string vCompositeStr = ParseUtils::GenerateSeqString(idxList);
 
                 if (vCompositeStr.length() > 0)
                 {
@@ -2032,18 +2009,16 @@ namespace Nektar
                 }
             }
 
+            idxList.clear();
             std::string vDomainListStr;
-            bool comma = false;
             for (unsigned int i = 0; i < m_domain.size(); ++i)
             {
                 if (vComposites.find(m_domain[i]) != vComposites.end())
                 {
-                    vDomainListStr += comma ? "," : "";
-                    comma = true;
-                    vDomainListStr += boost::lexical_cast<std::string>(m_domain[i]);
+                    idxList.push_back(m_domain[i]);
                 }
             }
-            vDomainListStr = "C[" + vDomainListStr + "]";
+            vDomainListStr = "C[" + ParseUtils::GenerateSeqString(idxList) + "]";
             TiXmlText* vDomainList = new TiXmlText(vDomainListStr);
             vDomain->LinkEndChild(vDomainList);
 
@@ -2086,18 +2061,19 @@ namespace Nektar
                         vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
                         std::vector<unsigned int> vSeq;
                         ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
-                        std::string vListStr;
-                        bool comma = false;
+
+                        idxList.clear();
+
                         for (unsigned int i = 0; i < vSeq.size(); ++i)
                         {
                             if (vComposites.find(vSeq[i]) != vComposites.end())
                             {
-                                vListStr += comma ? "," : "";
-                                comma = true;
-                                vListStr += boost::lexical_cast<std::string>(vSeq[i]);
+                                idxList.push_back(vSeq[i]);
                             }
                         }
                         int p = atoi(vItem->Attribute("ID"));
+
+                        std::string vListStr = ParseUtils::GenerateSeqString(idxList);
 
                         if (vListStr.length() == 0)
                         {

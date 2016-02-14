@@ -37,10 +37,19 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include "zlib.h"
 #include <set>
@@ -137,9 +146,9 @@ namespace Nektar
         /**
          *
          */
-        FieldIO::FieldIO(
-                LibUtilities::CommSharedPtr pComm)
-            : m_comm(pComm)
+        FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
+                         bool                        sharedFilesystem)
+            : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
         {
         }
 
@@ -1145,12 +1154,19 @@ namespace Nektar
             {
                 try
                 {
-                    if (rank == 0)
+                    if (m_sharedFilesystem)
+                    {
+                        if (rank == 0)
+                        {
+                            fs::remove_all(specPath);
+                        }
+
+                        m_comm->Block();
+                    }
+                    else
                     {
                         fs::remove_all(specPath);
                     }
-
-                    m_comm->Block();
                 }
                 catch (fs::filesystem_error& e)
                 {
@@ -1183,12 +1199,19 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                if (rank == 0)
+                if (m_sharedFilesystem)
+                {
+                    if (rank == 0)
+                    {
+                        fs::create_directory(specPath);
+                    }
+
+                    m_comm->Block();
+                }
+                else
                 {
                     fs::create_directory(specPath);
                 }
-
-                m_comm->Block();
             }
             catch (fs::filesystem_error& e)
             {

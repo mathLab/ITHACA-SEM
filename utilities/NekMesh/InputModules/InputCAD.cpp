@@ -42,6 +42,7 @@
 #include <NekMeshUtils/TetMeshing/TetMesh.h>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
@@ -77,6 +78,20 @@ InputCAD::~InputCAD()
 
 void InputCAD::Process()
 {
+    LibUtilities::PointsKey pkey(8,
+                                 LibUtilities::eNodalTriElec);
+    Array<OneD, NekDouble> u,v;
+
+    int np = LibUtilities::PointsManager()[pkey]->GetTotNumPoints();
+
+    LibUtilities::PointsManager()[pkey]->GetPoints(u,v);
+
+    for(int i = 0; i < u.num_elements(); i++)
+    {
+        cout << u[i] << "  " << v[i] << endl;
+    }
+    exit(-1);
+
     vector<string> filename;
     filename.push_back(m_config["infile"].as<string>());
     string fn = filename[0].substr(0, filename[0].find("."));

@@ -54,7 +54,8 @@ class CADCurve;
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
- * @brief struct which descibes a collection of cad edges which for a loop on the cad surface
+ * @brief struct which descibes a collection of cad edges which for a
+ *        loop on the cad surface
  */
 struct EdgeLoop
 {
@@ -202,7 +203,8 @@ private:
     void Test(Array<OneD, NekDouble> uv);
     /// normal
     bool m_correctNormal;
-    /// flag to alert the mesh generation to a potential problem is both curves have only two points in the mesh
+    /// flag to alert the mesh generation to a potential problem is both
+    /// curves have only two points in the mesh
     bool m_hasTwoCurves;
     /// OpenCascade object for surface.
     BRepAdaptor_Surface m_occSurface;

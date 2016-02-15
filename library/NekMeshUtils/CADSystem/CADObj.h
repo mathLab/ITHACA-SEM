@@ -83,7 +83,7 @@ public:
 protected:
     /// ID of the vert.
     int m_id;
-    ///
+    /// type of the cad object
     cadType m_type;
 
 };

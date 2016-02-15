@@ -124,7 +124,8 @@ void InputCAD::Process()
         ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
         sort(symsurfs.begin(), symsurfs.end());
         sort(blsurfs.begin(), blsurfs.end());
-        ASSERTL0(blsurfs.size() > 0, "No surfaces selected to make boundary layer on");
+        ASSERTL0(blsurfs.size() > 0,
+                        "No surfaces selected to make boundary layer on");
     }
 
     if(pSession->DefinesSolverInfo("UserDefinedSpacing"))

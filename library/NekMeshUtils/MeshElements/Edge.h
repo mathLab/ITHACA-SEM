@@ -83,7 +83,8 @@ namespace NekMeshUtils
             return m_edgeNodes.size() + 2;
         }
 
-        NEKMESHUTILS_EXPORT void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+        NEKMESHUTILS_EXPORT void GetCurvedNodes(
+                                    std::vector<NodeSharedPtr> &nodeList) const
         {
             nodeList.push_back(m_n1);
             for (int k = 0; k < m_edgeNodes.size(); ++k)
@@ -117,7 +118,8 @@ namespace NekMeshUtils
         }
 
         /// Generate a SpatialDomains::SegGeom object for this edge.
-        NEKMESHUTILS_EXPORT SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
+        NEKMESHUTILS_EXPORT SpatialDomains::SegGeomSharedPtr GetGeom(
+                                                                int coordDim)
         {
             // Create edge vertices.
             SpatialDomains::PointGeomSharedPtr p[2];

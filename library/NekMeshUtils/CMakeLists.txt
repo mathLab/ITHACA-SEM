@@ -10,7 +10,6 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
-    Optimisation/Guass-Seidel.cpp
     Optimisation/BGFS-B.cpp
     )
 IF(NEKTAR_USE_MESH)
@@ -49,7 +48,6 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
-    Optimisation/Guass-Seidel.h
     Optimisation/BGFS-B.h
     Optimisation/OptimiseObj.h
     )

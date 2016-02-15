@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: TetMesh.h
+//  File: BLMesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class for tet meshing
+//  Description: class for boundary layer meshing
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,14 +58,14 @@ public:
      *@brief default constructor
      */
     BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
-                               std::vector<unsigned int> syms, NekDouble b) :
-                               m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
+           std::vector<unsigned int> syms, NekDouble b) :
+                         m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
     {
     };
 
 
     /**
-     *@brief execute tet meshing
+     *@brief execute bl meshing
      */
     void Mesh();
 

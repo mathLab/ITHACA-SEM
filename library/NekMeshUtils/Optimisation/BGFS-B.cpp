@@ -240,9 +240,8 @@ namespace NekMeshUtils
                 l += jn(i,0) * dk[i];
             }
 
-            //cout << lam << ": " << fo << " " << fn << " : " << 0.9*fabs(r) << " " << fabs(l) << endl;
-
         }while(fn > fo + c || fabs(l) > 0.9*fabs(r));
+        // wolfe conditions
 
         //tst at this point is the new all vector
         //now need to update hessians
@@ -272,7 +271,8 @@ namespace NekMeshUtils
         if(d3(0,0) > 2.2E-16 * ynorm)
         {
             B = B + y * yT * (1.0 / d1(0,0)) - B * s * sT * B * (1.0 / d2(0,0));
-            H = H + (d3(0,0) + n1(0,0)) / d3(0,0) / d3(0,0) * s * sT - 1.0/d3(0,0) * (H * y * sT + s * yT * H);
+            H = H + (d3(0,0) + n1(0,0)) / d3(0,0) / d3(0,0) * s * sT -
+                    1.0/d3(0,0) * (H * y * sT + s * yT * H);
         }
 
         J = Jn;

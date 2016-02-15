@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_CADSYSTEM_CADCURVE
-#define NekMeshUtils_CADSYSTEM_CADCURVE
+#ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
+#define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
 #include <boost/shared_ptr.hpp>
 
@@ -88,16 +88,18 @@ public:
     NekDouble Length(NekDouble ti, NekDouble tf);
 
     /**
-     * @brief Gets the location (x,y,z) in an array out of the curve at point \p t.
+     * @brief Gets the location (x,y,z) in an array out of the curve at
+     * point \p t.
      *
      * @param t Parametric coordinate
      * @return Array of x,y,z
      */
     Array<OneD, NekDouble> P(NekDouble t);
 
+    /**
+     * @brief Gets the second derivatives at t
+     */
     Array<OneD, NekDouble> D2(NekDouble t);
-
-
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -140,7 +142,8 @@ public:
         m_mainVerts = falVert;
     }
 
-    /// get the ids of the vertices that are the ends of the curve, which are in the main cad list
+    /// get the ids of the vertices that are the ends of the curve,
+    /// which are in the main cad list
     std::vector<CADVertSharedPtr> GetVertex()
     {
         return m_mainVerts;

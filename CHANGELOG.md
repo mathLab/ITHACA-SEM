@@ -14,6 +14,7 @@ v4.3.0
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
+- Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 
 **APESolver:**

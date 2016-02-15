@@ -118,6 +118,23 @@ namespace Nektar
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }
+        
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In,
+                                            const std::vector<unsigned int> &eIDs):
+            ExpList(In,eIDs,false),
+            m_transposition(In.m_transposition),
+            m_useFFT(In.m_useFFT),
+            m_FFT(In.m_FFT),
+            m_tmpIN(In.m_tmpIN),
+            m_tmpOUT(In.m_tmpOUT),
+            m_homogeneousBasis(In.m_homogeneousBasis),
+            m_lhom(In.m_lhom), 
+            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize(In.m_padsize)
+        {
+            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
+        }
 
         /**
          * Destructor

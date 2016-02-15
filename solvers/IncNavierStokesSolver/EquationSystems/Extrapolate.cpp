@@ -92,12 +92,12 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
+        m_pressureCalls++;
         if(m_HBCdata.num_elements()>0)
         {
             Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> accelerationTerm;
 
-            m_pressureCalls++;
             int  n,cnt;
             int  nint    = min(m_pressureCalls,m_intSteps);
             int  nlevels = m_pressureHBCs.num_elements();

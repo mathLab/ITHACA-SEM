@@ -4,7 +4,9 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[7]" NUMMODES="8" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[8]" NUMMODES="9" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[9]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />
     </EXPANSIONS>
 
     <CONDITIONS>
@@ -18,9 +20,9 @@
 
         <PARAMETERS>
             <P> TimeStep      = 0.001        </P>
-            <P> NumSteps      = 100       </P>
-            <P> IO_CheckSteps = 100       </P>
-            <P> IO_InfoSteps  = 100       </P>
+            <P> NumSteps      = 1       </P>
+            <P> IO_CheckSteps = 1       </P>
+            <P> IO_InfoSteps  = 1       </P>
             <P> Kinvis        = 0.025        </P>
         </PARAMETERS>
 
@@ -55,7 +57,10 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <F VAR="u,v,p" FILE="KovaFlow_m8.rst" />
+            <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
+            <E VAR="v"
+                VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
+            <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
@@ -74,11 +79,13 @@
             <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zskOgyAABmFsRaq0bl3t4vs/ppfh4CTl8iVDAn8I+1PhAY9/eo0RG92XnvCErd4tvcOMZ/1zwR4H7YrqI056p1Gf8aq9Sf2Gd+0t+x/4xJf2tuoLvrW3U//gV3uz+g9X7d0A9rcC/gAA</Q>
         </ELEMENT>
         <COMPOSITE>
-            <C ID="0"> Q[0-11] </C>
+            <C ID="7"> Q[0-3]             </C>     <!-- Domain -->
+            <C ID="8"> Q[4-7]             </C>     <!-- Domain -->
+            <C ID="9"> Q[8-11]             </C>     <!-- Domain -->
             <C ID="1"> E[23,25,27,29] </C>
             <C ID="2"> E[3,6,9,12] </C>
             <C ID="3"> E[0,11,13,21-22,30] </C>
         </COMPOSITE>
-        <DOMAIN> C[0] </DOMAIN>
+        <DOMAIN> C[7-9] </DOMAIN>
     </GEOMETRY>
 </NEKTAR>

@@ -2010,6 +2010,50 @@
                 }
             }
         }
+        
+        void DisContField3D::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            int n, cnt, nq;
+            int offsetOld, offsetNew;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            std::vector<unsigned int> eIDs;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += m_bndCondExpansions[n]->GetExpSize();
+            }
+
+            // Populate eIDs with information from BoundaryToElmtMap
+            for (n = 0; n < m_bndCondExpansions[i]->GetExpSize(); ++n)
+            {
+                eIDs.push_back(ElmtID[cnt+n]);
+            }
+            
+            // Create expansion list
+            result = 
+                MemoryManager<ExpList3D>::AllocateSharedPtr(*this, eIDs);
+            
+            // Copy phys and coeffs to new explist
+            for (n = 0; n < result->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetPhys_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
+                
+                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetCoeff_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+            }
+        }
 
         /**
          * @brief Reset this field, so that geometry information can be updated.

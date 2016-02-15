@@ -106,6 +106,7 @@ namespace Nektar
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In):
             ExpList(In,false),
             m_transposition(In.m_transposition),
+            m_StripZcomm(In.m_StripZcomm),
             m_useFFT(In.m_useFFT),
             m_FFT(In.m_FFT),
             m_tmpIN(In.m_tmpIN),
@@ -114,8 +115,7 @@ namespace Nektar
             m_lhom(In.m_lhom), 
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
             m_dealiasing(In.m_dealiasing),
-            m_padsize(In.m_padsize),
-            m_StripZcomm(In.m_StripZcomm)
+            m_padsize(In.m_padsize)
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }
@@ -608,7 +608,12 @@ namespace Nektar
             
             std::vector<unsigned int> StripsIDs;
 
-            StripsIDs.push_back(m_transposition->GetStripID());
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
             
             std::vector<unsigned int> PlanesIDs;
             
@@ -617,7 +622,8 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i));
             }
             
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, StripsIDs, PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, 
+                    HomoLen, strips, StripsIDs, PlanesIDs);
             return returnval;
         }
 
@@ -631,7 +637,12 @@ namespace Nektar
             
             std::vector<unsigned int> StripsIDs;
 
-            StripsIDs.push_back(m_transposition->GetStripID());
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
             
             std::vector<unsigned int> PlanesIDs;
             
@@ -641,7 +652,8 @@ namespace Nektar
             }
             
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis, HomoLen, StripsIDs, PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis,
+                    HomoLen, strips, StripsIDs, PlanesIDs);
         }
 
 

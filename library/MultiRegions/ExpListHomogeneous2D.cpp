@@ -608,7 +608,8 @@ namespace Nektar
             }
 
             m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, 
-                                                     HomoLen, sIDs, zIDs, yIDs);
+                                                     HomoLen, false, 
+                                                     sIDs, zIDs, yIDs);
             return returnval;
         }
 
@@ -642,7 +643,8 @@ namespace Nektar
             
             // enforce NumHomoDir == 1 by direct call
              m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, HomoBasis, 
-                                                    HomoLen, sIDs, zIDs, yIDs);
+                                                    HomoLen, false,
+                                                    sIDs, zIDs, yIDs);
         }
         
         void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)

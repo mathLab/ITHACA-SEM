@@ -219,6 +219,11 @@ namespace Nektar
                         shapeStringStream << "-HomogenousExp2D";
                     }
 
+                    if (fielddefs[f]->m_homoStrips)
+                    {
+                        shapeStringStream << "-Strips";
+                    }
+
                     shapeString = shapeStringStream.str();
                 }
                 elemTag->SetAttribute("SHAPE", shapeString);
@@ -818,6 +823,14 @@ namespace Nektar
                         attr = attr->Next();
                     }
 
+
+                    // Check to see if using strips formulation
+                    bool strips = false;
+                    if(shapeString.find("Strips")!=string::npos)
+                    {
+                        strips = true;
+                    }
+
                     // Check to see if homogeneous expansion and if so
                     // strip down the shapeString definition
                     int numHomoDir = 0;
@@ -889,7 +902,7 @@ namespace Nektar
 
                     // Get Homogeneous strips IDs
                     std::vector<unsigned int> homoSIDs;
-                    if(numHomoDir == 1)
+                    if(strips)
                     {
                         valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(), homoSIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous strips IDs.");
@@ -963,7 +976,11 @@ namespace Nektar
                     valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
                     ASSERTL0(valid, "Unable to correctly parse the number of fields.");
 
-                    FieldDefinitionsSharedPtr fielddef  = MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoSIDs, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
+                    FieldDefinitionsSharedPtr fielddef  = 
+                            MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, 
+                            elementIds, basis, UniOrder, numModes, Fields, numHomoDir, 
+                            homoLengths, strips, homoSIDs, homoZIDs, homoYIDs, 
+                            points, pointDef, numPoints, numPointDef);
 
                     fielddefs.push_back(fielddef);
 

@@ -79,6 +79,7 @@ namespace Nektar
                     int NumHomoDir = 0,
                     const std::vector<NekDouble> &HomoLengths =
                     NullNekDoubleVector,
+                    bool  homoStrips = false,
                     const std::vector<unsigned int> &HomoSIDs =
                     NullUnsignedIntVector,
                     const std::vector<unsigned int> &HomoZIDs =
@@ -96,6 +97,7 @@ namespace Nektar
                 m_basis(basis),
                 m_numHomogeneousDir(NumHomoDir),
                 m_homogeneousLengths(HomoLengths),
+                m_homoStrips(homoStrips),
                 m_homogeneousSIDs(HomoSIDs),
                 m_homogeneousZIDs(HomoZIDs),
                 m_homogeneousYIDs(HomoYIDs),
@@ -109,14 +111,15 @@ namespace Nektar
             {
             }
             
-            ShapeType	                            m_shapeType;
-            std::vector<unsigned int>		        m_elementIDs;
+            ShapeType                               m_shapeType;
+            std::vector<unsigned int>               m_elementIDs;
             std::vector<LibUtilities::BasisType>    m_basis;
-            int					                    m_numHomogeneousDir;
-            std::vector<NekDouble>		            m_homogeneousLengths;
+            int                                     m_numHomogeneousDir;
+            std::vector<NekDouble>                  m_homogeneousLengths;
+            bool                                    m_homoStrips;
             std::vector<unsigned int>               m_homogeneousSIDs;
-            std::vector<unsigned int>		        m_homogeneousZIDs;
-            std::vector<unsigned int>		        m_homogeneousYIDs;
+            std::vector<unsigned int>               m_homogeneousZIDs;
+            std::vector<unsigned int>               m_homogeneousYIDs;
             
             /// Define the type of points per direction.
             std::vector<LibUtilities::PointsType>   m_points;

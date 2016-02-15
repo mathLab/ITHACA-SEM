@@ -1938,6 +1938,7 @@ namespace Nektar
                                                   int NumHomoDir,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
+                                                  bool  homoStrips,
                                                   std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
@@ -2030,8 +2031,8 @@ namespace Nektar
                         MemoryManager<LibUtilities::FieldDefinitions>::
                             AllocateSharedPtr(shape, elementIDs, basis,
                                             UniOrder, numModes,fields,
-                                            NumHomoDir, HomoLen, HomoSIDs,
-                                            HomoZIDs, HomoYIDs);
+                                            NumHomoDir, HomoLen, homoStrips,
+                                            HomoSIDs, HomoZIDs, HomoYIDs);
                     fielddef.push_back(fdef);
                 }
             }

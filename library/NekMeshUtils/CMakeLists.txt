@@ -10,8 +10,8 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
-    Optimisation/BGFS-B.cpp
     )
+
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         SurfaceMeshing/CurveMesh.cpp
@@ -28,12 +28,12 @@ IF(NEKTAR_USE_MESH)
         CADSystem/CADSystem.cpp
         CADSystem/CADCurve.cpp
         CADSystem/CADSurf.cpp
+        Optimisation/BGFS-B.cpp
     )
 ENDIF()
 
 SET(NEKMESHUTILS_HEADERS
     NekMeshUtilsDeclspec.h
-    MeshElements/MeshElements.h
     MeshElements/Node.h
     MeshElements/Edge.h
     MeshElements/Face.h
@@ -48,8 +48,6 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
-    Optimisation/BGFS-B.h
-    Optimisation/OptimiseObj.h
     )
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
@@ -70,6 +68,8 @@ IF(NEKTAR_USE_MESH)
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
         CADSystem/OpenCascade.h
+        Optimisation/BGFS-B.h
+        Optimisation/OptimiseObj.h
     )
 ENDIF()
 
@@ -77,7 +77,7 @@ ADD_DEFINITIONS(-DNEKMESHUTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
-TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC SolverUtils)
+TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC SpatialDomains)
 
 IF(NEKTAR_USE_MESH)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TRIANGLE_LIBRARY})

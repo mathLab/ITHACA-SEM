@@ -53,7 +53,8 @@ class ProcessBL : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
         return MemoryManager<ProcessBL>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
@@ -64,7 +65,6 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 };
-
 }
 }
 

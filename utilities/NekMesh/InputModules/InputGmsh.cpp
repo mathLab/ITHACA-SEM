@@ -37,9 +37,17 @@
 #include <iostream>
 using namespace std;
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-#include "InputGmsh.h"
+#include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/Point.h>
+#include <NekMeshUtils/MeshElements/Line.h>
+#include <NekMeshUtils/MeshElements/Triangle.h>
+#include <NekMeshUtils/MeshElements/Quadrilateral.h>
+#include <NekMeshUtils/MeshElements/Tetrahedron.h>
+#include <NekMeshUtils/MeshElements/Pyramid.h>
+#include <NekMeshUtils/MeshElements/Prism.h>
+#include <NekMeshUtils/MeshElements/Hexahedron.h>
 
+#include "InputGmsh.h"
 
 using namespace Nektar::NekMeshUtils;
 
@@ -48,20 +56,16 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputGmsh::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "msh"), InputGmsh::create,
-        "Reads Gmsh msh file.");
+ModuleKey InputGmsh::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "msh"), InputGmsh::create, "Reads Gmsh msh file.");
 
-std::map<unsigned int, ElmtConfig> InputGmsh::elmMap =
-    InputGmsh::GenElmMap();
+std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = InputGmsh::GenElmMap();
 
 /**
  * @brief Reorder a quadrilateral to appear in Nektar++ ordering from
  * Gmsh.
  */
-std::vector<int> quadTensorNodeOrdering(
-    const std::vector<int> &nodes, int n)
+std::vector<int> quadTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
 
@@ -72,44 +76,44 @@ std::vector<int> quadTensorNodeOrdering(
     nodeList[0] = nodes[0];
     if (n > 1)
     {
-        nodeList[n-1] = nodes[1];
-        nodeList[n*n-1] = nodes[2];
-        nodeList[n*(n-1)] = nodes[3];
+        nodeList[n - 1]     = nodes[1];
+        nodeList[n * n - 1] = nodes[2];
+        nodeList[n * (n - 1)] = nodes[3];
     }
-    for (int i = 1; i < n-1; ++i)
+    for (int i = 1; i < n - 1; ++i)
     {
-        nodeList[i] = nodes[4+i-1];
+        nodeList[i] = nodes[4 + i - 1];
     }
-    for (int i = 1; i < n-1; ++i)
+    for (int i = 1; i < n - 1; ++i)
     {
-        nodeList[n*n-1-i] = nodes[4+2*(n-2)+i-1];
+        nodeList[n * n - 1 - i] = nodes[4 + 2 * (n - 2) + i - 1];
     }
 
     // Interior (recursion)
     if (n > 2)
     {
         // Reorder interior nodes
-        std::vector<int> interior((n-2)*(n-2));
-        std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
-        interior = quadTensorNodeOrdering(interior, n-2);
+        std::vector<int> interior((n - 2) * (n - 2));
+        std::copy(
+            nodes.begin() + 4 + 4 * (n - 2), nodes.end(), interior.begin());
+        interior = quadTensorNodeOrdering(interior, n - 2);
 
         // Copy into full node list
-        for (int j = 1; j < n-1; ++j)
+        for (int j = 1; j < n - 1; ++j)
         {
-            nodeList[j*n] = nodes[4+3*(n-2)+n-2-j];
-            for (int i = 1; i < n-1; ++i)
+            nodeList[j * n] = nodes[4 + 3 * (n - 2) + n - 2 - j];
+            for (int i = 1; i < n - 1; ++i)
             {
-                nodeList[j*n+i] = interior[(j-1)*(n-2)+(i-1)];
+                nodeList[j * n + i] = interior[(j - 1) * (n - 2) + (i - 1)];
             }
-            nodeList[(j+1)*n-1] = nodes[4+(n-2)+j-1];
+            nodeList[(j + 1) * n - 1] = nodes[4 + (n - 2) + j - 1];
         }
     }
 
     return nodeList;
 }
 
-std::vector<int> triTensorNodeOrdering(
-    const std::vector<int> &nodes, int n)
+std::vector<int> triTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
     int cnt2;
@@ -120,39 +124,40 @@ std::vector<int> triTensorNodeOrdering(
     nodeList[0] = nodes[0];
     if (n > 1)
     {
-        nodeList[n-1] = nodes[1];
-        nodeList[n*(n+1)/2 - 1] = nodes[2];
+        nodeList[n - 1] = nodes[1];
+        nodeList[n * (n + 1) / 2 - 1] = nodes[2];
     }
 
     // Edges
     int cnt = n;
-    for (int i = 1; i < n-1; ++i)
+    for (int i = 1; i < n - 1; ++i)
     {
-        nodeList[i]         = nodes[3+i-1];
-        nodeList[cnt]       = nodes[3+3*(n-2)-i];
-        nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
-        cnt += n-i;
+        nodeList[i]               = nodes[3 + i - 1];
+        nodeList[cnt]             = nodes[3 + 3 * (n - 2) - i];
+        nodeList[cnt + n - i - 1] = nodes[3 + (n - 2) + i - 1];
+        cnt += n - i;
     }
 
     // Interior (recursion)
     if (n > 3)
     {
         // Reorder interior nodes
-        std::vector<int> interior((n-3)*(n-2)/2);
-        std::copy(nodes.begin() + 3+3*(n-2), nodes.end(), interior.begin());
-        interior = triTensorNodeOrdering(interior, n-3);
+        std::vector<int> interior((n - 3) * (n - 2) / 2);
+        std::copy(
+            nodes.begin() + 3 + 3 * (n - 2), nodes.end(), interior.begin());
+        interior = triTensorNodeOrdering(interior, n - 3);
 
         // Copy into full node list
-        cnt = n;
+        cnt  = n;
         cnt2 = 0;
-        for (int j = 1; j < n-2; ++j)
+        for (int j = 1; j < n - 2; ++j)
         {
-            for (int i = 0; i < n-j-2; ++i)
+            for (int i = 0; i < n - j - 2; ++i)
             {
-                nodeList[cnt+i+1] = interior[cnt2+i];
+                nodeList[cnt + i + 1] = interior[cnt2 + i];
             }
-            cnt += n-j;
-            cnt2 += n-2-j;
+            cnt += n - j;
+            cnt2 += n - 2 - j;
         }
     }
 
@@ -165,12 +170,10 @@ std::vector<int> triTensorNodeOrdering(
  */
 InputGmsh::InputGmsh(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputGmsh::~InputGmsh()
 {
-
 }
 
 /**
@@ -188,14 +191,14 @@ void InputGmsh::Process()
     // Open the file stream.
     OpenStream();
 
-    m_mesh->m_expDim = 0;
+    m_mesh->m_expDim   = 0;
     m_mesh->m_spaceDim = 0;
     string line;
     int nVertices = 0;
     int nEntities = 0;
-    int elm_type = 0;
-    int prevId = -1;
-    int maxTagId = -1;
+    int elm_type  = 0;
+    int prevId    = -1;
+    int maxTagId  = -1;
 
     map<unsigned int, ElmtConfig>::iterator it;
 
@@ -246,13 +249,14 @@ void InputGmsh::Process()
 
                 id -= 1; // counter starts at 0
 
-                if (id-prevId != 1)
+                if (id - prevId != 1)
                 {
                     cerr << "Gmsh vertex ids should be contiguous" << endl;
                     abort();
                 }
                 prevId = id;
-                m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                m_mesh->m_node.push_back(
+                    boost::shared_ptr<Node>(new Node(id, x, y, z)));
             }
         }
         // Process elements
@@ -308,14 +312,13 @@ void InputGmsh::Process()
                 if (oIt == orderingMap.end())
                 {
                     oIt = orderingMap.insert(
-                        make_pair(elm_type, CreateReordering(elm_type)))
-                        .first;
+                        make_pair(elm_type, CreateReordering(elm_type))).first;
                 }
 
                 // Apply reordering map where necessary.
                 if (oIt->second.size() > 0)
                 {
-                    vector<int> &mapping = oIt->second;
+                    vector<int> &mapping      = oIt->second;
                     vector<NodeSharedPtr> tmp = nodeList;
                     for (int i = 0; i < mapping.size(); ++i)
                     {
@@ -324,11 +327,12 @@ void InputGmsh::Process()
                 }
 
                 // Create element
-                ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(it->second.m_e,it->second,nodeList,tags);
+                ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    it->second.m_e, it->second, nodeList, tags);
 
                 // Determine mesh expansion dimension
-                if (E->GetDim() > m_mesh->m_expDim) {
+                if (E->GetDim() > m_mesh->m_expDim)
+                {
                     m_mesh->m_expDim = E->GetDim();
                 }
                 m_mesh->m_element[E->GetDim()].push_back(E);
@@ -344,11 +348,11 @@ void InputGmsh::Process()
 
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
     {
-        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+        ElementSharedPtr el          = m_mesh->m_element[m_mesh->m_expDim][i];
         LibUtilities::ShapeType type = el->GetConf().m_e;
 
         vector<int> tags = el->GetTagList();
-        int tag = tags[0];
+        int tag          = tags[0];
 
         cIt = compMap.find(tag);
 
@@ -386,23 +390,20 @@ void InputGmsh::Process()
 
     if (printInfo)
     {
-        cout << "Multiple elements in composite detected; remapped:"
-             << endl;
+        cout << "Multiple elements in composite detected; remapped:" << endl;
         for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
         {
             if (cIt->second.size() > 1)
             {
                 sIt = cIt->second.begin();
-                cout << "- Tag " << cIt->first << " => " << sIt->second
-                     << " ("
+                cout << "- Tag " << cIt->first << " => " << sIt->second << " ("
                      << LibUtilities::ShapeTypeMap[sIt->first] << ")";
                 sIt++;
 
                 for (; sIt != cIt->second.end(); ++sIt)
                 {
                     cout << ", " << sIt->second << " ("
-                         << LibUtilities::ShapeTypeMap[sIt->first]
-                         << ")";
+                         << LibUtilities::ShapeTypeMap[sIt->first] << ")";
                 }
 
                 cout << endl;
@@ -411,10 +412,10 @@ void InputGmsh::Process()
     }
 
     // Process rest of mesh.
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
     ProcessComposites();
 }
 
@@ -434,33 +435,32 @@ int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
         abort();
     }
 
-    switch(it->second.m_e)
+    switch (it->second.m_e)
     {
         case LibUtilities::ePoint:
-            nNodes = Point::        GetNumNodes(it->second);
+            nNodes = Point::GetNumNodes(it->second);
             break;
         case LibUtilities::eSegment:
-            nNodes = Line::         GetNumNodes(it->second);
+            nNodes = Line::GetNumNodes(it->second);
             break;
         case LibUtilities::eTriangle:
-            nNodes = Triangle::     GetNumNodes(it->second);
+            nNodes = Triangle::GetNumNodes(it->second);
             break;
         case LibUtilities::eQuadrilateral:
             nNodes = Quadrilateral::GetNumNodes(it->second);
             break;
         case LibUtilities::eTetrahedron:
-            nNodes = Tetrahedron::  GetNumNodes(it->second);
-            it->second.m_faceCurveType =
-                LibUtilities::eNodalTriEvenlySpaced;
+            nNodes = Tetrahedron::GetNumNodes(it->second);
+            it->second.m_faceCurveType = LibUtilities::eNodalTriEvenlySpaced;
             break;
         case LibUtilities::ePyramid:
-            nNodes = Pyramid::      GetNumNodes(it->second);
+            nNodes = Pyramid::GetNumNodes(it->second);
             break;
         case LibUtilities::ePrism:
-            nNodes = Prism::        GetNumNodes(it->second);
+            nNodes = Prism::GetNumNodes(it->second);
             break;
         case LibUtilities::eHexahedron:
-            nNodes = Hexahedron::   GetNumNodes(it->second);
+            nNodes = Hexahedron::GetNumNodes(it->second);
             break;
         default:
             cerr << "Unknown element type!" << endl;
@@ -493,7 +493,7 @@ vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
 
     // For specific elements, call the appropriate function to perform
     // the renumbering.
-    switch(it->second.m_e)
+    switch (it->second.m_e)
     {
         case LibUtilities::eTriangle:
             return TriReordering(it->second);
@@ -525,7 +525,7 @@ vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
 vector<int> InputGmsh::TriReordering(ElmtConfig conf)
 {
     const int order = conf.m_order;
-    const int n     = order-1;
+    const int n     = order - 1;
 
     // Copy vertices.
     vector<int> mapping(3);
@@ -540,9 +540,9 @@ vector<int> InputGmsh::TriReordering(ElmtConfig conf)
     }
 
     // Curvilinear edges.
-    mapping.resize(3 + 3*n);
+    mapping.resize(3 + 3 * n);
 
-    for (int i = 3; i < 3+3*n; ++i)
+    for (int i = 3; i < 3 + 3 * n; ++i)
     {
         mapping[i] = i;
     }
@@ -553,15 +553,15 @@ vector<int> InputGmsh::TriReordering(ElmtConfig conf)
     }
 
     // Interior nodes.
-    vector<int> interior(n*(n-1)/2);
+    vector<int> interior(n * (n - 1) / 2);
     for (int i = 0; i < interior.size(); ++i)
     {
-        interior[i] = i + 3+3*n;
+        interior[i] = i + 3 + 3 * n;
     }
 
     if (interior.size() > 0)
     {
-        interior = triTensorNodeOrdering(interior, n-1);
+        interior = triTensorNodeOrdering(interior, n - 1);
     }
 
     mapping.insert(mapping.end(), interior.begin(), interior.end());
@@ -574,7 +574,7 @@ vector<int> InputGmsh::TriReordering(ElmtConfig conf)
 vector<int> InputGmsh::QuadReordering(ElmtConfig conf)
 {
     const int order = conf.m_order;
-    const int n     = order-1;
+    const int n     = order - 1;
 
     // Copy vertices.
     vector<int> mapping(4);
@@ -589,9 +589,9 @@ vector<int> InputGmsh::QuadReordering(ElmtConfig conf)
     }
 
     // Curvilinear edges.
-    mapping.resize(4 + 4*n);
+    mapping.resize(4 + 4 * n);
 
-    for (int i = 4; i < 4+4*n; ++i)
+    for (int i = 4; i < 4 + 4 * n; ++i)
     {
         mapping[i] = i;
     }
@@ -602,10 +602,10 @@ vector<int> InputGmsh::QuadReordering(ElmtConfig conf)
     }
 
     // Interior nodes.
-    vector<int> interior(n*n);
+    vector<int> interior(n * n);
     for (int i = 0; i < interior.size(); ++i)
     {
-        interior[i] = i + 4+4*n;
+        interior[i] = i + 4 + 4 * n;
     }
 
     if (interior.size() > 0)
@@ -622,8 +622,8 @@ vector<int> InputGmsh::QuadReordering(ElmtConfig conf)
 vector<int> InputGmsh::TetReordering(ElmtConfig conf)
 {
     const int order = conf.m_order;
-    const int n     = order-1;
-    const int n2    = n*(n-1)/2;
+    const int n     = order - 1;
+    const int n2    = n * (n - 1) / 2;
 
     int i, j;
     vector<int> mapping(4);
@@ -640,11 +640,11 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
     }
 
     // Curvilinear edges.
-    mapping.resize(4 + 6*n);
+    mapping.resize(4 + 6 * n);
 
     // Curvilinear edges.
-    static int gmshToNekEdge[6] = {0,1,2,3,5,4};
-    static int gmshToNekRev [6] = {0,0,1,1,1,1};
+    static int gmshToNekEdge[6] = {0, 1, 2, 3, 5, 4};
+    static int gmshToNekRev[6]  = {0, 0, 1, 1, 1, 1};
 
     // Reorder edges.
     int offset, cnt = 4;
@@ -656,14 +656,14 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
         {
             for (int j = 0; j < n; ++j)
             {
-                mapping[offset+n-j-1] = cnt++;
+                mapping[offset + n - j - 1] = cnt++;
             }
         }
         else
         {
             for (int j = 0; j < n; ++j)
             {
-                mapping[offset+j] = cnt++;
+                mapping[offset + j] = cnt++;
             }
         }
     }
@@ -674,23 +674,25 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
     }
 
     // Curvilinear faces.
-    mapping.resize(4 + 6*n + 4*n2);
+    mapping.resize(4 + 6 * n + 4 * n2);
 
-    static int gmshToNekFace[4] = {0,1,3,2};
+    static int gmshToNekFace[4] = {0, 1, 3, 2};
 
     vector<int> triVertId(3);
-    triVertId[0] = 0; triVertId[1] = 1; triVertId[2] = 2;
+    triVertId[0] = 0;
+    triVertId[1] = 1;
+    triVertId[2] = 2;
 
     // Loop over Gmsh faces
     for (i = 0; i < 4; ++i)
     {
         int face    = gmshToNekFace[i];
-        int offset2 = 4 + 6*n + i   *n2;
-        offset      = 4 + 6*n + face*n2;
+        int offset2 = 4 + 6 * n + i * n2;
+        offset      = 4 + 6 * n + face * n2;
 
         // Create a list of interior face nodes for this face only.
         vector<int> faceNodes(n2);
-        vector<int> toAlign  (3);
+        vector<int> toAlign(3);
         for (j = 0; j < n2; ++j)
         {
             faceNodes[j] = offset2 + j;
@@ -698,27 +700,31 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
 
         // Now get the reordering of this face, which puts Gmsh
         // recursive ordering into Nektar++ row-by-row order.
-        vector<int> tmp = triTensorNodeOrdering(faceNodes, n-1);
+        vector<int> tmp = triTensorNodeOrdering(faceNodes, n - 1);
         HOTriangle<int> hoTri(triVertId, tmp);
 
         // Apply reorientation
         if (i == 0 || i == 2)
         {
             // Triangle verts {0,2,1} --> {0,1,2}
-            toAlign[0] = 0; toAlign[1] = 2; toAlign[2] = 1;
+            toAlign[0] = 0;
+            toAlign[1] = 2;
+            toAlign[2] = 1;
             hoTri.Align(toAlign);
         }
         else if (i == 3)
         {
             // Triangle verts {1,2,0} --> {0,1,2}
-            toAlign[0] = 1; toAlign[1] = 2; toAlign[2] = 0;
+            toAlign[0] = 1;
+            toAlign[1] = 2;
+            toAlign[2] = 0;
             hoTri.Align(toAlign);
         }
 
         // Fill in mapping.
         for (j = 0; j < n2; ++j)
         {
-            mapping[offset+j] = hoTri.surfVerts[j];
+            mapping[offset + j] = hoTri.surfVerts[j];
         }
     }
 
@@ -736,7 +742,7 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
 vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
 {
     const int order = conf.m_order;
-    const int n     = order-1;
+    const int n     = order - 1;
 
     int i;
     vector<int> mapping(6);
@@ -744,7 +750,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // To get from Gmsh -> Nektar++ prism, coordinates axes are
     // different; need to mirror in the triangular faces, and then
     // reorder vertices to make ordering anticlockwise on base quad.
-    static int gmshToNekVerts[6] = {3,4,1,0,5,2};
+    static int gmshToNekVerts[6] = {3, 4, 1, 0, 5, 2};
 
     for (i = 0; i < 6; ++i)
     {
@@ -757,10 +763,10 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     }
 
     // Curvilinear edges.
-    mapping.resize(6 + 9*n);
+    mapping.resize(6 + 9 * n);
 
-    static int gmshToNekEdge[9] = {2,7,3,6,1,8,0,4,5};
-    static int gmshToNekRev [9] = {1,0,1,0,1,1,0,0,0};
+    static int gmshToNekEdge[9] = {2, 7, 3, 6, 1, 8, 0, 4, 5};
+    static int gmshToNekRev[9]  = {1, 0, 1, 0, 1, 1, 0, 0, 0};
 
     // Reorder edges.
     int offset, cnt = 6;
@@ -772,14 +778,14 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
         {
             for (int j = 0; j < n; ++j)
             {
-                mapping[offset+n-j-1] = cnt++;
+                mapping[offset + n - j - 1] = cnt++;
             }
         }
         else
         {
             for (int j = 0; j < n; ++j)
             {
-                mapping[offset+j] = cnt++;
+                mapping[offset + j] = cnt++;
             }
         }
     }
@@ -811,16 +817,14 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
 vector<int> InputGmsh::HexReordering(ElmtConfig conf)
 {
     const int order = conf.m_order;
-    const int n     = order-1;
+    const int n     = order - 1;
     const int n2    = n * n;
     int i, j, k;
 
     vector<int> mapping;
 
     // Map taking Gmsh edges to Nektar++ edges.
-    static int gmshToNekEdge[12] = {
-        0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10
-    };
+    static int gmshToNekEdge[12] = {0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10};
 
     // Push back vertices.
     mapping.resize(8);
@@ -835,27 +839,27 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
     }
 
     // Curvilinear edges
-    mapping.resize(8 + 12*n);
+    mapping.resize(8 + 12 * n);
 
     // Reorder edges.
     int cnt = 8, offset;
     for (i = 0; i < 12; ++i)
     {
         int edge = gmshToNekEdge[i];
-        offset = 8 + n * abs(edge);
+        offset   = 8 + n * abs(edge);
 
         if (edge < 0)
         {
             for (int j = 0; j < n; ++j)
             {
-                mapping[offset+n-j-1] = cnt++;
+                mapping[offset + n - j - 1] = cnt++;
             }
         }
         else
         {
             for (int j = 0; j < n; ++j)
             {
-                mapping[offset+j] = cnt++;
+                mapping[offset + j] = cnt++;
             }
         }
     }
@@ -866,10 +870,10 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
     }
 
     // Curvilinear face nodes.
-    mapping.resize(8 + 12*n + 6*n2);
+    mapping.resize(8 + 12 * n + 6 * n2);
 
     // Map which takes Gmsh -> Nektar++ faces in the local element.
-    static int gmsh2NekFace[6] = {0,1,4,2,3,5};
+    static int gmsh2NekFace[6] = {0, 1, 4, 2, 3, 5};
 
     // Map which defines orientation between Gmsh and Nektar++ faces.
     StdRegions::Orientation faceOrient[6] = {
@@ -878,14 +882,13 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
         StdRegions::eDir1FwdDir2_Dir2FwdDir1,
         StdRegions::eDir1FwdDir1_Dir2FwdDir2,
         StdRegions::eDir1BwdDir1_Dir2FwdDir2,
-        StdRegions::eDir1FwdDir1_Dir2FwdDir2
-    };
+        StdRegions::eDir1FwdDir1_Dir2FwdDir2};
 
     for (i = 0; i < 6; ++i)
     {
-        int face = gmsh2NekFace[i];
+        int face    = gmsh2NekFace[i];
         int offset2 = 8 + 12 * n + i * n2;
-        offset = 8 + 12 * n + face * n2;
+        offset      = 8 + 12 * n + face * n2;
 
         // Create a list of interior face nodes for this face only.
         vector<int> faceNodes(n2);
@@ -905,7 +908,7 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
             // Orientation is the same, just copy.
             for (j = 0; j < n2; ++j)
             {
-                mapping[offset+j] = tmp[j];
+                mapping[offset + j] = tmp[j];
             }
         }
         else if (faceOrient[i] == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
@@ -915,7 +918,7 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
             {
                 for (k = 0; k < n; ++k)
                 {
-                    mapping[offset + j*n + k] = tmp[k*n + j];
+                    mapping[offset + j * n + k] = tmp[k * n + j];
                 }
             }
         }
@@ -925,7 +928,7 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
             {
                 for (k = 0; k < n; ++k)
                 {
-                    mapping[offset + j*n + k] = tmp[j*n + (n-k-1)];
+                    mapping[offset + j * n + k] = tmp[j * n + (n - k - 1)];
                 }
             }
         }
@@ -936,11 +939,11 @@ vector<int> InputGmsh::HexReordering(ElmtConfig conf)
         return mapping;
     }
 
-    const int totPoints = (order+1) * (order+1) * (order+1);
+    const int totPoints = (order + 1) * (order + 1) * (order + 1);
     mapping.resize(totPoints);
 
     // TODO: Fix ordering of volume nodes.
-    for (i = 8 + 12*n + 6*n2; i < totPoints; ++i)
+    for (i = 8 + 12 * n + 6 * n2; i < totPoints; ++i)
     {
         mapping[i] = i;
     }

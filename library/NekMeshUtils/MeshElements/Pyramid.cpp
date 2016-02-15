@@ -34,8 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/PyrGeom.h>
+#include <NekMeshUtils/MeshElements/Pyramid.h>
 
-#include "MeshElements.h"
 using namespace std;
 
 namespace Nektar
@@ -43,33 +43,34 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-LibUtilities::ShapeType Pyramid::type = GetElementFactory().
-    RegisterCreatorFunction(LibUtilities::ePyramid, Pyramid::create, "Pyramid");
+LibUtilities::ShapeType Pyramid::type =
+    GetElementFactory().RegisterCreatorFunction(
+        LibUtilities::ePyramid, Pyramid::create, "Pyramid");
 
 /**
  * @brief Create a pyramidic element.
  */
-Pyramid::Pyramid(ElmtConfig            pConf,
+Pyramid::Pyramid(ElmtConfig pConf,
                  vector<NodeSharedPtr> pNodeList,
-                 vector<int>           pTagList)
+                 vector<int> pTagList)
     : Element(pConf, GetNumNodes(pConf), pNodeList.size())
 {
     m_tag     = "P";
     m_dim     = 3;
     m_taglist = pTagList;
-    int n     = m_conf.m_order-1;
+    int n     = m_conf.m_order - 1;
 
     // This edge-node map is based on Nektar++ ordering.
-    map<pair<int,int>, int> edgeNodeMap;
-    map<pair<int,int>, int>::iterator it;
-    edgeNodeMap[pair<int,int>(1,2)] = 6;
-    edgeNodeMap[pair<int,int>(2,3)] = 6 + n;
-    edgeNodeMap[pair<int,int>(4,3)] = 6 + 2*n;
-    edgeNodeMap[pair<int,int>(1,4)] = 6 + 3*n;
-    edgeNodeMap[pair<int,int>(1,5)] = 6 + 4*n;
-    edgeNodeMap[pair<int,int>(2,5)] = 6 + 5*n;
-    edgeNodeMap[pair<int,int>(3,5)] = 6 + 6*n;
-    edgeNodeMap[pair<int,int>(4,5)] = 6 + 7*n;
+    map<pair<int, int>, int> edgeNodeMap;
+    map<pair<int, int>, int>::iterator it;
+    edgeNodeMap[pair<int, int>(1, 2)] = 6;
+    edgeNodeMap[pair<int, int>(2, 3)] = 6 + n;
+    edgeNodeMap[pair<int, int>(4, 3)] = 6 + 2 * n;
+    edgeNodeMap[pair<int, int>(1, 4)] = 6 + 3 * n;
+    edgeNodeMap[pair<int, int>(1, 5)] = 6 + 4 * n;
+    edgeNodeMap[pair<int, int>(2, 5)] = 6 + 5 * n;
+    edgeNodeMap[pair<int, int>(3, 5)] = 6 + 6 * n;
+    edgeNodeMap[pair<int, int>(4, 5)] = 6 + 7 * n;
 
     // Add vertices
     for (int i = 0; i < 5; ++i)
@@ -86,23 +87,24 @@ Pyramid::Pyramid(ElmtConfig            pConf,
         {
             for (int j = it->second; j < it->second + n; ++j)
             {
-                edgeNodes.push_back(pNodeList[j-1]);
+                edgeNodes.push_back(pNodeList[j - 1]);
             }
         }
-        m_edge.push_back(
-            EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
-                                   pNodeList[it->first.second-1],
-                                   edgeNodes,
-                                   m_conf.m_edgeCurveType)));
+        m_edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first - 1],
+                                                pNodeList[it->first.second - 1],
+                                                edgeNodes,
+                                                m_conf.m_edgeCurveType)));
         m_edge.back()->m_id = eid++;
     }
 
     // Create faces
-    int face_ids[5][4] = {
-        {0,1,2,3}, {0,1,4,-1}, {1,2,4,-1}, {3,2,4,-1}, {0,3,4,-1}
-    };
+    int face_ids[5][4] = {{0, 1, 2, 3},
+                          {0, 1, 4, -1},
+                          {1, 2, 4, -1},
+                          {3, 2, 4, -1},
+                          {0, 3, 4, -1}};
     int face_edges[5][4];
-    int faceoffset = 5 + 8*n;
+    int faceoffset = 5 + 8 * n;
     for (int j = 0; j < 5; ++j)
     {
         vector<NodeSharedPtr> faceVertices;
@@ -114,7 +116,7 @@ Pyramid::Pyramid(ElmtConfig            pConf,
         {
             faceVertices.push_back(m_vertex[face_ids[j][k]]);
             NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k+1) % nEdge]];
+            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % nEdge]];
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
                 if ((m_edge[i]->m_n1 == a && m_edge[i]->m_n2 == b) ||
@@ -129,15 +131,15 @@ Pyramid::Pyramid(ElmtConfig            pConf,
 
         if (m_conf.m_faceNodes)
         {
-            int facenodes = j == 0 ? n*n : n*(n-1)/2;
+            int facenodes = j == 0 ? n * n : n * (n - 1) / 2;
             for (int i = 0; i < facenodes; ++i)
             {
-                faceNodes.push_back(pNodeList[faceoffset+i]);
+                faceNodes.push_back(pNodeList[faceoffset + i]);
             }
-            faceoffset   += facenodes;
+            faceoffset += facenodes;
         }
-        m_face.push_back(FaceSharedPtr(
-            new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
+        m_face.push_back(FaceSharedPtr(new Face(
+            faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
     }
 
     // Reorder edges to align with Nektar++ order.
@@ -162,8 +164,7 @@ SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
         faces[i] = m_face[i]->GetGeom(coordDim);
     }
 
-    m_geom = MemoryManager<SpatialDomains::PyrGeom>::
-        AllocateSharedPtr(faces);
+    m_geom = MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces);
 
     return m_geom;
 }
@@ -174,8 +175,7 @@ SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
 unsigned int Pyramid::GetNumNodes(ElmtConfig pConf)
 {
     int n = pConf.m_order;
-    return 5 + 8*(n-1);
+    return 5 + 8 * (n - 1);
 }
-
 }
 }

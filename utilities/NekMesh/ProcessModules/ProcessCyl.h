@@ -60,7 +60,6 @@ public:
     virtual void Process();
     void GenerateEdgeNodes(EdgeSharedPtr edge);
 };
-
 }
 }
 

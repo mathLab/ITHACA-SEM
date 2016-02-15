@@ -37,52 +37,56 @@
 #define NekMeshUtils_MESHELEMENTS_TET
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    /**
-     * @brief A 3-dimensional four-faced element.
-     */
-    class Tetrahedron : public Element {
-    public:
-        /// Creates an instance of this class
-        static ElementSharedPtr create(
-            ElmtConfig                 pConf,
-            std::vector<NodeSharedPtr> pNodeList,
-            std::vector<int>           pTagList)
+
+/**
+ * @brief A 3-dimensional four-faced element.
+ */
+class Tetrahedron : public Element
+{
+public:
+    /// Creates an instance of this class
+    static ElementSharedPtr create(ElmtConfig pConf,
+                                   std::vector<NodeSharedPtr> pNodeList,
+                                   std::vector<int> pTagList)
+    {
+        ElementSharedPtr e = boost::shared_ptr<Element>(
+            new Tetrahedron(pConf, pNodeList, pTagList));
+        vector<FaceSharedPtr> faces = e->GetFaceList();
+        for (int i = 0; i < faces.size(); ++i)
         {
-            ElementSharedPtr e = boost::shared_ptr<Element>(
-                new Tetrahedron(pConf, pNodeList, pTagList));
-            vector<FaceSharedPtr> faces = e->GetFaceList();
-            for (int i = 0; i < faces.size(); ++i)
-            {
-                faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
-            }
-            return e;
+            faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e, i));
         }
-        /// Element type
-        static LibUtilities::ShapeType m_type;
+        return e;
+    }
+    /// Element type
+    static LibUtilities::ShapeType m_type;
 
-        NEKMESHUTILS_EXPORT Tetrahedron(ElmtConfig                 pConf,
-                                        std::vector<NodeSharedPtr> pNodeList,
-                                        std::vector<int>           pTagList);
-        NEKMESHUTILS_EXPORT Tetrahedron(const Tetrahedron& pSrc);
-        NEKMESHUTILS_EXPORT virtual ~Tetrahedron() {}
+    NEKMESHUTILS_EXPORT Tetrahedron(ElmtConfig pConf,
+                                    std::vector<NodeSharedPtr> pNodeList,
+                                    std::vector<int> pTagList);
+    NEKMESHUTILS_EXPORT Tetrahedron(const Tetrahedron &pSrc);
+    NEKMESHUTILS_EXPORT virtual ~Tetrahedron()
+    {
+    }
 
-        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        NEKMESHUTILS_EXPORT virtual void Complete(int order);
+    NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
+        int coordDim);
+    NEKMESHUTILS_EXPORT virtual void Complete(int order);
 
-        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 
-        int m_orientationMap[4];
-        int m_origVertMap[4];
+    int m_orientationMap[4];
+    int m_origVertMap[4];
 
-    protected:
-        void OrientTet();
-    };
-
+protected:
+    void OrientTet();
+};
 }
 }
 

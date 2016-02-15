@@ -48,87 +48,84 @@ namespace NekMeshUtils
 
 void SurfaceMesh::Mesh()
 {
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
         cout << endl << "Surface meshing" << endl;
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
         cout << endl << "\tCurve meshing:" << endl << endl;
 
     m_mesh->m_numNodes = m_cad->GetNumVerts();
 
-    //linear mesh all curves
-    for(int i = 1; i <= m_cad->GetNumCurve(); i++)
+    // linear mesh all curves
+    for (int i = 1; i <= m_cad->GetNumCurve(); i++)
     {
-        if(m_mesh->m_verbose)
+        if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i,m_cad->GetNumCurve(),
-                                           "Curve progress");
+            LibUtilities::PrintProgressbar(
+                i, m_cad->GetNumCurve(), "Curve progress");
         }
 
-        m_curvemeshes[i] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh,
-                            m_cad->GetCurve(i), m_octree);
+        m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(
+            i, m_mesh, m_cad->GetCurve(i), m_octree);
 
         m_curvemeshes[i]->Mesh();
     }
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
         cout << endl << "\tFace meshing:" << endl << endl;
 
-    //linear mesh all surfaces
-    for(int i = 1; i <= m_cad->GetNumSurf(); i++)
+    // linear mesh all surfaces
+    for (int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
-        if(m_mesh->m_verbose)
+        if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i,m_cad->GetNumSurf(),
-                                           "Face progress");
+            LibUtilities::PrintProgressbar(
+                i, m_cad->GetNumSurf(), "Face progress");
         }
 
         vector<unsigned int>::iterator it;
 
         it = find(m_symsurfs.begin(), m_symsurfs.end(), i);
-        if(it == m_symsurfs.end())
+        if (it == m_symsurfs.end())
         {
-            m_facemeshes[i] =
-                MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                    m_cad->GetSurf(i), m_octree, m_curvemeshes);
+            m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+                i, m_mesh, m_cad->GetSurf(i), m_octree, m_curvemeshes);
         }
         else
         {
-            m_facemeshes[i] =
-                MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                    m_cad->GetSurf(i), m_octree, m_curvemeshes, m_bl);
+            m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+                i, m_mesh, m_cad->GetSurf(i), m_octree, m_curvemeshes, m_bl);
         }
 
         m_facemeshes[i]->Mesh();
     }
 }
 
-//this mesh is valided that each egde is listed twice in the triangles
+// this mesh is valided that each egde is listed twice in the triangles
 void SurfaceMesh::Validate()
 {
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
         cout << endl << "\tVerifying surface mesh" << endl;
 
     EdgeSet::iterator it;
 
-    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
-        if((*it)->m_elLink.size() != 2)
+        if ((*it)->m_elLink.size() != 2)
         {
-            if(m_mesh->m_verbose)
+            if (m_mesh->m_verbose)
                 cout << "\t\tFailed" << endl;
-            ASSERTL0(false,"edge not listed twice");
+            ASSERTL0(false, "edge not listed twice");
         }
     }
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
         cout << "\t\tPassed" << endl;
 }
 
 void SurfaceMesh::Report()
 {
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         int ns = m_mesh->m_vertexSet.size();
         int es = m_mesh->m_edgeSet.size();
@@ -141,7 +138,5 @@ void SurfaceMesh::Report()
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
 }
-
-
 }
 }

@@ -51,18 +51,19 @@ public:
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
         return MemoryManager<InputCAD>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
     static ModuleKey className;
+
 private:
     NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
     int m_order;
     string m_CADName, m_udsName;
     bool m_makeBL, m_writeoctree;
 };
-
 }
 }
 

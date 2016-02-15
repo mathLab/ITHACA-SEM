@@ -35,67 +35,72 @@
 
 #include <NekMeshUtils/ExtLibInterface/TetGenInterface.h>
 
-using namespace std;
-namespace Nektar{
-namespace NekMeshUtils{
+#define TETLIBRARY
+#include <tetgen.h>
 
-void TetGenInterface::InitialMesh(map<int, NodeSharedPtr> tgidton,
+using namespace std;
+
+namespace Nektar
+{
+namespace NekMeshUtils
+{
+
+void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
                                   vector<Array<OneD, int> > tri)
 {
     surface.initialize();
     output.initialize();
 
-    //build surface input
+    // build surface input
     tetgenio::facet *f;
     tetgenio::polygon *p;
 
-    surface.firstnumber = 0;
+    surface.firstnumber    = 0;
     surface.numberofpoints = tgidton.size();
-    surface.pointlist = new REAL[surface.numberofpoints*3];
+    surface.pointlist      = new REAL[surface.numberofpoints * 3];
 
     map<int, NodeSharedPtr>::iterator it;
-    for(it = tgidton.begin(); it != tgidton.end(); it++)
+    for (it = tgidton.begin(); it != tgidton.end(); it++)
     {
         Array<OneD, NekDouble> loc = it->second->GetLoc();
 
-        surface.pointlist[it->first*3+0] = loc[0];
-        surface.pointlist[it->first*3+1] = loc[1];
-        surface.pointlist[it->first*3+2] = loc[2];
+        surface.pointlist[it->first * 3 + 0] = loc[0];
+        surface.pointlist[it->first * 3 + 1] = loc[1];
+        surface.pointlist[it->first * 3 + 2] = loc[2];
     }
 
-    surface.numberoffacets = tri.size();
-    surface.facetlist = new tetgenio::facet[surface.numberoffacets];
+    surface.numberoffacets  = tri.size();
+    surface.facetlist       = new tetgenio::facet[surface.numberoffacets];
     surface.facetmarkerlist = new int[surface.numberoffacets];
 
-    for(int i = 0; i < tri.size(); i++)
+    for (int i = 0; i < tri.size(); i++)
     {
-        f = &surface.facetlist[i];
-        f->numberofpolygons = 1;
-        f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-        f->numberofholes = 0;
-        f->holelist = NULL;
-        p = &f->polygonlist[0];
-        p->numberofvertices = 3;
-        p->vertexlist = new int[p->numberofvertices];
-
-        p->vertexlist[0] = tri[i][0];
-        p->vertexlist[1] = tri[i][1];
-        p->vertexlist[2] = tri[i][2];
+        f                          = &surface.facetlist[i];
+        f->numberofpolygons        = 1;
+        f->polygonlist             = new tetgenio::polygon[f->numberofpolygons];
+        f->numberofholes           = 0;
+        f->holelist                = NULL;
+        p                          = &f->polygonlist[0];
+        p->numberofvertices        = 3;
+        p->vertexlist              = new int[p->numberofvertices];
+        p->vertexlist[0]           = tri[i][0];
+        p->vertexlist[1]           = tri[i][1];
+        p->vertexlist[2]           = tri[i][2];
         surface.facetmarkerlist[i] = 0;
     }
 
     tetrahedralize("pYzqQ", &surface, &output);
-
 }
 
-void TetGenInterface::GetNewPoints(int num, vector<Array<OneD, NekDouble> > &newp)
+void TetGenInterface::GetNewPoints(int num,
+                                   vector<Array<OneD, NekDouble> > &newp)
 {
-    for(int i = num; i < output.numberofpoints; i++)
+    for (int i = num; i < output.numberofpoints; i++)
     {
         Array<OneD, NekDouble> loc(3);
-        loc[0] = output.pointlist[i*3+0];
-        loc[1] = output.pointlist[i*3+1];
-        loc[2] = output.pointlist[i*3+2];
+        loc[0] = output.pointlist[i * 3 + 0];
+        loc[1] = output.pointlist[i * 3 + 1];
+        loc[2] = output.pointlist[i * 3 + 2];
         newp.push_back(loc);
     }
 }
@@ -108,25 +113,24 @@ void TetGenInterface::RefineMesh(std::map<int, NekDouble> delta)
 
     input.pointmtrlist = new REAL[input.numberofpoints];
 
-    for(int i = 0; i < input.numberofpoints; i++)
+    for (int i = 0; i < input.numberofpoints; i++)
     {
         input.pointmtrlist[i] = delta[i];
     }
 
     tetrahedralize("pYrmzqQO2/7o/120", &input, &output);
-
 }
 
 vector<Array<OneD, int> > TetGenInterface::Extract()
 {
     vector<Array<OneD, int> > tets;
-    for(int i = 0; i < output.numberoftetrahedra; i++)
+    for (int i = 0; i < output.numberoftetrahedra; i++)
     {
         Array<OneD, int> tet(4);
-        tet[0] = output.tetrahedronlist[i*4+0];
-        tet[1] = output.tetrahedronlist[i*4+1];
-        tet[2] = output.tetrahedronlist[i*4+2];
-        tet[3] = output.tetrahedronlist[i*4+3];
+        tet[0] = output.tetrahedronlist[i * 4 + 0];
+        tet[1] = output.tetrahedronlist[i * 4 + 1];
+        tet[2] = output.tetrahedronlist[i * 4 + 2];
+        tet[3] = output.tetrahedronlist[i * 4 + 3];
         tets.push_back(tet);
     }
     return tets;
@@ -138,6 +142,5 @@ void TetGenInterface::freetet()
     input.deinitialize();
     output.deinitialize();
 }
-
 }
 }

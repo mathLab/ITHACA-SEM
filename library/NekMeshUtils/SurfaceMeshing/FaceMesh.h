@@ -33,11 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NekMeshUtils_SURFACEMESHING_FACEMESH
 #define NekMeshUtils_SURFACEMESHING_FACEMESH
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
@@ -48,7 +47,8 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief class for surface meshes on individual surfaces (paramter plane meshes)
+ * @brief class for surface meshes on individual surfaces (paramter plane
+ * meshes)
  */
 class FaceMesh
 {
@@ -58,34 +58,34 @@ public:
     /**
      * @brief Default constructor
      */
-    FaceMesh(   const int id,
-                MeshSharedPtr m,
-                CADSurfSharedPtr cad,
-                OctreeSharedPtr oct,
-                const std::map<int, CurveMeshSharedPtr> &cmeshes)
-                    : m_mesh(m), m_cadsurf(cad), m_octree(oct),
-                      m_curvemeshes(cmeshes),m_id(id)
+    FaceMesh(const int                                id,
+             MeshSharedPtr                            m,
+             CADSurfSharedPtr                         cad,
+             OctreeSharedPtr                          oct,
+             const std::map<int, CurveMeshSharedPtr> &cmeshes)
+        : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
+          m_id(id)
 
     {
         m_edgeloops = m_cadsurf->GetEdges();
-        m_makebl = false;
+        m_makebl    = false;
     };
 
     /**
      * @brief constructor for building with boundary layer
      */
-    FaceMesh(   const int id,
-                MeshSharedPtr m,
-                CADSurfSharedPtr cad,
-                OctreeSharedPtr oct,
-                const std::map<int, CurveMeshSharedPtr> &cmeshes,
-                const NekDouble b)
-                    : m_mesh(m), m_cadsurf(cad), m_octree(oct),
-                      m_curvemeshes(cmeshes),m_id(id), m_bl(b)
+    FaceMesh(const int                                id,
+             MeshSharedPtr                            m,
+             CADSurfSharedPtr                         cad,
+             OctreeSharedPtr                          oct,
+             const std::map<int, CurveMeshSharedPtr> &cmeshes,
+             const NekDouble                          b)
+        : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
+          m_id(id), m_bl(b)
 
     {
         m_edgeloops = m_cadsurf->GetEdges();
-        m_makebl = true;
+        m_makebl    = true;
     };
 
     /**
@@ -94,7 +94,6 @@ public:
     void Mesh();
 
 private:
-
     /**
      * @brief Calculate the paramter plane streching factor
      */
@@ -142,7 +141,7 @@ private:
      */
     void MakeBL();
 
-    ///mesh pointer
+    /// mesh pointer
     MeshSharedPtr m_mesh;
     /// CAD surface
     CADSurfSharedPtr m_cadsurf;
@@ -150,7 +149,8 @@ private:
     OctreeSharedPtr m_octree;
     /// Map of the curve meshes which bound the surfaces
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-    /// data structure containing the edges, their order and oreientation for the surface
+    /// data structure containing the edges, their order and oreientation for
+    /// the surface
     std::vector<EdgeLoop> m_edgeloops;
     /// id of the surface mesh
     int m_id;
@@ -162,22 +162,22 @@ private:
     NekDouble m_str;
     /// triangle connectiviities
     std::vector<std::vector<NodeSharedPtr> > m_connec;
-    ///local set of nodes
+    /// local set of nodes
     NodeSet m_localNodes;
-    ///local set of edges
+    /// local set of edges
     EdgeSet m_localEdges;
-    ///local list of elements
+    /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
     /// boundary layer thickness
     NekDouble m_bl;
     /// should build boundary layer
-    bool  m_makebl;
-    /// list of node links between node on loop and its corresponding interior node in quads
+    bool m_makebl;
+    /// list of node links between node on loop and its corresponding interior
+    /// node in quads
     std::vector<std::pair<NodeSharedPtr, NodeSharedPtr> > blpairs;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;
-
 }
 }
 

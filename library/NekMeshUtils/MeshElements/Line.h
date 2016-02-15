@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Mesh.h
+//  File: Line.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -37,40 +37,40 @@
 #define NekMeshUtils_MESHELEMENTS_LINE
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    /**
-     * @brief A 1-dimensional line between two vertex nodes.
-     */
-    class Line : public Element {
-    public:
-        /// Creates an instance of this class
-        static ElementSharedPtr create(
-            ElmtConfig                 pConf,
-            std::vector<NodeSharedPtr> pNodeList,
-            std::vector<int>           pTagList)
-        {
-            return boost::shared_ptr<Element>(
-                new Line(pConf, pNodeList, pTagList));
-        }
-        /// Element type
-        static LibUtilities::ShapeType m_type;
+/**
+ * @brief A 1-dimensional line between two vertex nodes.
+ */
+class Line : public Element
+{
+public:
+    /// Creates an instance of this class
+    static ElementSharedPtr create(ElmtConfig pConf,
+                                   std::vector<NodeSharedPtr> pNodeList,
+                                   std::vector<int> pTagList)
+    {
+        return boost::shared_ptr<Element>(new Line(pConf, pNodeList, pTagList));
+    }
+    /// Element type
+    static LibUtilities::ShapeType m_type;
 
-        NEKMESHUTILS_EXPORT Line(ElmtConfig                 pConf,
-             std::vector<NodeSharedPtr> pNodeList,
-             std::vector<int>           pTagList);
-        NEKMESHUTILS_EXPORT Line(const Point& pSrc);
-        NEKMESHUTILS_EXPORT virtual ~Line() {}
+    NEKMESHUTILS_EXPORT Line(ElmtConfig pConf,
+                             std::vector<NodeSharedPtr> pNodeList,
+                             std::vector<int> pTagList);
+    NEKMESHUTILS_EXPORT virtual ~Line()
+    {
+    }
 
-        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+    NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
+        int coordDim);
 
-        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
-    };
-
-
+    NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+};
 }
 }
 

@@ -55,9 +55,12 @@ public:
     /**
      * @brief constructor for a valid point (has radius of curvature)
      */
-    CurvaturePoint(int i, Array<OneD, NekDouble> uv,
-                   Array<OneD, NekDouble> l, NekDouble d, bool bnd = true)
-                   : sid(i), m_uv(uv), m_loc(l), m_delta(d), m_boundary(bnd)
+    CurvaturePoint(int i,
+                   Array<OneD, NekDouble> uv,
+                   Array<OneD, NekDouble> l,
+                   NekDouble d,
+                   bool bnd = true)
+        : sid(i), m_uv(uv), m_loc(l), m_delta(d), m_boundary(bnd)
     {
         m_valid = true;
     }
@@ -65,28 +68,33 @@ public:
     /**
      * @brief constructor for a invalid point
      */
-    CurvaturePoint(int i, Array<OneD, NekDouble> uv,
-                   Array<OneD, NekDouble> l)
-                   : sid(i), m_uv(uv), m_loc(l)
+    CurvaturePoint(int i, Array<OneD, NekDouble> uv, Array<OneD, NekDouble> l)
+        : sid(i), m_uv(uv), m_loc(l)
     {
-        m_delta = -1;
-        m_valid = false;
+        m_delta    = -1;
+        m_valid    = false;
         m_boundary = true;
     }
 
     /**
      * @brief return bool on whether point is valid
      */
-    bool IsValid(){return m_valid;}
+    bool IsValid()
+    {
+        return m_valid;
+    }
 
-    bool Isboundary(){return m_boundary;}
+    bool Isboundary()
+    {
+        return m_boundary;
+    }
 
     /**
      * @brief get mesh spacing paramter
      */
     NekDouble GetDelta()
     {
-        if(m_valid)
+        if (m_valid)
         {
             return m_delta;
         }
@@ -99,7 +107,10 @@ public:
     /**
      * @brief get location of point
      */
-    Array<OneD, NekDouble> GetLoc(){return m_loc;}
+    Array<OneD, NekDouble> GetLoc()
+    {
+        return m_loc;
+    }
 
     /**
      * @brief gets the corresponding cad information for the point
@@ -107,7 +118,7 @@ public:
     void GetCAD(int &surf, Array<OneD, NekDouble> &uv)
     {
         surf = sid;
-        uv = m_uv;
+        uv   = m_uv;
     }
 
     void SetDelta(NekDouble i)
@@ -116,14 +127,13 @@ public:
     }
 
 private:
-
-    ///surf id
+    /// surf id
     int sid;
-    ///uv coord on surf
+    /// uv coord on surf
     Array<OneD, NekDouble> m_uv;
     /// x,y,z location
     Array<OneD, NekDouble> m_loc;
-    ///normal vector of surface at point
+    /// normal vector of surface at point
     NekDouble m_delta;
     /// valid point or not
     bool m_valid;
@@ -132,7 +142,6 @@ private:
 };
 
 typedef boost::shared_ptr<CurvaturePoint> CurvaturePointSharedPtr;
-
 }
 }
 

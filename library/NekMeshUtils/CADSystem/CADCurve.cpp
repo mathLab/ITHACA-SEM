@@ -50,33 +50,33 @@ CADCurve::CADCurve(int i, TopoDS_Shape in)
     TopLoc_Location mv(transform);
     in.Move(mv);
 
-    m_occEdge = TopoDS::Edge(in);
+    m_occEdge  = TopoDS::Edge(in);
     m_occCurve = BRepAdaptor_Curve(m_occEdge);
 
     GProp_GProps System;
-    BRepGProp::LinearProperties( m_occEdge, System);
+    BRepGProp::LinearProperties(m_occEdge, System);
     m_length = System.Mass();
 
-    m_id = i;
+    m_id   = i;
     m_type = curve;
 }
 
 NekDouble CADCurve::tAtArcLength(NekDouble s)
 {
-    NekDouble dt = (m_occCurve.LastParameter() -
-                    m_occCurve.FirstParameter()) / (5000);
+    NekDouble dt =
+        (m_occCurve.LastParameter() - m_occCurve.FirstParameter()) / (5000);
     NekDouble t = m_occCurve.FirstParameter();
 
     NekDouble len = 0.0;
 
-    while(len <= s)
+    while (len <= s)
     {
-        gp_Pnt P1,P2;
-        gp_Vec drdt1,drdt2;
+        gp_Pnt P1, P2;
+        gp_Vec drdt1, drdt2;
 
-        m_occCurve.D1(t,P1,drdt1);
+        m_occCurve.D1(t, P1, drdt1);
         t += dt;
-        m_occCurve.D1(t,P2,drdt2);
+        m_occCurve.D1(t, P2, drdt2);
 
         len += (drdt1.Magnitude() + drdt2.Magnitude()) / 2.0 * dt;
     }
@@ -88,11 +88,11 @@ NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
     Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
-    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve( m_c, ti, tf );
-    TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge( NewCurve );
+    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
+    TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
-    BRepGProp::LinearProperties( NewEdge, System);
-    return System.Mass()/1000.0;
+    BRepGProp::LinearProperties(NewEdge, System);
+    return System.Mass() / 1000.0;
 }
 
 Array<OneD, NekDouble> CADCurve::P(NekDouble t)
@@ -140,8 +140,9 @@ Array<OneD, NekDouble> CADCurve::GetMinMax()
 {
     Array<OneD, NekDouble> locs(6);
 
-    gp_Pnt start = BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
-    gp_Pnt end   = BRep_Tool::Pnt(TopExp::LastVertex (m_occEdge, Standard_True));
+    gp_Pnt start =
+        BRep_Tool::Pnt(TopExp::FirstVertex(m_occEdge, Standard_True));
+    gp_Pnt end = BRep_Tool::Pnt(TopExp::LastVertex(m_occEdge, Standard_True));
 
     locs[0] = start.X();
     locs[1] = start.Y();
@@ -152,6 +153,5 @@ Array<OneD, NekDouble> CADCurve::GetMinMax()
 
     return locs;
 }
-
 }
 }

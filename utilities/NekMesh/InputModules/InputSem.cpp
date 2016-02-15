@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "InputSem.h"
 
@@ -46,21 +46,19 @@ namespace Utilities
 {
 
 ModuleKey InputSem::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "sem"), InputSem::create,
-        "Reads Semtex session files.");
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "sem"),
+                                               InputSem::create,
+                                               "Reads Semtex session files.");
 
 /**
  * @brief Initialises the InputSem class.
  */
 InputSem::InputSem(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputSem::~InputSem()
 {
-
 }
 
 /**
@@ -87,10 +85,10 @@ void InputSem::Process()
     }
 
     // Read through input file and populate the section map.
-    map<string,streampos>::iterator it;
-    string                          line, word;
-    stringstream                    ss;
-    streampos                       linePos;
+    map<string, streampos>::iterator it;
+    string line, word;
+    stringstream ss;
+    streampos linePos;
 
     sectionMap["NODES"]    = -1;
     sectionMap["ELEMENTS"] = -1;
@@ -112,7 +110,7 @@ void InputSem::Process()
         // line.
         for (it = sectionMap.begin(); it != sectionMap.end(); ++it)
         {
-            if (word == "<"+it->first || word == "<"+it->first+">")
+            if (word == "<" + it->first || word == "<" + it->first + ">")
             {
                 sectionMap[it->first] = linePos;
             }
@@ -126,15 +124,13 @@ void InputSem::Process()
     // Check that required sections exist in the file.
     if (sectionMap["NODES"] == std::streampos(-1))
     {
-        cerr << "Unable to locate NODES section in session file."
-             << endl;
+        cerr << "Unable to locate NODES section in session file." << endl;
         abort();
     }
 
     if (sectionMap["ELEMENTS"] == std::streampos(-1))
     {
-        cerr << "Unable to locate ELEMENTS section in session file."
-             << endl;
+        cerr << "Unable to locate ELEMENTS section in session file." << endl;
         abort();
     }
 
@@ -174,20 +170,23 @@ void InputSem::Process()
     // elements.
     m_mshFile.seekg(sectionMap["NODES"]);
     getline(m_mshFile, line);
-    ss.clear(); ss.str(line);
+    ss.clear();
+    ss.str(line);
     ss >> word;
 
     tag       = ss.str();
     start     = tag.find_first_of('=');
     end       = tag.find_first_of('>');
-    nVertices = atoi(tag.substr(start+1,end).c_str());
+    nVertices = atoi(tag.substr(start + 1, end).c_str());
 
     i = id = 0;
     while (i < nVertices)
     {
         getline(m_mshFile, line);
-        if (line.length() < 7) continue;
-        ss.clear(); ss.str(line);
+        if (line.length() < 7)
+            continue;
+        ss.clear();
+        ss.str(line);
         double x = 0, y = 0, z = 0;
         ss >> id >> x >> y >> z;
 
@@ -200,20 +199,22 @@ void InputSem::Process()
             m_mesh->m_spaceDim = 3;
         }
         id -= 1; // counter starts at 0
-        m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+        m_mesh->m_node.push_back(
+            boost::shared_ptr<Node>(new Node(id, x, y, z)));
         ++i;
     }
 
     // Now read in elements
     m_mshFile.seekg(sectionMap["ELEMENTS"]);
     getline(m_mshFile, line);
-    ss.clear(); ss.str(line);
+    ss.clear();
+    ss.str(line);
     ss >> word;
 
     tag       = ss.str();
     start     = tag.find_first_of('=');
     end       = tag.find_first_of('>');
-    nEntities = atoi(tag.substr(start+1,end).c_str());
+    nEntities = atoi(tag.substr(start + 1, end).c_str());
 
     i = id = 0;
     while (i < nEntities)
@@ -229,23 +230,25 @@ void InputSem::Process()
         tags.push_back(0); // composite
 
         // Read element node list
-        ss.clear(); ss.str(line);
+        ss.clear();
+        ss.str(line);
         ss >> id >> word;
         vector<NodeSharedPtr> nodeList;
         for (j = 0; j < 4; ++j)
         {
             int node = 0;
             ss >> node;
-            nodeList.push_back(m_mesh->m_node[node-1]);
+            nodeList.push_back(m_mesh->m_node[node - 1]);
         }
 
         // Create element
-        ElmtConfig conf(elType,1,false,false);
-        ElementSharedPtr E = GetElementFactory().
-            CreateInstance(elType,conf,nodeList,tags);
+        ElmtConfig conf(elType, 1, false, false);
+        ElementSharedPtr E =
+            GetElementFactory().CreateInstance(elType, conf, nodeList, tags);
 
         // Determine mesh expansion dimension
-        if (E->GetDim() > m_mesh->m_expDim) {
+        if (E->GetDim() > m_mesh->m_expDim)
+        {
             m_mesh->m_expDim = E->GetDim();
         }
         m_mesh->m_element[E->GetDim()].push_back(E);
@@ -259,27 +262,27 @@ void InputSem::Process()
 
         m_mshFile.seekg(sectionMap["CURVES"]);
         getline(m_mshFile, line);
-        ss.clear(); ss.str(line);
+        ss.clear();
+        ss.str(line);
         ss >> word;
 
         tag     = ss.str();
         start   = tag.find_first_of('=');
         end     = tag.find_first_of('>');
-        nCurves = atoi(tag.substr(start+1,end).c_str());
+        nCurves = atoi(tag.substr(start + 1, end).c_str());
 
         // Some session files have empty curves sections; if nCurves
         // is 0, no nead to load high order mesh file.
         if (nCurves > 0)
         {
             string fname    = m_config["infile"].as<string>();
-            int    ext      = fname.find_last_of('.');
-            string meshfile = fname.substr(0,ext) + ".msh";
+            int ext         = fname.find_last_of('.');
+            string meshfile = fname.substr(0, ext) + ".msh";
 
             homeshFile.open(meshfile.c_str());
             if (!homeshFile.is_open())
             {
-                cerr << "Cannot open or find mesh file: "
-                     << meshfile << endl
+                cerr << "Cannot open or find mesh file: " << meshfile << endl
                      << "Make sure to run meshpr on your session "
                      << "file first." << endl;
                 abort();
@@ -287,7 +290,8 @@ void InputSem::Process()
 
             // Make sure we have matching header.
             getline(homeshFile, line);
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> np >> nel >> nel >> nel;
 
             if (nel != m_mesh->m_element[m_mesh->m_expDim].size())
@@ -299,13 +303,14 @@ void InputSem::Process()
             // Now read in all mesh data. This is horribly inefficient
             // since not all elements are curved, but it is the
             // easiest way of finding element data.
-            hoXData.resize(nel*np*np);
-            hoYData.resize(nel*np*np);
+            hoXData.resize(nel * np * np);
+            hoYData.resize(nel * np * np);
 
-            for (j = 0; j < nel*np*np; ++j)
+            for (j = 0; j < nel * np * np; ++j)
             {
                 getline(homeshFile, line);
-                ss.clear(); ss.str(line);
+                ss.clear();
+                ss.str(line);
                 ss >> hoXData[j] >> hoYData[j];
             }
 
@@ -321,7 +326,8 @@ void InputSem::Process()
                 continue;
             }
             int elmt = 0, side = 0;
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> id >> elmt >> side >> word;
             id--;
             elmt--;
@@ -346,69 +352,73 @@ void InputSem::Process()
             // Now set high order data for requested element.
             for (int side = 0; side < 4; ++side)
             {
-                int offset = elmt*np*np;
+                int offset = elmt * np * np;
                 int stride = 0;
 
-                switch(side)
+                switch (side)
                 {
                     case 0: // Bottom edge
                         offset += 0;
-                        stride  = 1;
+                        stride = 1;
                         break;
                     case 1: // Right edge
-                        offset += np-1;
-                        stride  = np;
+                        offset += np - 1;
+                        stride = np;
                         break;
                     case 2: // Top edge
-                        offset += np*np-1;
-                        stride  = -1;
+                        offset += np * np - 1;
+                        stride = -1;
                         break;
                     case 3: // Left edge
-                        offset += np*(np-1);
-                        stride  = -np;
+                        offset += np * (np - 1);
+                        stride = -np;
                         break;
                     default:
                         cerr << "Unknown side for curve id " << id << endl;
                         abort();
                 }
 
-                for (j = 1; j < np-1; ++j, ++nodeId)
+                for (j = 1; j < np - 1; ++j, ++nodeId)
                 {
-                    double x = hoXData[offset+j*stride];
-                    double y = hoYData[offset+j*stride];
-                    NodeSharedPtr n = boost::shared_ptr<Node>(
-                        new Node(nodeId, x, y, 0.0));
+                    double x = hoXData[offset + j * stride];
+                    double y = hoYData[offset + j * stride];
+                    NodeSharedPtr n =
+                        boost::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
                     edgeNodes.push_back(n);
                 }
             }
 
             // Add internal points.
-            for (j = 1; j < np-1; ++j)
+            for (j = 1; j < np - 1; ++j)
             {
-                int offset = j*np+1;
-                for (k = 1; k < np-1; ++k, ++nodeId)
+                int offset = j * np + 1;
+                for (k = 1; k < np - 1; ++k, ++nodeId)
                 {
-                    double x = hoXData[offset+k];
-                    double y = hoYData[offset+k];
-                    NodeSharedPtr n = boost::shared_ptr<Node>(
-                        new Node(nodeId, x, y, 0.0));
+                    double x = hoXData[offset + k];
+                    double y = hoYData[offset + k];
+                    NodeSharedPtr n =
+                        boost::shared_ptr<Node>(new Node(nodeId, x, y, 0.0));
                     edgeNodes.push_back(n);
                 }
             }
 
             // Grab existing element from list and retrieve tags and
             // vertices; insert these into existing edge nodes.
-            ElementSharedPtr      e      = m_mesh->m_element[2][elmt];
+            ElementSharedPtr e           = m_mesh->m_element[2][elmt];
             vector<NodeSharedPtr> elvert = e->GetVertexList();
-            vector<int>           tags   = e->GetTagList();
+            vector<int> tags = e->GetTagList();
             edgeNodes.insert(edgeNodes.begin(), elvert.begin(), elvert.end());
 
             // Create new element and replace with an incomplete
             // quadrilateral of the correct order.
-            ElmtConfig conf(elType,np-1,true,false,true,
+            ElmtConfig conf(elType,
+                            np - 1,
+                            true,
+                            false,
+                            true,
                             LibUtilities::eGaussLobattoLegendre);
-            m_mesh->m_element[2][elmt] = GetElementFactory().
-                CreateInstance(elType,conf,edgeNodes,tags);
+            m_mesh->m_element[2][elmt] = GetElementFactory().CreateInstance(
+                elType, conf, edgeNodes, tags);
 
             ++i;
         }
@@ -420,7 +430,8 @@ void InputSem::Process()
         m_mshFile.seekg(sectionMap["FIELDS"]);
         getline(m_mshFile, line);
         getline(m_mshFile, line);
-        ss.clear(); ss.str(line);
+        ss.clear();
+        ss.str(line);
 
         while (ss >> tag)
         {
@@ -432,25 +443,27 @@ void InputSem::Process()
     // curves to ensure high-order points are preserved.
     if (sectionMap["SURFACES"] != std::streampos(-1))
     {
-        map<string,int> conditionMap;
-        int             maxTag = -1;
+        map<string, int> conditionMap;
+        int maxTag = -1;
 
         // First read in list of groups, which defines each condition tag.
         m_mshFile.seekg(sectionMap["GROUPS"]);
         getline(m_mshFile, line);
-        ss.clear(); ss.str(line);
+        ss.clear();
+        ss.str(line);
         ss >> word;
 
         tag     = ss.str();
         start   = tag.find_first_of('=');
         end     = tag.find_first_of('>');
-        nGroups = atoi(tag.substr(start+1,end).c_str());
+        nGroups = atoi(tag.substr(start + 1, end).c_str());
 
         i = id = 0;
         while (i < nGroups)
         {
             getline(m_mshFile, line);
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> id >> tag;
             conditionMap[tag] = i++;
         }
@@ -461,25 +474,27 @@ void InputSem::Process()
         // section.
         m_mshFile.seekg(sectionMap["BCS"]);
         getline(m_mshFile, line);
-        ss.clear(); ss.str(line);
+        ss.clear();
+        ss.str(line);
         ss >> word;
 
         tag   = ss.str();
         start = tag.find_first_of('=');
         end   = tag.find_first_of('>');
-        nBCs  = atoi(tag.substr(start+1,end).c_str());
+        nBCs  = atoi(tag.substr(start + 1, end).c_str());
 
         i = id = 0;
         while (i < nBCs)
         {
-            int                nF;
-            string             tmp;
+            int nF;
+            string tmp;
             ConditionSharedPtr p;
             getline(m_mshFile, line);
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> id >> tag >> nF;
 
-            p = ConditionSharedPtr(new Condition());
+            p                                      = ConditionSharedPtr(new Condition());
             m_mesh->m_condition[conditionMap[tag]] = p;
 
             // Read boundary condition.
@@ -487,7 +502,8 @@ void InputSem::Process()
             while (j < nF)
             {
                 getline(m_mshFile, line);
-                ss.clear(); ss.str(line);
+                ss.clear();
+                ss.str(line);
                 ss >> tmp;
 
                 // First string should be condition type.
@@ -501,7 +517,7 @@ void InputSem::Process()
                 }
                 else if (tmp == "<H>")
                 {
-                    p->type. push_back(eHOPCondition);
+                    p->type.push_back(eHOPCondition);
                     p->value.push_back("0");
                     p->field.push_back("p");
                     ++j;
@@ -509,7 +525,8 @@ void InputSem::Process()
                 }
                 else
                 {
-                    cerr << "Unsupported boundary condition type " << tmp << endl;
+                    cerr << "Unsupported boundary condition type " << tmp
+                         << endl;
                     abort();
                 }
 
@@ -521,7 +538,8 @@ void InputSem::Process()
                 ss >> tmp;
                 if (tmp != "=")
                 {
-                    cerr << "Couldn't read boundary condition type " << tag << endl;
+                    cerr << "Couldn't read boundary condition type " << tag
+                         << endl;
                     abort();
                 }
 
@@ -536,7 +554,7 @@ void InputSem::Process()
             // Finally set composite for condition. In this case, all
             // composites will be lines so there is one set per
             // composite.
-            p->m_composite.push_back(conditionMap[tag]+1);
+            p->m_composite.push_back(conditionMap[tag] + 1);
 
             ++i;
         }
@@ -544,13 +562,14 @@ void InputSem::Process()
         // Finally read surface information.
         m_mshFile.seekg(sectionMap["SURFACES"]);
         getline(m_mshFile, line);
-        ss.clear(); ss.str(line);
+        ss.clear();
+        ss.str(line);
         ss >> word;
 
         tag   = ss.str();
         start = tag.find_first_of('=');
         end   = tag.find_first_of('>');
-        nSurf = atoi(tag.substr(start+1,end).c_str());
+        nSurf = atoi(tag.substr(start + 1, end).c_str());
 
         i = id = 0;
         int elmt, side;
@@ -561,7 +580,8 @@ void InputSem::Process()
         while (i < nSurf)
         {
             getline(m_mshFile, line);
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> id >> elmt >> side >> word;
             elmt--;
             side--;
@@ -573,26 +593,27 @@ void InputSem::Process()
                 // periodic conditions.
                 if (periodicTagId == -1)
                 {
-                    periodicTagId = maxTag;
-                    ConditionSharedPtr in  =
-                        ConditionSharedPtr(new Condition());
+                    periodicTagId         = maxTag;
+                    ConditionSharedPtr in = ConditionSharedPtr(new Condition());
                     ConditionSharedPtr out =
                         ConditionSharedPtr(new Condition());
                     for (j = 0; j < m_mesh->m_fields.size(); ++j)
                     {
-                        in-> type.push_back(ePeriodic);
+                        in->type.push_back(ePeriodic);
                         out->type.push_back(ePeriodic);
-                        in-> field.push_back(m_mesh->m_fields[j]);
+                        in->field.push_back(m_mesh->m_fields[j]);
                         out->field.push_back(m_mesh->m_fields[j]);
-                        in-> value.push_back("["+boost::lexical_cast<
-                            string>(periodicTagId+1)+"]");
-                        out->value.push_back("["+boost::lexical_cast<
-                            string>(periodicTagId)+"]");
+                        in->value.push_back("[" + boost::lexical_cast<string>(
+                                                      periodicTagId + 1) +
+                                            "]");
+                        out->value.push_back(
+                            "[" + boost::lexical_cast<string>(periodicTagId) +
+                            "]");
                     }
-                    in-> m_composite.push_back(periodicTagId+1);
-                    out->m_composite.push_back(periodicTagId+2);
-                    m_mesh->m_condition[periodicTagId]   = in;
-                    m_mesh->m_condition[periodicTagId+1] = out;
+                    in->m_composite.push_back(periodicTagId + 1);
+                    out->m_composite.push_back(periodicTagId + 2);
+                    m_mesh->m_condition[periodicTagId]     = in;
+                    m_mesh->m_condition[periodicTagId + 1] = out;
                 }
 
                 int elmtB, sideB;
@@ -601,22 +622,22 @@ void InputSem::Process()
                 elmtB--;
                 sideB--;
 
-                pair<int, int> c1(elmt,  side );
+                pair<int, int> c1(elmt, side);
                 pair<int, int> c2(elmtB, sideB);
 
                 if (visitedPeriodic.count(c1) == 0 &&
                     visitedPeriodic.count(c2) == 0)
                 {
                     visitedPeriodic.insert(make_pair(elmtB, sideB));
-                    visitedPeriodic.insert(make_pair(elmt,  side ));
-                    insertEdge(elmt,  side,  periodicTagId+1);
-                    insertEdge(elmtB, sideB, periodicTagId+2);
+                    visitedPeriodic.insert(make_pair(elmt, side));
+                    insertEdge(elmt, side, periodicTagId + 1);
+                    insertEdge(elmtB, sideB, periodicTagId + 2);
                 }
             }
             else if (word == "<B>")
             {
                 ss >> tag;
-                insertEdge(elmt, side, conditionMap[tag]+1);
+                insertEdge(elmt, side, conditionMap[tag] + 1);
             }
             else
             {
@@ -640,21 +661,24 @@ void InputSem::Process()
 
 void InputSem::insertEdge(int elmt, int side, int tagId)
 {
-    EdgeSharedPtr edge = m_mesh->m_element[2][elmt]->GetEdge(side);
+    EdgeSharedPtr edge              = m_mesh->m_element[2][elmt]->GetEdge(side);
     vector<NodeSharedPtr> edgeNodes = edge->m_edgeNodes;
-    edgeNodes.insert(edgeNodes.begin(),edge->m_n2);
-    edgeNodes.insert(edgeNodes.begin(),edge->m_n1);
-    int order = edgeNodes.size()-1;
+    edgeNodes.insert(edgeNodes.begin(), edge->m_n2);
+    edgeNodes.insert(edgeNodes.begin(), edge->m_n1);
+    int order = edgeNodes.size() - 1;
 
     vector<int> tags;
     tags.push_back(tagId);
 
-    ElmtConfig conf(LibUtilities::eSegment, order, order > 1, false, true,
+    ElmtConfig conf(LibUtilities::eSegment,
+                    order,
+                    order > 1,
+                    false,
+                    true,
                     LibUtilities::eGaussLobattoLegendre);
-    ElementSharedPtr E = GetElementFactory().
-        CreateInstance(LibUtilities::eSegment,conf,edgeNodes,tags);
+    ElementSharedPtr E = GetElementFactory().CreateInstance(
+        LibUtilities::eSegment, conf, edgeNodes, tags);
     m_mesh->m_element[1].push_back(E);
 }
-
 }
 }

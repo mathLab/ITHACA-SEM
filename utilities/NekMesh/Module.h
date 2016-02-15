@@ -45,8 +45,7 @@
 #include <set>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 using namespace Nektar::NekMeshUtils;
 

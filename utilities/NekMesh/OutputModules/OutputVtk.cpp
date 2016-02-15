@@ -50,19 +50,15 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey OutputVtk::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eOutputModule, "vtk"), OutputVtk::create,
-        "Writes a VTK file.");
+ModuleKey OutputVtk::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eOutputModule, "vtk"), OutputVtk::create, "Writes a VTK file.");
 
 OutputVtk::OutputVtk(MeshSharedPtr m) : OutputModule(m)
 {
-
 }
 
 OutputVtk::~OutputVtk()
 {
-
 }
 
 void OutputVtk::Process()
@@ -72,15 +68,14 @@ void OutputVtk::Process()
         cout << "OutputVtk: Writing file..." << endl;
     }
 
-    vtkPolyData *vtkMesh = vtkPolyData::New();
-    vtkPoints *vtkPoints = vtkPoints::New();
+    vtkPolyData *vtkMesh   = vtkPolyData::New();
+    vtkPoints *vtkPoints   = vtkPoints::New();
     vtkCellArray *vtkPolys = vtkCellArray::New();
 
     std::set<NodeSharedPtr>::iterator it;
 
-    std::set<NodeSharedPtr> tmp(
-            m_mesh->m_vertexSet.begin(),
-            m_mesh->m_vertexSet.end());
+    std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
+                                m_mesh->m_vertexSet.end());
 
     for (it = tmp.begin(); it != tmp.end(); ++it)
     {
@@ -89,9 +84,8 @@ void OutputVtk::Process()
     }
 
     vtkIdType p[8];
-    vector<ElementSharedPtr> &elmt =
-                            m_mesh->m_element[m_mesh->m_expDim];
-    for(int i = 0; i < elmt.size(); ++i)
+    vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
+    for (int i = 0; i < elmt.size(); ++i)
     {
         int vertexCount = elmt[i]->GetVertexCount();
         for (int j = 0; j < vertexCount; ++j)
@@ -114,6 +108,5 @@ void OutputVtk::Process()
 #endif
     vtkMeshWriter->Update();
 }
-
 }
 }

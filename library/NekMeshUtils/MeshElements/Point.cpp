@@ -33,7 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "MeshElements.h"
+#include <NekMeshUtils/MeshElements/Point.h>
+
 using namespace std;
 
 namespace Nektar
@@ -41,15 +42,16 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-LibUtilities::ShapeType Point::m_type = GetElementFactory().
-    RegisterCreatorFunction(LibUtilities::ePoint, Point::create, "Point");
+LibUtilities::ShapeType Point::m_type =
+    GetElementFactory().RegisterCreatorFunction(
+        LibUtilities::ePoint, Point::create, "Point");
 
 /**
  * @brief Create a point element.
  */
-Point::Point(ElmtConfig            pConf,
+Point::Point(ElmtConfig pConf,
              vector<NodeSharedPtr> pNodeList,
-             vector<int>           pTagList)
+             vector<int> pTagList)
     : Element(pConf, GetNumNodes(pConf), pNodeList.size())
 {
     m_tag     = "";
@@ -65,6 +67,5 @@ unsigned int Point::GetNumNodes(ElmtConfig pConf)
 {
     return 1;
 }
-
 }
 }

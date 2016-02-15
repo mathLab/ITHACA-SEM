@@ -33,7 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+
+#include <boost/filesystem.hpp>
+
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
@@ -41,13 +46,7 @@
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/TetMeshing/TetMesh.h>
 
-#include <LibUtilities/BasicUtils/SessionReader.h>
-
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
-
 #include "InputCAD.h"
-
-#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -57,9 +56,9 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputCAD::className =
-GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eInputModule, "mcf"), InputCAD::create,
+ModuleKey InputCAD::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "mcf"),
+    InputCAD::create,
     "Reads CAD geometry and will generate the mesh file.");
 
 /**
@@ -67,12 +66,10 @@ GetModuleFactory().RegisterCreatorFunction(
  */
 InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputCAD::~InputCAD()
 {
-
 }
 
 void InputCAD::Process()
@@ -84,19 +81,19 @@ void InputCAD::Process()
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
 
-    //these parameters must be defined for any mesh generation to work
+    // these parameters must be defined for any mesh generation to work
     pSession->LoadParameter("MinDelta", m_minDelta);
     pSession->LoadParameter("MaxDelta", m_maxDelta);
-    pSession->LoadParameter("EPS",      m_eps);
-    pSession->LoadParameter("Order",    m_order);
+    pSession->LoadParameter("EPS", m_eps);
+    pSession->LoadParameter("Order", m_order);
     m_CADName = pSession->GetSolverInfo("CADFile");
 
-    if(pSession->DefinesSolverInfo("MeshType"))
+    if (pSession->DefinesSolverInfo("MeshType"))
     {
-        if(pSession->GetSolverInfo("MeshType") == "BL")
+        if (pSession->GetSolverInfo("MeshType") == "BL")
         {
             m_makeBL = true;
-            pSession->LoadParameter("BLThick",  m_blthick);
+            pSession->LoadParameter("BLThick", m_blthick);
         }
         else
         {
@@ -108,14 +105,14 @@ void InputCAD::Process()
         m_makeBL = false;
     }
 
-    if(pSession->DefinesSolverInfo("WriteOctree"))
+    if (pSession->DefinesSolverInfo("WriteOctree"))
     {
         m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
     }
 
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;
-    if(m_makeBL)
+    if (m_makeBL)
     {
         string sym, bl;
         sym = pSession->GetSolverInfo("SymPlane");
@@ -125,31 +122,31 @@ void InputCAD::Process()
         sort(symsurfs.begin(), symsurfs.end());
         sort(blsurfs.begin(), blsurfs.end());
         ASSERTL0(blsurfs.size() > 0,
-                        "No surfaces selected to make boundary layer on");
+                 "No surfaces selected to make boundary layer on");
     }
 
-    if(pSession->DefinesSolverInfo("UserDefinedSpacing"))
+    if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
     {
         m_udsName = pSession->GetSolverInfo("UserDefinedSpacing");
         ASSERTL0(boost::filesystem::exists(m_udsName.c_str()),
-                "UserDefinedSpacing file does not exist");
+                 "UserDefinedSpacing file does not exist");
     }
     else
     {
         m_udsName = "N";
     }
 
-    CADSystemSharedPtr m_cad = MemoryManager<CADSystem>::
-                                            AllocateSharedPtr(m_CADName);
+    CADSystemSharedPtr m_cad =
+        MemoryManager<CADSystem>::AllocateSharedPtr(m_CADName);
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "Building mesh for: " << m_CADName << endl;
     }
 
     ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "With parameters:" << endl;
         cout << "\tmin delta: " << m_minDelta << endl
@@ -159,40 +156,39 @@ void InputCAD::Process()
         m_cad->Report();
     }
 
-    if(m_makeBL && m_mesh->m_verbose)
+    if (m_makeBL && m_mesh->m_verbose)
     {
 
         cout << "\tWill make boundary layers on surfs: ";
-        for(int i = 0; i < blsurfs.size(); i++)
+        for (int i = 0; i < blsurfs.size(); i++)
         {
             cout << blsurfs[i] << " ";
         }
         cout << endl << "\tWith the symmetry planes: ";
-        for(int i = 0; i < symsurfs.size(); i++)
+        for (int i = 0; i < symsurfs.size(); i++)
         {
             cout << symsurfs[i] << " ";
         }
         cout << endl << "\tWith thickness " << m_blthick << endl;
     }
 
-    //create octree
-    OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_cad,
-                                    m_mesh->m_verbose, m_minDelta,
-                                    m_maxDelta, m_eps, m_udsName);
+    // create octree
+    OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(
+        m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps, m_udsName);
 
     m_octree->Build();
 
-    if(m_writeoctree)
+    if (m_writeoctree)
     {
         MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
-        oct->m_expDim = 3;
-        oct->m_spaceDim = 3;
-        oct->m_nummode = 2;
+        oct->m_expDim     = 3;
+        oct->m_spaceDim   = 3;
+        oct->m_nummode    = 2;
 
         m_octree->GetOctreeMesh(oct);
 
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
-                ModuleKey(eOutputModule, "xml"), oct);
+            ModuleKey(eOutputModule, "xml"), oct);
         mod->RegisterConfig("outfile", fn + "_oct.xml");
         mod->ProcessVertices();
         mod->ProcessEdges();
@@ -202,30 +198,31 @@ void InputCAD::Process()
         mod->Process();
     }
 
-    m_mesh->m_expDim = 3;
+    m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
     m_mesh->m_nummode = m_order + 1;
-    if(m_makeBL)
+    if (m_makeBL)
     {
-        m_mesh->m_numcomp = 2; //prisms and tets
+        m_mesh->m_numcomp = 2; // prisms and tets
     }
     else
     {
-        m_mesh->m_numcomp = 1;  //just tets
+        m_mesh->m_numcomp = 1; // just tets
     }
-    //m_mesh->m_nummode = 2;
+    // m_mesh->m_nummode = 2;
 
-    //create surface mesh
-    m_mesh->m_expDim--; //just to make it easier to surface mesh for now
-    SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_blthick);
+    // create surface mesh
+    m_mesh->m_expDim--; // just to make it easier to surface mesh for now
+    SurfaceMeshSharedPtr m_surfacemesh =
+        MemoryManager<SurfaceMesh>::AllocateSharedPtr(
+            m_mesh, m_cad, m_octree, symsurfs, m_blthick);
 
     m_surfacemesh->Mesh();
 
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
     ProcessComposites();
 
     m_surfacemesh->Report();
@@ -237,20 +234,20 @@ void InputCAD::Process()
     m_mesh->m_fields.push_back("p");
 
     map<int, FaceSharedPtr> surftopriface;
-    //map of surface element id to opposite prism
-    //face for psudo surface in tetmesh
+    // map of surface element id to opposite prism
+    // face for psudo surface in tetmesh
 
     TetMeshSharedPtr m_tet;
-    if(m_makeBL)
+    if (m_makeBL)
     {
         BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                          m_mesh, blsurfs, symsurfs, m_blthick);
+            m_mesh, blsurfs, symsurfs, m_blthick);
 
         m_blmesh->Mesh();
 
-        //create tet mesh
+        // create tet mesh
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
-                                                m_mesh, m_octree, m_blmesh);
+            m_mesh, m_octree, m_blmesh);
     }
     else
     {
@@ -260,20 +257,19 @@ void InputCAD::Process()
     m_tet->Mesh();
 
     ClearElementLinks();
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
     ProcessComposites();
 
     m_surfacemesh->HOSurf();
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << endl;
         cout << m_mesh->m_element[3].size() << endl;
     }
 }
-
 }
 }

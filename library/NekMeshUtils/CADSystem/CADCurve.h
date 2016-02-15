@@ -119,7 +119,7 @@ public:
      */
     Array<OneD, NekDouble> GetMinMax();
 
-    ///set the ids of the surfaces either side of the curve
+    /// set the ids of the surfaces either side of the curve
     void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
     {
         m_adjSurfs = i;
@@ -132,7 +132,10 @@ public:
     }
 
     /// returns lenght of the curve
-    NekDouble GetTotLength(){return m_length;}
+    NekDouble GetTotLength()
+    {
+        return m_length;
+    }
 
     /*
      * @brief assign ids of end vertices in main cad
@@ -150,7 +153,6 @@ public:
     }
 
 private:
-
     /// OpenCascade object of the curve.
     BRepAdaptor_Curve m_occCurve;
     /// OpenCascade edge
@@ -164,7 +166,6 @@ private:
 };
 
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
-
 }
 }
 

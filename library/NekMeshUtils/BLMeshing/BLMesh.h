@@ -38,11 +38,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 namespace Nektar
 {
@@ -57,15 +54,14 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
-           std::vector<unsigned int> syms, NekDouble b) :
-                         m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
-    {
-    };
-
+    BLMesh(MeshSharedPtr             m,
+           std::vector<unsigned int> bls,
+           std::vector<unsigned int> syms,
+           NekDouble                 b)
+        : m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b){};
 
     /**
-     *@brief execute bl meshing
+     * @brief Execute boundary layer meshing
      */
     void Mesh();
 
@@ -78,21 +74,19 @@ public:
     }
 
 private:
-
-    /// mesh object containing surface mesh
+    /// Mesh object containing surface mesh
     MeshSharedPtr m_mesh;
-    /// list of surfaces onto which boundary layers are placed
+    /// List of surfaces onto which boundary layers are placed
     std::vector<unsigned int> m_blsurfs;
-    /// list of symetry surfaces
+    /// List of symmetry surfaces
     std::vector<unsigned int> m_symsurfs;
-    /// thickness of the boundary layer
+    /// Thickness of the boundary layer
     NekDouble m_bl;
-    /// map from surface element id to opposite face of prism
+    /// Map from surface element ID to opposite face of prism
     std::map<int, FaceSharedPtr> m_surftopriface;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;
-
 }
 }
 

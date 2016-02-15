@@ -37,46 +37,49 @@
 #define NekMeshUtils_MESHELEMENTS_QUAD
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    /**
-     * @brief A 2-dimensional four-sided element.
-     */
-    class Quadrilateral : public Element {
-    public:
-        /// Creates an instance of this class
-        static ElementSharedPtr create(
-            ElmtConfig                 pConf,
-            std::vector<NodeSharedPtr> pNodeList,
-            std::vector<int>           pTagList)
+/**
+ * @brief A 2-dimensional four-sided element.
+ */
+class Quadrilateral : public Element
+{
+public:
+    /// Creates an instance of this class
+    static ElementSharedPtr create(ElmtConfig pConf,
+                                   std::vector<NodeSharedPtr> pNodeList,
+                                   std::vector<int> pTagList)
+    {
+        ElementSharedPtr e = boost::shared_ptr<Element>(
+            new Quadrilateral(pConf, pNodeList, pTagList));
+        vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
+        for (int i = 0; i < m_edges.size(); ++i)
         {
-            ElementSharedPtr e = boost::shared_ptr<Element>(
-                new Quadrilateral(pConf, pNodeList, pTagList));
-            vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
-            for (int i = 0; i < m_edges.size(); ++i)
-            {
-                m_edges[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
-            }
-            return e;
+            m_edges[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e, i));
         }
-        /// Element type
-        static LibUtilities::ShapeType m_type;
+        return e;
+    }
+    /// Element type
+    static LibUtilities::ShapeType m_type;
 
-        NEKMESHUTILS_EXPORT Quadrilateral(ElmtConfig                 pConf,
-                                         std::vector<NodeSharedPtr> pNodeList,
-                                         std::vector<int>           pTagList);
-        NEKMESHUTILS_EXPORT Quadrilateral(const Quadrilateral& pSrc);
-        NEKMESHUTILS_EXPORT virtual ~Quadrilateral() {}
+    NEKMESHUTILS_EXPORT Quadrilateral(ElmtConfig pConf,
+                                      std::vector<NodeSharedPtr> pNodeList,
+                                      std::vector<int> pTagList);
+    NEKMESHUTILS_EXPORT Quadrilateral(const Quadrilateral &pSrc);
+    NEKMESHUTILS_EXPORT virtual ~Quadrilateral()
+    {
+    }
 
-        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-        NEKMESHUTILS_EXPORT virtual void Complete(int order);
+    NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
+        int coordDim);
+    NEKMESHUTILS_EXPORT virtual void Complete(int order);
 
-        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
-    };
-
+    NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+};
 }
 }
 

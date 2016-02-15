@@ -32,9 +32,9 @@
 //  Description: Mesh manipulation objects.
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/QuadExp.h>
 
-#include "MeshElements.h"
+#include <LocalRegions/QuadExp.h>
+#include <NekMeshUtils/MeshElements/Quadrilateral.h>
 
 using namespace std;
 
@@ -43,38 +43,39 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-LibUtilities::ShapeType Quadrilateral::m_type = GetElementFactory().
-    RegisterCreatorFunction(LibUtilities::eQuadrilateral, Quadrilateral::create,
-                            "Quadrilateral");
+LibUtilities::ShapeType Quadrilateral::m_type =
+    GetElementFactory().RegisterCreatorFunction(
+        LibUtilities::eQuadrilateral, Quadrilateral::create, "Quadrilateral");
 
 /**
  * @brief Create a quadrilateral element.
  */
-Quadrilateral::Quadrilateral(ElmtConfig            pConf,
+Quadrilateral::Quadrilateral(ElmtConfig pConf,
                              vector<NodeSharedPtr> pNodeList,
-                             vector<int>           pTagList)
+                             vector<int> pTagList)
     : Element(pConf, GetNumNodes(pConf), pNodeList.size())
 {
-    m_tag = "Q";
-    m_dim = 2;
+    m_tag     = "Q";
+    m_dim     = 2;
     m_taglist = pTagList;
-    int n = m_conf.m_order-1;
+    int n     = m_conf.m_order - 1;
 
     // Create a map to relate edge nodes to a pair of vertices
     // defining an edge. This is based on the ordering produced by
     // gmsh.
-    map<pair<int,int>, int> edgeNodeMap;
-    map<pair<int,int>, int>::iterator it;
-    edgeNodeMap[pair<int,int>(1,2)] = 5;
-    edgeNodeMap[pair<int,int>(2,3)] = 5 + n;
-    edgeNodeMap[pair<int,int>(3,4)] = 5 + 2*n;
-    edgeNodeMap[pair<int,int>(4,1)] = 5 + 3*n;
+    map<pair<int, int>, int> edgeNodeMap;
+    map<pair<int, int>, int>::iterator it;
+    edgeNodeMap[pair<int, int>(1, 2)] = 5;
+    edgeNodeMap[pair<int, int>(2, 3)] = 5 + n;
+    edgeNodeMap[pair<int, int>(3, 4)] = 5 + 2 * n;
+    edgeNodeMap[pair<int, int>(4, 1)] = 5 + 3 * n;
 
     // Add vertices. This logic will determine (in 2D) whether the
     // element is clockwise (sum > 0) or counter-clockwise (sum < 0).
     NekDouble sum = 0.0;
-    for (int i = 0; i < 4; ++i) {
-        int o = (i+1) % 4;
+    for (int i = 0; i < 4; ++i)
+    {
+        int o = (i + 1) % 4;
         m_vertex.push_back(pNodeList[i]);
         sum += (pNodeList[o]->m_x - pNodeList[i]->m_x) *
                (pNodeList[o]->m_y + pNodeList[i]->m_y);
@@ -84,13 +85,15 @@ Quadrilateral::Quadrilateral(ElmtConfig            pConf,
     for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
     {
         vector<NodeSharedPtr> edgeNodes;
-        if (m_conf.m_order > 1) {
-            for (int j = it->second; j < it->second + n; ++j) {
-                edgeNodes.push_back(pNodeList[j-1]);
+        if (m_conf.m_order > 1)
+        {
+            for (int j = it->second; j < it->second + n; ++j)
+            {
+                edgeNodes.push_back(pNodeList[j - 1]);
             }
         }
-        m_edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
-                                                pNodeList[it->first.second-1],
+        m_edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first - 1],
+                                                pNodeList[it->first.second - 1],
                                                 edgeNodes,
                                                 m_conf.m_edgeCurveType)));
     }
@@ -106,40 +109,41 @@ Quadrilateral::Quadrilateral(ElmtConfig            pConf,
     if (m_conf.m_faceNodes)
     {
         m_volumeNodes.insert(m_volumeNodes.begin(),
-                           pNodeList.begin()+4*m_conf.m_order,
-                           pNodeList.end());
+                             pNodeList.begin() + 4 * m_conf.m_order,
+                             pNodeList.end());
     }
 }
 
 void Quadrilateral::Complete(int order)
 {
     LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A, order+1,
-        LibUtilities::PointsKey(
-            order+1,LibUtilities::eGaussLobattoLegendre));
+        LibUtilities::eOrtho_A,
+        order + 1,
+        LibUtilities::PointsKey(order + 1,
+                                LibUtilities::eGaussLobattoLegendre));
 
     SpatialDomains::QuadGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
-            this->GetGeom(3));
+        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(this->GetGeom(3));
 
     // Create a quad.
     LocalRegions::QuadExpSharedPtr quad =
-        MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
-            C0, C0, geom);
+        MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(C0, C0, geom);
 
     // Get coordinate array for quadrilateral.
     int nqtot = quad->GetTotPoints();
-    Array<OneD, NekDouble> alloc(3*nqtot);
-    Array<OneD, NekDouble> x    (alloc        );
-    Array<OneD, NekDouble> y    (alloc+1*nqtot);
-    Array<OneD, NekDouble> z    (alloc+2*nqtot);
+    Array<OneD, NekDouble> alloc(3 * nqtot);
+    Array<OneD, NekDouble> x(alloc);
+    Array<OneD, NekDouble> y(alloc + 1 * nqtot);
+    Array<OneD, NekDouble> z(alloc + 2 * nqtot);
 
     quad->GetCoords(x, y, z);
 
     // Now extract points from the co-ordinate arrays into the edge
     // and face nodes. First, extract edge-interior nodes.
-    int edgeMap[4][2] = {{0,1},{order,order+1},
-                         {nqtot-1,-1},{order*(order+1),-order-1}};
+    int edgeMap[4][2] = {{0, 1},
+                         {order, order + 1},
+                         {nqtot - 1, -1},
+                         {order * (order + 1), -order - 1}};
 
     for (int i = 0; i < 4; ++i)
     {
@@ -156,11 +160,11 @@ void Quadrilateral::Complete(int order)
     m_volumeNodes.clear();
     for (int i = 1; i < order; ++i)
     {
-        int pos = i*(order+1);
+        int pos = i * (order + 1);
         for (int j = 1; j < order; ++j)
         {
             m_volumeNodes.push_back(
-                NodeSharedPtr(new Node(0, x[pos+j], y[pos+j], z[pos+j])));
+                NodeSharedPtr(new Node(0, x[pos + j], y[pos + j], z[pos + j])));
         }
     }
 
@@ -171,13 +175,13 @@ void Quadrilateral::Complete(int order)
 
 SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
 {
-    SpatialDomains::SegGeomSharedPtr   edges[4];
+    SpatialDomains::SegGeomSharedPtr edges[4];
     SpatialDomains::PointGeomSharedPtr verts[4];
-    SpatialDomains::QuadGeomSharedPtr  ret;
+    SpatialDomains::QuadGeomSharedPtr ret;
 
     for (int i = 0; i < 4; ++i)
     {
-        edges[i] = m_edge  [i]->GetGeom(coordDim);
+        edges[i] = m_edge[i]->GetGeom(coordDim);
         verts[i] = m_vertex[i]->GetGeom(coordDim);
     }
 
@@ -185,11 +189,10 @@ SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
         SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
         SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
-        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
-    };
+        SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])};
 
-    ret = MemoryManager<SpatialDomains::QuadGeom>::
-        AllocateSharedPtr(m_id, verts, edges, edgeorient);
+    ret = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(
+        m_id, verts, edges, edgeorient);
 
     return ret;
 }
@@ -201,10 +204,9 @@ unsigned int Quadrilateral::GetNumNodes(ElmtConfig pConf)
 {
     int n = pConf.m_order;
     if (!pConf.m_faceNodes)
-        return 4*n;
+        return 4 * n;
     else
-        return (n+1)*(n+1);
+        return (n + 1) * (n + 1);
 }
-
 }
 }

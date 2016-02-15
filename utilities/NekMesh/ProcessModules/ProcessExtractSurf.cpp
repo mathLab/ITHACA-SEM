@@ -33,12 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-
-#include <SpatialDomains/MeshGraph.h>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
-
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessExtractSurf.h"
 
 using namespace std;
@@ -51,13 +47,14 @@ namespace Utilities
 
 ModuleKey ProcessExtractSurf::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "extract"), ProcessExtractSurf::create,
+        ModuleKey(eProcessModule, "extract"),
+        ProcessExtractSurf::create,
         "Process elements to extract a specified surface(s) or composites(s).");
 
 ProcessExtractSurf::ProcessExtractSurf(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["surf"] = ConfigOption(false, "-1",
-        "Tag identifying surface/composite to process.");
+    m_config["surf"] = ConfigOption(
+        false, "-1", "Tag identifying surface/composite to process.");
 }
 
 ProcessExtractSurf::~ProcessExtractSurf()
@@ -82,11 +79,11 @@ void ProcessExtractSurf::Process()
     }
 
     // Make a copy of all existing elements of one dimension lower.
-    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim-1];
+    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim - 1];
 
     // Clear all elements.
-    m_mesh->m_element[m_mesh->m_expDim]  .clear();
-    m_mesh->m_element[m_mesh->m_expDim-1].clear();
+    m_mesh->m_element[m_mesh->m_expDim].clear();
+    m_mesh->m_element[m_mesh->m_expDim - 1].clear();
 
     // Clear existing vertices, edges and faces.
     m_mesh->m_vertexSet.clear();
@@ -122,8 +119,10 @@ void ProcessExtractSurf::Process()
         vector<int> inter, tags = el[i]->GetTagList();
 
         sort(tags.begin(), tags.end());
-        set_intersection(surfs.begin(), surfs.end(),
-                         tags .begin(), tags .end(),
+        set_intersection(surfs.begin(),
+                         surfs.end(),
+                         tags.begin(),
+                         tags.end(),
                          back_inserter(inter));
 
         // It doesn't continue to next element.
@@ -133,7 +132,7 @@ void ProcessExtractSurf::Process()
         }
 
         // Get list of element vertices and edges.
-        ElementSharedPtr      elmt  = el[i];
+        ElementSharedPtr elmt       = el[i];
         vector<NodeSharedPtr> verts = elmt->GetVertexList();
         vector<EdgeSharedPtr> edges = elmt->GetEdgeList();
 
@@ -163,8 +162,7 @@ void ProcessExtractSurf::Process()
             {
                 m_mesh->m_edgeSet.insert(f->m_edgeList[j]);
                 elmt->SetEdge(j, f->m_edgeList[j]);
-                f->m_edgeList[j]->m_elLink.push_back(
-                    std::make_pair(elmt, j));
+                f->m_edgeList[j]->m_elLink.push_back(std::make_pair(elmt, j));
             }
             elmt->SetVolumeNodes(f->m_faceNodes);
             elmt->SetId(f->m_id);
@@ -184,7 +182,7 @@ void ProcessExtractSurf::Process()
         keptIds.insert(elmt->GetId());
 
         // Push element back into the list.
-        m_mesh->m_element[m_mesh->m_expDim-1].push_back(elmt);
+        m_mesh->m_element[m_mesh->m_expDim - 1].push_back(elmt);
     }
 
     // Decrement the expansion dimension to get manifold embedding.
@@ -239,7 +237,7 @@ void ProcessExtractSurf::Process()
     // which don't contain any elements in the new mesh.
     for (it = tmp.begin(); it != tmp.end(); ++it)
     {
-        CompositeSharedPtr c = it->second;
+        CompositeSharedPtr c        = it->second;
         vector<ElementSharedPtr> el = c->m_items;
 
         // Remove all but the first element from this composite.
@@ -282,8 +280,7 @@ void ProcessExtractSurf::Process()
         }
 
         // Insert new composites.
-        for (i = 0, it2 = newComps.begin(); it2 != newComps.end();
-             ++it2, ++i)
+        for (i = 0, it2 = newComps.begin(); it2 != newComps.end(); ++it2, ++i)
         {
             if (m_mesh->m_verbose && newComps.size() > 1)
             {
@@ -299,6 +296,5 @@ void ProcessExtractSurf::Process()
         }
     }
 }
-
 }
 }

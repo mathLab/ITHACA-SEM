@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE
 #define NEKTAR_MESHUTILS_OCTREE_OCTREE
 
@@ -42,7 +41,7 @@
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/CurvaturePoint.hpp>
 #include <NekMeshUtils/Octree/Octant.h>
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -69,11 +68,14 @@ public:
      * @param cad CAD object
      * @param ver bool verbose
      */
-    Octree(CADSystemSharedPtr cad, const bool ver,
-            const NekDouble min, const NekDouble max, const NekDouble eps,
-            const string uds) :
-                            m_minDelta(min), m_maxDelta(max), m_eps(eps),
-                            m_cad(cad), m_verbose(ver), m_udsfile(uds)
+    Octree(CADSystemSharedPtr cad,
+           const bool ver,
+           const NekDouble min,
+           const NekDouble max,
+           const NekDouble eps,
+           const string uds)
+        : m_minDelta(min), m_maxDelta(max), m_eps(eps), m_cad(cad),
+          m_verbose(ver), m_udsfile(uds)
     {
     }
 
@@ -96,7 +98,10 @@ public:
      *
      * @return miminum delta in octree
      */
-    NekDouble GetMinDelta(){return m_minDelta;}
+    NekDouble GetMinDelta()
+    {
+        return m_minDelta;
+    }
 
     /**
      * @brief populates the mesh m with a invalid hexahedral mesh based on the
@@ -105,7 +110,6 @@ public:
     void GetOctreeMesh(MeshSharedPtr m);
 
 private:
-
     /**
      * @brief Smooths specification over all octants to a gradation criteria
      */
@@ -130,7 +134,8 @@ private:
 
     /**
      * @brief takes the mesh specification from surface octants and
-     *        progates that through the domain so all octants have a specification
+     *        progates that through the domain so all octants have a
+     * specification
      *        using gradiation crieteria
      */
     void PropagateDomain();
@@ -170,7 +175,7 @@ private:
     std::vector<CurvaturePointSharedPtr> m_cpList;
     /// list of leaf octants
     std::vector<OctantSharedPtr> m_octants;
-    ///master octant for searching
+    /// master octant for searching
     OctantSharedPtr m_masteroct;
     /// number of octants made, used for id index
     int m_numoct;
@@ -179,7 +184,6 @@ private:
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;
-
 }
 }
 

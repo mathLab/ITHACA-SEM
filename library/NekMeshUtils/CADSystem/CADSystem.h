@@ -120,20 +120,18 @@ public:
      */
     CADCurveSharedPtr GetCurve(int i)
     {
-        std::map<int,CADCurveSharedPtr>::iterator
-                                search = m_curves.find(i);
+        std::map<int, CADCurveSharedPtr>::iterator search = m_curves.find(i);
         ASSERTL0(search != m_curves.end(), "curve does not exist");
 
         return search->second;
     }
 
     /**
-     * @brief Gets a suface from the map.
+     * @brief Gets a surface from the map.
      */
     CADSurfSharedPtr GetSurf(int i)
     {
-        std::map<int,CADSurfSharedPtr>::iterator
-                        search = m_surfs.find(i);
+        std::map<int, CADSurfSharedPtr>::iterator search = m_surfs.find(i);
         ASSERTL0(search != m_surfs.end(), "surface does not exist");
 
         return search->second;
@@ -150,7 +148,10 @@ public:
     /**
      * @brief Gets number of vertices
      */
-    int GetNumVerts(){return m_verts.size();}
+    int GetNumVerts()
+    {
+        return m_verts.size();
+    }
 
     /**
      * @brief based on location in space, uses opencascade routines to
@@ -161,27 +162,25 @@ public:
     bool InsideShape(Array<OneD, NekDouble> loc);
 
 private:
-
-    /// function to add curve to CADSystem::m_verts.
+    /// Function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);
-    /// function to add curve to CADSystem::m_curves.
+    /// Function to add curve to CADSystem::m_curves.
     void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
-    /// function to add surface to CADSystem::m_surfs.
+    /// Function to add surface to CADSystem::m_surfs.
     void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
     /// Name of cad file to be opened, including file extension.
     std::string m_name;
-    /// map of curves
+    /// Map of curves
     std::map<int, CADCurveSharedPtr> m_curves;
-    /// map of surfaces
+    /// Map of surfaces
     std::map<int, CADSurfSharedPtr> m_surfs;
-    /// map of vertices
+    /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
-    /// occ master object
+    /// OCC master object
     TopoDS_Shape shape;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
-
 }
 }
 

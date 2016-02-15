@@ -36,7 +36,6 @@
 #ifndef NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
 #define NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
 
-#include <LocalRegions/MatrixKey.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Optimisation/OptimiseObj.h>
 

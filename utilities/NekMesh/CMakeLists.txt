@@ -54,7 +54,6 @@ IF (NEKTAR_USE_CCM)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)
 
-
 IF (NEKTAR_USE_VTK)
     SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputVtk.h OutputModules/OutputVtk.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
@@ -65,12 +64,19 @@ IF (NEKTAR_USE_MESH)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESH)
 
-ADD_UTILITIES_EXECUTABLE(NekMesh util ${NekMeshSources} ${NekMeshHeaders})
+# Don't use macro -- this way we can just link against NekMeshUtils and
+# LocalRegions.
+ADD_EXECUTABLE(NekMesh ${NekMeshSources})
+SET_COMMON_PROPERTIES(NekMesh)
+TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions)
+SET_PROPERTY(TARGET NekMesh PROPERTY FOLDER util)
+INSTALL(TARGETS NekMesh
+    RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT util)
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh ccmio adf)
    SET_TARGET_PROPERTIES(NekMesh PROPERTIES
-    IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
+       IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
    INCLUDE_DIRECTORIES(NekMesh ${CCMIO_INCLUDE_DIR})
    LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
 ENDIF (NEKTAR_USE_CCM)
@@ -83,7 +89,6 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils)
 IF (NEKTAR_USE_MESH)
     SET_TARGET_PROPERTIES(NekMesh PROPERTIES COMPILE_DEFINITIONS "MESHGEN")
 ENDIF()

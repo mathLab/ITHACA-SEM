@@ -40,6 +40,7 @@
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 
+#include <NekMeshUtils/MeshElements/Triangle.h>
 #include "../Module.h"
 
 namespace Nektar
@@ -64,7 +65,8 @@ public:
     virtual void Process();
 
     /// Creates an instance of this class.
-    static ModuleSharedPtr create(MeshSharedPtr m) {
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
         return MemoryManager<InputNek>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
@@ -72,7 +74,7 @@ public:
 
 private:
     void LoadHOSurfaces();
-    int  GetNnodes     (LibUtilities::ShapeType elType);
+    int GetNnodes(LibUtilities::ShapeType elType);
 
     /**
      * Maps a curve tag to a filename containing surface information.
@@ -89,7 +91,6 @@ private:
      */
     std::map<int, int> hoMap;
 };
-
 }
 }
 

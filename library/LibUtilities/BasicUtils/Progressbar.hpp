@@ -38,7 +38,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <math.h>
+#include <cmath>
 
 #ifdef _WIN32
 #include <io.h>

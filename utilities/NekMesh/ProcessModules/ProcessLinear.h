@@ -42,25 +42,26 @@ namespace Nektar
 {
 namespace Utilities
 {
-    /**
-     * @brief This processing module removes all the high-order information
-     * from the mesh leaving just the linear elements
-     */
-    class ProcessLinear : public ProcessModule
+/**
+ * @brief This processing module removes all the high-order information
+ * from the mesh leaving just the linear elements
+ */
+class ProcessLinear : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-            return MemoryManager<ProcessLinear>::AllocateSharedPtr(m);
-        }
-        static ModuleKey className;
+        return MemoryManager<ProcessLinear>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
 
-        ProcessLinear(MeshSharedPtr m);
-        virtual ~ProcessLinear();
+    ProcessLinear(MeshSharedPtr m);
+    virtual ~ProcessLinear();
 
-        /// Write mesh to output file.
-        virtual void Process();
-    };
+    /// Write mesh to output file.
+    virtual void Process();
+};
 }
 }
 

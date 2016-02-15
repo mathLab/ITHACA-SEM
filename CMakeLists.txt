@@ -96,7 +96,7 @@ MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 
-# meshing
+# Meshing utilities and library
 OPTION(NEKTAR_USE_MESH "Build meshing utilities." OFF)
 
 # Build options
@@ -273,10 +273,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections)
-    IF(NEKTAR_USE_MESH)
-	SET(NEKTAR++_LIBRARIES ${NEKTAR++_LIBRARIES} NekMeshUtils)
-    ENDIF(NEKTAR_USE_MESH)
+        MultiRegions Collections NekMeshUtils)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)

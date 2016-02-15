@@ -40,75 +40,74 @@
 
 #include "ccmio.h"
 
-
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+/// Converter for VTK files.
+class InputStar : public InputModule
+{
+public:
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m)
     {
-        /// Converter for VTK files.
-        class InputStar : public InputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputStar>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-
-            InputStar(MeshSharedPtr m);
-            virtual ~InputStar();
-
-            /// Populate and validate required data structures.
-            virtual void Process();
-
-            void ReadZone(int &nComposite);
-
-        protected:
-
-            void GenElement3D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces,
-                              map<int, vector<int> >&FaceNodes,
-                              int ncomposite,
-                              bool DoOrient);
-
-            void GenElement2D(vector<NodeSharedPtr> &Nodes,
-                              int i,
-                              vector<int> &FaceNodes,
-                              int ncomposite);
-
-            Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &FaceNodes);
-
-            Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces,
-                                           map<int, vector<int> >&FaceNodes);
-
-            void ResetNodes(vector<NodeSharedPtr>     &Nodes,
-                            Array<OneD, vector<int> > &ElementFaces,
-                            map<int, vector<int> >      &FaceNodes);
-
-
-        private:
-            CCMIOError m_ccmErr;        //Star CCM error flag
-            CCMIOID    m_ccmTopology;   //Star CCM mesh topology
-            CCMIOID    m_ccmProcessor;
-            map<int,string> m_faceLabels; // label from CCM into composite
-
-            void InitCCM(void);
-
-            void ReadNodes( std::vector<NodeSharedPtr> &Nodes);
-
-            void ReadInternalFaces(map<int,  vector<int> > &FacesNodes,
-                                   Array<OneD, vector<int> > &ElementFaces);
-
-            void ReadBoundaryFaces(vector< vector<int> > &BndElementFaces,
-                                   map<int, vector<int> > &FacesNodes,
-                                   Array<OneD, vector<int> > &ElementFaces,
-                                   vector<string> &facelabels);
-
-            void SetupElements(void);
-        };
+        return MemoryManager<InputStar>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    InputStar(MeshSharedPtr m);
+    virtual ~InputStar();
+
+    /// Populate and validate required data structures.
+    virtual void Process();
+
+    void ReadZone(int &nComposite);
+
+protected:
+    void GenElement3D(vector<NodeSharedPtr> &Nodes,
+                      int i,
+                      vector<int> &ElementFaces,
+                      map<int, vector<int> > &FaceNodes,
+                      int ncomposite,
+                      bool DoOrient);
+
+    void GenElement2D(vector<NodeSharedPtr> &Nodes,
+                      int i,
+                      vector<int> &FaceNodes,
+                      int ncomposite);
+
+    Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
+                                   vector<int> &FaceNodes);
+
+    Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
+                                   vector<int> &ElementFaces,
+                                   map<int, vector<int> > &FaceNodes);
+
+    void ResetNodes(vector<NodeSharedPtr> &Nodes,
+                    Array<OneD, vector<int> > &ElementFaces,
+                    map<int, vector<int> > &FaceNodes);
+
+private:
+    CCMIOError m_ccmErr; // Star CCM error flag
+    CCMIOID m_ccmTopology; // Star CCM mesh topology
+    CCMIOID m_ccmProcessor;
+    map<int, string> m_faceLabels; // label from CCM into composite
+
+    void InitCCM(void);
+
+    void ReadNodes(std::vector<NodeSharedPtr> &Nodes);
+
+    void ReadInternalFaces(map<int, vector<int> > &FacesNodes,
+                           Array<OneD, vector<int> > &ElementFaces);
+
+    void ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
+                           map<int, vector<int> > &FacesNodes,
+                           Array<OneD, vector<int> > &ElementFaces,
+                           vector<string> &facelabels);
+
+    void SetupElements(void);
+};
+}
 }
 
 #endif

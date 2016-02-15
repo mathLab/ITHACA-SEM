@@ -34,11 +34,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/MeshGraph.h>
 
-#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessExtractTetPrismInterface.h"
 
@@ -58,7 +57,8 @@ ModuleKey ProcessExtractTetPrismInterface::className =
         "tets and prisms.");
 
 ProcessExtractTetPrismInterface::ProcessExtractTetPrismInterface(
-    MeshSharedPtr m) : ProcessModule(m)
+    MeshSharedPtr m)
+    : ProcessModule(m)
 {
 }
 
@@ -74,15 +74,15 @@ void ProcessExtractTetPrismInterface::Process()
              << "interface... " << endl;
     }
 
-    ASSERTL0(m_mesh->m_expDim == 3, "The prism-tet interface module"
+    ASSERTL0(m_mesh->m_expDim == 3,
+             "The prism-tet interface module"
              " only works for three-dimensional meshes.");
 
     // Copy 3D elements and 2D boundary elements and clear existing.
-    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
-    vector<ElementSharedPtr> bndEl = m_mesh->m_element[
-                                                    m_mesh->m_expDim-1];
+    vector<ElementSharedPtr> el    = m_mesh->m_element[m_mesh->m_expDim];
+    vector<ElementSharedPtr> bndEl = m_mesh->m_element[m_mesh->m_expDim - 1];
     m_mesh->m_element[m_mesh->m_expDim].clear();
-    m_mesh->m_element[m_mesh->m_expDim-1].clear();
+    m_mesh->m_element[m_mesh->m_expDim - 1].clear();
 
     // Extract prismatic elements.
     for (int i = 0; i < el.size(); ++i)
@@ -102,8 +102,7 @@ void ProcessExtractTetPrismInterface::Process()
 
     // Extract boundary region already associated with prisms
     // (i.e. outer wall of the computational domain)
-    for (fIt  = m_mesh->m_faceSet.begin();
-         fIt != m_mesh->m_faceSet.end(); fIt++)
+    for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
     {
         if ((*fIt)->m_elLink.size() == 1)
         {
@@ -111,17 +110,15 @@ void ProcessExtractTetPrismInterface::Process()
 
             if (el->GetConf().m_e != LibUtilities::eTetrahedron)
             {
-                m_mesh->m_element[m_mesh->m_expDim-1].push_back(
-                    bndEl[el->GetBoundaryLink(
-                            (*fIt)->m_elLink[0].second)]);
+                m_mesh->m_element[m_mesh->m_expDim - 1].push_back(
+                    bndEl[el->GetBoundaryLink((*fIt)->m_elLink[0].second)]);
             }
         }
     }
 
     // Now extract prismatic faces that are not connected to any other
     // elements, which denotes the prism/tet boundary.
-    for (fIt  = m_mesh->m_faceSet.begin();
-         fIt != m_mesh->m_faceSet.end(); fIt++)
+    for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
     {
         if ((*fIt)->m_elLink.size() != 1)
         {
@@ -141,11 +138,10 @@ void ProcessExtractTetPrismInterface::Process()
                 nodeList = (*fIt)->m_vertexList;
                 ElmtConfig conf(
                     LibUtilities::eTriangle, 1, false, false, false);
-                ElementSharedPtr tri = GetElementFactory().
-                    CreateInstance(
-                        LibUtilities::eTriangle, conf, nodeList, tags);
+                ElementSharedPtr tri = GetElementFactory().CreateInstance(
+                    LibUtilities::eTriangle, conf, nodeList, tags);
 
-                m_mesh->m_element[m_mesh->m_expDim-1].push_back(tri);
+                m_mesh->m_element[m_mesh->m_expDim - 1].push_back(tri);
             }
         }
     }
@@ -156,6 +152,5 @@ void ProcessExtractTetPrismInterface::Process()
     ProcessElements();
     ProcessComposites();
 }
-
 }
 }

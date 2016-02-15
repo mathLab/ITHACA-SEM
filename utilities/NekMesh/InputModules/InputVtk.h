@@ -48,7 +48,8 @@ class InputVtk : public InputModule
 {
 public:
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
         return MemoryManager<InputVtk>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
@@ -59,7 +60,6 @@ public:
     /// Populate and validate required data structures.
     virtual void Process();
 };
-
 }
 }
 

@@ -52,9 +52,10 @@ class ProcessExtractTetPrismInterface : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-        return MemoryManager<ProcessExtractTetPrismInterface>
-            ::AllocateSharedPtr(m);
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
+        return MemoryManager<
+            ProcessExtractTetPrismInterface>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
 
@@ -64,7 +65,6 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 };
-
 }
 }
 

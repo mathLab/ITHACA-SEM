@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessPerAlign.h"
 
@@ -54,8 +54,7 @@ namespace Utilities
 
 ModuleKey ProcessPerAlign::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "peralign"),
-        ProcessPerAlign::create);
+        ModuleKey(eProcessModule, "peralign"), ProcessPerAlign::create);
 
 /**
  * @class ProcessPerAlign
@@ -66,14 +65,14 @@ ModuleKey ProcessPerAlign::className =
  */
 ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["surf1"]  = ConfigOption(false, "-1",
-        "Tag identifying first surface.");
-    m_config["surf2"]  = ConfigOption(false, "-1",
-        "Tag identifying first surface.");
-    m_config["dir"]    = ConfigOption(false, "",
-        "Direction in which to align (either x, y, or z)");
-    m_config["orient"] = ConfigOption(true,  "0",
-        "Attempt to reorient tets and prisms");
+    m_config["surf1"] =
+        ConfigOption(false, "-1", "Tag identifying first surface.");
+    m_config["surf2"] =
+        ConfigOption(false, "-1", "Tag identifying first surface.");
+    m_config["dir"] = ConfigOption(
+        false, "", "Direction in which to align (either x, y, or z)");
+    m_config["orient"] =
+        ConfigOption(true, "0", "Attempt to reorient tets and prisms");
 }
 
 /**
@@ -81,15 +80,14 @@ ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
  */
 ProcessPerAlign::~ProcessPerAlign()
 {
-
 }
 
 void ProcessPerAlign::Process()
 {
-    int    surf1  = m_config["surf1"]. as<int>   ();
-    int    surf2  = m_config["surf2"]. as<int>   ();
-    string dir    = m_config["dir"].   as<string>();
-    bool   orient = m_config["orient"].as<bool>  ();
+    int surf1   = m_config["surf1"].as<int>();
+    int surf2   = m_config["surf2"].as<int>();
+    string dir  = m_config["dir"].as<string>();
+    bool orient = m_config["orient"].as<bool>();
 
     if (surf1 == -1)
     {
@@ -185,20 +183,21 @@ void ProcessPerAlign::Process()
             }
 
             Node dx = it->second - centroid;
-            if (fabs(fabs(dx.m_x*vec[0] + dx.m_y*vec[1] + dx.m_z*vec[2])/
-                     sqrt(dx.abs2()) - 1.0) < 1e-8)
+            if (fabs(fabs(dx.m_x * vec[0] + dx.m_y * vec[1] + dx.m_z * vec[2]) /
+                         sqrt(dx.abs2()) -
+                     1.0) < 1e-8)
             {
                 // Found match
                 int id1, id2;
 
                 if (c1->m_items[i]->GetConf().m_e == LibUtilities::eSegment)
                 {
-                    id1 = c1->m_items[i]        ->GetEdgeLink()->m_id;
+                    id1 = c1->m_items[i]->GetEdgeLink()->m_id;
                     id2 = c2->m_items[it->first]->GetEdgeLink()->m_id;
                 }
                 else
                 {
-                    id1 = c1->m_items[i]        ->GetFaceLink()->m_id;
+                    id1 = c1->m_items[i]->GetFaceLink()->m_id;
                     id2 = c2->m_items[it->first]->GetFaceLink()->m_id;
                 }
 
@@ -213,20 +212,23 @@ void ProcessPerAlign::Process()
                 {
                     for (int k = 0; k < nVerts; ++k)
                     {
-                        NodeSharedPtr n1 = c1->m_items[i]->GetFaceLink()->m_vertexList[k];
+                        NodeSharedPtr n1 =
+                            c1->m_items[i]->GetFaceLink()->m_vertexList[k];
                         int l;
 
                         for (l = 0; l < nVerts; ++l)
                         {
-                            NodeSharedPtr n2 =
-                                c2->m_items[it->first]->GetFaceLink()->m_vertexList[l];
+                            NodeSharedPtr n2 = c2->m_items[it->first]
+                                                   ->GetFaceLink()
+                                                   ->m_vertexList[l];
 
                             Node dn = *n2 - *n1;
-                            if (fabs(fabs(dn.m_x*vec[0] + dn.m_y*vec[1] +
-                                          dn.m_z*vec[2])/
-                                     sqrt(dn.abs2()) - 1.0) < 1e-8)
+                            if (fabs(fabs(dn.m_x * vec[0] + dn.m_y * vec[1] +
+                                          dn.m_z * vec[2]) /
+                                         sqrt(dn.abs2()) -
+                                     1.0) < 1e-8)
                             {
-                                perVerts   [k] = l;
+                                perVerts[k]    = l;
                                 perVertsInv[l] = k;
 
                                 int id1 = n1->m_id;
@@ -251,11 +253,11 @@ void ProcessPerAlign::Process()
                     int tot1 = 0, tot2 = 0;
                     for (int k = 0; k < nVerts; ++k)
                     {
-                        tot1 += perVerts   [k];
+                        tot1 += perVerts[k];
                         tot2 += perVertsInv[k];
                     }
-                    ASSERTL0(tot1 == nVerts*(nVerts-1)/2 &&
-                             tot2 == nVerts*(nVerts-1)/2,
+                    ASSERTL0(tot1 == nVerts * (nVerts - 1) / 2 &&
+                                 tot2 == nVerts * (nVerts - 1) / 2,
                              "Error identifying periodic vertices");
                 }
 
@@ -263,8 +265,8 @@ void ProcessPerAlign::Process()
                 {
                     perFaces[id1] = make_pair(
                         c2->m_items[it->first]->GetFaceLink(), perVerts);
-                    perFaces[id2] = make_pair(
-                        c1->m_items[i]        ->GetFaceLink(), perVertsInv);
+                    perFaces[id2] =
+                        make_pair(c1->m_items[i]->GetFaceLink(), perVertsInv);
                 }
                 break;
             }
@@ -294,6 +296,5 @@ void ProcessPerAlign::Process()
         ReorderPrisms(perFaces);
     }
 }
-
 }
 }

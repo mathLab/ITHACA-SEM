@@ -662,7 +662,7 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            m_nchk = 0;
+            m_nchk = 1;
 
             // Zero all physical fields initially
             ZeroPhysFields();

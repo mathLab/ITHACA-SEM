@@ -296,9 +296,13 @@ void DriverAdaptive::v_Execute(ostream &out)
             ClearManager(std::string("GlobalLinSys"));
 
         int chkNumber = m_equ[0]->GetCheckpointNumber();
+        int chkSteps  = m_equ[0]->GetCheckpointSteps();
 
         // Initialise driver again
         Driver::v_InitObject(out);
+
+        // Set chkSteps to zero to avoid writing initial condition
+        m_equ[0]->SetCheckpointSteps(0);
 
         // Initialise equation
         m_equ[0]->DoInitialise();
@@ -307,6 +311,7 @@ void DriverAdaptive::v_Execute(ostream &out)
         m_equ[0]->SetTime(startTime + i * period);
         m_equ[0]->SetBoundaryConditions(startTime + i * period);
         m_equ[0]->SetCheckpointNumber(chkNumber);
+        m_equ[0]->SetCheckpointSteps(chkSteps);
 
         // Project solution to new expansion
         for (int n = 0; n < nFields; n++)

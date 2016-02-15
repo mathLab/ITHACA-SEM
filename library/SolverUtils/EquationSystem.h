@@ -417,6 +417,16 @@ namespace Nektar
                 m_nchk = num;
             }
 
+            SOLVER_UTILS_EXPORT int GetCheckpointSteps()
+            {
+                return m_checksteps;
+            }
+
+            SOLVER_UTILS_EXPORT void SetCheckpointSteps(int num)
+            {
+                m_checksteps = num;
+            }
+
             SOLVER_UTILS_EXPORT void SetTime(
                 const NekDouble time)
             {

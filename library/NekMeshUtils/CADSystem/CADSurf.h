@@ -42,7 +42,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
-
+#include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 
 namespace Nektar
@@ -54,7 +54,8 @@ class CADCurve;
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
- * @brief struct which descibes a collection of cad edges which for a loop on the cad surface
+ * @brief struct which descibes a collection of cad edges which for a
+ *        loop on the cad surface
  */
 struct EdgeLoop
 {
@@ -68,7 +69,7 @@ struct EdgeLoop
  * @brief class for handleing a cad surface
  */
 
-class CADSurf
+class CADSurf : public CADObj
 {
 public:
     friend class MemoryManager<CADSurf>;
@@ -77,6 +78,8 @@ public:
      * @brief Default constructor.
      */
     CADSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+
+    ~CADSurf(){};
 
     /**
      * @brief Get the IDs of the edges which bound the surface.
@@ -183,11 +186,6 @@ public:
     bool GetTwoC(){return m_hasTwoCurves;}
 
     /**
-     * @brief return id
-     */
-    int GetId(){return m_ID;}
-
-    /**
      * @brief does unconstrained locuv to project point from anywhere
      */
     NekDouble DistanceTo(Array<OneD, NekDouble> p);
@@ -203,11 +201,10 @@ private:
 
     /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv);
-    /// ID of surface.
-    int m_ID;
     /// normal
     bool m_correctNormal;
-    /// flag to alert the mesh generation to a potential problem is both curves have only two points in the mesh
+    /// flag to alert the mesh generation to a potential problem is both
+    /// curves have only two points in the mesh
     bool m_hasTwoCurves;
     /// OpenCascade object for surface.
     BRepAdaptor_Surface m_occSurface;

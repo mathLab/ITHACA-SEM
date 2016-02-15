@@ -136,7 +136,8 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     if(out.numberofpoints-out.numberofedges+out.numberoftriangles != 2 - m_centers.size())
     {
         cout << endl << "epc wrong" << endl;
-        cout << out.numberofpoints-out.numberofedges+out.numberoftriangles << " " << m_centers.size() << " " << sid << endl;
+        cout << out.numberofpoints-out.numberofedges+out.numberoftriangles
+             << " " << m_centers.size() << " " << sid << endl;
     }
 
 }
@@ -212,7 +213,8 @@ void TriangleInterface::Extract(std::vector<std::vector<NodeSharedPtr> > &Connec
         n2 = nodemap.find(out.trianglelist[i*3+1]);
         n3 = nodemap.find(out.trianglelist[i*3+2]);
 
-        ASSERTL0(n1!=nodemap.end() && n2!=nodemap.end() && n3!=nodemap.end(),"node index error");
+        ASSERTL0(n1!=nodemap.end() && n2!=nodemap.end() && n3!=nodemap.end(),
+                                                            "node index error");
 
         vector<NodeSharedPtr> tri(3);
         tri[0] = n1->second;

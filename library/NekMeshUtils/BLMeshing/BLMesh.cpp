@@ -46,8 +46,10 @@ void BLMesh::Mesh()
     //At this stage the surface mesh is complete and the elements know their
     //neigbours through element links in the edges, this includes quads,
 
-    //here elements are made for the boundary layer they will need to know links (maybe facelinks)
-    //so that the tetmeshing module can extract the surface upon which it needs to mesh (top of the bl and the rest of the surface)
+    //here elements are made for the boundary layer they will need to know
+    //links (maybe facelinks)
+    //so that the tetmeshing module can extract the surface upon which it needs
+    // to mesh (top of the bl and the rest of the surface)
 
     vector<ElementSharedPtr> quad;
     vector<ElementSharedPtr> ptri;  //triangles to grow prisms onto
@@ -63,7 +65,8 @@ void BLMesh::Mesh()
                 break;
             }
         }
-        if(m_mesh->m_element[2][i]->GetConf().m_e == LibUtilities::eQuadrilateral)
+        if(m_mesh->m_element[2][i]->GetConf().m_e ==
+                                                LibUtilities::eQuadrilateral)
         {
             quad.push_back(m_mesh->m_element[2][i]);
         }
@@ -79,8 +82,11 @@ void BLMesh::Mesh()
         vector<EdgeSharedPtr> e = quad[i]->GetEdgeList();
         for(int j = 0; j < e.size(); j++)
         {
-            if((e[j]->m_n1->GetNumCadCurve() > 0 && e[j]->m_n2->GetNumCadCurve() > 0) ||
-               (!(e[j]->m_n1->GetNumCadCurve() > 0) && !(e[j]->m_n2->GetNumCadCurve() > 0))) //if both or none are on curve skip
+            //if both or none are on curve skip
+            if((e[j]->m_n1->GetNumCadCurve() > 0 &&
+                e[j]->m_n2->GetNumCadCurve() > 0) ||
+               (!(e[j]->m_n1->GetNumCadCurve() > 0) &&
+                !(e[j]->m_n2->GetNumCadCurve() > 0)))
             {
                 continue;
             }
@@ -150,17 +156,24 @@ void BLMesh::Mesh()
                 vector<pair<int, CADSurfSharedPtr> > surfs = n[j]->GetCADSurfs();
                 for(int s = 0; s < surfs.size(); s++)
                 {
-                    Array<OneD, NekDouble> N = surfs[s].second->N(n[j]->GetCADSurfInfo(surfs[s].first));
-                    for(int k = 0; k < 3; k++) AN[k] += N[k];
+                    Array<OneD, NekDouble> N =
+                        surfs[s].second->N(n[j]->GetCADSurfInfo(surfs[s].first));
+                    for(int k = 0; k < 3; k++)
+                    {
+                        AN[k] += N[k];
+                    }
                 }
                 NekDouble mag = sqrt(AN[0]*AN[0] + AN[1]*AN[1] + AN[2]*AN[2]);
-                for(int k = 0; k < 3; k++) AN[k] /= mag;
+                for(int k = 0; k < 3; k++)
+                {
+                    AN[k] /= mag;
+                }
 
                 Array<OneD, NekDouble> loc = n[j]->GetLoc();
                 Array<OneD, NekDouble> np(3);
                 for(int k = 0; k < 3; k++) np[k] = loc[k] + AN[k]*m_bl;
-                NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
-                                                                np[0],np[1],np[2]));
+                NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(
+                                m_mesh->m_numNodes++, np[0], np[1], np[2]));
                 pn[nm[j*2+1]] = nn;
                 blpair[n[j]->m_id] = nn;
             }
@@ -174,7 +187,8 @@ void BLMesh::Mesh()
 
         m_mesh->m_element[3].push_back(E);
 
-        //need to give the surface element some information about which prism is above it
+        //need to give the surface element some information about
+        //which prism is above it
         //so that tetmesh can infer the psudo surface
         vector<NodeSharedPtr> faceNodes;
         vector<EdgeSharedPtr> edgeList = ptri[i]->GetEdgeList();
@@ -187,7 +201,9 @@ void BLMesh::Mesh()
             if(f[j]->m_vertexList.size() != 3) //quad
                 continue;
 
-            if(!(F == f[j])) //only two triangle faces so if its not this one, this is the psudo surfaces
+            //only two triangle faces so if its not this one,
+            //this is the psudo surfaces
+            if(!(F == f[j])) 
             {
                 m_surftopriface[ptri[i]->GetId()] = f[j];
             }

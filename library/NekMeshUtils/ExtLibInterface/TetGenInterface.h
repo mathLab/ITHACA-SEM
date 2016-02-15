@@ -78,7 +78,8 @@ class TetGenInterface
         void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
 
         /**
-         * @brief refines a previously made tetmesh with node delta information from the Octree
+         * @brief refines a previously made tetmesh with node delta information
+         *        from the Octree
          */
         void RefineMesh(std::map<int, NekDouble> delta);
 

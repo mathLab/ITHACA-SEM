@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_CADSYSTEM_CADCURVE
-#define NekMeshUtils_CADSYSTEM_CADCURVE
+#ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
+#define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
 #include <boost/shared_ptr.hpp>
 
@@ -43,6 +43,7 @@
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
 
+#include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
@@ -57,7 +58,7 @@ namespace NekMeshUtils
  * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
  * Nektar++.
  */
-class CADCurve
+class CADCurve : public CADObj
 {
 public:
     friend class MemoryManager<CADCurve>;
@@ -66,6 +67,8 @@ public:
      * @brief Default constructor.
      */
     CADCurve(int i, TopoDS_Shape in);
+
+    ~CADCurve(){};
 
     /**
      * @brief Returns the minimum and maximum parametric coords t of the curve.
@@ -85,12 +88,18 @@ public:
     NekDouble Length(NekDouble ti, NekDouble tf);
 
     /**
-     * @brief Gets the location (x,y,z) in an array out of the curve at point \p t.
+     * @brief Gets the location (x,y,z) in an array out of the curve at
+     * point \p t.
      *
      * @param t Parametric coordinate
      * @return Array of x,y,z
      */
     Array<OneD, NekDouble> P(NekDouble t);
+
+    /**
+     * @brief Gets the second derivatives at t
+     */
+    Array<OneD, NekDouble> D2(NekDouble t);
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -109,12 +118,6 @@ public:
      * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
      */
     Array<OneD, NekDouble> GetMinMax();
-
-    /// return the id of the curve
-    int GetID()
-    {
-        return m_ID;
-    }
 
     ///set the ids of the surfaces either side of the curve
     void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
@@ -139,15 +142,15 @@ public:
         m_mainVerts = falVert;
     }
 
-    /// get the ids of the vertices that are the ends of the curve, which are in the main cad list
+    /// get the ids of the vertices that are the ends of the curve,
+    /// which are in the main cad list
     std::vector<CADVertSharedPtr> GetVertex()
     {
         return m_mainVerts;
     }
 
 private:
-    /// ID of the curve.
-    int m_ID;
+
     /// OpenCascade object of the curve.
     BRepAdaptor_Curve m_occCurve;
     /// OpenCascade edge

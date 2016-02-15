@@ -179,6 +179,7 @@ class Octant
         {
             ASSERTL0(m_delta.first, "Tried to acsess delta of octant"
                                     "which has not been set");
+
             return m_delta.second;
         }
 
@@ -304,6 +305,11 @@ class Octant
             return m_children[q];
         }
 
+        int GetNumBoundary()
+        {
+            return m_numBoundaryPoints;
+        }
+
     private:
 
         ///id
@@ -322,6 +328,7 @@ class Octant
         std::vector<CurvaturePointSharedPtr> m_localCPList;
         /// number of valid cp points
         int m_numValidPoints;
+        int m_numBoundaryPoints;
         /// mesh sizing parameter
         std::pair<bool, NekDouble> m_delta;
         /// idenify if division is needed

@@ -66,6 +66,7 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
     m_leaf = true;
     m_needToDivide = false;
     m_numValidPoints = 0;
+    m_numBoundaryPoints = 0;
     m_delta = pair<bool, NekDouble>(false, 0.0);
     NekDouble maxDif = 0;
     NekDouble minDif=numeric_limits<double>::max();
@@ -140,6 +141,10 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
                 }
                 m_numValidPoints++;
             }
+            if(CurvaturePointList[i]->Isboundary())
+            {
+                m_numBoundaryPoints++;
+            }
         }
     }
 
@@ -149,13 +154,18 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir) : m_id(i),
         //geometrically octant should subdivide
         if(maxDif/minDif>1.5)
         {
-            m_needToDivide=true;
+            m_needToDivide = true;
         }
 
         SetDelta(minDif);
+
+        if(GetDelta() > 5.0*DX())
+        {
+            m_needToDivide = true;
+        }
     }
 
-    if(NumCurvePoint()>0)
+    if(GetNumBoundary()>0)
     {
         m_location = eOnBoundary;
     }

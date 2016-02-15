@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: Curvemesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,66 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: object for individual curve meshes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
+#define NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 
-#include "../Module.h"
+#include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
 
-class InputCAD : public InputModule
+class OptiObj
 {
-public:
-    InputCAD(MeshSharedPtr m);
-    virtual ~InputCAD();
-    virtual void Process();
+    public:
 
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
-    }
-    /// %ModuleKey for class.
-    static ModuleKey className;
-private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    string m_CADName, m_udsName;
-    bool m_makeBL, m_writeoctree;
+        OptiObj(){};
+
+        virtual ~OptiObj(){};
+
+        virtual NekDouble F(Array<OneD, NekDouble> xitst)
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return 0.0;
+        };
+
+        virtual DNekMat dF(Array<OneD, NekDouble> xitst)
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return DNekMat(1,1,0.0);
+        };
+
+        virtual Array<OneD, NekDouble> Getxi()
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return Array<OneD,NekDouble>();
+        };
+
+        virtual Array<OneD, NekDouble> Getli()
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return Array<OneD,NekDouble>();
+        };
+
+        virtual Array<OneD, NekDouble> Getui()
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+            return Array<OneD,NekDouble>();
+        };
+
+        virtual void Update(Array<OneD, NekDouble> xinew)
+        {
+            ASSERTL0(false,"should be implemented in inheriting class");
+        };
+
 };
+typedef boost::shared_ptr<OptiObj> OptiObjSharedPtr;
 
 }
 }
-
 #endif

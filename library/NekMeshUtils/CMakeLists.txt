@@ -10,6 +10,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
+    Optimisation/BGFS-B.cpp
     )
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
@@ -20,7 +21,6 @@ IF(NEKTAR_USE_MESH)
         SurfaceMeshing/SurfaceMeshHOMesh.cpp
         SurfaceMeshing/FaceMesh.cpp
         SurfaceMeshing/OptimiseFunctions.cpp
-        SurfaceMeshing/OptimiseUtils.cpp
         ExtLibInterface/TriangleInterface.cpp
         ExtLibInterface/TetGenInterface.cpp
         TetMeshing/TetMesh.cpp
@@ -48,6 +48,8 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
+    Optimisation/BGFS-B.h
+    Optimisation/OptimiseObj.h
     )
 IF(NEKTAR_USE_MESH)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
@@ -57,10 +59,12 @@ IF(NEKTAR_USE_MESH)
         Octree/Octree.h
         SurfaceMeshing/SurfaceMesh.h
         SurfaceMeshing/FaceMesh.h
+        SurfaceMeshing/OptimiseFunctions.h
         ExtLibInterface/TriangleInterface.h
         ExtLibInterface/TetGenInterface.h
         TetMeshing/TetMesh.h
         BLMeshing/BLMesh.h
+        CADSystem/CADObj.h
         CADSystem/CADSystem.h
         CADSystem/CADVert.h
         CADSystem/CADCurve.h

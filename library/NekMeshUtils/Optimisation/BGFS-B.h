@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: Curvemesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,41 +29,23 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: object for individual curve meshes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
+#define NEKTAR_MESHUTILS_OPTIMISATION_BGFS_H
 
-#include "../Module.h"
+#include <LocalRegions/MatrixKey.h>
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/Optimisation/OptimiseObj.h>
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
-
-class InputCAD : public InputModule
-{
-public:
-    InputCAD(MeshSharedPtr m);
-    virtual ~InputCAD();
-    virtual void Process();
-
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
-    }
-    /// %ModuleKey for class.
-    static ModuleKey className;
-private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    string m_CADName, m_udsName;
-    bool m_makeBL, m_writeoctree;
-};
-
+    bool BGFSUpdate(OptiObjSharedPtr opti,
+                    DNekMat &J, DNekMat &B, DNekMat &H);
 }
 }
-
 #endif

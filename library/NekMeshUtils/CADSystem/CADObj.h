@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,39 +29,66 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
+#define NEKMESHUTILS_CADSYSTEM_CADOBJ
 
-#include "../Module.h"
+#include <boost/shared_ptr.hpp>
+
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+#include <NekMeshUtils/CADSystem/OpenCascade.h>
+
+#include <NekMeshUtils/MeshElements/MeshElements.h>
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
 
-class InputCAD : public InputModule
+enum cadType { vert, curve, surf };
+
+/**
+ * @brief class for CAD curves.
+ *
+ * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
+ * Nektar++.
+ */
+class CADObj
 {
 public:
-    InputCAD(MeshSharedPtr m);
-    virtual ~InputCAD();
-    virtual void Process();
+    friend class MemoryManager<CADObj>;
 
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
+    /**
+     * @brief Default constructor.
+     */
+    CADObj()
+    {
+
     }
-    /// %ModuleKey for class.
-    static ModuleKey className;
-private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    string m_CADName, m_udsName;
-    bool m_makeBL, m_writeoctree;
+
+    virtual ~CADObj(){};
+
+    /**
+     * @brief Return ID of the vertex
+     */
+    int GetId(){return m_id;}
+
+    cadType GetType(){return m_type;}
+
+protected:
+    /// ID of the vert.
+    int m_id;
+    /// type of the cad object
+    cadType m_type;
+
 };
+
+typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
 
 }
 }

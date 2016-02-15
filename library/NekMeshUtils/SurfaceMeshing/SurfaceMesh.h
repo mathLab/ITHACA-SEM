@@ -89,62 +89,6 @@ class SurfaceMesh
 
     private:
 
-        /**
-         * @brief get the gadient of the edge spring energy optimsation function
-         */
-        Array<OneD, NekDouble> EdgeGrad(NekDouble ux, NekDouble vx,
-                                        std::vector<Array<OneD,NekDouble> > bcs,
-                                        std::vector<NekDouble> weights,
-                                        int surf, bool &valid);
-
-        /**
-         * @brief get the value of the edge spring energy
-         */
-        NekDouble EdgeF(NekDouble ux, NekDouble vx,
-                        std::vector<Array<OneD,NekDouble> > bcs,
-                        std::vector<NekDouble> weights,
-                        int surf, bool &valid);
-
-        /**
-         * @brief get the value of face spring energy
-         */
-        NekDouble FaceF(NekDouble ux, NekDouble vx,
-                        std::vector<Array<OneD,NekDouble> > bcs,
-                        std::vector<NekDouble> weights,
-                        int surf, bool &valid);
-
-        /**
-         * @brief get the gadient of the face spring energy optimsation function
-         */
-        Array<OneD, NekDouble> FaceGrad(NekDouble ux, NekDouble vx,
-                                        std::vector<Array<OneD,NekDouble> > bcs,
-                                        std::vector<NekDouble> weights,
-                                        int surf, bool &valid);
-
-        /**
-         * @brief get the bracketing for brent optimisation
-         */
-        void Find1DBounds(NekDouble &a, NekDouble &b,
-                          Array<OneD, NekDouble> uvi,
-                          Array<OneD, NekDouble> df,
-                          Array<OneD, NekDouble> bounds);
-
-        /**
-         * @brief perform brent optimsation
-         */
-        NekDouble BrentOpti(NekDouble ax, NekDouble bx,
-                            NekDouble cx, NekDouble &fx,
-                            NekDouble tol, int surf,
-                            Array<OneD, NekDouble> uvi,
-                            Array<OneD, NekDouble> df,
-                            Array<OneD, NekDouble> bounds,
-                            std::vector<Array<OneD,NekDouble> > bcs,
-                            std::vector<NekDouble> weights,
-                            NekDouble (SurfaceMesh::*GetF)(
-                            NekDouble, NekDouble,
-                            std::vector<Array<OneD,NekDouble> >,
-                            std::vector<NekDouble>, int, bool &));
-
         /// mesh object
         MeshSharedPtr m_mesh;
         /// CAD object

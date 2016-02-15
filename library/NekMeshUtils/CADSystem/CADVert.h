@@ -42,6 +42,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
+#include <NekMeshUtils/CADSystem/CADObj.h>
 
 #include <NekMeshUtils/MeshElements/MeshElements.h>
 
@@ -56,7 +57,7 @@ namespace NekMeshUtils
  * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
  * Nektar++.
  */
-class CADVert
+class CADVert : public CADObj
 {
 public:
     friend class MemoryManager<CADVert>;
@@ -72,13 +73,17 @@ public:
         TopLoc_Location mv(transform);
         in.Move(mv);
 
-        m_ID = i;
+        m_id = i;
         m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
         m_node = boost::shared_ptr<Node>(
                 new Node(i-1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
         degen = false;
+
+        m_type = vert;
     }
+
+    ~CADVert(){};
 
     /**
      * @brief Get x,y,z location of the vertex
@@ -89,11 +94,6 @@ public:
         out[0] = m_occVert.X(); out[1] = m_occVert.Y(); out[2] = m_occVert.Z();
         return out;
     }
-
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId(){return m_ID;}
 
     /**
      * @brief returns a node object of the cad vertex
@@ -129,8 +129,7 @@ public:
     }
 
 private:
-    /// ID of the vert.
-    int m_ID;
+
     /// OpenCascade object of the curve.
     gp_Pnt m_occVert;
     /// mesh convert object of vert

@@ -485,9 +485,9 @@ void Octree::PropagateDomain()
                     {
                         NekDouble r = oct->Distance(known[j]);
 
-                        if(0.099*r + known[j]->GetDelta() < m_maxDelta)
+                        if(0.14*r + known[j]->GetDelta() < m_maxDelta)
                         {
-                            deltaPrime.push_back(0.099 * r + known[j]->GetDelta());
+                            deltaPrime.push_back(0.14 * r + known[j]->GetDelta());
                         }
                         else
                         {
@@ -751,6 +751,49 @@ int Octree::CountElemt()
     return int(total);
 }
 
+struct linesource
+{
+    Array<OneD, NekDouble> x1, x2;
+    NekDouble R, delta;
+    linesource(Array<OneD, NekDouble> p1,
+               Array<OneD, NekDouble> p2,
+               NekDouble r, NekDouble d) : x1(p1), x2(p2), R(r), delta(d) {}
+
+    bool withinRange(Array<OneD, NekDouble> p)
+    {
+        Array<OneD, NekDouble> Le(3), Re(3), s(3);
+        for(int i = 0; i < 3; i++)
+        {
+            Le[i] = p[i] - x1[i];
+            Re[i] = p[i] - x2[i];
+            s[i]  = x2[i] - x1[i];
+        }
+        Array<OneD, NekDouble> dev(3);
+        dev[0] = Le[1]*Re[2] - Re[1]*Le[2];
+        dev[1] = Le[0]*Re[2] - Re[0]*Le[2];
+        dev[2] = Le[0]*Re[1] - Re[0]*Le[1];
+
+        NekDouble dist = sqrt(dev[0]*dev[0] + dev[1]*dev[1] + dev[2]*dev[2]) /
+                         sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+
+        NekDouble t = -1.0*((x1[0]-p[0])*s[0] + (x1[1]-p[1])*s[1] + (x1[1]-p[1])*s[1]) / Length() / Length();
+
+        if(dist < R && !(t > 1) && !(t < 0))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    NekDouble Length()
+    {
+        return sqrt((x1[0]-x2[0])*(x1[0]-x2[0]) + (x1[1]-x2[1])*(x1[1]-x2[1]) + (x1[2]-x2[2])*(x1[2]-x2[2]));
+    }
+};
+
 void Octree::CompileCuravturePointList()
 {
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
@@ -893,6 +936,84 @@ void Octree::CompileCuravturePointList()
             }
         }
     }
+
+    if(m_udsfile == "N")
+    {
+        return;
+    }
+
+    //now deal with the user defined spacing
+    vector<linesource> lsources;
+    fstream fle;
+    fle.open(m_udsfile.c_str());
+
+    string fileline;
+
+    while( !fle.eof() )
+    {
+        getline( fle, fileline );
+        stringstream s(fileline);
+        string word;
+        s >> word;
+        if(word == "#")
+        {
+            continue;
+        }
+
+        Array<OneD, NekDouble> x1(3), x2(3);
+        NekDouble r, d;
+        x1[0] = stod(word);
+        s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
+
+        lsources.push_back(linesource(x1,x2,r,d));
+    }
+    fle.close();
+
+    for(int j = 0; j < lsources.size(); j++)
+    {
+        cout << lsources[j].x1[0] << " " << lsources[j].x1[1] << " " << lsources[j].x1[2] << endl;
+        cout << lsources[j].x2[0] << " " << lsources[j].x2[1] << " " << lsources[j].x2[2] << endl;
+        cout << lsources[j].Length() << endl;
+    }
+
+    int ct = 0;
+    for(int i = 0; i < m_cpList.size(); i++)
+    {
+        for(int j = 0; j < lsources.size(); j++)
+        {
+            if(lsources[j].withinRange(m_cpList[i]->GetLoc()))
+            {
+                ct++;
+                m_cpList[i]->SetDelta(lsources[j].delta);
+            }
+        }
+    }
+    cout << ct << endl;
+
+    ///@TODO need to add curvature points with the false tag to make octree modification work
+    //off surfaces
+
+    /*for(int i = 0; i < lsources.size(); i++)
+    {
+        int nc; //number of point to add cicularly
+        int nl; //number of point to add length
+
+        nc = ceil(2.0*3.142*lsources[i].R / lsources[i].delta)*2;
+        nl = ceil(lsources[i].Length() / lsources[i].delta)*2;
+
+        NekDouble dr = lsources[i].Length() / nl;
+        NekDouble dtheta = 2.0*3.142 / nc;
+
+        for(int j = 0; j < nl; j++)
+        {
+            NekDouble len =
+            for(int k = 0; k < nc; k++)
+            {
+
+            }
+        }
+
+    }*/
 }
 
 NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)

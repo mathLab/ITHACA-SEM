@@ -70,9 +70,10 @@ public:
      * @param ver bool verbose
      */
     Octree(CADSystemSharedPtr cad, const bool ver,
-            const NekDouble min, const NekDouble max, const NekDouble eps) :
+            const NekDouble min, const NekDouble max, const NekDouble eps,
+            const string uds) :
                             m_minDelta(min), m_maxDelta(max), m_eps(eps),
-                            m_cad(cad), m_verbose(ver)
+                            m_cad(cad), m_verbose(ver), m_udsfile(uds)
     {
     }
 
@@ -173,6 +174,8 @@ private:
     OctantSharedPtr m_masteroct;
     /// number of octants made, used for id index
     int m_numoct;
+
+    string m_udsfile;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

@@ -44,6 +44,7 @@
 #include <Standard_Macro.hxx>
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
+#include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>

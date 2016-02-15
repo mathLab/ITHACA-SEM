@@ -14,11 +14,13 @@ v4.3.0
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
+- Fix bug with initial conditions of CG simulations using variable P (!543)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **FieldConvert:**
+- Extended surface distance module to support hexahedra and quads (!524)
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)

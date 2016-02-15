@@ -85,6 +85,7 @@ ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
 # ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
+ADD_NEKTAR_TEST(cube_prismhex)
 
 # windows produces slightly differently formatted files which results in
 # different hashes

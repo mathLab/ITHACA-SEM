@@ -78,6 +78,7 @@ void SurfaceMesh::Mesh()
     //linear mesh all surfaces
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
+        if(i > 7) return;
         if(m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(i,m_cad->GetNumSurf(),

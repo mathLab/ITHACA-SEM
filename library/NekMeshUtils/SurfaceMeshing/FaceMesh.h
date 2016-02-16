@@ -47,6 +47,15 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+struct blpair
+{
+    NodeSharedPtr first;
+    NodeSharedPtr newn;
+    NodeSharedPtr pos;
+    Array<OneD, NekDouble> N;
+    bool stop;
+};
+
 /**
  * @brief class for surface meshes on individual surfaces (paramter plane meshes)
  */
@@ -172,8 +181,8 @@ private:
     NekDouble m_bl;
     /// should build boundary layer
     bool  m_makebl;
-    /// list of node links between node on loop and its corresponding interior node in quads
-    std::vector<std::pair<NodeSharedPtr, NodeSharedPtr> > blpairs;
+    /// list of bl information which follows the orderedLoops counting
+    std::vector<std::vector<blpair> > blpairs;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

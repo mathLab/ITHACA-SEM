@@ -183,7 +183,9 @@ INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
+INCLUDE (FindANN)
 INCLUDE (ThirdPartyCCM)
+
 
 INCLUDE (Doxygen)
 

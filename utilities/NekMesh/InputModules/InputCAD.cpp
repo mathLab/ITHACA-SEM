@@ -213,7 +213,7 @@ void InputCAD::Process()
     {
         m_mesh->m_numcomp = 1;  //just tets
     }
-    //m_mesh->m_nummode = 2;
+    m_mesh->m_nummode = 2;
 
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
@@ -228,7 +228,23 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    m_surfacemesh->Report();
+    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+    m_mesh->m_element[m_mesh->m_expDim].clear();
+    for(int i = 0; i < el.size(); i++)
+    {
+        if(el[i]->GetTagList()[0] == 6 || el[i]->GetTagList()[0] == 7)
+        {
+            m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
+        }
+    }
+
+    ProcessVertices  ();
+    ProcessEdges     ();
+    ProcessFaces     ();
+    ProcessElements  ();
+    ProcessComposites();
+
+    /*m_surfacemesh->Report();
 
     m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
@@ -272,7 +288,7 @@ void InputCAD::Process()
     {
         cout << endl;
         cout << m_mesh->m_element[3].size() << endl;
-    }
+    }*/
 }
 
 }

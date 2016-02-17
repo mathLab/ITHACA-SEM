@@ -38,6 +38,11 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
+#ifdef NEKTAR_USE_MESHGEN
+#include <SpatialDomains/PointGeom.h>
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#endif
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -217,7 +222,7 @@ public:
         return an;
     }
 
-#ifdef MESHGEN // fucntions for cad information
+#ifdef NEKTAR_USE_MESHGEN // fucntions for cad information
 
     void SetCADCurve(int i, CADCurveSharedPtr c, NekDouble t)
     {
@@ -310,8 +315,8 @@ public:
     /// Z-coordinate.
     NekDouble m_z;
 
-#ifdef MESHGEN // tag to tell the meshelemnets to include cad information
-
+#ifdef NEKTAR_USE_MESHGEN // tag to tell the meshelemnets to include cad
+                          // information
     /// list of cadcurves the node lies on
     std::map<int, std::pair<CADCurveSharedPtr, NekDouble> > CADCurveList;
     /// list of cadsurfs the node lies on

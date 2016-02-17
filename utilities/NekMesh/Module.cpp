@@ -193,7 +193,8 @@ void Module::ProcessEdges(bool ReprocessEdges)
                                     e2->m_edgeNodes.end());
                         }
                     }
-#ifdef MESHGEN
+
+#ifdef NEKTAR_USE_MESHGEN
                     if(ed->onCurve)
                     {
                         e2->onCurve = ed->onCurve;

@@ -256,9 +256,7 @@ void SurfaceMesh::HOSurf()
                                  LibUtilities::eNodalTriFekete);
     Array<OneD, NekDouble> u, v;
 
-    int np = LibUtilities::PointsManager()[pkey]->GetTotNumPoints();
     int nq = m_mesh->m_nummode;
-    int ni = (nq - 3) * (nq - 2) / 2;
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
 
@@ -269,8 +267,7 @@ void SurfaceMesh::HOSurf()
     EdgeSet completedEdges;
 
     // loop over all the faces in the surface mesh, check all three edges for
-    // high
-    // order info, if nothing high-order the edge.
+    // high order info, if nothing high-order the edge.
 
     for (int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
@@ -489,7 +486,6 @@ void SurfaceMesh::HOSurf()
 
                 bool repeat = true;
                 int itct    = 0;
-                bool hit = false;
                 while (repeat)
                 {
                     NekDouble Norm = 0;

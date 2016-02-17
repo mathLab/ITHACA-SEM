@@ -43,13 +43,13 @@
 
 #include <NekMeshUtils/MeshElements/Node.h>
 
+#define TETLIBRARY
+#include <tetgen.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-// Forward declarations
-class tetgenio;
 
 /**
  * @brief Class for interacting with the external library TetGen.

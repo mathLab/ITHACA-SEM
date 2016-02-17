@@ -37,6 +37,7 @@
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <limits>
+#include <set>
 
 using namespace std;
 namespace Nektar

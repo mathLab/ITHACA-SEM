@@ -42,13 +42,20 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+// horible definitions to get triangle to work
+#define REAL double
+#define ANSI_DECLARATORS
+#define TRILIBRARY
+#define VOID int
+
+extern "C" {
+#include <triangle.h>
+}
+
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-// Forward declarations
-struct triangulateio;
 
 /**
  * @brief class for interfacing with external library triangle
@@ -67,8 +74,9 @@ public:
      * @brief assign meshing paramters
      */
     void Assign(std::vector<std::vector<NodeSharedPtr> > &boundingloops,
-                std::vector<Array<OneD, NekDouble> > &centers, int i,
-                NekDouble str = 1.0)
+                std::vector<Array<OneD, NekDouble> >     &centers,
+                int                                       i,
+                NekDouble                                 str = 1.0)
     {
         m_boundingloops = boundingloops;
         m_centers       = centers;
@@ -91,7 +99,7 @@ public:
      */
     void Extract(std::vector<std::vector<NodeSharedPtr> > &Connec);
 
-  private:
+private:
     /**
      * @brief Clear memory
      */
@@ -100,17 +108,17 @@ public:
     /// List of bounding nodes to the surface
     std::vector<std::vector<NodeSharedPtr> > m_boundingloops;
     /// List of additional nodes
-    std::vector<NodeSharedPtr> m_stienerpoints;
+    std::vector<NodeSharedPtr>               m_stienerpoints;
     /// Coordinates of the centers of the loops
-    std::vector<Array<OneD, NekDouble> > m_centers;
+    std::vector<Array<OneD, NekDouble> >     m_centers;
     /// Map from NekMesh id to triangle id
-    std::map<int, NodeSharedPtr> nodemap;
+    std::map<int, NodeSharedPtr>             nodemap;
     /// ID of the surface
-    int sid;
+    int                                      sid;
     /// Stretching factor of parameter plane
-    NekDouble m_str;
+    NekDouble                                m_str;
     /// Triangle data strucutres
-    struct triangulateio in, out;
+    struct triangulateio                     in, out;
 };
 
 typedef boost::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;

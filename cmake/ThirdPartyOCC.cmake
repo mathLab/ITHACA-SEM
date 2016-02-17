@@ -6,7 +6,7 @@
 #
 ########################################################################
 
-IF(NEKTAR_USE_MESH)
+IF(NEKTAR_USE_MESHGEN)
     SET(BUILD_OCC ON)
 
     OPTION(THIRDPARTY_DOWNLOAD_OCC
@@ -69,4 +69,4 @@ IF(NEKTAR_USE_MESH)
             MESSAGE(STATUS "Link to OCC: ${OCC_LIBS}.so")
         ENDIF()
     ENDIF (THIRDPARTY_DOWNLOAD_OCC)
-ENDIF(NEKTAR_USE_MESH)
+ENDIF(NEKTAR_USE_MESHGEN)

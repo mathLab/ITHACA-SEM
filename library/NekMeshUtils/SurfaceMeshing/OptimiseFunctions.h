@@ -37,7 +37,8 @@
 #define NEKTAR_MESHUTILS_SURFACEMESH_OPTIMISEFUNCTIONS_H
 
 #include <LocalRegions/MatrixKey.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Optimisation/OptimiseObj.h>
 
 namespace Nektar

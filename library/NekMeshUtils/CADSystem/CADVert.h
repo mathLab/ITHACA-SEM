@@ -43,7 +43,6 @@
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
 #include <NekMeshUtils/CADSystem/CADObj.h>
-
 #include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar

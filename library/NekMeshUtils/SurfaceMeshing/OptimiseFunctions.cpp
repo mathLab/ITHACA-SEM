@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/SurfaceMeshing/OptimiseFunctions.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 
 using namespace std;
 namespace Nektar

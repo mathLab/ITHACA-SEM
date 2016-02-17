@@ -480,7 +480,7 @@ public:
         }
     }
 
-#ifdef MESHGEN
+#ifdef NEKTAR_USE_MESHGEN
     int CADSurfId;
 #endif
 

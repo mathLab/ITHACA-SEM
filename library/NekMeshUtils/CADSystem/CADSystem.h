@@ -42,17 +42,20 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <Standard_Macro.hxx>
-
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
-#include <NekMeshUtils/CADSystem/CADObj.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
-#include <NekMeshUtils/CADSystem/CADCurve.h>
-#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+class CADVert;
+typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+class CADCurve;
+typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+class CADSurf;
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+struct EdgeLoop;
 
 /**
  * @brief Base class for CAD interface system.

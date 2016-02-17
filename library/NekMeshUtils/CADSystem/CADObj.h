@@ -40,7 +40,6 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
-#include <NekMeshUtils/MeshElements/MeshElements.h>
 
 namespace Nektar
 {

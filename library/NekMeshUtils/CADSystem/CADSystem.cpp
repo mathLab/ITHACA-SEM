@@ -37,6 +37,10 @@
 #include <boost/filesystem.hpp>
 
 #include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 using namespace std;
 

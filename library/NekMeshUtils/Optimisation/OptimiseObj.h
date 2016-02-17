@@ -36,6 +36,8 @@
 #ifndef NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 #define NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+
 namespace Nektar
 {
 namespace NekMeshUtils

@@ -59,10 +59,10 @@ IF (NEKTAR_USE_VTK)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
 ENDIF (NEKTAR_USE_VTK)
 
-IF (NEKTAR_USE_MESH)
+IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputCAD.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
-ENDIF (NEKTAR_USE_MESH)
+ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
@@ -88,10 +88,6 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(NekMesh vtkCommonCore vtkIOLegacy)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
-
-IF (NEKTAR_USE_MESH)
-    SET_TARGET_PROPERTIES(NekMesh PROPERTIES COMPILE_DEFINITIONS "MESHGEN")
-ENDIF()
 
 # Nektar++
 ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)

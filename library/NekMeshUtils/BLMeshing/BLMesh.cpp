@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 using namespace std;
 namespace Nektar

@@ -69,7 +69,7 @@ public:
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
           m_curveType(pCurveType), m_geom()
     {
-#ifdef MESHGEN
+#ifdef NEKTAR_USE_MESHGEN
         onCurve = false;
 #endif
     }
@@ -78,7 +78,7 @@ public:
     NEKMESHUTILS_EXPORT Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(), m_curveType(), m_geom()
     {
-#ifdef MESHGEN
+#ifdef NEKTAR_USE_MESHGEN
         onCurve = false;
 #endif
     }
@@ -182,7 +182,7 @@ public:
     /// Element(s) which are linked to this edge.
     vector<pair<ElementSharedPtr, int> > m_elLink;
 
-#ifdef MESHGEN
+#ifdef NEKTAR_USE_MESHGEN
     bool onCurve;
     /// id of cad curve which edge lies on
     int CADCurveId;

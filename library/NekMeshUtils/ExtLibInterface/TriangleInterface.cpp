@@ -35,16 +35,6 @@
 
 #include <NekMeshUtils/ExtLibInterface/TriangleInterface.h>
 
-// horible definitions to get triangle to work
-#define REAL double
-#define ANSI_DECLARATORS
-#define TRILIBRARY
-#define VOID int
-
-extern "C" {
-#include <triangle.h>
-}
-
 #include <sstream>
 
 using namespace std;

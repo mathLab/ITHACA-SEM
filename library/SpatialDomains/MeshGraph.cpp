@@ -1889,54 +1889,27 @@ namespace Nektar
             compMap[LibUtilities::ePrism]         = make_pair("R", "R");
             compMap[LibUtilities::eHexahedron]    = make_pair("H", "H");
 
+            std::vector<unsigned int> idxList;
+
             for (cIt = m_meshComposites.begin(); cIt != m_meshComposites.end(); ++cIt)
             {
                 stringstream s;
                 TiXmlElement *c = new TiXmlElement("C");
-                bool range = false;
                 GeometrySharedPtr firstGeom = cIt->second->at(0);
                 int shapeDim = firstGeom->GetShapeDim();
                 string tag = (shapeDim < m_meshDimension) ?
                     compMap[firstGeom->GetShapeType()].second :
                     compMap[firstGeom->GetShapeType()].first;
 
-                int vId = firstGeom->GetGlobalID();
-                int prevId = vId;
-                s << " " << tag << "[" << vId;
+                idxList.clear();
+                s << " " << tag << "[";
 
-                for (int i = 1; i < cIt->second->size(); ++i)
+                for (int i = 0; i < cIt->second->size(); ++i)
                 {
-                    // store previous element ID and get current one
-                    prevId = vId;
-                    vId = (*cIt->second)[i]->GetGlobalID();
-
-                    // continue an already started range
-                    if (prevId > -1 && vId == prevId + 1)
-                    {
-                        range = true;
-                        // if this is the last element, it's the end of a range,
-                        // so write
-                        if (i == cIt->second->size() - 1)
-                        {
-                            s << "-" << vId;
-                        }
-                        continue;
-                    }
-
-                    // terminate a range, if present
-                    if (range)
-                    {
-                        s << "-" << prevId;
-                        range = false;
-                    }
-
-                    // write what will be either a single entry or start of new
-                    // range
-                    s << "," << vId;
+                    idxList.push_back((*cIt->second)[i]->GetGlobalID());
                 }
 
-                // terminate
-                s << "] ";
+                s << ParseUtils::GenerateSeqString(idxList) << "] ";
 
                 c->SetAttribute("ID", cIt->first);
                 c->LinkEndChild(new TiXmlText(s.str()));
@@ -1949,21 +1922,14 @@ namespace Nektar
             TiXmlElement *domTag = new TiXmlElement("DOMAIN");
             stringstream domString;
 
-            domString << " C[";
-            // TODO: Fix this
-            CompositeMap::iterator cIt2 = m_domain[0].end();
-            --cIt2;
-
+            // @todo Fix this to accomodate multi domain output
+            idxList.clear();
             for (cIt = m_domain[0].begin(); cIt != m_domain[0].end(); ++cIt)
             {
-                domString << cIt->first;
-                if (cIt != cIt2)
-                {
-                    domString << ",";
-                }
+                idxList.push_back(cIt->first);
             }
 
-            domString << "] ";
+            domString << " C[" << ParseUtils::GenerateSeqString(idxList) << "] ";
             domTag->LinkEndChild(new TiXmlText(domString.str()));
             geomTag->LinkEndChild(domTag);
         }

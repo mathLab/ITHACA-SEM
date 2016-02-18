@@ -56,6 +56,9 @@ void APE_coupled::v_InitObject()
 {
     APE::v_InitObject();
 
+    ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
+             "This EquationSystem requires the --cwipi command line switch");
+
     m_stOld = Array<OneD, NekDouble>(GetTotPoints());
     m_stNew = Array<OneD, NekDouble>(GetTotPoints());
     Vmath::Vcopy(GetTotPoints(), m_st[0]->GetPhys(), 1, m_stOld, 1);
@@ -77,13 +80,12 @@ void APE_coupled::v_InitObject()
     m_session->LoadParameter("EX_FiltWidth", filtWidth, 0.0);
 
     m_nRecvVars = 6;
-    if (m_session->DefinesCmdLineArgument("cwipi"))
-    {
-        m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                         m_bf[0], "cpl1", "precise", 0, 1.0, filtWidth);
-        m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
-                             m_coupling, "ex1", m_nRecvVars);
-    }
+
+    m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
+                        m_bf[0], "cpl1", "precise", 0, 1.0, filtWidth);
+    m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
+                            m_coupling, "ex1", m_nRecvVars);
+
 }
 
 
@@ -110,15 +112,7 @@ bool APE_coupled::v_PostIntegrate(int step)
         }
     }
 
-    if (m_session->DefinesCmdLineArgument("cwipi"))
-    {
-        receiveFields();
-    }
-    else
-    {
-        EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
-        EvaluateFunction(m_stNames, m_st, "Source", m_time);
-    }
+    receiveFields();
 
     // ensure the new fields are C0-continuous
     // HACK: normally, we would perform a FwdTrans and BwdTrans here, but for
@@ -145,11 +139,6 @@ bool APE_coupled::v_PostIntegrate(int step)
 
 void APE_coupled::receiveFields()
 {
-    if (! m_session->DefinesCmdLineArgument("cwipi"))
-    {
-        return;
-    }
-
     static NekDouble last_update = -1E23;
     int nq = GetTotPoints();
 
@@ -208,10 +197,7 @@ void APE_coupled::v_Output(void)
 {
     Nektar::SolverUtils::EquationSystem::v_Output();
 
-    if (m_session->DefinesCmdLineArgument("cwipi"))
-    {
-        m_coupling->FinalizeCoupling();
-    }
+    m_coupling->FinalizeCoupling();
 }
 
 } //end of namespace

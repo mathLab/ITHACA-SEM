@@ -12,11 +12,11 @@ IF (NOT WIN32)
 ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_ANN)
-    # First search for system TinyXML installs. Hint /opt/local for MacPorts.
+    # First search for system ANN installs. Hint /opt/local for MacPorts.
     FIND_LIBRARY(ANN_LIBRARY    NAMES ANN PATHS /opt/local/lib)
     FIND_PATH   (ANN_INCLUDE_DIR ANN.h PATHS /opt/local/include)
 
-    IF (ANN_LIBRARY AND ANNERR_LIBRARY AND ANN_INCLUDE_DIR)
+    IF (ANN_LIBRARY AND ANN_INCLUDE_DIR)
         SET(BUILD_ANN OFF)
     ELSE()
         SET(BUILD_ANN ON)
@@ -53,7 +53,7 @@ IF (NEKTAR_USE_ANN)
             BINARY_DIR ${TPBUILD}/ann-1.1.2
             TMP_DIR ${TPBUILD}/ann-1.1.2-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND rm -f ${ANN_DIR}/Makefile
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E remove -f ${ANN_DIR}/Makefile
             BUILD_COMMAND cd src
                  COMMAND $(MAKE) -C ${ANN_SRC} targets
                 "ANNLIB  = libANN.o"
@@ -61,8 +61,11 @@ IF (NEKTAR_USE_ANN)
                 "CFLAGS  = ${ANN_CFLAGS}"
                 "MAKELIB = ${ANN_MAKELIB}"
                 "RANLIB  = true"
-            INSTALL_COMMAND cp -r ${ANN_DIR}/lib/libANN.a ${TPDIST}/lib
-                 COMMAND cp -r ${ANN_DIR}/include/ ${TPDIST}/include
+            INSTALL_COMMAND ${CMAKE_COMMAND} -E make_directory ${TPDIST}/lib
+                COMMAND ${CMAKE_COMMAND} -E copy ${ANN_DIR}/lib/libANN.a
+                                                 ${TPDIST}/lib
+                COMMAND ${CMAKE_COMMAND} -E copy_directory ${ANN_DIR}/include
+                                                 ${TPDIST}/include
         )
 
         SET(ANN_LIBRARY ann CACHE FILEPATH
@@ -83,6 +86,5 @@ IF (NEKTAR_USE_ANN)
     INCLUDE_DIRECTORIES(${ANN_INCLUDE_DIR})
 
     MARK_AS_ADVANCED(ANN_LIBRARY)
-    MARK_AS_ADVANCED(ANNERR_LIBRARY)
     MARK_AS_ADVANCED(ANN_INCLUDE_DIR)
 ENDIF()

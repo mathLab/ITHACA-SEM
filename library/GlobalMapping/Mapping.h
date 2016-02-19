@@ -79,6 +79,9 @@ class Mapping
             v_InitObject( pFields, pMapping);
         }
 
+        GLOBAL_MAPPING_EXPORT void ReplaceField(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+
         // Create mapping, or return a pointer to it if it already exists 
         GLOBAL_MAPPING_EXPORT static MappingSharedPtr Load(
                 const LibUtilities::SessionReaderSharedPtr& pSession,

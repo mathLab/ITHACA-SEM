@@ -231,6 +231,23 @@ void Mapping::v_InitObject(
 /**
  *
  */
+void Mapping::ReplaceField(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+{
+    m_fields = pFields;
+
+    TiXmlElement* vMapping = NULL;
+
+    if (m_session->DefinesElement("Nektar/Mapping"))
+    {
+        vMapping = m_session->GetElement("Nektar/Mapping");
+    }
+    InitObject(pFields, vMapping);
+}
+
+/**
+ *
+ */
 MappingSharedPtr Mapping::Load(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)

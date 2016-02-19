@@ -359,7 +359,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void CopyToPhysField(const int i,
                                                             Array<OneD, NekDouble> &output);
             
-            SOLVER_UTILS_EXPORT inline void SetStepsToOne();
+            SOLVER_UTILS_EXPORT inline void SetSteps(const int steps);
             
             SOLVER_UTILS_EXPORT void ZeroPhysFields();
             
@@ -406,6 +406,41 @@ namespace Nektar
             /// Perform a case-insensitive string comparison.
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
                 const string & s1, const string& s2) ;
+
+            SOLVER_UTILS_EXPORT int GetCheckpointNumber()
+            {
+                return m_nchk;
+            }
+
+            SOLVER_UTILS_EXPORT void SetCheckpointNumber(int num)
+            {
+                m_nchk = num;
+            }
+
+            SOLVER_UTILS_EXPORT int GetCheckpointSteps()
+            {
+                return m_checksteps;
+            }
+
+            SOLVER_UTILS_EXPORT void SetCheckpointSteps(int num)
+            {
+                m_checksteps = num;
+            }
+
+            SOLVER_UTILS_EXPORT void SetTime(
+                const NekDouble time)
+            {
+                m_time = time;
+            }
+            
+            SOLVER_UTILS_EXPORT void SetInitialStep(
+                const int step)
+            {
+                m_initialStep = step;
+            }
+            
+            /// Evaluates the boundary conditions at the given time.
+            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
                 
             /// Virtual function to identify if operator is negated in DoSolve
             SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
@@ -435,6 +470,8 @@ namespace Nektar
             std::string                                 m_sessionName;
             /// Current time of simulation.
             NekDouble                                   m_time;
+            /// Number of the step where the simulation should begin
+            int                                         m_initialStep;
             /// Finish time of the simulation.
             NekDouble                                   m_fintime;
             /// Time step size
@@ -445,6 +482,8 @@ namespace Nektar
             std::set<std::string>                       m_loadedFields;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+            /// Number of checkpoints written so far
+            int                                         m_nchk;
             /// Number of steps to take.
             int                                         m_steps;
             /// Number of steps between checkpoints.
@@ -523,9 +562,6 @@ namespace Nektar
             }
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
-            
-            /// Evaluates the boundary conditions at the given time.
-            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
             
             /// Virtual function for initialisation implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
@@ -859,9 +895,9 @@ namespace Nektar
             return m_timestep;
         }
         
-        inline void EquationSystem::SetStepsToOne(void)
+        inline void EquationSystem::SetSteps(const int steps)
         {
-            m_steps=1;
+            m_steps = steps;
         }
         
         inline void EquationSystem::CopyFromPhysField(const int i,

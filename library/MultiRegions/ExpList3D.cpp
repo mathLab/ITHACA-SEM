@@ -58,6 +58,22 @@ namespace Nektar
         {
             SetExpType(e3D);
         }
+        
+        ExpList3D::ExpList3D(const ExpList3D &In,
+                const std::vector<unsigned int> &eIDs): ExpList(In, eIDs)
+        {
+            SetExpType(e3D);
+            
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            SetCoeffPhys();
+
+            ReadGlobalOptimizationParameters();
+            CreateCollections();
+        }
 
         ExpList3D::~ExpList3D()
         {

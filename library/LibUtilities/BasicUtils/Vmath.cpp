@@ -674,7 +674,16 @@ namespace Vmath
     {
         while (n--)
         {
-            *(z + *(y++)) = *(sign++) * (*(x++));
+            if(*sign)
+            {
+                *(z + *(y++)) = *(sign++) * (*(x++));
+            }
+            else
+            {
+                x++;
+                y++;
+                sign++;
+            }
         }
     }
 

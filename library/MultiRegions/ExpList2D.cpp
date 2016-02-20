@@ -90,6 +90,30 @@ namespace Nektar
         {
             SetExpType(e2D);
         }
+        
+        /**
+         * @param   In   ExpList2D object to copy.
+         * @param   eIDs Id of elements that should be copied.
+         */
+        ExpList2D::ExpList2D(
+            const ExpList2D &In, 
+            const std::vector<unsigned int> &eIDs,
+            const bool DeclareCoeffPhysArrays):
+            ExpList(In,eIDs,DeclareCoeffPhysArrays)
+        {
+            SetExpType(e2D);
+            
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // set up offset arrays.
+            SetCoeffPhysOffsets();
+
+            ReadGlobalOptimizationParameters();
+            CreateCollections();
+        }
 
 
         /**

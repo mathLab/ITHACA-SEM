@@ -4,6 +4,7 @@ Changelog
 v4.3.0
 ------
 **Library:**
+- Changed default XML format to compress mesh data (!533)
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
 - Fix range with variable p option (!522)
 - Fix bug with hexahedra of heterogeneous order (!520) and reading files (!522)
@@ -15,11 +16,14 @@ v4.3.0
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
 - Add support for PETSc matrix shell to use Nektar++ operations/preconditioners
   (!537)
+- Fix bug with initial conditions of CG simulations using variable P (!543)
+- Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **FieldConvert:**
+- Extended surface distance module to support hexahedra and quads (!524)
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)

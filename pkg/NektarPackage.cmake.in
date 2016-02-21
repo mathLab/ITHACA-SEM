@@ -42,7 +42,7 @@ elseif(CMAKE_GENERATOR STREQUAL "RPM")
     execute_process(COMMAND rpm --eval %{_arch}
                 OUTPUT_VARIABLE CPACK_RPM_PACKAGE_ARCHITECTURE
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-    set(ARCHITECTURE ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE})
+    set(ARCHITECTURE ${CPACK_RPM_PACKAGE_ARCHITECTURE})
 
     set(CPACK_RPM_PACKAGE_SUMMARY "@PKG_SUMMARY@")
     set(CPACK_RPM_PACKAGE_DESCRIPTION "@PKG_DESCRIPTION@")
@@ -54,7 +54,7 @@ elseif(CMAKE_GENERATOR STREQUAL "RPM")
     set(CPACK_PACKAGE_FILE_NAME
         "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
 elseif(CMAKE_GENERATOR STREQUAL "PackageMaker")
-    # OS X .pkg installer
+    # OS X .pkg installer -- set install location
     set(CPACK_PACKAGE_DEFAULT_LOCATION "/usr/local/nektar++")
     set(CPACK_PACKAGING_INSTALL_PREFIX "/")
 else()
@@ -100,7 +100,7 @@ endif()
 
 # This horrible block of code is designed to patch up our executables ready for
 # OS X deployment. The strategy is to create a piece of INSTALL code that will
-# patch up each executables and copy any libraries that we depend on, so that
+# patch up each executable and copy any libraries that we depend on, so that
 # things like ARPACK can be compiled using MacPorts/Homebrew.
 #
 # The strategy is:

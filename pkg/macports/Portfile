@@ -43,6 +43,13 @@ depends_lib  \
     port:zlib \
     port:tinyxml
 
+variant vtk description {
+    Enable VTK support for post-processing.
+} {
+    configure.args-append -DNEKTAR_USE_VTK=ON
+    depends_lib-append port:vtk
+}
+
 variant fftw description {
     Enable FFTW support for fast Fourier transform.
 } {

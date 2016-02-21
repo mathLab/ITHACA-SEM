@@ -64,7 +64,7 @@ macro (add_nektar_package)
     set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-${PKG_TYPE})
 
     file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
-    write_lib_files("${PKG_INSTALL_LIBS}" 
+    write_lib_files("${PKG_INSTALL_LIBS}"
                     "${BUILD_DIR}/targets/install_libs.txt")
     write_bin_files("${PKG_INSTALL_BINS}"
                     "${BUILD_DIR}/targets/install_bins.txt")

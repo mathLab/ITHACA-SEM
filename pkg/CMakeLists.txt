@@ -41,9 +41,15 @@ list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver 
                           DiffusionSolverTimeInt ShallowWaterSolver
-                          PulseWaveSolver
-                          ${nektar++-utilities_BINS}
-                          ${nektar++-demos_BINS})
+                          PulseWaveSolver)
+
+if (NEKTAR_BUILD_DEMOS)
+    list(APPEND nektar++_BINS ${nektar++-demos_BINS})
+endif()
+
+if (NEKTAR_BUILD_UTILITIES)
+    list(APPEND nektar++_BINS ${nektar++-utilities_BINS})
+endif()
 
 if (NEKTAR_BUILD_LIBRARY AND DPKG)
     ### DEBIAN PACKAGES ############################################

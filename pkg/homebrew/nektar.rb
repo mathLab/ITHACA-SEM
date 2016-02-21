@@ -15,6 +15,7 @@ class Nektar < Formula
   depends_on "boost"
   depends_on "tinyxml"
   depends_on "zlib"
+  depends_on "vtk"
   depends_on :mpi => :recommended
   depends_on "arpack" => :recommended
   depends_on "fftw" => :recommended
@@ -68,6 +69,10 @@ class Nektar < Formula
 
     if build.with? "fftw"
       args << "-DNEKTAR_USE_FFTW=ON"
+    end
+
+    if build.with? "vtk"
+      args << "-DNEKTAR_USE_VTK=ON"
     end
 
     if build.with? "petsc"

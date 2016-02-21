@@ -6,6 +6,7 @@ v4.3.0
 **Library:**
 - Changed default XML format to compress mesh data (!533)
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
+- Fix boundary condition imposition for 3D homogeneous 2D HelmSolve (!545)
 - Fix range with variable p option (!522)
 - Fix bug with hexahedra of heterogeneous order (!520) and reading files (!522)
 - Fix history point output formatting (!518)
@@ -17,6 +18,9 @@ v4.3.0
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
+
+**IncNavierStokesSolver**
+- Fix floquet stability analysis for HalfMode case (!536)
 
 **FieldConvert:**
 - Extended surface distance module to support hexahedra and quads (!524)

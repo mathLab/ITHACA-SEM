@@ -351,10 +351,10 @@ namespace Nektar
                 {
                     (*x)->Update(m_fields, m_time);
                 }
-                
+
                 // Write out checkpoint files
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
-                    doCheckTime)
+                     doCheckTime)
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {

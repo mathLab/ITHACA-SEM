@@ -114,8 +114,10 @@ namespace Nektar
 
             while (segment)
             {
-                const char *IsCompressed = segment->Attribute("COMPRESSED");
-                if(IsCompressed)
+                string IsCompressed;
+                segment->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                                LibUtilities::CompressData::GetCompressString()),

@@ -597,6 +597,33 @@ namespace Nektar
          *
          */
         template<>
+        inline const std::map<int, boost::shared_ptr<SegGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllSegGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<TriGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllTriGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<QuadGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllQuadGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
         inline const std::map<int, boost::shared_ptr<HexGeom> >& MeshGraph::GetAllElementsOfType() const
         {
             return GetAllHexGeoms();

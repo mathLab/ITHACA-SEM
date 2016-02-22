@@ -4,7 +4,7 @@ Changelog
 v4.3.0
 ------
 **Library:**
-- Changed default XML format to compress mesh data (!533)
+- Changed default XML format to compress mesh data (!533, !547)
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
 - Fix boundary condition imposition for 3D homogeneous 2D HelmSolve (!545)
 - Fix range with variable p option (!522)

@@ -107,8 +107,10 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            const char *IsCompressed = field->Attribute("COMPRESSED");
-            if(IsCompressed)
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+            if(IsCompressed.size()) 
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
@@ -256,8 +258,10 @@ namespace Nektar
                 ASSERTL0(elementType == "Q" || elementType == "T",
                          (std::string("Unknown 2D element type: ") + elementType).c_str());
                 
-                const char *IsCompressed = element->Attribute("COMPRESSED");
-                if(IsCompressed)
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData:: GetCompressString()),

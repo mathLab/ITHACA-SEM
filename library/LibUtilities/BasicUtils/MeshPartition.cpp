@@ -726,7 +726,7 @@ namespace Nektar
                 // check to see if compressed
                 std::string IsCompressed;
                 vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
-                
+
                 x = vSubElement->FirstChildElement();
                 while(x)
                 {

@@ -313,8 +313,11 @@ namespace Nektar
             }
 
             // check to see if compressed
-            const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-            if(IsCompressed)
+            // check to see if compressed
+            std::string IsCompressed;
+            vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+            if(IsCompressed.size()) 
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -371,8 +374,10 @@ namespace Nektar
                 ASSERTL0(vSubElement, "Cannot read edges");
 
                 // check to see if compressed
-                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-                if(IsCompressed)
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -440,8 +445,10 @@ namespace Nektar
                 while(x)
                 {
                     // check to see if compressed
-                    const char *IsCompressed = x->Attribute("COMPRESSED");
-                    if(IsCompressed)
+                    std::string IsCompressed;
+                    x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                    if(IsCompressed.size()) 
                     {
                         ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -536,8 +543,10 @@ namespace Nektar
             while(x)
             {
                 // check to see if compressed
-                const char *IsCompressed = x->Attribute("COMPRESSED");
-                if(IsCompressed)
+                std::string IsCompressed;
+                x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -716,11 +725,13 @@ namespace Nektar
                 vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
 
                 // check to see if compressed
-                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
                 x = vSubElement->FirstChildElement();
                 while(x)
                 {
-                    if(IsCompressed)
+                    if(IsCompressed.size()) 
                     {
                         ASSERTL0(boost::iequals(IsCompressed,
                                             CompressData::GetCompressString()),
@@ -775,6 +786,7 @@ namespace Nektar
                                 c.entityid   = cinfo[i].entityid;
                                 c.npoints    = cinfo[i].npoints;
                                 c.type       = kPointsTypeStr[cinfo[i].ptype];
+                                c.ptid       = cinfo[i].ptid;
                                 c.ptoffset   = cinfo[i].ptoffset;
                                 m_meshCurved[std::make_pair(c.entitytype,
                                                             c.id)] = c;

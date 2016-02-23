@@ -54,7 +54,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputNekpp::className = 
+        ModuleKey OutputNekpp::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "xml"), OutputNekpp::create,
                 "Writes a Nektar++ xml file.");
@@ -73,7 +73,25 @@ namespace Nektar
         {
 
         }
-        
+
+        template<typename T> void TestElmts(
+            SpatialDomains::MeshGraphSharedPtr &graph)
+        {
+            const std::map<int, boost::shared_ptr<T> > &tmp
+                = graph->GetAllElementsOfType<T>();
+            typename std::map<int, boost::shared_ptr<T> >::const_iterator it1, it2;
+
+            SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
+            SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
+
+            for (it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+            {
+                SpatialDomains::GeometrySharedPtr geom = it1->second;
+                geom->FillGeom();
+                geom->Reset(curvedEdges, curvedFaces);
+            }
+        }
+
         void OutputNekpp::Process()
         {
             if (m_mesh->m_verbose)
@@ -128,8 +146,9 @@ namespace Nektar
                 doc.SaveFile(filename);
             }
 
-            // Test the resulting XML file by loading it with the session reader
-            // and generating the meshgraph.
+            // Test the resulting XML file (with a basic test) by loading it
+            // with the session reader, generating the MeshGraph and testing if
+            // each element is valid.
             if (m_config["test"].beenSet)
             {
                 vector<string> filenames(1);
@@ -140,6 +159,14 @@ namespace Nektar
                         0, NULL, filenames);
                 SpatialDomains::MeshGraphSharedPtr graphShPt =
                     SpatialDomains::MeshGraph::Read(vSession);
+
+                TestElmts<SpatialDomains::SegGeom>  (graphShPt);
+                TestElmts<SpatialDomains::TriGeom>  (graphShPt);
+                TestElmts<SpatialDomains::QuadGeom> (graphShPt);
+                TestElmts<SpatialDomains::TetGeom>  (graphShPt);
+                TestElmts<SpatialDomains::PrismGeom>(graphShPt);
+                TestElmts<SpatialDomains::PyrGeom>  (graphShPt);
+                TestElmts<SpatialDomains::HexGeom>  (graphShPt);
             }
         }
 
@@ -857,19 +884,18 @@ namespace Nektar
                     {
                         if ((*it2)->m_faceNodes.size() > 0)
                         {
+                            vector<NodeSharedPtr> tmp;
+                            (*it2)->GetCurvedNodes(tmp);
+
                             LibUtilities::MeshCurvedInfo cinfo;
                             cinfo.id       = facecnt++;
                             cinfo.entityid = (*it2)->m_id;
-                            cinfo.npoints  = (*it2)->m_faceNodes.size(); // just interior nodes
+                            cinfo.npoints  = tmp.size();
                             cinfo.ptype    = (*it2)->m_curveType;
                             cinfo.ptid     = 0; // set to just one point set
                             cinfo.ptoffset = ptoffset;
 
                             faceinfo.push_back(cinfo);
-
-                            // fill in points
-                            vector<NodeSharedPtr> tmp;
-                            (*it2)->GetCurvedNodes(tmp);
 
                             for(int i =0; i < tmp.size(); ++i)
                             {

@@ -1149,9 +1149,30 @@ namespace Nektar
             // Directory name if in parallel, regular filename if in serial
             fs::path specPath (outname);
 
-            // Remove any existing file which is in the way
-            if(m_comm->RemoveExistingFiles())
+            // Full filename to attempt parallel deletion
+            fs::path fulloutname;
+
+            if (nprocs == 1)
             {
+                fulloutname = specPath;
+            }
+            else
+            {
+                // Guess at filename that might belong to this process.
+                boost::format pad("P%1$07d.fld");
+                pad % m_comm->GetRank();
+
+                // Generate full path name
+                fs::path poutfile(pad.str());
+                fulloutname = specPath / poutfile;
+            }
+
+            // Remove any existing file which is in the way
+            if (m_comm->RemoveExistingFiles())
+            {
+                // First, each process clears up .fld file. This might or might
+                // not be there (we might have changed numbers of processors
+                // between runs, for example), but we can try anyway.
                 try
                 {
                     if (m_sharedFilesystem)
@@ -1172,6 +1193,17 @@ namespace Nektar
                 {
                     ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
                              "Filesystem error: " + string(e.what()));
+                }
+
+                m_comm->Block();
+
+                // Now get rank == 0 processor to tidy everything else up.
+                if (rank == 0)
+                {
+                    try
+                    {
+                        fs::remove_all(specPath);
+                    }
                 }
             }
 

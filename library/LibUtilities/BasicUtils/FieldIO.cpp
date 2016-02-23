@@ -1149,8 +1149,13 @@ namespace Nektar
             // Directory name if in parallel, regular filename if in serial
             fs::path specPath (outname);
 
-            // Full filename to attempt parallel deletion
-            fs::path fulloutname;
+            // Pad rank to 8char filenames, e.g. P0000000.fld
+            boost::format pad("P%1$07d.fld");
+            pad % m_comm->GetRank();
+
+            // Generate full path name
+            fs::path poutfile(pad.str());
+            fs::path fulloutname = specPath / poutfile;
 
             if (nprocs == 1)
             {
@@ -1195,6 +1200,11 @@ namespace Nektar
                     try
                     {
                         fs::remove_all(specPath);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
                     }
                 }
 
@@ -1274,14 +1284,6 @@ namespace Nektar
                 // Send this process's ID list to the root process
                 m_comm->Send(0, idlist);
             }
-
-            // Pad rank to 8char filenames, e.g. P0000000.fld
-            boost::format pad("P%1$07d.fld");
-            pad % m_comm->GetRank();
-
-            // Generate full path name
-            fs::path poutfile(pad.str());
-            fs::path fulloutname = specPath / poutfile;
 
             // Return the full path to the partition for this process
             return LibUtilities::PortablePath(fulloutname);

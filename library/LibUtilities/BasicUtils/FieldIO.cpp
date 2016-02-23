@@ -1170,41 +1170,35 @@ namespace Nektar
             // Remove any existing file which is in the way
             if (m_comm->RemoveExistingFiles())
             {
-                // First, each process clears up .fld file. This might or might
-                // not be there (we might have changed numbers of processors
-                // between runs, for example), but we can try anyway.
-                try
+                if (m_sharedFilesystem)
                 {
-                    if (m_sharedFilesystem)
+                    // First, each process clears up its .fld file. This might
+                    // or might not be there (we might have changed numbers of
+                    // processors between runs, for example), but we can try
+                    // anyway.
+                    try
                     {
-                        if (rank == 0)
-                        {
-                            fs::remove_all(specPath);
-                        }
-
-                        m_comm->Block();
+                        fs::remove_all(fulloutname);
                     }
-                    else
+                    catch (fs::filesystem_error& e)
                     {
-                        fs::remove_all(specPath);
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
                     }
-                }
-                catch (fs::filesystem_error& e)
-                {
-                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                             "Filesystem error: " + string(e.what()));
                 }
 
                 m_comm->Block();
 
                 // Now get rank == 0 processor to tidy everything else up.
-                if (rank == 0)
+                if (rank == 0 || !m_sharedFilesystem)
                 {
                     try
                     {
                         fs::remove_all(specPath);
                     }
                 }
+
+                m_comm->Block();
             }
 
             // serial processing just add ending.
@@ -1231,16 +1225,7 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                if (m_sharedFilesystem)
-                {
-                    if (rank == 0)
-                    {
-                        fs::create_directory(specPath);
-                    }
-
-                    m_comm->Block();
-                }
-                else
+                if ((m_sharedFilesystem && rank == 0) || !m_sharedFilesystem)
                 {
                     fs::create_directory(specPath);
                 }
@@ -1249,6 +1234,8 @@ namespace Nektar
             {
                 ASSERTL0(false, "Filesystem error: " + string(e.what()));
             }
+
+            m_comm->Block();
 
             // Collate per-process element lists on root process to generate
             // the info file.

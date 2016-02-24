@@ -49,6 +49,7 @@ namespace Nektar
         // Forward declarations
         class ExpList;
         class GlobalLinSys;
+        class Preconditioner;
 
         /// Pointer to a GlobalLinSys object.
         typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
@@ -56,6 +57,9 @@ namespace Nektar
         typedef map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
         /// Pointer to a GlobalLinSys/key map.
         typedef boost::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr;
+
+        // Forward declaration
+        typedef boost::shared_ptr<Preconditioner> PreconditionerSharedPtr;
 
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
@@ -82,10 +86,10 @@ namespace Nektar
             /// Returns the key associated with the system.
             const inline GlobalLinSysKey &GetKey(void) const;
 
-	    //Returns the local matrix associated with the system
+            //Returns the local matrix associated with the system
             const inline boost::weak_ptr<ExpList> &GetLocMat(void) const;
 
-	    inline void InitObject();
+            inline void InitObject();
             inline void Initialise(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap);
 
@@ -117,7 +121,7 @@ namespace Nektar
                       Array<OneD,      NekDouble> &pOutput,
                 const AssemblyMapSharedPtr        &locToGloMap,
                 const int                          pNumDir = 0);
-            
+
         protected:
             /// Key associated with this linear system.
             const GlobalLinSysKey                m_linSysKey;
@@ -130,6 +134,8 @@ namespace Nektar
             virtual DNekScalMatSharedPtr    v_GetBlock          (unsigned int n);
             virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
             virtual void                    v_DropStaticCondBlock(unsigned int n);
+
+            PreconditionerSharedPtr CreatePrecon(AssemblyMapSharedPtr asmMap);
 
         private:
             /// Solve a linear system based on mapping.
@@ -197,7 +203,7 @@ namespace Nektar
                 const AssemblyMapSharedPtr &locToGloMap,
                 const int pNumDir)
         {
-	  v_SolveLinearSystem(pNumRows, pInput, pOutput, locToGloMap, pNumDir);
+            v_SolveLinearSystem(pNumRows, pInput, pOutput, locToGloMap, pNumDir);
         }
 
         inline void GlobalLinSys::InitObject()

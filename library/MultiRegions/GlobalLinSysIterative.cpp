@@ -361,13 +361,8 @@ namespace Nektar
         {
             if (!m_precon)
             {
-                MultiRegions::PreconditionerType pType
-                    = plocToGloMap->GetPreconType();
-                std::string PreconType
-                    = MultiRegions::PreconditionerTypeMap[pType];
                 v_UniqueMap();
-                m_precon = GetPreconFactory().CreateInstance(
-                    PreconType,GetSharedThisPtr(),plocToGloMap);
+                m_precon = CreatePrecon(plocToGloMap);
                 m_precon->BuildPreconditioner();
             }
 

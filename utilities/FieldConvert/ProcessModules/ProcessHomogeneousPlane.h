@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessMeanMode.h
+//  File: ProcessHomogeneousPlane.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,36 +29,36 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Extract mean mode of 3DH1D field.
+//  Description: Extract a single plane of a 3DH1D field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMEANMODE
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMEANMODE
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSHOMOGENEOUSPLANE
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSHOMOGENEOUSPLANE
 
 #include "../Module.h"
-#include "ProcessHomogeneousPlane.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
+
 /**
- * @brief This processing module replaces all expansions by the mean mode from
- * 3DH1D fields
+ * @brief This processing module replaces all expansions by a single plane from
+ * 3DH1D fields, defined by the parameter planeid
  */
-class ProcessMeanMode : public ProcessHomogeneousPlane
+class ProcessHomogeneousPlane : public ProcessModule
 {
 public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<ProcessMeanMode>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessHomogeneousPlane>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
 
-    ProcessMeanMode(FieldSharedPtr f);
-    virtual ~ProcessMeanMode();
+    ProcessHomogeneousPlane(FieldSharedPtr f);
+    virtual ~ProcessHomogeneousPlane();
 
     /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);

@@ -4,7 +4,7 @@ Changelog
 v4.3.0
 ------
 **Library:**
-- Changed default XML format to compress mesh data (!533)
+- Changed default XML format to compress mesh data (!533, !547)
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
 - Fix boundary condition imposition for 3D homogeneous 2D HelmSolve (!545)
 - Fix range with variable p option (!522)
@@ -15,6 +15,8 @@ v4.3.0
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
+- Add support for PETSc matrix shell to use Nektar++ operations/preconditioners
+  (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 
@@ -29,6 +31,7 @@ v4.3.0
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)
+- Add module to extract one of the planes of 3DH1D (!542)
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)

@@ -85,10 +85,9 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
-                     const GlobalLinSysKey &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
-                     const boost::shared_ptr<AssemblyMap>
-                     &pLocToGloMap)
+                     const GlobalLinSysKey                &pKey,
+                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -107,14 +106,14 @@ namespace Nektar
          *
          */
         GlobalLinSysPETScStaticCond::GlobalLinSysPETScStaticCond(
-                     const GlobalLinSysKey &pKey,
-                     const boost::weak_ptr<ExpList> &pExpList,
-                     const DNekScalBlkMatSharedPtr pSchurCompl,
-                     const DNekScalBlkMatSharedPtr pBinvD,
-                     const DNekScalBlkMatSharedPtr pC,
-                     const DNekScalBlkMatSharedPtr pInvD,
-                     const boost::shared_ptr<AssemblyMap>
-                                                            &pLocToGloMap)
+                     const GlobalLinSysKey                &pKey,
+                     const boost::weak_ptr<ExpList>       &pExpList,
+                     const DNekScalBlkMatSharedPtr         pSchurCompl,
+                     const DNekScalBlkMatSharedPtr         pBinvD,
+                     const DNekScalBlkMatSharedPtr         pC,
+                     const DNekScalBlkMatSharedPtr         pInvD,
+                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap,
+                     const PreconditionerSharedPtr         pPrecon)
             : GlobalLinSys          (pKey, pExpList, pLocToGloMap),
               GlobalLinSysPETSc     (pKey, pExpList, pLocToGloMap),
               GlobalLinSysStaticCond(pKey, pExpList, pLocToGloMap)
@@ -123,6 +122,7 @@ namespace Nektar
             m_BinvD      = pBinvD;
             m_C          = pC;
             m_invD       = pInvD;
+            m_precon     = pPrecon;
         }
 
         /**
@@ -131,6 +131,50 @@ namespace Nektar
         GlobalLinSysPETScStaticCond::~GlobalLinSysPETScStaticCond()
         {
 
+        }
+
+        void GlobalLinSysPETScStaticCond::v_InitObject()
+        {
+            m_precon = CreatePrecon(m_locToGloMap);
+
+            // Allocate memory for top-level structure
+            SetupTopLevel(m_locToGloMap);
+
+            // Setup Block Matrix systems
+            int n, n_exp = m_expList.lock()->GetNumElmts();
+
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            const Array<OneD,const unsigned int>& nbdry_size
+                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+            m_S1Blk = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
+
+            // Preserve original matrix in m_S1Blk
+            for (n = 0; n < n_exp; ++n)
+            {
+                DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
+                m_S1Blk->SetBlock(n, n, mat);
+            }
+
+            // Build preconditioner
+            m_precon->BuildPreconditioner();
+
+            // Do transform of Schur complement matrix
+            for (n = 0; n < n_exp; ++n)
+            {
+                if (m_linSysKey.GetMatrixType() !=
+                        StdRegions::eHybridDGHelmBndLam)
+                {
+                    DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    m_schurCompl->SetBlock(n, n, t);
+                }
+            }
+
+            // Construct this level
+            Initialise(m_locToGloMap);
         }
 
         /**
@@ -152,14 +196,37 @@ namespace Nektar
             DNekScalBlkMatSharedPtr invD       = m_invD;
             DNekScalMatSharedPtr    loc_mat;
 
+            // Build precon again if we in multi-level static condensation (a
+            // bit of a hack)
+            if (m_linSysKey.GetGlobalSysSolnType() ==
+                    ePETScMultiLevelStaticCond)
+            {
+                m_precon = CreatePrecon(m_locToGloMap);
+                m_precon->BuildPreconditioner();
+            }
+
             // CALCULATE REORDERING MAPPING
             CalculateReordering(pLocToGloMap->GetGlobalToUniversalBndMap(),
                                 pLocToGloMap->GetGlobalToUniversalBndMapUnique(),
                                 pLocToGloMap);
 
             // SET UP VECTORS AND MATRIX
-            SetUpMatVec();
+            SetUpMatVec(pLocToGloMap->GetNumGlobalBndCoeffs(), nDirDofs);
 
+            // SET UP SCATTER OBJECTS
+            SetUpScatter();
+
+            // CONSTRUCT KSP OBJECT
+            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
+
+            // If we are using the matrix multiplication shell don't try to
+            // populate the matrix.
+            if (m_matMult == ePETScMatMultShell)
+            {
+                return;
+            }
+
+            // POPULATE MATRIX
             for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
                 loc_mat = m_schurCompl->GetBlock(n,n);
@@ -193,12 +260,83 @@ namespace Nektar
             // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
+        }
 
-            // SET UP SCATTER OBJECTS
-            SetUpScatter();
+        DNekScalBlkMatSharedPtr GlobalLinSysPETScStaticCond::
+            v_GetStaticCondBlock(unsigned int n)
+        {
+            DNekScalBlkMatSharedPtr schurComplBlock;
+            int  scLevel           = m_locToGloMap->GetStaticCondLevel();
+            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
+            DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
+            unsigned int nbdry    = localMat->GetRows();
+            unsigned int nblks    = 1;
+            unsigned int esize[1] = {nbdry};
 
-            // CONSTRUCT KSP OBJECT
-            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
+            schurComplBlock = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nblks, nblks, esize, esize);
+            schurComplBlock->SetBlock(0, 0, localMat);
+
+            return schurComplBlock;
+        }
+
+        DNekScalBlkMatSharedPtr GlobalLinSysPETScStaticCond::v_PreSolve(
+            int                     scLevel,
+            NekVector<NekDouble>   &F_GlobBnd)
+        {
+            if (scLevel == 0)
+            {
+                // When matrices are supplied to the constructor at the top
+                // level, the preconditioner is never set up.
+                if (!m_precon)
+                {
+                    m_precon = CreatePrecon(m_locToGloMap);
+                    m_precon->BuildPreconditioner();
+                }
+
+                return m_S1Blk;
+            }
+            else
+            {
+                return m_schurCompl;
+            }
+        }
+
+        void GlobalLinSysPETScStaticCond::v_BasisTransform(
+            Array<OneD, NekDouble>& pInOut,
+            int                     offset)
+        {
+            m_precon->DoTransformToLowEnergy(pInOut, offset);
+        }
+
+        void GlobalLinSysPETScStaticCond::v_BasisInvTransform(
+            Array<OneD, NekDouble>& pInOut)
+        {
+            m_precon->DoTransformFromLowEnergy(pInOut);
+        }
+
+        /**
+         * @brief Apply matrix-vector multiplication using local approach and
+         * the assembly map.
+         *
+         * @param input   Vector input.
+         * @param output  Result of multiplication.
+         *
+         * @todo This can possibly be made faster by using the sparse
+         *       block-matrix multiplication code from the iterative elastic
+         *       systems.
+         */
+        void GlobalLinSysPETScStaticCond::v_DoMatrixMultiply(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output)
+        {
+            int nLocBndDofs = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nDirDofs    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
+            NekVector<NekDouble> in(nLocBndDofs), out(nLocBndDofs);
+            m_locToGloMap->GlobalToLocalBnd(input, in.GetPtr(), nDirDofs);
+            out = (*m_schurCompl) * in;
+            m_locToGloMap->AssembleBnd(out.GetPtr(), output, nDirDofs);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysPETScStaticCond::v_Recurse(
@@ -212,7 +350,8 @@ namespace Nektar
         {
             GlobalLinSysPETScStaticCondSharedPtr sys = MemoryManager<
                 GlobalLinSysPETScStaticCond>::AllocateSharedPtr(
-                    mkey, pExpList, pSchurCompl, pBinvD, pC, pInvD, l2gMap);
+                    mkey, pExpList, pSchurCompl, pBinvD, pC, pInvD, l2gMap,
+                    m_precon);
             sys->Initialise(l2gMap);
             return sys;
         }

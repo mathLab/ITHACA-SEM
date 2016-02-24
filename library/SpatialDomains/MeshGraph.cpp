@@ -390,8 +390,10 @@ namespace Nektar
                 zmove = expEvaluator.Evaluate(expr_id);
             }
 
-            const char *IsCompressed = element->Attribute("COMPRESSED");
-            if(IsCompressed)
+            string IsCompressed;
+            element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+            if(IsCompressed.size()) 
             {
                 if(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()))
@@ -1256,9 +1258,10 @@ namespace Nektar
                 return;
             }
 
-            const char *IsCompressed = field->Attribute("COMPRESSED");
-
-            if(IsCompressed)
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+            
+            if(IsCompressed.size()) 
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),

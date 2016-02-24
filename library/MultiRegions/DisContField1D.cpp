@@ -149,6 +149,11 @@ namespace Nektar
                                   m_bndCondExpansions, m_bndConditions, 
                                   m_periodicVerts, variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_traceMap->PrintStats(std::cout, variable);
+            }
+
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
             // retains a pointer to the trace space points, to ensure

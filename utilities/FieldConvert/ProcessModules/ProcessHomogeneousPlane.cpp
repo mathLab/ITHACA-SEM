@@ -50,14 +50,16 @@ namespace Utilities
 ModuleKey ProcessHomogeneousPlane::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "homplane"),
-        ProcessHomogeneousPlane::create, "Extracts a plane from a 3DH1D expansion, requires planeid to be defined.");
+        ProcessHomogeneousPlane::create,
+        "Extracts a plane from a 3DH1D expansion, requires planeid to be "
+        "defined.");
 
-ProcessHomogeneousPlane::ProcessHomogeneousPlane(FieldSharedPtr f) : ProcessModule(f)
+ProcessHomogeneousPlane::ProcessHomogeneousPlane(FieldSharedPtr f)
+    : ProcessModule(f)
 {
-    m_config["planeid"]            = ConfigOption(false, "NotSet",
-                                        "plane id to extract");
-    m_config["wavespace"]          = ConfigOption(true, "NotSet",
-                                        "Extract plane in Fourier space");
+    m_config["planeid"] = ConfigOption(false, "NotSet", "plane id to extract");
+    m_config["wavespace"] =
+        ConfigOption(true, "NotSet", "Extract plane in Fourier space");
 }
 
 ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
@@ -73,50 +75,54 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) != 1)
     {
-        ASSERTL0(false, "ProcessHomogeneousPlane only works for Homogeneous1D.");
+        ASSERTL0(false,
+                 "ProcessHomogeneousPlane only works for Homogeneous1D.");
     }
-    
+
     ASSERTL0(m_config["planeid"].m_beenSet,
              "Missing parameter planeid for ProcessHomogeneousPlane");
+
     int planeid = m_config["planeid"].as<int>();
-    
     int nfields = m_f->m_fielddef[0]->m_fields.size();
 
     int nstrips;
-    m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+    m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-    for(int s = 0; s < nstrips; ++s)
+    for (int s = 0; s < nstrips; ++s)
     {
         for (int i = 0; i < nfields; ++i)
         {
-            int n = s*nfields + i;
+            int n = s * nfields + i;
             m_f->m_exp[n] = m_f->m_exp[n]->GetPlane(planeid);
-            if( m_config["wavespace"].m_beenSet)
+
+            if (m_config["wavespace"].m_beenSet)
             {
                 m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
-                                    m_f->m_exp[n]->UpdatePhys());
+                                        m_f->m_exp[n]->UpdatePhys());
             }
             else
             {
                 m_f->m_exp[n]->FwdTrans(m_f->m_exp[n]->GetPhys(),
-                                    m_f->m_exp[n]->UpdateCoeffs());
+                                        m_f->m_exp[n]->UpdateCoeffs());
             }
         }
     }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-    for(int s = 0; s < nstrips; ++s)
+    for (int s = 0; s < nstrips; ++s)
     {
         for (int j = 0; j < nfields; ++j)
         {
-            for (int i = 0; i < FieldDef.size()/nstrips; ++i)
+            for (int i = 0; i < FieldDef.size() / nstrips; ++i)
             {
-                int n = s * FieldDef.size()/nstrips + i;
+                int n = s * FieldDef.size() / nstrips + i;
 
-                FieldDef[n]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                m_f->m_exp[s*nfields+j]->AppendFieldData(FieldDef[n], FieldData[n]);
+                FieldDef[n]->m_fields.push_back(
+                    m_f->m_fielddef[0]->m_fields[j]);
+                m_f->m_exp[s * nfields + j]->AppendFieldData(FieldDef[n],
+                                                             FieldData[n]);
             }
         }
     }
@@ -124,6 +130,5 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 }
-
 }
 }

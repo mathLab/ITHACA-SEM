@@ -50,7 +50,8 @@ namespace Utilities
 ModuleKey ProcessMeanMode::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "meanmode"),
-        ProcessMeanMode::create, "Extract mean mode from 3DH1D.");
+        ProcessMeanMode::create,
+        "Extract mean mode from 3DH1D.");
 
 ProcessMeanMode::ProcessMeanMode(FieldSharedPtr f) : ProcessHomogeneousPlane(f)
 {
@@ -66,18 +67,17 @@ void ProcessMeanMode::Process(po::variables_map &vm)
     {
         cout << "ProcessMeanMode: Extracting mean mode..." << endl;
     }
-    
+
     if (m_f->m_fielddef[0]->m_homogeneousZIDs[0] != 0)
     {
         ASSERTL0(false, "ProcessMeanMode: mean mode not found.");
     }
-    
+
     // Set parameters for mean mode
-    RegisterConfig("planeid"  , "0");
+    RegisterConfig("planeid", "0");
     RegisterConfig("wavespace", "1");
-    
+
     ProcessHomogeneousPlane::Process(vm);
 }
-
 }
 }

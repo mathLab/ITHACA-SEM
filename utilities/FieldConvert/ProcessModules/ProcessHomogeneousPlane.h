@@ -42,26 +42,27 @@ namespace Nektar
 {
 namespace Utilities
 {
+
 /**
- * @brief This processing module replaces all expansions by a single plane
- *             from 3DH1D fields, defined by the parameter planeid
+ * @brief This processing module replaces all expansions by a single plane from
+ * 3DH1D fields, defined by the parameter planeid
  */
 class ProcessHomogeneousPlane : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessHomogeneousPlane>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessHomogeneousPlane>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessHomogeneousPlane(FieldSharedPtr f);
-        virtual ~ProcessHomogeneousPlane();
+    ProcessHomogeneousPlane(FieldSharedPtr f);
+    virtual ~ProcessHomogeneousPlane();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 };
-
 }
 }
 

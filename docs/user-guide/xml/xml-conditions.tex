@@ -146,7 +146,7 @@ each of these parameters and give a brief description of what they mean.
 \begin{notebox}
   Defaults for all fields can be defined by setting the equivalent property in
   the \texttt{SOLVERINFO} section. Parameters defined in this section will
-  override any options sepcificed there.
+  override any options specificed there.
 \end{notebox}
 
 \subsubsection{\texttt{GlobalSysSoln} options}
@@ -158,7 +158,7 @@ each of these parameters and give a brief description of what they mean.
   invert it using an appropriate matrix technique, such as Cholesky
   factorisation, depending on the properties of the matrix. Direct solvers
   \textbf{only} run in serial.
-  \item \textbf{Iterative} solvers instead apply matrix-vector multipliciations
+  \item \textbf{Iterative} solvers instead apply matrix-vector multiplications
   repeatedly, using the conjugate gradient method, to converge to a solution to
   the system. For smaller problems, this is typically slower than a direct
   solve. However, for larger problems it can be used to solve the system in
@@ -185,7 +185,7 @@ These solvers can be run in one of three approaches:
   solvers, this technique is not recommended.
   \item The \textbf{StaticCond} approach applies a technique called \emph{static
     condensation} to instead construct the system using only the degrees of
-  freedom on the boundary of the element, which reduces the system size
+  freedom on the boundaries of the elements, which reduces the system size
   considerably. This is the \textbf{default option in parallel}.
   \item \textbf{MultiLevelStaticCond} methods apply the static condensation
   technique repeatedly to further reduce the system size, which can improve

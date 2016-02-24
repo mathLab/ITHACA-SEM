@@ -50,9 +50,10 @@ namespace Utilities
 ModuleKey ProcessMeanMode::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "meanmode"),
-        ProcessMeanMode::create, "Extract mean mode from 3DH1D.");
+        ProcessMeanMode::create,
+        "Extract mean mode from 3DH1D.");
 
-ProcessMeanMode::ProcessMeanMode(FieldSharedPtr f) : ProcessModule(f)
+ProcessMeanMode::ProcessMeanMode(FieldSharedPtr f) : ProcessHomogeneousPlane(f)
 {
 }
 
@@ -67,52 +68,16 @@ void ProcessMeanMode::Process(po::variables_map &vm)
         cout << "ProcessMeanMode: Extracting mean mode..." << endl;
     }
 
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) != 1)
-    {
-        ASSERTL0(false, "ProcessMeanMode only works for Homogeneous1D.");
-    }
-    
     if (m_f->m_fielddef[0]->m_homogeneousZIDs[0] != 0)
     {
         ASSERTL0(false, "ProcessMeanMode: mean mode not found.");
     }
-    
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
 
-    int nstrips;
-    m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+    // Set parameters for mean mode
+    RegisterConfig("planeid", "0");
+    RegisterConfig("wavespace", "1");
 
-    for(int s = 0; s < nstrips; ++s)
-    {
-        for (int i = 0; i < nfields; ++i)
-        {
-            int n = s*nfields + i;
-            m_f->m_exp[n] = m_f->m_exp[n]->GetPlane(0);
-            m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
-                                    m_f->m_exp[n]->UpdatePhys());
-        }
-    }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for(int s = 0; s < nstrips; ++s)
-    {
-        for (int j = 0; j < nfields; ++j)
-        {
-            for (int i = 0; i < FieldDef.size()/nstrips; ++i)
-            {
-                int n = s * FieldDef.size()/nstrips + i;
-
-                FieldDef[n]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                m_f->m_exp[s*nfields+j]->AppendFieldData(FieldDef[n], FieldData[n]);
-            }
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    ProcessHomogeneousPlane::Process(vm);
 }
-
 }
 }

@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+AlignAfterOpenBracket: true
+AlignConsecutiveAssignments: true
+IndentWidth: 4
+BreakBeforeBraces: Allman
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+IndentCaseLabels: true
+Standard: Cpp03
+AccessModifierOffset: -4
+BinPackParameters: false
+BinPackArguments: false

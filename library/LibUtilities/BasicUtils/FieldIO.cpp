@@ -1149,6 +1149,7 @@ namespace Nektar
             // Path to output: will be directory if parallel, normal file if
             // serial.
             fs::path specPath (outname);
+            fs::path fulloutname;
 
             if (nprocs == 1)
             {
@@ -1187,7 +1188,7 @@ namespace Nektar
 
                 m_comm->Block();
 
-                // Now get rank == 0 processor to tidy everything else up.
+                // Now get rank 0 processor to tidy everything else up.
                 if (rank == 0 || !m_sharedFilesystem)
                 {
                     try

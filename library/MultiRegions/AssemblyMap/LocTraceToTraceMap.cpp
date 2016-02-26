@@ -231,7 +231,9 @@ namespace Nektar
                     // to elements
                     Array<OneD, unsigned int> map;
                     Array<OneD, int> sign;
-                    exp2d->GetEdgeToElementMap(e, orient, map, sign);
+                    // Not sure about the call GetBasisNumModes passing (0)!
+                    exp2d->GetEdgeToElementMap(e, orient, map, sign,
+                                               edge->GetBasisNumModes(0));
                     
                     int order_f = edge->GetNcoeffs();
                     int foffset = trace->GetCoeff_Offset(edge->GetElmtId());

@@ -108,6 +108,22 @@ namespace Nektar
                 return(m_base);
             }
 
+            /** \brief This function returns the type of basis used in the \a dir
+             *  direction
+             *
+             *  The different types of bases implemented in the code are defined
+             *  in the LibUtilities::BasisType enumeration list. As a result, the
+             *  function will return one of the types of this enumeration list.
+             *
+             *  \param dir the direction
+             *  \return returns the type of basis used in the \a dir direction
+             */
+            inline  LibUtilities::BasisType GetBasisType(const int dir) const
+            {
+                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                return(m_base[dir]->GetBasisType());
+            }
+
             /**
              * @brief An object which contains the discretised boundary
              * conditions.

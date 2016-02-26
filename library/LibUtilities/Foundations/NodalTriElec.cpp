@@ -277,7 +277,14 @@ namespace Nektar
                 }
             }
 
-            //some idiot forgot to finish this piece of code and tell anyone
+            if(GetNumPoints() < 5)
+            {
+                //at numpoints = 4 there is only one interior point so doesnt
+                //need sorting
+                return;
+            }
+
+            //someone forgot to finish this piece of code and tell anyone
             //that they didnt
             //face interior nodes needs to be considered
             //make a copy of the unsorted nodes

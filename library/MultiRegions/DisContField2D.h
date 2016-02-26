@@ -96,6 +96,18 @@ namespace Nektar
 
 
         protected:
+
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+
+            /** \brief This function gets the shared point to basis
+             *
+             *  \return returns the shared pointer to the bases
+             */
+            inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
+            {
+                return(m_base);
+            }
+
             /**
              * @brief An object which contains the discretised boundary
              * conditions.

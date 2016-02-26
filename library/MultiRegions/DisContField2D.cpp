@@ -1360,45 +1360,113 @@ namespace Nektar
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
 #if 1
-            //cout << "================== NEW v_GetFwdBwdTracePhys ======================" << endl;
-            /*
-            for (int mm = 0; mm < field.num_elements(); ++mm)
+            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre
+             && m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
-                cout <<"i = " << mm << "\tfield = " << field[mm] << endl;
-            }
-             */
-            // blocked routine
-            Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
-                                            GetNLocTracePts());
+                //cout << "================== NEW v_GetFwdBwdTracePhys ======================" << endl;
+                /*
+                for (int mm = 0; mm < field.num_elements(); ++mm)
+                {
+                    cout <<"i = " << mm << "\tfield = " << field[mm] << endl;
+                }
+                */
+                // blocked routine
+                Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
+                                               GetNLocTracePts());
             
-            m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
+                m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
             
-            /*
-            for (int mm = 0; mm < edgevals.num_elements(); ++mm)
-            {
-                cout << "edgevals = " << edgevals[mm] << endl;
-            }
-             */
-            //cout << "=========== FWD ===========" << endl;
-            m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
+                /*
+                for (int mm = 0; mm < edgevals.num_elements(); ++mm)
+                {
+                    cout << "edgevals = " << edgevals[mm] << endl;
+                }
+                */
+                //cout << "=========== FWD ===========" << endl;
+                m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
 
-            //cout << "=========== BWD ===========" << endl;
-            Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
+                //cout << "=========== BWD ===========" << endl;
+                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
              
-            m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
+                m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
             
-            /*
-            for (int mm = 0; mm < Fwd.num_elements(); ++mm)
-            {
-                cout << "Fwd = " << Fwd[mm] << endl;
+                /*
+                for (int mm = 0; mm < Fwd.num_elements(); ++mm)
+                {
+                    cout << "Fwd = " << Fwd[mm] << endl;
+                }
+                for (int mm = 0; mm < Bwd.num_elements(); ++mm)
+                {
+                    cout << "Bwd = " << Bwd[mm] << endl;
+                }
+                int num; cin >> num;
+                */
             }
-            for (int mm = 0; mm < Bwd.num_elements(); ++mm)
+            else
             {
-                cout << "Bwd = " << Bwd[mm] << endl;
+                //cout << "================== OLD v_GetFwdBwdTracePhys ======================" << endl;
+                // Loop over elements and collect forward expansion
+                int nexp = GetExpSize();
+                Array<OneD,NekDouble> e_tmp;
+                PeriodicMap::iterator it2;
+                boost::unordered_map<int,pair<int,int> >::iterator it3;
+                LocalRegions::Expansion2DSharedPtr exp2d;
+
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                // Debugging stuff! ================================================
+                //Array<OneD, NekDouble> edgevals(Bwd.num_elements());
+                //Vmath::Zero(Bwd.num_elements(), edgevals, 1);
+                // =================================================================
+
+                for(cnt = n = 0; n < nexp; ++n)
+                {
+                    exp2d = (*m_exp)[n]->as<LocalRegions::Expansion2D>();
+                    phys_offset = GetPhys_Offset(n);
+
+                    for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
+                    {
+                        int offset = m_trace->GetPhys_Offset(
+                            elmtToTrace[n][e]->GetElmtId());
+
+                        if (m_leftAdjacentEdges[cnt])
+                        {
+                            exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
+                                                   field + phys_offset,
+                                                   e_tmp = Fwd + offset);
+                        }
+                        else
+                        {
+                            exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
+                                                   field + phys_offset,
+                                                   e_tmp = Bwd + offset);
+                        }
+
+                        // Debugging stuff! ========================================
+                        //exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
+                        //                       field + phys_offset,
+                        //                       e_tmp = edgevals + e * 4 + phys_offset);
+                        // =========================================================
+                    }
+                }
+                /*
+                for (int mm = 0; mm < edgevals.num_elements(); ++mm)
+                {
+                    cout << "edgevals = " << edgevals[mm] << endl;
+                }
+                for (int mm = 0; mm < Fwd.num_elements(); ++mm)
+                {
+                    cout << "Fwd = " << Fwd[mm] << endl;
+                }
+                for (int mm = 0; mm < Bwd.num_elements(); ++mm)
+                {
+                    cout << "Bwd = " << Bwd[mm] << endl;
+                }
+                int num; cin >> num;
+                 */
             }
-            int num; cin >> num;
-             */
 #else
             //cout << "================== OLD v_GetFwdBwdTracePhys ======================" << endl;
             // Loop over elements and collect forward expansion

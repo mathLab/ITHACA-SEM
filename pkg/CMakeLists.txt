@@ -384,13 +384,16 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
 endif()
 
 if (NEKTAR_BUILD_LIBRARY AND PKGMAKER)
-    # Ship MPI too, because why not
     if (NEKTAR_USE_MPI)
+        MESSAGE(WARNING "Shipping OS X with MPI is unlikely to work!")
         FIND_PROGRAM(HAVE_MPIRUN mpirun)
         IF(HAVE_MPIRUN)
             LIST(APPEND nektar++_BINS ${HAVE_MPIRUN})
         ENDIF()
 	UNSET(HAVE_MPIRUN CACHE)
+    endif ()
+    if (NEKTAR_USE_PETSC)
+        MESSAGE(WARNING "Shipping OS X with PETSc is unlikely to work!")
     endif ()
     add_nektar_package(
         NAME nektar++

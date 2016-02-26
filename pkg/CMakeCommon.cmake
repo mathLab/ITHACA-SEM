@@ -69,9 +69,6 @@ macro (add_nektar_package)
     write_bin_files("${PKG_INSTALL_BINS}"
                     "${BUILD_DIR}/targets/install_bins.txt")
 
-    # Configure project for this package
-    configure_file(NektarPackage.cmake.in ${BUILD_DIR}/CMakeLists.txt @ONLY)
-
     if(PKG_TYPE STREQUAL "deb")
         set(PKG_GENERATOR "DEB")
     elseif(PKG_TYPE STREQUAL "rpm")
@@ -83,6 +80,9 @@ macro (add_nektar_package)
     else()
         message(ERROR "Unknown package type: ${PKG_TYPE}")
     endif()
+
+    # Configure project for this package
+    configure_file(NektarPackage.cmake.in ${BUILD_DIR}/CMakeLists.txt @ONLY)
 
     add_custom_target(
         pkg-${PKG_TYPE}-${PKG_NAME}

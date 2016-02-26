@@ -139,17 +139,6 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
 
     SET_COMMON_PROPERTIES(${name})
 
-    # Set properties for building shared libraries
-    IF( ${type} STREQUAL "SHARED" )
-        # Properties specific to Mac OSX
-        IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-            # We allow undefined symbols to be looked up dynamically at runtime
-            # from the boost libraries linked by the executables.
-            SET_TARGET_PROPERTIES(${name} 
-                PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
-        ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-    ENDIF( ${type} STREQUAL "SHARED" )
-
     INSTALL(TARGETS ${name} 
         EXPORT Nektar++Libraries 
 		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component} OPTIONAL

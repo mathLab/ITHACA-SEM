@@ -6,6 +6,7 @@ project("pkg-@PKG_NAME@")
 set(CPACK_OUTPUT_FILE_PREFIX "../..")
 
 # Package details
+set(CPACK_GENERATOR "@PKG_GENERATOR@")
 set(CPACK_PACKAGE_NAME "@PKG_NAME@")
 set(CPACK_PACKAGE_VENDOR "Imperial College London")
 set(CPACK_PACKAGE_CONTACT 
@@ -18,7 +19,7 @@ set(CPACK_PACKAGE_VERSION_MAJOR "@NEKTAR_VERSION_MAJOR@")
 set(CPACK_PACKAGE_VERSION_MINOR "@NEKTAR_VERSION_MINOR@")
 set(CPACK_PACKAGE_VERSION_PATCH "@NEKTAR_VERSION_PATCH@")
 
-if(CMAKE_GENERATOR STREQUAL "DEB")
+if(CPACK_GENERATOR STREQUAL "DEB")
     # Debian packages
     execute_process(COMMAND dpkg --print-architecture 
         OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
@@ -38,7 +39,7 @@ if(CMAKE_GENERATOR STREQUAL "DEB")
     if (INSTALL_BINS_FILES OR INSTALL_LIBS_FILES)
         set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     endif ()
-elseif(CMAKE_GENERATOR STREQUAL "RPM")
+elseif(CPACK_GENERATOR STREQUAL "RPM")
     execute_process(COMMAND rpm --eval %{_arch}
                 OUTPUT_VARIABLE CPACK_RPM_PACKAGE_ARCHITECTURE
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -53,10 +54,13 @@ elseif(CMAKE_GENERATOR STREQUAL "RPM")
 
     set(CPACK_PACKAGE_FILE_NAME
         "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
-elseif(CMAKE_GENERATOR STREQUAL "PackageMaker")
+elseif(CPACK_GENERATOR STREQUAL "PackageMaker")
     # OS X .pkg installer -- set install location
-    set(CPACK_PACKAGE_DEFAULT_LOCATION "/usr/local/nektar++")
-    set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+    set(CPACK_PACKAGE_DEFAULT_LOCATION "/")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/nektar++")
+
+    # This is used as part of the identifier, so make it without spaces
+    set(CPACK_PACKAGE_VENDOR "imperial_college_london")
 else()
 endif()
 
@@ -143,7 +147,7 @@ if(APPLE)
             get_filename_component(reqname \${req} NAME)
             set(libdest \${CMAKE_INSTALL_PREFIX}/lib/\${reqname})
             set(changes \${changes} \"-change\" \"\${req}\" \"@executable_path/../lib/\${reqname}\")
-            set(changes_lib \${changes_lib} \"-change\" \"\${req}\" \"@rpath/../lib/\${reqname}\")
+            set(changes_lib \${changes_lib} \"-change\" \"\${req}\" \"@loader_path/../lib/\${reqname}\")
 
             # Copy this library
             if (NOT EXISTS \${libdest})
@@ -163,7 +167,7 @@ if(APPLE)
             endif()
         endforeach()
 
-        # Second pass -- fix up library to use @rpath/../lib/libName.dylib
+        # Second pass -- fix up library to use @loader_path/../lib/libName.dylib
         foreach(req \${prereqs})
             set(searchname \${req})
 
@@ -178,7 +182,7 @@ if(APPLE)
             execute_process(COMMAND \${cmd} RESULT_VARIABLE install_name_tool_result)
 
             # change library install name ID
-            execute_process(COMMAND install_name_tool -id @rpath/../lib/\${reqname} \${libdest})
+            execute_process(COMMAND install_name_tool -id @loader_path/../lib/\${reqname} \${libdest})
 
             # change @loader_path (used by some boost libs through homebrew)
         endforeach()

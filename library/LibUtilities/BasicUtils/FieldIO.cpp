@@ -1146,16 +1146,9 @@ namespace Nektar
             int nprocs = m_comm->GetSize();
             int rank   = m_comm->GetRank();
 
-            // Directory name if in parallel, regular filename if in serial
+            // Path to output: will be directory if parallel, normal file if
+            // serial.
             fs::path specPath (outname);
-
-            // Pad rank to 8char filenames, e.g. P0000000.fld
-            boost::format pad("P%1$07d.fld");
-            pad % m_comm->GetRank();
-
-            // Generate full path name
-            fs::path poutfile(pad.str());
-            fs::path fulloutname = specPath / poutfile;
 
             if (nprocs == 1)
             {
@@ -1235,7 +1228,7 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                if ((m_sharedFilesystem && rank == 0) || !m_sharedFilesystem)
+                if (rank == 0 || !m_sharedFilesystem)
                 {
                     fs::create_directory(specPath);
                 }

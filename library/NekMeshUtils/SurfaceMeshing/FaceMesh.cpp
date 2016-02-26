@@ -158,28 +158,87 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
 
     for(int i = 0; i < orderedLoops.size(); i++)
     {
+        for(int j = 0; j < orderedLoops[i].size() - 1; j++)
+        {
+            map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i][j]);
+            map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(orderedLoops[i][j+1]);
+
+            if(f1 == nmap.end() || f2 == nmap.end())
+            {
+                continue;
+            }
+
+            NodeSharedPtr n1 = f1->second;
+            NodeSharedPtr n2 = f2->second;
+
+            Array<OneD, NekDouble> loc1 = n1->GetLoc();
+            Array<OneD, NekDouble> uv1(2);
+            m_cadsurf->ProjectTo(loc1,uv1);
+            n1->SetCADSurf(m_id,m_cadsurf,uv1);
+            n1->Move(loc1,m_id,uv1);
+
+            vector<NodeSharedPtr> ns;
+            ns.push_back(orderedLoops[i][j]);
+            ns.push_back(n1);
+            ns.push_back(n2);
+            ns.push_back(orderedLoops[i][j+1]);
+
+            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+
+            vector<int> tags;
+            tags.push_back(m_id + 200);
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                    LibUtilities::eQuadrilateral, conf, ns, tags);
+            m_localElements.push_back(E);
+
+        }
+        {
+            map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i].back());
+            map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(orderedLoops[i][0]);
+
+            if(f1 == nmap.end() || f2 == nmap.end())
+            {
+                continue;
+            }
+
+            NodeSharedPtr n1 = f1->second;
+            NodeSharedPtr n2 = f2->second;
+
+            Array<OneD, NekDouble> loc1 = n1->GetLoc();
+            Array<OneD, NekDouble> uv1(2);
+            m_cadsurf->ProjectTo(loc1,uv1);
+            n1->SetCADSurf(m_id,m_cadsurf,uv1);
+            n1->Move(loc1,m_id,uv1);
+
+            vector<NodeSharedPtr> ns;
+            ns.push_back(orderedLoops[i].back());
+            ns.push_back(n1);
+            ns.push_back(n2);
+            ns.push_back(orderedLoops[i][0]);
+
+            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+
+            vector<int> tags;
+            tags.push_back(m_id + 200);
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                    LibUtilities::eQuadrilateral, conf, ns, tags);;
+            m_localElements.push_back(E);
+
+        }
+    }
+
+    for(int i = 0; i < orderedLoops.size(); i++)
+    {
         for(int j = 0; j < orderedLoops[i].size(); j++)
         {
             map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i][j]);
-            //map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(orderedLoops[i][j+1]);
             if(f1 == nmap.end())
             {
                 continue;
             }
-            //ASSERTL0(f2 != nmap.end(), "node not found");
             orderedLoops[i][j] = f1->second;
-            //orderedLoops[i][j+1] = f2->second;
-
-            Array<OneD, NekDouble> uv(2);
-            Array<OneD, NekDouble> loc = orderedLoops[i][j]->GetLoc();
-            m_cadsurf->ProjectTo(loc,uv);
-            orderedLoops[i][j]->SetCADSurf(m_id,m_cadsurf,uv);
-            orderedLoops[i][j]->Move(m_cadsurf->P(uv),m_id,uv);
-
-            nmap.erase(f1);
         }
     }
-    ASSERTL0(nmap.size() == 0, "not all nodes used");
 
     Mesh(true);
 }

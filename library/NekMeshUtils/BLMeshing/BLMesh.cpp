@@ -191,7 +191,7 @@ void BLMesh::Mesh()
             dists = new ANNdist[sample];
             kdTree->annkSearch(queryPt, sample, nnIdx, dists);
         }
-        while(sqrt(dists[sample-1]) < bit->second.bl);
+        while(sqrt(dists[sample-1]) < bit->second.bl * 2.5);
 
         //now need to build a set of triagnles to test against
         //use set to make sure its unique
@@ -224,7 +224,7 @@ void BLMesh::Mesh()
             }
         }
 
-        NekDouble mind = bit->second.bl;
+        NekDouble mind = bit->second.bl * 2.5;
         set<int>::iterator s;
         for(s = tris.begin(); s != tris.end(); s++)
         {
@@ -255,7 +255,7 @@ void BLMesh::Mesh()
                           (bit->first->m_y - ns[0]->m_y)*norm[1] +
                           (bit->first->m_z - ns[0]->m_z)*norm[2];
             t *= -1.0 / nu;
-            if(t < 1E-6 || t > bit->second.bl)
+            if(t < 1E-6 || t > bit->second.bl * 2.5)
             {
                 //no intersection worth worrying about
                 continue;
@@ -298,7 +298,7 @@ void BLMesh::Mesh()
                 mind = min(mind, t);
             }
         }
-        if(mind < bit->second.bl)
+        if(mind < bit->second.bl * 2.5)
         {
             bit->second.bl = mind * 0.25;
         }

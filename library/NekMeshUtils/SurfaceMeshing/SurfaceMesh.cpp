@@ -37,8 +37,6 @@
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
-#include <LocalRegions/MatrixKey.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 namespace Nektar
@@ -78,28 +76,16 @@ void SurfaceMesh::Mesh()
     //linear mesh all surfaces
     for(int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
-        if(i > 7) return;
         if(m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(i,m_cad->GetNumSurf(),
                                            "Face progress");
         }
 
-        vector<unsigned int>::iterator it;
+        m_facemeshes[i] =
+            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
+                m_cad->GetSurf(i), m_octree, m_curvemeshes);
 
-        it = find(m_symsurfs.begin(), m_symsurfs.end(), i);
-        if(it == m_symsurfs.end())
-        {
-            m_facemeshes[i] =
-                MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                    m_cad->GetSurf(i), m_octree, m_curvemeshes);
-        }
-        else
-        {
-            m_facemeshes[i] =
-                MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                    m_cad->GetSurf(i), m_octree, m_curvemeshes, m_bl);
-        }
 
         m_facemeshes[i]->Mesh();
     }
@@ -141,6 +127,20 @@ void SurfaceMesh::Report()
         cout << "\t\tTriangles " << ts << endl;
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
+}
+
+void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
+{
+    vector<int> surfs = blmesh->GetSymSurfs();
+    for(int i = 0; i < surfs.size(); i++)
+    {
+        map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetNodeMap(surfs[i]);
+        map<int, FaceMeshSharedPtr>::iterator f = m_facemeshes.find(surfs[i]);
+        ASSERTL0(f != m_facemeshes.end(), "surf not found");
+        f->second->QuadRemesh(nmap);
+    }
+
+
 }
 
 

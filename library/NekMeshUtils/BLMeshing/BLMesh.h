@@ -49,6 +49,15 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+struct blInfo
+{
+    NodeSharedPtr pNode;
+    NekDouble bl;
+    Array<OneD, NekDouble> N;
+    vector<unsigned int> surfs;
+    int symsurf;
+};
+
 class BLMesh
 {
 public:
@@ -57,9 +66,9 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
-           std::vector<unsigned int> syms, NekDouble b) :
-                         m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b)
+    BLMesh(CADSystemSharedPtr s, MeshSharedPtr m, std::vector<unsigned int> bls,
+           NekDouble b) :
+                        m_cad(s), m_mesh(m), m_blsurfs(bls), m_bl(b)
     {
     };
 
@@ -77,18 +86,34 @@ public:
         return m_surftopriface;
     }
 
+    std::vector<int> GetSymSurfs()
+    {
+        return m_symSurfs;
+    }
+
+    std::map<NodeSharedPtr, NodeSharedPtr> GetNodeMap(int s)
+    {
+        std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> >::iterator f;
+        f = m_symNodes.find(s);
+        ASSERTL0(f != m_symNodes.end(), "surf not found");
+        return f->second;
+    }
+
 private:
 
+    ///CAD
+    CADSystemSharedPtr m_cad;
     /// mesh object containing surface mesh
     MeshSharedPtr m_mesh;
     /// list of surfaces onto which boundary layers are placed
     std::vector<unsigned int> m_blsurfs;
-    /// list of symetry surfaces
-    std::vector<unsigned int> m_symsurfs;
     /// thickness of the boundary layer
     NekDouble m_bl;
     /// map from surface element id to opposite face of prism
     std::map<int, FaceSharedPtr> m_surftopriface;
+    std::vector<int> m_symSurfs;
+    std::map<NodeSharedPtr, blInfo> blData;
+    std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

@@ -40,23 +40,18 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
-#include <ANN/ANN.h>
-
 using namespace std;
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-void FaceMesh::Mesh()
+void FaceMesh::Mesh(bool remesh)
 {
-    Stretching();
-
-    OrientateCurves();
-
-    if(m_makebl)
+    if(!remesh)
     {
-        MakeBL();
+        Stretching();
+        OrientateCurves();
     }
 
     int numPoints = 0;
@@ -130,7 +125,7 @@ void FaceMesh::Mesh()
         {
             e[j]->m_elLink.clear();
         }
-        m_mesh->m_element[m_mesh->m_expDim].push_back(m_localElements[i]);
+        m_mesh->m_element[2].push_back(m_localElements[i]);
     }
 
     cout << "\r                                                                                             ";
@@ -143,159 +138,50 @@ void FaceMesh::Mesh()
          << endl;
 }
 
-void FaceMesh::MakeBL()
+void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
 {
-    NekDouble min = m_octree->GetMinDelta();
-    //create intial boundary layer with thickness m_minDelta/2
-    for(int i = 1; i < orderedLoops.size(); i++)//dont do this to first loop
+    m_stienerpoints.clear();
+    m_connec.clear();
+    m_localNodes.clear();
+    m_localEdges.clear();
+    m_localElements.clear();
+
+    vector<ElementSharedPtr> el = m_mesh->m_element[2];
+    m_mesh->m_element[2].clear();
+    for(int i = 0; i < el.size(); i++)
     {
-        vector<blpair> blps;
+        if(el[i]->CADSurfId != m_id)
+        {
+            m_mesh->m_element[2].push_back(el[i]);
+        }
+    }
+
+    for(int i = 0; i < orderedLoops.size(); i++)
+    {
         for(int j = 0; j < orderedLoops[i].size(); j++)
         {
-            //for each of the nodes make a new node which exists off the surface
-            vector<pair<int, CADSurfSharedPtr> > surfs = orderedLoops[i][j]->GetCADSurfs();
-            ASSERTL0(surfs.size() > 1, "point does not have enough surfs to make quad");
-
-            Array<OneD, NekDouble> AN(3,0.0);
-            //make a averaged normal ignoring surface mid
-            for(int s = 0; s < surfs.size(); s++)
+            map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i][j]);
+            //map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(orderedLoops[i][j+1]);
+            if(f1 == nmap.end())
             {
-                if(surfs[s].first == m_id)
-                    continue; //does not contribute to norm
-
-                Array<OneD, NekDouble> uv = orderedLoops[i][j]->GetCADSurfInfo(surfs[s].first);
-                Array<OneD, NekDouble> N = surfs[s].second->N(uv);
-                for(int k = 0; k < 3; k++) AN[k] += N[k];
+                continue;
             }
+            //ASSERTL0(f2 != nmap.end(), "node not found");
+            orderedLoops[i][j] = f1->second;
+            //orderedLoops[i][j+1] = f2->second;
 
-            //renormalise normal
-            NekDouble mag = sqrt(AN[0]*AN[0] + AN[1]*AN[1] + AN[2]*AN[2]);
-            for(int k = 0; k < 3; k++) AN[k] /= mag;
-
-            Array<OneD, NekDouble> loc = orderedLoops[i][j]->GetLoc();
-            Array<OneD, NekDouble> tp(3);
-            for(int k = 0; k < 3; k++) tp[k] = min/2.0*AN[k] + loc[k];
-            //project tp onto to surface to get new point
             Array<OneD, NekDouble> uv(2);
-            m_cadsurf->ProjectTo(tp,uv);
-            NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
-                                                        tp[0],tp[1],tp[2]));
-            nn->SetCADSurf(m_id,m_cadsurf,uv);
+            Array<OneD, NekDouble> loc = orderedLoops[i][j]->GetLoc();
+            m_cadsurf->ProjectTo(loc,uv);
+            orderedLoops[i][j]->SetCADSurf(m_id,m_cadsurf,uv);
+            orderedLoops[i][j]->Move(m_cadsurf->P(uv),m_id,uv);
 
-            blpair blp;
-            blp.first = orderedLoops[i][j];
-            blp.newn = nn;
-            blp.pos = nn;
-            blp.N = AN;
-            blp.stop = false;
-
-            blps.push_back(blp);
-            //place the new node into ordered loops for the surface triangulation to work With
-            orderedLoops[i][j] = nn;
-        }
-        blpairs.push_back(blps);
-    }
-
-    int numst = 9;
-    NekDouble dbl = (m_bl - min / 2) / numst;
-
-    for(int st = 0; st < numst; st++)
-    {
-        NekDouble blt = min /2.0 + st * dbl;
-        //advance the boundary layer point to their new possible locations
-        //then make ANN trees out of the possible locations
-        //then query the possible locations against the trees
-        //if the new position is not possible set flag to false and dont advance the point
-        //TODO add proximity search to look at points in own loop
-        for(int i = 0; i < blpairs.size(); i++)
-        {
-            for(int j = 0; j < blpairs[i].size(); j++)
-            {
-                if(blpairs[i][j].stop)
-                    continue;
-
-                Array<OneD, NekDouble> loc = blpairs[i][j].first->GetLoc();
-                Array<OneD, NekDouble> tp(3);
-                for(int k = 0; k < 3; k++)
-                {
-                    tp[k] = blt*blpairs[i][j].N[k] + loc[k];
-                }
-                //project tp onto to surface to get new point
-                Array<OneD, NekDouble> uv(2);
-                m_cadsurf->ProjectTo(tp,uv);
-                blpairs[i][j].pos->Move(tp,m_id,uv);
-            }
-        }
-
-        //make ann trees
-        vector<ANNkd_tree*> trees;
-        for(int i = 0; i < blpairs.size(); i++)
-        {
-            ANNpointArray dataPts;
-
-            ANNkd_tree* kdTree;
-
-            dataPts = annAllocPts(blpairs[i].size(), 3);
-
-            for(int j = 0; j < blpairs[i].size(); j++)
-            {
-                if(blpairs[i][j].stop)
-                {
-                    dataPts[j][0] = blpairs[i][j].newn->m_x;
-                    dataPts[j][1] = blpairs[i][j].newn->m_y;
-                    dataPts[j][2] = blpairs[i][j].newn->m_z;
-                }
-                else
-                {
-                    dataPts[j][0] = blpairs[i][j].pos->m_x;
-                    dataPts[j][1] = blpairs[i][j].pos->m_y;
-                    dataPts[j][2] = blpairs[i][j].pos->m_z;
-                }
-            }
-            kdTree = new ANNkd_tree(dataPts, blpairs[i].size(), 3);
-            trees.push_back(kdTree);
-        }
-
-        for(int i = 0; i < blpairs.size(); i++)
-        {
-            for(int j = 0; j < blpairs[i].size(); j++)
-            {
-                if(blpairs[i][j].stop)
-                    continue;
-
-                ANNpoint queryPt;
-                ANNidxArray nnIdx;
-                ANNdistArray dists;
-                queryPt = annAllocPt(3);
-                nnIdx = new ANNidx[1];
-                dists = new ANNdist[1];
-
-                queryPt[0] = blpairs[i][j].pos->m_x;
-                queryPt[1] = blpairs[i][j].pos->m_y;
-                queryPt[2] = blpairs[i][j].pos->m_z;
-
-                for(int k = 0; k < trees.size(); k++)
-                {
-                    if(i == k)
-                        continue;
-
-                    trees[k]->annkSearch(queryPt, 1, nnIdx, dists);
-
-                    if(sqrt(dists[0]) < m_octree->Query(blpairs[i][j].first->GetLoc()))
-                    {
-                        blpairs[i][j].stop = true;
-                        break;
-                    }
-                    else
-                    {
-                        blpairs[i][j].newn = blpairs[i][j].pos;
-                    }
-                }
-            }
+            nmap.erase(f1);
         }
     }
+    ASSERTL0(nmap.size() == 0, "not all nodes used");
 
-
+    Mesh(true);
 }
 
 void FaceMesh::OptimiseLocalMesh()
@@ -824,86 +710,13 @@ void FaceMesh::BuildLocalMesh()
     /*************************
     // build a local set of nodes edges and elemenets for optimstaion prior to putting them into m_mesh
     */
-    int tricomp = m_mesh->m_numcomp++;
-
-    //first build quads if bl surface
-    if(m_makebl)
-    {
-        int quadcomp = m_mesh->m_numcomp++;
-        ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
-
-        for(int i = 0; i < blpairs.size(); i++)
-        {
-            for(int j = 0; j < blpairs[i].size() - 1; j++)
-            {
-                vector<NodeSharedPtr> ns;
-                ns.push_back(blpairs[i][j].first);
-                ns.push_back(blpairs[i][j].newn);
-                ns.push_back(blpairs[i][j+1].newn);
-                ns.push_back(blpairs[i][j+1].first);
-                vector<int> tags;
-                tags.push_back(quadcomp);
-                ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                        LibUtilities::eQuadrilateral, conf, ns, tags);
-                E->CADSurfId = m_id;
-                m_localElements.push_back(E);
-            }
-            {
-                vector<NodeSharedPtr> ns;
-                ns.push_back(blpairs[i].back().first);
-                ns.push_back(blpairs[i].back().newn);
-                ns.push_back(blpairs[i][0].newn);
-                ns.push_back(blpairs[i][0].first);
-                vector<int> tags;
-                tags.push_back(quadcomp);
-                ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                        LibUtilities::eQuadrilateral, conf, ns, tags);
-                E->CADSurfId = m_id;
-                m_localElements.push_back(E);
-            }
-        }
-
-        for(int i = 0; i < m_localElements.size(); i++)
-        {
-            vector<NodeSharedPtr> nods = m_localElements[i]->GetVertexList();
-            for(int j = 0; j < nods.size(); j++)
-            {
-                //nodes are already unique some will insert some wont
-                m_localNodes.insert(nods[j]);
-            }
-            vector<EdgeSharedPtr> edgs = m_localElements[i]->GetEdgeList();
-            for(int j = 0; j < edgs.size(); j++)
-            {
-                //look for edge in m_mesh edgeset from curves
-                EdgeSet::iterator s = m_mesh->m_edgeSet.find(edgs[j]);
-                if(!(s == m_mesh->m_edgeSet.end()))
-                {
-                    edgs[j] = *s;
-                    m_localElements[i]->SetEdge(j, edgs[j]);
-                }
-
-                pair<EdgeSet::iterator, bool> test = m_localEdges.insert(edgs[j]);
-
-                if(test.second)
-                {
-                    (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(m_localElements[i],j));
-                }
-                else
-                {
-                    m_localElements[i]->SetEdge(j, *test.first);
-                    (*test.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(m_localElements[i],j));
-                }
-            }
-            m_localElements[i]->SetId(i);
-        }
-    }
 
     for(int i = 0; i < m_connec.size(); i++)
     {
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
-        tags.push_back(tricomp);
+        tags.push_back(m_id + 100);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                                 LibUtilities::eTriangle, conf, m_connec[i], tags);
         E->CADSurfId = m_id;

@@ -47,15 +47,6 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-struct blpair
-{
-    NodeSharedPtr first;
-    NodeSharedPtr newn;
-    NodeSharedPtr pos;
-    Array<OneD, NekDouble> N;
-    bool stop;
-};
-
 /**
  * @brief class for surface meshes on individual surfaces (paramter plane meshes)
  */
@@ -77,30 +68,14 @@ public:
 
     {
         m_edgeloops = m_cadsurf->GetEdges();
-        m_makebl = false;
-    };
-
-    /**
-     * @brief constructor for building with boundary layer
-     */
-    FaceMesh(   const int id,
-                MeshSharedPtr m,
-                CADSurfSharedPtr cad,
-                OctreeSharedPtr oct,
-                const std::map<int, CurveMeshSharedPtr> &cmeshes,
-                const NekDouble b)
-                    : m_mesh(m), m_cadsurf(cad), m_octree(oct),
-                      m_curvemeshes(cmeshes),m_id(id), m_bl(b)
-
-    {
-        m_edgeloops = m_cadsurf->GetEdges();
-        m_makebl = true;
     };
 
     /**
      * @brief mesh exectuation command
      */
-    void Mesh();
+    void Mesh(bool remesh = false);
+
+    void QuadRemesh(std::map<NodeSharedPtr, NodeSharedPtr> nmap);
 
 private:
 
@@ -177,12 +152,6 @@ private:
     EdgeSet m_localEdges;
     ///local list of elements
     std::vector<ElementSharedPtr> m_localElements;
-    /// boundary layer thickness
-    NekDouble m_bl;
-    /// should build boundary layer
-    bool  m_makebl;
-    /// list of bl information which follows the orderedLoops counting
-    std::vector<std::vector<blpair> > blpairs;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

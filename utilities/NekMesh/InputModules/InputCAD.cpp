@@ -118,11 +118,8 @@ void InputCAD::Process()
     if(m_makeBL)
     {
         string sym, bl;
-        sym = pSession->GetSolverInfo("SymPlane");
         bl = pSession->GetSolverInfo("BLSurfs");
-        ParseUtils::GenerateSeqVector(sym.c_str(), symsurfs);
         ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
-        sort(symsurfs.begin(), symsurfs.end());
         sort(blsurfs.begin(), blsurfs.end());
         ASSERTL0(blsurfs.size() > 0,
                         "No surfaces selected to make boundary layer on");
@@ -218,7 +215,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_cad, m_octree, symsurfs, m_blthick);
+                AllocateSharedPtr(m_mesh, m_cad, m_octree);
 
     m_surfacemesh->Mesh();
 
@@ -228,23 +225,7 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
-    m_mesh->m_element[m_mesh->m_expDim].clear();
-    for(int i = 0; i < el.size(); i++)
-    {
-        if(el[i]->GetTagList()[0] == 6 || el[i]->GetTagList()[0] == 7)
-        {
-            m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
-        }
-    }
-
-    ProcessVertices  ();
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
-    ProcessComposites();
-
-    /*m_surfacemesh->Report();
+    m_surfacemesh->Report();
 
     m_mesh->m_expDim = 3;
     m_mesh->m_fields.push_back("u");
@@ -260,9 +241,11 @@ void InputCAD::Process()
     if(m_makeBL)
     {
         BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                          m_mesh, blsurfs, symsurfs, m_blthick);
+                                        m_cad, m_mesh, blsurfs, m_blthick);
 
         m_blmesh->Mesh();
+
+        m_surfacemesh->Remesh(m_blmesh);
 
         //create tet mesh
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
@@ -273,7 +256,10 @@ void InputCAD::Process()
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
     }
 
-    m_tet->Mesh();
+    m_mesh->m_expDim = 2;
+
+    //m_tet->Mesh();
+    m_mesh->m_element[3].clear();
 
     ClearElementLinks();
     ProcessVertices  ();
@@ -282,13 +268,13 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    m_surfacemesh->HOSurf();
+    //m_surfacemesh->HOSurf();
 
     if(m_mesh->m_verbose)
     {
         cout << endl;
         cout << m_mesh->m_element[3].size() << endl;
-    }*/
+    }
 }
 
 }

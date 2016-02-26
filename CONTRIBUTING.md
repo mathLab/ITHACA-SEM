@@ -39,17 +39,23 @@ project. It's a pretty simple process:
 - Have you run your branch through buildbot and do all the tests pass?
 - Is there documentation in the user guide and/or developer guide?
 - Are there any massive files you might have added in the commit history? We try
-  to keep test files as small as possible.
-- Is the code formatted correctly? **Pro tip:** see below to download and
-  install `clang-format` to make life very easy!
+  to keep test files as small as possible. If so you'll need to rebase or
+  filter-branch to remove those from the commit history.
+- Is the code formatted correctly?
+  - **Note:** unfortunately, Nektar++ has pretty inconsistent code formatting at
+    the moment. To help in reviewing your submission, new files should be
+    formatted according to the guidelines (or use `clang-format` as described
+    below) -- otherwise, try to keep formatting consistent with the file you're
+    working on.
 
 ## Testing and Buildbot
 Your new features or fixes should include tests that cover the code you've
 added. There are numerous examples within the various `Tests` directory lying
 within the source trees, and there is an example of writing `.tst` files for our
-`Tester` executable in the `tests/Examples/regex_example.tst` directory. Once
-you've written your tests, add them to the `CMakeLists.txt` file in whatever
-directory you are working in.
+`Tester` executable in the `tests/Examples` directory. Once you've written your
+tests, add them to the `CMakeLists.txt` file for the relevant solver, or to the
+appropriate demos directory for library features in whatever directory you are
+working in.
 
 You should also test your branch on the
 [Nektar++ buildbot](http://buildbot.nektar.info/), which will compile and test
@@ -58,9 +64,14 @@ and 64-bit. If your tests don't pass, we can't merge the code into master.
 
 ## Documentation
 Nektar++ has a fairly comprehensive user guide and a developer guide that is
-presently very incomplete. If you are writing user-exposed features, you should
-add some documentation to the user guide on how to use them. Any code should
-also be well-commented in both Doxygen and in normal C++ comments to explain it.
+presently very incomplete. The following are rough guidelines for what you
+should provide:
+
+- If you are writing user-exposed features, you should add some documentation to
+  the user guide on how to use them.
+- Any functions/classes should include Doxygen documentation.
+- Generally, code should be well-commented using regular C++ comments to explain
+  its function to help in reviewing it.
 
 ## Code review and merging
 All merge requests will be reviewed by one of the senior developers. We try to
@@ -69,10 +80,14 @@ stick to the following process:
   release.
   - If the branch is deemed to be minor and passes the checklist above, senior
     developer will handle the request by themselves.
-  - Otherwise, senior developer will ask one or more other developers to review the code.
-- Submission checklist will be checked by the reviewers
+  - Otherwise, senior developer will ask one or more other developers to review
+    the code.
+- Submission checklist will be checked by the reviewers.
 - Where appropriate, reviewers will comment on regions of code that need further
   development and/or improvement.
+- In addition to any coding comments/suggestions, reviewers are asked to check
+  the branch passes the regression tests and appropriate documentation has been
+  added.
 - Once feedback received from the branch author (if necessary) and reviewers are
   happy, the branch will be merged.
 
@@ -92,7 +107,8 @@ below this would be fantastic.
 - All code blocks (even one-line blocks) should use braces, and braces should be
   on new lines; for instance
   ```c++
-  if (someCondition) {
+  if (someCondition)
+  {
       myAwesomeFunction();
   }
   ```
@@ -119,9 +135,12 @@ below this would be fantastic.
 
 ### Using `clang-format`
 Code formatting is reasonably boring, so Nektar++ comes with a `.clang-format`
-file to allow for automatic code formatting. Installing it is easy on most
-package managers. Nektar++ relies on options that are used in version 3.7 or
-later.
+file to allow for automatic code formatting. As noted above, you can use this
+for new files, or cosmetic `tidy/*` branches, but try to stick to existing
+formatting elsewhere.
+
+Installing it is easy on most package managers. Nektar++ relies on options that
+are used in version 3.7 or later.
 
 There are a number of instructions on how to use `clang-format` inside a number
 of text editors on the

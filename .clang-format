@@ -1,6 +1,5 @@
 BasedOnStyle: LLVM
 AlignAfterOpenBracket: true
-AlignConsecutiveAssignments: true
 IndentWidth: 4
 BreakBeforeBraces: Allman
 AllowShortBlocksOnASingleLine: false

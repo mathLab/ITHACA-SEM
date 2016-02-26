@@ -123,7 +123,8 @@ below this would be fantastic.
   }
   ```
 - **Don't use preprocessor directives and macros unless there is no viable
-  alternative.** The exception to this is header guards inside your `.h` files.
+  alternative.** The exception to this is header guards inside your `.h` files,
+  which you should be sure to include in any headers you contribute.
 - Use one `.cpp` and `.h` file per C++ class, and try to keep `inline` header
   code to a minimum (unless performance is a major factor).
 - Put spaces around binary operators and constants.
@@ -131,10 +132,10 @@ below this would be fantastic.
   example above).
 
 ### Variables and naming
-- Please use sensible names!
-- Use camelCase to define your variable and function names,
-  e.g. `myAwesomeVariable`. Any `typedef`s, function, `class` and `struct` names
-  should begin with capital letters, variable names should be lower case.
+- Please use sensible names and use camelCase as a broad naming convention.
+  - Variables should start with a lowercase letter, e.g. `myAwesomeVariable`.
+  - Function, `class`, `struct` and `typedef` names should begin with capital
+    letters, e.g. `MyAwesomeFunction`.
 - Inside classes, member variables should be prefixed with `m_`,
   e.g. `m_myAwesomeVariable`.
   - Global constants used throughout the library should be prefixed with `k`

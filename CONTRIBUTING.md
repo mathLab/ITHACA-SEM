@@ -62,6 +62,16 @@ You should also test your branch on the
 the code against a number of Linux, Mac and Windows operating systems, both 32-
 and 64-bit. If your tests don't pass, we can't merge the code into master.
 
+Testing is presently manually executed. You should:
+
+1. Go to the buildbot site and navigate to the *Builders* page.
+2. Scroll to the bottom of the page in the section *Force all builds*
+3. Enter your details. If you're working on a fork, then the *Suffix to repo
+   url* box should be changed to `username/nektar`.
+4. Hit the *Force build* button.
+5. Check the output in the *Grid* page -- hopefully everything should be green!
+   Tests can take up to two hours to run.
+
 ## Documentation
 Nektar++ has a fairly comprehensive user guide and a developer guide that is
 presently very incomplete. The following are rough guidelines for what you

@@ -8,15 +8,22 @@
 
 IF(NEKTAR_USE_MESHGEN)
     SET(BUILD_OCC ON)
-
     OPTION(THIRDPARTY_DOWNLOAD_OCC
-        "Get OpenCascade from ThirdParty." ${BUILD_OCC})
+        "Download pre-compiled versions of OpenCascade." ${BUILD_OCC})
 
     IF (THIRDPARTY_DOWNLOAD_OCC)
+        INCLUDE(ExternalProject)
+
+        SET(OCC_LIBS_TMP PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
+            TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
+            TKXSBase TKPShape TKTopAlgo)
+        FOREACH(OCC_LIB ${OCC_LIBS_TMP})
+            LIST(APPEND OCC_LIBS ${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${OCC_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
+        ENDFOREACH()
+
         IF(WIN32)
-            MESSAGE(SEND_ERROR "Cannot use OpenCascade with Nektar++ on Windows")
+            MESSAGE(SEND_ERROR "Cannot currently use OpenCascade with Nektar++ on Windows")
         ELSEIF(APPLE)
-            INCLUDE(ExternalProject)
             EXTERNALPROJECT_ADD(
                 opencascade-6.8
                 PREFIX ${TPSRC}
@@ -32,20 +39,13 @@ IF(NEKTAR_USE_MESHGEN)
                 BUILD_COMMAND ""
                 INSTALL_COMMAND cp -a ${TPSRC}/opencascade-6.8/i686/lib/. ${TPDIST}/lib/ COMMAND cp -a ${TPSRC}/opencascade-6.8/i686/inc/. ${TPDIST}/include/
                 )
-            LINK_DIRECTORIES(${TPDIST}/lib)
-            INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
 
             # Patch OS X libraries to fix install name problems.
             EXTERNALPROJECT_ADD_STEP(opencascade-6.8 patch-install-path
                 COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPSRC}/opencascade-6.8/i686/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
                 DEPENDEES build
                 DEPENDERS install)
-
-            SET(OCC_LIBS PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
-                TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
-                TKXSBase TKPShape TKTopAlgo)
         ELSE()
-            INCLUDE(ExternalProject)
             EXTERNALPROJECT_ADD(
                 opencascade-6.8
                 PREFIX ${TPSRC}
@@ -60,13 +60,10 @@ IF(NEKTAR_USE_MESHGEN)
                 BUILD_COMMAND ""
                 INSTALL_COMMAND cp -a ${TPSRC}/opencascade-6.8/lib/. ${TPDIST}/lib/ COMMAND cp -a ${TPSRC}/opencascade-6.8/inc/. ${TPDIST}/include/
                 )
-            LINK_DIRECTORIES(${TPDIST}/lib)
-            INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
-
-            SET(OCC_LIBS PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
-                TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
-                TKXSBase TKPShape TKTopAlgo)
-            MESSAGE(STATUS "Link to OCC: ${OCC_LIBS}.so")
         ENDIF()
+
+        MESSAGE(STATUS "Build OpenCascade: download binaries")
+        LINK_DIRECTORIES(${TPDIST}/lib)
+        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
     ENDIF (THIRDPARTY_DOWNLOAD_OCC)
 ENDIF(NEKTAR_USE_MESHGEN)

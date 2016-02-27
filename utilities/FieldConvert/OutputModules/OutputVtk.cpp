@@ -39,6 +39,8 @@ using namespace std;
 
 #include <iomanip>
 #include "OutputVtk.h"
+#include <boost/format.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 namespace Nektar
 {
@@ -77,16 +79,45 @@ void OutputVtk::Process(po::variables_map &vm)
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-
+    string path;
+    
     // amend for parallel output if required
     if(m_f->m_session->GetComm()->GetSize() != 1)
     {
-        int    dot  = filename.find_last_of('.');
+        int    dot = filename.find_last_of('.');
         string ext = filename.substr(dot,filename.length()-dot);
-        string procId = "_P" + boost::lexical_cast<std::string>(
-            m_f->m_session->GetComm()->GetRank());
         string start = filename.substr(0,dot);
-        filename = start + procId + ext;
+        path = start + "_vtu"; 
+        
+        boost::format pad("P%1$07d.vtu");
+        pad % m_f->m_session->GetComm()->GetRank();
+        filename = pad.str();
+
+        fs::path poutfile(filename.c_str());
+        fs::path specPath(path.c_str());
+        
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            try
+            {
+                fs::create_directory(specPath);
+            }
+            catch (fs::filesystem_error& e)
+            {
+                ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            }
+            cout << "Writing files to directory: " << specPath << endl;
+        }   
+        
+        fs::path fulloutname = specPath / poutfile;
+        filename =  LibUtilities::PortablePath(fulloutname);
+        m_f->m_comm->Block();
+    }
+    else
+    {
+        fs::path specPath(filename.c_str());
+        cout << "Writing: " << specPath << endl;
+        filename =  LibUtilities::PortablePath(specPath);
     }
 
     // Write solution.
@@ -192,7 +223,7 @@ void OutputVtk::Process(po::variables_map &vm)
                 << numBlocks << "\">" << endl;
         outfile << "      <Points>" << endl;
         outfile << "        <DataArray type=\"Float64\" "
-                << "NumberOfComponents=\""<<dim<<"\" format=\"ascii\">" << endl;
+                << "NumberOfComponents=\""<<3<<"\" format=\"ascii\">" << endl;
         for(i = 0; i < nPts; ++i)
         {
             for(j = 0; j < dim; ++j)
@@ -200,6 +231,11 @@ void OutputVtk::Process(po::variables_map &vm)
                 outfile << "          "  << setprecision(8)     << scientific 
                         <<  fPts->GetPointVal(j, i) << " ";
             }
+            for(j = dim; j < 3; ++j) // pack to 3D since paraview does not seem to handle 2D
+            {
+                outfile  <<  "          0.000000" ; 
+            }
+
             outfile << endl;
         }
         outfile << endl;
@@ -293,7 +329,7 @@ void OutputVtk::Process(po::variables_map &vm)
             outfile << "<PUnstructuredGrid GhostLevel=\"0\">" << endl;
             outfile << "<PPoints> " << endl;
             outfile << "<PDataArray type=\"Float64\" NumberOfComponents=\""
-                    <<  m_f->m_exp[0]->GetExp(0)->GetCoordim() << "\"/> " << endl; 
+                    <<  3 << "\"/> " << endl; 
             outfile << "</PPoints>" << endl;
             outfile << "<PCells>" << endl;
             outfile << "<PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << endl; 
@@ -310,7 +346,9 @@ void OutputVtk::Process(po::variables_map &vm)
 
             for(int i = 0; i < nprocs; ++i)
             {
-                outfile << "<Piece Source=\"" << body << "_P" << i << ".vtu" << "\"/>" <<endl;
+                boost::format pad("P%1$07d.vtu");
+                pad % i; 
+                outfile << "<Piece Source=\"" << path << "/" << pad.str() << "\"/>" <<endl;
             }
             outfile << "</PUnstructuredGrid>"  << endl;
             outfile << "</VTKFile>" << endl;

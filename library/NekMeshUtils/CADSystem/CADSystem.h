@@ -41,7 +41,6 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <Standard_Macro.hxx>
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
 
 namespace Nektar

@@ -48,6 +48,31 @@ project. It's a pretty simple process:
     below) -- otherwise, try to keep formatting consistent with the file you're
     working on.
 
+## Git cheatsheet
+Although Gitlab gives a nice interface to view the diff between a branch and
+master, for large merges, it can be slow. The following `git` aliases can
+provide a quicker alternative. You can use these by inserting them into the
+`.gitconfig` file in your home directory, or inside the `nektar++/.git/config`
+file.
+
+```
+[alias]
+branch-name = "!git rev-parse --abbrev-ref HEAD"
+diff-nows = diff --color -w
+log-branch = log --pretty="%Cgreen%h %Cred%an%Creset(%Cblue%ad%Creset)%n  %s" master..$(git branch-name)
+diff-branch = diff -U5 --minimal --color -w master...`git branch-name`
+```
+
+This gives you four commands:
+
+- `git branch-name` displays the current branch name
+- `git diff-nows` shows a diff of your current commit in colour, without
+  whitespace changes.
+- `git log-branch` shows a minimised log of all the commits on the current
+  branch that are not in `master`.
+- `git diff-branch` shows a diff of the current branch against `master` without
+  whitespace changes.
+
 ## Testing and Buildbot
 Your new features or fixes should include tests that cover the code you've
 added. There are numerous examples within the various `Tests` directory lying

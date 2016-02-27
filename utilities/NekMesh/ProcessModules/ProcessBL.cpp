@@ -33,17 +33,17 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Foundations/BLPoints.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <string>
 
-#include <LocalRegions/PrismExp.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Foundations/BLPoints.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LocalRegions/HexExp.h>
+#include <LocalRegions/PrismExp.h>
 
 #include <NekMeshUtils/MeshElements/Element.h>
-
 #include "ProcessBL.h"
 
 using namespace std;
@@ -53,7 +53,6 @@ namespace Nektar
 {
 namespace Utilities
 {
-
 ModuleKey ProcessBL::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eProcessModule, "bl"),
     ProcessBL::create,
@@ -376,6 +375,21 @@ void ProcessBL::Process()
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
     m_mesh->m_element[m_mesh->m_expDim].clear();
 
+    map<int, SpatialDomains::Geometry3DSharedPtr> geomMap;
+    for (int i = 0; i < el.size(); ++i)
+    {
+        const int elId = el[i]->GetId();
+        sIt = splitEls.find(elId);
+        if (sIt == splitEls.end())
+        {
+            continue;
+        }
+
+        // Get elemental geometry object and put into map.
+        geomMap[elId] = boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+            el[i]->GetGeom(m_mesh->m_spaceDim));
+    }
+
     // Iterate over list of elements of expansion dimension.
     for (int i = 0; i < el.size(); ++i)
     {
@@ -387,6 +401,8 @@ void ProcessBL::Process()
             m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
             continue;
         }
+
+        SpatialDomains::Geometry3DSharedPtr geom = geomMap[elId];
 
         const int faceNum              = sIt->second;
         LibUtilities::ShapeType elType = el[i]->GetConf().m_e;
@@ -404,11 +420,6 @@ void ProcessBL::Process()
                 bLink[sMap.bfaces[j]] = bl;
             }
         }
-
-        // Get elemental geometry object.
-        SpatialDomains::Geometry3DSharedPtr geom =
-            boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
-                el[i]->GetGeom(m_mesh->m_spaceDim));
 
         // Determine whether to use reverse points.
         LibUtilities::PointsType t =
@@ -594,10 +605,6 @@ void ProcessBL::Process()
                 HOedge->m_curveType = pt;
             }
 
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // THIS IS WHERE FACES NEEDS TO GO
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
             // Change the surface elements to match the layers of
             // elements on the boundary of the domain.
             map<int, int>::iterator it;
@@ -606,35 +613,29 @@ void ProcessBL::Process()
                 int fid = it->first;
                 int bl  = it->second;
 
+                vector<NodeSharedPtr> qNodeList(4);
+                for (int k = 0; k < 4; ++k)
+                {
+                    qNodeList[k] = nodeList[faceNodeMap[elType][fid][k]];
+                }
+                vector<int> tagBE;
+                tagBE =
+                    m_mesh->m_element[m_mesh->m_expDim - 1][bl]->GetTagList();
+                ElmtConfig bconf(
+                    LibUtilities::eQuadrilateral, 1, true, true, false);
+                ElementSharedPtr boundaryElmt =
+                    GetElementFactory().CreateInstance(
+                        LibUtilities::eQuadrilateral, bconf, qNodeList, tagBE);
+
+                // Overwrite first layer boundary element with new
+                // boundary element, otherwise push this back to end of
+                // the boundary list
                 if (j == 0)
                 {
-                    // For first layer reuse existing 2D element.
-                    ElementSharedPtr e =
-                        m_mesh->m_element[m_mesh->m_expDim - 1][bl];
-                    for (int k = 0; k < 4; ++k)
-                    {
-                        e->SetVertex(k, nodeList[faceNodeMap[elType][fid][k]]);
-                    }
+                    m_mesh->m_element[m_mesh->m_expDim - 1][bl] = boundaryElmt;
                 }
                 else
                 {
-                    // For all other layers create new element.
-                    vector<NodeSharedPtr> qNodeList(4);
-                    for (int k = 0; k < 4; ++k)
-                    {
-                        qNodeList[k] = nodeList[faceNodeMap[elType][fid][k]];
-                    }
-                    vector<int> tagBE;
-                    tagBE = m_mesh->m_element[m_mesh->m_expDim - 1][bl]
-                                ->GetTagList();
-                    ElmtConfig bconf(
-                        LibUtilities::eQuadrilateral, 1, true, true, false);
-                    ElementSharedPtr boundaryElmt =
-                        GetElementFactory().CreateInstance(
-                            LibUtilities::eQuadrilateral,
-                            bconf,
-                            qNodeList,
-                            tagBE);
                     m_mesh->m_element[m_mesh->m_expDim - 1].push_back(
                         boundaryElmt);
                 }

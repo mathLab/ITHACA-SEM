@@ -50,6 +50,8 @@ namespace io = boost::iostreams;
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "OutputNekpp.h"
 
+using namespace Nektar::NekMeshUtils;
+
 namespace Nektar
 {
 namespace Utilities
@@ -70,6 +72,23 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
 
 OutputNekpp::~OutputNekpp()
 {
+}
+
+template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
+{
+    const std::map<int, boost::shared_ptr<T> > &tmp =
+        graph->GetAllElementsOfType<T>();
+    typename std::map<int, boost::shared_ptr<T> >::const_iterator it1, it2;
+
+    SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
+    SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
+
+    for (it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+    {
+        SpatialDomains::GeometrySharedPtr geom = it1->second;
+        geom->FillGeom();
+        geom->Reset(curvedEdges, curvedFaces);
+    }
 }
 
 void OutputNekpp::Process()
@@ -126,8 +145,9 @@ void OutputNekpp::Process()
         doc.SaveFile(filename);
     }
 
-    // Test the resulting XML file by loading it with the session reader
-    // and generating the meshgraph.
+    // Test the resulting XML file (with a basic test) by loading it
+    // with the session reader, generating the MeshGraph and testing if
+    // each element is valid.
     if (m_config["test"].beenSet)
     {
         vector<string> filenames(1);
@@ -137,6 +157,14 @@ void OutputNekpp::Process()
             LibUtilities::SessionReader::CreateInstance(0, NULL, filenames);
         SpatialDomains::MeshGraphSharedPtr graphShPt =
             SpatialDomains::MeshGraph::Read(vSession);
+
+        TestElmts<SpatialDomains::SegGeom>(graphShPt);
+        TestElmts<SpatialDomains::TriGeom>(graphShPt);
+        TestElmts<SpatialDomains::QuadGeom>(graphShPt);
+        TestElmts<SpatialDomains::TetGeom>(graphShPt);
+        TestElmts<SpatialDomains::PrismGeom>(graphShPt);
+        TestElmts<SpatialDomains::PyrGeom>(graphShPt);
+        TestElmts<SpatialDomains::HexGeom>(graphShPt);
     }
 }
 
@@ -859,20 +887,18 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             {
                 if ((*it2)->m_faceNodes.size() > 0)
                 {
+                    vector<NodeSharedPtr> tmp;
+                    (*it2)->GetCurvedNodes(tmp);
+
                     LibUtilities::MeshCurvedInfo cinfo;
                     cinfo.id       = facecnt++;
                     cinfo.entityid = (*it2)->m_id;
-                    cinfo.npoints =
-                        (*it2)->m_faceNodes.size(); // just interior nodes
+                    cinfo.npoints  = tmp.size();
                     cinfo.ptype    = (*it2)->m_curveType;
                     cinfo.ptid     = 0; // set to just one point set
                     cinfo.ptoffset = ptoffset;
 
                     faceinfo.push_back(cinfo);
-
-                    // fill in points
-                    vector<NodeSharedPtr> tmp;
-                    (*it2)->GetCurvedNodes(tmp);
 
                     for (int i = 0; i < tmp.size(); ++i)
                     {
@@ -1050,16 +1076,8 @@ void OutputNekpp::WriteXmlExpansions(TiXmlElement *pRoot)
                 "COMPOSITE",
                 "C[" + boost::lexical_cast<std::string>(it->second->m_id) +
                     "]");
-            if (m_mesh->m_nummode < 2)
-            {
-                exp->SetAttribute("NUMMODES", 4);
-                exp->SetAttribute("TYPE", "MODIFIED");
-            }
-            else
-            {
-                exp->SetAttribute("NUMMODES", m_mesh->m_nummode);
-                exp->SetAttribute("TYPE", "MODIFIED");
-            }
+            exp->SetAttribute("NUMMODES", 4);
+            exp->SetAttribute("TYPE", "MODIFIED");
 
             if (m_mesh->m_fields.size() == 0)
             {

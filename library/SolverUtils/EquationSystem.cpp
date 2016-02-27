@@ -660,6 +660,8 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
+            m_nchk = 1;
+
             // Zero all physical fields initially
             ZeroPhysFields();
         }
@@ -2252,8 +2254,20 @@ namespace Nektar
                 AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
                 AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
                 AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
-                AddSummaryItem(s, "Selected Mode", m_multipleModes
-                        ? boost::lexical_cast<string>(m_NumMode) : "ALL");
+                if (m_halfMode)
+                {
+                    AddSummaryItem(s, "ModeType", "Half Mode");
+                }
+                else if (m_singleMode)
+                {
+                    AddSummaryItem(s, "ModeType", "Single Mode");
+                }
+                else if (m_multipleModes)
+                {
+                    AddSummaryItem(s, "ModeType", "Multiple Modes");
+                    AddSummaryItem(s, "Selected Mode",
+                                      boost::lexical_cast<string>(m_NumMode));
+                }
             }
             else if(m_HomogeneousType == eHomogeneous2D)
             {

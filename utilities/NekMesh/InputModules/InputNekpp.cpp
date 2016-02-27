@@ -39,7 +39,6 @@ using namespace std;
 
 #include <SpatialDomains/MeshGraph.h>
 #include <NekMeshUtils/MeshElements/Element.h>
-
 #include "InputNekpp.h"
 
 namespace Nektar
@@ -276,7 +275,7 @@ void InputNekpp::Process()
              geomIt != (*compIt->second).end();
              ++geomIt)
         {
-            ElmtConfig conf((*geomIt)->GetShapeType(), 1, true, true);
+            ElmtConfig conf((*geomIt)->GetShapeType(), 1, true, true, false);
 
             // Get hold of geometry
             vector<NodeSharedPtr> nodeList;

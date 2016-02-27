@@ -480,7 +480,6 @@ the session file:
 \item \inltt{TimeStep}: sets the time-step for the integration in time formula
 \item \inltt{NumSteps}: sets the number of time-steps
 \item \inltt{Kinvis}: sets the cinematic viscosity coefficient formula
-\item \inltt{Noise}: sets the white-noise amplitude we want to add on the velocity initial conditions
 \item \inltt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5)
 \item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75% of Fourier frequency are not dumped)
 \item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1)
@@ -776,7 +775,63 @@ Once these three files (the  \inltt{Geometry} in \inlsh{Session.xml.gz}, the non
 IncNavierStokesSolver Session.xml.gz Session.xml
 \end{lstlisting}
 
+\section{Adaptive polynomial order Session file configuration}
+\label{SectionDriverAdaptive}
 
+An adaptive polynomial order procedure is available for 2D and Quasi-3D simulations. 
+This procedure consists of the following steps:
+\begin{itemize}
+\item Advance the equations for a determined number of time steps
+\item Use the sensor defined in equation \ref{eq:sensor} to 
+estimate an error measure (the variable used in the sensor can be specified).
+ The error is defined here as the square of the sensor.  
+\item Use the error to determine if the order in each element should be
+increased by one, decreased by one, or left unaltered.
+\item Project the solution in each element to the new polynomial order and use it as an
+initial condition to restart the equation, repeating all steps a given number of times.
+\end{itemize}
+
+It is important to note that restarting the simulation after the refinement can be an
+expensive operation (in a typical case 200 times the cost of a single time step). Therefore, the number
+of steps between successive refinements needs to be carefully chosen, since if this value is too 
+low the procedure becomes inefficient, while if it is too high the refinement might not capture
+accurately structures that are convected by the flow.  
+
+\subsection{Solver Info}
+
+The use of the adaptive polynomial order procedure
+is enforced through the definition of the \inltt{Driver} which has to be
+\inltt{Adaptive}.
+
+\subsection{Parameters}
+
+The following parameters can be specified in the \texttt{PARAMETERS} section of the session file:
+
+\begin{itemize}
+\item \inltt{NumSteps}: when using the adaptive order procedure, this parameter determines
+ the number of time steps between successive refinements.
+\item \inltt{NumRuns}: this parameter defines the number of times the sequence of solving
+ the equation and refining is performed. Therefore,
+  the total number of time steps in the simulation is $NumSteps \times NumRuns$.
+\item \inltt{AdaptiveMaxModes}: sets the maximum number of modes (in each direction)
+ that can be used in an element during the adaptive procedure. The solution will not be
+  refined beyond this point, even if the error is higher than the tolerance. Default value: 12.
+\item \inltt{AdaptiveMinModes}: sets the minimal number of modes (in each direction)
+ that can be used in an element during the adaptive procedure. Default value: 4.
+\item \inltt{AdaptiveUpperTolerance}: defines a constant tolerance. The polynomial order
+ in an element is increased whenever the error is higher than this value. This can be replaced
+  by a spatially-varying function, as described below. Default value: $10^{-6}$.
+\item \inltt{AdaptiveLowerinModes}: defines a constant tolerance. The polynomial order in an
+ element is decreased whenever the error is lower than this value. This can also be replaced
+  by a spatially-varying function. Default value: $10^{-8}$.
+\item \inltt{AdaptiveSensorVariable}: integer defining which variable will be considered when calculating
+ the error. For example, if this parameter is set to $1$ in the Incompressible Navier-Stokes Solver,
+  the error will be estimated using the $v$ velocity. Default value: $0$.
+\end{itemize}
+
+\subsection{Functions}
+
+Spatially varying tolerances can be specified by defining the functions \inltt{AdaptiveLowerinModes} and/or \inltt{AdaptiveUpperTolerance}. In this case, the tolerance in an element is taken as the average of the function in the quadrature points of the element. If these functions are defined, the values set for the tolerances in the \texttt{PARAMETERS} section are ignored.
 
 \section{Examples}
 

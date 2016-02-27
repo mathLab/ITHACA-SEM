@@ -235,10 +235,8 @@ void OutputVtk::Process(po::variables_map &vm)
             {
                 outfile  <<  "          0.000000" ; 
             }
-
             outfile << endl;
         }
-        outfile << endl;
         outfile << "        </DataArray>" << endl;
         outfile << "      </Points>" << endl;
         outfile << "      <Cells>" << endl;
@@ -261,7 +259,6 @@ void OutputVtk::Process(po::variables_map &vm)
                 cnt ++;
             }
         }
-        outfile << endl;
         outfile << "        </DataArray>" << endl;
         outfile << "        <DataArray type=\"Int32\" "
                 << "Name=\"offsets\" format=\"ascii\">" << endl;

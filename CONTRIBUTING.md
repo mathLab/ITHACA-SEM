@@ -70,8 +70,10 @@ This gives you four commands:
   whitespace changes.
 - `git log-branch` shows a minimised log of all the commits on the current
   branch that are not in `master`.
-- `git diff-branch` shows a diff of the current branch against `master` without
-  whitespace changes.
+- `git diff-branch` shows a diff of the current branch against `master`, without
+  showing changes from `master` that aren't present in the branch (i.e. `git
+  diff master...branch`), without whitespace changes. (This should be roughly
+  equivalent to Gitlab's diff).
 
 ## Testing and Buildbot
 Your new features or fixes should include tests that cover the code you've

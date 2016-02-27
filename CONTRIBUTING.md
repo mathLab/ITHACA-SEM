@@ -123,7 +123,8 @@ below this would be fantastic.
   }
   ```
 - **Don't use preprocessor directives and macros unless there is no viable
-  alternative.** The exception to this is header guards inside your `.h` files,
+  alternative.**
+- However, please make sure you do have a header guard inside your `.h` files,
   which you should be sure to include in any headers you contribute.
 - Use one `.cpp` and `.h` file per C++ class, and try to keep `inline` header
   code to a minimum (unless performance is a major factor).

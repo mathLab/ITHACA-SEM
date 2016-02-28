@@ -191,7 +191,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             ASSERTL0(values[0] > 1, "N1 is not a valid number");
             ASSERTL0(values[1] > 1, "N2 is not a valid number");
             
->>>>>>> master
             int dim = (values.size()-2)/4;
 
             int npts1 = values[0];

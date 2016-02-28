@@ -135,6 +135,10 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "line string should contain 2 Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N is not an integer");
+            ASSERTL0(values[0] > 1, "N is not a valid number");
+           
             int dim = (values.size()-1)/2;
             int npts = values[0];
             Array<OneD, Array<OneD, NekDouble> > pts(dim);
@@ -166,7 +170,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
             m_f->m_fieldPts->SetPointsPerEdge(ppe);
-
+       
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
         {
@@ -180,7 +184,14 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "plane string should contain 4 Dim+2 values "
                      "N1,N2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3");
 
-
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N1 is not an integer");
+            ASSERTL0(std::modf(values[1], &tmp) == 0.0, "N2 is not an integer");
+            
+            ASSERTL0(values[0] > 1, "N1 is not a valid number");
+            ASSERTL0(values[1] > 1, "N2 is not a valid number");
+            
+>>>>>>> master
             int dim = (values.size()-2)/4;
 
             int npts1 = values[0];
@@ -376,7 +387,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             vector<NekDouble> boxdim;
             boxdim.assign(&values[3],&values[3]+6);
             m_f->m_fieldPts->SetBoxSize(boxdim);
-
         }
     }
 
@@ -438,9 +448,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
     string fromfld = m_config["fromfld"].as<string>();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,
-                  fromField->m_data,
-                  LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
+                             fromField->m_data,
+                             LibUtilities::NullFieldMetaDataMap,
+                             ElementGIDs);
 
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 
@@ -467,13 +477,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         for (i = 0; i < fromField->m_fielddef.size(); i++)
         {
             fromField->m_exp[j]->ExtractDataToCoeffs(
-                                        fromField->m_fielddef[i],
-                                        fromField->m_data[i],
-                                        fromField->m_fielddef[0]->m_fields[j],
-                                        fromField->m_exp[j]->UpdateCoeffs());
+                                                     fromField->m_fielddef[i],
+                                                     fromField->m_data[i],
+                                                     fromField->m_fielddef[0]->m_fields[j],
+                                                     fromField->m_exp[j]->UpdateCoeffs());
         }
         fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
-                                        fromField->m_exp[j]->UpdatePhys());
+                                      fromField->m_exp[j]->UpdatePhys());
 
         Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
         m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
@@ -499,11 +509,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(
-                         vector<MultiRegions::ExpListSharedPtr> &field0,
-                         Array<OneD, Array<OneD, NekDouble> >   &pts,
-                         NekDouble                              clamp_low,
-                         NekDouble                              clamp_up,
-                         NekDouble                              def_value)
+                                                vector<MultiRegions::ExpListSharedPtr> &field0,
+                                                Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                                NekDouble                              clamp_low,
+                                                NekDouble                              clamp_up,
+                                                NekDouble                              def_value)
 {
     int dim = pts.num_elements();
 
@@ -653,5 +663,3 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
 }
 }
-
-

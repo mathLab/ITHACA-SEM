@@ -707,6 +707,11 @@ namespace Nektar
             }
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
+            
+            void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
+            {
+                v_NormVectorIProductWRTBase(Fx,outarray);
+            }
 
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
             {
@@ -1162,6 +1167,8 @@ namespace Nektar
                                                 const std::vector<unsigned int > &nummodes,
                                                 const int nmode_offset,
                                                 NekDouble *coeffs);
+            
+            STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray);
 

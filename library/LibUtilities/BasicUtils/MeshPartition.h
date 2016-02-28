@@ -110,8 +110,10 @@ namespace Nektar
                 std::string type;
                 int npoints;
                 std::string data;
+                int ptid;
+                int ptoffset;
             };
-            
+
             struct MeshComposite
             {
                 int id;
@@ -182,6 +184,7 @@ namespace Nektar
             std::map<int, MeshEntity>           m_meshFaces;
             std::map<int, MeshEntity>           m_meshElements;
             std::map<MeshCurvedKey, MeshCurved> m_meshCurved;
+            std::map<int, MeshCurvedPts>        m_meshCurvedPts;
             std::map<int, MeshEntity>           m_meshComposites;
             std::vector<unsigned int>           m_domain;
             std::map<std::string, std::string>  m_vertexAttributes;

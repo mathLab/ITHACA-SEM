@@ -45,6 +45,8 @@
 namespace Nektar
 {
 
+using SpatialDomains::BoundaryConditionShPtr;
+
 /**
  * @brief Take an existing assembly map and create a coupled version suitable
  * for use in the linear elasticity solver.
@@ -56,11 +58,12 @@ namespace Nektar
  * [ D E F ] [ v ]   [ f_v ]
  * [ G H I ] [ w ]   [ f_w ]
  */
+
 CoupledAssemblyMap::CoupledAssemblyMap(
     const LibUtilities::SessionReaderSharedPtr        &pSession,
     const SpatialDomains::MeshGraphSharedPtr          &graph,
     const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
-    const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+    const Array<OneD, const BoundaryCondShPtr>        &boundaryConditions,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields) :
     AssemblyMapCG(pSession)
 {
@@ -213,13 +216,13 @@ CoupledAssemblyMap::CoupledAssemblyMap(
 
     ASSERTL1(globalId == m_numGlobalCoeffs, "Consistency error");
 
-    const int nLocalDirBndCoeffs =
-        cgMap->GetBndCondCoeffsToGlobalCoeffsMap().num_elements();
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
+        = fields[0]->GetBndCondExpansions();
 
     cnt1 = 0;
     for (n = 0; n < nVel; ++n)
     {
-        for (i = 0; i < nLocalDirBndCoeffs; ++i, ++cnt1)
+        for (i = 0; i < nLocBndCondDofs/nVel; ++i, ++cnt1)
         {
             const int l2g = cgMap->GetBndCondCoeffsToGlobalCoeffsMap()[i];
             int newId = newGlobalIds[l2g];

@@ -53,6 +53,10 @@
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
 
+#include <LibUtilities/Foundations/Foundations.hpp>
+
+
+
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
@@ -309,27 +313,34 @@ namespace Nektar
             }
 
             // check to see if compressed
-            const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-            if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+            // check to see if compressed
+            std::string IsCompressed;
+            vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+            if(IsCompressed.size()) 
             {
+                ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                        "Compressed formats do not match. Expected :"
+                             + CompressData::GetCompressString()
+                             + "but got "+ std::string(IsCompressed));
+
                 m_isCompressed = true;
+
                 // Extract the vertex body
                 TiXmlNode* vertexChild = vSubElement->FirstChild();
-                ASSERTL0(vertexChild, "Unable to extract the data from the compressed vertex tag.");
-                
+                ASSERTL0(vertexChild, "Unable to extract the data "
+                         "from the compressed vertex tag.");
+
                 std::string vertexStr;
-                while(vertexChild)
+                if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
-                    {
-                        vertexStr += vertexChild->ToText()->ValueStr();
-                    }
-                    vertexChild = vertexChild->NextSibling();
+                    vertexStr += vertexChild->ToText()->ValueStr();
                 }
-                
+
                 std::vector<MeshVertex> vertData;
                 CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
-                
+
                 for(int i = 0; i < vertData.size(); ++i)
                 {
                     m_meshVertices[vertData[i].id] = vertData[i];
@@ -338,7 +349,7 @@ namespace Nektar
             else
             {
                 x = vSubElement->FirstChildElement();
-                
+
                 while(x)
                 {
                     TiXmlAttribute* y = x->FirstAttribute();
@@ -363,24 +374,36 @@ namespace Nektar
                 ASSERTL0(vSubElement, "Cannot read edges");
 
                 // check to see if compressed
-                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
+                    ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                            "Compressed formats do not match. Expected :"
+                            + CompressData::GetCompressString()
+                            + " but got "
+                            + boost::lexical_cast<std::string>(IsCompressed));
+
                     m_isCompressed = true;
+
                     // Extract the edge body
                     TiXmlNode* edgeChild = vSubElement->FirstChild();
-                    ASSERTL0(edgeChild, "Unable to extract the data from the compressed edge tag.");
-                    
+                    ASSERTL0(edgeChild,
+                             "Unable to extract the data from the compressed "
+                             "edge tag.");
+
                     std::string edgeStr;
-                    
+
                     if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         edgeStr += edgeChild->ToText()->ValueStr();
                     }
-                    
+
                     std::vector<MeshEdge> edgeData;
                     CompressData::ZlibDecodeFromBase64Str(edgeStr,edgeData);
-                
+
                     for(int i = 0; i < edgeData.size(); ++i)
                     {
                         MeshEntity e;
@@ -393,7 +416,7 @@ namespace Nektar
                 else
                 {
                     x = vSubElement->FirstChildElement();
-                    
+
                     while(x)
                     {
                         TiXmlAttribute* y = x->FirstAttribute();
@@ -422,29 +445,40 @@ namespace Nektar
                 while(x)
                 {
                     // check to see if compressed
-                    const char *IsCompressed = x->Attribute("COMPRESSED");
-                    if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+                    std::string IsCompressed;
+                    x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                    if(IsCompressed.size()) 
                     {
+                        ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                                 "Compressed formats do not match. Expected :"
+                                 + CompressData::GetCompressString()
+                                 + " but got "
+                                 + boost::lexical_cast<std::string>(
+                                                                IsCompressed));
                         m_isCompressed = true;
-                    
+
                         // Extract the edge body
                         TiXmlNode* faceChild = x->FirstChild();
-                        ASSERTL0(faceChild, "Unable to extract the data from the compressed edge tag.");
-                        
-                        std::string faceStr;                        
+                        ASSERTL0(faceChild, "Unable to extract the data from "
+                                            "the compressed edge tag.");
+
+                        std::string faceStr;
                         if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
                             faceStr += faceChild->ToText()->ValueStr();
                         }
 
-                        // uncompress and fill in values. 
+                        // uncompress and fill in values.
                         const std::string val= x->Value();
-                        
+
                         if(boost::iequals(val,"T")) // triangle
                         {
                             std::vector<MeshTri> faceData;
-                            CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
-                            
+                            CompressData::ZlibDecodeFromBase64Str(faceStr,
+                                                                  faceData);
+
                             for(int i= 0; i < faceData.size(); ++i)
                             {
                                 MeshEntity f;
@@ -457,13 +491,13 @@ namespace Nektar
                                 }
                                 m_meshFaces[f.id] = f;
                             }
-                            
-                        } 
+                        }
                         else if (boost::iequals(val,"Q"))
                         {
                             std::vector<MeshQuad> faceData;
-                            CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
-                            
+                            CompressData::ZlibDecodeFromBase64Str(faceStr,
+                                                                  faceData);
+
                             for(int i= 0; i < faceData.size(); ++i)
                             {
                                 MeshEntity f;
@@ -481,7 +515,6 @@ namespace Nektar
                         {
                             ASSERTL0(false,"Unrecognised face tag");
                         }
-                        
                     }
                     else
                     {
@@ -510,47 +543,56 @@ namespace Nektar
             while(x)
             {
                 // check to see if compressed
-                const char *IsCompressed = x->Attribute("COMPRESSED");
-                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+                std::string IsCompressed;
+                x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
+                    ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                             "Compressed formats do not match. Expected :"
+                             + CompressData::GetCompressString()
+                             + " but got "
+                             + boost::lexical_cast<std::string>(IsCompressed));
                     m_isCompressed = true;
-                    
+
                     // Extract the body
                     TiXmlNode* child = x->FirstChild();
-                    ASSERTL0(child, "Unable to extract the data from the compressed element tag.");
-                    
-                    std::string elmtStr;                        
+                    ASSERTL0(child, "Unable to extract the data from the "
+                                    "compressed element tag.");
+
+                    std::string elmtStr;
                     if (child->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elmtStr += child->ToText()->ValueStr();
                     }
 
-                    // uncompress and fill in values. 
+                    // uncompress and fill in values.
                     const std::string val= x->Value();
-                    
+
                     switch(val[0])
                     {
-                    case 'S':// triangle
+                        case 'S': // segment
                         {
                             std::vector<MeshEdge> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity e;
                                 e.id = data[i].id;
-                                e.type = 'T';
+                                e.type = 'S';
                                 e.list.push_back(data[i].v0);
                                 e.list.push_back(data[i].v1);
                                 m_meshElements[e.id] = e;
                             }
-                        } 
+                        }
                         break;
-                    case 'T':// triangle
+                        case 'T': // triangle
                         {
                             std::vector<MeshTri> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity f;
@@ -562,14 +604,13 @@ namespace Nektar
                                 }
                                 m_meshElements[f.id] = f;
                             }
-                            
-                        } 
+                        }
                         break;
-                    case 'Q':
+                        case 'Q': // quadrilateral
                         {
                             std::vector<MeshQuad> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity f;
@@ -582,11 +623,12 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
-                    case 'A':
+                        break;
+                        case 'A': // tetrahedron
                         {
                             std::vector<MeshTet> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity f;
@@ -599,11 +641,12 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
-                    case 'P':
+                        break;
+                        case 'P': // prism
                         {
                             std::vector<MeshPyr> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity f;
@@ -616,16 +659,17 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
-                    case 'R':
+                        break;
+                        case 'R': // pyramid
                         {
                             std::vector<MeshPrism> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity f;
                                 f.id = data[i].id;
-                                f.type = 'Q';
+                                f.type = 'R';
                                 for (int j = 0; j < 5; ++j)
                                 {
                                     f.list.push_back(data[i].f[j]);
@@ -633,16 +677,17 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
-                    case 'H':
+                        break;
+                        case 'H': // hexahedron
                         {
                             std::vector<MeshHex> data;
                             CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
-                            
+
                             for(int i= 0; i < data.size(); ++i)
                             {
                                 MeshEntity f;
                                 f.id = data[i].id;
-                                f.type = 'Q';
+                                f.type = 'H';
                                 for (int j = 0; j < 6; ++j)
                                 {
                                     f.list.push_back(data[i].f[j]);
@@ -650,8 +695,9 @@ namespace Nektar
                                 m_meshElements[f.id] = f;
                             }
                         }
-                    default:
-                        ASSERTL0(false,"Unrecognised element tag");
+                        break;
+                        default:
+                            ASSERTL0(false,"Unrecognised element tag");
                     }
                 }
                 else
@@ -677,35 +723,157 @@ namespace Nektar
             if (pSession->DefinesElement("Nektar/Geometry/Curved"))
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
+
+                // check to see if compressed
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
                 x = vSubElement->FirstChildElement();
                 while(x)
                 {
-                    MeshCurved c;
-                    ASSERTL0(x->Attribute("ID", &c.id),
-                             "Failed to get attribute ID");
-                    c.type = std::string(x->Attribute("TYPE"));
-                    ASSERTL0(!c.type.empty(),
-                             "Failed to get attribute TYPE");
-                    ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
-                             "Failed to get attribute NUMPOINTS");
-                    c.data = x->FirstChild()->ToText()->Value();
-                    c.entitytype = x->Value()[0];
-                    if (c.entitytype == "E")
+                    if(IsCompressed.size()) 
                     {
-                        ASSERTL0(x->Attribute("EDGEID", &c.entityid),
-                             "Failed to get attribute EDGEID");
-                    }
-                    else if (c.entitytype == "F")
-                    {
-                        ASSERTL0(x->Attribute("FACEID", &c.entityid),
-                             "Failed to get attribute FACEID");
+                        ASSERTL0(boost::iequals(IsCompressed,
+                                            CompressData::GetCompressString()),
+                                "Compressed formats do not match. Expected :"
+                                + CompressData::GetCompressString()
+                                + " but got "
+                                + boost::lexical_cast<std::string>(
+                                                            IsCompressed));
+
+                        m_isCompressed = true;
+
+                        const char *entitytype = x->Value();
+                        // The compressed curved information is stored
+                        // in two parts: MeshCurvedInfo and
+                        // MeshCurvedPts.  MeshCurvedPts is just a
+                        // list of MeshVertex values of unique vertex
+                        // values from which we can make edges and
+                        // faces.
+                        //
+                        // Then there is a list of NekInt64 pieces of
+                        // information which make a MeshCurvedInfo
+                        // struct. This contains information such as
+                        // the curve id, the entity id, the number of
+                        // curved points and the offset of where these
+                        // points are stored in the pts vector of
+                        // MeshVertex values. Finally the point type
+                        // is also stored but in NekInt64 format
+                        // rather than an enum for binary stride
+                        // compatibility.
+                        if(boost::iequals(entitytype,"E")||
+                           boost::iequals(entitytype,"F"))
+                        {
+                            // read in data
+                            std::string elmtStr;
+                            TiXmlNode* child = x->FirstChild();
+
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+
+                            std::vector<MeshCurvedInfo> cinfo;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,
+                                                                  cinfo);
+
+                            // unpack list of curved edge or faces
+                            for(int i = 0; i < cinfo.size(); ++i)
+                            {
+                                MeshCurved c;
+                                c.id         = cinfo[i].id;
+                                c.entitytype = entitytype[0];
+                                c.entityid   = cinfo[i].entityid;
+                                c.npoints    = cinfo[i].npoints;
+                                c.type       = kPointsTypeStr[cinfo[i].ptype];
+                                c.ptid       = cinfo[i].ptid;
+                                c.ptoffset   = cinfo[i].ptoffset;
+                                m_meshCurved[std::make_pair(c.entitytype,
+                                                            c.id)] = c;
+                            }
+                        }
+                        else if(boost::iequals(entitytype,"DATAPOINTS"))
+                        {
+                            MeshCurvedPts cpts;
+                            NekInt id;
+
+                            ASSERTL0(x->Attribute("ID", &id),
+                                     "Failed to get ID from PTS section");
+                            cpts.id = id;
+
+                            // read in data
+                            std::string elmtStr;
+
+                            TiXmlElement* DataIdx =
+                                x->FirstChildElement("INDEX");
+                            ASSERTL0(DataIdx,
+                                     "Cannot read data index tag in compressed "
+                                     "curved section");
+
+                            TiXmlNode* child = DataIdx->FirstChild();
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,
+                                                                  cpts.index);
+
+                            TiXmlElement* DataPts
+                                    = x->FirstChildElement("POINTS");
+                            ASSERTL0(DataPts,
+                                     "Cannot read data pts tag in compressed "
+                                     "curved section");
+
+                            child = DataPts->FirstChild();
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,
+                                                                  cpts.pts);
+
+                            m_meshCurvedPts[cpts.id] = cpts;
+                        }
+                        else
+                        {
+                            ASSERTL0(false, "Unknown tag in curved section");
+                        }
+
+                        x = x->NextSiblingElement();
                     }
                     else
                     {
-                        ASSERTL0(false, "Unknown curve type.");
+                        MeshCurved c;
+                        ASSERTL0(x->Attribute("ID", &c.id),
+                                 "Failed to get attribute ID");
+                        c.type = std::string(x->Attribute("TYPE"));
+                        ASSERTL0(!c.type.empty(),
+                                 "Failed to get attribute TYPE");
+                        ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
+                                 "Failed to get attribute NUMPOINTS");
+                        c.data = x->FirstChild()->ToText()->Value();
+                        c.entitytype = x->Value()[0];
+
+                        if (c.entitytype == "E")
+                        {
+                            ASSERTL0(x->Attribute("EDGEID", &c.entityid),
+                                     "Failed to get attribute EDGEID");
+                        }
+                        else if (c.entitytype == "F")
+                        {
+                            ASSERTL0(x->Attribute("FACEID", &c.entityid),
+                                     "Failed to get attribute FACEID");
+                        }
+                        else
+                        {
+                            ASSERTL0(false, "Unknown curve type.");
+                        }
+
+                        m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
+                        x = x->NextSiblingElement();
                     }
-                    m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
-                    x = x->NextSiblingElement();
                 }
             }
 
@@ -1159,6 +1327,8 @@ namespace Nektar
             std::map<int, MeshVertex>::iterator vVertIt;
             std::map<std::string, std::string>::iterator vAttrIt;
 
+            std::vector<unsigned int> idxList;
+
             // Populate lists of elements, edges and vertices required.
             for (boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                  vertit != vertit_end;
@@ -1215,7 +1385,8 @@ namespace Nektar
             if(m_isCompressed)
             {
                 std::vector<MeshVertex> vertInfo;
-                for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+                for (vVertIt = vVertices.begin();
+                     vVertIt != vVertices.end(); vVertIt++)
                 {
                     MeshVertex v;
                     v.id = vVertIt->first;
@@ -1226,7 +1397,10 @@ namespace Nektar
                 }
                 std::string vertStr;
                 CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
-                vVertex->SetAttribute("COMPRESSED","B64Z");
+                vVertex->SetAttribute("COMPRESSED",
+                                      CompressData::GetCompressString());
+                vVertex->SetAttribute("BITSIZE",
+                                      CompressData::GetBitSizeStr());
                 vVertex->LinkEndChild(new TiXmlText(vertStr));
             }
             else
@@ -1269,7 +1443,10 @@ namespace Nektar
                     }
                     std::string edgeStr;
                     CompressData::ZlibEncodeToBase64Str(edgeInfo,edgeStr);
-                    vEdge->SetAttribute("COMPRESSED","B64Z");
+                    vEdge->SetAttribute("COMPRESSED",
+                                        CompressData::GetCompressString());
+                    vEdge->SetAttribute("BITSIZE",
+                                        CompressData::GetBitSizeStr());
                     vEdge->LinkEndChild(new TiXmlText(edgeStr));
                 }
                 else
@@ -1280,7 +1457,8 @@ namespace Nektar
                         x->SetAttribute("ID", vIt->first);
                         std::stringstream vVertices;
                         vVertices << std::setw(10) << vIt->second.list[0]
-                                  << std::setw(10) << vIt->second.list[1] << " ";
+                                  << std::setw(10) << vIt->second.list[1]
+                                  << " ";
                         y = new TiXmlText(vVertices.str());
                         x->LinkEndChild(y);
                         vEdge->LinkEndChild(x);
@@ -1295,14 +1473,14 @@ namespace Nektar
                 {
                     std::vector<MeshTri>  TriFaceInfo;
                     std::vector<MeshQuad> QuadFaceInfo;
-                    
+
                     for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
                     {
                         switch(vIt->second.list.size())
                         {
-                        case 3:
+                            case 3:
                             {
-                                MeshTri f; 
+                                MeshTri f;
                                 f.id = vIt->first;
                                 for(int i = 0; i < 3; ++i)
                                 {
@@ -1311,9 +1489,9 @@ namespace Nektar
                                 TriFaceInfo.push_back(f);
                             }
                             break;
-                        case 4:
+                            case 4:
                             {
-                                MeshQuad f; 
+                                MeshQuad f;
                                 f.id = vIt->first;
                                 for(int i = 0; i < 4; ++i)
                                 {
@@ -1321,9 +1499,9 @@ namespace Nektar
                                 }
                                 QuadFaceInfo.push_back(f);
                             }
-                            break;                        
-                        default:
-                            ASSERTL0(false,"Unkonwn face type");
+                            break;
+                            default:
+                                ASSERTL0(false,"Unknown face type.");
                         }
                     }
 
@@ -1331,21 +1509,29 @@ namespace Nektar
                     {
                         std::string vType("T");
                         x = new TiXmlElement(vType);
-                        
+
                         std::string faceStr;
-                        CompressData::ZlibEncodeToBase64Str(TriFaceInfo,faceStr);
-                        x->SetAttribute("COMPRESSED","B64Z");
+                        CompressData::ZlibEncodeToBase64Str(TriFaceInfo,
+                                                            faceStr);
+                        x->SetAttribute("COMPRESSED",
+                                        CompressData::GetCompressString());
+                        x->SetAttribute("BITSIZE",
+                                        CompressData::GetBitSizeStr());
                         x->LinkEndChild(new TiXmlText(faceStr));
                         vFace->LinkEndChild(x);
                     }
-                    
+
                     if(QuadFaceInfo.size())
                     {
                         std::string vType("Q");
                         x = new TiXmlElement(vType);
                         std::string faceStr;
-                        CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,faceStr);
-                        x->SetAttribute("COMPRESSED","B64Z");
+                        CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,
+                                                            faceStr);
+                        x->SetAttribute("COMPRESSED",
+                                        CompressData::GetCompressString());
+                        x->SetAttribute("BITSIZE",
+                                        CompressData::GetBitSizeStr());
                         x->LinkEndChild(new TiXmlText(faceStr));
                         vFace->LinkEndChild(x);
                     }
@@ -1381,25 +1567,24 @@ namespace Nektar
                 std::vector<MeshPyr>   PyrInfo;
                 std::vector<MeshPrism> PrismInfo;
                 std::vector<MeshHex>   HexInfo;
-                    
-                //gather elemements in groups. 
+
+                //gather elemements in groups.
                 for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
                 {
                     switch(vIt->second.type)
                     {
-                    case 'S':
+                        case 'S':
                         {
-                            MeshEdge e; 
+                            MeshEdge e;
                             e.id = vIt->first;
                             e.v0 = vIt->second.list[0];
                             e.v1 = vIt->second.list[1];
                             SegInfo.push_back(e);
                         }
                         break;
-
-                    case 'T':
+                        case 'T':
                         {
-                            MeshTri f; 
+                            MeshTri f;
                             f.id = vIt->first;
                             for(int i = 0; i < 3; ++i)
                             {
@@ -1408,9 +1593,9 @@ namespace Nektar
                             TriInfo.push_back(f);
                         }
                         break;
-                    case 'Q':
+                        case 'Q':
                         {
-                            MeshQuad f; 
+                            MeshQuad f;
                             f.id = vIt->first;
                             for(int i = 0; i < 4; ++i)
                             {
@@ -1418,10 +1603,10 @@ namespace Nektar
                             }
                             QuadInfo.push_back(f);
                         }
-                        break;                        
-                    case 'A': 
+                        break;
+                        case 'A':
                         {
-                            MeshTet vol; 
+                            MeshTet vol;
                             vol.id = vIt->first;
                             for(int i = 0; i < 4; ++i)
                             {
@@ -1430,9 +1615,9 @@ namespace Nektar
                             TetInfo.push_back(vol);
                         }
                         break;
-                    case 'P':
+                        case 'P':
                         {
-                            MeshPyr vol; 
+                            MeshPyr vol;
                             vol.id = vIt->first;
                             for(int i = 0; i < 5; ++i)
                             {
@@ -1441,9 +1626,9 @@ namespace Nektar
                             PyrInfo.push_back(vol);
                         }
                         break;
-                    case 'R':
+                        case 'R':
                         {
-                            MeshPrism vol; 
+                            MeshPrism vol;
                             vol.id = vIt->first;
                             for(int i = 0; i < 5; ++i)
                             {
@@ -1452,9 +1637,9 @@ namespace Nektar
                             PrismInfo.push_back(vol);
                         }
                         break;
-                    case 'H':
+                        case 'H':
                         {
-                            MeshHex vol; 
+                            MeshHex vol;
                             vol.id = vIt->first;
                             for(int i = 0; i < 6; ++i)
                             {
@@ -1463,19 +1648,22 @@ namespace Nektar
                             HexInfo.push_back(vol);
                         }
                         break;
-                    default:
-                        ASSERTL0(false,"Unknown element type");
-                    }         
-                }   
+                        default:
+                            ASSERTL0(false,"Unknown element type");
+                    }
+                }
 
                 if(SegInfo.size())
                 {
                     std::string vType("S");
                     x = new TiXmlElement(vType);
-                    
+
                     std::string segStr;
                     CompressData::ZlibEncodeToBase64Str(SegInfo,segStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(segStr));
                     vElement->LinkEndChild(x);
                 }
@@ -1484,21 +1672,27 @@ namespace Nektar
                 {
                     std::string vType("T");
                     x = new TiXmlElement(vType);
-                    
+
                     std::string faceStr;
                     CompressData::ZlibEncodeToBase64Str(TriInfo,faceStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(faceStr));
                     vElement->LinkEndChild(x);
                 }
-                
+
                 if(QuadInfo.size())
                 {
                     std::string vType("Q");
                     x = new TiXmlElement(vType);
                     std::string faceStr;
                     CompressData::ZlibEncodeToBase64Str(QuadInfo,faceStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(faceStr));
                     vElement->LinkEndChild(x);
                 }
@@ -1509,7 +1703,10 @@ namespace Nektar
                     x = new TiXmlElement(vType);
                     std::string volStr;
                     CompressData::ZlibEncodeToBase64Str(TetInfo,volStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(volStr));
                     vElement->LinkEndChild(x);
                 }
@@ -1520,7 +1717,10 @@ namespace Nektar
                     x = new TiXmlElement(vType);
                     std::string volStr;
                     CompressData::ZlibEncodeToBase64Str(PyrInfo,volStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(volStr));
                     vElement->LinkEndChild(x);
                 }
@@ -1531,7 +1731,10 @@ namespace Nektar
                     x = new TiXmlElement(vType);
                     std::string volStr;
                     CompressData::ZlibEncodeToBase64Str(PrismInfo,volStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(volStr));
                     vElement->LinkEndChild(x);
                 }
@@ -1542,7 +1745,10 @@ namespace Nektar
                     x = new TiXmlElement(vType);
                     std::string volStr;
                     CompressData::ZlibEncodeToBase64Str(HexInfo,volStr);
-                    x->SetAttribute("COMPRESSED","B64Z");
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
                     x->LinkEndChild(new TiXmlText(volStr));
                     vElement->LinkEndChild(x);
                 }
@@ -1571,30 +1777,160 @@ namespace Nektar
             if (m_dim >= 2)
             {
                 std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
-                for (vItCurve  = m_meshCurved.begin(); 
-                     vItCurve != m_meshCurved.end(); 
-                     ++vItCurve)
+
+                if(m_isCompressed)
                 {
-                    MeshCurved c = vItCurve->second;
-                    
-                    if (vEdges.find(c.entityid) != vEdges.end() || 
-                        vFaces.find(c.entityid) != vFaces.end())
+                    std::vector<MeshCurvedInfo> edgeinfo;
+                    std::vector<MeshCurvedInfo> faceinfo;
+                    MeshCurvedPts  curvedpts;
+                    curvedpts.id = 0; // assume all points are going in here
+                    int ptoffset = 0;
+                    int newidx   = 0;
+                    std::map<int,int> idxmap;
+
+                    for (vItCurve  = m_meshCurved.begin();
+                         vItCurve != m_meshCurved.end();
+                         ++vItCurve)
                     {
-                        x = new TiXmlElement(c.entitytype);
-                        x->SetAttribute("ID", c.id);
-                        if (c.entitytype == "E")
+                        MeshCurved c = vItCurve->second;
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                         {
-                            x->SetAttribute("EDGEID", c.entityid);
+                            MeshCurvedInfo cinfo;
+                            // add in
+                            cinfo.id       = c.id;
+                            cinfo.entityid = c.entityid;
+                            cinfo.npoints  = c.npoints;
+                            for(int i = 0; i < SIZE_PointsType; ++i)
+                            {
+                                if(c.type.compare(kPointsTypeStr[i]) == 0)
+                                {
+                                    cinfo.ptype = (PointsType) i;
+                                    break;
+                                }
+                            }
+                            cinfo.ptid   = 0; // set to just one point set
+                            cinfo.ptoffset = ptoffset;
+                            ptoffset += c.npoints;
+
+                            if (IsEdge)
+                            {
+                                edgeinfo.push_back(cinfo);
+                            }
+                            else
+                            {
+                                faceinfo.push_back(cinfo);
+                            }
+
+                            // fill in points to list.
+                            for(int i =0; i < c.npoints; ++i)
+                            {
+                                // get index from full list;
+                                int idx = m_meshCurvedPts[c.ptid]
+                                                    .index[c.ptoffset+i];
+
+                                // if index is not already in curved
+                                // points add it or set index to location
+                                if(idxmap.count(idx) == 0)
+                                {
+                                    idxmap[idx] = newidx;
+                                    curvedpts.index.push_back(newidx);
+                                    curvedpts.pts.push_back(
+                                            m_meshCurvedPts[c.ptid].pts[idx]);
+                                    newidx++;
+                                }
+                                else
+                                {
+                                    curvedpts.index.push_back(idxmap[idx]);
+                                }
+                            }
                         }
-                        else
-                        {
-                            x->SetAttribute("FACEID", c.entityid);
-                        }
-                        x->SetAttribute("TYPE", c.type);
-                        x->SetAttribute("NUMPOINTS", c.npoints);
-                        y = new TiXmlText(c.data);
-                        x->LinkEndChild(y);
+                    }
+
+                    // add xml information
+                    if(edgeinfo.size())
+                    {
+                        vCurved->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                        vCurved->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+
+                        x = new TiXmlElement("E");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
+                        x->LinkEndChild(new TiXmlText(dataStr));
                         vCurved->LinkEndChild(x);
+                    }
+
+                    if(faceinfo.size())
+                    {
+                        vCurved->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                        vCurved->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+
+                        x = new TiXmlElement("F");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
+                        x->LinkEndChild(new TiXmlText(dataStr));
+                        vCurved->LinkEndChild(x);
+                    }
+
+                    if(edgeinfo.size()||faceinfo.size())
+                    {
+                        x = new TiXmlElement("DATAPOINTS");
+                        x->SetAttribute("ID", curvedpts.id);
+
+                        TiXmlElement *subx = new TiXmlElement("INDEX");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(curvedpts.index,
+                                                            dataStr);
+                        subx->LinkEndChild(new TiXmlText(dataStr));
+                        x->LinkEndChild(subx);
+
+                        subx = new TiXmlElement("POINTS");
+                        CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
+                                                            dataStr);
+                        subx->LinkEndChild(new TiXmlText(dataStr));
+                        x->LinkEndChild(subx);
+
+                        vCurved->LinkEndChild(x);
+                    }
+                }
+                else
+                {
+                    for (vItCurve  = m_meshCurved.begin();
+                         vItCurve != m_meshCurved.end();
+                         ++vItCurve)
+                    {
+                        MeshCurved c = vItCurve->second;
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        {
+                            x = new TiXmlElement(c.entitytype);
+                            x->SetAttribute("ID", c.id);
+                            if (IsEdge)
+                            {
+                                x->SetAttribute("EDGEID", c.entityid);
+                            }
+                            else
+                            {
+                                x->SetAttribute("FACEID", c.entityid);
+                            }
+                            x->SetAttribute("TYPE", c.type);
+                            x->SetAttribute("NUMPOINTS", c.npoints);
+                            y = new TiXmlText(c.data);
+                            x->LinkEndChild(y);
+                            vCurved->LinkEndChild(x);
+                        }
                     }
                 }
             }
@@ -1603,10 +1939,8 @@ namespace Nektar
             // which belong to this partition.
             for (vIt = m_meshComposites.begin(); vIt != m_meshComposites.end(); ++vIt)
             {
-                bool comma = false; // Set to true after first entity output
-                bool range = false; // True when entity IDs form a range
-                int last_idx = -2;  // Last entity ID output
-                std::string vCompositeStr = "";
+                idxList.clear();
+
                 for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
                 {
                     // Based on entity type, check if in this partition
@@ -1638,33 +1972,10 @@ namespace Nektar
                         break;
                     }
 
-                    // Condense consecutive entity IDs into ranges
-                    // last_idx initially -2 to avoid error for ID=0
-                    if (last_idx + 1 == vIt->second.list[j])
-                    {
-                        last_idx++;
-                        range = true;
-                        continue;
-                    }
-                    // This entity is not in range, so close previous range with
-                    // last_idx
-                    if (range)
-                    {
-                        vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
-                        range = false;
-                    }
-                    // Output ID, which is either standalone, or will start a
-                    // range.
-                    vCompositeStr += comma ? "," : "";
-                    vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
-                    last_idx = vIt->second.list[j];
-                    comma = true;
+                    idxList.push_back(vIt->second.list[j]);
                 }
-                // If last entity is part of a range, it must be output now
-                if (range)
-                {
-                    vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
-                }
+
+                std::string vCompositeStr = ParseUtils::GenerateSeqString(idxList);
 
                 if (vCompositeStr.length() > 0)
                 {
@@ -1679,18 +1990,16 @@ namespace Nektar
                 }
             }
 
+            idxList.clear();
             std::string vDomainListStr;
-            bool comma = false;
             for (unsigned int i = 0; i < m_domain.size(); ++i)
             {
                 if (vComposites.find(m_domain[i]) != vComposites.end())
                 {
-                    vDomainListStr += comma ? "," : "";
-                    comma = true;
-                    vDomainListStr += boost::lexical_cast<std::string>(m_domain[i]);
+                    idxList.push_back(m_domain[i]);
                 }
             }
-            vDomainListStr = "C[" + vDomainListStr + "]";
+            vDomainListStr = "C[" + ParseUtils::GenerateSeqString(idxList) + "]";
             TiXmlText* vDomainList = new TiXmlText(vDomainListStr);
             vDomain->LinkEndChild(vDomainList);
 
@@ -1733,18 +2042,19 @@ namespace Nektar
                         vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
                         std::vector<unsigned int> vSeq;
                         ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
-                        std::string vListStr;
-                        bool comma = false;
+
+                        idxList.clear();
+
                         for (unsigned int i = 0; i < vSeq.size(); ++i)
                         {
                             if (vComposites.find(vSeq[i]) != vComposites.end())
                             {
-                                vListStr += comma ? "," : "";
-                                comma = true;
-                                vListStr += boost::lexical_cast<std::string>(vSeq[i]);
+                                idxList.push_back(vSeq[i]);
                             }
                         }
                         int p = atoi(vItem->Attribute("ID"));
+
+                        std::string vListStr = ParseUtils::GenerateSeqString(idxList);
 
                         if (vListStr.length() == 0)
                         {

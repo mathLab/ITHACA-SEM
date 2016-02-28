@@ -68,6 +68,11 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(
                 const ExpList1D &In,
                 const bool DeclareCoeffPhysArrays = true);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList1D(  const ExpList1D &In,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareCoeffPhysArrays = true);
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(

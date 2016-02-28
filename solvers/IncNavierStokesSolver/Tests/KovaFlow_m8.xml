@@ -68,33 +68,17 @@
     </CONDITIONS>
 
     <GEOMETRY DIM="2" SPACE="2">
-
-        <VERTEX COMPRESSED="B64Z">eJxjYGBg6KtngIIH+1FpBgZGrPI/7GEiTCjyH+zR5ZmxyiPMZ8Fq/ge4flbs7oPLs6HJr5+YzPM/q8IWJsIOlY92rHkVXF2zF91+DlT9GO7jRHM/1Py9MBEu7P6Du48bqzzCfzxY7UeEHy+q+23R5fmw6keYz4/df3B5ATR5d/P7P3e5JcD9JwiVf7xvqahibY4tuvlCUPmmsp+NV/7326CbL4zi/py9UPPh8QMAbZlisQAA</VERTEX>
-        <EDGE COMPRESSED="B64Z">eJxNkAcOgzAQBE2cCqGlkQL8/5ncSBPJSKtZltMtdkop7ULXUCU7M9iEsiTbm/ehg6xDR8ncyXwIneWlUK3+3xuZ7c/Otb63dsLR3aPZoL8V7CW6F2L2oecfn5Lul/u5g0ly1rdk90fPub+Sjp+eO5glHYueZ5X0be6GBGkA</EDGE>
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGD/aj0gwMjFjlf9jDRJhQ5D/Yo8szY5VHmM+C1fwPcP2s2N0Hl2dDk18/MZnnf1aFLUyEHUpHO9a8Cq6u2YtuPweqfgz3caK5H2r+XpgIF5o8uvu4scoj/MeD1X5E+PGiut8WXZ4Pq36E+fxY5RHuE0CTdze//3OXWwLcf4JQ+vG+paKKtTm26OYLQemmsp+NV/7326CbL4zi/py9UPPh8QMANMBNrQAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kskSgjAQBUFckDUIigv6/5/pgelLVyWXV/3yMjWTpCj2dQjtQkvxoBzchlZickflx9CTuAk9i6l3UT6F1uJrRhupz7di5unE1Ou1Dw/iSX1PyiX5twyPYnTOKHUX+dzjXczcD/XPP1jFvOtTTN8v+bz3W8wcH/n8g03MHF/5rJ+Y+f7dGwRp</EDGE>
         <ELEMENT>
-            <Q ID="0">    0     1     2     3 </Q>
-            <Q ID="1">    2     4     5     6 </Q>
-            <Q ID="2">    5     7     8     9 </Q>
-            <Q ID="3">    8    10    11    12 </Q>
-            <Q ID="4">   13    14    15     1 </Q>
-            <Q ID="5">   15    16    17     4 </Q>
-            <Q ID="6">   17    18    19     7 </Q>
-            <Q ID="7">   19    20    21    10 </Q>
-            <Q ID="8">   22    23    24    14 </Q>
-            <Q ID="9">   24    25    26    16 </Q>
-            <Q ID="10">   26    27    28    18 </Q>
-            <Q ID="11">   28    29    30    20 </Q>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zskOgyAABmFsRaq0bl3t4vs/ppfh4CTl8iVDAn8I+1PhAY9/eo0RG92XnvCErd4tvcOMZ/1zwR4H7YrqI056p1Gf8aq9Sf2Gd+0t+x/4xJf2tuoLvrW3U//gV3uz+g9X7d0A9rcC/gAA</Q>
         </ELEMENT>
-
         <COMPOSITE>
-            <C ID="0"> Q[0-11]             </C>     <!-- Domain -->
-            <C ID="1"> E[23,25,27,29]      </C>     <!-- Inflow -->
-            <C ID="2"> E[3,6,9,12]         </C>     <!-- Outflow -->
-            <C ID="3"> E[0,11,13,21,22,30] </C>     <!-- Walls -->
+            <C ID="0"> Q[0-11] </C>
+            <C ID="1"> E[23,25,27,29] </C>
+            <C ID="2"> E[3,6,9,12] </C>
+            <C ID="3"> E[0,11,13,21-22,30] </C>
         </COMPOSITE>
-
         <DOMAIN> C[0] </DOMAIN>
-
     </GEOMETRY>
-
 </NEKTAR>

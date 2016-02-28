@@ -84,6 +84,9 @@ namespace Nektar
                 const AssemblyMapSharedPtr         &locToGloMap,
                 const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
+            virtual void v_DoMatrixMultiply(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output);
         };
     }
 }

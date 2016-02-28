@@ -37,10 +37,19 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include "zlib.h"
 #include <set>
@@ -137,9 +146,9 @@ namespace Nektar
         /**
          *
          */
-        FieldIO::FieldIO(
-                LibUtilities::CommSharedPtr pComm)
-            : m_comm(pComm)
+        FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
+                         bool                        sharedFilesystem)
+            : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
         {
         }
 
@@ -149,7 +158,7 @@ namespace Nektar
          */
         void FieldIO::Write(const std::string &outFile,
                    std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                   std::vector<std::vector<NekDouble> > &fielddata, 
+                   std::vector<std::vector<NekDouble> > &fielddata,
                    const FieldMetaDataMap &fieldmetadatamap)
         {
             // Check everything seems sensible
@@ -259,7 +268,7 @@ namespace Nektar
                     }
                     elemTag->SetAttribute("HOMOGENEOUSLENGTHS", homoLenString);
                 }
-				
+
                 // Write homogeneuous planes/lines details
                 if(fielddefs[f]->m_numHomogeneousDir)
                 {
@@ -280,7 +289,7 @@ namespace Nektar
                         }
                         elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
                     }
-                    
+
                     if(fielddefs[f]->m_homogeneousZIDs.size() > 0)
                     {
                         std::string homoZIDsString;
@@ -299,7 +308,7 @@ namespace Nektar
                         elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
                     }
                 }
-                
+
                 // Write NUMMODESPERDIR
                 std::string numModesString;
                 {
@@ -332,7 +341,7 @@ namespace Nektar
                             first = false;
                         }
                     }
-                    
+
                     numModesString = numModesStringStream.str();
                 }
                 elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
@@ -346,12 +355,19 @@ namespace Nektar
                     GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
                 }
                 elemTag->SetAttribute("ID", idString);
+                elemTag->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
 
+                // Add this information for future compatibility
+                // issues, for exmaple in case we end up using a 128
+                // bit machine.
+                elemTag->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
                 std::string base64string;
-                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f], 
-                                                                     base64string),
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
+                                                fielddata[f], base64string),
                          "Failed to compress field data.");
-                
+
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -371,21 +387,21 @@ namespace Nektar
 
             std::string infile = infilename;
 
-            fs::path pinfilename(infilename);            
-            
+            fs::path pinfilename(infilename);
+
             if(fs::is_directory(pinfilename)) // check to see that infile is a directory
             {
                 fs::path infofile("Info.xml");
-                fs::path fullpath = pinfilename / infofile; 
+                fs::path fullpath = pinfilename / infofile;
                 infile = PortablePath(fullpath);
 
-                std::vector<std::string> filenames; 
+                std::vector<std::string> filenames;
                 std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
-                
-            
+
+
                 ImportMultiFldFileIDs(infile,filenames, elementIDs_OnPartitions,
                                       fieldmetadatamap);
-                
+
                 // Load metadata
                 ImportFieldMetaData(infile,fieldmetadatamap);
 
@@ -394,25 +410,25 @@ namespace Nektar
                     for(int i = 0; i < filenames.size(); ++i)
                     {
                         fs::path pfilename(filenames[i]);
-                        fullpath = pinfilename / pfilename; 
-                        string fname = PortablePath(fullpath); 
+                        fullpath = pinfilename / pfilename;
+                        string fname = PortablePath(fullpath);
 
                         TiXmlDocument doc1(fname);
                         bool loadOkay1 = doc1.LoadFile();
-                        
+
                         std::stringstream errstr;
                         errstr << "Unable to load file: " << fname << std::endl;
                         errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
                         errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
                         ASSERTL0(loadOkay1, errstr.str());
-                        
+
                         ImportFieldDefs(doc1, fielddefs, false);
                         if(fielddata != NullVectorNekDoubleVector)
                         {
                             ImportFieldData(doc1, fielddefs, fielddata);
                         }
                     }
-                    
+
                 }
                 else // only load relevant partitions
                 {
@@ -428,7 +444,7 @@ namespace Nektar
                             FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
                         }
                     }
-                    
+
                     for(i = 0; i < ElementIDs.num_elements(); ++i)
                     {
                         it = FileIDs.find(ElementIDs[i]);
@@ -440,22 +456,22 @@ namespace Nektar
                             }
                         }
                     }
-                    
-                    set<int>::iterator iter; 
+
+                    set<int>::iterator iter;
                     for(iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
                     {
                         fs::path pfilename(filenames[*iter]);
-                        fullpath = pinfilename / pfilename; 
-                        string fname = PortablePath(fullpath); 
+                        fullpath = pinfilename / pfilename;
+                        string fname = PortablePath(fullpath);
                         TiXmlDocument doc1(fname);
                         bool loadOkay1 = doc1.LoadFile();
-                        
+
                         std::stringstream errstr;
                         errstr << "Unable to load file: " << fname << std::endl;
                         errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
                         errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
                         ASSERTL0(loadOkay1, errstr.str());
-                        
+
                         ImportFieldDefs(doc1, fielddefs, false);
                         if(fielddata != NullVectorNekDoubleVector)
                         {
@@ -464,19 +480,19 @@ namespace Nektar
                     }
                 }
             }
-            else // serial format case 
+            else // serial format case
             {
-                
+
                 TiXmlDocument doc(infile);
                 bool loadOkay = doc.LoadFile();
-                
+
                 std::stringstream errstr;
                 errstr << "Unable to load file: " << infile << std::endl;
                 errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-                errstr << "Position: Line " << doc.ErrorRow() << ", Column " << 
+                errstr << "Position: Line " << doc.ErrorRow() << ", Column " <<
                     doc.ErrorCol() << std::endl;
                 ASSERTL0(loadOkay, errstr.str());
-                
+
                 ImportFieldMetaData(doc,fieldmetadatamap);
                 ImportFieldDefs(doc, fielddefs, false);
                 if(fielddata != NullVectorNekDoubleVector)
@@ -512,11 +528,11 @@ namespace Nektar
                 {
                     TiXmlElement * elemIDs = new TiXmlElement("Partition");
                     root->LinkEndChild(elemIDs);
-                    
+
                     elemIDs->SetAttribute("FileName",fileNames[t]);
-                    
+
                     string IDstring;
-                    
+
                     GenerateSeqString(elementList[t],IDstring);
 
                     elemIDs->LinkEndChild(new TiXmlText(IDstring));
@@ -527,27 +543,27 @@ namespace Nektar
         }
 
 
-        /** 
+        /**
          *
          */
          void FieldIO::ImportMultiFldFileIDs(const std::string &inFile,
                                     std::vector<std::string> &fileNames,
                                     std::vector<std::vector<unsigned int> > &elementList,
                                     FieldMetaDataMap &fieldmetadatamap)
-         {        
+         {
              TiXmlDocument doc(inFile);
              bool loadOkay = doc.LoadFile();
-             
-             
+
+
              std::stringstream errstr;
              errstr << "Unable to load file: " << inFile<< std::endl;
              errstr << "Reason: " << doc.ErrorDesc() << std::endl;
              errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
              ASSERTL0(loadOkay, errstr.str());
-             
+
              // Handle on XML document
              TiXmlHandle docHandle(&doc);
-             
+
              // Retrieve main NEKTAR tag - XML specification states one
              // top-level element tag per file.
              TiXmlElement* master = doc.FirstChildElement("NEKTAR");
@@ -595,25 +611,25 @@ namespace Nektar
         {
             TiXmlDocument doc(filename);
             bool loadOkay = doc.LoadFile();
-            
+
             std::stringstream errstr;
             errstr << "Unable to load file: " << filename << std::endl;
             errstr << "Reason: " << doc.ErrorDesc() << std::endl;
             errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
             ASSERTL0(loadOkay, errstr.str());
-                    
+
             ImportFieldMetaData(doc,fieldmetadatamap);
         }
-        
+
 
         void FieldIO::ImportFieldMetaData(TiXmlDocument &doc,
                                 FieldMetaDataMap &fieldmetadatamap)
         {
-            
+
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = 0;    // Master tag within which all data is contained.
             TiXmlElement* metadata = 0;
-            
+
             master = doc.FirstChildElement("NEKTAR");
             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
             std::string strLoop = "NEKTAR";
@@ -657,7 +673,7 @@ namespace Nektar
             if(metadata)
             {
                 TiXmlElement *param = metadata->FirstChildElement();
-                    
+
                 while (param)
                 {
                     std::string paramString = param->Value();
@@ -674,7 +690,7 @@ namespace Nektar
             }
 
         }
-        
+
 
         /**
          * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
@@ -766,6 +782,24 @@ namespace Nektar
                             numPointsString.insert(0, attr->Value());
                             numPointDef = true;
                         }
+                        else if (attrName == "COMPRESSED")
+                        {
+                            if(!boost::iequals(attr->Value(),
+                                            CompressData::GetCompressString()))
+                            {
+                                WARNINGL0(false, "Compressed formats do not "
+                                          "match. Expected: "
+                                          + CompressData::GetCompressString()
+                                          + " but got "+ string(attr->Value()));
+                            }
+                        }
+                        else if (attrName =="BITSIZE")
+                        {
+                            // This information is for future
+                            // compatibility issues, for exmaple in
+                            // case we end up using a 128 bit machine.
+                            // Currently just do nothing
+                        }
                         else
                         {
                             std::string errstr("Unknown attribute: ");
@@ -845,25 +879,25 @@ namespace Nektar
                         valid = ParseUtils::GenerateUnOrderedVector(homoLengthsString.c_str(), homoLengths);
                         ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
                     }
-					
-					// Get Homogeneous points IDs
-					std::vector<unsigned int> homoZIDs;
-					std::vector<unsigned int> homoYIDs;
-					
-					if(numHomoDir == 1)
+
+                    // Get Homogeneous points IDs
+                    std::vector<unsigned int> homoZIDs;
+                    std::vector<unsigned int> homoYIDs;
+
+                    if(numHomoDir == 1)
                     {
                         valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous planes IDs.");
                     }
-					
-					if(numHomoDir == 2)
-					{
-						valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
+
+                    if(numHomoDir == 2)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in z-direction.");
-						valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(), homoYIDs);
+                        valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(), homoYIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in y-direction.");
-					}
-					
+                    }
+
 
                     // Get points type
                     std::vector<PointsType> points;
@@ -916,7 +950,7 @@ namespace Nektar
                     ASSERTL0(valid, "Unable to correctly parse the number of fields.");
 
                     FieldDefinitionsSharedPtr fielddef  = MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
-                    
+
                     fielddefs.push_back(fielddef);
 
                     element = element->NextSiblingElement("ELEMENTS");
@@ -962,8 +996,21 @@ namespace Nektar
                     std::vector<NekDouble> elementFieldData;
                     // Convert from base64 to binary.
 
+                    const char *CompressStr = element->Attribute("COMPRESSED");
+                    if(CompressStr)
+                    {
+                        if(!boost::iequals(CompressStr,
+                                           CompressData::GetCompressString()))
+                        {
+                            WARNINGL0(false, "Compressed formats do not match. "
+                                      "Expected: "
+                                      + CompressData::GetCompressString()
+                                      + " but got "+ string(CompressStr));
+                        }
+                    }
+
                     ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
-                                                        elementStr, 
+                                                        elementStr,
                                                         elementFieldData),
                              "Failed to decompress field data.");
 
@@ -1099,21 +1146,63 @@ namespace Nektar
             int nprocs = m_comm->GetSize();
             int rank   = m_comm->GetRank();
 
-            // Directory name if in parallel, regular filename if in serial
+            // Path to output: will be directory if parallel, normal file if
+            // serial.
             fs::path specPath (outname);
+            fs::path fulloutname;
+
+            if (nprocs == 1)
+            {
+                fulloutname = specPath;
+            }
+            else
+            {
+                // Guess at filename that might belong to this process.
+                boost::format pad("P%1$07d.fld");
+                pad % m_comm->GetRank();
+
+                // Generate full path name
+                fs::path poutfile(pad.str());
+                fulloutname = specPath / poutfile;
+            }
 
             // Remove any existing file which is in the way
-            if(m_comm->RemoveExistingFiles())
+            if (m_comm->RemoveExistingFiles())
             {
-                try
+                if (m_sharedFilesystem)
                 {
-                    fs::remove_all(specPath);
+                    // First, each process clears up its .fld file. This might
+                    // or might not be there (we might have changed numbers of
+                    // processors between runs, for example), but we can try
+                    // anyway.
+                    try
+                    {
+                        fs::remove_all(fulloutname);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
-                catch (fs::filesystem_error& e)
+
+                m_comm->Block();
+
+                // Now get rank 0 processor to tidy everything else up.
+                if (rank == 0 || !m_sharedFilesystem)
                 {
-                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                             "Filesystem error: " + string(e.what()));
+                    try
+                    {
+                        fs::remove_all(specPath);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
+
+                m_comm->Block();
             }
 
             // serial processing just add ending.
@@ -1140,12 +1229,17 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                fs::create_directory(specPath);
+                if (rank == 0 || !m_sharedFilesystem)
+                {
+                    fs::create_directory(specPath);
+                }
             }
             catch (fs::filesystem_error& e)
             {
                 ASSERTL0(false, "Filesystem error: " + string(e.what()));
             }
+
+            m_comm->Block();
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1185,14 +1279,6 @@ namespace Nektar
                 m_comm->Send(0, idlist);
             }
 
-            // Pad rank to 8char filenames, e.g. P0000000.fld
-            boost::format pad("P%1$07d.fld");
-            pad % m_comm->GetRank();
-
-            // Generate full path name
-            fs::path poutfile(pad.str());
-            fs::path fulloutname = specPath / poutfile;
-
             // Return the full path to the partition for this process
             return LibUtilities::PortablePath(fulloutname);
         }
@@ -1221,9 +1307,9 @@ namespace Nektar
                 {
                     numbasis += fielddefs->m_numHomogeneousDir;
                 }
-                
+
                 break;
-            case eTriangle:  
+            case eTriangle:
             case eQuadrilateral:
                 if(fielddefs->m_numHomogeneousDir)
                 {
@@ -1244,9 +1330,9 @@ namespace Nektar
                 ASSERTL0(false, "Unsupported shape type.");
                 break;
             }
-            
+
             unsigned int datasize = 0;
-            
+
             ASSERTL0(fielddefs->m_basis.size() == numbasis, "Length of basis vector is incorrect");
 
             if(fielddefs->m_uniOrder == true)
@@ -1277,7 +1363,7 @@ namespace Nektar
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
-                    
+
                     if(fielddefs->m_numHomogeneousDir == 1)
                     {
                         datasize += StdTriData::getNumberOfCoefficients(l,m)*
@@ -1339,7 +1425,7 @@ namespace Nektar
                     ASSERTL0(false, "Unsupported shape type.");
                     break;
                 }
-                
+
                 datasize *= fielddefs->m_elementIDs.size();
             }
             else
@@ -1351,20 +1437,53 @@ namespace Nektar
                     switch(fielddefs->m_shapeType)
                     {
                     case eSegment:
-                        datasize += fielddefs->m_numModes[cnt++];
+                        {
+                            int l = fielddefs->m_numModes[cnt++];
+                            if(fielddefs->m_numHomogeneousDir == 1)
+                            {
+                                datasize += l*fielddefs->m_numModes[cnt++];
+                            }
+                            else if(fielddefs->m_numHomogeneousDir == 2)
+                            {
+                                int m = fielddefs->m_numModes[cnt++];
+                                datasize += l*m*fielddefs->m_numModes[cnt++];
+                            }
+                            else
+                            {
+                                datasize += l;
+                            }
+                        }
                         break;
                     case eTriangle:
                         {
                             int l = fielddefs->m_numModes[cnt++];
                             int m = fielddefs->m_numModes[cnt++];
-                            datasize += StdTriData::getNumberOfCoefficients(l,m);
+                            if(fielddefs->m_numHomogeneousDir == 1)
+                            {
+                                datasize += StdTriData::getNumberOfCoefficients(l,m)*
+                                            fielddefs->m_homogeneousZIDs.size();
+                                cnt++;
+                            }
+                            else
+                            {
+                                datasize += StdTriData::getNumberOfCoefficients(l,m);
+                            }
                         }
                         break;
                     case eQuadrilateral:
                         {
                             int l = fielddefs->m_numModes[cnt++];
                             int m = fielddefs->m_numModes[cnt++];
-                            datasize += l*m;
+                            if(fielddefs->m_numHomogeneousDir == 1)
+                            {
+                                datasize += l*m*fielddefs->
+                                                    m_homogeneousZIDs.size();
+                                cnt++;
+                            }
+                            else
+                            {
+                                datasize += l*m;
+                            }
                         }
                         break;
                     case eTetrahedron:
@@ -1405,7 +1524,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             return datasize;
         }
     }

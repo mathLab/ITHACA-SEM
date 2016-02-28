@@ -37,6 +37,8 @@
 #include <iomanip>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
 
+#include <boost/format.hpp>
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -345,13 +347,10 @@ void FilterHistoryPoints::v_Initialise(
                                             gloCoord[1],
                                             gloCoord[2]);
 
-            m_outputStream << "# \t" << i;
-            m_outputStream.width(8);
-            m_outputStream << gloCoord[0];
-            m_outputStream.width(8);
-            m_outputStream << gloCoord[1];
-            m_outputStream.width(8);
-            m_outputStream << gloCoord[2];
+            m_outputStream << "# " << boost::format("%6.0f") % i;
+            m_outputStream << " " << boost::format("%25e") % gloCoord[0];
+            m_outputStream << " " << boost::format("%25e") % gloCoord[1];
+            m_outputStream << " " << boost::format("%25e") % gloCoord[2];
             m_outputStream << endl;
         }
 
@@ -444,12 +443,10 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
         // Write data values point by point
         for (k = 0; k < m_historyPoints.size(); ++k)
         {
-            m_outputStream.width(8);
-            m_outputStream << setprecision(6) << time;
+            m_outputStream << boost::format("%25e") % time;
             for (int j = 0; j < numFields; ++j)
             {
-                m_outputStream.width(25);
-                m_outputStream << setprecision(16) << data[k*numFields+j];
+                m_outputStream << " " << boost::format("%25e") % data[k*numFields+j];
             }
             m_outputStream << endl;
         }

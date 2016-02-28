@@ -48,7 +48,14 @@ namespace Nektar
         // Forward declarations
         class ExpList;
 
-        /// A global linear system.
+        /// Enumerator
+        enum PETScMatMult
+        {
+            ePETScMatMultSparse,
+            ePETScMatMultShell
+        };
+
+        /// A PETSc global linear system.
         class GlobalLinSysPETSc : virtual public GlobalLinSys
         {
         public:
@@ -57,7 +64,7 @@ namespace Nektar
                 const GlobalLinSysKey                &pKey,
                 const boost::weak_ptr<ExpList>       &pExp,
                 const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-            
+
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETSc();
 
             virtual void v_SolveLinearSystem(
@@ -68,20 +75,71 @@ namespace Nektar
                 const int                          pNumDir);
 
         protected:
-            Mat m_matrix;
-            Vec m_x, m_b, m_locVec;
-            KSP m_ksp;
-            vector<int> m_reorderedMap;
-            VecScatter m_ctx;
-            int m_nLocal;
+            /// PETSc matrix object.
+            Mat          m_matrix;
+            /// PETSc vector objects used for local storage.
+            Vec          m_x, m_b, m_locVec;
+            /// KSP object that represents solver system.
+            KSP          m_ksp;
+            /// PCShell for preconditioner.
+            PC           m_pc;
+            /// Enumerator to select matrix multiplication type.
+            PETScMatMult m_matMult;
+            /// Reordering that takes universal IDs to a unique row in the PETSc
+            /// matrix. @see GlobalLinSysPETSc::CalculateReordering
+            vector<int>  m_reorderedMap;
+            /// PETSc scatter context that takes us between Nektar++ global
+            /// ordering and PETSc vector ordering.
+            VecScatter   m_ctx;
+            /// Number of unique degrees of freedom on this process.
+            int          m_nLocal;
+
+            PreconditionerSharedPtr m_precon;
+
+            /**
+             * @brief Internal struct for MatShell and PCShell calls to store
+             * current context for callback.
+             *
+             * To use the MatShell/PCShell representation inside PETSc KSP and
+             * PC objects (so that we can use the local spectral element
+             * approach) requires the use of a callback function, which must be
+             * static. This is a lightweight wrapper allowing us to call a
+             * virtual function so that we can handle the static
+             * condensation/full variants of the global system.
+             *
+             * @see GlobalLinSysPETSc::DoMatrixMultiply
+             */
+            struct ShellCtx
+            {
+                /// Number of global degrees of freedom.
+                int nGlobal;
+                /// Number of Dirichlet degrees of freedom.
+                int nDir;
+                /// Pointer to the original calling object.
+                GlobalLinSysPETSc *linSys;
+            };
 
             void SetUpScatter();
-            void SetUpMatVec();
+            void SetUpMatVec(int nGlobal, int nDir);
             void SetUpSolver(NekDouble tolerance);
             void CalculateReordering(
                 const Array<OneD, const int> &glo2uniMap,
                 const Array<OneD, const int> &glo2unique,
                 const AssemblyMapSharedPtr   &pLocToGloMap);
+
+            virtual void v_DoMatrixMultiply(
+                const Array<OneD, const NekDouble>& pInput,
+                      Array<OneD,       NekDouble>& pOutput) = 0;
+        private:
+            static std::string matMult;
+            static std::string matMultIds[];
+
+            static PetscErrorCode DoMatrixMultiply(Mat M, Vec in, Vec out);
+            static PetscErrorCode DoPreconditioner(PC pc, Vec in, Vec out);
+            static void DoNekppOperation(
+                Vec &in, Vec &out, ShellCtx *ctx, bool precon);
+            static PetscErrorCode DoDestroyMatCtx(Mat M);
+            static PetscErrorCode DoDestroyPCCtx (PC pc);
         };
     }
 }

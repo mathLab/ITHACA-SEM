@@ -48,6 +48,7 @@
 
 #include "zlib.h"
 
+
 // Buffer size for zlib compression/decompression
 #define CHUNK 16384
 
@@ -56,12 +57,38 @@ namespace Nektar
 namespace LibUtilities
 {
 
+    enum EndianType
+    {
+        eEndianUnknown,
+        eEndianBig,
+        eEndianLittle,
+        eEndianBigWord,   /* Middle-endian, Honeywell 316 style */
+        eEndianLittleWord /* Middle-endian, PDP-11 style */
+    };
+
+    const std::string EndianTypeMap[] =
+    {
+        "UnknownEndian",
+        "BigEndian",
+        "LittleEndian",
+        "BigWordEndian",
+        "LittleWordEndian"
+    };
+
+    LIB_UTILITIES_EXPORT EndianType Endianness(void);
+
     namespace CompressData
     {
+        LIB_UTILITIES_EXPORT std::string GetCompressString(void);
+
+
+        LIB_UTILITIES_EXPORT std::string GetBitSizeStr(void);
+
+
         /**
          * Compress a vector of NekDouble values into a string using zlib.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibEncode(std::vector<T>& in, std::string& out)
+        template<class T> int ZlibEncode(std::vector<T>& in, std::string& out)
         {
             int ret;
             unsigned have;
@@ -72,7 +99,7 @@ namespace LibUtilities
 
             /* allocate deflate state */
             strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
+            strm.zfree  = Z_NULL;
             strm.opaque = Z_NULL;
             ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
 
@@ -85,7 +112,7 @@ namespace LibUtilities
             do {
                 strm.avail_out = CHUNK;
                 strm.next_out = (unsigned char*)(&buffer[0]);
-                
+
                 ret = deflate(&strm, Z_FINISH);
 
                 // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
@@ -113,18 +140,20 @@ namespace LibUtilities
          * Convert a string containing compressed binary (i.e. from
          * deflate) into a base 64 string
          */
-        LIB_UTILITIES_EXPORT void BinaryStrToBase64Str(std::string &compressedDataString,
-                                 std::string &base64string);
+        LIB_UTILITIES_EXPORT void BinaryStrToBase64Str(
+                std::string &compressedDataString,
+                std::string &base64string);
 
         /**
          * Compress a vector of NekDouble values into a base64 string.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibEncodeToBase64Str(std::vector<T>& in, std::string& out64)
+        template<class T>
+        int ZlibEncodeToBase64Str(std::vector<T>& in, std::string& out64)
         {
             std::string out;
 
             int ok = ZlibEncode(in,out);
-            
+
             BinaryStrToBase64Str(out,out64);
 
             return ok;
@@ -135,8 +164,9 @@ namespace LibUtilities
          * Decompress a zlib-compressed string into a vector of NekDouble
          * values.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibDecode(std::string& in, std::vector<T>& out)
-                    {
+        template<class T>
+        int ZlibDecode(std::string& in, std::vector<T>& out)
+        {
             int ret;
             unsigned have;
             z_stream strm;
@@ -199,8 +229,9 @@ namespace LibUtilities
          * Convert a string containing base 64 (i.e. from xml file)
          * into a binary string
          */
-        LIB_UTILITIES_EXPORT void Base64StrToBinaryStr(std::string &base64string,
-                                  std::string &compressedDataString);
+        LIB_UTILITIES_EXPORT void Base64StrToBinaryStr(
+                std::string &base64string,
+                std::string &compressedDataString);
 
 
 
@@ -208,8 +239,8 @@ namespace LibUtilities
          * Decompress a base 64 compressed binary string into a vector
          * of NekDouble values.
          */
-        template<class T> LIB_UTILITIES_EXPORT int ZlibDecodeFromBase64Str(std::string& in64,
-                                 std::vector<T>& out)
+        template<class T>
+        int ZlibDecodeFromBase64Str(std::string& in64, std::vector<T>& out)
         {
             std::string in;
             Base64StrToBinaryStr(in64,in);

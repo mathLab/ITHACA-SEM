@@ -107,43 +107,52 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            const char *IsCompressed = field->Attribute("COMPRESSED");
-            if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+            if(IsCompressed.size()) 
             {
+                ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()),
+                         "Compressed formats do not match. Expected :"
+                         + LibUtilities::CompressData::GetCompressString()
+                         + " but got " + std::string(IsCompressed));
+
                 // Extract the edge body
                 TiXmlNode* edgeChild = field->FirstChild();
                 ASSERTL0(edgeChild, "Unable to extract the data from "
                          "the compressed edge tag.");
-                
+
                 std::string edgeStr;
                 if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
                     edgeStr += edgeChild->ToText()->ValueStr();
                 }
-                
-                std::vector<LibUtilities::MeshEdge> edgeData;
-                LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,edgeData);
 
+                std::vector<LibUtilities::MeshEdge> edgeData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,
+                                                                    edgeData);
                 int indx;
                 for(int i = 0; i < edgeData.size(); ++i)
                 {
                     indx = edgeData[i].id;
 
-
-                    PointGeomSharedPtr vertices[2] = {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
+                    PointGeomSharedPtr vertices[2] =
+                        {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
                     SegGeomSharedPtr edge;
 
                     it = m_curvedEdges.find(indx);
-                    
                     if (it == m_curvedEdges.end())
                     {
-                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices);
                     }
                     else
                     {
-                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices,
+                                            it->second);
                     }
-                    
                     m_segGeoms[indx] = edge;
                 }
             }
@@ -249,26 +258,35 @@ namespace Nektar
                 ASSERTL0(elementType == "Q" || elementType == "T",
                          (std::string("Unknown 2D element type: ") + elementType).c_str());
                 
-                const char *IsCompressed = element->Attribute("COMPRESSED");
-                if(IsCompressed&&boost::iequals(IsCompressed,"B64Z"))
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
+                    ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData:: GetCompressString()),
+                            "Compressed formats do not match. Expected :"
+                            + LibUtilities::CompressData::GetCompressString()
+                            + " but got " + std::string(IsCompressed));
+
                     // Extract the face body
                     TiXmlNode* faceChild = element->FirstChild();
                     ASSERTL0(faceChild, "Unable to extract the data from "
-                             "the compressed face tag.");
-                
+                                        "the compressed face tag.");
+
                     std::string faceStr;
                     if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         faceStr += faceChild->ToText()->ValueStr();
                     }
-                    
+
                     int indx;
                     if(elementType == "T")
                     {
                         std::vector<LibUtilities::MeshTri> faceData;
-                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
-                        
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr, faceData);
+
                         for(int i = 0; i < faceData.size(); ++i)
                         {
                             indx = faceData[i].id;
@@ -278,53 +296,57 @@ namespace Nektar
 
                             /// Create a TriGeom to hold the new definition.
                             SegGeomSharedPtr edges[TriGeom::kNedges] =
-                                {
-                                    GetSegGeom(faceData[i].e[0]),
-                                    GetSegGeom(faceData[i].e[1]),
-                                    GetSegGeom(faceData[i].e[2])
-                                };
+                            {
+                                GetSegGeom(faceData[i].e[0]),
+                                GetSegGeom(faceData[i].e[1]),
+                                GetSegGeom(faceData[i].e[2])
+                            };
 
                             StdRegions::Orientation edgeorient[TriGeom::kNedges] =
-                                {
-                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
-                                };
-                            
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                            };
+
                             TriGeomSharedPtr trigeom;
-                            
                             if (it == m_curvedFaces.end())
                             {
-                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
                             }
                             else
                             {
-                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
                             }
-
                             trigeom->SetGlobalID(indx);
                             m_triGeoms[indx] = trigeom;
                         }
-                        
                     }
                     else if (elementType == "Q")
                     {
                         std::vector<LibUtilities::MeshQuad> faceData;
-                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(faceStr,faceData);
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr,faceData);
 
                         for(int i = 0; i < faceData.size(); ++i)
                         {
                             indx = faceData[i].id;
-                            
+
                             /// See if this face has curves.
                             it = m_curvedFaces.find(indx);
-                            
-                            
+
                             /// Create a QuadGeom to hold the new definition.
                             SegGeomSharedPtr edges[QuadGeom::kNedges] =
-                                {GetSegGeom(faceData[i].e[0]),GetSegGeom(faceData[i].e[1]),
-                                 GetSegGeom(faceData[i].e[2]),GetSegGeom(faceData[i].e[3])};
-                            
+                                {GetSegGeom(faceData[i].e[0]),
+                                 GetSegGeom(faceData[i].e[1]),
+                                 GetSegGeom(faceData[i].e[2]),
+                                 GetSegGeom(faceData[i].e[3])};
+
                             StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
                                 {
                                     SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
@@ -332,19 +354,22 @@ namespace Nektar
                                     SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
                                     SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                                 };
-                            
+
                             QuadGeomSharedPtr quadgeom;
-                            
                             if (it == m_curvedEdges.end())
                             {
-                                quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
                             }
                             else
                             {
-                                quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
                             }
                             quadgeom->SetGlobalID(indx);
-                            
                             m_quadGeoms[indx] = quadgeom;
                         }
                     }

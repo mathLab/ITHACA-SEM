@@ -87,6 +87,28 @@ namespace Nektar
         {
             SetExpType(e1D);
         }
+        
+        /**
+         * 
+         */
+        ExpList1D::ExpList1D(const ExpList1D &In,
+                             const std::vector<unsigned int> &eIDs,
+                             const bool DeclareCoeffPhysArrays):
+            ExpList(In, eIDs, DeclareCoeffPhysArrays)
+        {
+            SetExpType(e1D);
+            
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // Allocate storage for data and populate element offset lists.
+            SetCoeffPhysOffsets();
+
+            ReadGlobalOptimizationParameters();
+            CreateCollections();
+        }
 
 
         /**
@@ -1184,9 +1206,9 @@ namespace Nektar
             int ntotminus = (nquad0-1);
 
             Array<OneD,NekDouble> coords[3];
-            coords[0] = Array<OneD,NekDouble>(ntot);
-            coords[1] = Array<OneD,NekDouble>(ntot);
-            coords[2] = Array<OneD,NekDouble>(ntot);
+            coords[0] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[1] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[2] = Array<OneD,NekDouble>(ntot, 0.0);
             (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
 
             outfile << "    <Piece NumberOfPoints=\""

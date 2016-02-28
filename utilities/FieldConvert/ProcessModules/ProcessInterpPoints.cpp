@@ -742,7 +742,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
         {
             m_f->m_data[nfields-2][r] = qinv*(m_f->m_data[pfield][r] - p0);
 
-            if(velid.size()) // calculate cp
+            if(velid.size()) // calculate cp0
             {
                 NekDouble q = 0; 
                 for(int i = 0; i < velid.size(); ++i)

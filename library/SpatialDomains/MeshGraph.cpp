@@ -2420,7 +2420,7 @@ namespace Nektar
                                 // skip element likely from parallel read
                                 continue;
                             }
-j                            geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
+                            geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
 
                             LibUtilities::PointsKey pkey(nmodes[cnt]+1, LibUtilities::eGaussLobattoLegendre);
 

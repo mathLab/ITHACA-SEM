@@ -274,7 +274,7 @@ IF (NEKTAR_BUILD_LIBRARY)
         MultiRegions Collections)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
-    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
 IF (NEKTAR_BUILD_SOLVERS)
@@ -308,7 +308,8 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
 
 # Install Nektar++ CMake configuration file
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
-    DESTINATION ${NEKTAR_LIB_DIR}/cmake/)
+    DESTINATION ${NEKTAR_LIB_DIR}/cmake/
+    COMPONENT dev)
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/

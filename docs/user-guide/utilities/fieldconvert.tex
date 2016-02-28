@@ -422,17 +422,33 @@ can be specified where \inltt{npts} is the number of equispaced points between
 $(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
 to $(x1,y1,z1)$.
 
-An extraction of a plane can also be specified by
+An extraction of a plane of points can also be specified by
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npts1,\
-	npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
+  FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
+        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
 \end{lstlisting}
 where \inltt{npts1,npts2} is the number of equispaced points in each 
 direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$ 
 define the plane of points specified in a clockwise or anticlockwise direction.
+
+In addition an extraction of a box of points can also be specified by
+\begin{lstlisting}[style=BashInputStyle] 
+  FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
+       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax
+\end{lstlisting}
+where \inltt{npts1,npts2,npts3} is the number of equispaced points in each 
+direction and $(xmin,ymin,zmin)$ and $(xmax,ymax,zmax3)$ 
+define the limits of the box of points. 
+
+For the plane and box interpolation there is an additional optional
+argument \inltt{cp=p0,q} which adds to the interpolated fields the value of
+$c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$ where $p0$ is a reference
+pressure and $q$ is the free stream dynamics pressure. If the input
+does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
+and $cp0$ are not evaluated accordingly
 %
 \begin{notebox} 
-This module does not run in parallel.
+This module  runs in parallel for the plane and box extraction of points. In this case a series of .dat files are generated that can be concatinated together. Other options do not run in parallel.
 \end{notebox}
 %
 %

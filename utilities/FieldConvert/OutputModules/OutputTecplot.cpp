@@ -244,7 +244,7 @@ void OutputTecplot::Process(po::variables_map &vm)
             {
                 NekDouble l2err;
                 std::string coordval[] = {"x","y","z"};
-                int rank = m_f->m_session->GetComm()->GetRank();
+                int rank = m_f->m_comm->GetRank();
 
                 for(int i = 0; i < dim; ++i)
                 {
@@ -278,11 +278,11 @@ void OutputTecplot::Process(po::variables_map &vm)
                     {
                         l2err += m_f->m_data[i][j]*m_f->m_data[i][j];
                     }
-                    m_f->m_session->GetComm()->AllReduce(l2err,
+                    m_f->m_comm->AllReduce(l2err,
                                                      LibUtilities::ReduceSum);
 
                     int npts = fPts->GetNpoints();
-                    m_f->m_session->GetComm()->AllReduce(npts,
+                    m_f->m_comm->AllReduce(npts,
                                                      LibUtilities::ReduceSum);
                     
                     l2err /= npts; 
@@ -331,7 +331,7 @@ void OutputTecplot::Process(po::variables_map &vm)
             {
                 NekDouble l2err;
                 std::string coordval[] = {"x","y","z"};
-                int rank = m_f->m_session->GetComm()->GetRank();
+                int rank = m_f->m_comm->GetRank();
 
                 for(int i = 0; i < dim + fPts->GetNFields(); ++i)
                 {
@@ -341,11 +341,11 @@ void OutputTecplot::Process(po::variables_map &vm)
                     {
                         l2err += fPts->GetPointVal(i,j)*fPts->GetPointVal(i,j);
                     }
-                    m_f->m_session->GetComm()->AllReduce(l2err,
+                    m_f->m_comm->AllReduce(l2err,
                                                   LibUtilities::ReduceSum);
                     
                     int npts = fPts->GetNpoints();
-                    m_f->m_session->GetComm()->AllReduce(npts,
+                    m_f->m_comm->AllReduce(npts,
                                                   LibUtilities::ReduceSum);
                 
                     l2err /= npts; 

@@ -415,7 +415,7 @@ namespace Nektar
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
-                m_rhs_magnitude = 1.0/vExchange[2];
+                m_rhs_magnitude = (vExchange[2] > 1e-6)? vExchange[2]:1.0;
             }
 
             // If input residual is less than tolerance skip solve.

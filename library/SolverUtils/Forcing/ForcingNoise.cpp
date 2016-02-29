@@ -123,7 +123,8 @@ namespace SolverUtils
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 Vmath::FillWhiteNoise(outarray[i].num_elements(),
-                                      m_noise,&m_Forcing[i][0],1,-m_index-i);
+                                      m_noise,&m_Forcing[i][0],1,
+                                     -m_index*m_NumVariable-i);
             }
         }
 

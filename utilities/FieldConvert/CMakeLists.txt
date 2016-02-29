@@ -92,11 +92,9 @@ ADD_NEKTAR_TEST(bfs_vort_rng)
 ADD_NEKTAR_TEST(pointdatatofld)
 # ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
-<<<<<<< c416d7f0fabe9bc13e231961f77517f3e63c1ad3
 ADD_NEKTAR_TEST(chan3DH1D_plane)
-=======
 ADD_NEKTAR_TEST(cube_prismhex)
->>>>>>> Add prism/hex test for surface distance module
+ADD_NEKTAR_TEST(outflow_pointdatatofld)
 
 # windows produces slightly differently formatted files which results in
 # different hashes

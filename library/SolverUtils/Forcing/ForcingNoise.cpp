@@ -62,7 +62,7 @@ namespace SolverUtils
 
         const TiXmlElement* noiseElmt = pForce->FirstChildElement("WHITENOISE");
         ASSERTL0(noiseElmt, "Requires WHITENOISE tag specifying "
-                               "magnitude of whilte noise force.");
+                               "magnitude of white noise force.");
         
         string noiseValue = noiseElmt->GetText();
 

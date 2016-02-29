@@ -587,7 +587,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
     if(rank == 0)
     {
-        cout << "Interpolating [" << flush;
+        cout << "Interpolating on proc 0 [" << flush;
     }
 
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
@@ -595,7 +595,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
     InterpolateFieldToPts(fromField->m_exp, pts,
-                          clamp_low, clamp_up, def_value);
+                          clamp_low, clamp_up, def_value, !rank);
     
     if(rank == 0)
     {
@@ -609,7 +609,8 @@ void ProcessInterpPoints::InterpolateFieldToPts(
                                                 Array<OneD, Array<OneD, NekDouble> >   &pts,
                                                 NekDouble                              clamp_low,
                                                 NekDouble                              clamp_up,
-                                                NekDouble                              def_value)
+                                                NekDouble                              def_value,
+                                                bool isRoot)
 {
     int dim = pts.num_elements();
 
@@ -732,7 +733,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             }
         }
 
-        if (intpts%1000 == 0)
+        if (intpts%1000 == 0&&isRoot)
         {
             cout <<"." << flush;
         }

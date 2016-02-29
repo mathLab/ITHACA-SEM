@@ -46,7 +46,14 @@ std::string MappingTranslation::className =
     MappingTranslation::create, "Translation mapping (X_i = x_i + constant)");
 
 /**
- *
+ * @class MappingTranslation
+ * This class implements a trivial mapping defined by
+ * \f[ \bar{x} = x + c_1 \f]
+ * \f[ \bar{y} = y + c_2 \f]
+ * \f[ \bar{z} = z + c_3 \f]
+ * where \f$c_i\f$ are constants, \f$(\bar{x},\bar{y},\bar{z})\f$ are the 
+ * Cartesian (physical) coordinates and \f$(x,y,z)\f$ are the transformed 
+ * (computational) coordinates.
  */
 MappingTranslation::MappingTranslation(
         const LibUtilities::SessionReaderSharedPtr &pSession,

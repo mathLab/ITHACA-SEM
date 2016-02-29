@@ -46,7 +46,14 @@ std::string MappingXofXZ::className =
                 MappingXofXZ::create, "X = X(x,z)");
 
 /**
- *
+ * @class MappingXofXZ
+ * This class implements a mapping defined by a transformation of the type
+ * \f[ \bar{x} = \bar{x}(x,z) \f]
+ * \f[ \bar{y} = y \f]
+ * \f[ \bar{z} = z \f]
+ * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical) 
+ * coordinates and \f$(x,y,z)\f$ are the transformed (computational)
+ *  coordinates.
  */
 MappingXofXZ::MappingXofXZ(
         const LibUtilities::SessionReaderSharedPtr &pSession,

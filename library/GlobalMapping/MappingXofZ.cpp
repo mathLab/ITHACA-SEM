@@ -46,7 +46,15 @@ std::string MappingXofZ::className =
                 MappingXofZ::create, "X = x + f(z)");
 
 /**
- *
+ * @class MappingXofZ
+ * This class implements a constant-Jacobian mapping defined by
+ *  a transformation of the type
+ * \f[ \bar{x} = \bar{x}(x,z) = x + f(z) \f]
+ * \f[ \bar{y} = y \f]
+ * \f[ \bar{z} = z \f]
+ * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical) 
+ * coordinates and \f$(x,y,z)\f$ are the transformed (computational)
+ *  coordinates.
  */
 MappingXofZ::MappingXofZ(
         const LibUtilities::SessionReaderSharedPtr &pSession,

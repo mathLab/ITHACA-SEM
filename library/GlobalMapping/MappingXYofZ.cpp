@@ -46,7 +46,14 @@ std::string MappingXYofZ::className =
                 MappingXYofZ::create, "X = x + f(z), Y = y +g(z)");
 
 /**
- *
+ * @class MappingXYofZ
+ * This class implements a constant-Jacobian mapping defined by
+ * \f[ \bar{x} = \bar{x}(x,z) = x + f(z) \f]
+ * \f[ \bar{y} = \bar{y}(y,z) = y + g(z) \f]
+ * \f[ \bar{z} = z \f]
+ * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical) 
+ * coordinates and \f$(x,y,z)\f$ are the transformed (computational)
+ *  coordinates.
  */
 MappingXYofZ::MappingXYofZ(
         const LibUtilities::SessionReaderSharedPtr &pSession,

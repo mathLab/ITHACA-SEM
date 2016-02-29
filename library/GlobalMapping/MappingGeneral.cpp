@@ -47,7 +47,14 @@ std::string MappingGeneral::className =
             MappingGeneral::create, "X = X(x,y,z), Y = Y(x,y,z), Z=Z(x,y,z)");
 
 /**
- *
+ * @class MappingGeneral
+ * This class implements the most general mapping, defined by the transformation
+ * \f[ \bar{x} = \bar{x}(x,y,z) \f]
+ * \f[ \bar{y} = \bar{y}(x,y,z) \f]
+ * \f[ \bar{z} = \bar{z}(x,y,z) \f]
+ * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical) 
+ * coordinates and \f$(x,y,z)\f$ are the transformed (computational)
+ *  coordinates.
  */
 MappingGeneral::MappingGeneral(
         const LibUtilities::SessionReaderSharedPtr &pSession,

@@ -46,7 +46,14 @@ std::string MappingXYofXY::className =
                 MappingXYofXY::create, "X = X(x,y), Y = Y(x,y)");
 
 /**
- *
+ * @class MappingXYofXY
+ * This class implements a mapping defined by the transformation 
+ * \f[ \bar{x} = \bar{x}(x,y) \f]
+ * \f[ \bar{y} = \bar{y}(x,y) \f]
+ * \f[ \bar{z} = z \f]
+ * where \f$(\bar{x},\bar{y},\bar{z})\f$ are the Cartesian (physical) 
+ * coordinates and \f$(x,y,z)\f$ are the transformed (computational)
+ *  coordinates.
  */
 MappingXYofXY::MappingXYofXY(
         const LibUtilities::SessionReaderSharedPtr &pSession,

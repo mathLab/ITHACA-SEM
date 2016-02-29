@@ -1,6 +1,8 @@
 BasedOnStyle: LLVM
 AlignAfterOpenBracket: true
 IndentWidth: 4
+AlwaysBreakAfterDefinitionReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 9999999
 BreakBeforeBraces: Allman
 AllowShortBlocksOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None

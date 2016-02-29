@@ -66,6 +66,7 @@ int main(int argc, char* argv[])
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
+        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
@@ -342,9 +343,8 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // If any output module has to reset points then set intput
-    // modules to match
-    if(vm.count("noequispaced"))
+    // If any output module has to reset points then set intput modules to match
+   if(vm.count("noequispaced"))
     {
         for (int i = 0; i < modules.size(); ++i)
         {

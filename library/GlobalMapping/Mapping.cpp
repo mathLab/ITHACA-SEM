@@ -88,7 +88,12 @@ Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
 }
 
 /**
- *
+ * This function initialises the Mapping object. It computes the coordinates
+ * and velocity coordinates, initialises the workspace variables, and calls
+ * UpdateGeomInfo, which will perform the calculations specific for each type
+ * of Mapping.
+ * @param pFields ExpList array used in the mapping
+ * @param pMapping xml element describing the mapping
  */
 void Mapping::v_InitObject(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -229,7 +234,9 @@ void Mapping::v_InitObject(
 }
 
 /**
- *
+ * This function replaces the expansion list contained in m_fields, and then
+ * proceeds reinitialising the Mapping with this new field.
+ * @param pFields New field to be used by the Mapping
  */
 void Mapping::ReplaceField(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
@@ -246,7 +253,13 @@ void Mapping::ReplaceField(
 }
 
 /**
- *
+ * This function is responsible for loading the Mapping, guaranteeing that a
+ * single instance of this class exists. When it is first called, it creates a 
+ * Mapping and returns a pointer to it. On subsequent calls, it just returns 
+ * the pointer.
+ * @param pSession Session reader object
+ * @param pFields  Fields which will be used by the Mapping
+ * @return Pointer to the Mapping 
  */
 MappingSharedPtr Mapping::Load(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -277,7 +290,14 @@ MappingSharedPtr Mapping::Load(
     return m_mappingPtr;
 }
 
-
+/**
+ * This function should be called before writing a fld or chk file. It updates
+ * the metadata with information from the Mapping. Also, if the mapping is not
+ * defined by a function, it writes a .map file containing the coordinates and
+ * velocity of the coordinates.
+ * @param fieldMetaDataMap Metadata of the output file
+ * @param outname          Name of the output file
+ */
 void Mapping::Output( 
             LibUtilities::FieldMetaDataMap  &fieldMetaDataMap,
             const std::string                    &outname)
@@ -454,6 +474,15 @@ void Mapping::EvaluateFunction(
     }
 }
 
+/**
+ * This function converts a contravariant vector in transformed space
+ * \f$v^{j}\f$ to the corresponding \f$\bar{v}^{i}\f$ in Cartesian (physical)
+ * space using the relation 
+ * \f[\bar{v}^{i} = \frac{\partial \bar{x}^i}{\partial x^j}v^{j}\f]
+ *  
+ * @param inarray  Components of the vector in transformed space (\f$v^{j}\f$) 
+ * @param outarray Components of the vector in Cartesian space (\f$\bar{v}^{i}\f$)
+ */
 void Mapping::ContravarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -475,6 +504,15 @@ void Mapping::ContravarToCartesian(
     }
 }
 
+/**
+ * This function converts a covariant vector in transformed space
+ * \f$v_{j}\f$ to the corresponding \f$\bar{v}_{i}\f$ in Cartesian (physical)
+ * space using the relation 
+ * \f[\bar{v}_{i} = \frac{\partial x^j}{\partial \bar{x}^i}v_{j}\f]
+ *  
+ * @param inarray  Components of the vector in transformed space (\f$v_{j}\f$) 
+ * @param outarray Components of the vector in Cartesian space (\f$\bar{v}_{i}\f$)
+ */
 void Mapping::CovarToCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -496,6 +534,15 @@ void Mapping::CovarToCartesian(
     }
 }
 
+/**
+ * This function converts a contravariant vector in Cartesian space
+ * \f$\bar{v}^{i}\f$ to the corresponding \f$v^{j}\f$ in transformed
+ * space using the relation 
+ * \f[v^{j} = \frac{\partial x^j}{\partial \bar{x}^i}\bar{v}^{i}\f]
+ *  
+ * @param inarray  Components of the vector in Cartesian space (\f$\bar{v}^{i}\f$) 
+ * @param outarray Components of the vector in transformed space (\f$v^{j}\f$)
+ */
 void Mapping::ContravarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -517,6 +564,15 @@ void Mapping::ContravarFromCartesian(
     }
 }
 
+/**
+ * This function converts a covariant vector in Cartesian space
+ * \f$\bar{v}_{i}\f$ to the corresponding \f$v_{j}\f$ in transformed
+ * space using the relation 
+ * \f[\bar{v}_{j} = \frac{\partial \bar{x}^i}{\partial x^j}v_{i}\f]
+ *  
+ * @param inarray  Components of the vector in Cartesian space (\f$\bar{v}_{i}\f$) 
+ * @param outarray Components of the vector in transformed space (\f$v_{j}\f$)
+ */
 void Mapping::CovarFromCartesian(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -538,6 +594,16 @@ void Mapping::CovarFromCartesian(
     }
 }
 
+/**
+ * This function lowers the index of the contravariant vector \f$v^{i}\f$,
+ * transforming it into its associated covariant vector \f$v_{j}\f$
+ *  according to the relation
+ * \f[$v_{j} = g_{ij}v^{i}\f]
+ * where \f$g_{ij}\f$ is the metric tensor.
+ *  
+ * @param inarray  Components of the contravariant vector \f$v^{i}\f$ 
+ * @param outarray Components of the covariant vector \f$v_{j}\f$
+ */
 void Mapping::LowerIndex(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)
@@ -559,6 +625,16 @@ void Mapping::LowerIndex(
     }
 }
 
+/**
+ * This function raises the index of the covariant vector \f$v_{j}\f$,
+ * transforming it into its associated contravariant vector \f$v^{i}\f$
+ *  according to the relation
+ * \f[$v^{i} = g^{ij}v_{j}\f]
+ * where \f$g^{ij}\f$ is the inverse of the metric tensor.
+ *  
+ * @param inarray  Components of the contravariant vector \f$v^{i}\f$ 
+ * @param outarray Components of the covariant vector \f$v_{j}\f$
+ */
 void Mapping::RaiseIndex(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray)

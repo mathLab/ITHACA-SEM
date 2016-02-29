@@ -108,7 +108,7 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     int dim = m_f->m_fieldPts->GetDim();
 
     // assume one field is already defined from input file.
-    m_f->m_exp.resize(nFields+1);
+    m_f->m_exp.resize(nFields);
     for(i = 1; i < nFields; ++i)
     {
         m_f->m_exp[i] = m_f->AppendExpList(0);

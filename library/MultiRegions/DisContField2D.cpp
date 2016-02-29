@@ -1362,7 +1362,6 @@ namespace Nektar
 #if 1
             // Basis definition on each element
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
-
             if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
                 //cout << "================== NEW v_GetFwdBwdTracePhys ======================" << endl;
@@ -1703,15 +1702,38 @@ namespace Nektar
             }
             */
 #if 1
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+            {
+                Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
+                m_trace->IProductWRTBase(Fn, Fcoeffs);
             
-            //cout << "================== NEW v_AddTraceIntegral 2 ======================" << endl;
-            Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
-            m_trace->IProductWRTBase(Fn, Fcoeffs);
-            
-            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
-                                                              outarray);
+                m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                               outarray);
+            }
+            else
+            {
+                int e, n, offset, t_offset;
+                Array<OneD, NekDouble> e_outarray;
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                for(n = 0; n < GetExpSize(); ++n)
+                {
+                    offset = GetCoeff_Offset(n);
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                    {
+                        t_offset = GetTrace()->GetPhys_Offset(
+                            elmtToTrace[n][e]->GetElmtId());
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                            e, elmtToTrace[n][e],
+                            Fn+t_offset,
+                            e_outarray = outarray+offset);
+                    }
+                }
+            }
 #else
-            //cout << "================== OLD v_AddTraceIntegral 2 ======================" << endl;
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >

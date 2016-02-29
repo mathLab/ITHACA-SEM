@@ -59,8 +59,8 @@ file.
 [alias]
 branch-name = "!git rev-parse --abbrev-ref HEAD"
 diff-nows = diff --color -w
-log-branch = log --pretty="%Cgreen%h %Cred%an%Creset(%Cblue%ad%Creset)%n  %s" master..$(git branch-name)
-diff-branch = diff -U5 --minimal --color -w master...`git branch-name`
+log-branch = log --pretty='%C(green)%h %C(red)%an %C(reset)(%C(blue)%ad%C(reset))%n%s' master..
+diff-branch = diff -U5 --minimal --color -w master...
 ```
 
 This gives you four commands:
@@ -74,6 +74,11 @@ This gives you four commands:
   showing changes from `master` that aren't present in the branch (i.e. `git
   diff master...branch`), without whitespace changes. (This should be roughly
   equivalent to Gitlab's diff).
+
+If you prefer a graphical interface to see the files that have changed in your
+commit, you can additionally use the `git gui` command to bring up a simple
+interface. `git difftool` can also be used in combination with a GUI diff
+viewer, to graphically view the output `git diff`.
 
 ## Testing and Buildbot
 Your new features or fixes should include tests that cover the code you've

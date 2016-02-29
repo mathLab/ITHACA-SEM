@@ -1360,8 +1360,10 @@ namespace Nektar
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
 #if 1
-            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre
-             && m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
                 //cout << "================== NEW v_GetFwdBwdTracePhys ======================" << endl;
                 /*

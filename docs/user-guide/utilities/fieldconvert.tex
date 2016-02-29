@@ -106,6 +106,8 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing; 
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
+\item \inltt{pointdatatofld}: Given discrete data at quadrature points
+  project them onto an expansion basis and output fld file; 
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
@@ -494,6 +496,74 @@ FieldConvert -m meanmode file.xml file.fld file-mean.fld
 The output file \inltt{file-mean.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview.
+
+setnantovalue option
+%
+%
+%
+
+\subsection{ Project point data to a field: \textit{pointdatatofld} module}
+\label{s:utilities:fieldconvert:sub:pointdatatofld}
+To project a series of points given at the same quadrature distribution as the .xml file and write out a .fld file use the pointdatatofld module:
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --noequispaced -m pointdatatofld file.pts file.xml file.fld
+\end{lstlisting}
+%
+This command will read in the points provided in the \inltt{file.pts}
+and assume these are given at the same quadrature distribution as the
+mesh and expansions defined in \inltt{file.xml} and output the field
+to \inltt{file.fld}. If the points do not match an error will be dumped. 
+
+
+The file \inltt{file.pts} which is assumed to be given by an interpolation from another source is of the form:
+%
+\begin{lstlisting}[style=XMLStyle]
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <POINTS DIM="3" FIELDS="p">
+  1.70415 -0.4       -0.0182028      -0.106893
+  1.70415 -0.395683  -0.0182028      -0.106794
+  1.70415 -0.3875    -0.0182028      -0.106698
+  1.70415 -0.379317  -0.0182028      -0.103815
+  </POINTS>
+</NEKTAR>
+\end{lstlisting}
+%
+where \inltt{DIM="3" FIELDS="p} specifies that the field is
+three-dimensional and contains one variable, $p$. Each line defines a
+point, the first, second, and third columns contains the
+$x,y,z$-coordinate and subsequent columns contain the field values, in
+this case the $p$-value So in the general case of $n$-dimensional
+data, the $n$ coordinates are specified in the first $n$ columns
+accordingly followed by the field data. 
+
+The default argument is to use the equipapced (but potentially
+collapsed) coordinates which can  be obtained from the command.
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert file.xml file.dat
+\end{lstlisting}
+
+In this case the pointdatatofld module shoudl be used without the
+\inltt{--noequispaced} option. However this can lead to problems when
+peforming an elemental forward projection/transform since the mass
+matrix in a deformed element can be singular as the equispaced points
+do not have a sufficiently accurate quadrature rule that spans the
+polynomial space. Therefore it is adviseable to use the set of points
+given by
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --noequispaced file.xml file.dat
+\end{lstlisting}
+
+which produces a set of points at the gaussian collapsed
+coordinates. In this case one must also use the \inltt{--noequispaced}
+option when projecting to a field.
+
+Finally the option \inltt{setnantovalue=0} can also be used which sets
+any nan values in the interpolation to zero or any specified value in
+this option.
 
 %
 %

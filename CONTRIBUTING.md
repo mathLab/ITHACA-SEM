@@ -1,6 +1,19 @@
 Contributing to Nektar++
 ========================
 
+## Contents
+This is a reasonably complete guide to help if you're interested in contributing
+to Nektar++, either in reporting bugs or, hopefully, trying to fix them! It's
+split up into a number of sections:
+
+- [Issues and bug reports](#issues-and-bug-reports)
+- [How to contribute](#how-to-contribute)
+- [Submission checklist](#submission-checklist)
+- [Git cheatsheet](#git-cheatsheet)
+- [Testing and Buildbot](#testing-and-buildbot)
+- [Documentation](#documentation)
+- [Formatting guidelines](#formatting-guidelines)
+
 ## Issues and bug reports
 Think you've found a bug or issue with Nektar++? We're very keen to hear about
 it!
@@ -78,7 +91,7 @@ This gives you four commands:
 If you prefer a graphical interface to see the files that have changed in your
 commit, you can additionally use the `git gui` command to bring up a simple
 interface. `git difftool` can also be used in combination with a GUI diff
-viewer, to graphically view the output `git diff`.
+viewer, to graphically view the output of `git diff`.
 
 ## Testing and Buildbot
 Your new features or fixes should include tests that cover the code you've
@@ -148,12 +161,14 @@ below this would be fantastic.
   but don't use trailing inline comments to save the 80 character limit!
 - All code blocks (even one-line blocks) should use braces, and braces should be
   on new lines; for instance
+  
   ```c++
   if (someCondition)
   {
       myAwesomeFunction();
   }
   ```
+
 - **Don't use preprocessor directives and macros unless there is no viable
   alternative.**
 - However, please make sure you do have a header guard inside your `.h` files,

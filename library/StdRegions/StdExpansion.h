@@ -1349,7 +1349,7 @@ namespace Nektar
              * more even distribution of points more suitable for alot of
              * postprocessing
              */
-            void EquiSpacedToCoeffs(
+             STD_REGIONS_EXPORT void EquiSpacedToCoeffs(
                            const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble>       &outarray);
 

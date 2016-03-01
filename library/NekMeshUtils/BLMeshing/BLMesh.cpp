@@ -84,6 +84,10 @@ void BLMesh::Mesh()
             bln.symsurf = 0;
 
             //if the diff size is greater than 1 there is a curve that needs remeshing
+            if(diff.size() > 1)
+            {
+                cout << diff.size() << endl;
+            }
             ASSERTL0(diff.size() <= 1,"not setup for curve bl refinement");
             for(int i = 0; i < diff.size(); i++)
             {

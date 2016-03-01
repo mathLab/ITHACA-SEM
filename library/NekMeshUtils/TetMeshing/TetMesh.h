@@ -90,7 +90,7 @@ private:
     OctreeSharedPtr m_octree;
     /// bl mesh
     BLMeshSharedPtr m_blmesh;
-    ///
+    /// mesh the tets using the psuedosurface
     bool m_usePSurface;
     /// number of tetrahedra
     int m_numtet;

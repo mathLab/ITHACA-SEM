@@ -86,11 +86,17 @@ public:
         return m_psuedoSurface;
     }
 
+    /**
+     * @brief Get the list of symetry surfaces
+     */
     std::vector<int> GetSymSurfs()
     {
         return m_symSurfs;
     }
 
+    /**
+     * @brief Get the map of boundary layer surface nodes to the prism top nodes
+     */
     std::map<NodeSharedPtr, NodeSharedPtr> GetNodeMap(int s)
     {
         std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> >::iterator f;
@@ -99,6 +105,9 @@ public:
         return f->second;
     }
 
+    /*
+     * @brief Get the list of surfaces to have a boundary layer generated
+     */
     std::vector<unsigned int> GetBLSurfs()
     {
         return m_blsurfs;
@@ -114,11 +123,13 @@ private:
     std::vector<unsigned int> m_blsurfs;
     /// thickness of the boundary layer
     NekDouble m_bl;
-    /// map from surface element id to opposite face of prism
-    std::map<int, FaceSharedPtr> m_surftopriface;
+    /// list of surfaces to be remeshed due to the boundary layer
     std::vector<int> m_symSurfs;
+    /// data structure used to store and develop bl information
     std::map<NodeSharedPtr, blInfo> blData;
+    /// list of nodes which will lie of symtetry surfaces
     std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
+    /// list of elements which form the psuedo surface from the top of prisms
     std::vector<ElementSharedPtr> m_psuedoSurface;
 };
 

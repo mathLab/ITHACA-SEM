@@ -210,7 +210,6 @@ void InputCAD::Process()
     {
         m_mesh->m_numcomp = 1;  //just tets
     }
-    m_mesh->m_nummode = 2;
 
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
@@ -227,12 +226,6 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    m_mesh->m_expDim = 3;
-    m_mesh->m_fields.push_back("u");
-    m_mesh->m_fields.push_back("v");
-    m_mesh->m_fields.push_back("w");
-    m_mesh->m_fields.push_back("p");
-
     map<int, FaceSharedPtr> surftopriface;
     //map of surface element id to opposite prism
     //face for psudo surface in tetmesh
@@ -248,18 +241,17 @@ void InputCAD::Process()
         m_surfacemesh->Remesh(m_blmesh);
 
         //create tet mesh
+        m_mesh->m_expDim = 3;
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
                                                 m_mesh, m_octree, m_blmesh);
     }
     else
     {
+        m_mesh->m_expDim = 3;
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
     }
 
-    m_mesh->m_expDim = 2;
-
-    //m_tet->Mesh();
-    m_mesh->m_element[3].clear();
+    m_tet->Mesh();
 
     ClearElementLinks();
     ProcessVertices  ();
@@ -268,7 +260,7 @@ void InputCAD::Process()
     ProcessElements  ();
     ProcessComposites();
 
-    //m_surfacemesh->HOSurf();
+    m_surfacemesh->HOSurf();
 
     if(m_mesh->m_verbose)
     {

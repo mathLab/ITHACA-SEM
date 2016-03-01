@@ -81,9 +81,9 @@ public:
     /**
      * @brief Get the map of surface element id to pseudo surface prism face
      */
-    std::map<int, FaceSharedPtr> GetSurfToPri()
+    std::vector<ElementSharedPtr> GetPsuedoSurf()
     {
-        return m_surftopriface;
+        return m_psuedoSurface;
     }
 
     std::vector<int> GetSymSurfs()
@@ -97,6 +97,11 @@ public:
         f = m_symNodes.find(s);
         ASSERTL0(f != m_symNodes.end(), "surf not found");
         return f->second;
+    }
+
+    std::vector<unsigned int> GetBLSurfs()
+    {
+        return m_blsurfs;
     }
 
 private:
@@ -114,6 +119,7 @@ private:
     std::vector<int> m_symSurfs;
     std::map<NodeSharedPtr, blInfo> blData;
     std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
+    std::vector<ElementSharedPtr> m_psuedoSurface;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

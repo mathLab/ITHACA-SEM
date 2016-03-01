@@ -66,7 +66,7 @@ public:
     TetMesh(MeshSharedPtr m, OctreeSharedPtr oct)
                 : m_mesh(m), m_octree(oct)
     {
-        m_pseudosurface = false;
+        m_usePSurface = false;
     };
 
     /**
@@ -75,7 +75,7 @@ public:
     TetMesh(MeshSharedPtr m, OctreeSharedPtr oct, BLMeshSharedPtr b)
                 : m_mesh(m), m_octree(oct), m_blmesh(b)
     {
-        m_pseudosurface = true;
+        m_usePSurface = true;
     };
 
     /**
@@ -91,13 +91,12 @@ private:
     /// bl mesh
     BLMeshSharedPtr m_blmesh;
     ///
-    bool m_pseudosurface;
+    bool m_usePSurface;
     /// number of tetrahedra
     int m_numtet;
     /// conncetivity of the tets from the interface
     std::vector<Array<OneD, int> > m_tetconnect;
 
-    std::map<int, FaceSharedPtr> m_surftopriface;
 };
 
 typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;

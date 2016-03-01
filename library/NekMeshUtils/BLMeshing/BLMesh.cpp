@@ -320,8 +320,12 @@ void BLMesh::Mesh()
 
     map<int,int> nm;
 
+    ElmtConfig pconf(LibUtilities::ePrism,1,false,false);
+    ElmtConfig tconf(LibUtilities::eTriangle,1,false,false);
+
     for(int i = 0; i < pTri.size(); i++)
     {
+        vector<NodeSharedPtr> tn(3); //nodes for pseduo surface
         vector<NodeSharedPtr> pn(6); //all prism nodes
         vector<NodeSharedPtr> n = pTri[i]->GetVertexList();
 
@@ -351,17 +355,21 @@ void BLMesh::Mesh()
         {
             pn[nm[j*2+0]] = n[j];
             pn[nm[j*2+1]] = blData[n[j]].pNode;
+            tn[j] = blData[n[j]].pNode;
         }
 
-        ElmtConfig conf(LibUtilities::ePrism,1,false,false);
+
         vector<int> tags;
         tags.push_back(1); //all prisms are comp 1
         ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(LibUtilities::ePrism, conf, pn, tags);
+                    CreateInstance(LibUtilities::ePrism, pconf, pn, tags);
 
         m_mesh->m_element[3].push_back(E);
 
-        //need to build info for pseduo surface
+        //tag of this element doesnt matter so can just be 1
+        ElementSharedPtr T = GetElementFactory().
+                    CreateInstance(LibUtilities::eTriangle, tconf, tn, tags);
+        m_psuedoSurface.push_back(T);
     }
 
     //loop over all prisms, if invalid shrink until it is

@@ -47,20 +47,20 @@ namespace Utilities
 /// Converter from fld to pts.
 class OutputPts : public OutputModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputPts>::AllocateSharedPtr(f);
-        }
-        static ModuleKey m_className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputPts>::AllocateSharedPtr(f);
+    }
+    static ModuleKey m_className;
 
-        OutputPts(FieldSharedPtr f);
-        virtual ~OutputPts();
+    OutputPts(FieldSharedPtr f);
+    virtual ~OutputPts();
 
-        /// Write fld to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 };
-
 }
 }
 

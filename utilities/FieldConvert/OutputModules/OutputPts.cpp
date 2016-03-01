@@ -41,16 +41,13 @@ using namespace std;
 #include "OutputPts.h"
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
-
 namespace Nektar
 {
 namespace Utilities
 {
 
-ModuleKey OutputPts::m_className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eOutputModule, "pts"), OutputPts::create,
-        "Writes a pts file.");
+ModuleKey OutputPts::m_className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eOutputModule, "pts"), OutputPts::create, "Writes a pts file.");
 
 OutputPts::OutputPts(FieldSharedPtr f) : OutputModule(f)
 {
@@ -72,34 +69,37 @@ void OutputPts::Process(po::variables_map &vm)
 
     fs::path writefile(filename);
     int writepts = 1;
-    if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
+    if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
     {
         LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
         int rank = comm->GetRank();
         writepts = 0; // set to zero for reduce all to be correct.
 
-        if(rank == 0)
+        if (rank == 0)
         {
             string answer;
             cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-            getline(cin,answer);
-            if(answer.compare("y") == 0)
+            getline(cin, answer);
+            if (answer.compare("y") == 0)
             {
                 writepts = 1;
             }
             else
             {
-                cout << "Not writing file " << filename << " because it already exists" << endl;
+                cout << "Not writing file " << filename
+                     << " because it already exists" << endl;
             }
         }
 
-        comm->AllReduce(writepts,LibUtilities::ReduceSum);
+        comm->AllReduce(writepts, LibUtilities::ReduceSum);
     }
 
-    if(writepts)
+    if (writepts)
     {
         LibUtilities::PtsIO ptsIO(m_f->m_session->GetComm());
-        Array<OneD, Array<OneD, NekDouble> > tmp(m_f->m_graph->GetMeshDimension() + m_f->m_fielddef[0]->m_fields.size());
+        Array<OneD, Array<OneD, NekDouble> > tmp(
+            m_f->m_graph->GetMeshDimension() +
+            m_f->m_fielddef[0]->m_fields.size());
 
         switch (m_f->m_graph->GetMeshDimension())
         {
@@ -122,14 +122,18 @@ void OutputPts::Process(po::variables_map &vm)
                 break;
         }
 
-        for (int i = 0; i < m_f->m_fielddef[0]->m_fields.size() ; ++i)
+        for (int i = 0; i < m_f->m_fielddef[0]->m_fields.size(); ++i)
         {
-            tmp[i + m_f->m_graph->GetMeshDimension()] = m_f->m_exp[i]->GetPhys();
+            tmp[i + m_f->m_graph->GetMeshDimension()] =
+                m_f->m_exp[i]->GetPhys();
         }
-        LibUtilities::PtsFieldSharedPtr tmpPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_f->m_graph->GetMeshDimension(), m_f->m_fielddef[0]->m_fields, tmp);
+        LibUtilities::PtsFieldSharedPtr tmpPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                m_f->m_graph->GetMeshDimension(),
+                m_f->m_fielddef[0]->m_fields,
+                tmp);
         ptsIO.Write(filename, tmpPts);
     }
 }
-
 }
 }

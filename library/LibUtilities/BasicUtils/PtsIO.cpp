@@ -61,7 +61,6 @@ namespace ptime = boost::posix_time;
 namespace ip = boost::asio::ip;
 namespace berrc = boost::system::errc;
 
-
 namespace Nektar
 {
 namespace LibUtilities
@@ -81,17 +80,16 @@ void Import(const string &inFile, PtsFieldSharedPtr &ptsField)
     // doing.
     if (init)
     {
-        MPI_Comm_size( MPI_COMM_WORLD, &size );
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
         ASSERTL0(size == 1,
-                "This static function is not available in parallel. Please "
-                "instantiate a FieldIO object for parallel use.");
+                 "This static function is not available in parallel. Please "
+                 "instantiate a FieldIO object for parallel use.");
     }
 #endif
     CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
     PtsIO p(c);
     p.Import(inFile, ptsField);
 }
-
 
 void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
 {
@@ -107,10 +105,10 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
     // doing.
     if (init)
     {
-        MPI_Comm_size( MPI_COMM_WORLD, &size );
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
         ASSERTL0(size == 1,
-                "This static function is not available in parallel. Please "
-                "instantiate a FieldIO object for parallel use.");
+                 "This static function is not available in parallel. Please "
+                 "instantiate a FieldIO object for parallel use.");
     }
 #endif
     CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
@@ -118,7 +116,10 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
     p.Write(outFile, ptsField);
 }
 
-
+PtsIO::PtsIO(CommSharedPtr pComm, bool sharedFilesystem)
+    : FieldIO(pComm, sharedFilesystem)
+{
+}
 
 /**
  * @brief Import a pts field from file
@@ -126,13 +127,16 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
  * @param inFile    filename of the file to read
  * @param ptsField  the resulting pts field.
  */
-void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField, FieldMetaDataMap &fieldmetadatamap)
+void PtsIO::Import(const string &inFile,
+                   PtsFieldSharedPtr &ptsField,
+                   FieldMetaDataMap &fieldmetadatamap)
 {
     std::string infile = inFile;
 
     fs::path pinfilename(infile);
 
-    if(fs::is_directory(pinfilename)) // check to see that infile is a directory
+    // check to see that infile is a directory
+    if (fs::is_directory(pinfilename))
     {
         fs::path infofile("Info.xml");
         fs::path fullpath = pinfilename / infofile;
@@ -141,20 +145,19 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField, FieldMetaD
         std::vector<std::string> filenames;
         std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
 
-
-        ImportMultiFldFileIDs(infile,filenames, elementIDs_OnPartitions,
-                              fieldmetadatamap);
+        ImportMultiFldFileIDs(
+            infile, filenames, elementIDs_OnPartitions, fieldmetadatamap);
 
         // Load metadata
         ImportFieldMetaData(infile, fieldmetadatamap);
 
-        //TODO: This currently only loads the filename matching our rank.
+        // TODO: This currently only loads the filename matching our rank.
         filenames.clear();
         boost::format pad("P%1$07d.%2$s");
         pad % m_comm->GetRank() % GetFileEnding();
         filenames.push_back(pad.str());
 
-        for(int i = 0; i < filenames.size(); ++i)
+        for (int i = 0; i < filenames.size(); ++i)
         {
             fs::path pfilename(filenames[i]);
             fullpath = pinfilename / pfilename;
@@ -166,7 +169,8 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField, FieldMetaD
             std::stringstream errstr;
             errstr << "Unable to load file: " << fname << std::endl;
             errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
+            errstr << "Position: Line " << doc1.ErrorRow() << ", Column "
+                   << doc1.ErrorCol() << std::endl;
             ASSERTL0(loadOkay1, errstr.str());
 
             ImportFieldData(doc1, ptsField);
@@ -180,14 +184,13 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField, FieldMetaD
         std::stringstream errstr;
         errstr << "Unable to load file: " << infile << std::endl;
         errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-        errstr << "Position: Line " << doc.ErrorRow() << ", Column " <<
-            doc.ErrorCol() << std::endl;
+        errstr << "Position: Line " << doc.ErrorRow() << ", Column "
+               << doc.ErrorCol() << std::endl;
         ASSERTL0(loadOkay, errstr.str());
 
         ImportFieldData(doc, ptsField);
     }
 }
-
 
 /**
  * @brief Save a pts field to a file
@@ -216,7 +219,7 @@ void PtsIO::Write(const string &outFile,
     ptsFile << "FIELDS=\"" << fn << "\" ";
     ptsFile << ">" << endl;
 
-    Array <OneD, Array <OneD, NekDouble > > pts;
+    Array<OneD, Array<OneD, NekDouble> > pts;
     ptsField->GetPts(pts);
     for (int i = 0; i < np; ++i)
     {
@@ -271,7 +274,6 @@ void PtsIO::Write(const string &outFile,
     */
 }
 
-
 void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
 {
     TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
@@ -286,10 +288,12 @@ void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
     vector<string> fieldNames;
     if (!fields.empty())
     {
-        bool valid = ParseUtils::GenerateOrderedStringVector(
-                        fields.c_str(), fieldNames);
-        ASSERTL0(valid,
-                "Unable to process list of field variable in  FIELDS attribute:  " + fields);
+        bool valid =
+            ParseUtils::GenerateOrderedStringVector(fields.c_str(), fieldNames);
+        ASSERTL0(
+            valid,
+            "Unable to process list of field variable in  FIELDS attribute:  " +
+                fields);
     }
 
     int nfields = fieldNames.size();
@@ -300,11 +304,11 @@ void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
     std::istringstream pointsDataStrm(pointsBody->ToText()->Value());
 
     vector<NekDouble> ptsSerial;
-    Array<OneD,  Array<OneD,  NekDouble> > pts(totvars);
+    Array<OneD, Array<OneD, NekDouble> > pts(totvars);
 
     try
     {
-        NekDouble      ptsStream;
+        NekDouble ptsStream;
         while (!pointsDataStrm.fail())
         {
             pointsDataStrm >> ptsStream;
@@ -335,15 +339,14 @@ void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
     ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
 }
 
-
 void PtsIO::SetUpFieldMetaData(const string outname)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
 
     int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
+    int rank = m_comm->GetRank();
 
-    fs::path specPath (outname);
+    fs::path specPath(outname);
 
     // Collate per-process element lists on root process to generate
     // the info file.
@@ -352,7 +355,7 @@ void PtsIO::SetUpFieldMetaData(const string outname)
         // Set up output names
         std::vector<std::string> filenames;
         std::vector<std::vector<unsigned int> > ElementIDs;
-        for(int i = 0; i < nprocs; ++i)
+        for (int i = 0; i < nprocs; ++i)
         {
             boost::format pad("P%1$07d.%2$s");
             pad % i % GetFileEnding();
@@ -364,8 +367,8 @@ void PtsIO::SetUpFieldMetaData(const string outname)
         }
 
         // Write the Info.xml file
-        string infofile = LibUtilities::PortablePath(
-                                    specPath / fs::path("Info.xml"));
+        string infofile =
+            LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
 
         cout << "Writing: " << specPath << endl;
 
@@ -373,7 +376,5 @@ void PtsIO::SetUpFieldMetaData(const string outname)
         WriteMultiFldFileIDs(infofile, filenames, ElementIDs, fieldmetadatamap);
     }
 }
-
-
 }
 }

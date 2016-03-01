@@ -19,6 +19,7 @@ v4.3.0
   (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
+- Add contribution guide (!551)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)

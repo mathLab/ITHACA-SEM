@@ -36,7 +36,9 @@ v4.3.0
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
-
+- Add module to project set of points to a fld file
+- Add support for interpolating to a box of points and fix ability to run interppointstofld module in parallel when using a plane or box option 
+	
 **MeshConvert:**
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order

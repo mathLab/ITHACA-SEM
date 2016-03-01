@@ -38,6 +38,7 @@
 
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include <vector>
 using namespace std;

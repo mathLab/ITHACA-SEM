@@ -90,8 +90,8 @@ namespace Nektar
                 (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
 
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
+            int nylines = m_homogeneousBasis_y->GetNumPoints();
+            int nzlines = m_homogeneousBasis_z->GetNumPoints();
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
@@ -164,28 +164,29 @@ namespace Nektar
             int cnt = 0;
             int cnt1 = 0;
             int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
-			int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
             NekDouble beta_y;
-			NekDouble beta_z;
-			NekDouble beta;
-			StdRegions::ConstFactorMap new_factors;
+            NekDouble beta_z;
+            NekDouble beta;
+            StdRegions::ConstFactorMap new_factors;
 
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
 			
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
-				// Fourier transform forcing function
-                            HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
-			}
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else
+            {
+                // Fourier transform forcing function
+                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+            }
 
+            int l =0;
             for(n = 0; n < nhom_modes_z; ++n)
             {
-                for(m = 0; m < nhom_modes_y; ++m)
+                for(m = 0; m < nhom_modes_y; ++m, l++)
                 {
                     beta_z = 2*M_PI*(n/2)/m_lhom_z;
                     beta_y = 2*M_PI*(m/2)/m_lhom_y;
@@ -193,13 +194,13 @@ namespace Nektar
                     new_factors = factors;
                     new_factors[StdRegions::eFactorLambda] += beta;
                     
-                    m_lines[n]->HelmSolve(fce + cnt,
+                    m_lines[l]->HelmSolve(fce + cnt,
                                           e_out = outarray + cnt1,
                                           flags, new_factors, varcoeff, dirForcing);
                     
-                    cnt  += m_lines[n]->GetTotPoints();
+                    cnt  += m_lines[l]->GetTotPoints();
                     
-                    cnt1 += m_lines[n]->GetNcoeffs();
+                    cnt1 += m_lines[l]->GetNcoeffs();
                     
                 }
             }

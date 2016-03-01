@@ -161,7 +161,10 @@ namespace Gs
         MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        return nektar_gs_setup(pId.get(),pId.num_elements(), &vComm, 0, gs_auto, 1);
+        gs_data* result = nektar_gs_setup(pId.get(),pId.num_elements(), 
+                                                    &vComm, 0, gs_auto, 1);
+        MPI_Comm_free(&vComm.c);
+        return result;
 #else
         return 0;
 #endif
@@ -202,7 +205,9 @@ namespace Gs
     static inline void Finalise (gs_data *pGsh)
     {
 #ifdef NEKTAR_USE_MPI
-        if (pGsh)
+        int finalized;
+        MPI_Finalized(&finalized);
+        if (pGsh && !finalized)
         {
             nektar_gs_free(pGsh);
         }

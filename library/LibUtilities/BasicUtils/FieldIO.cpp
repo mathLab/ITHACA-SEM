@@ -37,10 +37,19 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include "zlib.h"
 #include <set>
@@ -137,9 +146,9 @@ namespace Nektar
         /**
          *
          */
-        FieldIO::FieldIO(
-                LibUtilities::CommSharedPtr pComm)
-            : m_comm(pComm)
+        FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
+                         bool                        sharedFilesystem)
+            : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
         {
         }
 
@@ -346,30 +355,19 @@ namespace Nektar
                     GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
                 }
                 elemTag->SetAttribute("ID", idString);
+                elemTag->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
 
-                std::string compressedDataString;
-                ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
-                        "Failed to compress field data.");
+                // Add this information for future compatibility
+                // issues, for exmaple in case we end up using a 128
+                // bit machine.
+                elemTag->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
+                std::string base64string;
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
+                                                fielddata[f], base64string),
+                         "Failed to compress field data.");
 
-                // If the string length is not divisible by 3,
-                // pad it. There is a bug in transform_width
-                // that will make it reference past the end
-                // and crash.
-                switch (compressedDataString.length() % 3)
-                {
-                case 1:
-                    compressedDataString += '\0';
-                case 2:
-                    compressedDataString += '\0';
-                    break;
-                }
-
-                // Convert from binary to base64.
-                typedef boost::archive::iterators::base64_from_binary<
-                        boost::archive::iterators::transform_width<
-                        std::string::const_iterator, 6, 8> > base64_t;
-                std::string base64string(base64_t(compressedDataString.begin()),
-                        base64_t(compressedDataString.end()));
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -784,6 +782,24 @@ namespace Nektar
                             numPointsString.insert(0, attr->Value());
                             numPointDef = true;
                         }
+                        else if (attrName == "COMPRESSED")
+                        {
+                            if(!boost::iequals(attr->Value(),
+                                            CompressData::GetCompressString()))
+                            {
+                                WARNINGL0(false, "Compressed formats do not "
+                                          "match. Expected: "
+                                          + CompressData::GetCompressString()
+                                          + " but got "+ string(attr->Value()));
+                            }
+                        }
+                        else if (attrName =="BITSIZE")
+                        {
+                            // This information is for future
+                            // compatibility issues, for exmaple in
+                            // case we end up using a 128 bit machine.
+                            // Currently just do nothing
+                        }
                         else
                         {
                             std::string errstr("Unknown attribute: ");
@@ -977,16 +993,27 @@ namespace Nektar
                         elementChild = elementChild->NextSibling();
                     }
 
-                    // Convert from base64 to binary.
-                    typedef boost::archive::iterators::transform_width<
-                            boost::archive::iterators::binary_from_base64<
-                            std::string::const_iterator>, 8, 6 > binary_t;
-                    std::string vCompressed(binary_t(elementStr.begin()),
-                                            binary_t(elementStr.end()));
-
                     std::vector<NekDouble> elementFieldData;
-                    ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
-                            "Failed to decompress field data.");
+                    // Convert from base64 to binary.
+
+                    const char *CompressStr = element->Attribute("COMPRESSED");
+                    if(CompressStr)
+                    {
+                        if(!boost::iequals(CompressStr,
+                                           CompressData::GetCompressString()))
+                        {
+                            WARNINGL0(false, "Compressed formats do not match. "
+                                      "Expected: "
+                                      + CompressData::GetCompressString()
+                                      + " but got "+ string(CompressStr));
+                        }
+                    }
+
+                    ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
+                                                        elementStr,
+                                                        elementFieldData),
+                             "Failed to decompress field data.");
+
 
                     fielddata.push_back(elementFieldData);
 
@@ -1119,21 +1146,63 @@ namespace Nektar
             int nprocs = m_comm->GetSize();
             int rank   = m_comm->GetRank();
 
-            // Directory name if in parallel, regular filename if in serial
+            // Path to output: will be directory if parallel, normal file if
+            // serial.
             fs::path specPath (outname);
+            fs::path fulloutname;
+
+            if (nprocs == 1)
+            {
+                fulloutname = specPath;
+            }
+            else
+            {
+                // Guess at filename that might belong to this process.
+                boost::format pad("P%1$07d.fld");
+                pad % m_comm->GetRank();
+
+                // Generate full path name
+                fs::path poutfile(pad.str());
+                fulloutname = specPath / poutfile;
+            }
 
             // Remove any existing file which is in the way
-            if(m_comm->RemoveExistingFiles())
+            if (m_comm->RemoveExistingFiles())
             {
-                try
+                if (m_sharedFilesystem)
                 {
-                    fs::remove_all(specPath);
+                    // First, each process clears up its .fld file. This might
+                    // or might not be there (we might have changed numbers of
+                    // processors between runs, for example), but we can try
+                    // anyway.
+                    try
+                    {
+                        fs::remove_all(fulloutname);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
-                catch (fs::filesystem_error& e)
+
+                m_comm->Block();
+
+                // Now get rank 0 processor to tidy everything else up.
+                if (rank == 0 || !m_sharedFilesystem)
                 {
-                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                             "Filesystem error: " + string(e.what()));
+                    try
+                    {
+                        fs::remove_all(specPath);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
+
+                m_comm->Block();
             }
 
             // serial processing just add ending.
@@ -1160,12 +1229,17 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                fs::create_directory(specPath);
+                if (rank == 0 || !m_sharedFilesystem)
+                {
+                    fs::create_directory(specPath);
+                }
             }
             catch (fs::filesystem_error& e)
             {
                 ASSERTL0(false, "Filesystem error: " + string(e.what()));
             }
+
+            m_comm->Block();
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1205,132 +1279,8 @@ namespace Nektar
                 m_comm->Send(0, idlist);
             }
 
-            // Pad rank to 8char filenames, e.g. P0000000.fld
-            boost::format pad("P%1$07d.fld");
-            pad % m_comm->GetRank();
-
-            // Generate full path name
-            fs::path poutfile(pad.str());
-            fs::path fulloutname = specPath / poutfile;
-
             // Return the full path to the partition for this process
             return LibUtilities::PortablePath(fulloutname);
-        }
-
-
-        /**
-         * Compress a vector of NekDouble values into a string using zlib.
-         */
-        int FieldIO::Deflate(std::vector<NekDouble>& in,
-                        string& out)
-        {
-            int ret;
-            unsigned have;
-            z_stream strm;
-            unsigned char* input = (unsigned char*)(&in[0]);
-            string buffer;
-            buffer.resize(CHUNK);
-
-            /* allocate deflate state */
-            strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
-            strm.opaque = Z_NULL;
-            ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
-
-            ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
-
-            strm.avail_in = in.size() * sizeof(NekDouble) / sizeof(char);
-            strm.next_in = input;
-
-            // Deflate input until output buffer is no longer full.
-            do {
-                strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*)(&buffer[0]);
-
-                ret = deflate(&strm, Z_FINISH);
-
-                // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
-                // Z_STREAM_END. All, except Z_STREAM_ERROR are ok.
-                ASSERTL0(ret != Z_STREAM_ERROR, "Zlib stream error");
-
-                have = CHUNK - strm.avail_out;
-                out += buffer.substr(0, have);
-
-            } while (strm.avail_out == 0);
-
-            // Check all input was processed.
-            ASSERTL0(strm.avail_in == 0, "Not all input was used.");
-
-            // Check stream is complete.
-            ASSERTL0(ret == Z_STREAM_END, "Stream not finished");
-
-            // Clean-up and return
-            (void)deflateEnd(&strm);
-            return Z_OK;
-        }
-
-
-        /**
-         * Decompress a zlib-compressed string into a vector of NekDouble
-         * values.
-         */
-        int FieldIO::Inflate(std::string& in,
-                    std::vector<NekDouble>& out)
-        {
-            int ret;
-            unsigned have;
-            z_stream strm;
-            string buffer;
-            buffer.resize(CHUNK);
-            string output;
-
-            strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
-            strm.opaque = Z_NULL;
-            strm.avail_in = 0;
-            strm.next_in = Z_NULL;
-            ret = inflateInit(&strm);
-            ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
-
-            strm.avail_in = in.size();
-            strm.next_in = (unsigned char*)(&in[0]);
-
-            do {
-                strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*)(&buffer[0]);
-
-                ret = inflate(&strm, Z_NO_FLUSH);
-
-                ASSERTL0(ret != Z_STREAM_ERROR, "Stream error occured.");
-
-                switch (ret) {
-                    case Z_NEED_DICT:
-                        ret = Z_DATA_ERROR;     /* and fall through */
-                    case Z_DATA_ERROR:
-                    case Z_MEM_ERROR:
-                        (void)inflateEnd(&strm);
-                        return ret;
-                }
-
-                have = CHUNK - strm.avail_out;
-                output += buffer.substr(0, have);
-
-            } while (strm.avail_out == 0);
-
-            (void)inflateEnd(&strm);
-
-            if (ret == Z_STREAM_END)
-            {
-                NekDouble* readFieldData = (NekDouble*) output.c_str();
-                unsigned int len = output.size() * sizeof(*output.c_str())
-                                                 / sizeof(NekDouble);
-                out.assign( readFieldData, readFieldData + len);
-                return Z_OK;
-            }
-            else
-            {
-                return Z_DATA_ERROR;
-            }
         }
 
         /**

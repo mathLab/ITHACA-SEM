@@ -42,37 +42,44 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+class FilterReynoldsStresses : public FilterAverageFields
+{
+public:
+    friend class MemoryManager<FilterReynoldsStresses>;
+
+    /// Creates an instance of this class
+    static FilterSharedPtr
+    create(const LibUtilities::SessionReaderSharedPtr &pSession,
+           const std::map<std::string, std::string> &pParams)
     {
-        class FilterReynoldsStresses : public FilterAverageFields
-        {
-        public:
-            friend class MemoryManager<FilterReynoldsStresses>;
-            
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterReynoldsStresses>::AllocateSharedPtr(pSession, pParams);
-                return p;
-            }
-
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterReynoldsStresses(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterReynoldsStresses();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-            virtual void v_AddExtraFields(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-
-            std::vector<Array<OneD, NekDouble> > m_fields;
-        };
+        FilterSharedPtr p =
+            MemoryManager<FilterReynoldsStresses>::AllocateSharedPtr(pSession,
+                                                                     pParams);
+        return p;
     }
+
+    /// Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT
+    FilterReynoldsStresses(const LibUtilities::SessionReaderSharedPtr &pSession,
+                           const std::map<std::string, std::string> &pParams);
+    SOLVER_UTILS_EXPORT ~FilterReynoldsStresses();
+
+protected:
+    virtual void v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    virtual bool v_IsTimeDependent();
+    virtual void v_AddExtraFields(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+
+    std::vector<Array<OneD, NekDouble> > m_fields;
+};
+}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESES_H */

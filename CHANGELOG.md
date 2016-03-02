@@ -38,8 +38,9 @@ v4.3.0
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
 - Add module to project set of points to a fld file(!561)
-- Add support for interpolating to a box of points and fix ability to run interppointstofld module in parallel when using a plane or box optio(!561)n 
-	
+- Add support for interpolating to a box of points and fix ability to run interppointstofld module in parallel when using a plane or box optio(!561)
+- Add option to output equi-spaced points in VTU format (!550)
+
 **MeshConvert:**
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order

@@ -29,8 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Generate information to be able to calculate the
-// Reynolds streses
+// Description: Append Reynolds stresses to the average fields
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -66,6 +65,7 @@ void FilterReynoldsStresses::v_Initialise(
     int origFields = pFields.num_elements();
 
     m_fields.resize(nExtraFields);
+    m_delta.resize(dim);
     m_avgFields.resize(m_avgFields.size() + nExtraFields);
 
     for (int n = 0; n < nExtraFields; ++n)
@@ -75,20 +75,25 @@ void FilterReynoldsStresses::v_Initialise(
         m_fields[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
     }
 
+    for (int n = 0; n < dim; ++n)
+    {
+        m_delta[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
+    }
+
     if (dim == 2)
     {
         m_variables.push_back("uu");
-        m_variables.push_back("vv");
         m_variables.push_back("uv");
+        m_variables.push_back("vv");
     }
     else if (dim == 3)
     {
         m_variables.push_back("uu");
-        m_variables.push_back("vv");
-        m_variables.push_back("ww");
         m_variables.push_back("uv");
+        m_variables.push_back("uw");
+        m_variables.push_back("vv");
         m_variables.push_back("vw");
-        m_variables.push_back("vw");
+        m_variables.push_back("ww");
     }
     else
     {
@@ -100,91 +105,50 @@ void FilterReynoldsStresses::v_AddExtraFields(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    Array<OneD, NekDouble> tmp(m_fields[0].num_elements());
-    int dim = pFields.num_elements() - 1;
+    // Ignore first sample (its contribution is zero)
+    if( m_numAverages == 1)
+    {
+        return;
+    }
+
+    int i, j, n;
+    int nq          = pFields[0]->GetTotPoints();
+    int dim         = pFields.num_elements() - 1;
     int extraFields = dim == 2 ? 3 : 6;
+    int origFields  = pFields.num_elements();
 
-    // collect velocities squared.
-    for (int n = 0; n < pFields.num_elements() - 1; ++n)
+    Array<OneD, NekDouble> tmpCoeff(pFields[0]->GetNcoeffs());
+
+    // Constant n/(n-1)
+    NekDouble fac = ((NekDouble) m_numAverages) / (m_numAverages-1);
+
+    // delta_i = (ui_n - \bar{ui}_n)
+    for (i = 0; i < dim; ++i)
     {
-        Vmath::Vmul(m_fields[0].num_elements(),
-                    pFields[n]->GetPhys(),
-                    1,
-                    pFields[n]->GetPhys(),
-                    1,
-                    tmp,
-                    1);
-
-        Vmath::Vadd(
-            m_fields[0].num_elements(), tmp, 1, m_fields[n], 1, m_fields[n], 1);
+        // phys values of \bar{ui}
+        pFields[i]->BwdTrans(m_avgFields[i], m_delta[i]);
+        Vmath::Smul(nq, 1.0/m_numAverages, m_delta[i], 1, m_delta[i], 1);
+        // Calculate delta
+        Vmath::Vsub(nq, pFields[i]->GetPhys(), 1, m_delta[i], 1, m_delta[i], 1);
     }
 
-    if (dim == 2)
+    // Calculate correction: C_{n} - C_{n-1} = fac * deltaI * deltaJ
+    for (i = 0, n = 0; i < dim; ++i)
     {
-        // get uv field
-        Vmath::Vmul(m_fields[0].num_elements(),
-                    pFields[0]->GetPhys(),
-                    1,
-                    pFields[1]->GetPhys(),
-                    1,
-                    tmp,
-                    1);
-
-        Vmath::Vadd(
-            m_fields[0].num_elements(), tmp, 1, m_fields[2], 1, m_fields[2], 1);
-    }
-    else
-    {
-        // get uv field
-        Vmath::Vmul(m_fields[0].num_elements(),
-                    pFields[0]->GetPhys(),
-                    1,
-                    pFields[1]->GetPhys(),
-                    1,
-                    tmp,
-                    1);
-
-        Vmath::Vadd(
-            m_fields[0].num_elements(), tmp, 1, m_fields[3], 1, m_fields[3], 1);
-
-        // get uw field
-        Vmath::Vmul(m_fields[0].num_elements(),
-                    pFields[0]->GetPhys(),
-                    1,
-                    pFields[2]->GetPhys(),
-                    1,
-                    tmp,
-                    1);
-
-        Vmath::Vadd(
-            m_fields[0].num_elements(), tmp, 1, m_fields[4], 1, m_fields[4], 1);
-
-        // get vw field
-        Vmath::Vmul(m_fields[0].num_elements(),
-                    pFields[1]->GetPhys(),
-                    1,
-                    pFields[2]->GetPhys(),
-                    1,
-                    tmp,
-                    1);
-
-        Vmath::Vadd(
-            m_fields[0].num_elements(), tmp, 1, m_fields[5], 1, m_fields[5], 1);
+        for (j = 0; j < i; ++j, ++n)
+        {
+            Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, m_fields[n], 1);
+            Vmath::Smul(nq, fac, m_fields[n], 1, m_fields[n], 1);
+        }
     }
 
     // Forward transform and put into m_avgFields
-    int o = pFields.num_elements();
     for (int i = 0; i < extraFields; ++i)
     {
-        Array<OneD, NekDouble> tmp2(pFields[0]->GetNcoeffs());
-        pFields[0]->FwdTrans_IterPerExp(m_fields[i], tmp2);
-        Vmath::Vadd(m_avgFields[i + o].num_elements(),
-                    tmp2,
-                    1,
-                    m_avgFields[i + o],
-                    1,
-                    m_avgFields[i + o],
-                    1);
+        pFields[0]->FwdTrans_IterPerExp(m_fields[i], tmpCoeff);
+        Vmath::Vadd(m_avgFields[i + origFields].num_elements(), tmpCoeff, 1,
+                    m_avgFields[i + origFields], 1,
+                    m_avgFields[i + origFields], 1);
     }
 }
 

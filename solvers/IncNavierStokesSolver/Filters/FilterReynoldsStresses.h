@@ -29,8 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Generate information to be able to calculate the
-// Reynolds streses
+// Description: Append Reynolds stresses to the average fields
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +77,7 @@ protected:
         const NekDouble &time);
 
     std::vector<Array<OneD, NekDouble> > m_fields;
+    std::vector<Array<OneD, NekDouble> > m_delta;
 };
 }
 }

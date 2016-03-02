@@ -158,7 +158,7 @@ void FilterReynoldsStresses::v_AddExtraFields(
     }
 
     // Forward transform and put into m_avgFields
-    for (int i = 0; i < extraFields; ++i)
+    for (i = 0; i < extraFields; ++i)
     {
         pFields[0]->FwdTrans_IterPerExp(m_fields[i], tmpCoeff);
         Vmath::Vadd(m_avgFields[i + origFields].num_elements(), tmpCoeff, 1,

@@ -133,18 +133,33 @@ void FilterReynoldsStresses::v_AddExtraFields(
     int origFields  = pFields.num_elements();
 
     Array<OneD, NekDouble> tmpCoeff(pFields[0]->GetNcoeffs());
+    Array<OneD, NekDouble> tmpPhys(pFields[0]->GetTotPoints());
 
     // Constant n/(n-1)
     NekDouble fac = ((NekDouble) m_numAverages) / (m_numAverages-1);
+
+    // Deal with Homogeneous case
+    bool      waveSpace = pFields[0]->GetWaveSpace();
+    pFields[0]->SetWaveSpace(false);
 
     // delta_i = (ui_n - \bar{ui}_n)
     for (i = 0; i < dim; ++i)
     {
         // phys values of \bar{ui}
-        pFields[i]->BwdTrans(m_avgFields[i], m_delta[i]);
+        pFields[0]->BwdTrans(m_avgFields[i], m_delta[i]);
         Vmath::Smul(nq, 1.0/m_numAverages, m_delta[i], 1, m_delta[i], 1);
+
+        // Put new velocity in physical space in homogeneous case
+        if (waveSpace)
+        {
+            pFields[i]->HomogeneousBwdTrans(pFields[i]->GetPhys(), tmpPhys);
+        }
+        else
+        {
+            tmpPhys = pFields[i]->GetPhys();
+        }
         // Calculate delta
-        Vmath::Vsub(nq, pFields[i]->GetPhys(), 1, m_delta[i], 1, m_delta[i], 1);
+        Vmath::Vsub(nq, tmpPhys, 1, m_delta[i], 1, m_delta[i], 1);
     }
 
     // Calculate correction: C_{n} - C_{n-1} = fac * deltaI * deltaJ
@@ -165,6 +180,9 @@ void FilterReynoldsStresses::v_AddExtraFields(
                     m_avgFields[i + origFields], 1,
                     m_avgFields[i + origFields], 1);
     }
+
+    //Restore waveSpace
+    pFields[0]->SetWaveSpace(waveSpace);
 }
 
 bool FilterReynoldsStresses::v_IsTimeDependent()

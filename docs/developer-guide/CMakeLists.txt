@@ -12,7 +12,7 @@ ADD_CUSTOM_TARGET(developer-guide-html
 )
 
 # If tex4ht successful, create img dir and copy images across
-FILE(GLOB_RECURSE imgfiles "*/img/*.png" "*/img/*.jpg")
+FILE(GLOB_RECURSE imgfiles "img/*.png" "img/*.jpg" "*/img/*.png" "*/img/*.jpg")
 ADD_CUSTOM_COMMAND(TARGET developer-guide-html
     POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${DEVGUIDE}/html/img)
 FOREACH(img ${imgfiles})

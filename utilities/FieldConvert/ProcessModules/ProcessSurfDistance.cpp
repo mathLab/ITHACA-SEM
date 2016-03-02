@@ -67,6 +67,7 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 {
     int i, j, k, cnt;
     int surf = m_config["bnd"].as<int>();
+    int expdim = m_f->m_graph->GetMeshDimension();
 
     ASSERTL0(surf >= 0, "Invalid surface "+boost::lexical_cast<string>(surf));
 
@@ -95,6 +96,9 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
         m_f->m_fielddef[0]->m_fields[0] = "dist";
     }
 
+    ASSERTL0(!(m_f->m_fielddef[0]->m_numHomogeneousDir),
+                "Homogeneous expansions not supported");
+
     for (i = cnt = 0; i < BndExp.num_elements(); ++i)
     {
         if (i != surf)
@@ -107,17 +111,70 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
         {
             int elmtNum  = BoundarytoElmtID [cnt];
             int facetNum = BoundarytoTraceID[cnt];
+            int oppositeNum;
 
             // Get boundary and element expansions.
             LocalRegions::ExpansionSharedPtr bndElmt = BndExp[i]->GetExp(j);
             LocalRegions::ExpansionSharedPtr elmt =
                 m_f->m_exp[0]->GetExp(elmtNum);
 
-            ASSERTL0(elmt->DetShapeType() == LibUtilities::ePrism,
-                     "Only prisms supported for now!");
+            // Determine which face is opposite to the surface
+            switch(elmt->DetShapeType())
+            {
+                case LibUtilities::eQuadrilateral:
+                {
+                    oppositeNum = (facetNum+2)%4;
+                }
+                break;
 
-            ASSERTL0(facetNum == 1 || facetNum == 3,
-                     "Surface must be on a triangular face of the prism.");
+                case LibUtilities::ePrism:
+                {
+                    switch(facetNum)
+                    {
+                        case 1:
+                            oppositeNum = 3;
+                            break;
+                        case 3:
+                            oppositeNum = 1;
+                            break;
+                        default:
+                            ASSERTL0(false,
+                                "Surface must be on a triangular face of the prism.");
+                    }
+                }
+                break;
+
+                case LibUtilities::eHexahedron:
+                {
+                    switch(facetNum)
+                    {
+                        case 0:
+                            oppositeNum = 5;
+                            break;
+                        case 1:
+                            oppositeNum = 3;
+                            break;
+                        case 2:
+                            oppositeNum = 4;
+                            break;
+                        case 3:
+                            oppositeNum = 1;
+                            break;
+                        case 4:
+                            oppositeNum = 2;
+                            break;
+                        case 5:
+                            oppositeNum = 0;
+                            break;
+                        default:
+                            ASSERTL0(false, "Face out of bound.");
+                    }
+                }
+                break;
+
+                default:
+                    ASSERTL0(false, "Element not supported");
+            }
 
             int nq    = elmt   ->GetTotPoints();
             int nqBnd = bndElmt->GetTotPoints();
@@ -128,21 +185,48 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
             x[2] = Array<OneD, NekDouble>(nq);
             elmt->GetCoords(x[0], x[1], x[2]);
 
-            Array<OneD, NekDouble> face1(nqBnd), face3(nqBnd);
+            Array<OneD, NekDouble> face1(nqBnd), face2(nqBnd);
             Array<OneD, NekDouble> dist =
                 BndExp[i]->UpdatePhys() + BndExp[i]->GetPhys_Offset(j);
 
             // Zero existing value.
             Vmath::Zero(nqBnd, dist, 1);
 
-            // Calculate distance between two faces of prism.
-            for (k = 0; k < 3; ++k)
+            // Calculate distance between two faces of the element
+            for (k = 0; k < expdim; ++k)
             {
-                elmt->GetFacePhysVals(1, bndElmt, x[k], face1);
-                elmt->GetFacePhysVals(3, bndElmt, x[k], face3);
-                Vmath::Vsub (nqBnd, face1, 1, face3, 1, face1, 1);
+                switch(expdim)
+                {
+                    case 2:
+                    {
+                        elmt->GetEdgePhysVals(facetNum, bndElmt, x[k], face1);
+                        elmt->GetEdgePhysVals(oppositeNum, bndElmt, x[k], face2);
+                        // Consider edge orientation
+                        if (elmt->GetEorient(facetNum) ==
+                                elmt->GetEorient(oppositeNum))
+                        {
+                            Vmath::Reverse(nqBnd, face2, 1, face2, 1);
+                        }
+                    }
+                    break;
+                    case 3:
+                    {
+                        // Use orientation from the surface for both faces
+                        StdRegions::Orientation orientation =
+                                        elmt->GetForient(facetNum);
+                        elmt->GetFacePhysVals(facetNum, bndElmt,
+                                                x[k], face1, orientation);
+                        elmt->GetFacePhysVals(oppositeNum, bndElmt,
+                                                x[k], face2, orientation);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Expansion not supported");
+                }
+                Vmath::Vsub (nqBnd, face1, 1, face2, 1, face1, 1);
                 Vmath::Vvtvp(nqBnd, face1, 1, face1, 1, dist, 1, dist, 1);
             }
+            Vmath::Vsqrt(nqBnd, dist, 1, dist, 1);
         }
 
         BndExp[i]->FwdTrans(BndExp[i]->GetPhys(), BndExp[i]->UpdateCoeffs());

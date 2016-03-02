@@ -388,6 +388,53 @@ namespace Nektar
                 Vmath::Vcopy(MapSize, m_BCtoEdgMap, 1, EdgeID, 1);
             }
         }
+        
+        void DisContField3DHomogeneous1D::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            int n, cnt, nq;
+            int offsetOld, offsetNew;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            std::vector<unsigned int> eIDs;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += m_bndCondExpansions[n]->GetExpSize();
+            }
+
+            // Populate eIDs with information from BoundaryToElmtMap
+            for (n = 0; n < m_bndCondExpansions[i]->GetExpSize(); ++n)
+            {
+                eIDs.push_back(ElmtID[cnt+n]);
+            }
+            
+            // Create expansion list
+            result = 
+                MemoryManager<ExpList3DHomogeneous1D>::AllocateSharedPtr(*this, eIDs);
+            
+            // Copy phys and coeffs to new explist
+            for (n = 0; n < result->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetPhys_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
+                
+                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetCoeff_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+            }
+            
+            // Set wavespace value
+            result->SetWaveSpace(GetWaveSpace());
+        }    
 
         void DisContField3DHomogeneous1D::GetBCValues(
                   Array<OneD, NekDouble> &BndVals,
@@ -530,6 +577,52 @@ namespace Nektar
                 Vmath::Vcopy(nTracePts,
                              &outarray_plane[0], 1,
                              &outarray[i*nTracePts], 1);
+            }
+        }
+        
+        /**
+         */
+        void DisContField3DHomogeneous1D::v_GetBoundaryNormals(int i,
+                        Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            int j, n, cnt, nq;
+            int expdim = GetCoordim(0);
+            int coordim = 3;
+            Array<OneD, NekDouble> tmp;
+            StdRegions::StdExpansionSharedPtr elmt;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Initialise result
+            normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
+            for (j = 0; j < coordim; ++j)
+            {
+                normals[j] = Array<OneD, NekDouble> ( 
+                                GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+            }
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            int offset;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+                nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
+                
+                elmt   = GetExp(ElmtID[cnt+n]);
+                const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
+                            = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
+                // Copy to result
+                for (j = 0; j < expdim; ++j)
+                {
+                    Vmath::Vcopy(nq, normalsElmt[j], 1,
+                                     tmp = normals[j] + offset, 1);
+                }
             }
         }
 

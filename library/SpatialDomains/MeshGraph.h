@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
@@ -574,6 +575,33 @@ namespace Nektar
             return x->second;
         }
 
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<SegGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllSegGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<TriGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllTriGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<QuadGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllQuadGeoms();
+        }
 
         /**
          *

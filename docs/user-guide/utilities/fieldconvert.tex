@@ -99,11 +99,13 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
+\item \inltt{homplane}: Extract a plane from 3DH1D expansions;
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing; 
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
+\item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
@@ -252,6 +254,27 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise either in Tecplot or in Paraview the result.
 %
 %
+
+\subsection{Extract a plane from 3DH1D expansion: \textit{homplane} module}
+
+To obtain a 2D expansion containing one of the planes of a
+3DH1D field file, use the command:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m homplane:planeid=value file.xml file.fld file-plane.fld
+\end{lstlisting}
+
+If the option \inltt{wavespace} is used, the Fourier coefficients
+corresponding to \inltt{planeid} are obtained. The command in this case is:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m homplane:wavespace:planeid=value file.xml \
+    file.fld file-plane.fld
+\end{lstlisting}
+
+The output file \inltt{file-plane.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview.
+
+
 %
 %
 \subsection{Interpolate one field to another: \textit{interpfield} module}
@@ -439,6 +462,22 @@ keep.
 The output file \inltt{jacenergy.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+
+\subsection{Extract mean mode of 3DH1D expansion: \textit{meanmode} module}
+
+To obtain a 2D expansion containing the mean mode (plane zero in Fourier space) of a
+3DH1D field file, use the command:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m meanmode file.xml file.fld file-mean.fld
+\end{lstlisting}
+
+The output file \inltt{file-mean.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview.
 
 %
 %

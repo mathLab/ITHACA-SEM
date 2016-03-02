@@ -91,12 +91,12 @@ void OutputTecplot::Process(po::variables_map &vm)
     string filename = m_config["outfile"].as<string>();
 
     // Amend for parallel output if required
-    if(m_f->m_session->GetComm()->GetSize() != 1)
+    if(m_f->m_comm->GetSize() != 1)
     {
         int    dot = filename.find_last_of('.');
         string ext = filename.substr(dot,filename.length()-dot);
         string procId = "_P" + boost::lexical_cast<std::string>(
-                                 m_f->m_session->GetComm()->GetRank());
+                                 m_f->m_comm->GetRank());
         string start = filename.substr(0,dot);
         filename = start + procId + ext;
     }
@@ -284,7 +284,14 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
 
     if(HomoExpType == MultiRegions::e3DH1D)
     {
-        coordim +=1;
+        if(m_f->m_session->DefinesSolverInfo("ModeType")&&
+           boost::iequals(m_f->m_session->GetSolverInfo("ModeType"),"HalfMode"))
+        { // turn off for half mode case
+        }
+        else
+        {
+            coordim +=1;
+        }
     }
     else if (HomoExpType == MultiRegions::e3DH2D)
     {
@@ -341,7 +348,7 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
             {
                 NekDouble l2err;
                 std::string coordval[] = {"x","y","z"};
-                int rank = m_f->m_session->GetComm()->GetRank();
+                int rank = m_f->m_comm->GetRank();
 
                 for(int i = 0; i < coordim; ++i)
                 {
@@ -359,11 +366,18 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 
             if (HomoExpType == MultiRegions::e3DH1D)
             {
-                nBases  += 1;
-                coordim += 1;
                 int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
-                NekDouble tmp = numBlocks * (nPlanes-1);
-                numBlocks = (int)tmp;
+                if(nPlanes == 1) // halfMode case
+                {
+                    // do nothing
+                }
+                else
+                {
+                    nBases  += 1;
+                    coordim += 1;
+                    NekDouble tmp = numBlocks * (nPlanes-1);
+                    numBlocks = (int)tmp;
+                }
             }
             else if (HomoExpType == MultiRegions::e3DH2D)
             {
@@ -473,7 +487,7 @@ void OutputTecplot::WriteTecplotField(const int field,
         {
             NekDouble l2err = m_f->m_exp[0]->L2(m_f->m_exp[field]->UpdatePhys());
 
-            if(m_f->m_session->GetComm()->GetRank() == 0)
+            if(m_f->m_comm->GetRank() == 0)
             {
                 cout << "L 2 error (variable "
                      << m_f->m_fielddef[0]->m_fields[field]  << ") : "
@@ -532,37 +546,42 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
             {
                 nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
-                totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
 
-
-                for(int n = 1; n < nPlanes; ++n)
+                if(nPlanes > 1) // default to 2D case for HalfMode when nPlanes = 1
                 {
-                    for(j = 1; j < np1; ++j)
-                    {
-                        for(k = 1; k < np0; ++k)
-                        {
-                            outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k
-                                    << " ";
-                            outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + (n-1)*totPoints + j*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + (n-1)*totPoints + j*np0 + k
-                                    << " ";
+                    totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
 
-                            outfile << cnt + n*totPoints + (j-1)*np0 + k
+
+                    for(int n = 1; n < nPlanes; ++n)
+                    {
+                        for(j = 1; j < np1; ++j)
+                        {
+                            for(k = 1; k < np0; ++k)
+                            {
+                                outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k
+                                        << " ";
+                                outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + (n-1)*totPoints + j*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + (n-1)*totPoints + j*np0 + k
                                     << " ";
-                            outfile << cnt + n*totPoints + (j-1)*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + n*totPoints + j*np0 + k + 1
-                                    << " ";
-                            outfile << cnt + n*totPoints + j*np0 + k    << endl;
+                                
+                                outfile << cnt + n*totPoints + (j-1)*np0 + k
+                                        << " ";
+                                outfile << cnt + n*totPoints + (j-1)*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + n*totPoints + j*np0 + k + 1
+                                        << " ";
+                                outfile << cnt + n*totPoints + j*np0 + k    << endl;
+                            }
                         }
                     }
+                    cnt += np0*np1;
                 }
-                cnt += np0*np1;
             }
-            else
+
+            if(nPlanes == 1)
             {
                 for(j = 1; j < np1; ++j)
                 {

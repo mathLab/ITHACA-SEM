@@ -43,6 +43,21 @@ std::string FilterReynoldsStresses::className =
     GetFilterFactory().RegisterCreatorFunction("ReynoldsStresses",
                                                FilterReynoldsStresses::create);
 
+/**
+ * @class FilterReynoldsStresses
+ * 
+ * @brief Append Reynolds stresses to the average fields
+ * 
+ * This class appends the average fields with the Reynolds stresses of the form
+ * \f$ \overline{u' v'} \f$. This is achieved by calculating 
+ * \f$ C_{n} = \Sigma_{i=1}^{n} (u_i - \bar{u}_n)(v_i - \bar{v}_n)\f$
+ * using the recursive relation:
+ * 
+ * \f[ C_{n} = C_{n-1} + \frac{n}{n-1} (u_n - \bar{u}_n)(v_n - \bar{v}_n) \f]
+ * 
+ * The FilterAverageFields base class then divides the result by n, leading
+ * to the Reynolds stress.
+ */
 FilterReynoldsStresses::FilterReynoldsStresses(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const std::map<std::string, std::string> &pParams)

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="1" SPACE="1">
+        <VERTEX>
+            <V ID="0"> 0.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="1"> 0.020e+00 0.000e+00 0.000e+00</V>
+            <V ID="2"> 0.040e+00 0.000e+00 0.000e+00</V>           
+            <V ID="3"> 0.060e+00 0.000e+00 0.000e+00</V>        
+            <V ID="4"> 0.080e+00 0.000e+00 0.000e+00</V>                      
+            <V ID="5"> 0.100e+00 0.000e+00 0.000e+00</V>
+            <V ID="6"> 0.120e+00 0.000e+00 0.000e+00</V>         
+            <V ID="7"> 0.140e+00 0.000e+00 0.000e+00</V>        
+            <V ID="8"> 0.160e+00 0.000e+00 0.000e+00</V>       
+            <V ID="9"> 0.180e+00 0.000e+00 0.000e+00</V>
+            <V ID="10"> 0.200e+00 0.000e+00 0.000e+00</V>
+            <V ID="11"> 0.220e+00 0.000e+00 0.000e+00</V>
+            <V ID="12"> 0.240e+00 0.000e+00 0.000e+00</V>
+            <V ID="13"> 0.260e+00 0.000e+00 0.000e+00</V>           
+            <V ID="14"> 0.280e+00 0.000e+00 0.000e+00</V>        
+            <V ID="15"> 0.300e+00 0.000e+00 0.000e+00</V>          
+            <V ID="16"> 0.320e+00 0.000e+00 0.000e+00</V>
+            <V ID="17"> 0.340e+00 0.000e+00 0.000e+00</V>         
+            <V ID="18"> 0.360e+00 0.000e+00 0.000e+00</V>        
+            <V ID="19"> 0.380e+00 0.000e+00 0.000e+00</V>       
+            <V ID="20"> 0.400e+00 0.000e+00 0.000e+00</V>
+        </VERTEX>
+        <ELEMENT>
+            <S ID="0">    0     1 </S>
+            <S ID="1">    1     2 </S>
+            <S ID="2">    2     3 </S>
+            <S ID="3">    3     4 </S>
+            <S ID="4">    4     5 </S>
+            <S ID="5">    5     6 </S>
+            <S ID="6">    6     7 </S>
+            <S ID="7">    7     8 </S>
+            <S ID="8">    8     9 </S>
+            <S ID="9">    9     10 </S>
+            <S ID="10">    10     11 </S>
+            <S ID="11">    11     12 </S>
+            <S ID="12">    12     13 </S>
+            <S ID="13">    13     14 </S>
+            <S ID="14">    14     15 </S>
+            <S ID="15">    15     16 </S>
+            <S ID="16">    16     17 </S>
+            <S ID="17">    17     18 </S>
+            <S ID="18">    18     19 </S>
+            <S ID="19">    19     20 </S>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> S[0-19] </C>
+            <C ID="1"> V[0] </C>
+            <C ID="2"> V[20] </C>
+        </COMPOSITE>
+
+        <DOMAIN> 
+      	    <D ID="0"> C[0] </D>
+	</DOMAIN>
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="rho,rhou,E" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> TimeStep       = 1e-6               </P>
+            <P> FinTime        = 40e-6               </P>
+            <P> NumSteps       = FinTime/TimeStep   </P>
+            <P> IO_CheckSteps  = 100                </P>
+	    <P> IO_InfoSteps   = 10                 </P>
+            <P> Gamma          = 1.4                </P>
+	    <P> pInf           = 101325             </P>
+	    <P> rhoInf         = 1.225              </P>
+            <P> u0             = 0.1                </P>
+            <P> uInf           = u0                 </P>
+            <P> uInfL          = u0 + 0.01          </P>
+            <P> uInfR          = u0                 </P>
+      </PARAMETERS>
+        
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="EulerCFE" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="AdvectionType" VALUE="WeakDG" />
+            <I PROPERTY="DiffusionType" VALUE="LDGNS" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+            <I PROPERTY="UpwindType"  VALUE="ExactToro"/>
+	    <I PROPERTY="ProblemType"  VALUE="General"/>
+	    <I PROPERTY="ViscosityType"  VALUE="Constant"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> rho </V>
+            <V ID="1"> rhou </V>
+            <V ID="2"> E </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="rho" VALUE="rhoInf" />
+                <D VAR="rhou" VALUE="rhoInf*uInfL" />
+                <D VAR="E" VALUE="pInf/(Gamma-1)+0.5*rhoInf*(uInfL*uInfL)" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="rho" VALUE="rhoInf" />
+                <D VAR="rhou" VALUE="rhoInf*uInfR" />
+                <D VAR="E" VALUE="pInf/(Gamma-1)+0.5*rhoInf*(uInfR*uInfR)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="rho" DOMAIN="0" VALUE="rhoInf" />
+            <E VAR="rhou" DOMAIN="0" VALUE="rhoInf*u0" />
+            <E VAR="E" DOMAIN="0" VALUE="pInf/(Gamma-1)+0.5*rhoInf*(u0*u0)" />
+        </FUNCTION>
+        
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="rho" DOMAIN="0" VALUE="rhoInf" />
+            <E VAR="rhou" DOMAIN="0" VALUE="rhoInf*uInf" />
+	    <E VAR="E" DOMAIN="0" VALUE="pInf/(Gamma-1)+0.5*rhoInf*(uInf*uInf)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

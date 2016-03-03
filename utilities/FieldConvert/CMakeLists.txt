@@ -79,17 +79,18 @@ SET(FieldConvertSources
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
 TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
 
-ADD_NEKTAR_TEST(chan3D_tec)
+#ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
+#ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 
+#ADD_NEKTAR_TEST(chan3D_vort) # This is covered by bfs_vort
+#ADD_NEKTAR_TEST(chan3D_pts)  # This does not currently work -- hash metric 
+
 ADD_NEKTAR_TEST(chan3D_tec_n10)
-#ADD_NEKTAR_TEST(chan3D_vtu)
-ADD_NEKTAR_TEST(chan3D_vort)
 ADD_NEKTAR_TEST(chan3D_interppointsplane)
 ADD_NEKTAR_TEST(chan3D_interppointsbox)
 ADD_NEKTAR_TEST(bfs_tec)
 ADD_NEKTAR_TEST(bfs_tec_rng)
 ADD_NEKTAR_TEST(bfs_vort)
-ADD_NEKTAR_TEST(bfs_vort_rng)
-# ADD_NEKTAR_TEST(chan3D_pts)
+ADD_NEKTAR_TEST(bfs_vort_rng) 
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
 ADD_NEKTAR_TEST(chan3DH1D_plane)
 ADD_NEKTAR_TEST(cube_prismhex)

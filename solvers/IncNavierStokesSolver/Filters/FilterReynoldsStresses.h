@@ -75,6 +75,9 @@ protected:
     virtual void v_AddExtraFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    virtual void v_PrepareOutput(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
 
     std::vector<Array<OneD, NekDouble> > m_fields;
     std::vector<Array<OneD, NekDouble> > m_delta;

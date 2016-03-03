@@ -82,6 +82,12 @@ protected:
     {
         // By default do not add any extra fields.
     }
+    virtual void v_PrepareOutput(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)
+    {
+        // By default nothing has to be done here.
+    }
 
     void OutputAvgField(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

@@ -144,6 +144,7 @@ void FilterAverageFields::v_Update(
 
     if (m_index % m_outputFrequency == 0)
     {
+        v_PrepareOutput(pFields, time);
         OutputAvgField(pFields, ++m_outputIndex);
     }
 
@@ -153,6 +154,7 @@ void FilterAverageFields::v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    v_PrepareOutput(pFields, time);
     OutputAvgField(pFields);
 }
 

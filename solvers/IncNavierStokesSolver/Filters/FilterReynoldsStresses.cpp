@@ -129,11 +129,9 @@ void FilterReynoldsStresses::v_AddExtraFields(
     int i, j, n;
     int nq          = pFields[0]->GetTotPoints();
     int dim         = pFields.num_elements() - 1;
-    int extraFields = dim == 2 ? 3 : 6;
-    int origFields  = pFields.num_elements();
 
-    Array<OneD, NekDouble> tmpCoeff(pFields[0]->GetNcoeffs());
-    Array<OneD, NekDouble> tmpPhys(pFields[0]->GetTotPoints());
+    Array<OneD, NekDouble> vel(pFields[0]->GetTotPoints());
+    Array<OneD, NekDouble> tmp(pFields[0]->GetTotPoints());
 
     // Constant n/(n-1)
     NekDouble fac = ((NekDouble) m_numAverages) / (m_numAverages-1);
@@ -152,33 +150,48 @@ void FilterReynoldsStresses::v_AddExtraFields(
         // Put new velocity in physical space in homogeneous case
         if (waveSpace)
         {
-            pFields[i]->HomogeneousBwdTrans(pFields[i]->GetPhys(), tmpPhys);
+            pFields[i]->HomogeneousBwdTrans(pFields[i]->GetPhys(), vel);
         }
         else
         {
-            tmpPhys = pFields[i]->GetPhys();
+            vel = pFields[i]->GetPhys();
         }
         // Calculate delta
-        Vmath::Vsub(nq, tmpPhys, 1, m_delta[i], 1, m_delta[i], 1);
+        Vmath::Vsub(nq, vel, 1, m_delta[i], 1, m_delta[i], 1);
     }
 
-    // Calculate correction: C_{n} - C_{n-1} = fac * deltaI * deltaJ
+    // Calculate C_{n} = C_{n-1} + fac * deltaI * deltaJ
     for (i = 0, n = 0; i < dim; ++i)
     {
         for (j = i; j < dim; ++j, ++n)
         {
-            Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, m_fields[n], 1);
-            Vmath::Smul(nq, fac, m_fields[n], 1, m_fields[n], 1);
+            Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, tmp, 1);
+            Vmath::Smul(nq, fac, tmp, 1, tmp, 1);
+
+            Vmath::Vadd(nq, tmp, 1, m_fields[n], 1, m_fields[n], 1);
         }
     }
 
+    //Restore waveSpace
+    pFields[0]->SetWaveSpace(waveSpace);
+}
+
+void FilterReynoldsStresses::v_PrepareOutput(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
+{
+    int dim         = pFields.num_elements() - 1;
+    int extraFields = dim == 2 ? 3 : 6;
+    int origFields  = pFields.num_elements();
+
+    bool waveSpace  = pFields[0]->GetWaveSpace();
+    pFields[0]->SetWaveSpace(false);
+
     // Forward transform and put into m_avgFields
-    for (i = 0; i < extraFields; ++i)
+    for (int i = 0; i < extraFields; ++i)
     {
-        pFields[0]->FwdTrans_IterPerExp(m_fields[i], tmpCoeff);
-        Vmath::Vadd(m_avgFields[i + origFields].num_elements(), tmpCoeff, 1,
-                    m_avgFields[i + origFields], 1,
-                    m_avgFields[i + origFields], 1);
+        pFields[0]->FwdTrans_IterPerExp(m_fields[i],
+                                        m_avgFields[i + origFields]);
     }
 
     //Restore waveSpace

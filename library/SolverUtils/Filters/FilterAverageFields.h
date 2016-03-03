@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/FilterSampler.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAverageFields : public Filter
+class FilterAverageFields : public FilterSampler
 {
 public:
     friend class MemoryManager<FilterAverageFields>;
@@ -50,7 +50,8 @@ public:
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams) {
+        const std::map<std::string, std::string> &pParams)
+    {
         FilterSharedPtr p = MemoryManager<FilterAverageFields>
                                 ::AllocateSharedPtr(pSession, pParams);
         return p;
@@ -69,40 +70,18 @@ protected:
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time);
-    virtual void v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
-    virtual void v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
     virtual bool v_IsTimeDependent();
-    virtual void v_AddExtraFields(
+    virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
-    {
-        // By default do not add any extra fields.
-    }
+        const NekDouble &time);
     virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+        const NekDouble &time);
+    virtual std::string v_GetFileSuffix()
     {
-        // By default nothing has to be done here.
+        return "_avg";
     }
 
-    void OutputAvgField(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            int dump = -1);
-
-    unsigned int       m_numAverages;
-    unsigned int       m_outputFrequency;
-    unsigned int       m_sampleFrequency;
-    unsigned int       m_index;
-    unsigned int       m_outputIndex;
-    std::string        m_outputFile;
-    LibUtilities::FieldIOSharedPtr m_fld;
-    LibUtilities::FieldMetaDataMap m_avgFieldMetaData;
-    std::vector<Array<OneD, NekDouble> > m_avgFields;
-    std::vector<std::string>             m_variables;
 };
 
 }

@@ -28,6 +28,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
+  Filters/FilterSampler.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
   RiemannSolvers/RiemannSolver.cpp
@@ -72,6 +73,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
+  Filters/FilterSampler.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h
   RiemannSolvers/RiemannSolver.h

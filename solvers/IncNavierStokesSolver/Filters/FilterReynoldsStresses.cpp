@@ -61,7 +61,7 @@ std::string FilterReynoldsStresses::className =
 FilterReynoldsStresses::FilterReynoldsStresses(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const std::map<std::string, std::string> &pParams)
-    : FilterAverageFields(pSession, pParams)
+    : FilterSampler(pSession, pParams)
 {
 }
 
@@ -73,28 +73,15 @@ void FilterReynoldsStresses::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    FilterAverageFields::v_Initialise(pFields, time);
-
     int dim = pFields.num_elements() - 1;
     int nExtraFields = dim == 2 ? 3 : 6;
     int origFields = pFields.num_elements();
 
-    m_fields.resize(nExtraFields);
-    m_delta.resize(dim);
-    m_avgFields.resize(m_avgFields.size() + nExtraFields);
-
-    for (int n = 0; n < nExtraFields; ++n)
+    // Fill name of variables
+    for(int n = 0; n < origFields; ++n)
     {
-        m_avgFields[n + origFields] =
-            Array<OneD, NekDouble>(pFields[0]->GetNcoeffs(), 0.0);
-        m_fields[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
+        m_variables.push_back(pFields[n]->GetSession()->GetVariable(n));
     }
-
-    for (int n = 0; n < dim; ++n)
-    {
-        m_delta[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
-    }
-
     if (dim == 2)
     {
         m_variables.push_back("uu");
@@ -114,84 +101,93 @@ void FilterReynoldsStresses::v_Initialise(
     {
         ASSERTL0(false, "Unsupported dimension");
     }
+
+    // Allocate storage
+    m_fields.resize(origFields + nExtraFields);
+    m_delta.resize(dim);
+
+    for (int n = 0; n < m_fields.size(); ++n)
+    {
+        m_fields[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
+    }
+    for (int n = 0; n < m_delta.size(); ++n)
+    {
+        m_delta[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
+    }
+
+    // Initialise output arrays
+    FilterSampler::v_Initialise(pFields, time);
 }
 
-void FilterReynoldsStresses::v_AddExtraFields(
+void FilterReynoldsStresses::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    // Ignore first sample (its contribution is zero)
-    if( m_numAverages == 1)
+    int i, j, n;
+    int nq             = pFields[0]->GetTotPoints();
+    int dim            = pFields.num_elements() - 1;
+    bool waveSpace     = pFields[0]->GetWaveSpace();
+    NekDouble nSamples = (NekDouble) m_numSamples;
+    NekDouble fac      = nSamples / (nSamples-1);
+
+    Array<OneD, NekDouble> vel(nq);
+    Array<OneD, NekDouble> tmp(nq);
+
+    // Update original velocities in phys space and calculate (\bar{u} - u_n)
+    for (n = 0; n < dim; ++n)
+    {
+        if (waveSpace)
+        {
+            pFields[n]->HomogeneousBwdTrans(pFields[n]->GetPhys(), vel);
+        }
+        else
+        {
+            vel = pFields[n]->GetPhys();
+        }
+        Vmath::Vadd(nq, vel, 1, m_fields[n], 1, m_fields[n], 1);
+        Vmath::Svtvm(nq, 1.0/nSamples, m_fields[n], 1,
+                     vel, 1, m_delta[n], 1);
+    }
+    // Update pressure (directly to outFields)
+    Vmath::Vadd(m_outFields[dim].num_elements(), pFields[dim]->GetCoeffs(), 1, 
+                m_outFields[dim], 1, m_outFields[dim], 1);
+
+    // Ignore Reynolds stress for first sample (its contribution is zero)
+    if( m_numSamples == 1)
     {
         return;
     }
 
-    int i, j, n;
-    int nq          = pFields[0]->GetTotPoints();
-    int dim         = pFields.num_elements() - 1;
-
-    Array<OneD, NekDouble> vel(pFields[0]->GetTotPoints());
-    Array<OneD, NekDouble> tmp(pFields[0]->GetTotPoints());
-
-    // Constant n/(n-1)
-    NekDouble fac = ((NekDouble) m_numAverages) / (m_numAverages-1);
-
-    // Deal with Homogeneous case
-    bool      waveSpace = pFields[0]->GetWaveSpace();
-    pFields[0]->SetWaveSpace(false);
-
-    // delta_i = (ui_n - \bar{ui}_n)
-    for (i = 0; i < dim; ++i)
-    {
-        // phys values of \bar{ui}
-        pFields[0]->BwdTrans(m_avgFields[i], m_delta[i]);
-        Vmath::Smul(nq, 1.0/m_numAverages, m_delta[i], 1, m_delta[i], 1);
-
-        // Put new velocity in physical space in homogeneous case
-        if (waveSpace)
-        {
-            pFields[i]->HomogeneousBwdTrans(pFields[i]->GetPhys(), vel);
-        }
-        else
-        {
-            vel = pFields[i]->GetPhys();
-        }
-        // Calculate delta
-        Vmath::Vsub(nq, vel, 1, m_delta[i], 1, m_delta[i], 1);
-    }
-
     // Calculate C_{n} = C_{n-1} + fac * deltaI * deltaJ
-    for (i = 0, n = 0; i < dim; ++i)
+    for (i = 0, n = dim+1; i < dim; ++i)
     {
         for (j = i; j < dim; ++j, ++n)
         {
             Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, tmp, 1);
             Vmath::Smul(nq, fac, tmp, 1, tmp, 1);
-
             Vmath::Vadd(nq, tmp, 1, m_fields[n], 1, m_fields[n], 1);
         }
     }
-
-    //Restore waveSpace
-    pFields[0]->SetWaveSpace(waveSpace);
 }
 
 void FilterReynoldsStresses::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int dim         = pFields.num_elements() - 1;
-    int extraFields = dim == 2 ? 3 : 6;
-    int origFields  = pFields.num_elements();
+    m_scale = 1.0/m_numSamples;
+    int dim = pFields.num_elements() - 1;
 
+    // Set wavespace to false, as calculations were performed in physical space
     bool waveSpace  = pFields[0]->GetWaveSpace();
     pFields[0]->SetWaveSpace(false);
 
-    // Forward transform and put into m_avgFields
-    for (int i = 0; i < extraFields; ++i)
+    // Forward transform and put into m_outFields (except pressure)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
-        pFields[0]->FwdTrans_IterPerExp(m_fields[i],
-                                        m_avgFields[i + origFields]);
+        if(i != dim)
+        {
+            pFields[0]->FwdTrans_IterPerExp(m_fields[i], m_outFields[i]);
+        }
     }
 
     //Restore waveSpace

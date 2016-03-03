@@ -165,7 +165,7 @@ void FilterReynoldsStresses::v_AddExtraFields(
     // Calculate correction: C_{n} - C_{n-1} = fac * deltaI * deltaJ
     for (i = 0, n = 0; i < dim; ++i)
     {
-        for (j = 0; j < i; ++j, ++n)
+        for (j = i; j < dim; ++j, ++n)
         {
             Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, m_fields[n], 1);
             Vmath::Smul(nq, fac, m_fields[n], 1, m_fields[n], 1);

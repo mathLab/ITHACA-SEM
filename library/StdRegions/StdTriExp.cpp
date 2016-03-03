@@ -911,8 +911,132 @@ namespace Nektar
             const int                  eid,
             const Orientation      edgeOrient,
             Array<OneD, unsigned int>& maparray,
-            Array<OneD,          int>& signarray)
+            Array<OneD,          int>& signarray,
+            int P)
         {
+#if 1
+            ASSERTL1(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
+                     GetEdgeBasisType(eid) == LibUtilities::eModified_B,
+                     "Mapping not defined for this type of basis");
+
+            int i;
+            int numModes;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+
+            switch (eid)
+            {
+            case 0:
+                numModes = order0;
+                break;
+            case 1:
+            case 2:
+                numModes = order1;
+                break;
+            }
+
+            bool checkForZeroedModes = false;
+            if (P == -1)
+            {
+                P = numModes;
+            }
+            else if(P != numModes)
+            {
+                checkForZeroedModes = true;
+            }
+
+
+            if(maparray.num_elements() != P)
+            {
+                maparray = Array<OneD, unsigned int>(P);
+            }
+
+            if(signarray.num_elements() != P)
+            {
+                signarray = Array<OneD, int>(P,1);
+            }
+            else
+            {
+                fill(signarray.get() , signarray.get()+P, 1);
+            }
+
+            switch(eid)
+            {
+                case 0:
+                {
+                    int cnt = 0;
+                    for(i = 0; i < P; cnt+=order1-i, ++i)
+                    {
+                        maparray[i] = cnt;
+                    }
+
+                    if(edgeOrient==eBackwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+
+                        for(i = 3; i < P; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    maparray[0] = order1;
+                    maparray[1] = 1;
+                    for(i = 2; i < P; i++)
+                    {
+                        maparray[i] = order1-1+i;
+                    }
+
+                    if(edgeOrient==eBackwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+
+                        for(i = 3; i < P; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    for(i = 0; i < P; i++)
+                    {
+                        maparray[i] = i;
+                    }
+
+                    if(edgeOrient==eForwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+
+                        for(i = 3; i < P; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                }
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+                break;
+            }
+
+
+            if (checkForZeroedModes)
+            {
+                // Zero signmap and set maparray to zero if
+                // elemental modes are not as large as face modes
+                for (int j = numModes; j < P; j++)
+                {
+                    signarray[j] = 0.0;
+                    maparray[j]  = maparray[0];
+                }
+            }
+
+#else
             ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(eid) == LibUtilities::eModified_B,
                      "Mapping not defined for this type of basis");
@@ -998,6 +1122,7 @@ namespace Nektar
                 ASSERTL0(false,"eid must be between 0 and 2");
                 break;
             }
+#endif
         }
 
         int StdTriExp::v_GetVertexMap(const int localVertexId,bool useCoeffPacking)

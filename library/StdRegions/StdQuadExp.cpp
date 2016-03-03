@@ -1189,20 +1189,19 @@ namespace Nektar
             }
             const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
 
-            int nEdgeCoeffs = P;
 
-            if (maparray.num_elements() != nEdgeCoeffs)
+            if (maparray.num_elements() != P)
             {
-                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+                maparray = Array<OneD, unsigned int>(P);
             }
 
-            if(signarray.num_elements() != nEdgeCoeffs)
+            if(signarray.num_elements() != P)
             {
-                signarray = Array<OneD, int>(nEdgeCoeffs, 1);
+                signarray = Array<OneD, int>(P, 1);
             }
             else
             {
-                fill(signarray.get(), signarray.get()+nEdgeCoeffs, 1);
+                fill(signarray.get(), signarray.get()+P, 1);
             }
 
             if (bType == LibUtilities::eModified_A)
@@ -1215,11 +1214,11 @@ namespace Nektar
                         {
                             maparray[i] = i;
                         }
-
+                        
                         if (edgeOrient == eBackwards)
                         {
                             swap(maparray[0], maparray[1]);
-
+                            
                             for(i = 3; i < P; i+=2)
                             {
                                 signarray[i] = -1;

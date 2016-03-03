@@ -72,6 +72,10 @@ output every 100 time steps.
 
 \subsection{Reynolds stresses}
 
+\begin{notebox}
+  This filter is only supported for the incompressible Navier-Stokes solver.
+\end{notebox}
+
 This filter is an extended version of the time-average filter. It outputs
 not only the time-average of the fields, but also the Reynolds stresses.
 The same parameters supported in the time-average case can be used,
@@ -84,9 +88,6 @@ for example:
       <PARAM NAME="SampleFrequency"> 10 </PARAM>
   </FILTER>
 \end{lstlisting}
-
-However, note that this filter is only available for the
-IncNavierStokesSolver.
 
 \subsection{Checkpoint fields}
  

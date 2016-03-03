@@ -216,9 +216,6 @@ CoupledAssemblyMap::CoupledAssemblyMap(
 
     ASSERTL1(globalId == m_numGlobalCoeffs, "Consistency error");
 
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
-        = fields[0]->GetBndCondExpansions();
-
     cnt1 = 0;
     for (n = 0; n < nVel; ++n)
     {

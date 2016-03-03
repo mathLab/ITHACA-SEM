@@ -36,30 +36,16 @@
 
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
-#include <LibUtilities/BasicUtils/FileSystem.h>
-#include <LibUtilities/BasicConst/GitRevision.h>
-
-#include <boost/algorithm/string/join.hpp>
-#include <boost/format.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/asio/ip/host_name.hpp>
-
-#include <sstream>
-#include <iostream>
 #include <fstream>
+
+#include <boost/format.hpp>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
 #endif
 
-#ifndef NEKTAR_VERSION
-#define NEKTAR_VERSION "Unknown"
-#endif
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
-namespace ptime = boost::posix_time;
-namespace ip = boost::asio::ip;
-namespace berrc = boost::system::errc;
 
 namespace Nektar
 {

@@ -112,6 +112,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const SpatialDomains::MeshGraphSharedPtr &pGraph);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList(
+                const ExpList &in,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareCoeffPhysArrays = true);
 
             /// The copy constructor.
             MULTI_REGIONS_EXPORT ExpList(
@@ -353,6 +359,10 @@ namespace Nektar
                 Array<OneD, const NekDouble> &V2,
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
+            
+            inline void NormVectorIProductWRTBase(
+                Array<OneD, Array<OneD, NekDouble> > &V,
+                Array<OneD, NekDouble> &outarray);
             
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
@@ -729,6 +739,20 @@ namespace Nektar
 
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
+            
+            inline void GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
+            
+            inline void ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &elmt,
+                            Array<OneD, NekDouble> &boundary);
+            
+            inline void ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt);
+            
+            inline void GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
@@ -1213,10 +1237,28 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
             
+            virtual void v_NormVectorIProductWRTBase(
+                Array<OneD, Array<OneD, NekDouble> > &V,
+                Array<OneD, NekDouble> &outarray);
+            
             virtual void v_SetUpPhysNormals();
             
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
+            
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
+            
+            virtual void v_ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &elmt,
+                            Array<OneD, NekDouble> &boundary);
+            
+            virtual void v_ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt);
+            
+            virtual void v_GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
             virtual void v_ReadGlobalOptimizationParameters();
 
@@ -1727,6 +1769,13 @@ namespace Nektar
         {
             v_NormVectorIProductWRTBase(V1,V2,outarray,BndID);
         }
+        
+        inline void ExpList::NormVectorIProductWRTBase(
+            Array<OneD, Array<OneD, NekDouble> > &V,
+            Array<OneD, NekDouble> &outarray)
+        {
+            v_NormVectorIProductWRTBase(V, outarray);
+        }
     
         /**
          * @param   eid         The index of the element to be checked.
@@ -2081,6 +2130,32 @@ namespace Nektar
                                             Array<OneD,int> &EdgeID)
         {
             v_GetBoundaryToElmtMap(ElmtID,EdgeID);
+        }
+        
+        inline void ExpList::GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            v_GetBndElmtExpansion(i, result);
+        }
+        
+        inline void ExpList::ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &elmt,
+                            Array<OneD, NekDouble> &boundary)
+        {
+            v_ExtractElmtToBndPhys(i, elmt, boundary);
+        }
+        
+        inline void ExpList::ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt)
+        {
+            v_ExtractPhysToBndElmt(i, phys, bndElmt);
+        }
+        
+        inline void ExpList::GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            v_GetBoundaryNormals(i, normals);
         }
 
         const static Array<OneD, ExpListSharedPtr> NullExpListSharedPtrArray;

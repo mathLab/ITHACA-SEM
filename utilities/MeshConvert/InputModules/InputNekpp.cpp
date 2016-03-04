@@ -269,7 +269,7 @@ namespace Nektar
                     geomIt != (*compIt->second).end();
                         ++geomIt)
                 {
-                    ElmtConfig conf((*geomIt)->GetShapeType(),1,true,true);
+                    ElmtConfig conf((*geomIt)->GetShapeType(),1,true,true,false);
                     
                     // Get hold of geometry
                     vector<NodeSharedPtr> nodeList;
@@ -303,7 +303,7 @@ namespace Nektar
                             // set up link back to this element
                             edg->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
-                        
+
                         if(dim == 2)
                         {
                             FaceSharedPtr fac = fIdMap[(*geomIt)->GetGlobalID()];

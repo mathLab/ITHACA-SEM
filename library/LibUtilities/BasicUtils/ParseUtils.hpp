@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <vector>
+#include <sstream>
 
 #include <boost/version.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -153,6 +154,52 @@ namespace Nektar
                 //  End grammar
 
                 space_p).full;
+        }
+
+        static std::string GenerateSeqString(const std::vector<unsigned int> &elmtids)
+        {
+            std::stringstream idStringStream;
+            bool setdash = true;
+            unsigned int endval;
+
+            if (elmtids.size() == 0)
+            {
+                return std::string("");
+            }
+
+            idStringStream << elmtids[0];
+            for (int i = 1; i < elmtids.size(); ++i)
+            {
+                if (elmtids[i] == elmtids[i - 1] + 1)
+                {
+                    if (setdash)
+                    {
+                        idStringStream << "-";
+                        setdash = false;
+                    }
+
+                    if (i == elmtids.size() - 1) // last element
+                    {
+                        idStringStream << elmtids[i];
+                    }
+                    else
+                    {
+                        endval = elmtids[i];
+                    }
+                }
+                else
+                {
+                    if (setdash == false) // finish off previous dash sequence
+                    {
+                        idStringStream << endval;
+                        setdash = true;
+                    }
+
+                    idStringStream << "," << elmtids[i];
+                }
+            }
+
+            return idStringStream.str();
         }
 
     private:

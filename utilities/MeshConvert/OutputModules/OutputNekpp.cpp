@@ -54,7 +54,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputNekpp::className = 
+        ModuleKey OutputNekpp::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "xml"), OutputNekpp::create,
                 "Writes a Nektar++ xml file.");
@@ -73,7 +73,25 @@ namespace Nektar
         {
 
         }
-        
+
+        template<typename T> void TestElmts(
+            SpatialDomains::MeshGraphSharedPtr &graph)
+        {
+            const std::map<int, boost::shared_ptr<T> > &tmp
+                = graph->GetAllElementsOfType<T>();
+            typename std::map<int, boost::shared_ptr<T> >::const_iterator it1, it2;
+
+            SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
+            SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
+
+            for (it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+            {
+                SpatialDomains::GeometrySharedPtr geom = it1->second;
+                geom->FillGeom();
+                geom->Reset(curvedEdges, curvedFaces);
+            }
+        }
+
         void OutputNekpp::Process()
         {
             if (m_mesh->m_verbose)
@@ -94,11 +112,11 @@ namespace Nektar
             geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
             root->LinkEndChild( geomTag );
 
-            WriteXmlNodes     (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlEdges     (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlFaces     (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlElements  (geomTag,m_config["uncompress"].as<bool>());
-            WriteXmlCurves    (geomTag,m_config["uncompress"].as<bool>());
+            WriteXmlNodes     (geomTag);
+            WriteXmlEdges     (geomTag);
+            WriteXmlFaces     (geomTag);
+            WriteXmlElements  (geomTag);
+            WriteXmlCurves    (geomTag);
             WriteXmlComposites(geomTag);
             WriteXmlDomain    (geomTag);
             WriteXmlExpansions(root);
@@ -128,8 +146,9 @@ namespace Nektar
                 doc.SaveFile(filename);
             }
 
-            // Test the resulting XML file by loading it with the session reader
-            // and generating the meshgraph.
+            // Test the resulting XML file (with a basic test) by loading it
+            // with the session reader, generating the MeshGraph and testing if
+            // each element is valid.
             if (m_config["test"].beenSet)
             {
                 vector<string> filenames(1);
@@ -140,11 +159,21 @@ namespace Nektar
                         0, NULL, filenames);
                 SpatialDomains::MeshGraphSharedPtr graphShPt =
                     SpatialDomains::MeshGraph::Read(vSession);
+
+                TestElmts<SpatialDomains::SegGeom>  (graphShPt);
+                TestElmts<SpatialDomains::TriGeom>  (graphShPt);
+                TestElmts<SpatialDomains::QuadGeom> (graphShPt);
+                TestElmts<SpatialDomains::TetGeom>  (graphShPt);
+                TestElmts<SpatialDomains::PrismGeom>(graphShPt);
+                TestElmts<SpatialDomains::PyrGeom>  (graphShPt);
+                TestElmts<SpatialDomains::HexGeom>  (graphShPt);
             }
         }
 
-        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+
             TiXmlElement* verTag = new TiXmlElement( "VERTEX" );
             std::set<NodeSharedPtr>::iterator it;
 
@@ -177,10 +206,11 @@ namespace Nektar
                     v.x  = n->m_x;
                     v.y  = n->m_y;
                     v.z  = n->m_z;
-                    vertInfo.push_back(v);     
+                    vertInfo.push_back(v);
                 }
                 std::string vertStr;
-                LibUtilities::CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
+                LibUtilities::CompressData::ZlibEncodeToBase64Str(vertInfo,
+                                                                  vertStr);
                 verTag->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                 verTag->SetAttribute("BITSIZE",
@@ -192,8 +222,10 @@ namespace Nektar
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+            
             if (m_mesh->m_expDim >= 2)
             {
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
@@ -222,11 +254,11 @@ namespace Nektar
                     {
                         LibUtilities::MeshEdge e;
                         EdgeSharedPtr ed = *it;
-                        
+
                         e.id = ed->m_id;
                         e.v0 = ed->m_n1->m_id;
                         e.v1 = ed->m_n2->m_id;
-                        
+
                         edgeInfo.push_back(e);
                     }
                     std::string edgeStr;
@@ -241,8 +273,10 @@ namespace Nektar
             }
         }
 
-        void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot, bool Uncompressed)
+        void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+
             if (m_mesh->m_expDim == 3)
             {
                 TiXmlElement* verTag = new TiXmlElement( "FACE" );
@@ -251,7 +285,7 @@ namespace Nektar
                                             m_mesh->m_faceSet.begin(),
                                             m_mesh->m_faceSet.end());
 
-                if(Uncompressed)
+                if(UnCompressed)
                 {
                     for (it = tmp.begin(); it != tmp.end(); ++it)
                     {
@@ -281,19 +315,18 @@ namespace Nektar
                 }
                 else
                 {
-                    
                     std::vector<LibUtilities::MeshTri>   TriFaceInfo;
                     std::vector<LibUtilities::MeshQuad>  QuadFaceInfo;
-                    
+
                     for (it = tmp.begin(); it != tmp.end(); ++it)
                     {
                         FaceSharedPtr fa = *it;
-                        
+
                         switch(fa->m_edgeList.size())
                         {
                         case 3:
                             {
-                                LibUtilities::MeshTri f; 
+                                LibUtilities::MeshTri f;
                                 f.id = fa->m_id;
                                 for(int i = 0; i < 3; ++i)
                                 {
@@ -304,7 +337,7 @@ namespace Nektar
                             break;
                         case 4:
                             {
-                                LibUtilities::MeshQuad f; 
+                                LibUtilities::MeshQuad f;
                                 f.id = fa->m_id;
                                 for(int i = 0; i < 4; ++i)
                                 {
@@ -312,18 +345,19 @@ namespace Nektar
                                 }
                                 QuadFaceInfo.push_back(f);
                             }
-                            break;                        
+                            break;
                         default:
                             ASSERTL0(false,"Unkonwn face type");
                         }
                     }
-                        
+
                     if(TriFaceInfo.size())
                     {
                         std::string vType("T");
                         TiXmlElement* x = new TiXmlElement(vType);
                         std::string faceStr;
-                        LibUtilities::CompressData::ZlibEncodeToBase64Str(TriFaceInfo,faceStr);
+                        LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              TriFaceInfo,faceStr);
                         x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                         x->SetAttribute("BITSIZE",
@@ -331,13 +365,14 @@ namespace Nektar
                         x->LinkEndChild(new TiXmlText(faceStr));
                         verTag->LinkEndChild(x);
                     }
-                    
+
                     if(QuadFaceInfo.size())
                     {
                         std::string vType("Q");
                         TiXmlElement* x = new TiXmlElement(vType);
                         std::string faceStr;
-                        LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,faceStr);
+                        LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              QuadFaceInfo,faceStr);
                         x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                         x->SetAttribute("BITSIZE",
@@ -350,8 +385,10 @@ namespace Nektar
             }
         }
             
-        void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+            
             TiXmlElement* verTag = new TiXmlElement( "ELEMENT" );
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
@@ -374,14 +411,14 @@ namespace Nektar
                 std::vector<LibUtilities::MeshPyr>   PyrInfo;
                 std::vector<LibUtilities::MeshPrism> PrismInfo;
                 std::vector<LibUtilities::MeshHex>   HexInfo;
-                
+
                 for(int i = 0; i < elmt.size(); ++i)
-                {                    
+                {
                     switch(elmt[i]->GetTag()[0])
                     {
                     case 'S':
                         {
-                            LibUtilities::MeshEdge e; 
+                            LibUtilities::MeshEdge e;
                             e.id = elmt[i]->GetId();
                             e.v0 = elmt[i]->GetVertex(0)->m_id;
                             e.v1 = elmt[i]->GetVertex(1)->m_id;
@@ -396,7 +433,7 @@ namespace Nektar
                             {
                                 e.e[j] = elmt[i]->GetEdge(j)->m_id;
                             }
-                            TriInfo.push_back(e);                        
+                            TriInfo.push_back(e);
                         }
                         break;
                     case 'Q':
@@ -407,64 +444,65 @@ namespace Nektar
                             {
                                 e.e[j] = elmt[i]->GetEdge(j)->m_id;
                             }
-                            QuadInfo.push_back(e);                        
+                            QuadInfo.push_back(e);
                         }
                         break;
                     case 'A':
-                        {   
+                        {
                             LibUtilities::MeshTet e;
                             e.id  = elmt[i]->GetId();
                             for(int j = 0; j < 4; ++j)
                             {
                                 e.f[j] = elmt[i]->GetFace(j)->m_id;
                             }
-                            TetInfo.push_back(e);                        
+                            TetInfo.push_back(e);
                         }
                         break;
                     case 'P':
-                        {   
+                        {
                             LibUtilities::MeshPyr e;
                             e.id  = elmt[i]->GetId();
                             for(int j = 0; j < 5; ++j)
                             {
                                 e.f[j] = elmt[i]->GetFace(j)->m_id;
                             }
-                            PyrInfo.push_back(e);                        
+                            PyrInfo.push_back(e);
                         }
                         break;
                     case 'R':
-                        {   
+                        {
                             LibUtilities::MeshPrism e;
                             e.id  = elmt[i]->GetId();
                             for(int j = 0; j < 5; ++j)
                             {
                                 e.f[j] = elmt[i]->GetFace(j)->m_id;
                             }
-                            PrismInfo.push_back(e);                        
+                            PrismInfo.push_back(e);
                         }
                         break;
                     case 'H':
-                        {   
+                        {
                             LibUtilities::MeshHex e;
                             e.id  = elmt[i]->GetId();
                             for(int j = 0; j < 6; ++j)
                             {
                                 e.f[j] = elmt[i]->GetFace(j)->m_id;
                             }
-                            HexInfo.push_back(e);                        
+                            HexInfo.push_back(e);
                         }
                         break;
                     default:
                         ASSERTL0(false,"Unknown element type");
-                    }         
+                    }
                 }
-                
+
                 if(SegInfo.size())
                 {
                     std::string vType("S");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(SegInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              SegInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -472,13 +510,14 @@ namespace Nektar
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
-                
+
                 if(TriInfo.size())
                 {
                     std::string vType("T");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(TriInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              TriInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -486,13 +525,14 @@ namespace Nektar
                     x->LinkEndChild(new TiXmlText(Str));
                     verTag->LinkEndChild(x);
                 }
-                
+
                 if(QuadInfo.size())
                 {
                     std::string vType("Q");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(QuadInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              QuadInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -506,7 +546,8 @@ namespace Nektar
                     std::string vType("A");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(TetInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              TetInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -520,7 +561,8 @@ namespace Nektar
                     std::string vType("P");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(PyrInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              PyrInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -534,7 +576,8 @@ namespace Nektar
                     std::string vType("R");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(PrismInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              PrismInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -548,7 +591,8 @@ namespace Nektar
                     std::string vType("H");
                     TiXmlElement* x = new TiXmlElement(vType);
                     std::string Str;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(HexInfo,Str);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              HexInfo,Str);
                     x->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
                     x->SetAttribute("BITSIZE",
@@ -561,8 +605,10 @@ namespace Nektar
             pRoot->LinkEndChild(verTag);
         }
 
-        void OutputNekpp::WriteXmlCurves(TiXmlElement * pRoot, bool UnCompressed)
+        void OutputNekpp::WriteXmlCurves(TiXmlElement * pRoot)
         {
+            bool UnCompressed = m_config["uncompress"].as<bool>(); 
+            
             int edgecnt = 0;
 
             bool curve = false;
@@ -594,7 +640,7 @@ namespace Nektar
             TiXmlElement * curved = new TiXmlElement ("CURVED" );
 
             if(UnCompressed)
-            {            
+            {
                 for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); ++it)
                 {
                     if ((*it)->m_edgeNodes.size() > 0)
@@ -679,39 +725,39 @@ namespace Nektar
                 }
             }
             else
-            {                
+            {
                 std::vector<LibUtilities::MeshCurvedInfo> edgeinfo;
                 std::vector<LibUtilities::MeshCurvedInfo> faceinfo;
-                LibUtilities::MeshCurvedPts  curvedpts; 
+                LibUtilities::MeshCurvedPts  curvedpts;
                 curvedpts.id = 0; // assume all points are going in here
-                int ptoffset = 0; 
+                int ptoffset = 0;
                 int newidx   = 0;
-                NodeSet  cvertlist; 
+                NodeSet  cvertlist;
 
-                for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); ++it)
+                for (it = m_mesh->m_edgeSet.begin();
+                     it != m_mesh->m_edgeSet.end(); ++it)
                 {
-                    
                     if ((*it)->m_edgeNodes.size() > 0)
                     {
-                        LibUtilities::MeshCurvedInfo cinfo; 
+                        LibUtilities::MeshCurvedInfo cinfo;
                         cinfo.id       = edgecnt++;
                         cinfo.entityid = (*it)->m_id;
-                        cinfo.npoints  = (*it)->m_edgeNodes.size()+2; 
+                        cinfo.npoints  = (*it)->m_edgeNodes.size()+2;
                         cinfo.ptype    = (*it)->m_curveType;
                         cinfo.ptid     = 0; // set to just one point set
-                        cinfo.ptoffset = ptoffset; 
+                        cinfo.ptoffset = ptoffset;
 
                         edgeinfo.push_back(cinfo);
-                        
+
                         std::vector<NodeSharedPtr> nodeList;
                         (*it)->GetCurvedNodes(nodeList);
 
-                        // fill in points 
+                        // fill in points
                         for(int i =0; i < nodeList.size(); ++i)
                         {
                             pair<NodeSet::iterator,bool> testIns =
                                 cvertlist.insert(nodeList[i]);
-                            
+
                             if(testIns.second) // have inserted node
                             {
                                 (*(testIns.first))->m_id = newidx;
@@ -729,12 +775,12 @@ namespace Nektar
                                            (*(testIns.first))->m_id);
                         }
 
-                        ptoffset += cinfo.npoints; 
+                        ptoffset += cinfo.npoints;
                     }
                 }
 
                 int facecnt = 0;
-                
+
                 // 1D element in 2 or 3 space
                 if (m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
                 {
@@ -745,17 +791,17 @@ namespace Nektar
                         // Only generate face curve if there are volume nodes
                         if ((*it)->GetVolumeNodes().size() > 0)
                         {
-                            LibUtilities::MeshCurvedInfo cinfo; 
+                            LibUtilities::MeshCurvedInfo cinfo;
                             cinfo.id       = facecnt++;
                             cinfo.entityid = (*it)->GetId();
                             cinfo.npoints  = (*it)->GetNodeCount();
                             cinfo.ptype    = (*it)->GetCurveType();
                             cinfo.ptid     = 0; // set to just one point set
-                            cinfo.ptoffset = ptoffset; 
-                            
+                            cinfo.ptoffset = ptoffset;
+
                             edgeinfo.push_back(cinfo);
 
-                            // fill in points 
+                            // fill in points
                             vector<NodeSharedPtr> tmp;
                             (*it)->GetCurvedNodes(tmp);
 
@@ -763,11 +809,11 @@ namespace Nektar
                             {
                                 pair<NodeSet::iterator,bool> testIns =
                                     cvertlist.insert(tmp[i]);
-                                
+
                                 if(testIns.second) // have inserted node
                                 {
                                     (*(testIns.first))->m_id = newidx;
-                                    
+
                                     LibUtilities::MeshVertex v;
                                     v.id = newidx;
                                     v.x  = tmp[i]->m_x;
@@ -776,10 +822,10 @@ namespace Nektar
                                     curvedpts.pts.push_back(v);
                                     newidx++;
                                 }
-                                curvedpts.index.push_back((*(testIns.first))->m_id);
+                                curvedpts.index.push_back(
+                                                (*(testIns.first))->m_id);
                             }
-                            
-                            ptoffset += cinfo.npoints; 
+                            ptoffset += cinfo.npoints;
                         }
                     }
                 }
@@ -793,17 +839,17 @@ namespace Nektar
                         // Only generate face curve if there are volume nodes
                         if ((*it)->GetVolumeNodes().size() > 0)
                         {
-                            LibUtilities::MeshCurvedInfo cinfo; 
+                            LibUtilities::MeshCurvedInfo cinfo;
                             cinfo.id       = facecnt++;
                             cinfo.entityid = (*it)->GetId();
                             cinfo.npoints  = (*it)->GetNodeCount();
                             cinfo.ptype    = (*it)->GetCurveType();
                             cinfo.ptid     = 0; // set to just one point set
-                            cinfo.ptoffset = ptoffset; 
-                            
+                            cinfo.ptoffset = ptoffset;
+
                             faceinfo.push_back(cinfo);
 
-                            // fill in points 
+                            // fill in points
                             vector<NodeSharedPtr> tmp;
                             (*it)->GetCurvedNodes(tmp);
 
@@ -811,11 +857,11 @@ namespace Nektar
                             {
                                 pair<NodeSet::iterator,bool> testIns =
                                     cvertlist.insert(tmp[i]);
-                                
+
                                 if(testIns.second) // have inserted node
                                 {
                                     (*(testIns.first))->m_id = newidx;
-                                    
+
                                     LibUtilities::MeshVertex v;
                                     v.id = newidx;
                                     v.x  = tmp[i]->m_x;
@@ -824,9 +870,10 @@ namespace Nektar
                                     curvedpts.pts.push_back(v);
                                     newidx++;
                                 }
-                                curvedpts.index.push_back((*(testIns.first))->m_id);
+                                curvedpts.index.push_back(
+                                                (*(testIns.first))->m_id);
                             }
-                            ptoffset += cinfo.npoints; 
+                            ptoffset += cinfo.npoints;
                         }
                     }
                 }
@@ -837,30 +884,28 @@ namespace Nektar
                     {
                         if ((*it2)->m_faceNodes.size() > 0)
                         {
-                            LibUtilities::MeshCurvedInfo cinfo; 
-                            cinfo.id       = facecnt++;
-                            cinfo.entityid = (*it2)->m_id;
-                            cinfo.npoints  = (*it2)->m_faceNodes.size(); // just interior nodes
-                            cinfo.ptype    = (*it2)->m_curveType;
-                            cinfo.ptid     = 0; // set to just one point set
-                            cinfo.ptoffset = ptoffset; 
-                            
-                            faceinfo.push_back(cinfo);
-
-
-                            // fill in points 
                             vector<NodeSharedPtr> tmp;
                             (*it2)->GetCurvedNodes(tmp);
-                            
+
+                            LibUtilities::MeshCurvedInfo cinfo;
+                            cinfo.id       = facecnt++;
+                            cinfo.entityid = (*it2)->m_id;
+                            cinfo.npoints  = tmp.size();
+                            cinfo.ptype    = (*it2)->m_curveType;
+                            cinfo.ptid     = 0; // set to just one point set
+                            cinfo.ptoffset = ptoffset;
+
+                            faceinfo.push_back(cinfo);
+
                             for(int i =0; i < tmp.size(); ++i)
                             {
                                 pair<NodeSet::iterator,bool> testIns =
                                     cvertlist.insert(tmp[i]);
-                                
+
                                 if(testIns.second) // have inserted node
                                 {
                                     (*(testIns.first))->m_id = newidx;
-                                    
+
                                     LibUtilities::MeshVertex v;
                                     v.id = newidx;
                                     v.x  = tmp[i]->m_x;
@@ -869,14 +914,14 @@ namespace Nektar
                                     curvedpts.pts.push_back(v);
                                     newidx++;
                                 }
-                                curvedpts.index.push_back((*(testIns.first))->m_id);
+                                curvedpts.index.push_back(
+                                                (*(testIns.first))->m_id);
                             }
-
-                            ptoffset += cinfo.npoints; 
+                            ptoffset += cinfo.npoints;
                         }
                     }
                 }
-            
+
                 // add xml information
                 if(edgeinfo.size())
                 {
@@ -884,10 +929,11 @@ namespace Nektar
                               LibUtilities::CompressData::GetCompressString());
                     curved->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
-                    
+
                     TiXmlElement *x = new TiXmlElement("E");
                     std::string dataStr;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              edgeinfo,dataStr);
                     x->LinkEndChild(new TiXmlText(dataStr));
                     curved->LinkEndChild(x);
                 }
@@ -898,30 +944,33 @@ namespace Nektar
                               LibUtilities::CompressData::GetCompressString());
                     curved->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
-                    
+
                     TiXmlElement *x = new TiXmlElement("F");
                     std::string dataStr;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              faceinfo,dataStr);
                     x->LinkEndChild(new TiXmlText(dataStr));
                     curved->LinkEndChild(x);
                 }
-                
+
                 if(edgeinfo.size()||faceinfo.size())
                 {
                     TiXmlElement *x = new TiXmlElement("DATAPOINTS");
                     x->SetAttribute("ID", curvedpts.id);
-                    
+
                     TiXmlElement *subx = new TiXmlElement("INDEX");
                     std::string dataStr;
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedpts.index,dataStr);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              curvedpts.index,dataStr);
                     subx->LinkEndChild(new TiXmlText(dataStr));
                     x->LinkEndChild(subx);
-                    
+
                     subx = new TiXmlElement("POINTS");
-                    LibUtilities::CompressData::ZlibEncodeToBase64Str(curvedpts.pts,dataStr);
+                    LibUtilities::CompressData::ZlibEncodeToBase64Str(
+                              curvedpts.pts,dataStr);
                     subx->LinkEndChild(new TiXmlText(dataStr));
                     x->LinkEndChild(subx);
-                    
+
                     curved->LinkEndChild(x);
                 }
             }

@@ -726,7 +726,19 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                                       ->GetPtr().get(), 1, &inarray[0], 1);
             }
         }
-
+        
+        // Get vertex value from the 1D Phys space.
+        void SegExp::v_GetTracePhysVals(
+                        const int edge,
+                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,       NekDouble> &outarray,
+                        StdRegions::Orientation  orient)
+        {
+            NekDouble result;
+            v_GetVertexPhysVals(edge, inarray, result);
+            outarray[0] = result;
+        }
 
         //-----------------------------
         // Helper functions
@@ -869,7 +881,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat =
                                 geomFactors->GetDerivFactors(GetPointsKeys());
-            int nqe = m_base[0]->GetNumPoints();
+            int nqe = 1;
             int vCoordDim = GetCoordim();
 
             m_vertexNormals[vertex] =

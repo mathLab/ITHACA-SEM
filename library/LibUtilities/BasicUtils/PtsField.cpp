@@ -268,9 +268,9 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
                         const string fieldName)
 {
     int nTotvars = m_pts.num_elements();
-    int nPts = m_pts[0].num_elements();
 
-    ASSERTL1(pts.num_elements() ==  nPts, "Field size mismatch");
+    ASSERTL1(pts.num_elements() ==  m_pts[0].num_elements(), 
+            "Field size mismatch");
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);

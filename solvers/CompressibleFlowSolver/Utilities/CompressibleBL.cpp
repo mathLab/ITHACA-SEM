@@ -254,9 +254,9 @@ void OUTPUT(int                                  m_xpoints,
     Array <OneD, NekDouble > test    (m_xpoints, 0.0);
 
 
-    NekDouble dd, dm, scale, flg, dlta;
+    NekDouble dd, dm, scale, flg;
     NekDouble xcher, ycher;
-    int index;
+    int index = -1;
 
     z[0]           = 0.0;
     NekDouble sumd = 0.0;
@@ -270,7 +270,6 @@ void OUTPUT(int                                  m_xpoints,
 
         if ((ff[1][i] > 0.999) && (flg < 1.0))
         {
-            dlta = z[i];
             flg  = 2.0;
         }
     }
@@ -343,6 +342,10 @@ void OUTPUT(int                                  m_xpoints,
                     break;
                 }
             }
+            if (index == -1)
+            {
+                ASSERTL0(false, "Could not determine index in CompressibleBL");
+            }
 
             u_QuadraturePts[i]   = u[index];
             rho_QuadraturePts[i] = rho[index];
@@ -365,13 +368,13 @@ int main(int argc, char *argv[])
 
     string opt;
 
-    int  i, j, numModes;
+    int  i, j, k, numModes;
 
     Array<OneD, NekDouble>               xx(m_xpoints, 0.0);
     Array<OneD, Array<OneD, NekDouble> > ff(nmax);
     Array<OneD, NekDouble>               parameter(9, 0.0);
 
-    for (int i = 0; i < nmax; i++)
+    for (i = 0; i < nmax; i++)
     {
         ff[i] = Array<OneD, NekDouble> (m_xpoints);
     }
@@ -526,7 +529,7 @@ int main(int argc, char *argv[])
 
     RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
 
-    for (int k = 0; k < maxit; k++)
+    for (k = 0; k < maxit; k++)
     {
         vstart[2] = v[0];
 
@@ -674,7 +677,7 @@ int main(int argc, char *argv[])
     // Verification of the compressible similarity solution
     ofstream verif;
     verif.open("similarity_solution.dat");
-    for (int i=0; i< nQuadraturePts; i++)
+    for (i=0; i< nQuadraturePts; i++)
     {
         verif << scientific << setprecision(9) << x_QuadraturePts[i]
               << "  \t  " << y_QuadraturePts[i] << "  \t " ;
@@ -686,7 +689,7 @@ int main(int argc, char *argv[])
     verif.close();
 
     // Calculation of the physical variables
-    for (int i = 0; i < nQuadraturePts; i++)
+    for (i = 0; i < nQuadraturePts; i++)
     {
         rho_QuadraturePts[i] = rho_QuadraturePts[i] * m_rhoInf;
         u_QuadraturePts[i]   = u_QuadraturePts[i] * m_uInf;
@@ -763,7 +766,7 @@ int main(int argc, char *argv[])
         cout << argv[1] << endl;
         string tmp = argv[1];
         int len = tmp.size();
-        for (int i = 0; i < len-4; ++i)
+        for (i = 0; i < len-4; ++i)
         {
             file_name += argv[1][i];
         }
@@ -872,7 +875,7 @@ int main(int argc, char *argv[])
         cout << argv[1] << endl;
         string tmp = argv[1];
         int len = tmp.size();
-        for (int i = 0; i < len-4; ++i)
+        for (i = 0; i < len-4; ++i)
         {
             file_name += argv[1][i];
         }

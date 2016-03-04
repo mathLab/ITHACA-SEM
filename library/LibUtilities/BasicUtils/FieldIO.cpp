@@ -37,10 +37,19 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include "zlib.h"
 #include <set>
@@ -137,9 +146,9 @@ namespace Nektar
         /**
          *
          */
-        FieldIO::FieldIO(
-                LibUtilities::CommSharedPtr pComm)
-            : m_comm(pComm)
+        FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
+                         bool                        sharedFilesystem)
+            : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
         {
         }
 
@@ -348,13 +357,17 @@ namespace Nektar
                 elemTag->SetAttribute("ID", idString);
                 elemTag->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
+
+                // Add this information for future compatibility
+                // issues, for exmaple in case we end up using a 128
+                // bit machine.
                 elemTag->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
                 std::string base64string;
-                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f], 
-                                                                     base64string),
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
+                                                fielddata[f], base64string),
                          "Failed to compress field data.");
-                
+
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -772,16 +785,20 @@ namespace Nektar
                         else if (attrName == "COMPRESSED")
                         {
                             if(!boost::iequals(attr->Value(),
-                                               CompressData::GetCompressString()))
+                                            CompressData::GetCompressString()))
                             {
-                                WARNINGL0(false,"Compressed formats do not match. Expected: "
+                                WARNINGL0(false, "Compressed formats do not "
+                                          "match. Expected: "
                                           + CompressData::GetCompressString()
                                           + " but got "+ string(attr->Value()));
                             }
                         }
                         else if (attrName =="BITSIZE")
                         {
-                            // do nothing
+                            // This information is for future
+                            // compatibility issues, for exmaple in
+                            // case we end up using a 128 bit machine.
+                            // Currently just do nothing
                         }
                         else
                         {
@@ -982,17 +999,18 @@ namespace Nektar
                     const char *CompressStr = element->Attribute("COMPRESSED");
                     if(CompressStr)
                     {
-                        if(!boost::iequals(CompressStr,CompressData::GetCompressString()))
+                        if(!boost::iequals(CompressStr,
+                                           CompressData::GetCompressString()))
                         {
-                            WARNINGL0(false,"Compressed formats do not match. Expected: "
+                            WARNINGL0(false, "Compressed formats do not match. "
+                                      "Expected: "
                                       + CompressData::GetCompressString()
                                       + " but got "+ string(CompressStr));
                         }
                     }
-                                                                              
 
                     ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
-                                                        elementStr, 
+                                                        elementStr,
                                                         elementFieldData),
                              "Failed to decompress field data.");
 
@@ -1128,21 +1146,63 @@ namespace Nektar
             int nprocs = m_comm->GetSize();
             int rank   = m_comm->GetRank();
 
-            // Directory name if in parallel, regular filename if in serial
+            // Path to output: will be directory if parallel, normal file if
+            // serial.
             fs::path specPath (outname);
+            fs::path fulloutname;
+
+            if (nprocs == 1)
+            {
+                fulloutname = specPath;
+            }
+            else
+            {
+                // Guess at filename that might belong to this process.
+                boost::format pad("P%1$07d.fld");
+                pad % m_comm->GetRank();
+
+                // Generate full path name
+                fs::path poutfile(pad.str());
+                fulloutname = specPath / poutfile;
+            }
 
             // Remove any existing file which is in the way
-            if(m_comm->RemoveExistingFiles())
+            if (m_comm->RemoveExistingFiles())
             {
-                try
+                if (m_sharedFilesystem)
                 {
-                    fs::remove_all(specPath);
+                    // First, each process clears up its .fld file. This might
+                    // or might not be there (we might have changed numbers of
+                    // processors between runs, for example), but we can try
+                    // anyway.
+                    try
+                    {
+                        fs::remove_all(fulloutname);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
-                catch (fs::filesystem_error& e)
+
+                m_comm->Block();
+
+                // Now get rank 0 processor to tidy everything else up.
+                if (rank == 0 || !m_sharedFilesystem)
                 {
-                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                             "Filesystem error: " + string(e.what()));
+                    try
+                    {
+                        fs::remove_all(specPath);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
+
+                m_comm->Block();
             }
 
             // serial processing just add ending.
@@ -1169,12 +1229,17 @@ namespace Nektar
             // Create the destination directory
             try
             {
-                fs::create_directory(specPath);
+                if (rank == 0 || !m_sharedFilesystem)
+                {
+                    fs::create_directory(specPath);
+                }
             }
             catch (fs::filesystem_error& e)
             {
                 ASSERTL0(false, "Filesystem error: " + string(e.what()));
             }
+
+            m_comm->Block();
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1213,14 +1278,6 @@ namespace Nektar
                 // Send this process's ID list to the root process
                 m_comm->Send(0, idlist);
             }
-
-            // Pad rank to 8char filenames, e.g. P0000000.fld
-            boost::format pad("P%1$07d.fld");
-            pad % m_comm->GetRank();
-
-            // Generate full path name
-            fs::path poutfile(pad.str());
-            fs::path fulloutname = specPath / poutfile;
 
             // Return the full path to the partition for this process
             return LibUtilities::PortablePath(fulloutname);

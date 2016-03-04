@@ -146,7 +146,7 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
             out << "\tInital vector       : random  " << endl;
         }
 
-        NekDouble eps=1;
+        NekDouble eps=0.0001;
         Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
     }
 

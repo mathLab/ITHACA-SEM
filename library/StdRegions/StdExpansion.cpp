@@ -1022,14 +1022,19 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
-        void StdExpansion::v_NormVectorIProductWRTBase(
-                                                       const Array<OneD, const NekDouble> &Fx,
+        void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx,
                                                        const Array<OneD, const NekDouble> &Fy,
                                                        const Array<OneD, const NekDouble> &Fz,
                                                        Array< OneD, NekDouble> &outarray)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
+
+        void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
 
         DNekScalBlkMatSharedPtr StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
         {

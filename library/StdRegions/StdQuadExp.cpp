@@ -1230,7 +1230,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = i*P + 1;
+                            maparray[i] = i*order0 + 1;
                         }
 
                         if (edgeOrient == eBackwards)
@@ -1248,7 +1248,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = P+i;
+                            maparray[i] = order0+i;
                         }
 
                         if (edgeOrient == eForwards)
@@ -1266,7 +1266,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = i*P;
+                            maparray[i] = i*order0;
                         }
 
                         if (edgeOrient == eForwards)
@@ -1302,7 +1302,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = (i+1)*P - 1;
+                            maparray[i] = (i+1)*order0 - 1;
                         }
                     }
                     break;
@@ -1310,7 +1310,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = P*order1 - 1 - i;
+                            maparray[i] = order0*order1 - 1 - i;
                         }
                     }
                     break;
@@ -1318,7 +1318,7 @@ namespace Nektar
                     {
                         for (i = 0; i < P; i++)
                         {
-                            maparray[i] = P*(order1-1-i);
+                            maparray[i] = order0*(order1-1-i);
                         }
                     }
                     break;

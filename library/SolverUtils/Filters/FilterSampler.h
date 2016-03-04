@@ -55,25 +55,25 @@ public:
 
 
 protected:
-    virtual void v_Initialise(
+    SOLVER_UTILS_EXPORT virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time);
-    virtual void v_Update(
+    SOLVER_UTILS_EXPORT virtual void v_Update(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time);
-    virtual void v_Finalise(
+    SOLVER_UTILS_EXPORT virtual void v_Finalise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time);
-    virtual void v_ProcessSample(
+    SOLVER_UTILS_EXPORT virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time) = 0;
-    virtual void v_PrepareOutput(
+    SOLVER_UTILS_EXPORT virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
     {
         // Do nothing by default
     }
-    virtual std::string v_GetFileSuffix() = 0;
+    SOLVER_UTILS_EXPORT virtual std::string v_GetFileSuffix() = 0;
 
     void OutputField(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

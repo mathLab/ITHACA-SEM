@@ -37,6 +37,7 @@ v4.3.0
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
 - Add option to output equi-spaced points in VTU format (!550)
+- Add comand line option of part-only and part-only-overlapping (!569)
 
 **MeshConvert:**
 - Enable face curvature inside core MeshConvert objects (!511)

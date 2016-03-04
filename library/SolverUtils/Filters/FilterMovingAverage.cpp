@@ -112,12 +112,19 @@ void FilterMovingAverage::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    // Take first sample as initial vector
+    NekDouble alpha = m_alpha;
+    if( m_numSamples == 1)
+    {
+        alpha = 1.0;
+    }
+
     // \bar{u}_n = alpha * u_n + (1-alpha) * \bar{u}_{n-1}
     for(int n = 0; n < pFields.num_elements(); ++n)
     {
         Vmath::Svtsvtp(m_outFields[n].num_elements(), 
-                       m_alpha, pFields[n]->GetCoeffs(), 1,
-                       (1.0-m_alpha), m_outFields[n], 1,
+                       alpha, pFields[n]->GetCoeffs(), 1,
+                       (1.0-alpha), m_outFields[n], 1,
                        m_outFields[n], 1);
     }
 }

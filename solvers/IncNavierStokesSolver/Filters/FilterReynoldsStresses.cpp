@@ -192,13 +192,20 @@ void FilterReynoldsStresses::v_ProcessSample(
     bool waveSpace     = pFields[0]->GetWaveSpace();
     NekDouble nSamples = (NekDouble) m_numSamples;
 
+    // For moving average, take first sample as initial vector
+    NekDouble alpha = m_alpha;
+    if( m_numSamples == 1)
+    {
+        alpha = 1.0;
+    }
+
     // Define auxiliary constants for averages
     NekDouble facOld, facAvg, facStress, facDelta;
     if(m_movAvg)
     {
-        facOld    = 1.0 - m_alpha;
-        facAvg    = m_alpha;
-        facStress = m_alpha;
+        facOld    = 1.0 - alpha;
+        facAvg    = alpha;
+        facStress = alpha;
         facDelta  = 1.0;
     }
     else

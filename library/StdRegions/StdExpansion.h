@@ -843,11 +843,13 @@ namespace Nektar
                 v_GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
             }
 
-            void GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
+            void GetEdgeToElementMap(const int eid,
+                                     const Orientation edgeOrient,
                                      Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int> &signarray)
+                                     Array<OneD, int> &signarray,
+                                     int P = -1)
             {
-                v_GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
+                v_GetEdgeToElementMap(eid, edgeOrient, maparray, signarray, P);
             }
 
             void GetFaceToElementMap(const int fid, const Orientation faceOrient,
@@ -1708,9 +1710,12 @@ namespace Nektar
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
-                                               Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(
+                const int                  eid,
+                const Orientation          edgeOrient,
+                Array<OneD, unsigned int>& maparray,
+                Array<OneD, int>&          signarray,
+                int                        P = -1);
 
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(const int fid, const Orientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,

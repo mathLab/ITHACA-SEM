@@ -706,6 +706,7 @@ namespace Nektar
                     {
                         outarray[i] = i;
                     }
+
                     break;
                 case 1:
                     nq0 = nquad0;
@@ -715,7 +716,7 @@ namespace Nektar
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-
+                    
                     //Direction A and B positive
                     for (int k = 0; k < nquad2; k++)
                     {
@@ -771,12 +772,11 @@ namespace Nektar
                     for (int i = 0; i < nquad1*nquad2; i++)
                     {
                         outarray[i] = i*nquad0;
-                    }
+                    }                    
                     break;
                 case 5:
                     nq0 = nquad0;
                     nq1 = nquad1;
-
                     //Directions A and B positive
                     if(outarray.num_elements()!=nq0*nq1)
                     {
@@ -787,6 +787,7 @@ namespace Nektar
                     {
                         outarray[i] = nquad0*nquad1*(nquad2-1) + i;
                     }
+
                     break;
                 default:
                     ASSERTL0(false,"face value (> 5) is out of range");

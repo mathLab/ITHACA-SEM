@@ -1154,11 +1154,211 @@ namespace Nektar
 
         }
 
-        void StdQuadExp::v_GetEdgeToElementMap(const int eid,
-                             const Orientation edgeOrient,
-                             Array<OneD, unsigned int> &maparray,
-                             Array<OneD, int> &signarray)
+        void StdQuadExp::v_GetEdgeToElementMap(
+             const int                  eid,
+             const Orientation          edgeOrient,
+             Array<OneD, unsigned int>& maparray,
+             Array<OneD, int>&          signarray,
+             int                        P)
         {
+#if 1
+            int i;
+            int numModes;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+
+            switch (eid)
+            {
+            case 0:
+            case 2:
+                numModes = order0;
+                break;
+            case 1:
+            case 3:
+                numModes = order1;
+            }
+
+            bool checkForZeroedModes = false;
+            if (P == -1)
+            {
+                P = numModes;
+            }
+            else if(P != numModes)
+            {
+                checkForZeroedModes = true;
+            }
+            const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
+
+
+            if (maparray.num_elements() != P)
+            {
+                maparray = Array<OneD, unsigned int>(P);
+            }
+
+            if(signarray.num_elements() != P)
+            {
+                signarray = Array<OneD, int>(P, 1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get()+P, 1);
+            }
+
+            if (bType == LibUtilities::eModified_A)
+            {
+                switch (eid)
+                {
+                case 0:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = i;
+                        }
+                        
+                        if (edgeOrient == eBackwards)
+                        {
+                            swap(maparray[0], maparray[1]);
+                            
+                            for(i = 3; i < P; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }
+                    }
+                    break;
+                case 1:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = i*order0 + 1;
+                        }
+
+                        if (edgeOrient == eBackwards)
+                        {
+                            swap(maparray[0], maparray[1]);
+
+                            for(i = 3; i < P; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }
+                    }
+                    break;
+                case 2:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = order0+i;
+                        }
+
+                        if (edgeOrient == eForwards)
+                        {
+                            swap(maparray[0], maparray[1]);
+
+                            for (i = 3; i < P; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }
+                    }
+                    break;
+                case 3:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = i*order0;
+                        }
+
+                        if (edgeOrient == eForwards)
+                        {
+                            swap(maparray[0], maparray[1]);
+
+                            for (i = 3; i < P; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "eid must be between 0 and 3");
+                    break;
+                }
+            }
+            else if(bType == LibUtilities::eGLL_Lagrange ||
+                    bType == LibUtilities::eGauss_Lagrange)
+            {
+                switch (eid)
+                {
+                case 0:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = i;
+                        }
+                    }
+                    break;
+                case 1:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = (i+1)*order0 - 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = order0*order1 - 1 - i;
+                        }
+                    }
+                    break;
+                case 3:
+                    {
+                        for (i = 0; i < P; i++)
+                        {
+                            maparray[i] = order0*(order1-1-i);
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "eid must be between 0 and 3");
+                    break;
+                }
+                if (edgeOrient == eBackwards)
+                {
+                    reverse(maparray.get(), maparray.get()+P);
+                }
+            }
+            else
+            {
+                ASSERTL0(false, "Mapping not defined for this type of basis");
+            }
+
+            if (checkForZeroedModes)
+            {
+                if (bType == LibUtilities::eModified_A)
+                {
+                    // Zero signmap and set maparray to zero if
+                    // elemental modes are not as large as face modesl
+                    for (int j = numModes; j < P; j++)
+                    {
+                        signarray[j] = 0.0;
+                        maparray[j]  = maparray[0];
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false, "Different trace space edge dimension "
+                                    "and element edge dimension not possible "
+                                    "for GLL-Lagrange bases");
+                }
+            }
+
+
+
+#else
             int i;
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
@@ -1310,7 +1510,10 @@ namespace Nektar
             {
                 ASSERTL0(false,"Mapping not defined for this type of basis");
             }
+#endif
         }
+
+
 
         ///////////////////////
         // Wrapper Functions //

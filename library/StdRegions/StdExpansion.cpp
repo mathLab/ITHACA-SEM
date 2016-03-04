@@ -1435,11 +1435,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            void StdExpansion::v_GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
-                                               Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray)
+            void StdExpansion::v_GetEdgeToElementMap(
+                const int                  eid,
+                const Orientation          edgeOrient,
+                Array<OneD, unsigned int>& maparray,
+                Array<OneD, int>&          signarray,
+                int                        P)
             {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
             }
 
             void StdExpansion::v_GetFaceToElementMap(const int fid, const Orientation faceOrient,

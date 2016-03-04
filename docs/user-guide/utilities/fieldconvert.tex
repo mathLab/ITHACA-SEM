@@ -662,12 +662,16 @@ field files placed within the directory.
 %
 %
 %
-\section{Processing large files}
+\section{Processing large files in serial}
 When processing large files it is not always convenient to run in parallel 
 but process each parallel partition in serial, for example when interpolating 
-one field to another. To do this we can use the \inltt{--nprocs} and 
-\inltt{--procid} options. For example the following option will interpolate 
-partition 2 of a decomposition into 10 partitions of \inltt{fiile2.xml} from 
+one field to another.
+
+\subsection{Using the nprocs and procid options}
+
+One option is to use the \inltt{--nprocs} and \inltt{--procid}
+options. For example the following option will interpolate partition 2
+of a decomposition into 10 partitions of \inltt{fiile2.xml} from
 \inltt{file1.fld}
 \begin{lstlisting}[style=BashInputStyle] 
 FieldConvert --nprocs 10 --procid 2 \
@@ -699,6 +703,34 @@ Note the final \inltt{:info} extension on the last argument is necessary to
 tell FieldConvert that you wish to generate an info file but the extension 
 to this file is .xml. This syntax allows the routine not to get confused with 
 the input/output xml files.
+
+\subsection{ Using the --part-only and --part-only-overlapping options}
+
+Another approach to serially proessing a large file is to intiially process the file into multiple partitions. This can be done with the \inltt{part-only} option. So the command
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert --part-only 10 file.xml file.fld
+\end{lstlisting}
+will call the mesh partitioner for 10 paritions and write the
+partitions into a director called file\_xml. If you enter this
+directory you will find parititoned xml files \inltt{P0000000.xml},
+\inltt{P0000001.xml},...,\inltt{P0000009.xml} which can then be
+processed individually.
+
+There is also a \inltt{part-only-overlapping} option
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert --part-only-overlapping 10 file.xml file.fld
+\end{lstlisting}
+which will partition the mesh into 10 overlapping partitions which can
+then be processed individually. This is sometime helpful when for
+example trying to produce a global isocontour which has been
+smoothed. Applying the smoothed isocontour extraction routine with the
+\inltt{part-only} option will produce a series of isocontour where
+there will be a gap between partitions as the smoother tends to shrink
+the isocontour within a partition. using the
+\inltt{part-only-overlapping} will still have shrinking isocnotour but
+the overlapping nature of these isocontour can be helpful when trying
+to mask the partiiton boundaries.
+
 
 %%% Local Variables:
 %%% mode: latex

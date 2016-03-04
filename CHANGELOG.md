@@ -20,12 +20,14 @@ v4.3.0
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 - Add contribution guide (!551)
+- Add a filter to calculate exponential moving averages (!566)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **IncNavierStokesSolver**
 - Fix floquet stability analysis for HalfMode case (!536)
+- Add a filter to calculate Reynolds stresses (!566)
 
 **FieldConvert:**
 - Extended surface distance module to support hexahedra and quads (!524)

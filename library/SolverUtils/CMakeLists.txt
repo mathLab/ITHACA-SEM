@@ -28,6 +28,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
+  Filters/FilterMovingAverage.cpp
   Filters/FilterSampler.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
@@ -73,6 +74,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
+  Filters/FilterMovingAverage.h
   Filters/FilterSampler.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h

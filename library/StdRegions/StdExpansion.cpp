@@ -1007,11 +1007,6 @@ namespace Nektar
         }
 
 
-        void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-        }
-
         void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");

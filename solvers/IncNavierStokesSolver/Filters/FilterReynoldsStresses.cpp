@@ -49,20 +49,83 @@ std::string FilterReynoldsStresses::className =
  * @brief Append Reynolds stresses to the average fields
  * 
  * This class appends the average fields with the Reynolds stresses of the form
- * \f$ \overline{u' v'} \f$. This is achieved by calculating 
+ * \f$ \overline{u' v'} \f$.
+ *
+ * For the default case, this is achieved by calculating
  * \f$ C_{n} = \Sigma_{i=1}^{n} (u_i - \bar{u}_n)(v_i - \bar{v}_n)\f$
  * using the recursive relation:
  * 
  * \f[ C_{n} = C_{n-1} + \frac{n}{n-1} (u_n - \bar{u}_n)(v_n - \bar{v}_n) \f]
- * 
- * The FilterAverageFields base class then divides the result by n, leading
+ *
+ * The FilterSampler base class then divides the result by n, leading
  * to the Reynolds stress.
+ *
+ * It is also possible to perform the averages using an exponential moving
+ *  average, in which case either the moving average parameter \f$ \alpha \f$
+ * or the time constant \f$ \tau \f$ must be prescribed.
  */
 FilterReynoldsStresses::FilterReynoldsStresses(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const std::map<std::string, std::string> &pParams)
     : FilterSampler(pSession, pParams)
 {
+    ParamMap::const_iterator it;
+
+    // Check if should use moving average
+    it = pParams.find("MovingAverage");
+    if (it == pParams.end())
+    {
+        m_movAvg = false;
+    }
+    else
+    {
+        std::string sOption =
+                        it->second.c_str();
+        m_movAvg = ( boost::iequals(sOption,"true")) ||
+                   ( boost::iequals(sOption,"yes"));
+    }
+
+    if(!m_movAvg)
+    {
+        return;
+    }
+
+    // Load alpha parameter for moving average
+    it = pParams.find("alpha");
+    if(it == pParams.end())
+    {
+        it = pParams.find("tau");
+        if(it == pParams.end())
+        {
+            ASSERTL0(false, "MovingAverage needs either alpha or tau.");
+        }
+        else
+        {
+            // Load time constant
+            LibUtilities::Equation equ(m_session, it->second);
+            NekDouble tau = equ.Evaluate();
+            // Load delta T between samples
+            NekDouble dT;
+            m_session->LoadParameter("TimeStep", dT);
+            dT = dT * m_sampleFrequency;
+            // Calculate alpha
+            m_alpha = dT / (tau + dT);
+        }
+    }
+    else
+    {
+        LibUtilities::Equation equ(m_session, it->second);
+        m_alpha = equ.Evaluate();
+        // Check if tau was also defined
+        it = pParams.find("tau");
+        if(it != pParams.end())
+        {
+            ASSERTL0(false,
+                    "Cannot define both alpha and tau in MovingAverage.");
+        }
+    }
+    // Check bounds of m_alpha
+    ASSERTL0(m_alpha > 0 && m_alpha < 1, "Alpha out of bounds.");
 }
 
 FilterReynoldsStresses::~FilterReynoldsStresses()
@@ -128,7 +191,23 @@ void FilterReynoldsStresses::v_ProcessSample(
     int dim            = pFields.num_elements() - 1;
     bool waveSpace     = pFields[0]->GetWaveSpace();
     NekDouble nSamples = (NekDouble) m_numSamples;
-    NekDouble fac      = nSamples / (nSamples-1);
+
+    // Define auxiliary constants for averages
+    NekDouble facOld, facAvg, facStress, facDelta;
+    if(m_movAvg)
+    {
+        facOld    = 1.0 - m_alpha;
+        facAvg    = m_alpha;
+        facStress = m_alpha;
+        facDelta  = 1.0;
+    }
+    else
+    {
+        facOld    = 1.0;
+        facAvg    = 1.0;
+        facStress = nSamples / (nSamples-1);
+        facDelta  = 1.0/nSamples;
+    }
 
     Array<OneD, NekDouble> vel(nq);
     Array<OneD, NekDouble> tmp(nq);
@@ -144,13 +223,17 @@ void FilterReynoldsStresses::v_ProcessSample(
         {
             vel = pFields[n]->GetPhys();
         }
-        Vmath::Vadd(nq, vel, 1, m_fields[n], 1, m_fields[n], 1);
-        Vmath::Svtvm(nq, 1.0/nSamples, m_fields[n], 1,
+        Vmath::Svtsvtp(nq, facAvg, vel, 1,
+                       facOld, m_fields[n], 1,
+                       m_fields[n], 1);
+        Vmath::Svtvm(nq, facDelta, m_fields[n], 1,
                      vel, 1, m_delta[n], 1);
     }
     // Update pressure (directly to outFields)
-    Vmath::Vadd(m_outFields[dim].num_elements(), pFields[dim]->GetCoeffs(), 1, 
-                m_outFields[dim], 1, m_outFields[dim], 1);
+    Vmath::Svtsvtp(m_outFields[dim].num_elements(),
+                    facAvg, pFields[dim]->GetCoeffs(), 1,
+                    facOld, m_outFields[dim], 1,
+                    m_outFields[dim], 1);
 
     // Ignore Reynolds stress for first sample (its contribution is zero)
     if( m_numSamples == 1)
@@ -158,14 +241,15 @@ void FilterReynoldsStresses::v_ProcessSample(
         return;
     }
 
-    // Calculate C_{n} = C_{n-1} + fac * deltaI * deltaJ
+    // Calculate C_{n} = facOld * C_{n-1} + facStress * deltaI * deltaJ
     for (i = 0, n = dim+1; i < dim; ++i)
     {
         for (j = i; j < dim; ++j, ++n)
         {
             Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, tmp, 1);
-            Vmath::Smul(nq, fac, tmp, 1, tmp, 1);
-            Vmath::Vadd(nq, tmp, 1, m_fields[n], 1, m_fields[n], 1);
+            Vmath::Svtsvtp(nq, facStress, tmp, 1,
+                           facOld, m_fields[n], 1,
+                           m_fields[n], 1);
         }
     }
 }
@@ -174,8 +258,16 @@ void FilterReynoldsStresses::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    m_scale = 1.0/m_numSamples;
     int dim = pFields.num_elements() - 1;
+
+    if(m_movAvg)
+    {
+        m_scale = 1.0;
+    }
+    else
+    {
+        m_scale = 1.0/m_numSamples;
+    }
 
     // Set wavespace to false, as calculations were performed in physical space
     bool waveSpace  = pFields[0]->GetWaveSpace();

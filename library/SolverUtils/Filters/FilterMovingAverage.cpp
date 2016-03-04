@@ -86,7 +86,7 @@ FilterMovingAverage::FilterMovingAverage(
         }
     }
     // Check bounds of m_alpha
-    ASSERTL0(m_alpha > 0 && m_alpha < 1, "Alpha out of bounds.")
+    ASSERTL0(m_alpha > 0 && m_alpha < 1, "Alpha out of bounds.");
 }
 
 FilterMovingAverage::~FilterMovingAverage()

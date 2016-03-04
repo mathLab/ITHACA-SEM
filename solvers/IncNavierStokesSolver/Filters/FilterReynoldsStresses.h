@@ -84,6 +84,8 @@ protected:
 
     std::vector<Array<OneD, NekDouble> > m_fields;
     std::vector<Array<OneD, NekDouble> > m_delta;
+    NekDouble                            m_alpha;
+    bool                                 m_movAvg;
 };
 }
 }

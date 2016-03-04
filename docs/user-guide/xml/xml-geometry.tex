@@ -5,15 +5,16 @@ the elemental decomposition of the domain. It also defines a list of composites
 which are used in the Expansions and Conditions sections of the file to describe
 the polynomial expansions and impose boundary conditions.
 
-The GEOMETRY section is structured as \begin{lstlisting}[style=XMLStyle]
+The GEOMETRY section is structured as
+\begin{lstlisting}[style=XMLStyle]
 <GEOMETRY DIM="2" SPACE="2">
-  <VERTEX> ...
-  </VERTEX> <EDGE> ...
-  </EDGE> <FACE> ...
-  </FACE> <ELEMENT> ...
-  </ELEMENT> <CURVED> ...
-  </CURVED> <COMPOSITE> ...
-  </COMPOSITE> <DOMAIN> ... </DOMAIN>
+  <VERTEX> ... </VERTEX>
+  <EDGE> ... </EDGE>
+  <FACE> ... </FACE>
+  <ELEMENT> ... </ELEMENT>
+  <CURVED> ... </CURVED>
+  <COMPOSITE> ... </COMPOSITE>
+  <DOMAIN> ... </DOMAIN>
 </GEOMETRY>
 \end{lstlisting}
 It has two (required) attributes:
@@ -23,34 +24,49 @@ It has two (required) attributes:
     elements exist.
 \end{itemize}
 These attributes allow, for example, a two-dimensional surface to be embedded in
-a three-dimensional space. 
+a three-dimensional space.
 
 \begin{notebox}
-The attribute \inltt{PARAMETER} may also appear in a partitioned mesh.
+The attribute \inltt{PARTITION} may also appear in a partitioned mesh.
 However, this attribute should not be explicitly specified by the user.
+\end{notebox}
+
+Each of the \inltt{VERTEX}, \inltt{EDGE}, \inltt{FACE}, \inltt{ELEMENT}
+and \inltt{CURVED} sections may optionally be compressed and stored in
+base64-encoded gzipped binary form, using either little-endian or big-endian
+ordering, as specified by the \inltt{COMPRESSED} attribute to these sections.
+Currently supported values are:
+\begin{itemize}
+    \item \inltt{B64Z-LittleEndian}: Base64 Gzip compressed using little-endian
+        ordering.
+    \item \inltt{B64Z-BigEndian}: Base64 Gzip compressed using big-endian
+        ordering.
+\end{itemize}
+
+\begin{notebox}
+The description below explains how the \inltt{GEOMETRY} section is laid out in
+uncompressed ascii format. From Jan 2016 the distribution uses the compressed
+format for each of the above sections. To convert a compressed xml file into
+ascii format use \\
+  \inltt{ MeshConvert file.msh newfile.xml:xml:uncompress}
 \end{notebox}
 
 
 \subsection{Vertices}
 
-Vertices have three coordinates. Each has a unique vertex ID. They are defined
-in the file within \inltt{VERTEX} subsection as follows:
+Vertices have three coordinates. Each has a unique vertex ID. In
+uncompressed form, they are defined within \inltt{VERTEX} subsection as follows:
 \begin{lstlisting}[style=XMLStyle] <VERTEX>
 <V ID="0"> 0.0  0.0  0.0 </V> ...
 \end{lstlisting}
 The \inltt{VERTEX} subsection has optional attributes which can be used to
-apply a transformation to the mesh:
-\begin{itemize}
-    \item \inltt{XSCALE}
-    \item \inltt{YSCALE}
-    \item \inltt{ZSCALE}
-    \item \inltt{XMOVE}
-    \item \inltt{YMOVE}
-    \item \inltt{ZMOVE}
-\end{itemize}        
+apply a transformation to the mesh:\\
+\inltt{XSCALE}, \inltt{YSCALE}, \inltt{ZSCALE},
+\inltt{XMOVE}, \inltt{YMOVE}, \inltt{ZMOVE}
+
 They specify scaling factors (centred at the origin) and translations to the
 vertex coordinates. For example, the following snippet
-\begin{lstlisting}[style=XMLStyle] 
+\begin{lstlisting}[style=XMLStyle]
 <VERTEX XSCALE="5">
   <V ID="0"> 0.0  0.0  0.0 </V>
   <V ID="1"> 1.0  2.0  0.0 </V>
@@ -64,6 +80,7 @@ mathematical operations/functions of the latter. If omitted, default scaling
 factors 1.0, and translations of 0.0, are assumed.
 
 
+
 \subsection{Edges}
 \begin{tipbox}
     The \inltt{EDGES} section is only necessary when \inltt{DIM=2} or
@@ -71,8 +88,8 @@ factors 1.0, and translations of 0.0, are assumed.
     one-dimensional meshes.
 \end{tipbox}
 
-Edges are defined by two vertices. Each edge has a unique edge ID. They are
-defined in the file with a line of the form 
+Edges are defined by two vertices. Each edge has a unique edge ID. In
+uncompressed form, they are defined in the file with a line of the form
 \begin{lstlisting}[style=XMLStyle]
 <E ID="0"> 0 1 </E>
 \end{lstlisting}
@@ -125,6 +142,11 @@ For mesh elements with curved edges and/or curved faces, a separate entry is use
 </E>
 \end{lstlisting}
 
+\begin{notebox}
+    In the compressed form, this section contains different sub-elements to
+    efficiently encode the high-order curvature data. This is not described
+    further in this document.
+\end{notebox}
 
 \subsection{Composites}
 Composites define collections of elements, faces or edges. Each has a unique composite ID associated with it. All components of a composite entry must be of the same type. The syntax allows components to be listed individually or using ranges. Examples include

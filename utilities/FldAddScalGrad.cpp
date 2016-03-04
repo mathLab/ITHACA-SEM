@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    for(int j = 0; j < addfields; ++j)
+    for(j = 0; j < addfields; ++j)
     {
         int ncoeffs = exp[0]->GetNcoeffs();
         Array<OneD, NekDouble> output(ncoeffs);

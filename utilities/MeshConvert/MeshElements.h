@@ -243,22 +243,36 @@ namespace Nektar
             {
                 return m_edgeNodes.size() + 2;
             }
+            void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+            {
+                nodeList.push_back(m_n1);
+                for (int k = 0; k < m_edgeNodes.size(); ++k) 
+                {
+                    nodeList.push_back(m_edgeNodes[k]);
+                }
+                nodeList.push_back(m_n2);
+            }
 
             /// Creates a Nektar++ string listing the coordinates of all the
             /// nodes.
             std::string GetXmlCurveString() const
             {
+                std::vector<NodeSharedPtr> nodeList;
+
+                GetCurvedNodes(nodeList);
+
                 std::stringstream s;
                 std::string str;
-                s << std::scientific << std::setprecision(8) << "     "
-                  <<  m_n1->m_x << "  " << m_n1->m_y << "  " << m_n1->m_z << "     ";
-                for (int k = 0; k < m_edgeNodes.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "     "
-                      <<  m_edgeNodes[k]->m_x << "  " << m_edgeNodes[k]->m_y
-                      << "  " << m_edgeNodes[k]->m_z << "     ";
+
+                // put them into a string and return
+                for (int k = 0; k < nodeList.size(); ++k)
+                {
+                    s << std::scientific << std::setprecision(8) << "    "
+                      <<  nodeList[k]->m_x << "  " << nodeList[k]->m_y
+                      << "  " << nodeList[k]->m_z << "    ";
+
                 }
-                s << std::scientific << std::setprecision(8) << "     "
-                  <<  m_n2->m_x << "  " << m_n2->m_y << "  " << m_n2->m_z;
+
                 return s.str();
             }
 
@@ -397,43 +411,30 @@ namespace Nektar
                 return n;
             }
 
-            /// Generates a string listing the coordinates of all nodes
-            /// associated with this face.
-            std::string GetXmlCurveString() const
+            /// Assemble a list of nodes on curved face
+            void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
             {
-                std::stringstream s;
-                std::string str;
-
                 // Treat 2D point distributions differently to 3D.
                 if (m_curveType == LibUtilities::eNodalTriFekete       ||
                     m_curveType == LibUtilities::eNodalTriEvenlySpaced ||
                     m_curveType == LibUtilities::eNodalTriElec)
                 {
-                    vector<NodeSharedPtr> tmp;
                     int n = m_edgeList[0]->GetNodeCount();
-
-                    tmp.insert(tmp.end(), m_vertexList.begin(), m_vertexList.end());
-                    for (int k = 0; k < m_edgeList.size(); ++k)
+                    
+                    nodeList.insert(nodeList.end(), m_vertexList.begin(), m_vertexList.end());
+                    for (int k = 0; k < m_edgeList.size(); ++k) 
                     {
-                        tmp.insert(tmp.end(), m_edgeList[k]->m_edgeNodes.begin(),
+                        nodeList.insert(nodeList.end(), m_edgeList[k]->m_edgeNodes.begin(),
                                    m_edgeList[k]->m_edgeNodes.end());
                         if (m_edgeList[k]->m_n1 != m_vertexList[k])
                         {
                             // If edge orientation is reversed relative to node
                             // ordering, we need to reverse order of nodes.
-                            std::reverse(tmp.begin() + 3 + k*(n-2),
-                                         tmp.begin() + 3 + (k+1)*(n-2));
+                            std::reverse(nodeList.begin() + 3 + k*(n-2),
+                                         nodeList.begin() + 3 + (k+1)*(n-2));
                         }
                     }
-                    tmp.insert(tmp.end(), m_faceNodes.begin(), m_faceNodes.end());
-
-                    for (int k = 0; k < tmp.size(); ++k) {
-                        s << std::scientific << std::setprecision(8) << "    "
-                          <<  tmp[k]->m_x << "  " << tmp[k]->m_y
-                          << "  " << tmp[k]->m_z << "    ";
-                    }
-
-                    return s.str();
+                    nodeList.insert(nodeList.end(), m_faceNodes.begin(), m_faceNodes.end());
                 }
                 else
                 {
@@ -443,16 +444,16 @@ namespace Nektar
                              "for quadrilaterals.");
 
                     int n = (int)sqrt((NekDouble)GetNodeCount());
-                    vector<NodeSharedPtr> tmp(n*n);
+                    nodeList.resize(n*n);
 
                     ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");
 
                     // Write vertices
-                    tmp[0]       = m_vertexList[0];
-                    tmp[n-1]     = m_vertexList[1];
-                    tmp[n*n-1]   = m_vertexList[2];
-                    tmp[n*(n-1)] = m_vertexList[3];
-
+                    nodeList[0]       = m_vertexList[0];
+                    nodeList[n-1]     = m_vertexList[1];
+                    nodeList[n*n-1]   = m_vertexList[2];
+                    nodeList[n*(n-1)] = m_vertexList[3];
+                    
                     // Write edge-interior
                     int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
                     for (int i = 0; i < 4; ++i)
@@ -463,7 +464,7 @@ namespace Nektar
                         {
                             for (int j = 1; j < n-1; ++j)
                             {
-                                tmp[skips[i][0] + j*skips[i][1]] =
+                                nodeList[skips[i][0] + j*skips[i][1]] = 
                                     m_edgeList[i]->m_edgeNodes[n-2-j];
                             }
                         }
@@ -471,29 +472,43 @@ namespace Nektar
                         {
                             for (int j = 1; j < n-1; ++j)
                             {
-                                tmp[skips[i][0] + j*skips[i][1]] =
+                                nodeList[skips[i][0] + j*skips[i][1]] = 
                                     m_edgeList[i]->m_edgeNodes[j-1];
                             }
                         }
                     }
-
+                    
                     // Write interior
                     for (int i = 1; i < n-1; ++i)
                     {
                         for (int j = 1; j < n-1; ++j)
                         {
-                            tmp[i*n+j] = m_faceNodes[(i-1)*(n-2)+(j-1)];
+                            nodeList[i*n+j] = m_faceNodes[(i-1)*(n-2)+(j-1)];
                         }
                     }
-
-                    for (int k = 0; k < tmp.size(); ++k) {
-                        s << std::scientific << std::setprecision(8) << "    "
-                          <<  tmp[k]->m_x << "  " << tmp[k]->m_y
-                          << "  " << tmp[k]->m_z << "    ";
-                    }
-
-                    return s.str();
                 }
+            }
+
+            /// Generates a string listing the coordinates of all nodes
+            /// associated with this face.
+            std::string GetXmlCurveString() const
+            {
+                std::stringstream s;
+                std::string str;
+                vector<NodeSharedPtr> nodeList;
+                
+                // assemble listof nodes
+                GetCurvedNodes(nodeList);
+                
+                // put them into a string 
+                for (int k = 0; k < nodeList.size(); ++k) 
+                {
+                    s << std::scientific << std::setprecision(8) << "    "
+                      <<  nodeList[k]->m_x << "  " << nodeList[k]->m_y
+                      << "  " << nodeList[k]->m_z << "    ";
+                }
+                
+                return s.str();
             }
 
             /// Generate either SpatialDomains::TriGeom or
@@ -513,8 +528,9 @@ namespace Nektar
 
                 for (int i = 0; i < nEdge; ++i)
                 {
-                    edgeo[i] = m_edgeList[i]->m_n1 == m_vertexList[i] ?
-                        StdRegions::eForwards : StdRegions::eBackwards;
+                    edgeo[i] = SpatialDomains::SegGeom::GetEdgeOrientation(
+                                            *edges[i], *edges[(i+1) % nEdge]);
+
                 }
 
                 if(m_faceNodes.size() > 0)
@@ -686,27 +702,27 @@ namespace Nektar
          */
         struct ElmtConfig
         {
-            ElmtConfig(LibUtilities::ShapeType  pE,
-                       unsigned int             pOrder,
-                       bool                     pFn,
-                       bool                     pVn,
-                       bool                     pReorient = true,
-                       LibUtilities::PointsType pECt
-                                             = LibUtilities::ePolyEvenlySpaced,
-                       LibUtilities::PointsType pFCt
-                                             = LibUtilities::ePolyEvenlySpaced)
-            : m_e            (pE),
-              m_faceNodes    (pFn),
-              m_volumeNodes  (pVn),
-              m_order        (pOrder),
-              m_reorient     (pReorient),
-              m_edgeCurveType(pECt),
-              m_faceCurveType(pFCt)
+        ElmtConfig(LibUtilities::ShapeType  pE,
+                   unsigned int             pOrder,
+                   bool                     pFn,
+                   bool                     pVn,
+                   bool                     pReorient = true,
+                   LibUtilities::PointsType pECt
+                   = LibUtilities::ePolyEvenlySpaced,
+                   LibUtilities::PointsType pFCt
+                   = LibUtilities::ePolyEvenlySpaced)
+        : m_e            (pE),
+                m_faceNodes    (pFn),
+                m_volumeNodes  (pVn),
+                m_order        (pOrder),
+                m_reorient     (pReorient),
+                m_edgeCurveType(pECt),
+                m_faceCurveType(pFCt)
             {
             }
 
-            ElmtConfig(ElmtConfig const &p) :
-                m_e            (p.m_e),
+        ElmtConfig(ElmtConfig const &p) :
+            m_e            (p.m_e),
                 m_faceNodes    (p.m_faceNodes),
                 m_volumeNodes  (p.m_volumeNodes),
                 m_order        (p.m_order),
@@ -930,13 +946,8 @@ namespace Nektar
                 return s.str();
             }
 
-            /// Generates a string listing the coordinates of all nodes
-            /// associated with this element.
-            std::string GetXmlCurveString() const
+            void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
             {
-                // Temporary node list for reordering
-                std::vector<NodeSharedPtr> nodeList;
-
                 // Node orderings are different for different elements.
                 // Triangle
                 if (m_vertex.size() == 2)
@@ -1023,6 +1034,16 @@ namespace Nektar
                     cerr << "GetXmlCurveString for a " << m_vertex.size()
                          << "-vertex element is not yet implemented." << endl;
                 }
+            }
+
+            /// Generates a string listing the coordinates of all nodes
+            /// associated with this element.
+            std::string GetXmlCurveString() const
+            {
+                // Temporary node list for reordering
+                std::vector<NodeSharedPtr> nodeList;
+
+                GetCurvedNodes(nodeList);
 
                 // Finally generate the XML string corresponding to our new
                 // node reordering.

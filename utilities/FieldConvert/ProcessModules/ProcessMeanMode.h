@@ -37,31 +37,32 @@
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSMEANMODE
 
 #include "../Module.h"
+#include "ProcessHomogeneousPlane.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 /**
- * @brief This processing module replaces all expansions by the mean mode
- *             from 3DH1D fields
+ * @brief This processing module replaces all expansions by the mean mode from
+ * 3DH1D fields
  */
-class ProcessMeanMode : public ProcessModule
+class ProcessMeanMode : public ProcessHomogeneousPlane
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessMeanMode>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessMeanMode>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessMeanMode(FieldSharedPtr f);
-        virtual ~ProcessMeanMode();
+    ProcessMeanMode(FieldSharedPtr f);
+    virtual ~ProcessMeanMode();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 };
-
 }
 }
 

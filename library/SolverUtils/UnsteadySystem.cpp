@@ -76,6 +76,8 @@ namespace Nektar
         void UnsteadySystem::v_InitObject()
         {
             EquationSystem::v_InitObject();
+            
+            m_initialStep = 0;
 
             // Load SolverInfo parameters
             m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
@@ -172,7 +174,7 @@ namespace Nektar
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
 
-            int i, nchk = 1;
+            int i = 1;
             int nvariables = 0;
             int nfields = m_fields.num_elements();
 
@@ -245,7 +247,7 @@ namespace Nektar
 
             Timer     timer;
             bool      doCheckTime   = false;
-            int       step          = 0;
+            int       step          = m_initialStep;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
@@ -349,10 +351,10 @@ namespace Nektar
                 {
                     (*x)->Update(m_fields, m_time);
                 }
-                
+
                 // Write out checkpoint files
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
-                    doCheckTime)
+                     doCheckTime)
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
@@ -368,7 +370,7 @@ namespace Nektar
                                 transformed[i] = true;
                             }
                         }
-                        Checkpoint_Output(nchk++);
+                        Checkpoint_Output(m_nchk++);
                         for(i = 0; i < nfields; i++)
                         {
                             if (transformed[i])
@@ -383,7 +385,7 @@ namespace Nektar
                     }
                     else
                     {
-                        Checkpoint_Output(nchk++);
+                        Checkpoint_Output(m_nchk++);
                     }
                     doCheckTime = false;
                 }

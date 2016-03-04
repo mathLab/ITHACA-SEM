@@ -146,6 +146,43 @@ namespace Nektar
                 SetCoeffPhys();
             }
         }
+        
+        /**
+         * @param   In          ExpList3DHomogeneous1D object to copy.
+         * @param   eIDs Id of elements that should be copied.
+         */
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, 
+                const std::vector<unsigned int> &eIDs,
+                bool DeclarePlanesSetCoeffPhys):
+            ExpListHomogeneous1D(In, eIDs)
+        {
+            SetExpType(e3DH1D);
+
+            if(DeclarePlanesSetCoeffPhys)
+            {
+                bool False = false;
+                std::vector<unsigned int> eIDsPlane;
+                int nel = eIDs.size()/m_planes.num_elements();
+                
+                for (int i = 0; i < nel; ++i)
+                {
+                    eIDsPlane.push_back(eIDs[i]);
+                }
+                
+                ExpList2DSharedPtr zero_plane_old =
+                        boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                
+                ExpList2DSharedPtr zero_plane = 
+                        MemoryManager<ExpList2D>::AllocateSharedPtr(*(zero_plane_old), eIDsPlane);
+
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*zero_plane,False);
+                }
+
+                SetCoeffPhys();
+            }
+        }
 
         /**
          * Destructor
@@ -325,6 +362,13 @@ namespace Nektar
                 int              expansion,
                 int              istrip)
         {
+            // If there is only one plane (e.g. HalfMode), we write a 2D plane.
+            if (m_planes.num_elements() == 1)
+            {
+                m_planes[0]->WriteVtkPieceHeader(outfile, expansion);
+                return;
+            }
+
             int i,j,k;
             int nq0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nq1 = (*m_exp)[expansion]->GetNumPoints(1);

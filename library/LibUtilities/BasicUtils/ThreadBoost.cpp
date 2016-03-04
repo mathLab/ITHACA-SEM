@@ -407,6 +407,10 @@ unsigned int ThreadWorkerBoost::GetNumToLoad()
         case e_dynamic:
             numToLoad = m_threadManager->m_chunkSize;
             break;
+
+        default:
+            ASSERTL0(0, "Invalid value for SchedType.");
+            break;
     }
     return numToLoad;
 }

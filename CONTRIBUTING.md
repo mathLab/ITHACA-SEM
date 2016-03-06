@@ -128,6 +128,12 @@ should provide:
 - Generally, code should be well-commented using regular C++ comments to explain
   its function to help in reviewing it.
 
+Nektar++ also has a growing number of tutorials to help introduce users and
+developers to the use of the library and the range of application solvers. These
+are stored in a separate repository, but are available from the main repository
+through a git submodule. To populate the docs/tutorial directory run `git
+submodule init` followed by `git submodule update`.
+
 ## Code review and merging
 All merge requests will be reviewed by one of the senior developers. We try to
 stick to the following process:

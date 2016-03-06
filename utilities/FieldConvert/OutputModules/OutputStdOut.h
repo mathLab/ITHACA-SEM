@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Info output module
+//  Description: Dummy output module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTINFO
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTINFO
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTSTDOUT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTSTDOUT
 
 #include <tinyxml.h>
 #include "../Module.h"

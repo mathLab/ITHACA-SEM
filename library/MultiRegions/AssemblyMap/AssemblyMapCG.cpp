@@ -584,7 +584,16 @@ namespace Nektar
                 for(j = 0; j < nEdges; ++j)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(j);
-                    EdgeSize[meshEdgeId] = exp->GetEdgeNcoeffs(j) - 2;
+                    if (EdgeSize.count(meshEdgeId) > 0)
+                    {
+                        EdgeSize[meshEdgeId] =
+                                min(EdgeSize[meshEdgeId],
+                                    exp->GetEdgeNcoeffs(j) - 2);
+                    }
+                    else
+                    {
+                        EdgeSize[meshEdgeId] = exp->GetEdgeNcoeffs(j) - 2;
+                    }
                 }
 
                 nFaces = exp->GetNfaces();
@@ -592,6 +601,16 @@ namespace Nektar
                 for(j = 0; j < nFaces; ++j)
                 {
                     meshFaceId = exp->GetGeom()->GetFid(j);
+                    if (FaceSize.count(meshFaceId) > 0)
+                    {
+                        FaceSize[meshFaceId] =
+                                min(FaceSize[meshFaceId],
+                                    exp->GetFaceIntNcoeffs(j));
+                    }
+                    else
+                    {
+                        FaceSize[meshFaceId] = exp->GetFaceIntNcoeffs(j);
+                    }
                     FaceSize[meshFaceId] = exp->GetFaceIntNcoeffs(j);
                 }
             }
@@ -1094,12 +1113,14 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
                 Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
                 Gs::Gather(tmp4, Gs::gs_add, tmp1);
+                Gs::Finalise(tmp1);
 
                 if (unique_edges > 0)
                 {
                     Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
                     Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm);
                     Gs::Gather(tmp5, Gs::gs_add, tmp2);
+                    Gs::Finalise(tmp2);
                 }
 
                 if (unique_faces > 0)
@@ -1107,6 +1128,7 @@ namespace Nektar
                     Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
                     Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm);
                     Gs::Gather(tmp6, Gs::gs_add, tmp3);
+                    Gs::Finalise(tmp3);
                 }
 
                 // Finally, fill the partVerts set with all non-Dirichlet
@@ -1290,15 +1312,79 @@ namespace Nektar
 
                 for(j = 0; j < locExpVector[i]->GetNedges(); ++j)
                 {
-                    dofs[1][exp->GetGeom()->GetEid(j)] =
-                        exp->GetEdgeNcoeffs(j) - 2;
+                    if (dofs[1].count(exp->GetGeom()->GetEid(j)) > 0)
+                    {
+                        if (dofs[1][exp->GetGeom()->GetEid(j)] !=
+                                    locExpVector[i]->GetEdgeNcoeffs(j)-2)
+                        {
+                            ASSERTL0( (exp->GetEdgeBasisType(j) == LibUtilities::eModified_A) ||
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B),
+                                    "CG with variable order only available with modal expansion");
+                        }
+                        dofs[1][exp->GetGeom()->GetEid(j)] =
+                                min(dofs[1][exp->GetGeom()->GetEid(j)],
+                                    locExpVector[i]->GetEdgeNcoeffs(j)-2);
+                    }
+                    else
+                    {
+                        dofs[1][exp->GetGeom()->GetEid(j)] =
+                            exp->GetEdgeNcoeffs(j) - 2;
+                    }
                 }
 
                 for(j = 0; j < locExpVector[i]->GetNfaces(); ++j)
                 {
-                    dofs[2][exp->GetGeom()->GetFid(j)] =
-                        exp->GetFaceIntNcoeffs(j);
+                    if (dofs[2].count(exp->GetGeom()->GetFid(j)) > 0)
+                    {
+                        if (dofs[2][exp->GetGeom()->GetFid(j)] !=
+                                     exp->GetFaceIntNcoeffs(j))
+                        {
+                            ASSERTL0( false,
+                                    "CG with variable order not available in 3D");
+                        }
+                        dofs[2][exp->GetGeom()->GetFid(j)] =
+                                min(dofs[2][exp->GetGeom()->GetFid(j)],
+                                    exp->GetFaceIntNcoeffs(j));
+                    }
+                    else
+                    {
+                        dofs[2][exp->GetGeom()->GetFid(j)] =
+                            exp->GetFaceIntNcoeffs(j);
+                    }
                 }
+            }
+            // Now use information from all partitions to determine
+            //    the correct size
+            map<int, int>::iterator dofIt;
+            // edges
+            Array<OneD, long> edgeId (dofs[1].size());
+            Array<OneD, NekDouble> edgeDof (dofs[1].size());
+            for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
+            {
+                edgeId[i] = dofIt->first;
+                edgeDof[i] = (NekDouble) dofIt->second;
+            }
+            Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
+            Gs::Gather(edgeDof, Gs::gs_min, tmp);
+            Gs::Finalise(tmp);
+            for (i=0; i < dofs[1].size(); i++)
+            {
+                dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
+            }
+            // faces
+            Array<OneD, long> faceId (dofs[2].size());
+            Array<OneD, NekDouble> faceDof (dofs[2].size());
+            for(dofIt = dofs[2].begin(), i=0; dofIt != dofs[2].end(); dofIt++, i++)
+            {
+                faceId[i] = dofIt->first;
+                faceDof[i] = (NekDouble) dofIt->second;
+            }
+            Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
+            Gs::Gather(faceDof, Gs::gs_min, tmp2);
+            Gs::Finalise(tmp2);
+            for (i=0; i < dofs[2].size(); i++)
+            {
+                dofs[2][faceId[i]] = (int) (faceDof[i]+0.5);
             }
 
             Array<OneD, const BndCond> bndCondVec(1, bndConditions);
@@ -1345,13 +1431,13 @@ namespace Nektar
                     nEdgeInteriorCoeffs = exp->GetEdgeNcoeffs(j) - 2;
                     meshEdgeId = exp->GetGeom()->GetEid(j);
                     graphVertOffset[graph[1][meshEdgeId]+1]
-                        = nEdgeInteriorCoeffs;
+                        = dofs[1][meshEdgeId];
 
                     bType = exp->GetEdgeBasisType(j);
 
                     // need a sign vector for modal expansions if nEdgeCoeffs
-                    // >=4
-                    if(nEdgeInteriorCoeffs >= 2 &&
+                    // >=3 (not 4 because of variable order case)
+                    if(nEdgeInteriorCoeffs &&
                        (bType == LibUtilities::eModified_A ||
                         bType == LibUtilities::eModified_B))
                     {
@@ -1363,7 +1449,7 @@ namespace Nektar
                 {
                     nFaceInteriorCoeffs = exp->GetFaceIntNcoeffs(j);
                     meshFaceId = exp->GetGeom()->GetFid(j);
-                    graphVertOffset[graph[2][meshFaceId]+1] = nFaceInteriorCoeffs;
+                    graphVertOffset[graph[2][meshFaceId]+1] = dofs[2][meshFaceId];
                 }
             }
 
@@ -1446,18 +1532,27 @@ namespace Nektar
                     exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < nEdgeInteriorCoeffs; ++k)
+                    for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
                             graphVertOffset[graph[1][meshEdgeId]]+k;
+                    }
+                    for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                    {
+                        m_localToGlobalMap[cnt+edgeInteriorMap[k]] =
+                            graphVertOffset[graph[1][meshEdgeId]];
                     }
 
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
-                        for(k = 0; k < nEdgeInteriorCoeffs; ++k)
+                        for(k = 0; k < dofs[1][exp->GetGeom()->GetEid(j)]; ++k)
                         {
                             m_localToGlobalSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
+                        }
+                        for(k = dofs[1][exp->GetGeom()->GetEid(j)]; k < nEdgeInteriorCoeffs; ++k)
+                        {
+                            m_localToGlobalSign[cnt+edgeInteriorMap[k]] = 0.0;
                         }
                     }
                 }
@@ -1479,19 +1574,29 @@ namespace Nektar
                     exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
 
                     // Set the global DOF's for the interior modes of face j
-                    for(k = 0; k < nFaceInteriorCoeffs; ++k)
+                    for(k = 0; k < dofs[2][exp->GetGeom()->GetFid(j)]; ++k)
                     {
                         m_localToGlobalMap[cnt+faceInteriorMap[k]] =
                             graphVertOffset[graph[2][meshFaceId]]+k;
                     }
+                    for(k = dofs[2][exp->GetGeom()->GetFid(j)]; k < nFaceInteriorCoeffs; ++k)
+                    {
+                        m_localToGlobalMap[cnt+faceInteriorMap[k]] =
+                            graphVertOffset[graph[2][meshFaceId]];
+                    }
 
                     if(m_signChange)
                     {
-                        for(k = 0; k < nFaceInteriorCoeffs; ++k)
+                        for(k = 0; k < dofs[2][exp->GetGeom()->GetFid(j)]; ++k)
                         {
                             m_localToGlobalSign[cnt+faceInteriorMap[k]] = (NekDouble) faceInteriorSign[k];
                         }
+                        for(k = dofs[2][exp->GetGeom()->GetFid(j)]; k < nFaceInteriorCoeffs; ++k)
+                        {
+                            m_localToGlobalSign[cnt+faceInteriorMap[k]] = 0;
+                        }
                     }
+
                 }
             }
 
@@ -1742,6 +1847,8 @@ namespace Nektar
          */
         AssemblyMapCG::~AssemblyMapCG()
         {
+            Gs::Finalise(m_gsh);
+            Gs::Finalise(m_bndGsh);
         }
 
         /**
@@ -1970,7 +2077,8 @@ namespace Nektar
                     dof = exp->GetEdgeNcoeffs(j)-2;
 
                     // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < dof; ++k)
+                    //    run backwards because of variable P case "ghost" modes
+                    for(k = dof-1; k >= 0; --k)
                     {
                         vGlobalId = m_localToGlobalMap[cnt+edgeInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
@@ -2002,7 +2110,7 @@ namespace Nektar
                     dof = exp->GetFaceIntNcoeffs(j);
 
 
-                    for(k = 0; k < dof; ++k)
+                    for(k = dof-1; k >= 0; --k)
                     {
                         vGlobalId = m_localToGlobalMap[cnt+faceInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]

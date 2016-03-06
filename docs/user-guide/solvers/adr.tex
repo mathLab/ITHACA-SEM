@@ -363,10 +363,10 @@ $L_{inf}$ errors and the time spent on the calculation.
 Simulation results are written in the file Helmholtz2D\_modal.fld. We can choose
 to visualise the output in Gmsh
 \begin{lstlisting}[style=BashInputStyle]
-FldToGmsh Helmholtz2D_modal.xml Helmholtz2D_modal.fld
+FieldConvert Helmholtz2D_modal.xml Helmholtz2D_modal.fld Helmholtz2D_modal.vtu
 \end{lstlisting}
-which generates the file Helmholtz2D\_modal\_u.pos as shown in
-Fig.~\ref{f:adrsolver:helmholtz2D}
+which generates the file Helmholtz2D\_modal.vtu which can be visualised and is
+shown in Fig.~\ref{f:adrsolver:helmholtz2D}
 
 \begin{figure}
 \begin{center}

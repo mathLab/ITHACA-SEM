@@ -148,6 +148,13 @@ namespace Nektar
                     const int vertex,
                     const Array<OneD, const NekDouble> &inarray,
                           NekDouble &outarray);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
+                        const int edge,
+                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,       NekDouble> &outarray,
+                        StdRegions::Orientation  orient);
 
             //-----------------------------
             // Helper functions

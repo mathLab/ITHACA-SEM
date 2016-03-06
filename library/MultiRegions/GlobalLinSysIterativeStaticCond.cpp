@@ -152,12 +152,7 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-            MultiRegions::PreconditionerType pType
-                = m_locToGloMap->GetPreconType();
-            std::string PreconType
-                = MultiRegions::PreconditionerTypeMap[pType];
-            m_precon = GetPreconFactory().CreateInstance(
-                PreconType,GetSharedThisPtr(),m_locToGloMap);
+            m_precon = CreatePrecon(m_locToGloMap);
 
             // Allocate memory for top-level structure
             SetupTopLevel(m_locToGloMap);
@@ -170,7 +165,7 @@ namespace Nektar
                     = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
 
             // Preserve original matrix in m_S1Blk
             for (n = 0; n < n_exp; ++n)
@@ -244,14 +239,10 @@ namespace Nektar
 
             // Build precon again if we in multi-level static condensation (a
             // bit of a hack)
-            if (m_linSysKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond)
+            if (m_linSysKey.GetGlobalSysSolnType() ==
+                    eIterativeMultiLevelStaticCond)
             {
-                MultiRegions::PreconditionerType pType
-                    = m_locToGloMap->GetPreconType();
-                std::string PreconType
-                    = MultiRegions::PreconditionerTypeMap[pType];
-                m_precon = GetPreconFactory().CreateInstance(
-                    PreconType,GetSharedThisPtr(),m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap);
                 m_precon->BuildPreconditioner();
             }
 
@@ -520,8 +511,8 @@ namespace Nektar
                 {
                     const int rows = m_rows[i];
                     Blas::Dgemv('N', rows, rows,
-                                m_scale[i], m_denseBlocks[i], rows, 
-                                m_wsp.get()+cnt, 1, 
+                                m_scale[i], m_denseBlocks[i], rows,
+                                m_wsp.get()+cnt, 1,
                                 0.0, tmpout.get()+cnt, 1);
                 }
                 m_locToGloMap->AssembleBnd(tmpout, pOutput);
@@ -543,12 +534,7 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    MultiRegions::PreconditionerType pType
-                        = m_locToGloMap->GetPreconType();
-                    std::string PreconType
-                        = MultiRegions::PreconditionerTypeMap[pType];
-                    m_precon = GetPreconFactory().CreateInstance(
-                        PreconType, GetSharedThisPtr(), m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap);
                     m_precon->BuildPreconditioner();
                 }
 

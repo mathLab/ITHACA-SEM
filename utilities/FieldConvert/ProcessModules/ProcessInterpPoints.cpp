@@ -117,10 +117,14 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                         m_config["line"].as<string>().c_str(),values),
                      "Failed to interpret line string");
 
-            ASSERTL0(values.size() > 3,
+            ASSERTL0(values.size() > 2,
                      "line string should contain 2Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N is not an integer");
+            ASSERTL0(values[0] > 1, "N is not a valid number");
+           
             int dim = (values.size()-1)/2;
             int npts = values[0];
             Array<OneD, Array<OneD, NekDouble> > pts(dim);
@@ -150,9 +154,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             vector<int> ppe;
             ppe.push_back(npts);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-            m_f->m_fieldPts->SetPointsPerEdge(ppe);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
-
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+       
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
         {
@@ -162,12 +166,18 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                              m_config["plane"].as<string>().c_str(),values),
                      "Failed to interpret plane string");
 
-            ASSERTL0(values.size() > 3,
-                     "line string should contain 2Dim+1 values "
-                     "N,x0,y0,z0,x1,y1,z1");
+            ASSERTL0(values.size() > 9,
+                     "plane string should contain 4Dim+2 values "
+                     "N1,N2,x0,y0,x1,y1,x2,y2,x3,y3");
 
-
-            int dim = (values.size()-1)/4;
+            double tmp;
+            ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N1 is not an integer");
+            ASSERTL0(std::modf(values[1], &tmp) == 0.0, "N2 is not an integer");
+            
+            ASSERTL0(values[0] > 1, "N1 is not a valid number");
+            ASSERTL0(values[1] > 1, "N2 is not a valid number");
+            
+            int dim = (values.size()-2)/4;
 
             int npts1 = values[0];
             int npts2 = values[1];
@@ -186,18 +196,15 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                     pts[0][i+j*npts1] =
                         (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
                         (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
-                    if(dim > 1)
+                    pts[1][i+j*npts1] =
+                        (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
+                        (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                    
+                    if(dim > 2)
                     {
-                        pts[1][i+j*npts1] =
-                            (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
-                            (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
-
-                        if(dim > 2)
-                        {
-                            pts[2][i+j*npts1] =
-                                (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
-                                (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
-                        }
+                        pts[2][i+j*npts1] =
+                            (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
+                            (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
                     }
                 }
             }
@@ -206,9 +213,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             ppe.push_back(npts1);
             ppe.push_back(npts2);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
-            m_f->m_fieldPts->SetPointsPerEdge(ppe);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsPlane);
-
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+           
         }
     }
 
@@ -270,9 +277,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
     string fromfld = m_config["fromfld"].as<string>();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,
-                  fromField->m_data,
-                  LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
+                             fromField->m_data,
+                             LibUtilities::NullFieldMetaDataMap,
+                             ElementGIDs);
 
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 
@@ -299,13 +306,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         for (i = 0; i < fromField->m_fielddef.size(); i++)
         {
             fromField->m_exp[j]->ExtractDataToCoeffs(
-                                        fromField->m_fielddef[i],
-                                        fromField->m_data[i],
-                                        fromField->m_fielddef[0]->m_fields[j],
-                                        fromField->m_exp[j]->UpdateCoeffs());
+                                                     fromField->m_fielddef[i],
+                                                     fromField->m_data[i],
+                                                     fromField->m_fielddef[0]->m_fields[j],
+                                                     fromField->m_exp[j]->UpdateCoeffs());
         }
         fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
-                                        fromField->m_exp[j]->UpdatePhys());
+                                      fromField->m_exp[j]->UpdatePhys());
 
         Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
         m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
@@ -331,13 +338,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(
-                         vector<MultiRegions::ExpListSharedPtr> &field0,
-                         Array<OneD, Array<OneD, NekDouble> >   &pts,
-                         NekDouble                              clamp_low,
-                         NekDouble                              clamp_up,
-                         NekDouble                              def_value)
+                                                vector<MultiRegions::ExpListSharedPtr> &field0,
+                                                Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                                NekDouble                              clamp_low,
+                                                NekDouble                              clamp_up,
+                                                NekDouble                              def_value)
 {
-    int expdim = field0[0]->GetCoordim(0);
+    int expdim = pts.num_elements();
 
     Array<OneD, NekDouble> coords(expdim), Lcoords(expdim);
     int nq1 = pts[0].num_elements();
@@ -408,5 +415,3 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
 }
 }
-
-

@@ -118,6 +118,23 @@ namespace Nektar
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }
+        
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In,
+                                            const std::vector<unsigned int> &eIDs):
+            ExpList(In,eIDs,false),
+            m_transposition(In.m_transposition),
+            m_useFFT(In.m_useFFT),
+            m_FFT(In.m_FFT),
+            m_tmpIN(In.m_tmpIN),
+            m_tmpOUT(In.m_tmpOUT),
+            m_homogeneousBasis(In.m_homogeneousBasis),
+            m_lhom(In.m_lhom), 
+            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize(In.m_padsize)
+        {
+            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
+        }
 
         /**
          * Destructor
@@ -606,10 +623,18 @@ namespace Nektar
             HomoLen.push_back(m_lhom);
             
             std::vector<unsigned int> PlanesIDs;
-            
+            int IDoffset = 0;
+
+            // introduce a 2 plane offset for single mode case so can
+            // be post-processed or used in MultiMode expansion.
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                IDoffset  = 2;
+            }
+
             for(int i = 0; i < m_planes.num_elements(); i++)
             {
-                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
             int NumHomoStrip;
@@ -629,10 +654,16 @@ namespace Nektar
             HomoLen.push_back(m_lhom);
             
             std::vector<unsigned int> PlanesIDs;
-            
+            int IDoffset = 0;
+
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                IDoffset = 2;
+            }
+
             for(int i = 0; i < m_planes.num_elements(); i++)
             {
-                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
             int NumHomoStrip;
@@ -714,27 +745,25 @@ namespace Nektar
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
                 std::map<int,int>::iterator it;
+                int IDoffset = 0;
 
-
+                // introduce a 2 plane offset for single mode case so can
+                // be post-processed or used in MultiMode expansion. 
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+                {
+                    IDoffset  = 2;
+                }
+                
                 // Build map of plane IDs lying on this processor.
                 std::map<int,int> homoZids;
                 for (i = 0; i < m_planes.num_elements(); ++i)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)] = i;
+                    homoZids[m_transposition->GetPlaneID(i)+IDoffset] = i;
                 }
                 
                 if(fielddef->m_numHomogeneousDir)
                 {
-                    for(i = 0; i < fielddef->m_basis.size(); ++i)
-                    {
-                        if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
-                        {
-                            nzmodes = fielddef->m_homogeneousZIDs.size();
-                            break;
-                        }
-                    }
-                    ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of Homogeneous modes");
-                    
+                    nzmodes = fielddef->m_homogeneousZIDs.size();
                     fieldDefHomoZids = fielddef->m_homogeneousZIDs;
                 }
                 else // input file is 2D and so set nzmodes to 1
@@ -772,6 +801,8 @@ namespace Nektar
                     {
                         // increase offset for correct FieldData access
                         offset += datalen*nzmodes;
+                        modes_offset += (*m_exp)[0]->GetNumBases() +
+                                        fielddef->m_numHomogeneousDir;
                         continue;
                     }
                     
@@ -799,7 +830,7 @@ namespace Nektar
                             (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes,modes_offset,&coeffs[m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane]);
                         }
                     }
-                    modes_offset += (*m_exp)[0]->GetNumBases();
+                    modes_offset += (*m_exp)[0]->GetNumBases() + fielddef->m_numHomogeneousDir;
                 }
             }
         }
@@ -810,17 +841,25 @@ namespace Nektar
         {
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
+            int toNcoeffs_per_plane = m_planes[0]->GetNcoeffs();
             Array<OneD, NekDouble> tocoeffs_tmp, fromcoeffs_tmp; 
             
             for(i = 0; i < m_planes.num_elements(); ++i)
             {
-                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + m_ncoeffs*i);
+                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + toNcoeffs_per_plane*i);
             }
         }
 
         void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
+            // If there is only one plane (e.g. HalfMode), we write a 2D plane.
+            if (m_planes.num_elements() == 1)
+            {
+                m_planes[0]->WriteVtkPieceData(outfile, expansion, var);
+                return;
+            }
+
             int i;
             int nq = (*m_exp)[expansion]->GetTotPoints();
             int npoints_per_plane = m_planes[0]->GetTotPoints();

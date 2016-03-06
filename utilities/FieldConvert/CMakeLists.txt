@@ -10,6 +10,7 @@ SET(FieldConvertHeaders
     OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
     OutputModules/OutputStdOut.h
+    OutputModules/OutputPts.h
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
@@ -50,6 +51,7 @@ SET(FieldConvertSources
     OutputModules/OutputVtk.cpp
     OutputModules/OutputFld.cpp
     OutputModules/OutputStdOut.cpp
+    OutputModules/OutputPts.cpp
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp

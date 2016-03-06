@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Add a field to the input field.
+//  Description: Compute inner product between two fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINNERPRODUCT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINNERPRODUCT
 
 #include "../Module.h"
 
@@ -44,7 +44,7 @@ namespace Utilities
 {
 
 /**
- * @brief This processing module scales the input fld file
+ * @brief This processing module computes the inner product between two fields.
  *
  */
 class ProcessInnerProduct : public ProcessModule

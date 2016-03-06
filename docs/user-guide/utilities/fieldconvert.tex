@@ -19,15 +19,15 @@ does not have parallel support will be specified in the related section}
 %
 %
 %
-\section{Convert .fld / .chk files into Paraview or Tecplot format}
+\section{Convert .fld / .chk files into Paraview, VisIt or Tecplot format}
 \label{s:utilities:fieldconvert:sub:convert}
-To convert the \nekpp output binary files (.chk and .fld) into a format 
-which can be read by two common visualisation softwares: Paraview 
-(.vtu format) or Tecplot (.dat format) the user can run the following 
-commands:
+To convert the \nekpp output binary files (.chk and .fld) into a
+format which can be read by two common visualisation softwares:
+Paraview (.vtu format), VisIt (.vtu format) or Tecplot (.dat format)
+the user can run the following commands:
 %
 \begin{itemize}
-\item Paraview (.vtu format)
+\item Paraview or VisIt (.vtu format)
 %
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert test.xml test.fld test.vtu
@@ -64,7 +64,7 @@ sub-range defined by $-2\leq x \leq 3$, $-1\leq y \leq 2$ the
 additional flag \inltt{-r} can be used as follows:
 %
 \begin{itemize}
-\item Paraview (.vtu format)
+\item Paraview or VisIt (.vtu format)
 %
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -r -2,3,-1,2 test.xml test.fld test.vtu
@@ -135,7 +135,7 @@ FieldConvert -m C0Projection test.xml test.fld test-C0Proj.fld
 %
 where the file \inltt{test-C0Proj.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 
 \subsection{Calculate Q-Criterion: \textit{QCriterion} module}
 To perform the Q-criterion calculation and obtain an output 
@@ -147,7 +147,7 @@ FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
 %
 where the file \inltt{test-QCrit.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
@@ -167,7 +167,7 @@ is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output
 which contain the sum of the two .fld files.
 \inltt{file3.fld} can be processed in a similar way as described 
 in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
-it either in Tecplot or in Paraview the result.
+the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
@@ -181,7 +181,7 @@ FieldConvert -m concatenate file.xml  file1.fld  file2.fld  file-conc.fld
 %
 where the file \inltt{file-conc.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
@@ -193,14 +193,19 @@ number of poinst. This produces much smaller output files. The points
 are then connected together by simplices (triangles and tetrahedrons).
 
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m equispacedouptput test.xml test.fld test-boundary.dat
+FieldConvert -m equispacedoutput test.xml test.fld test.dat
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m equispacedouttput test.xml test.fld test.vtu
 \end{lstlisting}
 
 
 \begin{notebox} 
 Currently this option is only set up for triangles, quadrilaterals,
-tetrahedrons and prisms. It also only is currently used in tecplot
-output.
+tetrahedrons and prisms.
 \end{notebox}
 
 \subsection{Extract a boundary region: \textit{extract} module}
@@ -238,7 +243,7 @@ FieldConvert  test-b0.xml test-b0.fld test-b0.dat
 %
 This will obviously generate a Tecplot output if a .dat file 
 is specified as last argument. A .vtu extension will produce 
-a Paraview output.
+a Paraview or VisIt output.
 %
 %
 %
@@ -251,7 +256,7 @@ FieldConvert -m gradient test.xml  test.fld  test-grad.fld
 %
 where the file \inltt{file-grad.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 
@@ -461,7 +466,7 @@ keep.
 
 The output file \inltt{jacenergy.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise it either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt. 
 
 %
 %
@@ -477,7 +482,7 @@ FieldConvert -m meanmode file.xml file.fld file-mean.fld
 
 The output file \inltt{file-mean.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise it either in Tecplot or in Paraview.
+to visualise the result either in Tecplot or in Paraview or VisIt.
 
 %
 %
@@ -489,7 +494,8 @@ to visualise it either in Tecplot or in Paraview.
 FieldConvert -m printfldnorms test.xml test.fld 
 \end{lstlisting}
 
-This module does not create an output file. The L2 and LInf norms for each field variable is printed to the stdout. 
+This module does not create an output file. The L2 and LInf norms for
+each field variable is printed to the stdout.
 
 %
 %
@@ -515,7 +521,7 @@ The argument \inltt{scale=value} rescales of a factor \inltt{value}
 \inltt{test.fld} by the factor value.
 The output file \inltt{file-conc.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise it either in Tecplot or in Paraview the result.
+to visualise the result  either in Tecplot, Paraview or VisIt.
 
 %
 %
@@ -638,13 +644,21 @@ command
 \begin{lstlisting}[style=BashInputStyle]
 mpirun -np <nprocs> FieldConvert test.xml test.fld test.dat
 \end{lstlisting}
-replacing \inltt{<nprocs>} with the number of processors. 
-This will produce multiple \inltt{.dat} files of the form \inltt{test\_P0.dat}, 
-\inltt{test\_P1.dat}, \inltt{test\_P2.dat}. Similarly the VTK files can be
-processed in this manner as can the vorticity option. In the case of 
-the vorticity option a directory called \inltt{test\_vort.fld} (or the specified 
-output name) will be produced with the standard parallel field files placed 
-within the directory.
+or
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np <nprocs> FieldConvert test.xml test.fld test.vtu
+\end{lstlisting}
+replacing \inltt{<nprocs>} with the number of processors.  This will
+produce multiple \inltt{.dat} or \inltt{.vtu} files of the form
+\inltt{test\_P0.dat}, \inltt{test\_P1.dat}, \inltt{test\_P2.dat} or
+\inltt{test\_P0.vtu}, \inltt{test\_P1.vtu}, \inltt{test\_P2.vtu}. Note
+when producing a parallel \inltt{.vtu} file an additional file called
+\inltt{.pvtu} is written out which allows for parallel reading of the
+individual \inltt{.vtu} files. Similarly functions that produce a
+\inltt{.fld} file output can be processed in this manner. In the case
+when producing a .fld file a directory called \inltt{test.fld} (or the
+specified output name) will be produced with the standard parallel
+field files placed within the directory.
 %
 %
 %
@@ -674,7 +688,7 @@ done
 
 This will create a directory called \inltt{file2.fld} and put the different 
 parallel partitions into files with names 
-\inltt{P0000000.fld, P0000001.fld, ?., P0000009.fld}. This is nearly a complete
+\inltt{P0000000.fld, P0000001.fld, .., P0000009.fld}. This is nearly a complete
 parallel field file but the Info.xml file which contains the information about 
 which elements are in each partitioned file \inltt{P000000X.fld}. So to generate
 this Info.xml file you need to call

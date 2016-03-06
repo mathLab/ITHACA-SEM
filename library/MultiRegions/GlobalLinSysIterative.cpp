@@ -414,7 +414,8 @@ namespace Nektar
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
-                m_rhs_magnitude = 1.0/vExchange[2];
+                NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
+                Set_Rhs_Magnitude(inGlob);
             }
 
             // If input residual is less than tolerance skip solve.

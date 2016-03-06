@@ -46,8 +46,10 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey OutputStdOut::m_className = GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eOutputModule, "stdout"), OutputStdOut::create,
+ModuleKey OutputStdOut::m_className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "stdout"),
+        OutputStdOut::create,
         "Writes to stdout");
 
 OutputStdOut::OutputStdOut(FieldSharedPtr f) : OutputModule(f)
@@ -69,6 +71,5 @@ void OutputStdOut::Process(po::variables_map &vm)
         cout << "OutputStdOut: Output written to StdOut" << endl;
     }
 }
-
 }
 }

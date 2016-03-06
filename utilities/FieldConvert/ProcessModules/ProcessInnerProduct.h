@@ -49,26 +49,25 @@ namespace Utilities
  */
 class ProcessInnerProduct : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessInnerProduct>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessInnerProduct>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessInnerProduct(FieldSharedPtr f);
-        virtual ~ProcessInnerProduct();
+    ProcessInnerProduct(FieldSharedPtr f);
+    virtual ~ProcessInnerProduct();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-    private:
-        NekDouble IProduct(vector<unsigned int>  &processFields,
-                          FieldSharedPtr         &fromField,
-                          Array<OneD, const Array<OneD, NekDouble> > &SaveFld);
+private:
+    NekDouble IProduct(vector<unsigned int> &processFields,
+                       FieldSharedPtr &fromField,
+                       Array<OneD, const Array<OneD, NekDouble> > &SaveFld);
 };
-
 }
 }
 

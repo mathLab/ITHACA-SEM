@@ -46,20 +46,20 @@ namespace Utilities
 
 class OutputStdOut : public OutputModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputStdOut>::AllocateSharedPtr(f);
-        }
-        static ModuleKey m_className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputStdOut>::AllocateSharedPtr(f);
+    }
+    static ModuleKey m_className;
 
-        OutputStdOut(FieldSharedPtr f);
-        virtual ~OutputStdOut();
+    OutputStdOut(FieldSharedPtr f);
+    virtual ~OutputStdOut();
 
-        /// Write fld to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 };
-
 }
 }
 

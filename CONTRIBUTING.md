@@ -199,7 +199,7 @@ for new files, or cosmetic `tidy/*` branches, but try to stick to existing
 formatting elsewhere.
 
 Installing it is straightforward on most package managers. Nektar++ relies on
-options that are used in version 3.6 or later.
+options that are used in version 3.7 or later.
 
 There are a number of instructions on how to use `clang-format` inside a number
 of text editors on the

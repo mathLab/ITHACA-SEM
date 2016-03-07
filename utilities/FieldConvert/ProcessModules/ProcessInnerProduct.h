@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputPts.cpp
+//  File: ProcessInnerProduct.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,79 +29,46 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Read xml file of a series of points and hold
+//  Description: Compute inner product between two fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-#include <iostream>
-using namespace std;
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINNERPRODUCT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINNERPRODUCT
 
-#include <LibUtilities/BasicUtils/PtsIO.h>
-#include <LibUtilities/BasicUtils/PtsField.h>
-
-#include <tinyxml.h>
-
-#include "InputPts.h"
+#include "../Module.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-ModuleKey InputPts::m_className[5] = {
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+/**
+ * @brief This processing module computes the inner product between two fields.
+ *
+ */
+class ProcessInnerProduct : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessInnerProduct>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
+
+    ProcessInnerProduct(FieldSharedPtr f);
+    virtual ~ProcessInnerProduct();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+    NekDouble IProduct(vector<unsigned int> &processFields,
+                       FieldSharedPtr &fromField,
+                       Array<OneD, const Array<OneD, NekDouble> > &SaveFld);
 };
-
-
-/**
- * @brief Set up InputPts object.
- *
- */
-InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
-{
-    m_allowedFiles.insert("pts");
-}
-
-
-/**
- *
- */
-InputPts::~InputPts()
-{
-}
-
-
-/**
- *
- */
-void InputPts::Process(po::variables_map &vm)
-{
-    if (m_f->m_verbose)
-    {
-        cout << "Processing input pts file" << endl;
-    }
-
-    string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
-
-    if(m_f->m_session)
-    {
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::
-        AllocateSharedPtr(m_f->m_session->GetComm());
-
-    }
-    else // serial communicator
-    {
-        LibUtilities::CommSharedPtr c = LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>
-            ::AllocateSharedPtr(c);
-    }
-
-    m_f->m_ptsIO->Import(inFile,  m_f->m_fieldPts);
-}
-
 }
 }
+
+#endif

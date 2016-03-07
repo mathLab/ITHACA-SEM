@@ -53,12 +53,13 @@ public:
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const std::map<std::string, std::string> &pParams)
     {
-        FilterSharedPtr p = MemoryManager<FilterMovingAverage>
-                                ::AllocateSharedPtr(pSession, pParams);
+        FilterSharedPtr p =
+            MemoryManager<FilterMovingAverage>::AllocateSharedPtr(pSession,
+                                                                  pParams);
         return p;
     }
 
-    ///Name of the class
+    /// Name of the class
     static std::string className;
 
     SOLVER_UTILS_EXPORT FilterMovingAverage(
@@ -66,11 +67,10 @@ public:
         const ParamMap &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterMovingAverage();
 
-
 protected:
     virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     virtual bool v_IsTimeDependent();
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -80,9 +80,8 @@ protected:
         return "_movAvg";
     }
 
-    NekDouble   m_alpha;
+    NekDouble m_alpha;
 };
-
 }
 }
 

@@ -45,16 +45,16 @@ std::string FilterReynoldsStresses::className =
 
 /**
  * @class FilterReynoldsStresses
- * 
+ *
  * @brief Append Reynolds stresses to the average fields
- * 
+ *
  * This class appends the average fields with the Reynolds stresses of the form
  * \f$ \overline{u' v'} \f$.
  *
  * For the default case, this is achieved by calculating
  * \f$ C_{n} = \Sigma_{i=1}^{n} (u_i - \bar{u}_n)(v_i - \bar{v}_n)\f$
  * using the recursive relation:
- * 
+ *
  * \f[ C_{n} = C_{n-1} + \frac{n}{n-1} (u_n - \bar{u}_n)(v_n - \bar{v}_n) \f]
  *
  * The FilterSampler base class then divides the result by n, leading
@@ -79,23 +79,22 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
     else
     {
-        std::string sOption =
-                        it->second.c_str();
-        m_movAvg = ( boost::iequals(sOption,"true")) ||
-                   ( boost::iequals(sOption,"yes"));
+        std::string sOption = it->second.c_str();
+        m_movAvg = (boost::iequals(sOption, "true")) ||
+                   (boost::iequals(sOption, "yes"));
     }
 
-    if(!m_movAvg)
+    if (!m_movAvg)
     {
         return;
     }
 
     // Load alpha parameter for moving average
     it = pParams.find("alpha");
-    if(it == pParams.end())
+    if (it == pParams.end())
     {
         it = pParams.find("tau");
-        if(it == pParams.end())
+        if (it == pParams.end())
         {
             ASSERTL0(false, "MovingAverage needs either alpha or tau.");
         }
@@ -118,10 +117,10 @@ FilterReynoldsStresses::FilterReynoldsStresses(
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");
-        if(it != pParams.end())
+        if (it != pParams.end())
         {
             ASSERTL0(false,
-                    "Cannot define both alpha and tau in MovingAverage.");
+                     "Cannot define both alpha and tau in MovingAverage.");
         }
     }
     // Check bounds of m_alpha
@@ -136,12 +135,12 @@ void FilterReynoldsStresses::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int dim = pFields.num_elements() - 1;
+    int dim          = pFields.num_elements() - 1;
     int nExtraFields = dim == 2 ? 3 : 6;
-    int origFields = pFields.num_elements();
+    int origFields   = pFields.num_elements();
 
     // Fill name of variables
-    for(int n = 0; n < origFields; ++n)
+    for (int n = 0; n < origFields; ++n)
     {
         m_variables.push_back(pFields[n]->GetSession()->GetVariable(n));
     }
@@ -190,18 +189,18 @@ void FilterReynoldsStresses::v_ProcessSample(
     int nq             = pFields[0]->GetTotPoints();
     int dim            = pFields.num_elements() - 1;
     bool waveSpace     = pFields[0]->GetWaveSpace();
-    NekDouble nSamples = (NekDouble) m_numSamples;
+    NekDouble nSamples = (NekDouble)m_numSamples;
 
     // For moving average, take first sample as initial vector
     NekDouble alpha = m_alpha;
-    if( m_numSamples == 1)
+    if (m_numSamples == 1)
     {
         alpha = 1.0;
     }
 
     // Define auxiliary constants for averages
     NekDouble facOld, facAvg, facStress, facDelta;
-    if(m_movAvg)
+    if (m_movAvg)
     {
         facOld    = 1.0 - alpha;
         facAvg    = alpha;
@@ -212,8 +211,8 @@ void FilterReynoldsStresses::v_ProcessSample(
     {
         facOld    = 1.0;
         facAvg    = 1.0;
-        facStress = nSamples / (nSamples-1);
-        facDelta  = 1.0/nSamples;
+        facStress = nSamples / (nSamples - 1);
+        facDelta  = 1.0 / nSamples;
     }
 
     Array<OneD, NekDouble> vel(nq);
@@ -230,33 +229,35 @@ void FilterReynoldsStresses::v_ProcessSample(
         {
             vel = pFields[n]->GetPhys();
         }
-        Vmath::Svtsvtp(nq, facAvg, vel, 1,
-                       facOld, m_fields[n], 1,
-                       m_fields[n], 1);
-        Vmath::Svtvm(nq, facDelta, m_fields[n], 1,
-                     vel, 1, m_delta[n], 1);
+        Vmath::Svtsvtp(
+            nq, facAvg, vel, 1, facOld, m_fields[n], 1, m_fields[n], 1);
+        Vmath::Svtvm(nq, facDelta, m_fields[n], 1, vel, 1, m_delta[n], 1);
     }
     // Update pressure (directly to outFields)
     Vmath::Svtsvtp(m_outFields[dim].num_elements(),
-                    facAvg, pFields[dim]->GetCoeffs(), 1,
-                    facOld, m_outFields[dim], 1,
-                    m_outFields[dim], 1);
+                   facAvg,
+                   pFields[dim]->GetCoeffs(),
+                   1,
+                   facOld,
+                   m_outFields[dim],
+                   1,
+                   m_outFields[dim],
+                   1);
 
     // Ignore Reynolds stress for first sample (its contribution is zero)
-    if( m_numSamples == 1)
+    if (m_numSamples == 1)
     {
         return;
     }
 
     // Calculate C_{n} = facOld * C_{n-1} + facStress * deltaI * deltaJ
-    for (i = 0, n = dim+1; i < dim; ++i)
+    for (i = 0, n = dim + 1; i < dim; ++i)
     {
         for (j = i; j < dim; ++j, ++n)
         {
             Vmath::Vmul(nq, m_delta[i], 1, m_delta[j], 1, tmp, 1);
-            Vmath::Svtsvtp(nq, facStress, tmp, 1,
-                           facOld, m_fields[n], 1,
-                           m_fields[n], 1);
+            Vmath::Svtsvtp(
+                nq, facStress, tmp, 1, facOld, m_fields[n], 1, m_fields[n], 1);
         }
     }
 }
@@ -267,29 +268,29 @@ void FilterReynoldsStresses::v_PrepareOutput(
 {
     int dim = pFields.num_elements() - 1;
 
-    if(m_movAvg)
+    if (m_movAvg)
     {
         m_scale = 1.0;
     }
     else
     {
-        m_scale = 1.0/m_numSamples;
+        m_scale = 1.0 / m_numSamples;
     }
 
     // Set wavespace to false, as calculations were performed in physical space
-    bool waveSpace  = pFields[0]->GetWaveSpace();
+    bool waveSpace = pFields[0]->GetWaveSpace();
     pFields[0]->SetWaveSpace(false);
 
     // Forward transform and put into m_outFields (except pressure)
     for (int i = 0; i < m_fields.size(); ++i)
     {
-        if(i != dim)
+        if (i != dim)
         {
             pFields[0]->FwdTrans_IterPerExp(m_fields[i], m_outFields[i]);
         }
     }
 
-    //Restore waveSpace
+    // Restore waveSpace
     pFields[0]->SetWaveSpace(waveSpace);
 }
 

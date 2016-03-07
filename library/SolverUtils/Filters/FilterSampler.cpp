@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Base clase for filters performing operations on samples 
+// Description: Base clase for filters performing operations on samples
 //              of the field.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,8 +43,8 @@ namespace SolverUtils
 
 FilterSampler::FilterSampler(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const ParamMap &pParams) :
-    Filter(pSession)
+    const ParamMap &pParams)
+    : Filter(pSession)
 {
     ParamMap::const_iterator it;
 
@@ -62,7 +62,7 @@ FilterSampler::FilterSampler(
 
     // SampleFrequency
     it = pParams.find("SampleFrequency");
-    if(it == pParams.end())
+    if (it == pParams.end())
     {
         m_sampleFrequency = 1;
     }
@@ -74,7 +74,7 @@ FilterSampler::FilterSampler(
 
     // OutputFrequency
     it = pParams.find("OutputFrequency");
-    if(it == pParams.end())
+    if (it == pParams.end())
     {
         m_outputFrequency = m_session->GetParameter("NumSteps");
     }
@@ -88,9 +88,8 @@ FilterSampler::FilterSampler(
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
-    m_fld         = MemoryManager<LibUtilities::FieldIO>
-                    ::AllocateSharedPtr(pSession->GetComm());
-
+    m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+        pSession->GetComm());
 }
 
 FilterSampler::~FilterSampler()
@@ -98,25 +97,24 @@ FilterSampler::~FilterSampler()
 }
 
 void FilterSampler::v_Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
     int ncoeff = pFields[0]->GetNcoeffs();
     // m_variables need to be filled by a derived class
     m_outFields.resize(m_variables.size());
 
-    for(int n = 0; n < m_variables.size(); ++n)
+    for (int n = 0; n < m_variables.size(); ++n)
     {
         m_outFields[n] = Array<OneD, NekDouble>(ncoeff, 0.0);
     }
 
-    m_fieldMetaData["InitialTime"]
-                       = boost::lexical_cast<std::string>(time);
+    m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 }
 
 void FilterSampler::v_Update(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
     m_index++;
     if (m_index % m_sampleFrequency > 0)
@@ -129,94 +127,91 @@ void FilterSampler::v_Update(
 
     if (m_index % m_outputFrequency == 0)
     {
-        m_fieldMetaData["FinalTime"]
-                       = boost::lexical_cast<std::string>(time);
+        m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
         v_PrepareOutput(pFields, time);
         OutputField(pFields, ++m_outputIndex);
     }
-
 }
 
 void FilterSampler::v_Finalise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    m_fieldMetaData["FinalTime"]
-                       = boost::lexical_cast<std::string>(time);
+    m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
     v_PrepareOutput(pFields, time);
     OutputField(pFields);
 }
 
 void FilterSampler::OutputField(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        int dump)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
 {
-    for(int n = 0; n < m_outFields.size(); ++n)
+    for (int n = 0; n < m_outFields.size(); ++n)
     {
-        Vmath::Smul(m_outFields[n].num_elements(), m_scale,
-                    m_outFields[n], 1,
-                    m_outFields[n], 1);
+        Vmath::Smul(m_outFields[n].num_elements(),
+                    m_scale,
+                    m_outFields[n],
+                    1,
+                    m_outFields[n],
+                    1);
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = pFields[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        pFields[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-    Array<OneD, NekDouble>  fieldcoeffs;
+    Array<OneD, NekDouble> fieldcoeffs;
     int ncoeffs = pFields[0]->GetNcoeffs();
 
     // copy Data into FieldData and set variable
-    for(int j = 0; j < m_outFields.size(); ++j)
+    for (int j = 0; j < m_outFields.size(); ++j)
     {
         // check to see if field is same order a zeroth field
-        if(m_outFields[j].num_elements() == ncoeffs)
+        if (m_outFields[j].num_elements() == ncoeffs)
         {
             fieldcoeffs = m_outFields[j];
         }
         else
         {
             fieldcoeffs = Array<OneD, NekDouble>(ncoeffs);
-            pFields[0]->ExtractCoeffsToCoeffs(pFields[j],
-                                              m_outFields[j],
-                                              fieldcoeffs);
+            pFields[0]->ExtractCoeffsToCoeffs(
+                pFields[j], m_outFields[j], fieldcoeffs);
         }
 
-        for(int i = 0; i < FieldDef.size(); ++i)
+        for (int i = 0; i < FieldDef.size(); ++i)
         {
             FieldDef[i]->m_fields.push_back(m_variables[j]);
-            pFields[0]->AppendFieldData(FieldDef[i],
-                                        FieldData[i],
-                                        fieldcoeffs);
+            pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs);
         }
     }
 
-    m_fieldMetaData["NumberOfFieldDumps"]
-                      = boost::lexical_cast<std::string>(m_numSamples);
+    m_fieldMetaData["NumberOfFieldDumps"] =
+        boost::lexical_cast<std::string>(m_numSamples);
 
     std::stringstream outname;
-    std::string       suffix = v_GetFileSuffix();
-    if(dump == -1) // final dump
+    std::string suffix = v_GetFileSuffix();
+    if (dump == -1) // final dump
     {
-        outname <<  m_outputFile << suffix << ".fld";
+        outname << m_outputFile << suffix << ".fld";
     }
     else
     {
-        outname << m_outputFile<< "_" << dump << suffix << ".fld";
+        outname << m_outputFile << "_" << dump << suffix << ".fld";
     }
 
-    m_fld->Write(outname.str(),FieldDef,FieldData,m_fieldMetaData);
+    m_fld->Write(outname.str(), FieldDef, FieldData, m_fieldMetaData);
 
-    if(dump != -1) // not final dump so rescale
+    if (dump != -1) // not final dump so rescale
     {
-        for(int n = 0; n < m_outFields.size(); ++n)
+        for (int n = 0; n < m_outFields.size(); ++n)
         {
             Vmath::Smul(m_outFields[n].num_elements(),
-                        1.0/m_scale,
-                        m_outFields[n], 1,
-                        m_outFields[n], 1);
+                        1.0 / m_scale,
+                        m_outFields[n],
+                        1,
+                        m_outFields[n],
+                        1);
         }
     }
 }
-
 }
 }

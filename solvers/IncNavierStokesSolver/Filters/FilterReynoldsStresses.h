@@ -48,9 +48,9 @@ public:
     friend class MemoryManager<FilterReynoldsStresses>;
 
     /// Creates an instance of this class
-    static FilterSharedPtr
-    create(const LibUtilities::SessionReaderSharedPtr &pSession,
-           const std::map<std::string, std::string> &pParams)
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams)
     {
         FilterSharedPtr p =
             MemoryManager<FilterReynoldsStresses>::AllocateSharedPtr(pSession,
@@ -84,8 +84,8 @@ protected:
 
     std::vector<Array<OneD, NekDouble> > m_fields;
     std::vector<Array<OneD, NekDouble> > m_delta;
-    NekDouble                            m_alpha;
-    bool                                 m_movAvg;
+    NekDouble m_alpha;
+    bool m_movAvg;
 };
 }
 }

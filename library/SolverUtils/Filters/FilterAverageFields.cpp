@@ -45,8 +45,8 @@ std::string FilterAverageFields::className =
 
 FilterAverageFields::FilterAverageFields(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const ParamMap &pParams) :
-    FilterSampler(pSession, pParams)
+    const ParamMap &pParams)
+    : FilterSampler(pSession, pParams)
 {
 }
 
@@ -61,7 +61,7 @@ void FilterAverageFields::v_Initialise(
     int nfield = pFields.num_elements();
     m_variables.resize(pFields.num_elements());
     // Fill name of variables
-    for(int n = 0; n < nfield; ++n)
+    for (int n = 0; n < nfield; ++n)
     {
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
     }
@@ -76,8 +76,12 @@ void FilterAverageFields::v_ProcessSample(
     for(int n = 0; n < pFields.num_elements(); ++n)
     {
         Vmath::Vadd(m_outFields[n].num_elements(),
-                    pFields[n]->GetCoeffs(), 1, m_outFields[n], 1,
-                    m_outFields[n], 1);
+                    pFields[n]->GetCoeffs(),
+                    1,
+                    m_outFields[n],
+                    1,
+                    m_outFields[n],
+                    1);
     }
 }
 
@@ -85,7 +89,7 @@ void FilterAverageFields::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    m_scale = 1.0/m_numSamples;
+    m_scale = 1.0 / m_numSamples;
 }
 
 bool FilterAverageFields::v_IsTimeDependent()

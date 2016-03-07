@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Base clase for filters performing operations on samples 
+// Description: Base clase for filters performing operations on samples
 //              of the field.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,17 +53,16 @@ public:
         const ParamMap &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterSampler();
 
-
 protected:
     SOLVER_UTILS_EXPORT virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time) = 0;
@@ -76,22 +75,21 @@ protected:
     SOLVER_UTILS_EXPORT virtual std::string v_GetFileSuffix() = 0;
 
     void OutputField(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            int dump = -1);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        int dump = -1);
 
-    NekDouble                            m_scale;
-    unsigned int                         m_numSamples;
-    unsigned int                         m_outputFrequency;
-    unsigned int                         m_sampleFrequency;
-    unsigned int                         m_index;
-    unsigned int                         m_outputIndex;
-    std::string                          m_outputFile;
-    LibUtilities::FieldIOSharedPtr       m_fld;
-    LibUtilities::FieldMetaDataMap       m_fieldMetaData;
+    NekDouble m_scale;
+    unsigned int m_numSamples;
+    unsigned int m_outputFrequency;
+    unsigned int m_sampleFrequency;
+    unsigned int m_index;
+    unsigned int m_outputIndex;
+    std::string m_outputFile;
+    LibUtilities::FieldIOSharedPtr m_fld;
+    LibUtilities::FieldMetaDataMap m_fieldMetaData;
     std::vector<Array<OneD, NekDouble> > m_outFields;
-    std::vector<std::string>             m_variables;
+    std::vector<std::string> m_variables;
 };
-
 }
 }
 

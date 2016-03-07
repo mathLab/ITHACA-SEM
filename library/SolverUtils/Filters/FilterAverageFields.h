@@ -65,7 +65,6 @@ public:
         const ParamMap &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
 
-
 protected:
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -81,9 +80,7 @@ protected:
     {
         return "_avg";
     }
-
 };
-
 }
 }
 

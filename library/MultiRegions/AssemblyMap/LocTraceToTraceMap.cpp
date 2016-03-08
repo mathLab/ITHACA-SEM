@@ -997,19 +997,12 @@ namespace Nektar
                     // Get to/from points
                     LibUtilities::PointsKey fromPointsKey0
                         = m_interpPoints[dir][i].get<0>();
-                    LibUtilities::PointsKey fromPointsKey1
-                        = m_interpPoints[dir][i].get<1>();
                     LibUtilities::PointsKey toPointsKey0
                         = m_interpPoints[dir][i].get<2>();
-                    LibUtilities::PointsKey toPointsKey1
-                        = m_interpPoints[dir][i].get<3>();
                     
-                    
-                    int fnp0 = fromPointsKey0.GetNumPoints();
-                    int fnp1 = fromPointsKey1.GetNumPoints();
-                    int tnp0 = toPointsKey0.GetNumPoints();
-                    int tnp1 = toPointsKey1.GetNumPoints();
-                    int nfromfacepts = m_interpNfaces[dir][i]*fnp0;
+                    int fnp = fromPointsKey0.GetNumPoints();
+                    int tnp = toPointsKey0.GetNumPoints();
+                    int nedges = m_interpNfaces[dir][i];
                     
                     // Do interpolation here if required
                     switch(m_interpTrace[dir][i])
@@ -1017,7 +1010,7 @@ namespace Nektar
                         case eNoInterp: // Just copy
                         {
                             //cout << "eNoInterp!" << endl;
-                            Vmath::Vcopy(nfromfacepts,
+                            Vmath::Vcopy(nedges*fnp,
                                          locedges.get()+cnt, 1,
                                          tmp.get()+cnt1, 1);
                         }
@@ -1026,34 +1019,33 @@ namespace Nektar
                         {
                             //cout << "eInterpDir0!" << endl;
                             DNekMatSharedPtr I0 = m_interpTraceI0[dir][i];
-                            Blas::Dgemm('N', 'N', tnp0, tnp1, fnp0, 1.0,
+                            Blas::Dgemm('N', 'N', tnp, nedges, fnp, 1.0,
                                         I0->GetPtr().get(),
-                                        tnp0, locedges.get()+cnt, fnp0, 0.0,
-                                        tmp.get()+cnt1, tnp0);
+                                        tnp, locedges.get()+cnt, fnp, 0.0,
+                                        tmp.get()+cnt1, tnp);
                         }
                             break;
                         case eInterpEndPtDir0:
                         {
                             //cout << "eInterpEndPtDir0!" << endl;
-                            int nedges = m_interpNfaces[dir][i];
                             
                             Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                             
                             for (int k = 0; k < nedges; ++k)
                             {
-                                Vmath::Vcopy(fnp0, &locedges[cnt+k*fnp0],
-                                             1, &tmp[cnt+k*tnp0], 1);
+                                Vmath::Vcopy(fnp, &locedges[cnt+k*fnp],
+                                             1, &tmp[cnt1+k*tnp], 1);
                                     
-                                tmp[cnt+k*tnp0+tnp0-1] = Blas::
-                                    Ddot(fnp0, locedges.get()+cnt+k*fnp0,
+                                tmp[cnt1+k*tnp+tnp-1] = Blas::
+                                    Ddot(fnp, locedges.get()+cnt+k*fnp,
                                          1, &I0[0], 1);
                             }
                         }
-                            break;
+                        break;
                     }
                     
-                    cnt  += nfromfacepts;
-                    cnt1 += m_interpNfaces[dir][i]*tnp0*tnp1;
+                    cnt  += nedges*fnp;
+                    cnt1 += nedges*tnp;
                 }
             }
             

@@ -33,6 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USING_PETSC
+#include "petscsys.h"
+#endif
+
 #include <LibUtilities/Communication/CommSerial.h>
 
 namespace Nektar
@@ -62,7 +66,9 @@ namespace Nektar
          */
         void CommSerial::v_Finalise()
         {
-
+#ifdef NEKTAR_USING_PETSC
+            PetscFinalize();
+#endif
         }
 
         /**

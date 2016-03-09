@@ -52,6 +52,9 @@ namespace Nektar
         CommSerial::CommSerial(int argc, char* argv[]) :
                 Comm(argc, argv)
         {
+#ifdef NEKTAR_USING_PETSC
+            PetscInitializeNoArguments();
+#endif
             m_size = 1;
             m_type = "Serial";
         }

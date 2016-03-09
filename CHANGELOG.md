@@ -44,6 +44,9 @@ v4.3.0
 - Add linearise processing module to remove all curvature from high order
   elements (!509)
 
+**Documentation:**
+- Added git submodule for including Nektar++ tutorials in the source tree (!507)
+
 v4.2.0
 ------
 

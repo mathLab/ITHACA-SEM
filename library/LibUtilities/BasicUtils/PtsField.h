@@ -93,12 +93,7 @@ class PtsField
 
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
-            const Array<OneD, Array<OneD, NekDouble> > &pts) :
-            m_dim(dim),
-            m_pts(pts),
-            m_ptsType(ePtsFile)
-        {
-        };
+            const Array<OneD, Array<OneD, NekDouble> > &pts);
 
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,

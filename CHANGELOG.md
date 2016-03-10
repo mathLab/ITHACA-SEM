@@ -19,6 +19,7 @@ v4.3.0
   (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
+- Add contribution guide (!551)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
@@ -35,11 +36,16 @@ v4.3.0
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
+- Add option to output equi-spaced points in VTU format (!550)
+- Add module innerproduct (!568)
 
 **MeshConvert:**
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)
+
+**Documentation:**
+- Added git submodule for including Nektar++ tutorials in the source tree (!507)
 
 v4.2.0
 ------

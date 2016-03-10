@@ -186,7 +186,7 @@ public:
         std::vector<std::vector<unsigned int> > &elementList,
         const FieldMetaDataMap         &fieldinfomap = NullFieldMetaDataMap);
 
-private:
+protected:
     /// Communicator to use when writing parallel format
     LibUtilities::CommSharedPtr m_comm;
 
@@ -199,7 +199,9 @@ private:
     LIB_UTILITIES_EXPORT void GenerateSeqString(
         const std::vector<unsigned int> &elmtids, std::string &idString);
 
-    LIB_UTILITIES_EXPORT std::string SetUpOutput(
+    LIB_UTILITIES_EXPORT std::string SetUpOutput(const std::string outname);
+
+    LIB_UTILITIES_EXPORT void SetUpFieldMetaData(
         const std::string                             outname,
         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         const FieldMetaDataMap                       &fieldmetadatamap);
@@ -212,6 +214,12 @@ private:
 
     LIB_UTILITIES_EXPORT int CheckFieldDefinition(
         const FieldDefinitionsSharedPtr &fielddefs);
+
+    LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
+    {
+        return "fld";
+    };
+
 };
 
 typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;

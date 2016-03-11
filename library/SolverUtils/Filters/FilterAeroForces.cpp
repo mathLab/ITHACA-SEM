@@ -200,6 +200,7 @@ void FilterAeroForces::v_Initialise(
         m_outputStream << endl;
     }
 
+    m_index       = 0;
     v_Update(pFields, time);
 }
 

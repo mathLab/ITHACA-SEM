@@ -99,16 +99,9 @@ class PtsPoint
 class PtsField
 {
     public:
-
         LIB_UTILITIES_EXPORT PtsField(
-                                      const int dim,
-                                      const Array<OneD, Array<OneD, NekDouble> > &pts) :
-        m_ptsInfo(NullPtsInfoMap),
-        m_dim(dim),
-        m_pts(pts),
-        m_ptsType(ePtsFile)
-        {
-        };
+            const int dim,
+            const Array<OneD, Array<OneD, NekDouble> > &pts);
 
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,

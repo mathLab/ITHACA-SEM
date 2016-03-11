@@ -61,7 +61,7 @@ namespace Nektar
 
         InputStar::InputStar(MeshSharedPtr m) : InputModule(m)
         {
-
+            m_config["writelabelsonly"] = ConfigOption(true,"0","Just write out tags from star file for each surface/composite");
         }
 
         InputStar::~InputStar()
@@ -129,7 +129,20 @@ namespace Nektar
             ReadBoundaryFaces(BndElementFaces, FaceNodes,
                               ElementFaces, Facelabels);
                 
-            // 3D Zone
+            if(m_config["writelabelsonly"].beenSet)
+            {
+                nComposite = 2;
+                // write boundary zones/composites
+                for(i = 0; i < BndElementFaces.size(); ++i)
+                {
+                    cout << " 2D Zone (composite = " <<
+                    nComposite << ", label = "<< Facelabels[i] << ")" << endl;
+                    nComposite++;
+                }
+                exit(1);
+            }
+            
+                // 3D Zone
             // Reset node ordering so that all prism faces have 
             // consistent numbering for singular vertex re-ordering
             ResetNodes(Nodes,ElementFaces,FaceNodes);

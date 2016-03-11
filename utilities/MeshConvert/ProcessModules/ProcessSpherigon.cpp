@@ -476,8 +476,9 @@ namespace Nektar
                 MeshSharedPtr plymesh = plyfile->GetMesh();
                 GenerateNormals(plymesh->m_element[plymesh->m_expDim],plymesh);
                 
-                // finaly find nearest vertex and set normal to mesh surface file normal. 
-                // probably should have a hex tree search ? 
+                // finaly find nearest vertex and set normal to mesh
+                // surface file normal.  probably should have a hex
+                // tree search ?
                 Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
                 Node minx(0,0.0,0.0,0.0), tmp,tmpsav;
                 NodeSet::iterator it; 
@@ -857,7 +858,14 @@ namespace Nektar
                         P += Q[k]*blend[k];
                     }
                     
-                    out[j] = P;
+                    if ((boost::math::isnan)(P.m_x)||(boost::math::isnan)(P.m_y)||(boost::math::isnan)(P.m_z))
+                    {
+                        ASSERTL0(false, "spherigon point is a nan. Check to see if ply file is correct if using input normal file");
+                    }
+                    else
+                    {
+                        out[j] = P;
+                    }
                 }
                 
                 // Push nodes into lines - TODO: face interior nodes. 

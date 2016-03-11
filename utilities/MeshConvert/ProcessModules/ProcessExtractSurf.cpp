@@ -54,9 +54,9 @@ namespace Nektar
 
         ProcessExtractSurf::ProcessExtractSurf(MeshSharedPtr m) : ProcessModule(m)
         {
-            m_config["surf"] = ConfigOption(false, "-1",
+            m_config["surf"] = ConfigOption(false, "NotSet",
                 "Tag identifying surface/composite to process.");
-
+            
             m_config["detectbnd"] = ConfigOption(false,"-1","Tag to detect on boundary composites");
         }
 
@@ -72,7 +72,8 @@ namespace Nektar
 
             // Obtain vector of surface IDs from string.
             vector<unsigned int> surfs;
-            ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+            ASSERTL0(ParseUtils::GenerateSeqVector(surf.c_str(), surfs),
+                     "Failed to interp surf string. Have you specified this string?");
             sort(surfs.begin(), surfs.end());
 
             // If we're running in verbose mode print out a list of surfaces.

@@ -287,6 +287,21 @@ MeshConvert Mesh.msh output.xml:xml:uncompress
 In the rest of these subsections, we discuss the various processing modules
 available within \mc.
 
+\subsection{Extract surfaces from a mesh}
+
+To extract composite surfaces 2 and 3  from a mesh use the module \inltt{extract}
+module:
+%
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m extract:surf=2,3 Mesh.xml output.xml
+\end{lstlisting}
+%
+If you also wish to have the boundaries of the extracted surface detected add the \inltt{detectbnd} option
+%
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m extract:surf=2,3:detectbnd Mesh.xml output.xml
+\end{lstlisting}
+
 \subsection{Negative Jacobian detection}
 
 To detect elements with negative Jacobian determinant, use the \inltt{jac}

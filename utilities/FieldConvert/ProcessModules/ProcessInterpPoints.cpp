@@ -407,12 +407,21 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     m_f->m_fieldPts->GetPts(pts);
 
     rng->m_checkShape   = false;
+    rng->m_zmin = -1;
+    rng->m_zmax =  1;
+    rng->m_ymin = -1;
+    rng->m_ymax =  1;
     switch(coordim)
     {
     case 3:
         rng->m_doZrange = true;
         rng->m_zmin = Vmath::Vmin(npts, pts[2],1);
         rng->m_zmax = Vmath::Vmax(npts, pts[2],1);
+        if(rng->m_zmax == rng->m_zmin)
+        {
+            rng->m_zmin -=1; 
+            rng->m_zmax +=1; 
+        }
     case 2:
         rng->m_doYrange = true;
         rng->m_ymin = Vmath::Vmin(npts, pts[1],1);
@@ -444,6 +453,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
     }
+
+    // check to see that we do have some elmement in teh domain since
+    // possibly all points could be outside of the domain
+    ASSERTL0(i > 0, "No elements are set. Are the interpolated points "
+             "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,

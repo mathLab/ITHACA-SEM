@@ -158,7 +158,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                 if(rank == 0)
                 {
                     outfile << " ZONE I="
-                            << fPts->GetPointsPerEdge(0)
+                            << fPts->GetNpoints()
                             << " F=POINT" << endl;
                 }
                 break;

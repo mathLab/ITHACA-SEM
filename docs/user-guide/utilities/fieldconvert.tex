@@ -100,6 +100,7 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
+\item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields). 
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
@@ -185,7 +186,8 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
+  FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld \
+  file3.fld
 \end{lstlisting}
 %
 In this case we use it in conjunction with the command \inltt{scale} 
@@ -309,8 +311,57 @@ way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview.
 
 
+\subsection{Inner Product of a single or series of fields with respect to a single or series of fields: \textit{innerproduct} module}
+You can take the inner product of one field with another field using
+the following command:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld  file2.xml file2.fld \
+  out.stdout
+\end{lstlisting}
+This command will load the \inltt{file1.fld} and \inltt{file2.fld}
+assuming they both are spatially defined by \inltt{files.xml} and
+determine the inner product of these fields. The input option
+\inltt{fromfld} must therefore be specified in this module.
+
+Optional arguments for this module are \inltt{fields} which allow you to specify
+the fields that you wish to use for the inner product, i.e. 
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld:fields=''0,1,2'' file2.xml \
+  file2.fld out.stdout
+\end{lstlisting}
+will only take the inner product between the variables 0,1 and 2 in
+the two fields files. The default is to take the inner product between
+all fields provided.
+
+Additional options include \inltt{multifldids} and \inltt{allfromflds}
+which allow for a series of fields to be evaluated in the following
+manner:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids=''0-3''\
+  file2.xml  file2.fld out.stdout
+\end{lstlisting}
+will take the inner product between a file names
+field1\_0.fld, field1\_1.fld, field1\_2.fld and field1\_3.fld with
+respect to field2.fld.
+
+Analogously including the options \inltt{allfromflds}, i.e. 
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids=''0-3'':\
+  allfromflds  file2.xml file2.fld out.stdout
+\end{lstlisting}
+Will take the inner product of all the from fields,
+i.e. field1\_0.fld,field1\_1.fld,field1\_2.fld and field1\_3.fld with
+respect to each other. This option essentially ignores file2.fld. Only
+the unique inner products are evaluated so if four from fields are
+given only the related trianuglar number $4\times5/2=10$ of inner
+products are evaluated.
+
+This option can be run in parallel. 
+
 %
 %
+%
+
 \subsection{Interpolate one field to another: \textit{interpfield} module}
 To interpolate one field to another, one can use the following command:
 %
@@ -607,11 +658,12 @@ this option.
 \subsection{Print L2 and LInf norms: \textit{printfldnorms} module}
 
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m printfldnorms test.xml test.fld 
+FieldConvert -m printfldnorms test.xml test.fld out.stdout
 \end{lstlisting}
 
-This module does not create an output file. The L2 and LInf norms for
-each field variable is printed to the stdout.
+This module does not create an output file which is reinforced by the
+out.stdout option. The L2 and LInf norms for each field variable are
+then printed to the stdout.
 
 %
 %

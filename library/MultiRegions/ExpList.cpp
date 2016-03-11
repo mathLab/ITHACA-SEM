@@ -2793,6 +2793,140 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        /**
+         */
+        void ExpList::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
+        /**
+         */
+        void ExpList::v_ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &element,
+                            Array<OneD, NekDouble> &boundary)
+        {
+            int n, cnt;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            StdRegions::StdExpansionSharedPtr elmt;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Initialise result
+            boundary = Array<OneD, NekDouble> 
+                            (GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            int offsetBnd;
+            int offsetElmt = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offsetBnd = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+                
+                elmt   = GetExp(ElmtID[cnt+n]);
+                elmt->GetTracePhysVals(EdgeID[cnt+n],
+                                      GetBndCondExpansions()[i]->GetExp(n),
+                                      tmp1 = element + offsetElmt,
+                                      tmp2 = boundary + offsetBnd);
+                
+                offsetElmt += elmt->GetTotPoints();
+            }
+        }
+        
+        /**
+         */
+        void ExpList::v_ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt)
+        {
+            int n, cnt, nq;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            // Count number of points
+            int npoints = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                npoints += GetExp(ElmtID[cnt+n])->GetTotPoints();
+            }
+            
+            // Initialise result
+            bndElmt = Array<OneD, NekDouble> (npoints, 0.0);
+            
+            // Extract data
+            int offsetPhys;
+            int offsetElmt = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
+                Vmath::Vcopy(nq, tmp1 = phys    + offsetPhys, 1,
+                                 tmp2 = bndElmt + offsetElmt, 1);
+                offsetElmt += nq;
+            }
+        }
+        
+        /**
+         */
+        void ExpList::v_GetBoundaryNormals(int i,
+                        Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            int j, n, cnt, nq;
+            int coordim = GetCoordim(0);
+            Array<OneD, NekDouble> tmp;
+            StdRegions::StdExpansionSharedPtr elmt;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Initialise result
+            normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
+            for (j = 0; j < coordim; ++j)
+            {
+                normals[j] = Array<OneD, NekDouble> ( 
+                                GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+            }
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            int offset;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+                nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
+                
+                elmt   = GetExp(ElmtID[cnt+n]);
+                const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
+                            = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
+                // Copy to result
+                for (j = 0; j < coordim; ++j)
+                {
+                    Vmath::Vcopy(nq, normalsElmt[j], 1,
+                                     tmp = normals[j] + offset, 1);
+                }
+            }
+        }
 
         /**
          */

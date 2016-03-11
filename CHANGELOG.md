@@ -20,8 +20,7 @@ v4.3.0
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 - Add contribution guide (!551)
-- Added in a method to convert equispaced interpolated points back to coefficients which requires the introduction of a new StdRegions matrix.(!561)
-	
+
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
@@ -37,14 +36,16 @@ v4.3.0
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
-- Add module to project set of points to a fld file(!561)
-- Add support for interpolating to a box of points and fix ability to run interppointstofld module in parallel when using a plane or box optio(!561)
 - Add option to output equi-spaced points in VTU format (!550)
+- Add module innerproduct (!568)
 
 **MeshConvert:**
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)
+
+**Documentation:**
+- Added git submodule for including Nektar++ tutorials in the source tree (!507)
 
 v4.2.0
 ------

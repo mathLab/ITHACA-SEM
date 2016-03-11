@@ -257,6 +257,7 @@ namespace Nektar
                 ASSERTL0(elementType == "Q" || elementType == "T",
                     (std::string("Unknown 3D face type: ") + elementType).c_str());
 
+
                 string IsCompressed;
                 element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
                 

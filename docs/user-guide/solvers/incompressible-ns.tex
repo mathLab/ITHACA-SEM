@@ -921,8 +921,8 @@ IncNavierStokesSolver Session.xml.gz Session.xml
 \section{Adaptive polynomial order Session file configuration}
 \label{SectionDriverAdaptive}
 
-An adaptive polynomial order procedure is available for 2D and Quasi-3D simulations. 
-This procedure consists of the following steps:
+An adaptive polynomial order procedure is available for 2D and
+Quasi-3D simulations.  This procedure consists of the following steps:
 \begin{itemize}
 \item Advance the equations for a determined number of time steps
 \item Use the sensor defined in equation \ref{eq:sensor} to 
@@ -974,7 +974,12 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 
 \subsection{Functions}
 
-Spatially varying tolerances can be specified by defining the functions \inltt{AdaptiveLowerinModes} and/or \inltt{AdaptiveUpperTolerance}. In this case, the tolerance in an element is taken as the average of the function in the quadrature points of the element. If these functions are defined, the values set for the tolerances in the \texttt{PARAMETERS} section are ignored.
+Spatially varying tolerances can be specified by defining the
+functions \inltt{AdaptiveLowerinModes} and/or
+\inltt{AdaptiveUpperTolerance}. In this case, the tolerance in an
+element is taken as the average of the function in the quadrature
+points of the element. If these functions are defined, the values set
+for the tolerances in the \texttt{PARAMETERS} section are ignored.
 
 \section{Examples}
 

@@ -145,7 +145,7 @@ namespace Nektar
                     }
                     else
                     {
-                        nBwdPts += elmtToTrace[n][i]->GetTotPoints();
+                        nBwdPts    += elmtToTrace[n][i]->GetTotPoints();
                         nBwdCoeffs += elmtToTrace[n][i]->GetNcoeffs();
                     }
                 }
@@ -352,7 +352,7 @@ namespace Nektar
                     nedgepts  = exp2d->GetEdgeNumPoints(e);
                     nedgepts1 = edge->GetTotPoints();
                     
-                    StdRegions::Orientation orient = exp2d->GetEorient(e);
+                    StdRegions::Orientation orient = exp2d->GetCartesianEorient(e);
                     
                     // Account for eBackwards orientation
                     exp2d->ReOrientEdgePhysMap(
@@ -360,7 +360,7 @@ namespace Nektar
                             orient, toPointsKey0.GetNumPoints(),
                             locTraceToTraceMap);
 
-#if 1 // not sure we need this
+#if 0 // not sure we need this
                     if (orient == StdRegions::eBackwards)
                     {
                         int store;
@@ -1049,24 +1049,23 @@ namespace Nektar
                 }
             }
             
-            /*
+
+            Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
+                         tmp.get(), m_LocTraceToTraceMap[dir].get(),
+                         edges.get());
+
+#if 0 
             for (int k = 0; k < edges.num_elements(); ++k)
             {
                 cout << "k = "
                      << k
-                     << ",\tm_LocTraceToTraceMap[dir] = "
-                     << *(m_LocTraceToTraceMap[dir].get()+k)
                      << ",\ttmp = "
                      << *(tmp.get()+k)
                      << ",\tedges = "
                      << *(edges.get()+k)
                      << endl;
             }
-             */
-            
-            Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
-                         tmp.get(), m_LocTraceToTraceMap[dir].get(),
-                         edges.get());
+#endif
         }
     
     

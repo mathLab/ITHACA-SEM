@@ -914,20 +914,6 @@ namespace Nektar
                     break;
             }
             
-            // Reverse data if necessary
-            if (GetCartesianEorient(edge) == StdRegions::eBackwards)
-            {
-                int nn = outarray.num_elements();
-                int nloop = nn/2;
-                int store;
-                    
-                for (int rev = 0; rev < nloop; ++rev)
-                {
-                    store = outarray[nn-1-rev];
-                    outarray[nn-1-rev] = outarray[rev];
-                    outarray[rev] = store;
-                }
-            }
         }
     
         

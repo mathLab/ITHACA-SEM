@@ -1359,54 +1359,27 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-#if 1
             // Basis definition on each element
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
             if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
-                //cout << "================== NEW v_GetFwdBwdTracePhys ======================" << endl;
-                /*
-                for (int mm = 0; mm < field.num_elements(); ++mm)
-                {
-                    cout <<"i = " << mm << "\tfield = " << field[mm] << endl;
-                }
-                */
+
                 // blocked routine
                 Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                                GetNLocTracePts());
             
                 m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
             
-                /*
-                for (int mm = 0; mm < edgevals.num_elements(); ++mm)
-                {
-                    cout << "edgevals = " << edgevals[mm] << endl;
-                }
-                */
-                //cout << "=========== FWD ===========" << endl;
                 m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
 
-                //cout << "=========== BWD ===========" << endl;
                 Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
              
                 m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
             
-                /*
-                for (int mm = 0; mm < Fwd.num_elements(); ++mm)
-                {
-                    cout << "Fwd = " << Fwd[mm] << endl;
-                }
-                for (int mm = 0; mm < Bwd.num_elements(); ++mm)
-                {
-                    cout << "Bwd = " << Bwd[mm] << endl;
-                }
-                int num; cin >> num;
-                */
             }
             else
             {
-                //cout << "================== OLD v_GetFwdBwdTracePhys ======================" << endl;
                 // Loop over elements and collect forward expansion
                 int nexp = GetExpSize();
                 Array<OneD,NekDouble> e_tmp;
@@ -1416,11 +1389,6 @@ namespace Nektar
 
                 Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-                // Debugging stuff! ================================================
-                //Array<OneD, NekDouble> edgevals(Bwd.num_elements());
-                //Vmath::Zero(Bwd.num_elements(), edgevals, 1);
-                // =================================================================
 
                 for(cnt = n = 0; n < nexp; ++n)
                 {
@@ -1445,92 +1413,9 @@ namespace Nektar
                                                    e_tmp = Bwd + offset);
                         }
 
-                        // Debugging stuff! ========================================
-                        //exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
-                        //                       field + phys_offset,
-                        //                       e_tmp = edgevals + e * 4 + phys_offset);
-                        // =========================================================
                     }
                 }
-                /*
-                for (int mm = 0; mm < edgevals.num_elements(); ++mm)
-                {
-                    cout << "edgevals = " << edgevals[mm] << endl;
-                }
-                for (int mm = 0; mm < Fwd.num_elements(); ++mm)
-                {
-                    cout << "Fwd = " << Fwd[mm] << endl;
-                }
-                for (int mm = 0; mm < Bwd.num_elements(); ++mm)
-                {
-                    cout << "Bwd = " << Bwd[mm] << endl;
-                }
-                int num; cin >> num;
-                 */
             }
-#else
-            //cout << "================== OLD v_GetFwdBwdTracePhys ======================" << endl;
-            // Loop over elements and collect forward expansion
-            int nexp = GetExpSize();
-            Array<OneD,NekDouble> e_tmp;
-            PeriodicMap::iterator it2;
-            boost::unordered_map<int,pair<int,int> >::iterator it3;
-            LocalRegions::Expansion2DSharedPtr exp2d;
-            
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-            &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            // Debugging stuff! ================================================
-            //Array<OneD, NekDouble> edgevals(Bwd.num_elements());
-            //Vmath::Zero(Bwd.num_elements(), edgevals, 1);
-            // =================================================================
-            
-            for(cnt = n = 0; n < nexp; ++n)
-            {
-                exp2d = (*m_exp)[n]->as<LocalRegions::Expansion2D>();
-                phys_offset = GetPhys_Offset(n);
-
-                for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
-                {
-                    int offset = m_trace->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-                    
-                    if (m_leftAdjacentEdges[cnt])
-                    {
-                        exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
-                                               field + phys_offset,
-                                               e_tmp = Fwd + offset);
-                    }
-                    else
-                    {
-                        exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
-                                               field + phys_offset,
-                                               e_tmp = Bwd + offset);
-                    }
-                    
-                    // Debugging stuff! ========================================
-                    //exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
-                    //                       field + phys_offset,
-                    //                       e_tmp = edgevals + e * 4 + phys_offset);
-                    // =========================================================
-                }
-            }
-            /*
-            for (int mm = 0; mm < edgevals.num_elements(); ++mm)
-            {
-                cout << "edgevals = " << edgevals[mm] << endl;
-            }
-            for (int mm = 0; mm < Fwd.num_elements(); ++mm)
-            {
-                cout << "Fwd = " << Fwd[mm] << endl;
-            }
-            for (int mm = 0; mm < Bwd.num_elements(); ++mm)
-            {
-                cout << "Bwd = " << Bwd[mm] << endl;
-            }
-            int num; cin >> num;
-             */
-#endif
             
             // Fill boundary conditions into missing elements
             int id1, id2 = 0;
@@ -1651,7 +1536,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
         {
-            //cout << "v_AddTraceIntegral 3 ============================" << endl;
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
@@ -1695,13 +1579,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            /*
-            for (int i = 0; i < Fn.num_elements(); ++i)
-            {
-                cout << "i = " << i << "\tFn = " << Fn[i] << endl;
-            }
-            */
-#if 1
             // Basis definition on each element
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
             if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
@@ -1733,36 +1610,6 @@ namespace Nektar
                     }
                 }
             }
-#else
-            int e, n, offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            for(n = 0; n < GetExpSize(); ++n)
-            {
-                offset = GetCoeff_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
-                {
-                    t_offset = GetTrace()->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddEdgeNormBoundaryInt(
-                        e,
-                        elmtToTrace[n][e],
-                        Fn+t_offset,
-                        e_outarray = outarray+offset);
-                }
-            }
-#endif
-            /*
-            for (int i = 0; i < outarray.num_elements(); ++i)
-            {
-                cout << "i = " << i << "\toutarray = " << outarray[i] << endl;
-            }
-             */
-            //int num;
-            //cin >> num;
-
         }
         
 
@@ -1793,7 +1640,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Bwd, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            //cout << "v_AddFwdBwdTraceIntegral 3 ============================" << endl;
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
@@ -2319,19 +2165,6 @@ namespace Nektar
                         ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
                 };
 
-
-                //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
-                //LocalRegions::QuadExpSharedPtr ppExp = 
-                //    MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
-                //Orthogonal expansion created
-
-                //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
-                //===============================================================================================
-                //(*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],(*m_exp)[eid]->UpdatePhys());
-                //(*m_exp)[eid]->PhysDeriv((*m_exp)[eid]->GetPhys(), qrhs, qrhs1);
-                //ppExp->IProductWRTDerivBase(0,qrhs,force);
-                //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
-                //===============================================================================================
                
                 //DGDeriv    
                 // (d/dx w, d/dx q_0)

@@ -914,7 +914,6 @@ namespace Nektar
             Array<OneD,          int>& signarray,
             int P)
         {
-#if 1
             ASSERTL1(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(eid) == LibUtilities::eModified_B,
                      "Mapping not defined for this type of basis");
@@ -1035,94 +1034,6 @@ namespace Nektar
                     maparray[j]  = maparray[0];
                 }
             }
-
-#else
-            ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(eid) == LibUtilities::eModified_B,
-                     "Mapping not defined for this type of basis");
-
-            int i;
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
-
-            if(maparray.num_elements() != nEdgeCoeffs)
-            {
-                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
-            }
-
-            if(signarray.num_elements() != nEdgeCoeffs)
-            {
-                signarray = Array<OneD, int>(nEdgeCoeffs,1);
-            }
-            else
-            {
-                fill(signarray.get() , signarray.get()+nEdgeCoeffs, 1);
-            }
-
-            switch(eid)
-            {
-                case 0:
-                {
-                    int cnt = 0;
-                    for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
-                    {
-                        maparray[i] = cnt;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    maparray[0] = nummodes1;
-                    maparray[1] = 1;
-                    for(i = 2; i < nEdgeCoeffs; i++)
-                    {
-                        maparray[i] = nummodes1-1+i;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    for(i = 0; i < nEdgeCoeffs; i++)
-                    {
-                        maparray[i] = i;
-                    }
-
-                    if(edgeOrient==eForwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-            default:
-                ASSERTL0(false,"eid must be between 0 and 2");
-                break;
-            }
-#endif
         }
 
         int StdTriExp::v_GetVertexMap(const int localVertexId,bool useCoeffPacking)

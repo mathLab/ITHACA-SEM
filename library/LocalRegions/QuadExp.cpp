@@ -91,7 +91,6 @@ namespace Nektar
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
 
             // multiply inarray with Jacobian
-
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
@@ -681,60 +680,60 @@ namespace Nektar
             StdRegions::Orientation edgedir = GetEorient(edge);
             switch(edge)
             {
-                case 0:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
-                                     &(outarray[0]),1);
-                    }
-                    break;
-                case 1:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
-                                     &(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
-                                     -nquad0, &(outarray[0]),1);
-                    }
-                    break;
-                case 2:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1),-1,
-                                     &(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
-                                     &(outarray[0]),1);
-                    }
-                    break;
-                case 3:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
-                                     -nquad0,&(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
-                                     &(outarray[0]),1);
-                    }
+            case 0:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
+                                 &(outarray[0]),1);
+                }
+                break;
+            case 1:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
+                                 &(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
+                                 -nquad0, &(outarray[0]),1);
+                }
+                break;
+            case 2:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1),-1,
+                                 &(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
+                                 &(outarray[0]),1);
+                }
+                break;
+            case 3:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
+                                 -nquad0,&(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
+                                 &(outarray[0]),1);
+                }
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
                 break;
             }
         }
-
-
+        
+        
         void QuadExp::v_GetTracePhysVals(
              const int edge,
              const StdRegions::StdExpansionSharedPtr &EdgeExp,
@@ -919,20 +918,6 @@ namespace Nektar
                     break;
             }
             
-            // Reverse data if necessary
-            if (GetCartesianEorient(edge) == StdRegions::eBackwards)
-            {
-                int nn = outarray.num_elements();
-                int nloop = nn/2;
-                int store;
-                    
-                for (int rev = 0; rev < nloop; ++rev)
-                {
-                    store = outarray[nn-1-rev];
-                    outarray[nn-1-rev] = outarray[rev];
-                    outarray[rev] = store;
-                }
-            }
         }
     
         

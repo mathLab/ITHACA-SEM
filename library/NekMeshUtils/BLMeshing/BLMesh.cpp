@@ -54,7 +54,6 @@ void BLMesh::Mesh()
     // surface upon which it needs to mesh (top of the bl and the rest of the
     // surface).
 
-<<<<<<< HEAD
     set<int> symSurfs;
 
     NodeSet::iterator it;
@@ -441,7 +440,7 @@ void BLMesh::Mesh()
             nodeToNear[es[j]->m_n2].insert(es[j]->m_n1);
         }
     }
-    
+
     bool repeat = true;
     while(repeat)
     {

@@ -126,7 +126,6 @@ void SurfaceMesh::Report()
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
 }
-<<<<<<< HEAD
 
 void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
 {
@@ -142,8 +141,5 @@ void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
 
 }
 
-
-=======
->>>>>>> master
 }
 }

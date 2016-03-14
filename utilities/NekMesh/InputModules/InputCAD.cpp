@@ -206,21 +206,11 @@ void InputCAD::Process()
     {
         m_mesh->m_numcomp = 1; // just tets
     }
-<<<<<<< HEAD
 
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
                 AllocateSharedPtr(m_mesh, m_cad, m_octree);
-=======
-    // m_mesh->m_nummode = 2;
-
-    // create surface mesh
-    m_mesh->m_expDim--; // just to make it easier to surface mesh for now
-    SurfaceMeshSharedPtr m_surfacemesh =
-        MemoryManager<SurfaceMesh>::AllocateSharedPtr(
-            m_mesh, m_cad, m_octree, symsurfs, m_blthick);
->>>>>>> master
 
     m_surfacemesh->Mesh();
 
@@ -240,7 +230,6 @@ void InputCAD::Process()
     if (m_makeBL)
     {
         BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-<<<<<<< HEAD
                                         m_cad, m_mesh, blsurfs, m_blthick);
 
         m_blmesh->Mesh();
@@ -249,13 +238,7 @@ void InputCAD::Process()
 
         //create tet mesh
         m_mesh->m_expDim = 3;
-=======
-            m_mesh, blsurfs, symsurfs, m_blthick);
 
-        m_blmesh->Mesh();
-
-        // create tet mesh
->>>>>>> master
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
             m_mesh, m_octree, m_blmesh);
     }

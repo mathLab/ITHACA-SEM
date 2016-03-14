@@ -152,16 +152,6 @@ private:
     EdgeSet m_localEdges;
     /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
-<<<<<<< HEAD
-=======
-    /// boundary layer thickness
-    NekDouble m_bl;
-    /// should build boundary layer
-    bool m_makebl;
-    /// list of node links between node on loop and its corresponding interior
-    /// node in quads
-    std::vector<std::pair<NodeSharedPtr, NodeSharedPtr> > blpairs;
->>>>>>> master
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

@@ -295,11 +295,15 @@ IF (NEKTAR_BUILD_TESTS)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF (NEKTAR_BUILD_TESTS)
 
+# Compile list of definitions for Nektar++Config.cmake input file. We exclude
+# vtk definitions which should not be required for external builds.
 SET(NEKTAR_DEFINITIONS "")
 GET_DIRECTORY_PROPERTY(
     NEKTAR_DEFINITIONS_LIST DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
 FOREACH(def ${NEKTAR_DEFINITIONS_LIST})
-    SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    IF (NOT def MATCHES "^vtk")
+        SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    ENDIF()
 ENDFOREACH()
 
 # Write out Nektar++ build configuration

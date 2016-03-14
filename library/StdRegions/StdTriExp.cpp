@@ -1403,8 +1403,7 @@ namespace Nektar
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
-            // apply SVV filter (JEL)
+            // Apply SVV filter (JEL)
             for(j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b-j; ++k)

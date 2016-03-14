@@ -37,99 +37,104 @@
 #define NEKMESHUTILS_MESHELEMENTS_MESH
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/Composite.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    /**
-     * Enumeration of condition types (Dirichlet, Neumann, etc).
-     */
-    enum ConditionType
+/**
+ * Enumeration of condition types (Dirichlet, Neumann, etc).
+ */
+enum ConditionType
+{
+    eDirichlet,
+    eNeumann,
+    eRobin,
+    ePeriodic,
+    eHOPCondition,
+    SIZE_ConditionType
+};
+
+/**
+ * @brief Defines a boundary condition.
+ *
+ * A boundary condition is defined by its type (e.g. Dirichlet), the
+ * field it applies to, the value imposed on this field and the
+ * composite which the boundary condition is applied to.
+ */
+struct Condition
+{
+    Condition() : type(), field(), value(), m_composite()
     {
-        eDirichlet,
-        eNeumann,
-        eRobin,
-        ePeriodic,
-        eHOPCondition,
-        SIZE_ConditionType
-    };
+    }
+    std::vector<ConditionType> type;
+    std::vector<std::string> field;
+    std::vector<std::string> value;
+    std::vector<int> m_composite;
+};
 
-    /**
-     * @brief Defines a boundary condition.
-     *
-     * A boundary condition is defined by its type (e.g. Dirichlet), the
-     * field it applies to, the value imposed on this field and the
-     * composite which the boundary condition is applied to.
-     */
-    struct Condition
+typedef boost::shared_ptr<Condition> ConditionSharedPtr;
+typedef std::map<int, ConditionSharedPtr> ConditionMap;
+
+NEKMESHUTILS_EXPORT bool operator==(ConditionSharedPtr const &c1,
+                                    ConditionSharedPtr const &c2);
+
+class Mesh
+{
+public:
+    NEKMESHUTILS_EXPORT Mesh() : m_verbose(false), m_nummode(0)
     {
-    Condition() : type(), field(), value(), m_composite() {}
-        std::vector<ConditionType> type;
-        std::vector<std::string>   field;
-        std::vector<std::string>   value;
-        std::vector<int>           m_composite;
-    };
+    }
 
-    typedef boost::shared_ptr<Condition> ConditionSharedPtr;
-    typedef std::map<int,ConditionSharedPtr> ConditionMap;
+    /// Verbose flag
+    bool                            m_verbose;
+    /// Dimension of the expansion.
+    unsigned int                    m_expDim;
+    /// Dimension of the space in which the mesh is defined.
+    unsigned int                    m_spaceDim;
+    /// a order tag to aid output, a bit of a hack
+    unsigned int                    m_nummode;
+    ///
+    unsigned int                    m_numcomp;
+    /// List of mesh nodes.
+    std::vector<NodeSharedPtr>      m_node;
+    /// Set of element vertices.
+    NodeSet                         m_vertexSet;
+    /// used for meshing purposes to keep trac of ids
+    int                             m_numNodes;
+    /// Set of element edges.
+    EdgeSet                         m_edgeSet;
+    /// Set of element faces.
+    FaceSet                         m_faceSet;
+    /// Map for elements.
+    ElementMap                      m_element;
+    /// Map for composites.
+    CompositeMap                    m_composite;
+    /// Boundary conditions maps tag to condition.
+    ConditionMap                    m_condition;
+    /// List of fields names.
+    std::vector<std::string>        m_fields;
+    /// Map of vertex normals.
+    boost::unordered_map<int, Node> m_vertexNormals;
+    /// Set of all pairs of element ID and edge/face number on which to
+    /// apply spherigon surface smoothing.
+    set<pair<int, int> >            m_spherigonSurfs;
+    /// List of face labels for composite annotation
+    map<int, string>                m_faceLabels;
 
-    NEKMESHUTILS_EXPORT bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2);
-
-    class Mesh
-    {
-    public:
-        NEKMESHUTILS_EXPORT Mesh() : m_verbose(false), m_nummode(0) {}
-
-        /// Verbose flag
-        bool                            m_verbose;
-        /// Dimension of the expansion.
-        unsigned int                    m_expDim;
-        /// Dimension of the space in which the mesh is defined.
-        unsigned int                    m_spaceDim;
-        /// a order tag to aid output, a bit of a hack
-        unsigned int                    m_nummode;
-        ///
-        unsigned int                    m_numcomp;
-        /// List of mesh nodes.
-        std::vector<NodeSharedPtr>      m_node;
-        /// Set of element vertices.
-        NodeSet                         m_vertexSet;
-        /// used for meshing purposes to keep trac of ids
-        int                             m_numNodes;
-        /// Set of element edges.
-        EdgeSet                         m_edgeSet;
-        /// Set of element faces.
-        FaceSet                         m_faceSet;
-        /// Map for elements.
-        ElementMap                      m_element;
-        /// Map for composites.
-        CompositeMap                    m_composite;
-        /// Boundary conditions maps tag to condition.
-        ConditionMap                    m_condition;
-        /// List of fields names.
-        std::vector<std::string>        m_fields;
-        /// Map of vertex normals.
-        boost::unordered_map<int, Node> m_vertexNormals;
-        /// Set of all pairs of element ID and edge/face number on which to
-        /// apply spherigon surface smoothing.
-        set<pair<int,int> >             m_spherigonSurfs;
-        /// List of face labels for composite annotation
-        map<int,string>                 m_faceLabels;
-
-        /// Returns the total number of elements in the mesh with
-        /// dimension expDim.
-        NEKMESHUTILS_EXPORT unsigned int                    GetNumElements();
-        /// Returns the total number of elements in the mesh with
-        /// dimension < expDim.
-        NEKMESHUTILS_EXPORT unsigned int                    GetNumBndryElements();
-        /// Returns the total number of entities in the mesh.
-        NEKMESHUTILS_EXPORT unsigned int                    GetNumEntities();
-
-    };
-    /// Shared pointer to a mesh.
-    typedef boost::shared_ptr<Mesh> MeshSharedPtr;
-
+    /// Returns the total number of elements in the mesh with
+    /// dimension expDim.
+    NEKMESHUTILS_EXPORT unsigned int GetNumElements();
+    /// Returns the total number of elements in the mesh with
+    /// dimension < expDim.
+    NEKMESHUTILS_EXPORT unsigned int GetNumBndryElements();
+    /// Returns the total number of entities in the mesh.
+    NEKMESHUTILS_EXPORT unsigned int GetNumEntities();
+};
+/// Shared pointer to a mesh.
+typedef boost::shared_ptr<Mesh> MeshSharedPtr;
 }
 }
 

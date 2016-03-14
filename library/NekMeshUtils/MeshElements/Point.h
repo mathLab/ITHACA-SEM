@@ -37,37 +37,39 @@
 #define NEKMESHUTILS_MESHELEMENTS_POINT
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    /**
-     * @brief A 0-dimensional vertex.
-     */
-    class Point : public Element {
-    public:
-        /// Creates an instance of this class
-        static ElementSharedPtr create(
-            ElmtConfig                 pConf,
-            std::vector<NodeSharedPtr> pNodeList,
-            std::vector<int>           pTagList)
-        {
-            return boost::shared_ptr<Element>(
-                new Point(pConf, pNodeList, pTagList));
-        }
-        /// Element type
-        static LibUtilities::ShapeType m_type;
+/**
+ * @brief A 0-dimensional vertex.
+ */
+class Point : public Element
+{
+public:
+    /// Creates an instance of this class
+    static ElementSharedPtr create(ElmtConfig pConf,
+                                   std::vector<NodeSharedPtr> pNodeList,
+                                   std::vector<int> pTagList)
+    {
+        return boost::shared_ptr<Element>(
+            new Point(pConf, pNodeList, pTagList));
+    }
+    /// Element type
+    static LibUtilities::ShapeType m_type;
 
-        NEKMESHUTILS_EXPORT Point(ElmtConfig                 pConf,
-              std::vector<NodeSharedPtr> pNodeList,
-              std::vector<int>           pTagList);
-        NEKMESHUTILS_EXPORT Point(const Point& pSrc);
-        NEKMESHUTILS_EXPORT virtual ~Point() {}
+    NEKMESHUTILS_EXPORT Point(ElmtConfig pConf,
+                              std::vector<NodeSharedPtr> pNodeList,
+                              std::vector<int> pTagList);
+    NEKMESHUTILS_EXPORT Point(const Point &pSrc);
+    NEKMESHUTILS_EXPORT virtual ~Point()
+    {
+    }
 
-        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
-    };
-
+    NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+};
 }
 }
 

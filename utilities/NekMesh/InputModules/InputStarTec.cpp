@@ -33,11 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <boost/algorithm/string.hpp>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
-
-#include <boost/algorithm/string.hpp>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "InputStarTec.h"
 
@@ -49,21 +48,18 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputTec::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "dat"), InputTec::create,
-        "Reads Tecplot polyhedron ascii format converted from Star CCM (.dat).");
+ModuleKey InputTec::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "dat"),
+    InputTec::create,
+    "Reads Tecplot polyhedron ascii format converted from Star CCM (.dat).");
 
 InputTec::InputTec(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputTec::~InputTec()
 {
-
 }
-
 
 /**
  * Tecplot file Polyhedron format contains a list of nodes, a
@@ -85,18 +81,18 @@ void InputTec::Process()
         cout << "InputStarTec: Start reading file..." << endl;
     }
 
-    string      line, word;
+    string line, word;
 
     // Open the file stream.
     OpenStream();
 
-    int  nComposite = 0;
+    int nComposite = 0;
 
     // read first zone (Hopefully 3D)
     while (!m_mshFile.eof())
     {
         getline(m_mshFile, line);
-        if(line.find("ZONE") != string::npos)
+        if (line.find("ZONE") != string::npos)
         {
             ReadZone(nComposite);
             break;
@@ -106,7 +102,7 @@ void InputTec::Process()
     // read remaining 2D zones
     while (!m_mshFile.eof())
     {
-        if(line.find("ZONE") != string::npos)
+        if (line.find("ZONE") != string::npos)
         {
             ReadZone(nComposite);
         }
@@ -124,16 +120,16 @@ void InputTec::Process()
 void InputTec::ReadZone(int &nComposite)
 {
     int i;
-    string line,tag;
+    string line, tag;
     int nfaces, nnodes, nelements;
-    int start,end;
+    int start, end;
     stringstream s;
     NekDouble value;
     streampos pos;
-    static int zcnt=1;
+    static int zcnt = 1;
 
     // Read Zone Header
-    nnodes  = nfaces = nelements = 0;
+    nnodes = nfaces = nelements = 0;
     while (!m_mshFile.eof())
     {
         pos = m_mshFile.tellg();
@@ -143,13 +139,13 @@ void InputTec::ReadZone(int &nComposite)
         boost::to_upper(line);
 
         // cehck to see if readable data.
-        if(sscanf(line.c_str(),"%lf",&value) == 1)
+        if (sscanf(line.c_str(), "%lf", &value) == 1)
         {
             m_mshFile.seekg(pos);
             break;
         }
 
-        if ((line.find("NODES") != string::npos)&&
+        if ((line.find("NODES") != string::npos) &&
             (line.find("TOTALNUMFACENODES") == string::npos))
         {
             s.clear();
@@ -157,11 +153,11 @@ void InputTec::ReadZone(int &nComposite)
 
             tag    = s.str();
             start  = tag.find("NODES=");
-            end    = tag.find_first_of(',',start);
-            nnodes = atoi(tag.substr(start+6,end).c_str());
+            end    = tag.find_first_of(',', start);
+            nnodes = atoi(tag.substr(start + 6, end).c_str());
         }
 
-        if ((line.find("FACES") != string::npos)&&
+        if ((line.find("FACES") != string::npos) &&
             (line.find("NUMCONNECTEDBOUNDARYFACES") == string::npos))
         {
             s.clear();
@@ -169,8 +165,8 @@ void InputTec::ReadZone(int &nComposite)
 
             tag    = s.str();
             start  = tag.find("FACES=");
-            end    = tag.find_first_of(',',start);
-            nfaces = atoi(tag.substr(start+6,end).c_str());
+            end    = tag.find_first_of(',', start);
+            nfaces = atoi(tag.substr(start + 6, end).c_str());
         }
 
         if (line.find("ELEMENTS") != string::npos)
@@ -178,10 +174,10 @@ void InputTec::ReadZone(int &nComposite)
             s.clear();
             s.str(line);
 
-            tag    = s.str();
-            start  = tag.find("ELEMENTS=");
-            end    = tag.find_first_of(',',start);
-            nelements = atoi(tag.substr(start+9,end).c_str());
+            tag       = s.str();
+            start     = tag.find("ELEMENTS=");
+            end       = tag.find_first_of(',', start);
+            nelements = atoi(tag.substr(start + 9, end).c_str());
         }
 
         if (line.find("ZONETYPE") != string::npos)
@@ -189,54 +185,55 @@ void InputTec::ReadZone(int &nComposite)
             s.clear();
             s.str(line);
 
-            if((line.find("FEPOLYGON") == string::npos)&&
-               (line.find("FEPOLYHEDRON") == string::npos))
+            if ((line.find("FEPOLYGON") == string::npos) &&
+                (line.find("FEPOLYHEDRON") == string::npos))
             {
-                ASSERTL0(false,"Routine only set up for FEPolygon or FEPolyhedron");
+                ASSERTL0(false,
+                         "Routine only set up for FEPolygon or FEPolyhedron");
             }
         }
     }
-    if(!nnodes) // No zone found
+    if (!nnodes) // No zone found
     {
         return;
     }
 
-    cout << "Setting up zone "<<  zcnt++;
+    cout << "Setting up zone " << zcnt++;
 
-    vector<NekDouble> x,y,z;
+    vector<NekDouble> x, y, z;
 
     // Read in Nodes
-    for(i = 0; i < nnodes; ++i)
+    for (i = 0; i < nnodes; ++i)
     {
         m_mshFile >> value;
         x.push_back(value);
     }
 
-    for(i = 0; i < nnodes; ++i)
+    for (i = 0; i < nnodes; ++i)
     {
         m_mshFile >> value;
         y.push_back(value);
     }
 
-    for(i = 0; i < nnodes; ++i)
+    for (i = 0; i < nnodes; ++i)
     {
         m_mshFile >> value;
         z.push_back(value);
     }
 
     std::vector<NodeSharedPtr> Nodes;
-    for(i = 0; i < nnodes; ++i)
+    for (i = 0; i < nnodes; ++i)
     {
-        Nodes.push_back(boost::shared_ptr<Node>(new Node(i,x[i],y[i],z[i])));
+        Nodes.push_back(boost::shared_ptr<Node>(new Node(i, x[i], y[i], z[i])));
     }
 
     // Read Node count per face
     getline(m_mshFile, line);
-    if(line.find("node count per face") == string::npos)
+    if (line.find("node count per face") == string::npos)
     {
-        if(line.find("face nodes") == string::npos)
+        if (line.find("face nodes") == string::npos)
         {
-            getline(m_mshFile,line);
+            getline(m_mshFile, line);
         }
     }
 
@@ -244,13 +241,14 @@ void InputTec::ReadZone(int &nComposite)
     s.str(line);
 
     vector<int> Nodes_per_face;
-    if(line.find("node count per face") != string::npos)
+    if (line.find("node count per face") != string::npos)
     {
         int nodes;
-        for(i = 0; i < nfaces; ++i)
+        for (i = 0; i < nfaces; ++i)
         {
-            m_mshFile>> nodes;
-            ASSERTL0(nodes <= 4,"Can only handle meshes with "
+            m_mshFile >> nodes;
+            ASSERTL0(nodes <= 4,
+                     "Can only handle meshes with "
                      "up to four nodes per face");
             Nodes_per_face.push_back(nodes);
         }
@@ -259,92 +257,90 @@ void InputTec::ReadZone(int &nComposite)
     }
 
     // Read face nodes;
-    if(line.find("face nodes") == string::npos)
+    if (line.find("face nodes") == string::npos)
     {
-        getline(m_mshFile,line);
+        getline(m_mshFile, line);
     }
     s.clear();
     s.str(line);
 
     vector<vector<int> > FaceNodes;
 
-    if(line.find("face nodes") != string::npos)
+    if (line.find("face nodes") != string::npos)
     {
 
-        for(i = 0; i < nfaces; ++i)
+        for (i = 0; i < nfaces; ++i)
         {
             // check to see if Nodes_per_face is defined and
             // if not assume 2 nodes for 2D case
-            int nodes = (Nodes_per_face.size())? Nodes_per_face[i]: 2;
+            int nodes = (Nodes_per_face.size()) ? Nodes_per_face[i] : 2;
 
             int nodeID;
             vector<int> Fnodes;
-            for(int j = 0; j < nodes; ++j)
+            for (int j = 0; j < nodes; ++j)
             {
 
-                m_mshFile>> nodeID;
+                m_mshFile >> nodeID;
 
-                Fnodes.push_back(nodeID-1);
+                Fnodes.push_back(nodeID - 1);
             }
 
             FaceNodes.push_back(Fnodes);
         }
-
     }
     else
     {
-        ASSERTL0(false,"Failed to find face node section");
+        ASSERTL0(false, "Failed to find face node section");
     }
 
     // Read left elements
-    Array<OneD, vector< int> > ElementFaces(nelements);
+    Array<OneD, vector<int> > ElementFaces(nelements);
 
     // check to see if next line contains left elements
     getline(m_mshFile, line);
-    if(line.find("left elements") == string::npos)
+    if (line.find("left elements") == string::npos)
     {
-        getline(m_mshFile,line);
+        getline(m_mshFile, line);
     }
 
-    if(line.find("left elements") != string::npos)
+    if (line.find("left elements") != string::npos)
     {
         int elmtID;
 
-        for(i = 0; i < nfaces; ++i)
+        for (i = 0; i < nfaces; ++i)
         {
-            m_mshFile>> elmtID;
+            m_mshFile >> elmtID;
 
-            if(elmtID > 0)
+            if (elmtID > 0)
             {
-                ElementFaces[elmtID-1].push_back(i);
+                ElementFaces[elmtID - 1].push_back(i);
             }
         }
     }
     else
     {
-        ASSERTL0(false,"Left element not found");
+        ASSERTL0(false, "Left element not found");
     }
-
 
     // check to see if next line contains right elements
     getline(m_mshFile, line);
-    if(line.find("right elements") == string::npos)
+    if (line.find("right elements") == string::npos)
     {
         getline(m_mshFile, line);
     }
 
-    if(line.find("right elements") != string::npos)
+    if (line.find("right elements") != string::npos)
 
     {
         int elmtID;
 
-        for(i = 0; i < nfaces; ++i)
+        for (i = 0; i < nfaces; ++i)
         {
-            m_mshFile>> elmtID;
+            m_mshFile >> elmtID;
 
-            if(elmtID > 0)
+            if (elmtID > 0)
             {
-                ElementFaces[elmtID-1].push_back(i);
+                ElementFaces[elmtID - 1].push_back(i);
             }
         }
 
@@ -353,40 +349,39 @@ void InputTec::ReadZone(int &nComposite)
     }
     else
     {
-        ASSERTL0(false,"Left element not found");
+        ASSERTL0(false, "Left element not found");
     }
 
-
-
-    if(Nodes_per_face.size()) // 3D Zone
+    if (Nodes_per_face.size()) // 3D Zone
     {
-        cout << " (3D) "<<  endl;
+        cout << " (3D) " << endl;
 
         // Reset node ordering so that all prism faces have
         // consistent numbering for singular vertex re-ordering
-        ResetNodes(Nodes,ElementFaces,FaceNodes);
+        ResetNodes(Nodes, ElementFaces, FaceNodes);
 
         m_mesh->m_node = Nodes;
 
         // create Prisms/Pyramids first
-        for(i = 0; i < nelements; ++i)
+        for (i = 0; i < nelements; ++i)
         {
-            if(ElementFaces[i].size() > 4)
+            if (ElementFaces[i].size() > 4)
             {
-                GenElement3D(Nodes,i,ElementFaces[i],FaceNodes,nComposite,true);
+                GenElement3D(
+                    Nodes, i, ElementFaces[i], FaceNodes, nComposite, true);
             }
         }
 
         nComposite++;
 
         // create Tets second
-        for(i = 0; i < nelements; ++i)
+        for (i = 0; i < nelements; ++i)
         {
-            if(ElementFaces[i].size() == 4)
+            if (ElementFaces[i].size() == 4)
             {
-                GenElement3D(Nodes,i,ElementFaces[i],FaceNodes,nComposite,true);
+                GenElement3D(
+                    Nodes, i, ElementFaces[i], FaceNodes, nComposite, true);
             }
-
         }
         nComposite++;
 
@@ -396,14 +391,15 @@ void InputTec::ReadZone(int &nComposite)
     {
         cout << " (2D)" << endl;
 
-        // find ids of VertNodes from m_mesh->m_vertexSet so that we can identify
-        for(i = 0; i < Nodes.size(); ++i)
+        // find ids of VertNodes from m_mesh->m_vertexSet so that we can
+        // identify
+        for (i = 0; i < Nodes.size(); ++i)
         {
             NodeSet::iterator it = m_mesh->m_vertexSet.find(Nodes[i]);
 
             if (it == m_mesh->m_vertexSet.end())
             {
-                ASSERTL0(false,"Failed to find face vertex in 3D list");
+                ASSERTL0(false, "Failed to find face vertex in 3D list");
             }
             else
             {
@@ -411,56 +407,56 @@ void InputTec::ReadZone(int &nComposite)
             }
         }
 
-        for(i = 0; i < nelements; ++i)
+        for (i = 0; i < nelements; ++i)
         {
-            GenElement2D(Nodes,i,ElementFaces[i],FaceNodes,nComposite);
+            GenElement2D(Nodes, i, ElementFaces[i], FaceNodes, nComposite);
         }
 
         nComposite++;
     }
 }
 
-
-static void PrismLineFaces(int prismid,  map<int, int> &facelist,
-                    vector<vector<int> > &FacesToPrisms,
-                    vector<vector<int> > &PrismsToFaces,
-                    vector<bool> &PrismDone);
+static void PrismLineFaces(int prismid,
+                           map<int, int> &facelist,
+                           vector<vector<int> > &FacesToPrisms,
+                           vector<vector<int> > &PrismsToFaces,
+                           vector<bool> &PrismDone);
 
 void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
-                          Array<OneD, vector<int> >&ElementFaces,
-                          vector<vector<int> >&FaceNodes)
+                          Array<OneD, vector<int> > &ElementFaces,
+                          vector<vector<int> > &FaceNodes)
 {
-    int i,j;
-    Array<OneD,int> NodeReordering(Vnodes.size(),-1);
-    int face1_map[3] = {0,1,4};
-    int face3_map[3] = {3,2,5};
-    int nodeid = 0;
-    map<int,bool> FacesRenumbered;
+    int i, j;
+    Array<OneD, int> NodeReordering(Vnodes.size(), -1);
+    int face1_map[3] = {0, 1, 4};
+    int face3_map[3] = {3, 2, 5};
+    int nodeid       = 0;
+    map<int, bool> FacesRenumbered;
 
     // Determine Prism triangular face connectivity.
     vector<vector<int> > FaceToPrisms(FaceNodes.size());
     vector<vector<int> > PrismToFaces(ElementFaces.num_elements());
-    map<int,int> Prisms;
-    map<int,int>::iterator PrismIt;
+    map<int, int> Prisms;
+    map<int, int>::iterator PrismIt;
 
     // generate map of prism-faces to prisms and prism to
     // triangular-faces as well as ids of each prism.
-    for(i = 0; i < ElementFaces.num_elements(); ++i)
+    for (i = 0; i < ElementFaces.num_elements(); ++i)
     {
         // Find Prism (and pyramids!).
-        if(ElementFaces[i].size() == 5)
+        if (ElementFaces[i].size() == 5)
         {
             vector<int> LocTriFaces;
             // Find triangular faces
-            for(j = 0; j < ElementFaces[i].size(); ++j)
+            for (j = 0; j < ElementFaces[i].size(); ++j)
             {
-                if(FaceNodes[ElementFaces[i][j]].size() == 3)
+                if (FaceNodes[ElementFaces[i][j]].size() == 3)
                 {
                     LocTriFaces.push_back(j);
                 }
             }
 
-            if(LocTriFaces.size() == 2) //prism otherwise a pyramid
+            if (LocTriFaces.size() == 2) // prism otherwise a pyramid
             {
                 Prisms[i] = i;
 
@@ -473,136 +469,136 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
         }
     }
 
-
-    vector<bool> FacesDone(FaceNodes.size(),false);
-    vector<bool> PrismDone(ElementFaces.num_elements(),false);
+    vector<bool> FacesDone(FaceNodes.size(), false);
+    vector<bool> PrismDone(ElementFaces.num_elements(), false);
 
     // For every prism find the list of prismatic elements
     // that represent an aligned block of cells. Then renumber
     // these blocks consecutativiesly
-    for(PrismIt = Prisms.begin(); PrismIt != Prisms.end(); ++PrismIt)
+    for (PrismIt = Prisms.begin(); PrismIt != Prisms.end(); ++PrismIt)
     {
-        int elmtid   = PrismIt->first;
-        map<int,int> facelist;
-        map<int,int>::iterator faceIt;
+        int elmtid = PrismIt->first;
+        map<int, int> facelist;
+        map<int, int>::iterator faceIt;
 
-
-        if(PrismDone[elmtid])
+        if (PrismDone[elmtid])
         {
             continue;
         }
         else
         {
             // Generate list of faces in list
-            PrismLineFaces(elmtid, facelist, FaceToPrisms,
-                           PrismToFaces, PrismDone);
+            PrismLineFaces(
+                elmtid, facelist, FaceToPrisms, PrismToFaces, PrismDone);
 
             // loop over faces and number vertices of associated prisms.
-            for(faceIt = facelist.begin(); faceIt != facelist.end(); faceIt++)
+            for (faceIt = facelist.begin(); faceIt != facelist.end(); faceIt++)
             {
                 int faceid = faceIt->second;
 
-                for(i = 0; i < FaceToPrisms[faceid].size(); ++i)
+                for (i = 0; i < FaceToPrisms[faceid].size(); ++i)
                 {
                     int prismid = FaceToPrisms[faceid][i];
 
-                    if((FacesDone[PrismToFaces[prismid][0]] == true)&&
-                       (FacesDone[PrismToFaces[prismid][1]] == true))
+                    if ((FacesDone[PrismToFaces[prismid][0]] == true) &&
+                        (FacesDone[PrismToFaces[prismid][1]] == true))
                     {
                         continue;
                     }
 
-                    Array<OneD, int> Nodes = SortFaceNodes(Vnodes,
-                                                           ElementFaces[prismid],
-                                                           FaceNodes);
+                    Array<OneD, int> Nodes =
+                        SortFaceNodes(Vnodes, ElementFaces[prismid], FaceNodes);
 
-                    if((FacesDone[PrismToFaces[prismid][0]] == false)&&
-                       (FacesDone[PrismToFaces[prismid][1]] == false))
+                    if ((FacesDone[PrismToFaces[prismid][0]] == false) &&
+                        (FacesDone[PrismToFaces[prismid][1]] == false))
                     {
                         // number all nodes consecutive since
                         // already correctly re-arranged.
-                        for(i = 0; i < 3; ++i)
+                        for (i = 0; i < 3; ++i)
                         {
-                            if(NodeReordering[Nodes[face1_map[i]]] == -1)
+                            if (NodeReordering[Nodes[face1_map[i]]] == -1)
                             {
                                 NodeReordering[Nodes[face1_map[i]]] = nodeid++;
                             }
                         }
 
-                       for(i = 0; i < 3; ++i)
+                        for (i = 0; i < 3; ++i)
                         {
-                            if(NodeReordering[Nodes[face3_map[i]]] == -1)
+                            if (NodeReordering[Nodes[face3_map[i]]] == -1)
                             {
                                 NodeReordering[Nodes[face3_map[i]]] = nodeid++;
                             }
                         }
                     }
-                    else if((FacesDone[PrismToFaces[prismid][0]] == false)&&
-                            (FacesDone[PrismToFaces[prismid][1]] == true))
+                    else if ((FacesDone[PrismToFaces[prismid][0]] == false) &&
+                             (FacesDone[PrismToFaces[prismid][1]] == true))
                     {
                         // find node of highest id
-                        int max_id1,max_id2;
+                        int max_id1, max_id2;
 
                         max_id1 = (NodeReordering[Nodes[face3_map[0]]] <
-                                   NodeReordering[Nodes[face3_map[1]]] )? 1:0;
+                                   NodeReordering[Nodes[face3_map[1]]])
+                                      ? 1
+                                      : 0;
                         max_id2 = (NodeReordering[Nodes[face3_map[max_id1]]] <
-                                   NodeReordering[Nodes[face3_map[2]]] )? 2:max_id1;
+                                   NodeReordering[Nodes[face3_map[2]]])
+                                      ? 2
+                                      : max_id1;
 
                         // add numbering according to order of
-                        int id0 = (max_id1== 1)? 0:1;
+                        int id0 = (max_id1 == 1) ? 0 : 1;
 
-                        if(NodeReordering[Nodes[face1_map[id0]]] == -1)
+                        if (NodeReordering[Nodes[face1_map[id0]]] == -1)
                         {
-                            NodeReordering[Nodes[face1_map[id0]]] =
-                                nodeid++;
+                            NodeReordering[Nodes[face1_map[id0]]] = nodeid++;
                         }
 
-                        if(NodeReordering[Nodes[face1_map[max_id1]]] == -1)
+                        if (NodeReordering[Nodes[face1_map[max_id1]]] == -1)
                         {
                             NodeReordering[Nodes[face1_map[max_id1]]] =
                                 nodeid++;
                         }
 
-                        if(NodeReordering[Nodes[face1_map[max_id2]]] == -1)
+                        if (NodeReordering[Nodes[face1_map[max_id2]]] == -1)
                         {
                             NodeReordering[Nodes[face1_map[max_id2]]] =
                                 nodeid++;
                         }
                     }
-                    else if((FacesDone[PrismToFaces[prismid][0]] == true)&&
-                            (FacesDone[PrismToFaces[prismid][1]] == false))
+                    else if ((FacesDone[PrismToFaces[prismid][0]] == true) &&
+                             (FacesDone[PrismToFaces[prismid][1]] == false))
                     {
                         // find node of highest id
-                        int max_id1,max_id2;
-
+                        int max_id1, max_id2;
 
                         max_id1 = (NodeReordering[Nodes[face1_map[0]]] <
-                                  NodeReordering[Nodes[face1_map[1]]] )? 1:0;
+                                   NodeReordering[Nodes[face1_map[1]]])
+                                      ? 1
+                                      : 0;
                         max_id2 = (NodeReordering[Nodes[face1_map[max_id1]]] <
-                                   NodeReordering[Nodes[face1_map[2]]] )? 2:max_id1;
+                                   NodeReordering[Nodes[face1_map[2]]])
+                                      ? 2
+                                      : max_id1;
 
                         // add numbering according to order of
-                        int id0 = (max_id1== 1)? 0:1;
+                        int id0 = (max_id1 == 1) ? 0 : 1;
 
-
-                        if(NodeReordering[Nodes[face3_map[id0]]] == -1)
+                        if (NodeReordering[Nodes[face3_map[id0]]] == -1)
                         {
-                            NodeReordering[Nodes[face3_map[id0]]] =
-                                nodeid++;
+                            NodeReordering[Nodes[face3_map[id0]]] = nodeid++;
                         }
 
-                        if(NodeReordering[Nodes[face3_map[max_id1]]] == -1)
+                        if (NodeReordering[Nodes[face3_map[max_id1]]] == -1)
                         {
                             NodeReordering[Nodes[face3_map[max_id1]]] =
                                 nodeid++;
                         }
 
-                        if(NodeReordering[Nodes[face3_map[max_id2]]] == -1)
+                        if (NodeReordering[Nodes[face3_map[max_id2]]] == -1)
                         {
                             NodeReordering[Nodes[face3_map[max_id2]]] =
                                 nodeid++;
                         }
-
                     }
                 }
             }
@@ -610,84 +606,90 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     }
 
     // fill in any unset nodes at from other shapes
-    for(i = 0; i < NodeReordering.num_elements(); ++i)
+    for (i = 0; i < NodeReordering.num_elements(); ++i)
     {
-        if(NodeReordering[i] == -1)
+        if (NodeReordering[i] == -1)
         {
             NodeReordering[i] = nodeid++;
         }
     }
 
-    ASSERTL1(nodeid == NodeReordering.num_elements(),"Have not renumbered all nodes");
+    ASSERTL1(nodeid == NodeReordering.num_elements(),
+             "Have not renumbered all nodes");
 
     // Renumbering successfull so resort nodes and faceNodes;
-    for(i = 0; i < FaceNodes.size(); ++i)
+    for (i = 0; i < FaceNodes.size(); ++i)
     {
-        for(j = 0; j < FaceNodes[i].size(); ++j)
+        for (j = 0; j < FaceNodes[i].size(); ++j)
         {
             FaceNodes[i][j] = NodeReordering[FaceNodes[i][j]];
         }
     }
 
     vector<NodeSharedPtr> save(Vnodes);
-    for(i = 0; i < Vnodes.size(); ++i)
+    for (i = 0; i < Vnodes.size(); ++i)
     {
         Vnodes[NodeReordering[i]] = save[i];
         Vnodes[NodeReordering[i]]->SetID(NodeReordering[i]);
     }
-
 }
 
-
-
-static void PrismLineFaces(int prismid,  map<int, int> &facelist,
-                    vector<vector<int> > &FaceToPrisms,
-                    vector<vector<int> > &PrismToFaces,
-                    vector<bool> &PrismDone)
+static void PrismLineFaces(int prismid,
+                           map<int, int> &facelist,
+                           vector<vector<int> > &FaceToPrisms,
+                           vector<vector<int> > &PrismToFaces,
+                           vector<bool> &PrismDone)
 {
-    if(PrismDone[prismid] == false)
+    if (PrismDone[prismid] == false)
     {
         PrismDone[prismid] = true;
 
         // Add faces0
-        int face = PrismToFaces[prismid][0];
+        int face       = PrismToFaces[prismid][0];
         facelist[face] = face;
-        for(int i = 0; i < FaceToPrisms[face].size(); ++i)
+        for (int i = 0; i < FaceToPrisms[face].size(); ++i)
         {
-            PrismLineFaces(FaceToPrisms[face][i], facelist, FaceToPrisms,
-                     PrismToFaces, PrismDone);
+            PrismLineFaces(FaceToPrisms[face][i],
+                           facelist,
+                           FaceToPrisms,
+                           PrismToFaces,
+                           PrismDone);
         }
 
         // Add faces1
-        face = PrismToFaces[prismid][1];
+        face           = PrismToFaces[prismid][1];
         facelist[face] = face;
-        for(int i = 0; i < FaceToPrisms[face].size(); ++i)
+        for (int i = 0; i < FaceToPrisms[face].size(); ++i)
         {
-            PrismLineFaces(FaceToPrisms[face][i], facelist, FaceToPrisms,
-                     PrismToFaces, PrismDone);
+            PrismLineFaces(FaceToPrisms[face][i],
+                           facelist,
+                           FaceToPrisms,
+                           PrismToFaces,
+                           PrismDone);
         }
     }
 }
 
 void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
-                            int i, vector<int> &ElementFaces,
-                            vector<vector<int> >&FaceNodes,
+                            int i,
+                            vector<int> &ElementFaces,
+                            vector<vector<int> > &FaceNodes,
                             int nComposite)
 {
     LibUtilities::ShapeType elType;
     // set up Node list
 
-    if(ElementFaces.size() == 3)
+    if (ElementFaces.size() == 3)
     {
         elType = LibUtilities::eTriangle;
     }
-    else if(ElementFaces.size() == 4)
+    else if (ElementFaces.size() == 4)
     {
         elType = LibUtilities::eQuadrilateral;
     }
     else
     {
-        ASSERTL0(false,"Not set up for elements which are not Tets or Prism");
+        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
     }
 
     // Create element tags
@@ -697,51 +699,52 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
     // make unique node list
     vector<NodeSharedPtr> nodeList;
     Array<OneD, int> Nodes = SortEdgeNodes(VertNodes, ElementFaces, FaceNodes);
-    for(int j  = 0; j < Nodes.num_elements(); ++j)
+    for (int j = 0; j < Nodes.num_elements(); ++j)
     {
         nodeList.push_back(VertNodes[Nodes[j]]);
     }
 
     // Create element
-    ElmtConfig conf(elType,1,true,true);
-    ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
-                                                             nodeList,tags);
+    ElmtConfig conf(elType, 1, true, true);
+    ElementSharedPtr E =
+        GetElementFactory().CreateInstance(elType, conf, nodeList, tags);
 
     m_mesh->m_element[E->GetDim()].push_back(E);
 }
 
 void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
-                            int i, vector<int> &ElementFaces,
-                            vector<vector<int> >&FaceNodes,
-                            int nComposite, bool DoOrient)
+                            int i,
+                            vector<int> &ElementFaces,
+                            vector<vector<int> > &FaceNodes,
+                            int nComposite,
+                            bool DoOrient)
 {
     LibUtilities::ShapeType elType;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
-    int nnodes = Nodes.num_elements();
-    map<LibUtilities::ShapeType,int> domainComposite;
-
+    int nnodes             = Nodes.num_elements();
+    map<LibUtilities::ShapeType, int> domainComposite;
 
     // Set Nodes  -- Not sure we need this so could
-    //m_mesh->m_node = VertNodes;
+    // m_mesh->m_node = VertNodes;
 
     // element type
-    if(nnodes == 4)
+    if (nnodes == 4)
     {
         elType = LibUtilities::eTetrahedron;
     }
-    else if(nnodes == 5)
+    else if (nnodes == 5)
     {
         elType = LibUtilities::ePyramid;
     }
-    else if(nnodes == 6)
+    else if (nnodes == 6)
     {
         elType = LibUtilities::ePrism;
     }
     else
     {
 
-        ASSERTL0(false,"Not set up for elements which are not Tets or Prism");
+        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
     }
 
     // Create element tags
@@ -750,18 +753,17 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
 
     // make unique node list
     vector<NodeSharedPtr> nodeList;
-    for(int j  = 0; j < Nodes.num_elements(); ++j)
+    for (int j = 0; j < Nodes.num_elements(); ++j)
     {
         nodeList.push_back(VertNodes[Nodes[j]]);
     }
 
-
     // Create element
-    if(elType != LibUtilities::ePyramid)
+    if (elType != LibUtilities::ePyramid)
     {
-        ElmtConfig conf(elType,1,true,true,DoOrient);
-        ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
-                                                   nodeList,tags);
+        ElmtConfig conf(elType, 1, true, true, DoOrient);
+        ElementSharedPtr E =
+            GetElementFactory().CreateInstance(elType, conf, nodeList, tags);
 
         m_mesh->m_element[E->GetDim()].push_back(E);
     }
@@ -773,12 +775,12 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
 
 Array<OneD, int> InputTec::SortEdgeNodes(vector<NodeSharedPtr> &Vnodes,
                                          vector<int> &ElementFaces,
-                                         vector<vector<int> >&FaceNodes)
+                                         vector<vector<int> > &FaceNodes)
 {
-    int i,j;
+    int i, j;
     Array<OneD, int> returnval;
 
-    if(ElementFaces.size() == 3) // Triangle
+    if (ElementFaces.size() == 3) // Triangle
     {
         returnval = Array<OneD, int>(3);
 
@@ -786,64 +788,65 @@ Array<OneD, int> InputTec::SortEdgeNodes(vector<NodeSharedPtr> &Vnodes,
         returnval[1] = FaceNodes[ElementFaces[0]][1];
 
         // Find third node index;
-        for(i = 0; i < 2; ++i)
+        for (i = 0; i < 2; ++i)
         {
-            if((FaceNodes[ElementFaces[1]][i] != returnval[0])&&(FaceNodes[ElementFaces[1]][i] != returnval[1]))
+            if ((FaceNodes[ElementFaces[1]][i] != returnval[0]) &&
+                (FaceNodes[ElementFaces[1]][i] != returnval[1]))
             {
-                returnval[2]=  FaceNodes[ElementFaces[1]][i];
+                returnval[2] = FaceNodes[ElementFaces[1]][i];
                 break;
             }
         }
     }
-    else if(ElementFaces.size() == 4) // quadrilateral
+    else if (ElementFaces.size() == 4) // quadrilateral
     {
         returnval = Array<OneD, int>(4);
 
         int indx0 = FaceNodes[ElementFaces[0]][0];
         int indx1 = FaceNodes[ElementFaces[0]][1];
-        int indx2,indx3;
+        int indx2, indx3;
 
         indx2 = indx3 = -1;
         // Find third, fourth node index;
-        for(j = 1; j < 4; ++j)
+        for (j = 1; j < 4; ++j)
         {
-            for(i = 0; i < 2; ++i)
+            for (i = 0; i < 2; ++i)
             {
-                if((FaceNodes[ElementFaces[j]][i] != indx0)&&(FaceNodes[ElementFaces[j]][i] != indx1))
+                if ((FaceNodes[ElementFaces[j]][i] != indx0) &&
+                    (FaceNodes[ElementFaces[j]][i] != indx1))
                 {
-                    if(indx2 == -1)
+                    if (indx2 == -1)
                     {
-                        indx2 =  FaceNodes[ElementFaces[j]][i];
+                        indx2 = FaceNodes[ElementFaces[j]][i];
                     }
-                    else if(indx2 != -1)
+                    else if (indx2 != -1)
                     {
-                        if(FaceNodes[ElementFaces[j]][i] != indx2)
+                        if (FaceNodes[ElementFaces[j]][i] != indx2)
                         {
-                            indx3 =  FaceNodes[ElementFaces[j]][i];
+                            indx3 = FaceNodes[ElementFaces[j]][i];
                         }
                     }
                 }
             }
         }
 
-        ASSERTL1((indx2 != -1)&&(indx3 != -1),"Failed to find vertex 3 or 4");
-
+        ASSERTL1((indx2 != -1) && (indx3 != -1),
+                 "Failed to find vertex 3 or 4");
 
         // calculate 0-1,
         Node a = *(Vnodes[indx1]) - *(Vnodes[indx0]);
         // calculate 0-2,
-        Node b = *(Vnodes[indx2]) - *(Vnodes[indx0]);
-        Node acurlb  = a.curl(b);
-
+        Node b      = *(Vnodes[indx2]) - *(Vnodes[indx0]);
+        Node acurlb = a.curl(b);
 
         // calculate 2-1,
         Node c = *(Vnodes[indx1]) - *(Vnodes[indx2]);
         // calculate 3-2,
-        Node d = *(Vnodes[indx3]) - *(Vnodes[indx2]);
-        Node acurld  = a.curl(d);
+        Node d      = *(Vnodes[indx3]) - *(Vnodes[indx2]);
+        Node acurld = a.curl(d);
 
         NekDouble acurlb_dot_acurld = acurlb.dot(acurld);
-        if(acurlb_dot_acurld > 0.0)
+        if (acurlb_dot_acurld > 0.0)
         {
             returnval[0] = indx0;
             returnval[1] = indx1;
@@ -864,16 +867,16 @@ Array<OneD, int> InputTec::SortEdgeNodes(vector<NodeSharedPtr> &Vnodes,
 
 Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                                          vector<int> &ElementFaces,
-                                         vector<vector<int> >&FaceNodes)
+                                         vector<vector<int> > &FaceNodes)
 {
 
-    int i,j;
+    int i, j;
     Array<OneD, int> returnval;
 
-
-    if(ElementFaces.size() == 4) // Tetrahedron
+    if (ElementFaces.size() == 4) // Tetrahedron
     {
-        ASSERTL1(FaceNodes[ElementFaces[0]].size() == 3,"Face is not triangular");
+        ASSERTL1(FaceNodes[ElementFaces[0]].size() == 3,
+                 "Face is not triangular");
 
         returnval = Array<OneD, int>(4);
 
@@ -882,30 +885,32 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         int indx2 = FaceNodes[ElementFaces[0]][2];
         int indx3 = -1;
 
-
         // calculate 0-1,
         Node a = *(Vnodes[indx1]) - *(Vnodes[indx0]);
         // calculate 0-2,
         Node b = *(Vnodes[indx2]) - *(Vnodes[indx0]);
 
         // Find fourth node index;
-        ASSERTL1(FaceNodes[ElementFaces[1]].size() == 3,"Face is not triangular");
-        for(i = 0; i < 3; ++i)
+        ASSERTL1(FaceNodes[ElementFaces[1]].size() == 3,
+                 "Face is not triangular");
+        for (i = 0; i < 3; ++i)
         {
 
-            if((FaceNodes[ElementFaces[1]][i] != indx0)&&(FaceNodes[ElementFaces[1]][i] != indx1)&&(FaceNodes[ElementFaces[1]][i] != indx2))
+            if ((FaceNodes[ElementFaces[1]][i] != indx0) &&
+                (FaceNodes[ElementFaces[1]][i] != indx1) &&
+                (FaceNodes[ElementFaces[1]][i] != indx2))
             {
-                indx3 =  FaceNodes[ElementFaces[1]][i];
+                indx3 = FaceNodes[ElementFaces[1]][i];
                 break;
             }
         }
 
         // calculate 0-3,
-        Node c = *(Vnodes[indx3]) - *(Vnodes[indx0]);
-        Node acurlb  = a.curl(b);
+        Node c      = *(Vnodes[indx3]) - *(Vnodes[indx0]);
+        Node acurlb = a.curl(b);
 
         NekDouble acurlb_dotc = acurlb.dot(c);
-        if(acurlb_dotc < 0.0)
+        if (acurlb_dotc < 0.0)
         {
             returnval[0] = indx0;
             returnval[1] = indx1;
@@ -920,21 +925,20 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             returnval[3] = indx3;
         }
     }
-    else if(ElementFaces.size() == 5) //prism or pyramid
+    else if (ElementFaces.size() == 5) // prism or pyramid
     {
         int triface0, triface1;
         int quadface0, quadface1, quadface2;
-        bool isPrism =  true;
+        bool isPrism = true;
 
-
-        //find ids of tri faces and first quad face
+        // find ids of tri faces and first quad face
         triface0 = triface1 = -1;
         quadface0 = quadface1 = quadface2 = -1;
-        for(i = 0; i < 5; ++i)
+        for (i = 0; i < 5; ++i)
         {
-            if(FaceNodes[ElementFaces[i]].size() == 3)
+            if (FaceNodes[ElementFaces[i]].size() == 3)
             {
-                if(triface0 == -1)
+                if (triface0 == -1)
                 {
                     triface0 = i;
                 }
@@ -946,12 +950,11 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                 {
                     isPrism = false;
                 }
-
             }
 
-            if(FaceNodes[ElementFaces[i]].size() == 4)
+            if (FaceNodes[ElementFaces[i]].size() == 4)
             {
-                if(quadface0 == -1)
+                if (quadface0 == -1)
                 {
                     quadface0 = i;
                 }
@@ -966,69 +969,70 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             }
         }
 
-        if(isPrism) //Prism
+        if (isPrism) // Prism
         {
             returnval = Array<OneD, int>(6);
         }
-        else        //Pyramid
+        else // Pyramid
         {
             returnval = Array<OneD, int>(5);
         }
 
         // find matching nodes between triface0 and triquad0
-        int indx0,indx1,indx2,indx3,indx4;
+        int indx0, indx1, indx2, indx3, indx4;
 
         indx0 = indx1 = indx2 = indx3 = indx4 = -1;
         // Loop over all quad nodes and if they match any
         // triangular nodes If they do set these to indx0 and
         // indx1 and if not set it to indx2, indx3
 
-        for(i = 0; i < 4; ++i)
+        for (i = 0; i < 4; ++i)
         {
-            for(j = 0; j < 3; ++j)
+            for (j = 0; j < 3; ++j)
             {
-                if(FaceNodes[ElementFaces[triface0]][j] ==
-                   FaceNodes[ElementFaces[quadface0]][i])
+                if (FaceNodes[ElementFaces[triface0]][j] ==
+                    FaceNodes[ElementFaces[quadface0]][i])
                 {
                     break; // same node break
                 }
             }
 
-            if(j == 3) // Vertex not in quad face
+            if (j == 3) // Vertex not in quad face
             {
-                if(indx2 == -1)
+                if (indx2 == -1)
                 {
                     indx2 = FaceNodes[ElementFaces[quadface0]][i];
-
                 }
-                else if(indx3 == -1)
+                else if (indx3 == -1)
                 {
                     indx3 = FaceNodes[ElementFaces[quadface0]][i];
                 }
                 else
                 {
-                    ASSERTL0(false,"More than two vertices do not match triangular face");
+                    ASSERTL0(
+                        false,
+                        "More than two vertices do not match triangular face");
                 }
             }
             else // if found match then set indx0,indx1;
             {
-                if(indx0 == -1)
+                if (indx0 == -1)
                 {
                     indx0 = FaceNodes[ElementFaces[quadface0]][i];
                 }
                 else
                 {
-                    indx1 =  FaceNodes[ElementFaces[quadface0]][i];
+                    indx1 = FaceNodes[ElementFaces[quadface0]][i];
                 }
             }
         }
 
         // Finally check for top vertex
-        for(int i = 0; i < 3; ++i)
+        for (int i = 0; i < 3; ++i)
         {
-            if((FaceNodes[ElementFaces[triface0]][i] != indx0)&&
-               (FaceNodes[ElementFaces[triface0]][i] != indx1)&&
-               (FaceNodes[ElementFaces[triface0]][i] != indx2))
+            if ((FaceNodes[ElementFaces[triface0]][i] != indx0) &&
+                (FaceNodes[ElementFaces[triface0]][i] != indx1) &&
+                (FaceNodes[ElementFaces[triface0]][i] != indx2))
             {
                 indx4 = FaceNodes[ElementFaces[triface0]][i];
                 break;
@@ -1039,12 +1043,12 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         Node a = *(Vnodes[indx1]) - *(Vnodes[indx0]);
         // calculate 0-4,
         Node b = *(Vnodes[indx4]) - *(Vnodes[indx0]);
-       // calculate 0-2,
-        Node c = *(Vnodes[indx2]) - *(Vnodes[indx0]);
-        Node acurlb  = a.curl(b);
+        // calculate 0-2,
+        Node c      = *(Vnodes[indx2]) - *(Vnodes[indx0]);
+        Node acurlb = a.curl(b);
 
         NekDouble acurlb_dotc = acurlb.dot(c);
-        if(acurlb_dotc < 0.0)
+        if (acurlb_dotc < 0.0)
         {
             returnval[0] = indx0;
             returnval[1] = indx1;
@@ -1057,20 +1061,21 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             returnval[4] = indx4;
         }
 
-        // check to see if two vertices are shared between one of the other faces
+        // check to see if two vertices are shared between one of the other
+        // faces
         // to define which is indx2 and indx3
 
         int cnt = 0;
-        for(int i = 0; i < 4; ++i)
+        for (int i = 0; i < 4; ++i)
         {
-            if((FaceNodes[ElementFaces[quadface1]][i] == returnval[1])||
-               (FaceNodes[ElementFaces[quadface1]][i] == indx2))
+            if ((FaceNodes[ElementFaces[quadface1]][i] == returnval[1]) ||
+                (FaceNodes[ElementFaces[quadface1]][i] == indx2))
             {
                 cnt++;
             }
         }
 
-        if(cnt == 2)  // have two matching vertices
+        if (cnt == 2) // have two matching vertices
         {
             returnval[2] = indx2;
             returnval[3] = indx3;
@@ -1078,16 +1083,17 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         else
         {
             cnt = 0;
-            for(int i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
-                if((FaceNodes[ElementFaces[quadface2]][i] == returnval[1])||
-                   (FaceNodes[ElementFaces[quadface2]][i] == indx2))
+                if ((FaceNodes[ElementFaces[quadface2]][i] == returnval[1]) ||
+                    (FaceNodes[ElementFaces[quadface2]][i] == indx2))
                 {
                     cnt++;
                 }
             }
 
-            if(cnt != 2) // neither of the other faces has two matching nodes so reverse
+            if (cnt != 2) // neither of the other faces has two matching nodes
+                          // so reverse
             {
                 returnval[2] = indx3;
                 returnval[3] = indx2;
@@ -1099,30 +1105,27 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             }
         }
 
-
-        if(isPrism == true)
+        if (isPrism == true)
         {
             // finally need to find last vertex from second triangular face.
-            for(int i = 0; i < 3; ++i)
+            for (int i = 0; i < 3; ++i)
             {
-                if((FaceNodes[ElementFaces[triface1]][i] != indx2)&&
-                   (FaceNodes[ElementFaces[triface1]][i] != indx3)&&
-                   (FaceNodes[ElementFaces[triface1]][i] != indx3))
+                if ((FaceNodes[ElementFaces[triface1]][i] != indx2) &&
+                    (FaceNodes[ElementFaces[triface1]][i] != indx3) &&
+                    (FaceNodes[ElementFaces[triface1]][i] != indx3))
                 {
                     returnval[5] = FaceNodes[ElementFaces[triface1]][i];
                     break;
                 }
             }
         }
-
     }
     else
     {
-        ASSERTL0(false,"SortFaceNodes not set up for this number of faces");
+        ASSERTL0(false, "SortFaceNodes not set up for this number of faces");
     }
 
     return returnval;
 }
-
 }
 }

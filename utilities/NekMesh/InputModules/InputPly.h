@@ -48,7 +48,8 @@ class InputPly : public InputModule
 {
 public:
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
         return MemoryManager<InputPly>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
@@ -60,11 +61,11 @@ public:
     virtual void Process();
 
     void ReadPly(std::ifstream &mshFile, NekDouble scale = 1.0);
+
 private:
 };
 
 typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
-
 }
 }
 

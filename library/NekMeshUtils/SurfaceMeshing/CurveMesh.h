@@ -33,13 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 #define NEKTAR_MESHUTILS_SURFACEMESHING_CURVEMESH_H
 
 #include <boost/shared_ptr.hpp>
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/Octree/Octree.h>
@@ -63,10 +62,8 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m, CADCurveSharedPtr c, OctreeSharedPtr o) :
-              m_cadcurve(c),m_octree(o), m_id(id), m_mesh(m)
-    {
-    };
+    CurveMesh(int id, MeshSharedPtr m, CADCurveSharedPtr c, OctreeSharedPtr o)
+        : m_cadcurve(c), m_octree(o), m_id(id), m_mesh(m){};
 
     /**
      * @brief execute meshing
@@ -76,30 +73,44 @@ public:
     /**
      * @brief get id of first node
      */
-    NodeSharedPtr GetFirstPoint(){return m_meshpoints[0];}
+    NodeSharedPtr GetFirstPoint()
+    {
+        return m_meshpoints[0];
+    }
 
     /**
      * @brief get id of last node
      */
-    NodeSharedPtr GetLastPoint(){return m_meshpoints.back();}
+    NodeSharedPtr GetLastPoint()
+    {
+        return m_meshpoints.back();
+    }
 
     /**
      * @brief get list of mesh nodes
      */
-    std::vector<NodeSharedPtr> GetMeshPoints(){return m_meshpoints;}
+    std::vector<NodeSharedPtr> GetMeshPoints()
+    {
+        return m_meshpoints;
+    }
 
     /**
      * @brief get the number of points in the curve
      */
-    int GetNumPoints(){return m_meshpoints.size();}
+    int GetNumPoints()
+    {
+        return m_meshpoints.size();
+    }
 
     /**
      * @brief get the length of the curve
      */
-    NekDouble GetLength(){return m_curvelength;}
+    NekDouble GetLength()
+    {
+        return m_curvelength;
+    }
 
 private:
-
     /**
      * @brief get node spacing sampling function
      */
@@ -138,7 +149,8 @@ private:
     NekDouble Ae;
     /// ds
     NekDouble ds;
-    /// number of edges to be made in the curve as defined by the spacing funtion
+    /// number of edges to be made in the curve as defined by the spacing
+    /// funtion
     int Ne;
     /// paramteric coordiates of the mesh nodes
     std::vector<NekDouble> meshsvalue;
@@ -151,7 +163,6 @@ private:
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
-
 }
 }
 

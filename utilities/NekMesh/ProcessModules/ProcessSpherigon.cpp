@@ -33,16 +33,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
 
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessSpherigon.h"
 
@@ -58,8 +57,7 @@ namespace Utilities
 
 ModuleKey ProcessSpherigon::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "spherigon"),
-        ProcessSpherigon::create);
+        ModuleKey(eProcessModule, "spherigon"), ProcessSpherigon::create);
 
 /**
  * @class ProcessSpherigon
@@ -92,18 +90,22 @@ ModuleKey ProcessSpherigon::className =
  */
 ProcessSpherigon::ProcessSpherigon(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["N"] = ConfigOption(false, "5",
-        "Number of points to add to face edges.");
-    m_config["surf"] = ConfigOption(false, "-1",
-        "Tag identifying surface to process.");
-    m_config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
-        "Curve both triangular faces of prism on boundary.");
-    m_config["usenormalfile"] = ConfigOption(false,"NoFile",
-         "Use alternative file for Spherigon definition");
-    m_config["scalefile"] = ConfigOption(false,"1.0",
-         "Apply scaling factor to coordinates in file ");
-    m_config["normalnoise"] = ConfigOption(false,"NotSpecified",
-               "Add randowm noise to normals of amplitude AMP in specified region. input string is Amp,xmin,xmax,ymin,ymax,zmin,zmax");
+    m_config["N"] =
+        ConfigOption(false, "5", "Number of points to add to face edges.");
+    m_config["surf"] =
+        ConfigOption(false, "-1", "Tag identifying surface to process.");
+    m_config["BothTriFacesOnPrism"] = ConfigOption(
+        true, "-1", "Curve both triangular faces of prism on boundary.");
+    m_config["usenormalfile"] = ConfigOption(
+        false, "NoFile", "Use alternative file for Spherigon definition");
+    m_config["scalefile"] = ConfigOption(
+        false, "1.0", "Apply scaling factor to coordinates in file ");
+    m_config["normalnoise"] =
+        ConfigOption(false,
+                     "NotSpecified",
+                     "Add randowm noise to normals of amplitude AMP "
+                     "in specified region. input string is "
+                     "Amp,xmin,xmax,ymin,ymax,zmin,zmax");
 }
 
 /**
@@ -111,7 +113,6 @@ ProcessSpherigon::ProcessSpherigon(MeshSharedPtr m) : ProcessModule(m)
  */
 ProcessSpherigon::~ProcessSpherigon()
 {
-
 }
 
 /*
@@ -122,15 +123,15 @@ void ProcessSpherigon::UnitCrossProd(Node &a, Node &b, Node &c)
 {
     double inv_mag;
 
-    c.m_x = a.m_y*b.m_z - a.m_z*b.m_y;
-    c.m_y = a.m_z*b.m_x - a.m_x*b.m_z;
-    c.m_z = a.m_x*b.m_y - a.m_y*b.m_x;
+    c.m_x = a.m_y * b.m_z - a.m_z * b.m_y;
+    c.m_y = a.m_z * b.m_x - a.m_x * b.m_z;
+    c.m_z = a.m_x * b.m_y - a.m_y * b.m_x;
 
-    inv_mag = 1.0/sqrt(c.m_x*c.m_x + c.m_y*c.m_y + c.m_z*c.m_z);
+    inv_mag = 1.0 / sqrt(c.m_x * c.m_x + c.m_y * c.m_y + c.m_z * c.m_z);
 
-    c.m_x = c.m_x*inv_mag;
-    c.m_y = c.m_y*inv_mag;
-    c.m_z = c.m_z*inv_mag;
+    c.m_x = c.m_x * inv_mag;
+    c.m_y = c.m_y * inv_mag;
+    c.m_z = c.m_z * inv_mag;
 }
 
 /**
@@ -139,10 +140,10 @@ void ProcessSpherigon::UnitCrossProd(Node &a, Node &b, Node &c)
  */
 double ProcessSpherigon::CrossProdMag(Node &a, Node &b)
 {
-    double tmp1 = a.m_y*b.m_z - a.m_z*b.m_y;
-    double tmp2 = a.m_z*b.m_x - a.m_x*b.m_z;
-    double tmp3 = a.m_x*b.m_y - a.m_y*b.m_x;
-    return sqrt(tmp1*tmp1 + tmp2*tmp2 + tmp3*tmp3);
+    double tmp1 = a.m_y * b.m_z - a.m_z * b.m_y;
+    double tmp2 = a.m_z * b.m_x - a.m_x * b.m_z;
+    double tmp3 = a.m_x * b.m_y - a.m_y * b.m_x;
+    return sqrt(tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3);
 }
 
 /**
@@ -155,7 +156,7 @@ double ProcessSpherigon::CrossProdMag(Node &a, Node &b)
  */
 double ProcessSpherigon::Blend(double r)
 {
-    return r*r;
+    return r * r;
 }
 
 /**
@@ -169,29 +170,31 @@ double ProcessSpherigon::Blend(double r)
  * @param P      Point in the triangle to apply blending to.
  * @param blend  The resulting blending components for each vertex.
  */
-void ProcessSpherigon::SuperBlend(
-    vector<double> &r, vector<Node> &Q, Node &P, vector<double> &blend)
+void ProcessSpherigon::SuperBlend(vector<double> &r,
+                                  vector<Node> &Q,
+                                  Node &P,
+                                  vector<double> &blend)
 {
     vector<double> tmp(r.size());
-    double         totBlend = 0.0;
-    int            i;
-    int            nV = r.size();
+    double totBlend = 0.0;
+    int i;
+    int nV = r.size();
 
     for (i = 0; i < nV; ++i)
     {
         blend[i] = 0.0;
-        tmp  [i] = (Q[i]-P).abs2();
+        tmp[i]   = (Q[i] - P).abs2();
     }
 
     for (i = 0; i < nV; ++i)
     {
-        int ip = (i+1) % nV, im = (i-1+nV) % nV;
+        int ip = (i + 1) % nV, im = (i - 1 + nV) % nV;
 
-        if (r[i] > TOL_BLEND && r[i] < (1-TOL_BLEND))
+        if (r[i] > TOL_BLEND && r[i] < (1 - TOL_BLEND))
         {
-            blend[i] = r[i]*r[i]*(
-                r[im]*r[im]*tmp[im]/(tmp[im] + tmp[i]) +
-                r[ip]*r[ip]*tmp[ip]/(tmp[ip] + tmp[i]));
+            blend[i] =
+                r[i] * r[i] * (r[im] * r[im] * tmp[im] / (tmp[im] + tmp[i]) +
+                               r[ip] * r[ip] * tmp[ip] / (tmp[ip] + tmp[i]));
             totBlend += blend[i];
         }
     }
@@ -199,7 +202,7 @@ void ProcessSpherigon::SuperBlend(
     for (i = 0; i < nV; ++i)
     {
         blend[i] /= totBlend;
-        if (r[i] >= (1-TOL_BLEND))
+        if (r[i] >= (1 - TOL_BLEND))
         {
             blend[i] = 1.0;
         }
@@ -228,16 +231,14 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
 {
     boost::unordered_map<int, Node>::iterator nIt;
 
-
-
     for (int i = 0; i < el.size(); ++i)
     {
         ElementSharedPtr e = el[i];
 
         // Ensure that element is a line, triangle or quad.
-        ASSERTL0(e->GetConf().m_e == LibUtilities::eSegment      ||
-                 e->GetConf().m_e == LibUtilities::eTriangle     ||
-                 e->GetConf().m_e == LibUtilities::eQuadrilateral,
+        ASSERTL0(e->GetConf().m_e == LibUtilities::eSegment ||
+                     e->GetConf().m_e == LibUtilities::eTriangle ||
+                     e->GetConf().m_e == LibUtilities::eQuadrilateral,
                  "Spherigon expansions must be lines, triangles or "
                  "quadrilaterals.");
 
@@ -262,11 +263,11 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         else
         {
             // Calculate gradient vector and invert.
-            Node dx  = *(node[1]) - *(node[0]);
-            dx      /= sqrt(dx.abs2());
-            n.m_x      = -dx.m_y;
-            n.m_y      = dx.m_x;
-            n.m_z      = 0;
+            Node dx = *(node[1]) - *(node[0]);
+            dx /= sqrt(dx.abs2());
+            n.m_x = -dx.m_y;
+            n.m_y = dx.m_x;
+            n.m_z = 0;
         }
 
         // Insert face normal into vertex normal list or add to existing
@@ -286,8 +287,9 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
     }
 
     // Normalize resulting vectors.
-    for (nIt  = mesh->m_vertexNormals.begin();
-         nIt != mesh->m_vertexNormals.end  (); ++nIt)
+    for (nIt = mesh->m_vertexNormals.begin();
+         nIt != mesh->m_vertexNormals.end();
+         ++nIt)
     {
         Node &n = mesh->m_vertexNormals[nIt->first];
         n /= sqrt(n.abs2());
@@ -303,7 +305,7 @@ void ProcessSpherigon::Process()
              "Spherigon implementation only valid in 2D/3D.");
 
     boost::unordered_set<int>::iterator eIt;
-    boost::unordered_set<int>           visitedEdges;
+    boost::unordered_set<int> visitedEdges;
 
     // First construct vector of elements to process.
     vector<ElementSharedPtr> el;
@@ -322,14 +324,13 @@ void ProcessSpherigon::Process()
     {
         // Full 2D or 3D case - iterate over stored edges/faces and
         // create segments/triangles representing those edges/faces.
-        set<pair<int,int> >::iterator it;
+        set<pair<int, int> >::iterator it;
         vector<int> t;
         t.push_back(0);
 
-
         // Construct list of spherigon edges/faces from a tag.
         string surfTag = m_config["surf"].as<string>();
-        bool prismTag = m_config["BothTriFacesOnPrism"].beenSet;
+        bool prismTag  = m_config["BothTriFacesOnPrism"].beenSet;
 
         if (surfTag != "")
         {
@@ -341,8 +342,8 @@ void ProcessSpherigon::Process()
             for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
             {
                 ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-                int nSurf = m_mesh->m_expDim == 3 ? el->GetFaceCount() :
-                                             el->GetEdgeCount();
+                int nSurf = m_mesh->m_expDim == 3 ? el->GetFaceCount()
+                                                  : el->GetEdgeCount();
 
                 for (int j = 0; j < nSurf; ++j)
                 {
@@ -352,13 +353,16 @@ void ProcessSpherigon::Process()
                         continue;
                     }
 
-                    ElementSharedPtr bEl  = m_mesh->m_element[m_mesh->m_expDim-1][bl];
-                    vector<int>      tags = bEl->GetTagList();
-                    vector<int>      inter;
+                    ElementSharedPtr bEl =
+                        m_mesh->m_element[m_mesh->m_expDim - 1][bl];
+                    vector<int> tags = bEl->GetTagList();
+                    vector<int> inter;
 
                     sort(tags.begin(), tags.end());
-                    set_intersection(surfs.begin(), surfs.end(),
-                                     tags .begin(), tags .end(),
+                    set_intersection(surfs.begin(),
+                                     surfs.end(),
+                                     tags.begin(),
+                                     tags.end(),
                                      back_inserter(inter));
 
                     if (inter.size() == 1)
@@ -367,7 +371,7 @@ void ProcessSpherigon::Process()
 
                         // Curve other tri face on Prism. Note could be
                         // problem on pyramid when implemented.
-                        if(nSurf == 5 && prismTag)
+                        if (nSurf == 5 && prismTag)
                         {
                             // add other end of prism on boundary for
                             // smoothing
@@ -389,18 +393,21 @@ void ProcessSpherigon::Process()
 
         if (m_mesh->m_expDim == 3)
         {
-            for (it  = m_mesh->m_spherigonSurfs.begin();
-                 it != m_mesh->m_spherigonSurfs.end  (); ++it)
+            for (it = m_mesh->m_spherigonSurfs.begin();
+                 it != m_mesh->m_spherigonSurfs.end();
+                 ++it)
             {
-                FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
-                    GetFace(it->second);
+                FaceSharedPtr f =
+                    m_mesh->m_element[m_mesh->m_expDim][it->first]->GetFace(
+                        it->second);
                 vector<NodeSharedPtr> nodes = f->m_vertexList;
-                LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size());
+                LibUtilities::ShapeType eType =
+                    (LibUtilities::ShapeType)(nodes.size());
                 ElmtConfig conf(eType, 1, false, false);
 
                 // Create 2D element.
-                ElementSharedPtr elmt = GetElementFactory().
-                    CreateInstance(eType,conf,nodes,t);
+                ElementSharedPtr elmt =
+                    GetElementFactory().CreateInstance(eType, conf, nodes, t);
 
                 // Copy vertices/edges from face.
                 for (int i = 0; i < f->m_vertexList.size(); ++i)
@@ -417,11 +424,13 @@ void ProcessSpherigon::Process()
         }
         else
         {
-            for (it  = m_mesh->m_spherigonSurfs.begin();
-                 it != m_mesh->m_spherigonSurfs.end  (); ++it)
+            for (it = m_mesh->m_spherigonSurfs.begin();
+                 it != m_mesh->m_spherigonSurfs.end();
+                 ++it)
             {
-                EdgeSharedPtr edge = m_mesh->m_element[m_mesh->m_expDim][it->first]->
-                    GetEdge(it->second);
+                EdgeSharedPtr edge =
+                    m_mesh->m_element[m_mesh->m_expDim][it->first]->GetEdge(
+                        it->second);
                 vector<NodeSharedPtr> nodes;
                 LibUtilities::ShapeType eType = LibUtilities::eSegment;
                 ElmtConfig conf(eType, 1, false, false);
@@ -430,14 +439,16 @@ void ProcessSpherigon::Process()
                 nodes.push_back(edge->m_n2);
 
                 // Create 2D element.
-                ElementSharedPtr elmt = GetElementFactory().
-                    CreateInstance(eType,conf,nodes,t);
+                ElementSharedPtr elmt =
+                    GetElementFactory().CreateInstance(eType, conf, nodes, t);
 
                 // Copy vertices/edges from original element.
                 elmt->SetVertex(0, nodes[0]);
                 elmt->SetVertex(1, nodes[1]);
-                elmt->SetEdge(0, m_mesh->m_element[m_mesh->m_expDim][it->first]->
-                              GetEdge(it->second));
+                elmt->SetEdge(
+                    0,
+                    m_mesh->m_element[m_mesh->m_expDim][it->first]->GetEdge(
+                        it->second));
                 el.push_back(elmt);
             }
         }
@@ -447,45 +458,45 @@ void ProcessSpherigon::Process()
         ASSERTL0(false, "Spherigon expansions must be 2/3 dimensional");
     }
 
-
     // See if vertex normals have been generated. If they have not,
     // approximate them by summing normals of surrounding elements.
     bool normalsGenerated = false;
 
     // Read Normal file if one exists
     std::string normalfile = m_config["usenormalfile"].as<string>();
-    if(normalfile.compare("NoFile") != 0)
+    if (normalfile.compare("NoFile") != 0)
     {
         NekDouble scale = m_config["scalefile"].as<NekDouble>();
 
         if (m_mesh->m_verbose)
         {
-            cout << "Inputing normal file: " << normalfile << " with scaling of " << scale << endl;
+            cout << "Inputing normal file: " << normalfile
+                 << " with scaling of " << scale << endl;
         }
 
         ifstream inply;
-        InputPlySharedPtr  plyfile;
+        InputPlySharedPtr plyfile;
 
         inply.open(normalfile.c_str());
-        ASSERTL0(inply,string("Could not open input ply file: ") +
-                 normalfile);
+        ASSERTL0(inply, string("Could not open input ply file: ") + normalfile);
 
         int j;
         MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
         plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
-        plyfile->ReadPly(inply,scale);
+        plyfile->ReadPly(inply, scale);
         plyfile->ProcessVertices();
 
         MeshSharedPtr plymesh = plyfile->GetMesh();
-        GenerateNormals(plymesh->m_element[plymesh->m_expDim],plymesh);
+        GenerateNormals(plymesh->m_element[plymesh->m_expDim], plymesh);
 
-        // finaly find nearest vertex and set normal to mesh surface file normal.
+        // finaly find nearest vertex and set normal to mesh surface file
+        // normal.
         // probably should have a hex tree search ?
         Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
-        Node minx(0,0.0,0.0,0.0), tmp,tmpsav;
+        Node minx(0, 0.0, 0.0, 0.0), tmp, tmpsav;
         NodeSet::iterator it;
-        map<int,NodeSharedPtr>::iterator vIt;
-        map<int,NodeSharedPtr> surfverts;
+        map<int, NodeSharedPtr>::iterator vIt;
+        map<int, NodeSharedPtr> surfverts;
 
         // make a map of normal vertices to visit based on elements el
         for (int i = 0; i < el.size(); ++i)
@@ -494,82 +505,85 @@ void ProcessSpherigon::Process()
             int nV = e->GetVertexCount();
             for (int j = 0; j < nV; ++j)
             {
-                int id = e->GetVertex(j)->m_id;
+                int id        = e->GetVertex(j)->m_id;
                 surfverts[id] = e->GetVertex(j);
             }
         }
 
-        //loop over all element in ply mesh and determine
-        //xmin,xmax,ymin,ymax as search criterion
+        // loop over all element in ply mesh and determine
+        // xmin,xmax,ymin,ymax as search criterion
 
-
-        NekDouble mindiff,diff;
-        int       cntmin;
+        NekDouble mindiff, diff;
+        int cntmin;
 
         if (m_mesh->m_verbose)
         {
-            cout << "\t Processing surface normals "  << endl;
+            cout << "\t Processing surface normals " << endl;
         }
         int cnt = 0;
-        map<int,int> locnorm;
-        for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt,++cnt)
+        map<int, int> locnorm;
+        for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt, ++cnt)
         {
-            mindiff  = 1e12;
+            mindiff = 1e12;
 
-            for(j = 0, it = plymesh->m_vertexSet.begin(); it != plymesh->m_vertexSet.end(); ++it, ++j)
+            for (j = 0, it = plymesh->m_vertexSet.begin();
+                 it != plymesh->m_vertexSet.end();
+                 ++it, ++j)
             {
-                tmp = *(vIt->second)- *(*it);
+                tmp  = *(vIt->second) - *(*it);
                 diff = tmp.abs2();
 
-                if(diff < mindiff)
+                if (diff < mindiff)
                 {
                     mindiff = diff;
-                    cntmin = (*it)->m_id;
-                    tmpsav = tmp;
+                    cntmin  = (*it)->m_id;
+                    tmpsav  = tmp;
                 }
             }
             locnorm[cntmin] = vIt->first;
 
-            ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),"cntmin is out of range");
-            m_mesh->m_vertexNormals[vIt->first] = plymesh->m_vertexNormals[cntmin];
-
+            ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
+                     "cntmin is out of range");
+            m_mesh->m_vertexNormals[vIt->first] =
+                plymesh->m_vertexNormals[cntmin];
         }
         if (m_mesh->m_verbose)
         {
-            cout << "\t end of processing surface normals "  << endl;
+            cout << "\t end of processing surface normals " << endl;
         }
         normalsGenerated = true;
     }
     else if (m_mesh->m_vertexNormals.size() == 0)
     {
-        GenerateNormals(el,m_mesh);
+        GenerateNormals(el, m_mesh);
         normalsGenerated = true;
     }
 
-
     // See if we should add noise to normals
     std::string normalnoise = m_config["normalnoise"].as<string>();
-    if(normalnoise.compare("NotSpecified") != 0)
+    if (normalnoise.compare("NotSpecified") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(),values),"Failed to interpret normal noise string");
+        ASSERTL0(
+            ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(), values),
+            "Failed to interpret normal noise string");
 
-        int nvalues = values.size()/2;
+        int nvalues   = values.size() / 2;
         NekDouble amp = values[0];
-
 
         if (m_mesh->m_verbose)
         {
-            cout << "\t adding noise to normals of amplitude "<< amp << " in range: ";
-            for(int i = 0; i < nvalues; ++i)
+            cout << "\t adding noise to normals of amplitude " << amp
+                 << " in range: ";
+            for (int i = 0; i < nvalues; ++i)
             {
-                cout << values[2*i+1] <<"," << values[2*i+2] << " ";
+                cout << values[2 * i + 1] << "," << values[2 * i + 2] << " ";
             }
             cout << endl;
         }
 
-        map<int,NodeSharedPtr>::iterator vIt;
-        map<int,NodeSharedPtr> surfverts;
+        map<int, NodeSharedPtr>::iterator vIt;
+        map<int, NodeSharedPtr> surfverts;
 
         // make a map of normal vertices to visit based on elements el
         for (int i = 0; i < el.size(); ++i)
@@ -578,47 +592,48 @@ void ProcessSpherigon::Process()
             int nV = e->GetVertexCount();
             for (int j = 0; j < nV; ++j)
             {
-                int id = e->GetVertex(j)->m_id;
+                int id        = e->GetVertex(j)->m_id;
                 surfverts[id] = e->GetVertex(j);
             }
         }
 
-        for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt)
+        for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt)
         {
             bool AddNoise = false;
 
-            for(int i = 0; i < nvalues; ++i)
+            for (int i = 0; i < nvalues; ++i)
             {
                 // check to see if point is in range
-                switch(nvalues)
+                switch (nvalues)
                 {
-                case 1:
+                    case 1:
                     {
-                        if(((vIt->second)->m_x > values[2*i+1])&&((vIt->second)->m_x < values[2*i+2]))
+                        if (((vIt->second)->m_x > values[2 * i + 1]) &&
+                            ((vIt->second)->m_x < values[2 * i + 2]))
                         {
                             AddNoise = true;
                         }
                     }
                     break;
-                case 2:
+                    case 2:
                     {
-                        if(((vIt->second)->m_x > values[2*i+1])&&
-                           ((vIt->second)->m_x < values[2*i+2])&&
-                           ((vIt->second)->m_y > values[2*i+3])&&
-                           ((vIt->second)->m_y < values[2*i+4]))
+                        if (((vIt->second)->m_x > values[2 * i + 1]) &&
+                            ((vIt->second)->m_x < values[2 * i + 2]) &&
+                            ((vIt->second)->m_y > values[2 * i + 3]) &&
+                            ((vIt->second)->m_y < values[2 * i + 4]))
                         {
                             AddNoise = true;
                         }
                     }
                     break;
-                case 3:
+                    case 3:
                     {
-                        if(((vIt->second)->m_x > values[2*i+1])&&
-                           ((vIt->second)->m_x < values[2*i+2])&&
-                           ((vIt->second)->m_y > values[2*i+3])&&
-                           ((vIt->second)->m_y < values[2*i+4])&&
-                           ((vIt->second)->m_z > values[2*i+5])&&
-                           ((vIt->second)->m_z < values[2*i+6]))
+                        if (((vIt->second)->m_x > values[2 * i + 1]) &&
+                            ((vIt->second)->m_x < values[2 * i + 2]) &&
+                            ((vIt->second)->m_y > values[2 * i + 3]) &&
+                            ((vIt->second)->m_y < values[2 * i + 4]) &&
+                            ((vIt->second)->m_z > values[2 * i + 5]) &&
+                            ((vIt->second)->m_z < values[2 * i + 6]))
 
                         {
                             AddNoise = true;
@@ -627,11 +642,11 @@ void ProcessSpherigon::Process()
                     break;
                 }
 
-                if(AddNoise)
+                if (AddNoise)
                 {
                     // generate random unit vector;
-                    Node rvec(0,rand(),rand(),rand());
-                    rvec *= values[0]/sqrt(rvec.abs2());
+                    Node rvec(0, rand(), rand(), rand());
+                    rvec *= values[0] / sqrt(rvec.abs2());
 
                     Node normal = m_mesh->m_vertexNormals[vIt->first];
 
@@ -644,39 +659,38 @@ void ProcessSpherigon::Process()
         }
     }
 
-
     // Allocate storage for interior points.
-    int nq = m_config["N"].as<int>();
-    int nquad = m_mesh->m_spaceDim == 3 ? nq*nq : nq;
-    Array<OneD, NekDouble> x(nq*nq);
-    Array<OneD, NekDouble> y(nq*nq);
-    Array<OneD, NekDouble> z(nq*nq);
+    int nq    = m_config["N"].as<int>();
+    int nquad = m_mesh->m_spaceDim == 3 ? nq * nq : nq;
+    Array<OneD, NekDouble> x(nq * nq);
+    Array<OneD, NekDouble> y(nq * nq);
+    Array<OneD, NekDouble> z(nq * nq);
 
-    Array<OneD, NekDouble> xc(nq*nq);
-    Array<OneD, NekDouble> yc(nq*nq);
-    Array<OneD, NekDouble> zc(nq*nq);
+    Array<OneD, NekDouble> xc(nq * nq);
+    Array<OneD, NekDouble> yc(nq * nq);
+    Array<OneD, NekDouble> zc(nq * nq);
 
     ASSERTL0(nq > 2, "Number of points must be greater than 2.");
 
     LibUtilities::BasisKey B0(
-        LibUtilities::eOrtho_A, nq,
-        LibUtilities::PointsKey(
-            nq, LibUtilities::eGaussLobattoLegendre));
+        LibUtilities::eOrtho_A,
+        nq,
+        LibUtilities::PointsKey(nq, LibUtilities::eGaussLobattoLegendre));
     LibUtilities::BasisKey B1(
-        LibUtilities::eOrtho_B, nq,
-        LibUtilities::PointsKey(
-            nq, LibUtilities::eGaussRadauMAlpha1Beta0));
+        LibUtilities::eOrtho_B,
+        nq,
+        LibUtilities::PointsKey(nq, LibUtilities::eGaussRadauMAlpha1Beta0));
     StdRegions::StdNodalTriExpSharedPtr stdtri =
         MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
             B0, B1, LibUtilities::eNodalTriElec);
 
-    Array<OneD, NekDouble> xnodal(nq*(nq+1)/2), ynodal(nq*(nq+1)/2);
+    Array<OneD, NekDouble> xnodal(nq * (nq + 1) / 2), ynodal(nq * (nq + 1) / 2);
     stdtri->GetNodalPoints(xnodal, ynodal);
 
     int edgeMap[3][4][2] = {
-        {{0, 1}, {-1,   -1}, {-1,        -1 }, {-1,        -1}}, // seg
-        {{0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}, {-1,        -1}}, // tri
-        {{0, 1}, {nq-1, nq}, {nq*nq-1,   -1 }, {nq*(nq-1), -nq}} // quad
+        {{0, 1}, {-1, -1}, {-1, -1}, {-1, -1}},                         // seg
+        {{0, 1}, {nq - 1, nq}, {nq * (nq - 1), -nq}, {-1, -1}},         // tri
+        {{0, 1}, {nq - 1, nq}, {nq * nq - 1, -1}, {nq * (nq - 1), -nq}} // quad
     };
 
     int vertMap[3][4][2] = {
@@ -693,9 +707,9 @@ void ProcessSpherigon::Process()
         ElementSharedPtr e = el[i];
 
         LibUtilities::BasisKey B2(
-            LibUtilities::eModified_A, nq,
-            LibUtilities::PointsKey(
-                nq, LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::eModified_A,
+            nq,
+            LibUtilities::PointsKey(nq, LibUtilities::eGaussLobattoLegendre));
 
         if (e->GetConf().m_e == LibUtilities::eSegment)
         {
@@ -703,9 +717,9 @@ void ProcessSpherigon::Process()
                 boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                     e->GetGeom(m_mesh->m_spaceDim));
             LocalRegions::SegExpSharedPtr seg =
-                MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(
-                    B2, geom);
-            seg->GetCoords(x,y,z);
+                MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(B2,
+                                                                       geom);
+            seg->GetCoords(x, y, z);
             nquad = nq;
         }
         else if (e->GetConf().m_e == LibUtilities::eTriangle)
@@ -714,33 +728,32 @@ void ProcessSpherigon::Process()
                 boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                     e->GetGeom(3));
             LocalRegions::NodalTriExpSharedPtr tri =
-                MemoryManager<LocalRegions::NodalTriExp>
-                    ::AllocateSharedPtr(
-                        B0, B1, LibUtilities::eNodalTriElec, geom);
+                MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(
+                    B0, B1, LibUtilities::eNodalTriElec, geom);
 
             Array<OneD, NekDouble> coord(2);
-            tri->GetCoords(xc,yc,zc);
-            nquad = nq*(nq+1)/2;
+            tri->GetCoords(xc, yc, zc);
+            nquad = nq * (nq + 1) / 2;
 
             for (int j = 0; j < nquad; ++j)
             {
                 coord[0] = xnodal[j];
                 coord[1] = ynodal[j];
-                x[j] = stdtri->PhysEvaluate(coord, xc);
+                x[j]     = stdtri->PhysEvaluate(coord, xc);
             }
 
             for (int j = 0; j < nquad; ++j)
             {
                 coord[0] = xnodal[j];
                 coord[1] = ynodal[j];
-                y[j] = stdtri->PhysEvaluate(coord, yc);
+                y[j]     = stdtri->PhysEvaluate(coord, yc);
             }
 
             for (int j = 0; j < nquad; ++j)
             {
                 coord[0] = xnodal[j];
                 coord[1] = ynodal[j];
-                z[j] = stdtri->PhysEvaluate(coord, zc);
+                z[j]     = stdtri->PhysEvaluate(coord, zc);
             }
         }
         else if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
@@ -751,8 +764,8 @@ void ProcessSpherigon::Process()
             LocalRegions::QuadExpSharedPtr quad =
                 MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
                     B2, B2, geom);
-            quad->GetCoords(x,y,z);
-            nquad = nq*nq;
+            quad->GetCoords(x, y, z);
+            nquad = nq * nq;
         }
         else
         {
@@ -771,17 +784,18 @@ void ProcessSpherigon::Process()
         for (int j = 0; j < nV; ++j)
         {
             v.push_back(*(e->GetVertex(j)));
-            ASSERTL1(m_mesh->m_vertexNormals.count(v[j].m_id) != 0,"Normal has not been defined");
+            ASSERTL1(m_mesh->m_vertexNormals.count(v[j].m_id) != 0,
+                     "Normal has not been defined");
             vN.push_back(m_mesh->m_vertexNormals[v[j].m_id]);
         }
 
-        vector<Node>   tmp  (nV);
-        vector<double> r    (nV);
-        vector<Node>   K    (nV);
-        vector<Node>   Q    (nV);
-        vector<Node>   Qp   (nV);
+        vector<Node> tmp(nV);
+        vector<double> r(nV);
+        vector<Node> K(nV);
+        vector<Node> Q(nV);
+        vector<Node> Qp(nV);
         vector<double> blend(nV);
-        vector<Node>   out  (nquad);
+        vector<Node> out(nquad);
 
         // Calculate segment length for 2D spherigon routine.
         double segLength = sqrt((v[0] - v[1]).abs2());
@@ -790,7 +804,7 @@ void ProcessSpherigon::Process()
         for (int j = 0; j < nquad; ++j)
         {
             Node P(0, x[j], y[j], z[j]);
-            Node N(0,0,0,0);
+            Node N(0, 0, 0, 0);
 
             // Calculate generalised barycentric coordinates r[] and the
             // Phong normal N = vN . r for this point of the element.
@@ -804,7 +818,7 @@ void ProcessSpherigon::Process()
                 r[1] = 1.0 - r[0];
 
                 // Calculate Phong normal.
-                N = vN[0]*r[0] + vN[1]*r[1];
+                N = vN[0] * r[0] + vN[1] * r[1];
             }
             else if (m_mesh->m_spaceDim == 3)
             {
@@ -819,10 +833,10 @@ void ProcessSpherigon::Process()
                 for (int k = 0; k < nV; ++k)
                 {
                     r[k] = 1.0;
-                    for (int l = 0; l < nV-2; ++l)
+                    for (int l = 0; l < nV - 2; ++l)
                     {
-                        r[k] *= CrossProdMag(tmp[(k+l+1) % nV],
-                                             tmp[(k+l+2) % nV]);
+                        r[k] *= CrossProdMag(tmp[(k + l + 1) % nV],
+                                             tmp[(k + l + 2) % nV]);
                     }
                     weight += r[k];
                 }
@@ -831,7 +845,7 @@ void ProcessSpherigon::Process()
                 for (int k = 0; k < nV; ++k)
                 {
                     r[k] /= weight;
-                    N    += vN[k]*r[k];
+                    N += vN[k] * r[k];
                 }
             }
 
@@ -843,10 +857,10 @@ void ProcessSpherigon::Process()
                 // Perform steps denoted in equations 2, 3, 8 for C1
                 // smoothing.
                 double tmp1;
-                K [k] = P+N*((v[k]-P).dot(N));
-                tmp1  = (v[k]-K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
-                Q [k] = K[k] + N*tmp1;
-                Qp[k] = v[k] - N*((v[k]-P).dot(N));
+                K[k]  = P + N * ((v[k] - P).dot(N));
+                tmp1  = (v[k] - K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
+                Q[k]  = K[k] + N * tmp1;
+                Qp[k] = v[k] - N * ((v[k] - P).dot(N));
             }
 
             // Apply C1 blending function to the surface. TODO: Add
@@ -857,7 +871,7 @@ void ProcessSpherigon::Process()
             // Apply blending (equation 4).
             for (int k = 0; k < nV; ++k)
             {
-                P += Q[k]*blend[k];
+                P += Q[k] * blend[k];
             }
 
             out[j] = P;
@@ -865,34 +879,34 @@ void ProcessSpherigon::Process()
 
         // Push nodes into lines - TODO: face interior nodes.
         // offset = 0 (seg), 1 (tri) or 2 (quad)
-        int offset = (int)e->GetConf().m_e-2;
+        int offset = (int)e->GetConf().m_e - 2;
 
         for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
         {
             eIt = visitedEdges.find(e->GetEdge(edge)->m_id);
             if (eIt == visitedEdges.end())
             {
-                bool reverseEdge = !(v[vertMap[offset][edge][0]] ==
-                                     *(e->GetEdge(edge)->m_n1));
+                bool reverseEdge =
+                    !(v[vertMap[offset][edge][0]] == *(e->GetEdge(edge)->m_n1));
 
                 // Clear existing curvature.
                 e->GetEdge(edge)->m_edgeNodes.clear();
 
                 if (e->GetConf().m_e != LibUtilities::eTriangle)
                 {
-                    for (int j = 1; j < nq-1; ++j)
+                    for (int j = 1; j < nq - 1; ++j)
                     {
                         int v = edgeMap[offset][edge][0] +
-                            j*edgeMap[offset][edge][1];
+                                j * edgeMap[offset][edge][1];
                         e->GetEdge(edge)->m_edgeNodes.push_back(
                             NodeSharedPtr(new Node(out[v])));
                     }
                 }
                 else
                 {
-                    for (int j = 0; j < nq-2; ++j)
+                    for (int j = 0; j < nq - 2; ++j)
                     {
-                        int v = 3 + edge*(nq-2) + j;
+                        int v = 3 + edge * (nq - 2) + j;
                         e->GetEdge(edge)->m_edgeNodes.push_back(
                             NodeSharedPtr(new Node(out[v])));
                     }
@@ -918,20 +932,20 @@ void ProcessSpherigon::Process()
 
             if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
             {
-                volNodes.resize((nq-2)*(nq-2));
-                for (int j = 1; j < nq-1; ++j)
+                volNodes.resize((nq - 2) * (nq - 2));
+                for (int j = 1; j < nq - 1; ++j)
                 {
-                    for (int k = 1; k < nq-1; ++k)
+                    for (int k = 1; k < nq - 1; ++k)
                     {
-                        int v = j*nq+k;
-                        volNodes[(j-1)*(nq-2)+(k-1)] =
+                        int v = j * nq + k;
+                        volNodes[(j - 1) * (nq - 2) + (k - 1)] =
                             NodeSharedPtr(new Node(out[v]));
                     }
                 }
             }
             else
             {
-                for (int j = 3+3*(nq-2); j < nquad; ++j)
+                for (int j = 3 + 3 * (nq - 2); j < nquad; ++j)
                 {
                     volNodes.push_back(NodeSharedPtr(new Node(out[j])));
                 }
@@ -944,18 +958,20 @@ void ProcessSpherigon::Process()
     // Copy face nodes back into 3D element faces
     if (m_mesh->m_expDim == 3)
     {
-        set<pair<int,int> >::iterator it;
+        set<pair<int, int> >::iterator it;
         int elmt = 0;
-        for (it  = m_mesh->m_spherigonSurfs.begin();
-             it != m_mesh->m_spherigonSurfs.end  (); ++it, ++elmt)
+        for (it = m_mesh->m_spherigonSurfs.begin();
+             it != m_mesh->m_spherigonSurfs.end();
+             ++it, ++elmt)
         {
-            FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
-                GetFace(it->second);
+            FaceSharedPtr f =
+                m_mesh->m_element[m_mesh->m_expDim][it->first]->GetFace(
+                    it->second);
 
             f->m_faceNodes = el[elmt]->GetVolumeNodes();
-            f->m_curveType = f->m_vertexList.size() == 3 ?
-                LibUtilities::eNodalTriElec :
-                LibUtilities::eGaussLobattoLegendre;
+            f->m_curveType = f->m_vertexList.size() == 3
+                                 ? LibUtilities::eNodalTriElec
+                                 : LibUtilities::eGaussLobattoLegendre;
         }
     }
 
@@ -964,6 +980,5 @@ void ProcessSpherigon::Process()
         m_mesh->m_vertexNormals.clear();
     }
 }
-
 }
 }

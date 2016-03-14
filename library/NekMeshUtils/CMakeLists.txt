@@ -10,9 +10,9 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
-    Optimisation/BGFS-B.cpp
     )
-IF(NEKTAR_USE_MESH)
+
+IF(NEKTAR_USE_MESHGEN)
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         SurfaceMeshing/CurveMesh.cpp
         Octree/Octant.cpp
@@ -28,12 +28,12 @@ IF(NEKTAR_USE_MESH)
         CADSystem/CADSystem.cpp
         CADSystem/CADCurve.cpp
         CADSystem/CADSurf.cpp
+        Optimisation/BGFS-B.cpp
     )
 ENDIF()
 
 SET(NEKMESHUTILS_HEADERS
     NekMeshUtilsDeclspec.h
-    MeshElements/MeshElements.h
     MeshElements/Node.h
     MeshElements/Edge.h
     MeshElements/Face.h
@@ -48,10 +48,9 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
-    Optimisation/BGFS-B.h
-    Optimisation/OptimiseObj.h
     )
-IF(NEKTAR_USE_MESH)
+
+IF(NEKTAR_USE_MESHGEN)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
         Octree/CurvaturePoint.hpp
         SurfaceMeshing/CurveMesh.h
@@ -70,6 +69,8 @@ IF(NEKTAR_USE_MESH)
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
         CADSystem/OpenCascade.h
+        Optimisation/BGFS-B.h
+        Optimisation/OptimiseObj.h
     )
 ENDIF()
 
@@ -77,9 +78,9 @@ ADD_DEFINITIONS(-DNEKMESHUTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
-TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC SolverUtils)
+TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC LocalRegions)
 
-IF(NEKTAR_USE_MESH)
+IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TRIANGLE_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${LIB_ANN})
@@ -89,11 +90,7 @@ IF(NEKTAR_USE_MESH)
     SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
     SET_TARGET_PROPERTIES(NekMeshUtils PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBS})
-    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.8)
-ENDIF(NEKTAR_USE_MESH)
-
-IF (NEKTAR_USE_MESH)
-    SET_TARGET_PROPERTIES(NekMeshUtils PROPERTIES COMPILE_DEFINITIONS "MESHGEN")
+    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.8 triangle-1.6 tetgen-1.5)
 ENDIF()
 
 INSTALL(DIRECTORY ./

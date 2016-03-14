@@ -37,10 +37,19 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include "zlib.h"
 #include <set>
@@ -137,9 +146,10 @@ namespace Nektar
         /**
          *
          */
-        FieldIO::FieldIO(
-                LibUtilities::CommSharedPtr pComm)
-            : m_comm(pComm)
+        FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
+                         bool                        sharedFilesystem) :
+            m_comm(pComm),
+            m_sharedFilesystem(sharedFilesystem)
         {
         }
 
@@ -169,7 +179,8 @@ namespace Nektar
             // Prepare to write out data. In parallel, we must create directory
             // and determine the full pathname to the file to write out.
             // Any existing file/directory which is in the way is removed.
-            std::string filename = SetUpOutput(outFile, fielddefs, fieldmetadatamap);
+            std::string filename = SetUpOutput(outFile);
+            SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
 
             // Create the file (partition)
             TiXmlDocument doc;
@@ -1128,30 +1139,70 @@ namespace Nektar
         /**
          *
          */
-        std::string FieldIO::SetUpOutput(const std::string outname,
-                const std::vector<FieldDefinitionsSharedPtr>& fielddefs,
-                const FieldMetaDataMap &fieldmetadatamap)
+        std::string FieldIO::SetUpOutput(const std::string outname)
         {
             ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
             int nprocs = m_comm->GetSize();
             int rank   = m_comm->GetRank();
 
-            // Directory name if in parallel, regular filename if in serial
+            // Path to output: will be directory if parallel, normal file if
+            // serial.
             fs::path specPath (outname);
+            fs::path fulloutname;
+
+            if (nprocs == 1)
+            {
+                fulloutname = specPath;
+            }
+            else
+            {
+                // Guess at filename that might belong to this process.
+                boost::format pad("P%1$07d.%2$s");
+                pad % m_comm->GetRank() % GetFileEnding();
+
+                // Generate full path name
+                fs::path poutfile(pad.str());
+                fulloutname = specPath / poutfile;
+            }
 
             // Remove any existing file which is in the way
-            if(m_comm->RemoveExistingFiles())
+            if (m_comm->RemoveExistingFiles())
             {
-                try
+                if (m_sharedFilesystem)
                 {
-                    fs::remove_all(specPath);
+                    // First, each process clears up its .fld file. This might
+                    // or might not be there (we might have changed numbers of
+                    // processors between runs, for example), but we can try
+                    // anyway.
+                    try
+                    {
+                        fs::remove_all(fulloutname);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
-                catch (fs::filesystem_error& e)
+
+                m_comm->Block();
+
+                // Now get rank 0 processor to tidy everything else up.
+                if (rank == 0 || !m_sharedFilesystem)
                 {
-                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                             "Filesystem error: " + string(e.what()));
+                    try
+                    {
+                        fs::remove_all(specPath);
+                    }
+                    catch (fs::filesystem_error& e)
+                    {
+                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                                 "Filesystem error: " + string(e.what()));
+                    }
                 }
+
+                m_comm->Block();
             }
 
             // serial processing just add ending.
@@ -1160,6 +1211,38 @@ namespace Nektar
                 cout << "Writing: " << specPath << endl;
                 return LibUtilities::PortablePath(specPath);
             }
+
+            // Create the destination directory
+            try
+            {
+                if (rank == 0 || !m_sharedFilesystem)
+                {
+                    fs::create_directory(specPath);
+                }
+            }
+            catch (fs::filesystem_error& e)
+            {
+                ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            }
+
+            m_comm->Block();
+
+            // Return the full path to the partition for this process
+            return LibUtilities::PortablePath(fulloutname);
+        }
+
+
+        void FieldIO::SetUpFieldMetaData(
+            const string outname,
+            const vector< FieldDefinitionsSharedPtr > &fielddefs,
+            const FieldMetaDataMap &fieldmetadatamap)
+        {
+            ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
+
+            int nprocs = m_comm->GetSize();
+            int rank   = m_comm->GetRank();
+
+            fs::path specPath (outname);
 
             // Compute number of elements on this process and share with other
             // processes. Also construct list of elements on this process from
@@ -1174,16 +1257,6 @@ namespace Nektar
                                             fielddefs[i]->m_elementIDs.end());
             }
             m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
-
-            // Create the destination directory
-            try
-            {
-                fs::create_directory(specPath);
-            }
-            catch (fs::filesystem_error& e)
-            {
-                ASSERTL0(false, "Filesystem error: " + string(e.what()));
-            }
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1204,8 +1277,8 @@ namespace Nektar
                 std::vector<std::string> filenames;
                 for(int i = 0; i < nprocs; ++i)
                 {
-                    boost::format pad("P%1$07d.fld");
-                    pad % i;
+                    boost::format pad("P%1$07d.%2$s");
+                    pad % i % GetFileEnding();
                     filenames.push_back(pad.str());
                 }
 
@@ -1223,17 +1296,8 @@ namespace Nektar
                 m_comm->Send(0, idlist);
             }
 
-            // Pad rank to 8char filenames, e.g. P0000000.fld
-            boost::format pad("P%1$07d.fld");
-            pad % m_comm->GetRank();
-
-            // Generate full path name
-            fs::path poutfile(pad.str());
-            fs::path fulloutname = specPath / poutfile;
-
-            // Return the full path to the partition for this process
-            return LibUtilities::PortablePath(fulloutname);
         }
+
 
         /**
          *

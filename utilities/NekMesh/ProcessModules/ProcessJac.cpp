@@ -33,12 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-
-#include <SpatialDomains/MeshGraph.h>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
-
+#include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessJac.h"
 
 using namespace std;
@@ -49,22 +44,21 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey ProcessJac::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "jac"), ProcessJac::create,
-        "Process elements based on values of Jacobian.");
+ModuleKey ProcessJac::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "jac"),
+    ProcessJac::create,
+    "Process elements based on values of Jacobian.");
 
 ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["extract"] = ConfigOption(
-        true, "0", "Extract non-valid elements from mesh.");
-    m_config["list"]    = ConfigOption(
+    m_config["extract"] =
+        ConfigOption(true, "0", "Extract non-valid elements from mesh.");
+    m_config["list"] = ConfigOption(
         true, "0", "Print list of elements having negative Jacobian.");
 }
 
 ProcessJac::~ProcessJac()
 {
-
 }
 
 void ProcessJac::Process()
@@ -74,7 +68,7 @@ void ProcessJac::Process()
         cout << "ProcessJac: Calculating Jacobians... " << endl;
     }
 
-    bool extract = m_config["extract"].as<bool>();
+    bool extract   = m_config["extract"].as<bool>();
     bool printList = m_config["list"].as<bool>();
 
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
@@ -91,7 +85,7 @@ void ProcessJac::Process()
 
     int nNeg = 0;
 
-    Array<OneD, int> bin(20,0);
+    Array<OneD, int> bin(20, 0);
 
     // Iterate over list of elements of expansion dimension.
     for (int i = 0; i < el.size(); ++i)
@@ -101,8 +95,7 @@ void ProcessJac::Process()
             el[i]->GetGeom(m_mesh->m_spaceDim);
 
         // Generate geometric factors.
-        SpatialDomains::GeomFactorsSharedPtr gfac =
-            geom->GetGeomFactors();
+        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
         // Get the Jacobian and, if it is negative, print a warning
         // message.
@@ -113,8 +106,8 @@ void ProcessJac::Process()
             if (printList)
             {
                 cout << "  - " << el[i]->GetId() << " ("
-                     << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e]
-                     << ")" << endl;
+                     << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e] << ")"
+                     << endl;
             }
 
             if (extract)
@@ -126,7 +119,7 @@ void ProcessJac::Process()
 
     if (extract)
     {
-        m_mesh->m_element[m_mesh->m_expDim-1].clear();
+        m_mesh->m_element[m_mesh->m_expDim - 1].clear();
         ProcessVertices();
         ProcessEdges();
         ProcessFaces();
@@ -141,10 +134,8 @@ void ProcessJac::Process()
     else if (nNeg > 0)
     {
         cout << "WARNING: Detected " << nNeg << " element"
-             << (nNeg == 1 ? "" : "s") << " with negative Jacobian."
-             << endl;
+             << (nNeg == 1 ? "" : "s") << " with negative Jacobian." << endl;
     }
 }
-
 }
 }

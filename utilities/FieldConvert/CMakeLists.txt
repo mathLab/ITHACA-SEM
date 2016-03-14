@@ -9,6 +9,8 @@ SET(FieldConvertHeaders
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
+    OutputModules/OutputStdOut.h
+    OutputModules/OutputPts.h
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
@@ -17,11 +19,14 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
+    ProcessModules/ProcessHomogeneousPlane.h
+    ProcessModules/ProcessInnerProduct.h
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
     ProcessModules/ProcessInterpPointDataToFld.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
+    ProcessModules/ProcessNumModes.h
     ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPrintFldNorms.h
     ProcessModules/ProcessScaleInFld.h
@@ -46,6 +51,8 @@ SET(FieldConvertSources
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp
     OutputModules/OutputFld.cpp
+    OutputModules/OutputStdOut.cpp
+    OutputModules/OutputPts.cpp
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
@@ -54,11 +61,14 @@ SET(FieldConvertSources
     ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
+    ProcessModules/ProcessHomogeneousPlane.cpp
+    ProcessModules/ProcessInnerProduct.cpp
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
     ProcessModules/ProcessInterpPointDataToFld.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+    ProcessModules/ProcessNumModes.cpp
     ProcessModules/ProcessMeanMode.cpp
     ProcessModules/ProcessPrintFldNorms.cpp
     ProcessModules/ProcessScaleInFld.cpp
@@ -85,6 +95,7 @@ ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
 # ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
+ADD_NEKTAR_TEST(chan3DH1D_plane)
 ADD_NEKTAR_TEST(cube_prismhex)
 
 # windows produces slightly differently formatted files which results in

@@ -43,8 +43,7 @@
 
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
 #include <NekMeshUtils/CADSystem/CADObj.h>
-
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
 {
@@ -73,11 +72,11 @@ public:
         TopLoc_Location mv(transform);
         in.Move(mv);
 
-        m_id = i;
+        m_id      = i;
         m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
         m_node = boost::shared_ptr<Node>(
-                new Node(i-1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
+            new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
         degen = false;
 
         m_type = vert;
@@ -91,21 +90,26 @@ public:
     Array<OneD, NekDouble> GetLoc()
     {
         Array<OneD, NekDouble> out(3);
-        out[0] = m_occVert.X(); out[1] = m_occVert.Y(); out[2] = m_occVert.Z();
+        out[0] = m_occVert.X();
+        out[1] = m_occVert.Y();
+        out[2] = m_occVert.Z();
         return out;
     }
 
     /**
      * @brief returns a node object of the cad vertex
      */
-    NodeSharedPtr GetNode(){return m_node;}
+    NodeSharedPtr GetNode()
+    {
+        return m_node;
+    }
 
     /**
      * @brief if the vertex is degenerate manually set uv for that surface
      */
     void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
     {
-        degen = true;
+        degen     = true;
         degensurf = s;
         Array<OneD, NekDouble> uv(2);
         uv[0] = u;
@@ -118,7 +122,7 @@ public:
      */
     int IsDegen()
     {
-        if(degen)
+        if (degen)
         {
             return degensurf;
         }
@@ -129,19 +133,17 @@ public:
     }
 
 private:
-
     /// OpenCascade object of the curve.
     gp_Pnt m_occVert;
     /// mesh convert object of vert
     NodeSharedPtr m_node;
-    ///degen marker
+    /// degen marker
     bool degen;
-    //degen surface
+    // degen surface
     int degensurf;
 };
 
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
-
 }
 }
 

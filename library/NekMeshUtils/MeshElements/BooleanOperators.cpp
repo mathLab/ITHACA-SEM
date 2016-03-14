@@ -33,7 +33,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "MeshElements.h"
+#include <NekMeshUtils/MeshElements/Triangle.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
+
 using namespace std;
 
 namespace Nektar

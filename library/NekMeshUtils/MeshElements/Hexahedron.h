@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Mesh.h
+//  File: Hexahedron.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh Hexahedral object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,45 +37,49 @@
 #define NekMeshUtils_MESHELEMENTS_HEX
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-    /**
-     * @brief A 3-dimensional six-faced element.
-     */
-    class Hexahedron : public Element {
-    public:
-        /// Creates an instance of this class
-        NEKMESHUTILS_EXPORT static ElementSharedPtr create(
-                                        ElmtConfig                 pConf,
-                                        std::vector<NodeSharedPtr> pNodeList,
-                                        std::vector<int>           pTagList)
+/**
+ * @brief A 3-dimensional six-faced element.
+ */
+class Hexahedron : public Element
+{
+public:
+    /// Creates an instance of this class
+    NEKMESHUTILS_EXPORT static ElementSharedPtr create(
+        ElmtConfig                 pConf,
+        std::vector<NodeSharedPtr> pNodeList,
+        std::vector<int>           pTagList)
+    {
+        ElementSharedPtr e = boost::shared_ptr<Element>(
+            new Hexahedron(pConf, pNodeList, pTagList));
+        vector<FaceSharedPtr> faces = e->GetFaceList();
+        for (int i = 0; i < faces.size(); ++i)
         {
-            ElementSharedPtr e = boost::shared_ptr<Element>(
-                new Hexahedron(pConf, pNodeList, pTagList));
-            vector<FaceSharedPtr> faces = e->GetFaceList();
-            for (int i = 0; i < faces.size(); ++i)
-            {
-                faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
-            }
-            return e;
+            faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e, i));
         }
-        /// Element type
-        static LibUtilities::ShapeType m_type;
+        return e;
+    }
+    /// Element type
+    static LibUtilities::ShapeType m_type;
 
-        NEKMESHUTILS_EXPORT Hexahedron(ElmtConfig                 pConf,
-                                       std::vector<NodeSharedPtr> pNodeList,
-                                       std::vector<int>           pTagList);
-        NEKMESHUTILS_EXPORT Hexahedron(const Hexahedron& pSrc);
-        NEKMESHUTILS_EXPORT virtual ~Hexahedron() {}
+    NEKMESHUTILS_EXPORT Hexahedron(ElmtConfig pConf,
+                                   std::vector<NodeSharedPtr> pNodeList,
+                                   std::vector<int> pTagList);
+    NEKMESHUTILS_EXPORT Hexahedron(const Hexahedron &pSrc);
+    NEKMESHUTILS_EXPORT virtual ~Hexahedron()
+    {
+    }
 
-        NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+    NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
+        int coordDim);
 
-        NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
-    };
-
+    NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+};
 }
 }
 

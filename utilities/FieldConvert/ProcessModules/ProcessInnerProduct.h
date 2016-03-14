@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.h
+//  File: ProcessInnerProduct.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,59 +29,46 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Compute inner product between two fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_MESHELEMENTS
-#define NekMeshUtils_MESHELEMENTS_MESHELEMENTS
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINNERPRODUCT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINNERPRODUCT
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <iomanip>
+#include "../Module.h"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
-
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/ShapeType.hpp>
-
-#ifdef MESHGEN //forard declare cad objects for mesh elements
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
-    class CADCurve;
-    class CADSurf;
-    typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
-    typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+
+/**
+ * @brief This processing module computes the inner product between two fields.
+ *
+ */
+class ProcessInnerProduct : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessInnerProduct>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
+
+    ProcessInnerProduct(FieldSharedPtr f);
+    virtual ~ProcessInnerProduct();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+    NekDouble IProduct(vector<unsigned int> &processFields,
+                       FieldSharedPtr &fromField,
+                       Array<OneD, const Array<OneD, NekDouble> > &SaveFld);
+};
 }
 }
-#endif
-
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/MeshComponents.h>
-
-#include "Node.h"
-#include "Edge.h"
-#include "Face.h"
-#include "Element.h"
-#include "Composite.h"
-#include "Mesh.h"
-#include "Point.h"
-#include "Line.h"
-#include "Triangle.h"
-#include "Quadrilateral.h"
-#include "Tetrahedron.h"
-#include "Pyramid.h"
-#include "Prism.h"
-#include "Hexahedron.h"
-
 
 #endif

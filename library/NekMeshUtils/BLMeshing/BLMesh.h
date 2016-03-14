@@ -38,11 +38,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 namespace Nektar
 {
@@ -72,9 +69,8 @@ public:
     {
     };
 
-
     /**
-     *@brief execute bl meshing
+     * @brief Execute boundary layer meshing
      */
     void Mesh();
 
@@ -119,7 +115,7 @@ private:
     CADSystemSharedPtr m_cad;
     /// mesh object containing surface mesh
     MeshSharedPtr m_mesh;
-    /// list of surfaces onto which boundary layers are placed
+    /// List of surfaces onto which boundary layers are placed
     std::vector<unsigned int> m_blsurfs;
     /// thickness of the boundary layer
     NekDouble m_bl;
@@ -134,7 +130,6 @@ private:
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;
-
 }
 }
 

@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "OutputGmsh.h"
 #include "../InputModules/InputGmsh.h"
@@ -47,9 +47,9 @@ namespace Utilities
 {
 
 ModuleKey OutputGmsh::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eOutputModule, "msh"), OutputGmsh::create,
-        "Writes Gmsh msh file.");
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "msh"),
+                                               OutputGmsh::create,
+                                               "Writes Gmsh msh file.");
 
 OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 {
@@ -67,7 +67,6 @@ OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 
 OutputGmsh::~OutputGmsh()
 {
-
 }
 
 /**
@@ -92,8 +91,8 @@ void OutputGmsh::Process()
 
     // Write MSH header
     m_mshFile << "$MeshFormat" << endl
-            << "2.2 0 8" << endl
-            << "$EndMeshFormat" << endl;
+              << "2.2 0 8" << endl
+              << "$EndMeshFormat" << endl;
 
     int id = m_mesh->m_vertexSet.size();
     vector<ElementSharedPtr> toComplete;
@@ -111,14 +110,15 @@ void OutputGmsh::Process()
         }
     }
 
-    //maxOrder = 2;
+    // maxOrder = 2;
     for (int d = 1; d <= 3; ++d)
     {
         for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
         {
             ElementSharedPtr e = m_mesh->m_element[d][i];
-            if ((e->GetConf().m_order <= 1        && maxOrder > 1) ||
-                (e->GetConf().m_order == maxOrder && e->GetConf().m_faceNodes == false))
+            if ((e->GetConf().m_order <= 1 && maxOrder > 1) ||
+                (e->GetConf().m_order == maxOrder &&
+                 e->GetConf().m_faceNodes == false))
             {
                 toComplete.push_back(e);
             }
@@ -210,14 +210,12 @@ void OutputGmsh::Process()
                                 m_mesh->m_vertexSet.end());
 
     // Write out nodes section.
-    m_mshFile << "$Nodes"                   << endl
-              << m_mesh->m_vertexSet.size() << endl;
+    m_mshFile << "$Nodes" << endl << m_mesh->m_vertexSet.size() << endl;
 
     for (it = tmp.begin(); it != tmp.end(); ++it)
     {
         m_mshFile << (*it)->m_id << " " << scientific << setprecision(10)
-                  << (*it)->m_x  << " "
-                  << (*it)->m_y  << " " << (*it)->m_z
+                  << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z
                   << endl;
     }
 
@@ -237,8 +235,7 @@ void OutputGmsh::Process()
             ElementSharedPtr e = m_mesh->m_element[d][i];
 
             // First output element ID and type.
-            m_mshFile << id                   << " "
-                      << elmMap[e->GetConf()] << " ";
+            m_mshFile << id << " " << elmMap[e->GetConf()] << " ";
 
             // Write out number of element tags and then the tags
             // themselves.
@@ -259,9 +256,9 @@ void OutputGmsh::Process()
 
             // Finally write out node list. First write vertices, then
             // internal edge nodes, then face nodes.
-            vector<NodeSharedPtr> nodeList = e->GetVertexList ();
-            vector<EdgeSharedPtr> edgeList = e->GetEdgeList   ();
-            vector<FaceSharedPtr> faceList = e->GetFaceList   ();
+            vector<NodeSharedPtr> nodeList = e->GetVertexList();
+            vector<EdgeSharedPtr> edgeList = e->GetEdgeList();
+            vector<FaceSharedPtr> faceList = e->GetFaceList();
             vector<NodeSharedPtr> volList  = e->GetVolumeNodes();
 
             tags.clear();
@@ -279,7 +276,7 @@ void OutputGmsh::Process()
                     for (int k = 0; k < nodeList.size(); ++k)
                     {
                         tags.push_back(nodeList[k]->m_id);
-                        //cout << "EDGENODE" << endl;
+                        // cout << "EDGENODE" << endl;
                     }
                 }
 
@@ -288,14 +285,14 @@ void OutputGmsh::Process()
                     nodeList = faceList[j]->m_faceNodes;
                     for (int k = 0; k < nodeList.size(); ++k)
                     {
-                        //cout << "FACENODE" << endl;
+                        // cout << "FACENODE" << endl;
                         tags.push_back(nodeList[k]->m_id);
                     }
                 }
 
                 for (int j = 0; j < volList.size(); ++j)
                 {
-                    //cout << "VOLNODE" << endl;
+                    // cout << "VOLNODE" << endl;
                     tags.push_back(volList[j]->m_id);
                 }
             }
@@ -312,22 +309,26 @@ void OutputGmsh::Process()
                 }
                 int pos = 4;
                 // Swap edge 1->3 nodes with edge 2->3 nodes.
-                pos = 4 + 4*(order-1);
-                for (int j = 0; j < order-1; ++j)
+                pos = 4 + 4 * (order - 1);
+                for (int j = 0; j < order - 1; ++j)
                 {
-                    swap(tags[j+pos], tags[j+pos+order-1]);
+                    swap(tags[j + pos], tags[j + pos + order - 1]);
                 }
                 // Reverse ordering of other vertical edge-interior
                 // nodes.
-                reverse(tags.begin()+4+3*(order-1), tags.begin()+4+4*(order-1));
-                reverse(tags.begin()+4+4*(order-1), tags.begin()+4+5*(order-1));
-                reverse(tags.begin()+4+5*(order-1), tags.begin()+4+6*(order-1));
+                reverse(tags.begin() + 4 + 3 * (order - 1),
+                        tags.begin() + 4 + 4 * (order - 1));
+                reverse(tags.begin() + 4 + 4 * (order - 1),
+                        tags.begin() + 4 + 5 * (order - 1));
+                reverse(tags.begin() + 4 + 5 * (order - 1),
+                        tags.begin() + 4 + 6 * (order - 1));
 
                 // Swap face 2 nodes with face 3.
-                pos = 4 + 6*(order-1) + 2*(order-2)*(order-1)/2;
-                for (int j = 0; j < (order-2)*(order-1)/2; ++j)
+                pos = 4 + 6 * (order - 1) + 2 * (order - 2) * (order - 1) / 2;
+                for (int j = 0; j < (order - 2) * (order - 1) / 2; ++j)
                 {
-                    swap(tags[j+pos], tags[j+pos+(order-2)*(order-1)/2]);
+                    swap(tags[j + pos],
+                         tags[j + pos + (order - 2) * (order - 1) / 2]);
                 }
 
                 // Re-order face points. Gmsh ordering (node->face) is:
@@ -341,50 +342,53 @@ void OutputGmsh::Process()
                 // 3 to match nodal ordering.
 
                 // Re-order face 0: transpose
-                vector<int> tmp((order-2)*(order-1)/2);
+                vector<int> tmp((order - 2) * (order - 1) / 2);
                 int a = 0;
-                pos = 4 + 6*(order-1);
-                for (int j = 0; j < order-2; ++j)
+                pos = 4 + 6 * (order - 1);
+                for (int j = 0; j < order - 2; ++j)
                 {
-                    for (int k = 0; k < order-2-j; ++k, ++a)
+                    for (int k = 0; k < order - 2 - j; ++k, ++a)
                     {
-                        tmp[a] = tags[pos+j+k*(2*(order-2)+1-k)/2];
+                        tmp[a] =
+                            tags[pos + j + k * (2 * (order - 2) + 1 - k) / 2];
                     }
                 }
-                for (int j = 0; j < (order-1)*(order-2)/2; ++j)
+                for (int j = 0; j < (order - 1) * (order - 2) / 2; ++j)
                 {
-                    tags[pos+j] = tmp[j];
+                    tags[pos + j] = tmp[j];
                 }
 
                 // Re-order face 2: transpose
-                pos = 4 + 6*(order-1) + 2*(order-2)*(order-1)/2;
+                pos = 4 + 6 * (order - 1) + 2 * (order - 2) * (order - 1) / 2;
                 a = 0;
-                for (int j = 0; j < order-2; ++j)
+                for (int j = 0; j < order - 2; ++j)
                 {
-                    for (int k = 0; k < order-2-j; ++k, ++a)
+                    for (int k = 0; k < order - 2 - j; ++k, ++a)
                     {
-                        tmp[a] = tags[pos+j+k*(2*(order-2)+1-k)/2];
+                        tmp[a] =
+                            tags[pos + j + k * (2 * (order - 2) + 1 - k) / 2];
                     }
                 }
-                for (int j = 0; j < (order-1)*(order-2)/2; ++j)
+                for (int j = 0; j < (order - 1) * (order - 2) / 2; ++j)
                 {
-                    tags[pos+j] = tmp[j];
+                    tags[pos + j] = tmp[j];
                 }
 
                 // Re-order face 3: reflect in y direction
-                pos = 4 + 6*(order-1)+3*(order-2)*(order-1)/2;
+                pos = 4 + 6 * (order - 1) + 3 * (order - 2) * (order - 1) / 2;
                 a = 0;
-                for (int j = 0; j < order-2; ++j)
+                for (int j = 0; j < order - 2; ++j)
                 {
-                    for (int k = order-3-j; k >= 0; --k, ++a)
+                    for (int k = order - 3 - j; k >= 0; --k, ++a)
                     {
-                        tmp[a] = tags[pos+j+k*(2*(order-2)+1-k)/2];
+                        tmp[a] =
+                            tags[pos + j + k * (2 * (order - 2) + 1 - k) / 2];
                     }
                 }
 
-                for (int j = 0; j < (order-1)*(order-2)/2; ++j)
+                for (int j = 0; j < (order - 1) * (order - 2) / 2; ++j)
                 {
-                    tags[pos+j] = tmp[j];
+                    tags[pos + j] = tmp[j];
                 }
             }
             // Re-order prism vertices.
@@ -399,17 +403,17 @@ void OutputGmsh::Process()
                 }
 
                 // Swap nodes.
-                vector<int> temp (18);
-                temp[0] = tags[0];
-                temp[1] = tags[1];
-                temp[2] = tags[4];
-                temp[3] = tags[3];
-                temp[4] = tags[2];
-                temp[5] = tags[5];
-                temp[6] = tags[6];
-                temp[7] = tags[10];
-                temp[8] = tags[9];
-                temp[9] = tags[11];
+                vector<int> temp(18);
+                temp[0]  = tags[0];
+                temp[1]  = tags[1];
+                temp[2]  = tags[4];
+                temp[3]  = tags[3];
+                temp[4]  = tags[2];
+                temp[5]  = tags[5];
+                temp[6]  = tags[6];
+                temp[7]  = tags[10];
+                temp[8]  = tags[9];
+                temp[9]  = tags[11];
                 temp[10] = tags[7];
                 temp[11] = tags[14];
                 temp[12] = tags[8];
@@ -435,6 +439,5 @@ void OutputGmsh::Process()
     }
     m_mshFile << "$EndElements" << endl;
 }
-
 }
 }

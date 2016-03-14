@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Element.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh element.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include <loki/Singleton.h>
 
-#include "MeshElements.h"
+#include <NekMeshUtils/MeshElements/Element.h>
+
 using namespace std;
 
 namespace Nektar
@@ -42,26 +44,22 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-ElementFactory& GetElementFactory()
+ElementFactory &GetElementFactory()
 {
-    typedef Loki::SingletonHolder<ElementFactory,
-        Loki::CreateUsingNew,
-        Loki::NoDestroy > Type;
+    typedef Loki::SingletonHolder<ElementFactory, Loki::CreateUsingNew,
+                                  Loki::NoDestroy> Type;
     return Type::Instance();
 }
 
-Element::Element(ElmtConfig   pConf,
-                 unsigned int pNumNodes,
+Element::Element(ElmtConfig pConf, unsigned int pNumNodes,
                  unsigned int pGotNodes)
-    : m_conf(pConf),
-      m_curveType(LibUtilities::ePolyEvenlySpaced),
-      m_geom()
+    : m_conf(pConf), m_curveType(LibUtilities::ePolyEvenlySpaced), m_geom()
 {
     if (pNumNodes != pGotNodes)
     {
-        cerr << "Number of modes mismatch for type "
-             << pConf.m_e << "! Should be " << pNumNodes
-             << " but got " << pGotNodes << " nodes." << endl;
+        cerr << "Number of modes mismatch for type " << pConf.m_e
+             << "! Should be " << pNumNodes << " but got " << pGotNodes
+             << " nodes." << endl;
         abort();
     }
 }
@@ -162,7 +160,7 @@ int Element::GetMaxOrder()
 
     for (i = 0; i < m_edge.size(); ++i)
     {
-        int edgeOrder = m_edge[i]->GetNodeCount()-1;
+        int edgeOrder = m_edge[i]->GetNodeCount() - 1;
         if (edgeOrder > ret)
         {
             ret = edgeOrder;
@@ -171,6 +169,5 @@ int Element::GetMaxOrder()
 
     return ret;
 }
-
 }
 }

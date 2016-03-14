@@ -55,9 +55,6 @@ namespace Nektar
         public:
             virtual ~NodalTriFekete()
             {
-                //commented out because this is really annoying and not helpful
-                //std::cout << "******* ~NodalTriFekete() destructor called!"
-                //          << endl;
             }
 
             NodalTriFekete(const PointsKey &key):PointsBaseType(key)
@@ -95,8 +92,6 @@ namespace Nektar
         private:
             NodalTriFekete():PointsBaseType(NullPointsKey)
             {
-                std::cout << "******* NodalTriFekete() constructor called!"
-                          << endl;
             }
 
             void CalculatePoints();

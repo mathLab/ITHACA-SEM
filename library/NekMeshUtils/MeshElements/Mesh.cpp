@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Mesh.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,7 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "MeshElements.h"
+#include <NekMeshUtils/MeshElements/Mesh.h>
+
 using namespace std;
 
 namespace Nektar
@@ -78,6 +79,5 @@ unsigned int Mesh::GetNumEntities()
 
     return nEnt;
 }
-
 }
 }

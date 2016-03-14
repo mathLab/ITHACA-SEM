@@ -48,7 +48,8 @@ class InputSwan : public InputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
         return MemoryManager<InputSwan>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
@@ -59,7 +60,6 @@ public:
     /// Populate and validate required data structures.
     virtual void Process();
 };
-
 }
 }
 

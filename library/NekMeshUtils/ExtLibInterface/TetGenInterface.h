@@ -38,13 +38,13 @@
 
 #include <boost/shared_ptr.hpp>
 
-#define TETLIBRARY
-#include <tetgen.h>
-
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Node.h>
+
+#define TETLIBRARY
+#include <tetgen.h>
 
 namespace Nektar
 {
@@ -52,55 +52,51 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief class for interacting with the external library tetgen
+ * @brief Class for interacting with the external library TetGen.
  */
 class TetGenInterface
 {
-    public:
-        friend class MemoryManager<TetGenInterface>;
+public:
+    friend class MemoryManager<TetGenInterface>;
 
-        /**
-         * @brief default constructor
-         */
-        TetGenInterface()
-        {
-        };
+    /**
+     * @brief Default constructor
+     */
+    TetGenInterface(){};
 
-        /**
-         * @brief assign parameters for meshing
-         */
-        void InitialMesh(std::map<int, NodeSharedPtr> tgidton,
-                         std::vector<Array<OneD, int> > tri);
+    /**
+     * @brief Assign parameters for meshing
+     */
+    void InitialMesh(std::map<int, NodeSharedPtr>   tgidton,
+                     std::vector<Array<OneD, int> > tri);
 
-        /**
-         * @brief gets the locations of the stiener points added by tetgen
-         */
-        void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
+    /**
+     * @brief Gets the locations of the Stiener points added by TetGen
+     */
+    void GetNewPoints(int num, std::vector<Array<OneD, NekDouble> > &newp);
 
-        /**
-         * @brief refines a previously made tetmesh with node delta information
-         *        from the Octree
-         */
-        void RefineMesh(std::map<int, NekDouble> delta);
+    /**
+     * @brief Refines a previously made tetmesh with node delta information
+     *        from the Octree
+     */
+    void RefineMesh(std::map<int, NekDouble> delta);
 
-        /**
-         * @brief get the list of connectivites of the nodes
-         */
-        std::vector<Array<OneD, int> > Extract();
+    /**
+     * @brief Get the list of connectivites of the nodes
+     */
+    std::vector<Array<OneD, int> > Extract();
 
-        /**
-         * @brief clear previous mesh
-         */
-        void freetet();
+    /**
+     * @brief Clear previous mesh
+     */
+    void freetet();
 
-    private:
-
-        ///tetgen objects
-        tetgenio surface, output, input, additional;
+private:
+    /// TetGen objects
+    tetgenio surface, output, input, additional;
 };
 
 typedef boost::shared_ptr<TetGenInterface> TetGenInterfaceSharedPtr;
-
 }
 }
 #endif

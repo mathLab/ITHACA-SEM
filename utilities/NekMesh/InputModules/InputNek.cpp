@@ -33,16 +33,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-#include "InputNek.h"
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <boost/algorithm/string.hpp>
-
 #include <map>
 #include <vector>
 #include <sstream>
 #include <string>
+
+#include <boost/algorithm/string.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/Prism.h>
+#include <NekMeshUtils/MeshElements/Tetrahedron.h>
+
+#include "InputNek.h"
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -52,28 +54,23 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputNek::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "rea"), InputNek::create,
-        "Reads Nektar rea file.");
+ModuleKey InputNek::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "rea"), InputNek::create, "Reads Nektar rea file.");
 
 InputNek::InputNek(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputNek::~InputNek()
 {
-
 }
 
 /**
  * @brief Processes Nektar file format.
  *
- * Nektar sessions are defined by rea files, and contain sections
- * defining a DNS simulation in a specific order. The converter only
- * reads mesh information, curve information if it exists and boundary
- * information.
+ * Nektar sessions are defined by rea files, and contain sections defining a DNS
+ * simulation in a specific order. The converter only reads mesh information,
+ * curve information if it exists and boundary information.
  *
  * @param pFilename Filename of Nektar session file to read.
  */
@@ -82,16 +79,16 @@ void InputNek::Process()
     // Open the file stream.
     OpenStream();
 
-    string      line, word;
-    int         nParam, nElements, nCurves;
-    int         i, j, k, nodeCounter = 0;
-    int         nComposite = 0;
+    string line, word;
+    int nParam, nElements, nCurves;
+    int i, j, k, nodeCounter = 0;
+    int nComposite           = 0;
     LibUtilities::ShapeType elType;
-    double      vertex[3][8];
-    map<LibUtilities::ShapeType,int> domainComposite;
-    map<LibUtilities::ShapeType,vector< vector<NodeSharedPtr> > > elNodes;
-    map<LibUtilities::ShapeType,vector<int> > elIds;
-    boost::unordered_map<int,int> elMap;
+    double vertex[3][8];
+    map<LibUtilities::ShapeType, int> domainComposite;
+    map<LibUtilities::ShapeType, vector<vector<NodeSharedPtr> > > elNodes;
+    map<LibUtilities::ShapeType, vector<int> > elIds;
+    boost::unordered_map<int, int> elMap;
     vector<LibUtilities::ShapeType> elmOrder;
 
     // Set up vector of processing orders.
@@ -172,7 +169,8 @@ void InputNek::Process()
 
     // Now read in number of elements and space dimension.
     getline(m_mshFile, line);
-    s.clear(); s.str(line);
+    s.clear();
+    s.str(line);
     s >> nElements >> m_mesh->m_expDim;
     m_mesh->m_spaceDim = m_mesh->m_expDim;
 
@@ -242,8 +240,9 @@ void InputNek::Process()
 
         for (j = 0; j < m_mesh->m_expDim; ++j)
         {
-            getline(m_mshFile,line);
-            s.clear(); s.str(line);
+            getline(m_mshFile, line);
+            s.clear();
+            s.str(line);
             for (k = 0; k < nNodes; ++k)
             {
                 s >> vertex[j][k];
@@ -265,28 +264,27 @@ void InputNek::Process()
         vector<NodeSharedPtr> nodeList;
         for (k = 0; k < nNodes; ++k)
         {
-            NodeSharedPtr n = boost::shared_ptr<Node>(
-                new Node(nodeCounter++, vertex[0][k],
-                         vertex[1][k],  vertex[2][k]));
+            NodeSharedPtr n = boost::shared_ptr<Node>(new Node(
+                nodeCounter++, vertex[0][k], vertex[1][k], vertex[2][k]));
             nodeList.push_back(n);
         }
 
         elNodes[elType].push_back(nodeList);
-        elIds  [elType].push_back(i);
+        elIds[elType].push_back(i);
     }
 
     int reorderedId = 0;
-    nodeCounter = 0;
+    nodeCounter     = 0;
 
     for (i = 0; i < elmOrder.size(); ++i)
     {
-        LibUtilities::ShapeType elType = elmOrder[i];
+        LibUtilities::ShapeType elType      = elmOrder[i];
         vector<vector<NodeSharedPtr> > &tmp = elNodes[elType];
 
         for (j = 0; j < tmp.size(); ++j)
         {
             vector<int> tags;
-            map<LibUtilities::ShapeType,int>::iterator compIt =
+            map<LibUtilities::ShapeType, int>::iterator compIt =
                 domainComposite.find(elType);
             if (compIt == domainComposite.end())
             {
@@ -319,9 +317,9 @@ void InputNek::Process()
             }
 
             // Create linear element
-            ElmtConfig conf(elType,1,false,false);
-            ElementSharedPtr E = GetElementFactory().
-                CreateInstance(elType,conf,nodeList,tags);
+            ElmtConfig conf(elType, 1, false, false);
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                elType, conf, nodeList, tags);
             m_mesh->m_element[E->GetDim()].push_back(E);
         }
     }
@@ -336,7 +334,8 @@ void InputNek::Process()
 
     // Read number of curves.
     getline(m_mshFile, line);
-    s.clear(); s.str(line);
+    s.clear();
+    s.str(line);
     s >> nCurves;
 
     if (nCurves > 0)
@@ -346,14 +345,16 @@ void InputNek::Process()
         for (i = 0; i < nCurves; ++i)
         {
             getline(m_mshFile, line);
-            s.clear(); s.str(line);
+            s.clear();
+            s.str(line);
             s >> word;
 
             if (word == "File")
             {
                 // Next line contains filename and curve tag.
                 getline(m_mshFile, line);
-                s.clear(); s.str(line);
+                s.clear();
+                s.str(line);
                 s >> word >> curveTag;
                 curveTags[curveTag] = make_pair(eFile, word);
             }
@@ -361,7 +362,8 @@ void InputNek::Process()
             {
                 // Next line contains curve tag.
                 getline(m_mshFile, line);
-                s.clear(); s.str(line);
+                s.clear();
+                s.str(line);
                 s >> word >> curveTag;
                 curveTags[curveTag] = make_pair(eRecon, word);
             }
@@ -377,7 +379,7 @@ void InputNek::Process()
 
         // Read in curve information. First line should contain number
         // of curved sides.
-        getline(m_mshFile,line);
+        getline(m_mshFile, line);
 
         if (line.find("side") == string::npos)
         {
@@ -387,10 +389,11 @@ void InputNek::Process()
 
         int nCurvedSides;
         int faceId, elId;
-        map<string,pair<NekCurve, string> >::iterator it;
+        map<string, pair<NekCurve, string> >::iterator it;
         HOSurfSet::iterator hoIt;
 
-        s.clear(); s.str(line);
+        s.clear();
+        s.str(line);
         s >> nCurvedSides;
 
         // Iterate over curved sides, and look up high-order surface
@@ -398,10 +401,11 @@ void InputNek::Process()
         for (i = 0; i < nCurvedSides; ++i)
         {
             getline(m_mshFile, line);
-            s.clear(); s.str(line);
+            s.clear();
+            s.str(line);
             s >> faceId >> elId >> word;
             faceId--;
-            elId = elMap[elId-1];
+            elId                = elMap[elId - 1];
             ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][elId];
 
             int origFaceId = faceId;
@@ -412,11 +416,11 @@ void InputNek::Process()
                     boost::dynamic_pointer_cast<Prism>(el);
                 if (p->m_orientation == 1)
                 {
-                    faceId = (faceId+2) % 6;
+                    faceId = (faceId + 2) % 6;
                 }
                 else if (p->m_orientation == 2)
                 {
-                    faceId = (faceId+4) % 6;
+                    faceId = (faceId + 4) % 6;
                 }
             }
             else if (el->GetConf().m_e == LibUtilities::eTetrahedron)
@@ -429,42 +433,45 @@ void InputNek::Process()
             it = curveTags.find(word);
             if (it == curveTags.end())
             {
-                cerr << "Unrecognised curve tag " << word
-                     << " in curved lines" << endl;
+                cerr << "Unrecognised curve tag " << word << " in curved lines"
+                     << endl;
                 abort();
             }
 
             if (it->second.first == eRecon)
             {
                 // Spherigon information: read in vertex normals.
-                vector<NodeSharedPtr> &tmp =
-                    el->GetFace(faceId)->m_vertexList;
+                vector<NodeSharedPtr> &tmp = el->GetFace(faceId)->m_vertexList;
                 vector<Node> n(tmp.size());
 
                 int offset = 0;
-                if (el->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 1)
+                if (el->GetConf().m_e == LibUtilities::ePrism &&
+                    faceId % 2 == 1)
                 {
-                    offset = boost::dynamic_pointer_cast<Prism>(
-                        el)->m_orientation;
+                    offset =
+                        boost::dynamic_pointer_cast<Prism>(el)->m_orientation;
                 }
 
                 // Read x/y/z coordinates.
                 getline(m_mshFile, line);
-                s.clear(); s.str(line);
+                s.clear();
+                s.str(line);
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     s >> n[j].m_x;
                 }
 
                 getline(m_mshFile, line);
-                s.clear(); s.str(line);
+                s.clear();
+                s.str(line);
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     s >> n[j].m_y;
                 }
 
                 getline(m_mshFile, line);
-                s.clear(); s.str(line);
+                s.clear();
+                s.str(line);
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     s >> n[j].m_z;
@@ -472,7 +479,7 @@ void InputNek::Process()
 
                 for (j = 0; j < tmp.size(); ++j)
                 {
-                    int id = tmp[(j+offset) % tmp.size()]->m_id;
+                    int id = tmp[(j + offset) % tmp.size()]->m_id;
                     boost::unordered_map<int, Node>::iterator vIt =
                         m_mesh->m_vertexNormals.find(id);
 
@@ -488,9 +495,9 @@ void InputNek::Process()
             }
             else if (it->second.first == eFile)
             {
-                FaceSharedPtr f = el->GetFace(faceId);
+                FaceSharedPtr f               = el->GetFace(faceId);
                 static int tetFaceVerts[4][3] = {
-                    {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+                    {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
 
                 vector<int> vertId(3);
                 s >> vertId[0] >> vertId[1] >> vertId[2];
@@ -506,9 +513,10 @@ void InputNek::Process()
 
                     for (j = 0; j < 3; ++j)
                     {
-                        int v = tet->GetVertex(
-                            tet->m_origVertMap[
-                                tetFaceVerts[origFaceId][j]])->m_id;
+                        int v =
+                            tet->GetVertex(tet->m_origVertMap
+                                               [tetFaceVerts[origFaceId][j]])
+                                ->m_id;
 
                         for (k = 0; k < 3; ++k)
                         {
@@ -537,14 +545,15 @@ void InputNek::Process()
                     }
                 }
 
-                HOSurfSharedPtr hs = boost::shared_ptr<HOSurf>(new HOSurf(vertId));
+                HOSurfSharedPtr hs =
+                    boost::shared_ptr<HOSurf>(new HOSurf(vertId));
                 // Find vertex combination in hoData.
                 hoIt = hoData[word].find(hs);
 
                 if (hoIt == hoData[word].end())
                 {
                     cerr << "Unable to find high-order surface data "
-                         << "for element id " << elId+1 << endl;
+                         << "for element id " << elId + 1 << endl;
                     abort();
                 }
 
@@ -554,8 +563,8 @@ void InputNek::Process()
                 surf->Align(vertId);
 
                 // Finally, add high order data to appropriate face.
-                int           Ntot = (*hoIt)->surfVerts.size();
-                int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
+                int Ntot = (*hoIt)->surfVerts.size();
+                int N    = ((int)sqrt(8.0 * Ntot + 1.0) - 1) / 2;
                 EdgeSharedPtr edge;
 
                 // Apply high-order map to convert face data to Nektar++
@@ -587,14 +596,13 @@ void InputNek::Process()
                         continue;
                     }
 
-                    //edge->m_edgeNodes.clear();
-                    edge->m_curveType
-                        = LibUtilities::eGaussLobattoLegendre;
+                    // edge->m_edgeNodes.clear();
+                    edge->m_curveType = LibUtilities::eGaussLobattoLegendre;
 
-                    for (int k = 0; k < N-2; ++k)
+                    for (int k = 0; k < N - 2; ++k)
                     {
                         edge->m_edgeNodes.push_back(
-                            (*hoIt)->surfVerts[3+j*(N-2)+k]);
+                            (*hoIt)->surfVerts[3 + j * (N - 2) + k]);
                     }
 
                     // Nodal triangle data is always
@@ -609,7 +617,7 @@ void InputNek::Process()
 
                 // Insert interior face curvature.
                 f->m_curveType = LibUtilities::eNodalTriElec;
-                for (int j = 3+3*(N-2); j < Ntot; ++j)
+                for (int j = 3 + 3 * (N - 2); j < Ntot; ++j)
                 {
                     f->m_faceNodes.push_back((*hoIt)->surfVerts[j]);
                 }
@@ -623,7 +631,7 @@ void InputNek::Process()
     // value is a vector of pairs of composites and element
     // types. Essentially this map takes conditions -> composites for
     // each element type.
-    map<int,vector<pair<int,LibUtilities::ShapeType> > > surfaceCompMap;
+    map<int, vector<pair<int, LibUtilities::ShapeType> > > surfaceCompMap;
 
     // Skip boundary conditions line.
     getline(m_mshFile, line);
@@ -645,25 +653,25 @@ void InputNek::Process()
         // Read boundary type, element ID and face ID.
         char bcType;
         int elId, faceId;
-        s.clear(); s.str(line);
+        s.clear();
+        s.str(line);
         s >> bcType >> elId >> faceId;
         faceId--;
-        elId = elMap[elId-1];
+        elId = elMap[elId - 1];
 
-        vector<string>        vals;
+        vector<string> vals;
         vector<ConditionType> type;
-        ConditionSharedPtr    c =
-            MemoryManager<Condition>::AllocateSharedPtr();
+        ConditionSharedPtr c = MemoryManager<Condition>::AllocateSharedPtr();
 
         // First character on each line describes type of BC. Currently
         // only support V, W, and O. In this switch statement we
         // construct the quantities needed to search for the condition.
-        switch(bcType)
+        switch (bcType)
         {
             // Wall boundary.
             case 'W':
             {
-                for (i = 0; i < m_mesh->m_fields.size()-1; ++i)
+                for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
                 {
                     vals.push_back("0");
                     type.push_back(eDirichlet);
@@ -679,12 +687,12 @@ void InputNek::Process()
             case 'V':
             case 'v':
             {
-                for (i = 0; i < m_mesh->m_fields.size()-1; ++i)
+                for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
                 {
                     getline(m_mshFile, line);
                     size_t p = line.find_first_of('=');
-                    vals.push_back(boost::algorithm::trim_copy(
-                                       line.substr(p+1)));
+                    vals.push_back(
+                        boost::algorithm::trim_copy(line.substr(p + 1)));
                     type.push_back(eDirichlet);
                 }
                 // Set high-order boundary condition for Dirichlet
@@ -703,7 +711,7 @@ void InputNek::Process()
                     type.push_back(eNeumann);
                 }
                 // Set zero Dirichlet condition for outflow.
-                type[m_mesh->m_fields.size()-1] = eDirichlet;
+                type[m_mesh->m_fields.size() - 1] = eDirichlet;
                 break;
             }
 
@@ -717,8 +725,7 @@ void InputNek::Process()
                 break;
 
             default:
-                cerr << "Unknown boundary condition type "
-                     << line[0] << endl;
+                cerr << "Unknown boundary condition type " << line[0] << endl;
                 abort();
         }
 
@@ -732,7 +739,8 @@ void InputNek::Process()
         // probably be made faster!
         ConditionMap::iterator it;
         bool found = false;
-        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end(); ++it)
+        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
+             ++it)
         {
             if (c == it->second)
             {
@@ -759,11 +767,11 @@ void InputNek::Process()
                     boost::dynamic_pointer_cast<Prism>(elm);
                 if (p->m_orientation == 1)
                 {
-                    faceId = (faceId+2) % 6;
+                    faceId = (faceId + 2) % 6;
                 }
                 else if (p->m_orientation == 2)
                 {
-                    faceId = (faceId+4) % 6;
+                    faceId = (faceId + 4) % 6;
                 }
             }
             else if (elm->GetConf().m_e == LibUtilities::eTetrahedron)
@@ -774,7 +782,7 @@ void InputNek::Process()
             }
 
             FaceSharedPtr f = elm->GetFace(faceId);
-            bool tri = f->m_vertexList.size() == 3;
+            bool tri        = f->m_vertexList.size() == 3;
 
             vector<NodeSharedPtr> nodeList;
             nodeList.insert(nodeList.begin(),
@@ -783,20 +791,18 @@ void InputNek::Process()
 
             vector<int> tags;
 
-            LibUtilities::ShapeType seg = tri ? LibUtilities::eTriangle :
-                LibUtilities::eQuadrilateral;
-            ElmtConfig conf(seg,1,true,true,false,
-                            LibUtilities::eGaussLobattoLegendre);
-            surfEl = GetElementFactory().
-                CreateInstance(seg,conf,nodeList,tags);
+            LibUtilities::ShapeType seg =
+                tri ? LibUtilities::eTriangle : LibUtilities::eQuadrilateral;
+            ElmtConfig conf(
+                seg, 1, true, true, false, LibUtilities::eGaussLobattoLegendre);
+            surfEl =
+                GetElementFactory().CreateInstance(seg, conf, nodeList, tags);
 
             // Copy high-order surface information from edges.
             for (int i = 0; i < f->m_vertexList.size(); ++i)
             {
-                surfEl->GetEdge(i)->m_edgeNodes =
-                    f->m_edgeList[i]->m_edgeNodes;
-                surfEl->GetEdge(i)->m_curveType =
-                    f->m_edgeList[i]->m_curveType;
+                surfEl->GetEdge(i)->m_edgeNodes = f->m_edgeList[i]->m_edgeNodes;
+                surfEl->GetEdge(i)->m_curveType = f->m_edgeList[i]->m_curveType;
             }
         }
         else
@@ -809,10 +815,14 @@ void InputNek::Process()
 
             vector<int> tags;
 
-            ElmtConfig conf(LibUtilities::eSegment,1,true,true,false,
+            ElmtConfig conf(LibUtilities::eSegment,
+                            1,
+                            true,
+                            true,
+                            false,
                             LibUtilities::eGaussLobattoLegendre);
-            surfEl = GetElementFactory().
-                CreateInstance(LibUtilities::eSegment,conf,nodeList,tags);
+            surfEl = GetElementFactory().CreateInstance(
+                LibUtilities::eSegment, conf, nodeList, tags);
         }
 
         LibUtilities::ShapeType surfElType = surfEl->GetConf().m_e;
@@ -823,19 +833,20 @@ void InputNek::Process()
             // list, create new composite tag and put inside
             // surfaceCompMap.
             conditionId = m_mesh->m_condition.size();
-            compTag     = nComposite;
+            compTag = nComposite;
             c->m_composite.push_back(compTag);
             m_mesh->m_condition[conditionId] = c;
 
             surfaceCompMap[conditionId].push_back(
-                pair<int,LibUtilities::ShapeType>(nComposite,surfElType));
+                pair<int, LibUtilities::ShapeType>(nComposite, surfElType));
 
             nComposite++;
         }
         else
         {
             // Otherwise find existing composite inside surfaceCompMap.
-            map<int,vector<pair<int,LibUtilities::ShapeType> > >::iterator it2;
+            map<int, vector<pair<int, LibUtilities::ShapeType> > >::iterator
+                it2;
             it2 = surfaceCompMap.find(it->first);
 
             found = false;
@@ -848,7 +859,7 @@ void InputNek::Process()
 
             for (j = 0; j < it2->second.size(); ++j)
             {
-                pair<int,LibUtilities::ShapeType> tmp = it2->second[j];
+                pair<int, LibUtilities::ShapeType> tmp = it2->second[j];
                 if (tmp.second == surfElType)
                 {
                     found   = true;
@@ -863,8 +874,8 @@ void InputNek::Process()
             // and insert into the map.
             if (!found)
             {
-                it2->second.push_back(pair<int,LibUtilities::ShapeType>(
-                                          nComposite,surfElType));
+                it2->second.push_back(
+                    pair<int, LibUtilities::ShapeType>(nComposite, surfElType));
                 compTag = nComposite;
                 m_mesh->m_condition[it->first]->m_composite.push_back(compTag);
                 nComposite++;
@@ -878,8 +889,8 @@ void InputNek::Process()
         vector<int> existingTags = surfEl->GetTagList();
 
         existingTags.insert(existingTags.begin(), compTag);
-        surfEl->SetTagList (existingTags);
-        surfEl->SetId      (nSurfaces);
+        surfEl->SetTagList(existingTags);
+        surfEl->SetId(nSurfaces);
 
         m_mesh->m_element[surfEl->GetDim()].push_back(surfEl);
         nSurfaces++;
@@ -888,9 +899,9 @@ void InputNek::Process()
     m_mshFile.close();
 
     // -- Process rest of mesh.
-    ProcessEdges     ();
-    ProcessFaces     ();
-    ProcessElements  ();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
     ProcessComposites();
 }
 
@@ -905,9 +916,9 @@ void InputNek::LoadHOSurfaces()
     for (it = curveTags.begin(); it != curveTags.end(); ++it)
     {
         ifstream hsf;
-        string   line, fileName = it->second.second;
-        size_t   pos;
-        int      N, Nface, dot;
+        string line, fileName = it->second.second;
+        size_t pos;
+        int N, Nface, dot;
 
         if (it->second.first != eFile)
         {
@@ -915,8 +926,8 @@ void InputNek::LoadHOSurfaces()
         }
 
         // Replace fro extension with hsf.
-        dot = fileName.find_last_of('.');
-        fileName = fileName.substr(0,dot);
+        dot      = fileName.find_last_of('.');
+        fileName = fileName.substr(0, dot);
         fileName += ".hsf";
 
         // Open hsf file.
@@ -937,7 +948,7 @@ void InputNek::LoadHOSurfaces()
                  << "nodal points." << endl;
             abort();
         }
-        line = line.substr(pos+1);
+        line = line.substr(pos + 1);
         stringstream ss(line);
         ss >> N;
 
@@ -948,11 +959,12 @@ void InputNek::LoadHOSurfaces()
                  << "faces." << endl;
             abort();
         }
-        line = line.substr(pos+1);
-        ss.clear(); ss.str(line);
+        line = line.substr(pos + 1);
+        ss.clear();
+        ss.str(line);
         ss >> Nface;
 
-        int Ntot = N*(N+1)/2;
+        int Ntot = N * (N + 1) / 2;
 
         // Skip a line, then read in r,s positions inside the next
         // comments.
@@ -964,7 +976,8 @@ void InputNek::LoadHOSurfaces()
             string word;
 
             getline(hsf, line);
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> word;
 
             if (word != "#")
@@ -984,7 +997,7 @@ void InputNek::LoadHOSurfaces()
         // be constructed.
         Array<OneD, NekDouble> rp(Ntot), sp(Ntot);
         LibUtilities::PointsKey elec(N, LibUtilities::eNodalTriElec);
-        LibUtilities::PointsManager()[elec]->GetPoints(rp,sp);
+        LibUtilities::PointsManager()[elec]->GetPoints(rp, sp);
 
         // Expensively construct remapping array nodemap. This will
         // map nodal ordering from hsf order to Nektar++ ordering
@@ -994,7 +1007,7 @@ void InputNek::LoadHOSurfaces()
         {
             for (int j = 0; j < Ntot; ++j)
             {
-                if (fabs(r[i]-rp[j]) < 1e-5 && fabs(s[i]-sp[j]) < 1e-5)
+                if (fabs(r[i] - rp[j]) < 1e-5 && fabs(s[i] - sp[j]) < 1e-5)
                 {
                     hoMap[i] = j;
                     break;
@@ -1015,12 +1028,13 @@ void InputNek::LoadHOSurfaces()
             {
                 double x, y, z;
                 getline(hsf, line);
-                ss.clear(); ss.str(line);
+                ss.clear();
+                ss.str(line);
                 ss >> x >> y >> z;
                 faceNodes[j] = NodeSharedPtr(new Node(nodeId, x, y, z));
             }
             // Skip over tecplot connectivity information.
-            for (int j = 0; j < (N-1)*(N-1); ++j)
+            for (int j = 0; j < (N - 1) * (N - 1); ++j)
             {
                 getline(hsf, line);
             }
@@ -1032,18 +1046,18 @@ void InputNek::LoadHOSurfaces()
         getline(hsf, line);
         for (int i = 0; i < Nface; ++i)
         {
-            string      tmp;
-            int         fid;
+            string tmp;
+            int fid;
             vector<int> nodeIds(3);
 
             getline(hsf, line);
-            ss.clear(); ss.str(line);
+            ss.clear();
+            ss.str(line);
             ss >> tmp >> fid >> nodeIds[0] >> nodeIds[1] >> nodeIds[2];
 
             if (tmp != "#")
             {
-                cerr << "Unable to read hsf connectivity information."
-                     << endl;
+                cerr << "Unable to read hsf connectivity information." << endl;
                 abort();
             }
 
@@ -1063,22 +1077,37 @@ int InputNek::GetNnodes(LibUtilities::ShapeType InputNekEntity)
 {
     int nNodes = 0;
 
-    switch(InputNekEntity)
+    switch (InputNekEntity)
     {
-    case LibUtilities::ePoint:         nNodes = 1;  break;
-    case LibUtilities::eSegment:       nNodes = 2;  break;
-    case LibUtilities::eTriangle:      nNodes = 3;  break;
-    case LibUtilities::eQuadrilateral: nNodes = 4;  break;
-    case LibUtilities::eTetrahedron:   nNodes = 4;  break;
-    case LibUtilities::ePyramid:       nNodes = 5;  break;
-    case LibUtilities::ePrism:         nNodes = 6;  break;
-    case LibUtilities::eHexahedron:    nNodes = 8;  break;
-    default:
-        cerr << "unknown Nektar element type" << endl;
+        case LibUtilities::ePoint:
+            nNodes = 1;
+            break;
+        case LibUtilities::eSegment:
+            nNodes = 2;
+            break;
+        case LibUtilities::eTriangle:
+            nNodes = 3;
+            break;
+        case LibUtilities::eQuadrilateral:
+            nNodes = 4;
+            break;
+        case LibUtilities::eTetrahedron:
+            nNodes = 4;
+            break;
+        case LibUtilities::ePyramid:
+            nNodes = 5;
+            break;
+        case LibUtilities::ePrism:
+            nNodes = 6;
+            break;
+        case LibUtilities::eHexahedron:
+            nNodes = 8;
+            break;
+        default:
+            cerr << "unknown Nektar element type" << endl;
     }
 
     return nNodes;
 }
-
 }
 }

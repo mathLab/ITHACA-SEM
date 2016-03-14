@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADCurve.h
+//  File: CADObj.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -38,19 +38,20 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-
 #include <NekMeshUtils/CADSystem/OpenCascade.h>
-
-#include <NekMeshUtils/MeshElements/MeshElements.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-enum cadType { vert, curve, surf };
+enum cadType
+{
+    vert,
+    curve,
+    surf
+};
 
 /**
  * @brief class for CAD curves.
@@ -68,7 +69,6 @@ public:
      */
     CADObj()
     {
-
     }
 
     virtual ~CADObj(){};
@@ -76,20 +76,24 @@ public:
     /**
      * @brief Return ID of the vertex
      */
-    int GetId(){return m_id;}
+    int GetId()
+    {
+        return m_id;
+    }
 
-    cadType GetType(){return m_type;}
+    cadType GetType()
+    {
+        return m_type;
+    }
 
 protected:
     /// ID of the vert.
     int m_id;
     /// type of the cad object
     cadType m_type;
-
 };
 
 typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
-
 }
 }
 

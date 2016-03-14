@@ -33,12 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-
-#include <SpatialDomains/MeshGraph.h>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
-
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessDetectSurf.h"
 
 using namespace std;
@@ -51,24 +47,28 @@ namespace Utilities
 
 ModuleKey ProcessDetectSurf::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "detect"), ProcessDetectSurf::create,
+        ModuleKey(eProcessModule, "detect"),
+        ProcessDetectSurf::create,
         "Process elements to detect a surface.");
 
 ProcessDetectSurf::ProcessDetectSurf(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["vol"] = ConfigOption(false, "-1",
-        "Tag identifying surface to process.");
+    m_config["vol"] =
+        ConfigOption(false, "-1", "Tag identifying surface to process.");
 }
 
 ProcessDetectSurf::~ProcessDetectSurf()
 {
 }
 
-struct EdgeInfo {
-    EdgeInfo() : count(0) {}
-    int           count;
+struct EdgeInfo
+{
+    EdgeInfo() : count(0)
+    {
+    }
+    int count;
     EdgeSharedPtr edge;
-    unsigned int  group;
+    unsigned int group;
 };
 
 void ProcessDetectSurf::Process()
@@ -96,8 +96,8 @@ void ProcessDetectSurf::Process()
         cout << "ProcessDetectSurf: detecting surfaces";
         if (surfs.size() > 0)
         {
-            cout << " for surface" << (surfs.size() == 1 ? "" : "s")
-                 << " " << surf << endl;
+            cout << " for surface" << (surfs.size() == 1 ? "" : "s") << " "
+                 << surf << endl;
         }
     }
 
@@ -115,8 +115,10 @@ void ProcessDetectSurf::Process()
             vector<int> inter, tags = el[i]->GetTagList();
 
             sort(tags.begin(), tags.end());
-            set_intersection(surfs.begin(), surfs.end(),
-                             tags .begin(), tags .end(),
+            set_intersection(surfs.begin(),
+                             surfs.end(),
+                             tags.begin(),
+                             tags.end(),
                              back_inserter(inter));
 
             // It doesn't continue to next element.
@@ -131,7 +133,7 @@ void ProcessDetectSurf::Process()
         for (j = 0; j < elmt->GetEdgeCount(); ++j)
         {
             EdgeSharedPtr e = elmt->GetEdge(j);
-            int eId = e->m_id;
+            int eId         = e->m_id;
             edgeCount[eId].count++;
             edgeCount[eId].edge = e;
         }
@@ -144,7 +146,8 @@ void ProcessDetectSurf::Process()
     CompositeMap::iterator cIt;
     unsigned int maxId = 0;
 
-    for (cIt = m_mesh->m_composite.begin(); cIt != m_mesh->m_composite.end(); ++cIt)
+    for (cIt = m_mesh->m_composite.begin(); cIt != m_mesh->m_composite.end();
+         ++cIt)
     {
         maxId = (std::max)(cIt->first, maxId);
     }
@@ -155,8 +158,8 @@ void ProcessDetectSurf::Process()
 
     while (doneIds.size() > 0)
     {
-        ElementSharedPtr start
-            = m_mesh->m_element[m_mesh->m_expDim][idMap[*(doneIds.begin())]];
+        ElementSharedPtr start =
+            m_mesh->m_element[m_mesh->m_expDim][idMap[*(doneIds.begin())]];
 
         vector<ElementSharedPtr> block;
         FindContiguousSurface(start, doneIds, block);
@@ -186,7 +189,7 @@ void ProcessDetectSurf::Process()
             continue;
         }
 
-        unsigned int compId = eIt->second.group;
+        unsigned int compId        = eIt->second.group;
         CompositeMap::iterator cIt = m_mesh->m_composite.find(compId);
 
         if (cIt == m_mesh->m_composite.end())
@@ -194,7 +197,8 @@ void ProcessDetectSurf::Process()
             CompositeSharedPtr comp(new Composite());
             comp->m_id  = compId;
             comp->m_tag = "E";
-            cIt = m_mesh->m_composite.insert(std::make_pair(compId, comp)).first;
+            cIt =
+                m_mesh->m_composite.insert(std::make_pair(compId, comp)).first;
         }
 
         vector<int> tags(1);
@@ -204,18 +208,17 @@ void ProcessDetectSurf::Process()
         nodeList[1] = eIt->second.edge->m_n2;
 
         ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
-        ElementSharedPtr elmt = GetElementFactory().
-            CreateInstance(LibUtilities::eSegment,conf,nodeList,tags);
+        ElementSharedPtr elmt = GetElementFactory().CreateInstance(
+            LibUtilities::eSegment, conf, nodeList, tags);
         elmt->SetEdgeLink(eIt->second.edge);
 
         cIt->second->m_items.push_back(elmt);
     }
 }
 
-void ProcessDetectSurf::FindContiguousSurface(
-    ElementSharedPtr          start,
-    set<int>                 &doneIds,
-    vector<ElementSharedPtr> &block)
+void ProcessDetectSurf::FindContiguousSurface(ElementSharedPtr start,
+                                              set<int> &doneIds,
+                                              vector<ElementSharedPtr> &block)
 {
     block.push_back(start);
     doneIds.erase(start->GetId());
@@ -241,6 +244,5 @@ void ProcessDetectSurf::FindContiguousSurface(
         }
     }
 }
-
 }
 }

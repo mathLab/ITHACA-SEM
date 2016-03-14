@@ -54,7 +54,8 @@ public:
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
         return MemoryManager<InputSem>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
@@ -64,9 +65,8 @@ private:
     void insertEdge(int elmt, int side, int tagId);
 
     /// Maps Semtex sections to positions inside the input file.
-    std::map<std::string,std::streampos> sectionMap;
+    std::map<std::string, std::streampos> sectionMap;
 };
-
 }
 }
 

@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 #include <ANN/ANN.h>
 
@@ -48,11 +49,12 @@ void BLMesh::Mesh()
     //At this stage the surface mesh is complete and the elements know their
     //neigbours through element links in the edges,,
 
-    //here elements are made for the boundary layer they will need to know
-    //links (maybe facelinks)
-    //so that the tetmeshing module can extract the surface upon which it needs
-    // to mesh (top of the bl and the rest of the surface)
+    // here elements are made for the boundary layer they will need to know
+    // links (maybe facelinks), so that the tetmeshing module can extract the
+    // surface upon which it needs to mesh (top of the bl and the rest of the
+    // surface).
 
+<<<<<<< HEAD
     set<int> symSurfs;
 
     NodeSet::iterator it;
@@ -424,8 +426,8 @@ void BLMesh::Mesh()
             geom = el->GetGeom(m_mesh->m_spaceDim);
             gfac = geom->GetGeomFactors();
         }
-
     }
+
 
     //smoothing
     //need to build a list of nodes to neigbours
@@ -439,7 +441,7 @@ void BLMesh::Mesh()
             nodeToNear[es[j]->m_n2].insert(es[j]->m_n1);
         }
     }
-
+    
     bool repeat = true;
     while(repeat)
     {
@@ -482,6 +484,5 @@ void BLMesh::Mesh()
     }
 
 }
-
 }
 }

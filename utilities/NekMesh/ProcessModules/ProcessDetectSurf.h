@@ -53,7 +53,8 @@ class ProcessDetectSurf : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
         return MemoryManager<ProcessDetectSurf>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
@@ -65,12 +66,10 @@ public:
     virtual void Process();
 
 private:
-    void FindContiguousSurface(
-        ElementSharedPtr          start,
-        set<int>                 &doneIds,
-        vector<ElementSharedPtr> &block);
+    void FindContiguousSurface(ElementSharedPtr start,
+                               set<int> &doneIds,
+                               vector<ElementSharedPtr> &block);
 };
-
 }
 }
 

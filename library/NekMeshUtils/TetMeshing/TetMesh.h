@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>

@@ -169,7 +169,10 @@ namespace Xxt
         MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        return nektar_crs_setup(pRank, &pId[0], nz, &pAi[0], &pAj[0], &pAr[0], 0, &vComm);
+        crs_data* result = nektar_crs_setup(pRank, &pId[0], nz, &pAi[0],
+                                            &pAj[0], &pAr[0], 0, &vComm);
+        MPI_Comm_free(&vComm.c);
+        return result;
 #else
         return 0;
 #endif
@@ -198,9 +201,11 @@ namespace Xxt
     static inline void Finalise (crs_data* pCrs)
     {
 #ifdef NEKTAR_USE_MPI
-        if (pCrs)
+        int finalized;
+        MPI_Finalized(&finalized);
+        if (pCrs && !finalized)
         {
-            //nektar_crs_free(pCrs);
+            nektar_crs_free(pCrs);
         }
 #endif
     }

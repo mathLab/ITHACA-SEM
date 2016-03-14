@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: octree.h
+//  File: TriangleInterface.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: Interface to triangle mesher
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,9 +49,9 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     int numPoints = 0;
     int numSeg = 0;
-    for(int i = 0; i < m_boundingloops.size(); i++)
+    for (int i = 0; i < m_boundingloops.size(); i++)
     {
-        numSeg+=m_boundingloops[i].size();
+        numSeg += m_boundingloops[i].size();
     }
     numPoints = numSeg + m_stienerpoints.size();
 
@@ -60,161 +60,162 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     ASSERTL0(numPoints > 2, ss.str());
 
-    in.numberofpoints = numPoints;
+    in.numberofpoints          = numPoints;
     in.numberofpointattributes = 0;
-    in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
-    in.pointmarkerlist = (int *) malloc(in.numberofpoints * sizeof(int));
+    in.pointlist               = new REAL[in.numberofpoints * 2];
+    in.pointmarkerlist         = new int [in.numberofpoints];
 
     int pointc = 0;
 
-    for(int i = 0; i < m_boundingloops.size(); i++)
+    for (int i = 0; i < m_boundingloops.size(); i++)
     {
-        for(int j = 0; j < m_boundingloops[i].size(); j++, pointc++)
+        for (int j = 0; j < m_boundingloops[i].size(); j++, pointc++)
         {
             nodemap[pointc] = m_boundingloops[i][j];
 
-            Array<OneD, NekDouble> uv = m_boundingloops[i][j]->GetCADSurfInfo(sid);
-            in.pointlist[pointc*2+0] = uv[0]*m_str;
-            in.pointlist[pointc*2+1] = uv[1];
+            Array<OneD, NekDouble> uv =
+                m_boundingloops[i][j]->GetCADSurfInfo(sid);
+            in.pointlist[pointc * 2 + 0] = uv[0] * m_str;
+            in.pointlist[pointc * 2 + 1] = uv[1];
         }
     }
 
-    for(int i = 0; i < m_stienerpoints.size(); i++, pointc++)
+    for (int i = 0; i < m_stienerpoints.size(); i++, pointc++)
     {
         nodemap[pointc] = m_stienerpoints[i];
 
-        Array<OneD, NekDouble> uv = m_stienerpoints[i]->GetCADSurfInfo(sid);
-        in.pointlist[pointc*2+0] = uv[0]*m_str;
-        in.pointlist[pointc*2+1] = uv[1];
+        Array<OneD, NekDouble> uv    = m_stienerpoints[i]->GetCADSurfInfo(sid);
+        in.pointlist[pointc * 2 + 0] = uv[0] * m_str;
+        in.pointlist[pointc * 2 + 1] = uv[1];
     }
 
     in.numberofsegments = numSeg;
-    in.segmentlist = (int *) malloc(in.numberofsegments*2*sizeof(int));
-    pointc=0;
-    for(int i = 0; i < m_boundingloops.size(); i++, pointc++)
+    in.segmentlist      = new int[in.numberofsegments * 2];
+    pointc = 0;
+    for (int i = 0; i < m_boundingloops.size(); i++, pointc++)
     {
         int first = pointc;
-        for(int j = 0; j < m_boundingloops[i].size()-1; j++, pointc++)
+        for (int j = 0; j < m_boundingloops[i].size() - 1; j++, pointc++)
         {
-            in.segmentlist[pointc*2+0] = pointc;
-            in.segmentlist[pointc*2+1] = pointc+1;
+            in.segmentlist[pointc * 2 + 0] = pointc;
+            in.segmentlist[pointc * 2 + 1] = pointc + 1;
         }
-        in.segmentlist[pointc*2+0] = pointc;
-        in.segmentlist[pointc*2+1] = first;
+        in.segmentlist[pointc * 2 + 0] = pointc;
+        in.segmentlist[pointc * 2 + 1] = first;
     }
 
     in.numberofregions = 0;
-    in.numberofholes = m_centers.size()-1;
-    in.holelist = (REAL *) malloc(in.numberofholes*2*sizeof(REAL));
+    in.numberofholes   = m_centers.size() - 1;
+    in.holelist        = new REAL[in.numberofholes * 2];
 
-    for(int i = 1; i < m_centers.size(); i++)
+    for (int i = 1; i < m_centers.size(); i++)
     {
-        in.holelist[(i-1)*2+0] = m_centers[i][0]*m_str;
-        in.holelist[(i-1)*2+1] = m_centers[i][1];
+        in.holelist[(i - 1) * 2 + 0] = m_centers[i][0] * m_str;
+        in.holelist[(i - 1) * 2 + 1] = m_centers[i][1];
     }
 
-
-
-    if(Quiet && Quality)
+    if (Quiet && Quality)
     {
-        triangulate("pzenqQYY", &in, &out,  NULL);
+        triangulate("pzenqQYY", &in, &out, NULL);
     }
-    else if(Quiet && !Quality)
+    else if (Quiet && !Quality)
     {
-        triangulate("pzenYYQ", &in, &out,  NULL);
+        triangulate("pzenYYQ", &in, &out, NULL);
     }
-    else if(!Quiet && Quality)
+    else if (!Quiet && Quality)
     {
-        triangulate("pzenqYY", &in, &out,  NULL);
+        triangulate("pzenqYY", &in, &out, NULL);
     }
-    else if(!Quiet && !Quality)
+    else if (!Quiet && !Quality)
     {
-        triangulate("pzenYY", &in, &out,  NULL);
+        triangulate("pzenYY", &in, &out, NULL);
     }
 
-    //verify the mesh a bit
-    if(out.numberofpoints-out.numberofedges+out.numberoftriangles != 2 - m_centers.size())
+    // verify the mesh a bit
+    if (out.numberofpoints - out.numberofedges + out.numberoftriangles !=
+        2 - m_centers.size())
     {
         cout << endl << "epc wrong" << endl;
-        cout << out.numberofpoints-out.numberofedges+out.numberoftriangles
+        cout << out.numberofpoints - out.numberofedges + out.numberoftriangles
              << " " << m_centers.size() << " " << sid << endl;
     }
-
 }
 
 void TriangleInterface::SetUp()
 {
-    in.pointlist = (REAL *) NULL;
-    in.pointattributelist = (REAL *) NULL;
-    in.pointmarkerlist = (int *) NULL;
-    in.numberofpoints = 0;
-    in.numberofpointattributes = 0;
-
-    in.trianglelist = (int *) NULL;
-    in.triangleattributelist = (REAL *) NULL;
-    in.trianglearealist = (REAL *) NULL;
-    in.neighborlist = (int *) NULL;
-    in.numberoftriangles = 0;
-    in.numberofcorners = 0;
-    in.numberoftriangleattributes = 0;
-
-    in.segmentlist = (int *) NULL;
-    in.segmentmarkerlist = (int *) NULL;
-    in.numberofsegments = 0;
-
-    in.holelist = (REAL *) NULL;
-    in.numberofholes = 0;
-
-    in.regionlist = (REAL *) NULL;
-    in.numberofregions = 0;
-
-    in.edgelist = (int *) NULL;
-    in.edgemarkerlist = (int *) NULL;
-    in.normlist = (REAL *) NULL;
-    in.numberofedges = 0;
-
-    out.pointlist = (REAL *) NULL;
-    out.pointattributelist = (REAL *) NULL;
-    out.pointmarkerlist = (int *) NULL;
-    out.numberofpoints = 0;
-    out.numberofpointattributes = 0;
-
-    out.trianglelist = (int *) NULL;
-    out.triangleattributelist = (REAL *) NULL;
-    out.trianglearealist = (REAL *) NULL;
-    out.neighborlist = (int *) NULL;
-    out.numberoftriangles = 0;
-    out.numberofcorners = 0;
+    in.pointlist                   = (REAL *)NULL;
+    in.pointattributelist          = (REAL *)NULL;
+    in.pointmarkerlist             = (int *)NULL;
+    in.numberofpoints              = 0;
+    in.numberofpointattributes     = 0;
+    //
+    in.trianglelist                = (int *)NULL;
+    in.triangleattributelist       = (REAL *)NULL;
+    in.trianglearealist            = (REAL *)NULL;
+    in.neighborlist                = (int *)NULL;
+    in.numberoftriangles           = 0;
+    in.numberofcorners             = 0;
+    in.numberoftriangleattributes  = 0;
+    //
+    in.segmentlist                 = (int *)NULL;
+    in.segmentmarkerlist           = (int *)NULL;
+    in.numberofsegments            = 0;
+    //
+    in.holelist                    = (REAL *)NULL;
+    in.numberofholes               = 0;
+    //
+    in.regionlist                  = (REAL *)NULL;
+    in.numberofregions             = 0;
+    //
+    in.edgelist                    = (int *)NULL;
+    in.edgemarkerlist              = (int *)NULL;
+    in.normlist                    = (REAL *)NULL;
+    in.numberofedges               = 0;
+    //
+    out.pointlist                  = (REAL *)NULL;
+    out.pointattributelist         = (REAL *)NULL;
+    out.pointmarkerlist            = (int *)NULL;
+    out.numberofpoints             = 0;
+    out.numberofpointattributes    = 0;
+    //
+    out.trianglelist               = (int *)NULL;
+    out.triangleattributelist      = (REAL *)NULL;
+    out.trianglearealist           = (REAL *)NULL;
+    out.neighborlist               = (int *)NULL;
+    out.numberoftriangles          = 0;
+    out.numberofcorners            = 0;
     out.numberoftriangleattributes = 0;
-
-    out.segmentlist = (int *) NULL;
-    out.segmentmarkerlist = (int *) NULL;
-    out.numberofsegments = 0;
-
-    out.holelist = (REAL *) NULL;
-    out.numberofholes = 0;
-
-    out.regionlist = (REAL *) NULL;
-    out.numberofregions = 0;
-
-    out.edgelist = (int *) NULL;
-    out.edgemarkerlist = (int *) NULL;
-    out.normlist = (REAL *) NULL;
-    out.numberofedges = 0;
+    //
+    out.segmentlist                = (int *)NULL;
+    out.segmentmarkerlist          = (int *)NULL;
+    out.numberofsegments           = 0;
+    //
+    out.holelist                   = (REAL *)NULL;
+    out.numberofholes              = 0;
+    //
+    out.regionlist                 = (REAL *)NULL;
+    out.numberofregions            = 0;
+    //
+    out.edgelist                   = (int *)NULL;
+    out.edgemarkerlist             = (int *)NULL;
+    out.normlist                   = (REAL *)NULL;
+    out.numberofedges              = 0;
 }
 
-void TriangleInterface::Extract(std::vector<std::vector<NodeSharedPtr> > &Connec)
+void TriangleInterface::Extract(
+    std::vector<std::vector<NodeSharedPtr> > &Connec)
 {
     Connec.clear();
-    for(int i = 0; i < out.numberoftriangles; i++)
+    for (int i = 0; i < out.numberoftriangles; i++)
     {
-        map<int, NodeSharedPtr>::iterator n1,n2,n3;
-        n1 = nodemap.find(out.trianglelist[i*3+0]);
-        n2 = nodemap.find(out.trianglelist[i*3+1]);
-        n3 = nodemap.find(out.trianglelist[i*3+2]);
+        map<int, NodeSharedPtr>::iterator n1, n2, n3;
+        n1 = nodemap.find(out.trianglelist[i * 3 + 0]);
+        n2 = nodemap.find(out.trianglelist[i * 3 + 1]);
+        n3 = nodemap.find(out.trianglelist[i * 3 + 2]);
 
-        ASSERTL0(n1!=nodemap.end() && n2!=nodemap.end() && n3!=nodemap.end(),
-                                                            "node index error");
+        ASSERTL0(n1 != nodemap.end() && n2 != nodemap.end() &&
+                     n3 != nodemap.end(),
+                 "node index error");
 
         vector<NodeSharedPtr> tri(3);
         tri[0] = n1->second;
@@ -223,6 +224,5 @@ void TriangleInterface::Extract(std::vector<std::vector<NodeSharedPtr> > &Connec
         Connec.push_back(tri);
     }
 }
-
 }
 }

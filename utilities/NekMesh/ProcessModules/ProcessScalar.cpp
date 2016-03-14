@@ -33,14 +33,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
-
-#include <SpatialDomains/MeshGraph.h>
-
-#include <LocalRegions/QuadExp.h>
-
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessScalar.h"
 
@@ -52,19 +47,18 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey ProcessScalar::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "scalar"), ProcessScalar::create,
-        "Impose a scalar function z=f(x,y) on a surface.");
+ModuleKey ProcessScalar::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "scalar"),
+    ProcessScalar::create,
+    "Impose a scalar function z=f(x,y) on a surface.");
 
 ProcessScalar::ProcessScalar(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["surf"]   = ConfigOption(false, "-1",
-        "Tag identifying surface/composite to process.");
-    m_config["nq"]     = ConfigOption(false, "-1",
-        "Number of quadrature points to generate.");
-    m_config["scalar"] = ConfigOption(false, "",
-        "Expression to evaluate.");
+    m_config["surf"] = ConfigOption(
+        false, "-1", "Tag identifying surface/composite to process.");
+    m_config["nq"] =
+        ConfigOption(false, "-1", "Number of quadrature points to generate.");
+    m_config["scalar"] = ConfigOption(false, "", "Expression to evaluate.");
 }
 
 ProcessScalar::~ProcessScalar()
@@ -95,7 +89,7 @@ void ProcessScalar::Process()
     int rExprId = rEval.DefineFunction("x y z", expr);
 
     // Make a copy of all existing elements of one dimension lower.
-    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim-1];
+    vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim - 1];
 
     // Iterate over list of surface elements.
     for (i = 0; i < el.size(); ++i)
@@ -104,8 +98,10 @@ void ProcessScalar::Process()
         vector<int> inter, tags = el[i]->GetTagList();
 
         sort(tags.begin(), tags.end());
-        set_intersection(surfs.begin(), surfs.end(),
-                         tags .begin(), tags .end(),
+        set_intersection(surfs.begin(),
+                         surfs.end(),
+                         tags.begin(),
+                         tags.end(),
                          back_inserter(inter));
 
         // It doesn't continue to next element.
@@ -121,7 +117,7 @@ void ProcessScalar::Process()
         for (j = 0; j < 4; ++j)
         {
             NodeSharedPtr n = f->m_vertexList[j];
-            n->m_z = rEval.Evaluate(rExprId, n->m_x, n->m_y, 0.0, 0.0);
+            n->m_z          = rEval.Evaluate(rExprId, n->m_x, n->m_y, 0.0, 0.0);
 
             if (n->m_z < 1e-32)
             {
@@ -134,13 +130,13 @@ void ProcessScalar::Process()
         {
             NodeSharedPtr n1 = f->m_edgeList[j]->m_n1;
             NodeSharedPtr n2 = f->m_edgeList[j]->m_n2;
-            Node disp = *n2-*n1;
+            Node disp        = *n2 - *n1;
 
             f->m_edgeList[j]->m_edgeNodes.clear();
 
-            for (k = 1; k < nq-1; ++k)
+            for (k = 1; k < nq - 1; ++k)
             {
-                Node n = *n1 + disp * k / (nq-1.0);
+                Node n = *n1 + disp * k / (nq - 1.0);
                 n.m_z = rEval.Evaluate(rExprId, n.m_x, n.m_y, 0.0, 0.0);
                 if (n.m_z < 1e-32)
                 {
@@ -153,6 +149,5 @@ void ProcessScalar::Process()
         }
     }
 }
-
 }
 }

@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKMESHUTILS_CADSYSTEM_OCC
 #define NEKMESHUTILS_CADSYSTEM_OCC
 
@@ -68,5 +67,6 @@
 #include <ShapeAnalysis_Wire.hxx>
 #include <TopoDS_Wire.hxx>
 #include <ShapeAnalysis_Surface.hxx>
+#include <Standard_Macro.hxx>
 
 #endif

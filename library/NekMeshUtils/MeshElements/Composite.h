@@ -37,94 +37,91 @@
 #define NekMeshUtils_MESHELEMENTS_COMPOSITE
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+/**
+ * @brief A composite is a collection of elements.
+ *
+ * All elements should be of the same type, i.e. have the same tag.
+ */
+class Composite
+{
+public:
+    NEKMESHUTILS_EXPORT Composite() : m_reorder(true)
+    {
+    }
+
     /**
-     * @brief A composite is a collection of elements.
+     * @brief Generate a Nektar++ string describing the composite.
      *
-     * All elements should be of the same type, i.e. have the same tag.
+     * The list of composites may include individual element IDs or ranges of
+     * element IDs.
      */
-    class Composite {
-    public:
-        NEKMESHUTILS_EXPORT Composite() : m_reorder(true) {}
+    NEKMESHUTILS_EXPORT std::string GetXmlString(bool doSort = true)
+    {
+        stringstream st;
+        vector<ElementSharedPtr>::iterator it;
+        bool range = false;
+        int vId    = m_items[0]->GetId();
+        int prevId = vId;
 
-        /**
-         * @brief Generate a Nektar++ string describing the composite.
-         *
-         * The list of composites may include individual element IDs or ranges
-         * of element IDs.
-         */
-        NEKMESHUTILS_EXPORT std::string GetXmlString(bool doSort=true)
+        st << " " << m_tag << "[" << vId;
+
+        for (it = m_items.begin() + 1; it != m_items.end(); ++it)
         {
+            // store previous element ID and get current one
+            prevId = vId;
+            vId    = (*it)->GetId();
 
-#if 0 // turn this option off since causes problem with InputNekpp.cpp
-            if (doSort)
+            // continue an already started range
+            if (prevId > -1 && vId == prevId + 1)
             {
-                element_id_less_than sortOperator;
-                sort(m_items.begin(), m_items.end(), sortOperator);
-            }
-#endif
-
-            stringstream st;
-            vector<ElementSharedPtr>::iterator it;
-            bool range = false;
-            int vId = m_items[0]->GetId();
-            int prevId = vId;
-
-            st << " " << m_tag << "[" << vId;
-
-            for (it = m_items.begin()+1; it != m_items.end(); ++it){
-                // store previous element ID and get current one
-                prevId = vId;
-                vId = (*it)->GetId();
-
-                // continue an already started range
-                if (prevId > -1 && vId == prevId + 1)
+                range = true;
+                // if this is the last element, it's the end of a range, so
+                // write
+                if (*it == m_items.back())
                 {
-                    range = true;
-                    // if this is the last element, it's the end of a range, so write
-                    if (*it == m_items.back())
-                    {
-                        st << "-" << vId;
-                    }
-                    continue;
+                    st << "-" << vId;
                 }
-
-                // terminate a range, if present
-                if (range)
-                {
-                    st << "-" << prevId;
-                    range = false;
-                }
-
-                // write what will be either a single entry or start of new range
-                st << "," << vId;
+                continue;
             }
-            // terminate
-            st << "] ";
-            return st.str();
+
+            // terminate a range, if present
+            if (range)
+            {
+                st << "-" << prevId;
+                range = false;
+            }
+
+            // write what will be either a single entry or start of new range
+            st << "," << vId;
         }
+        // terminate
+        st << "] ";
+        return st.str();
+    }
 
-        /// ID of composite.
-        unsigned int m_id;
-        /// Element type tag.
-        std::string m_tag;
-        /// boundary label
-        std::string m_label;
-        /// Determines whether items can be reordered.
-        bool m_reorder;
-        /// List of elements in this composite.
-        std::vector<ElementSharedPtr> m_items;
-    };
-    /// Shared pointer to a composite.
-    typedef boost::shared_ptr<Composite> CompositeSharedPtr;
-    /// Container of composites; key is the composite id, value is the
-    /// composite.
-    typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;
+    /// ID of composite.
+    unsigned int m_id;
+    /// Element type tag.
+    std::string m_tag;
+    /// boundary label
+    std::string m_label;
+    /// Determines whether items can be reordered.
+    bool m_reorder;
+    /// List of elements in this composite.
+    std::vector<ElementSharedPtr> m_items;
+};
 
+/// Shared pointer to a composite.
+typedef boost::shared_ptr<Composite> CompositeSharedPtr;
+/// Container of composites; key is the composite id, value is the
+/// composite.
+typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;
 }
 }
 

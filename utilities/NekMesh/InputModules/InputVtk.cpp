@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
@@ -50,21 +50,16 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputVtk::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "vtk"), InputVtk::create,
-        "Reads VTK format.");
+ModuleKey InputVtk::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "vtk"), InputVtk::create, "Reads VTK format.");
 
 InputVtk::InputVtk(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputVtk::~InputVtk()
 {
-
 }
-
 
 /**
  * Gmsh file contains a list of nodes and their coordinates, along with
@@ -91,12 +86,12 @@ void InputVtk::Process()
     vtkPoints *vtkPoints = vtkMesh->GetPoints();
 
     const int numCellTypes = 3;
-    vtkCellArray* vtkCells[numCellTypes];
+    vtkCellArray *vtkCells[numCellTypes];
     LibUtilities::ShapeType vtkCellTypes[numCellTypes];
     int vtkNumPoints[numCellTypes];
-    vtkCells[0] = vtkMesh->GetPolys();
-    vtkCells[1] = vtkMesh->GetStrips();
-    vtkCells[2] = vtkMesh->GetLines();
+    vtkCells[0]     = vtkMesh->GetPolys();
+    vtkCells[1]     = vtkMesh->GetStrips();
+    vtkCells[2]     = vtkMesh->GetLines();
     vtkCellTypes[0] = LibUtilities::eTriangle;
     vtkCellTypes[1] = LibUtilities::eTriangle;
     vtkCellTypes[2] = LibUtilities::eSegment;
@@ -125,7 +120,8 @@ void InputVtk::Process()
             m_mesh->m_spaceDim = 3;
         }
 
-        m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
+        m_mesh->m_node.push_back(
+            boost::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
     }
 
     for (int c = 0; c < numCellTypes; ++c)
@@ -137,7 +133,7 @@ void InputVtk::Process()
             {
                 // Create element tags
                 vector<int> tags;
-                tags.push_back(0); // composite
+                tags.push_back(0);               // composite
                 tags.push_back(vtkCellTypes[c]); // element type
 
                 // Read element node list
@@ -148,13 +144,13 @@ void InputVtk::Process()
                 }
 
                 // Create element
-                ElmtConfig conf(vtkCellTypes[c],1,false,false);
-                ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(vtkCellTypes[c],
-                                    conf,nodeList,tags);
+                ElmtConfig conf(vtkCellTypes[c], 1, false, false);
+                ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    vtkCellTypes[c], conf, nodeList, tags);
 
                 // Determine mesh expansion dimension
-                if (E->GetDim() > m_mesh->m_expDim) {
+                if (E->GetDim() > m_mesh->m_expDim)
+                {
                     m_mesh->m_expDim = E->GetDim();
                 }
                 m_mesh->m_element[E->GetDim()].push_back(E);
@@ -168,6 +164,5 @@ void InputVtk::Process()
     ProcessElements();
     ProcessComposites();
 }
-
 }
 }

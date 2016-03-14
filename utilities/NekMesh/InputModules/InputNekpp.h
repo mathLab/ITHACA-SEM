@@ -54,13 +54,13 @@ public:
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m) {
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
         return MemoryManager<InputNekpp>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
     static ModuleKey className;
 };
-
 }
 }
 

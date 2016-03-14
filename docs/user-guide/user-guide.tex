@@ -354,7 +354,8 @@ pdfauthor={I am the Author} % author
       \hspace*{0.05\textwidth}% 
       \parbox[b]{0.85\textwidth}{%
         \vbox{%
-          \vspace{\drop}
+          {\includegraphics[width=0.2\textwidth]{img/icon-blue.png}\par}
+          \vskip1.00\baselineskip
           {\Huge\bfseries\raggedright\@title\par}
           \vskip2.37\baselineskip
           {\huge\bfseries Version \nekver\par}
@@ -388,6 +389,9 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 % Render pretty title page if not building HTML
 \ifdefined\HCode
+\begin{center}
+    \includegraphics[width=0.1\textwidth]{img/icon-blue.png}
+\end{center}
 \maketitle
 \begin{center}
     \huge{Users Guide - Version \nekver}

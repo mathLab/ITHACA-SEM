@@ -137,6 +137,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD,int> &EdgeID);
+            
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
 
             /// This funtion extract form a vector containing a full
             /// 3D-homogenous-1D field the value associated with a
@@ -259,6 +262,9 @@ namespace Nektar
 
            virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
+           
+           virtual void v_GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
             // virtual functions

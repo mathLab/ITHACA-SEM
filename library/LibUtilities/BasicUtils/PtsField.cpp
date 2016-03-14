@@ -195,6 +195,19 @@ void PtsField::GetWeights(
     neighbourInds = m_neighInds;
 }
 
+PtsField::PtsField(const int dim, const Array< OneD, Array< OneD, NekDouble > > &pts):
+    m_dim(dim),
+    m_pts(pts),
+    m_ptsType(ePtsFile)
+{
+    for (int i = 0; i < GetNFields(); ++i)
+    {
+        m_fieldNames.push_back("NA");
+    }
+}
+
+
+
 /**
  * @brief Set the connectivity data for ePtsTetBlock and ePtsTriBlock
  *
@@ -268,9 +281,9 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
                         const string fieldName)
 {
     int nTotvars = m_pts.num_elements();
-    int nPts = m_pts[0].num_elements();
 
-    ASSERTL1(pts.num_elements() ==  nPts, "Field size mismatch");
+    ASSERTL1(pts.num_elements() ==  m_pts[0].num_elements(), 
+            "Field size mismatch");
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);

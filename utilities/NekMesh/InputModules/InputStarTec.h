@@ -40,54 +40,54 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+/// Converter for VTK files.
+class InputTec : public InputModule
+{
+public:
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(MeshSharedPtr m)
     {
-        /// Converter for VTK files.
-        class InputTec : public InputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputTec>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-
-            InputTec(MeshSharedPtr m);
-            virtual ~InputTec();
-
-            /// Populate and validate required data structures.
-            virtual void Process();
-
-            void ReadZone(int &nComposite);
-
-        protected:
-
-            void GenElement3D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces,
-                              vector<vector<int> >&FaceNodes,
-                              int ncomposite,
-                              bool DoOrient);
-
-
-            void GenElement2D(vector<NodeSharedPtr> &Nodes,
-                              int i, vector<int> &ElementFaces,
-                              vector<vector<int> >&FaceNodes,
-                              int ncomposite);
-
-
-            Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces,
-                                           vector<vector<int> >&FaceNodes);
-
-            Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
-                                           vector<int> &ElementFaces,
-                                           vector<vector<int> >&FaceNodes);
-
-            void ResetNodes(vector<NodeSharedPtr> &Nodes,
-                            Array<OneD, vector<int> >&ElementFaces,
-                            vector<vector<int> >&FaceNodes);
-        };
+        return MemoryManager<InputTec>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    InputTec(MeshSharedPtr m);
+    virtual ~InputTec();
+
+    /// Populate and validate required data structures.
+    virtual void Process();
+
+    void ReadZone(int &nComposite);
+
+protected:
+    void GenElement3D(vector<NodeSharedPtr> &Nodes,
+                      int i,
+                      vector<int> &ElementFaces,
+                      vector<vector<int> > &FaceNodes,
+                      int ncomposite,
+                      bool DoOrient);
+
+    void GenElement2D(vector<NodeSharedPtr> &Nodes,
+                      int i,
+                      vector<int> &ElementFaces,
+                      vector<vector<int> > &FaceNodes,
+                      int ncomposite);
+
+    Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
+                                   vector<int> &ElementFaces,
+                                   vector<vector<int> > &FaceNodes);
+
+    Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
+                                   vector<int> &ElementFaces,
+                                   vector<vector<int> > &FaceNodes);
+
+    void ResetNodes(vector<NodeSharedPtr> &Nodes,
+                    Array<OneD, vector<int> > &ElementFaces,
+                    vector<vector<int> > &FaceNodes);
+};
+}
 }
 
 #endif

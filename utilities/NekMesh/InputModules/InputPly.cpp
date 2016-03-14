@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include "InputPly.h"
 
@@ -45,21 +45,18 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputPly::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "ply"), InputPly::create,
-        "Reads ply triangulation format.");
+ModuleKey InputPly::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "ply"),
+    InputPly::create,
+    "Reads ply triangulation format.");
 
 InputPly::InputPly(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputPly::~InputPly()
 {
-
 }
-
 
 /**
  *
@@ -86,9 +83,9 @@ void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
 {
     m_mesh->m_expDim = 0;
     string line;
-    int nVertices = 0;
-    int nEntities = 0;
-    int nProperties = 0;
+    int nVertices                  = 0;
+    int nEntities                  = 0;
+    int nProperties                = 0;
     LibUtilities::ShapeType elType = LibUtilities::eTriangle;
     map<string, int> propMap;
 
@@ -103,12 +100,13 @@ void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
         stringstream s(line);
         string word;
         s >> word;
-        if(word == "format")
+        if (word == "format")
         {
             s >> word;
-            if(word != "ascii")
+            if (word != "ascii")
             {
-                ASSERTL0(false,"InputPly file currently only set up to read ascii formatted ply files");
+                ASSERTL0(false, "InputPly file currently only set up to read "
+                                "ascii formatted ply files");
             }
         }
         else if (word == "element")
@@ -160,16 +158,15 @@ void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
                 y *= scale;
                 z *= scale;
 
-
                 m_mesh->m_node.push_back(
                     boost::shared_ptr<Node>(new Node(i, x, y, z)));
 
                 // Read vertex normals.
                 if (propMap.count("nx") > 0)
                 {
-                    double nx = data[propMap["nx"]];
-                    double ny = data[propMap["ny"]];
-                    double nz = data[propMap["nz"]];
+                    double nx                  = data[propMap["nx"]];
+                    double ny                  = data[propMap["ny"]];
+                    double nz                  = data[propMap["nz"]];
                     m_mesh->m_vertexNormals[i] = Node(0, nx, ny, nz);
                 }
             }
@@ -196,9 +193,9 @@ void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
                 }
 
                 // Create element
-                ElmtConfig conf(elType,1,false,false);
-                ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(elType,conf,nodeList,tags);
+                ElmtConfig conf(elType, 1, false, false);
+                ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    elType, conf, nodeList, tags);
 
                 // Determine mesh expansion dimension
                 if (E->GetDim() > m_mesh->m_expDim)
@@ -210,6 +207,5 @@ void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
         }
     }
 }
-
 }
 }

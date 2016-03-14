@@ -36,7 +36,7 @@
 #ifndef NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 #define NEKTAR_MESHUTILS_OPTIMISATION_OPTIMISEOBJ_H
 
-#include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 namespace Nektar
 {

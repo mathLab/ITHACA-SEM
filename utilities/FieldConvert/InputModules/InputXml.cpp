@@ -35,7 +35,10 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 using namespace std;
+
+#include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
 
@@ -224,60 +227,46 @@ void InputXml::Process(po::variables_map &vm)
     }
 
 
-    // set up command lines options for session read to pass through
-    string firstarg = "FieldConvert";
-    int argc = 1;
-    char **argv;
-    argv = (char**)malloc(6*sizeof(char*));
+    // Set up command lines options that will be passed through to SessionReader
+    vector<string> cmdArgs;
+    cmdArgs.push_back("FieldConvert");
 
-    argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
-    sprintf(argv[0],"%s",firstarg.c_str());
-    
     if(m_f->m_verbose)
     {
-        string verbose = "--verbose";
-        argv[argc] = (char *)malloc(verbose.size()*sizeof(char));
-
-        sprintf(argv[argc],"%s",verbose.c_str());
-        ++argc;
+        cmdArgs.push_back("--verbose");
     }
 
     if(vm.count("shared-filesystem"))
     {
-        string sharedfs = "--shared-filesystem";
-        argv[argc] = (char *)malloc(sharedfs.size()*sizeof(char));
-        sprintf(argv[argc],"%s",sharedfs.c_str());
-        argc ++;
+        cmdArgs.push_back("--shared-filesystem");
     }
 
     if(vm.count("part-only"))
     {
-        string argstr = "--part-only";
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
-        
-        argstr = boost::lexical_cast<string>(vm["part-only"].as<int>());
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
+        cmdArgs.push_back("--part-only");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["part-only"].as<int>()));
     }
-    
+
     if(vm.count("part-only-overlapping"))
     {
-        string argstr = "--part-only-overlapping";
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
+        cmdArgs.push_back("--part-only-overlapping");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
+    }
 
-        argstr = boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>());
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
+    int argc = cmdArgs.size();
+    const char **argv = new const char*[argc];
+    for (int i = 0; i < argc; ++i)
+    {
+        argv[i] = cmdArgs[i].c_str();
     }
 
     m_f->m_session = LibUtilities::SessionReader::
         CreateInstance(argc, (char **) argv, files, m_f->m_comm);
+
+    // Free up memory.
+    delete [] argv;
 
     if(m_f->m_verbose)
     {

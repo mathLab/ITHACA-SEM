@@ -12,6 +12,9 @@ v4.3.0
 - Fix history point output formatting (!518)
 - Fix for OS X 10.11 (!512)
 - Fix `HexGeom::v_GetDir` to support heterogeneous basis functions (!520)
+- Added new `NekMeshUtils` library to support new `NekMesh` executable and 
+  associated CAD routines. Old CAD wrappers in LibUtilities now moved to 
+  `NekMeshUtils`. (!527)
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
@@ -39,7 +42,9 @@ v4.3.0
 - Add option to output equi-spaced points in VTU format (!550)
 - Add module innerproduct (!568)
 
-**MeshConvert:**
+**NekMesh:**
+- `MeshConvert` is now renamed to `NekMesh` to reflect new mesh generation
+  functionality (!527).
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)

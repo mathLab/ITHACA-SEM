@@ -10,11 +10,21 @@ pre-written PDE solvers for a selection of application domains.
 The software and User Guide is available for download from
 <http://www.nektar.info/>.
 
+
 User Guide
 ----------
 Detailed information on compiling, installing and using the software is
 available in the User Guide. This document is available as a pre-compiled PDF
 from the downloads section of the project website.
+
+
+Tutorials
+---------
+A number of tutorials are available, designed to walk the user through the
+basics of spectral/hp element methods, through the use of individual solvers and
+performing specific types of calculations.
+
+The tutorials are available from <http://doc.nektar.info/tutorials/latest>.
 
 
 Pre-requisites

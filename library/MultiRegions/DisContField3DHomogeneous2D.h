@@ -96,6 +96,9 @@ namespace Nektar
 			/// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,Array<OneD,int> &EdgeID);
+            
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
 			
 			/// Storage space for the boundary to element and boundary to trace map.
             /// This member variable is really allocated just in case a boundary expansion

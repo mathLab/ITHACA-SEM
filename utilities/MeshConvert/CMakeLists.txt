@@ -80,6 +80,7 @@ ENDIF (NEKTAR_USE_VTK)
 
 # Nektar++
 ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
+ADD_NEKTAR_TEST        (Nektar++/Tube45Refinement)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)

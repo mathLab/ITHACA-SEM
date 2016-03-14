@@ -19,15 +19,15 @@ does not have parallel support will be specified in the related section}
 %
 %
 %
-\section{Convert .fld / .chk files into Paraview or Tecplot format}
+\section{Convert .fld / .chk files into Paraview, VisIt or Tecplot format}
 \label{s:utilities:fieldconvert:sub:convert}
-To convert the \nekpp output binary files (.chk and .fld) into a format 
-which can be read by two common visualisation softwares: Paraview 
-(.vtu format) or Tecplot (.dat format) the user can run the following 
-commands:
+To convert the \nekpp output binary files (.chk and .fld) into a
+format which can be read by two common visualisation softwares:
+Paraview (.vtu format), VisIt (.vtu format) or Tecplot (.dat format)
+the user can run the following commands:
 %
 \begin{itemize}
-\item Paraview (.vtu format)
+\item Paraview or VisIt (.vtu format)
 %
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert test.xml test.fld test.vtu
@@ -64,7 +64,7 @@ sub-range defined by $-2\leq x \leq 3$, $-1\leq y \leq 2$ the
 additional flag \inltt{-r} can be used as follows:
 %
 \begin{itemize}
-\item Paraview (.vtu format)
+\item Paraview or VisIt (.vtu format)
 %
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -r -2,3,-1,2 test.xml test.fld test.vtu
@@ -99,6 +99,8 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
+\item \inltt{homplane}: Extract a plane from 3DH1D expansions;
+\item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields). 
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
@@ -134,7 +136,7 @@ FieldConvert -m C0Projection test.xml test.fld test-C0Proj.fld
 %
 where the file \inltt{test-C0Proj.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 
 \subsection{Calculate Q-Criterion: \textit{QCriterion} module}
 To perform the Q-criterion calculation and obtain an output 
@@ -146,7 +148,7 @@ FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
 %
 where the file \inltt{test-QCrit.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
@@ -155,7 +157,8 @@ to visualise either in Tecplot or in Paraview the result.
 To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
 %
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
+  FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld \
+  file3.fld
 \end{lstlisting}
 %
 In this case we use it in conjunction with the command \inltt{scale} 
@@ -166,7 +169,7 @@ is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output
 which contain the sum of the two .fld files.
 \inltt{file3.fld} can be processed in a similar way as described 
 in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
-it either in Tecplot or in Paraview the result.
+the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
@@ -180,7 +183,7 @@ FieldConvert -m concatenate file.xml  file1.fld  file2.fld  file-conc.fld
 %
 where the file \inltt{file-conc.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
@@ -192,14 +195,19 @@ number of poinst. This produces much smaller output files. The points
 are then connected together by simplices (triangles and tetrahedrons).
 
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m equispacedouptput test.xml test.fld test-boundary.dat
+FieldConvert -m equispacedoutput test.xml test.fld test.dat
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m equispacedouttput test.xml test.fld test.vtu
 \end{lstlisting}
 
 
 \begin{notebox} 
 Currently this option is only set up for triangles, quadrilaterals,
-tetrahedrons and prisms. It also only is currently used in tecplot
-output.
+tetrahedrons and prisms.
 \end{notebox}
 
 \subsection{Extract a boundary region: \textit{extract} module}
@@ -237,7 +245,7 @@ FieldConvert  test-b0.xml test-b0.fld test-b0.dat
 %
 This will obviously generate a Tecplot output if a .dat file 
 is specified as last argument. A .vtu extension will produce 
-a Paraview output.
+a Paraview or VisIt output.
 %
 %
 %
@@ -250,11 +258,81 @@ FieldConvert -m gradient test.xml  test.fld  test-grad.fld
 %
 where the file \inltt{file-grad.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt.
+%
+%
+
+\subsection{Extract a plane from 3DH1D expansion: \textit{homplane} module}
+
+To obtain a 2D expansion containing one of the planes of a
+3DH1D field file, use the command:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m homplane:planeid=value file.xml file.fld file-plane.fld
+\end{lstlisting}
+
+If the option \inltt{wavespace} is used, the Fourier coefficients
+corresponding to \inltt{planeid} are obtained. The command in this case is:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m homplane:wavespace:planeid=value file.xml \
+    file.fld file-plane.fld
+\end{lstlisting}
+
+The output file \inltt{file-plane.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview.
+
+
+\subsection{Inner Product of a single or series of fields with respect to a single or series of fields: \textit{innerproduct} module}
+You can take the inner product of one field with another field using
+the following command:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld  file2.xml file2.fld \
+  out.stdout
+\end{lstlisting}
+This command will load the \inltt{file1.fld} and \inltt{file2.fld}
+assuming they both are spatially defined by \inltt{files.xml} and
+determine the inner product of these fields. The input option
+\inltt{fromfld} must therefore be specified in this module.
+
+Optional arguments for this module are \inltt{fields} which allow you to specify
+the fields that you wish to use for the inner product, i.e. 
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld:fields=''0,1,2'' file2.xml \
+  file2.fld out.stdout
+\end{lstlisting}
+will only take the inner product between the variables 0,1 and 2 in
+the two fields files. The default is to take the inner product between
+all fields provided.
+
+Additional options include \inltt{multifldids} and \inltt{allfromflds}
+which allow for a series of fields to be evaluated in the following
+manner:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids=''0-3''\
+  file2.xml  file2.fld out.stdout
+\end{lstlisting}
+will take the inner product between a file names
+field1\_0.fld, field1\_1.fld, field1\_2.fld and field1\_3.fld with
+respect to field2.fld.
+
+Analogously including the options \inltt{allfromflds}, i.e. 
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m innerproduct:fromfld=file1.fld:multifldids=''0-3'':\
+  allfromflds  file2.xml file2.fld out.stdout
+\end{lstlisting}
+Will take the inner product of all the from fields,
+i.e. field1\_0.fld,field1\_1.fld,field1\_2.fld and field1\_3.fld with
+respect to each other. This option essentially ignores file2.fld. Only
+the unique inner products are evaluated so if four from fields are
+given only the related trianuglar number $4\times5/2=10$ of inner
+products are evaluated.
+
+This option can be run in parallel. 
+
 %
 %
 %
-%
+
 \subsection{Interpolate one field to another: \textit{interpfield} module}
 To interpolate one field to another, one can use the following command:
 %
@@ -439,13 +517,13 @@ keep.
 
 The output file \inltt{jacenergy.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise it either in Tecplot or in Paraview the result.
+to visualise the result either in Tecplot, Paraview or VisIt. 
 
 %
 %
 %
 
-\subsection{Extract mean mode of 3Dh1D expansion: \textit{meanmode} module}
+\subsection{Extract mean mode of 3DH1D expansion: \textit{meanmode} module}
 
 To obtain a 2D expansion containing the mean mode (plane zero in Fourier space) of a
 3DH1D field file, use the command:
@@ -455,7 +533,7 @@ FieldConvert -m meanmode file.xml file.fld file-mean.fld
 
 The output file \inltt{file-mean.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise it either in Tecplot or in Paraview.
+to visualise the result either in Tecplot or in Paraview or VisIt.
 
 %
 %
@@ -464,10 +542,12 @@ to visualise it either in Tecplot or in Paraview.
 \subsection{Print L2 and LInf norms: \textit{printfldnorms} module}
 
 \begin{lstlisting}[style=BashInputStyle] 
-FieldConvert -m printfldnorms test.xml test.fld 
+FieldConvert -m printfldnorms test.xml test.fld out.stdout
 \end{lstlisting}
 
-This module does not create an output file. The L2 and LInf norms for each field variable is printed to the stdout. 
+This module does not create an output file which is reinforced by the
+out.stdout option. The L2 and LInf norms for each field variable are
+then printed to the stdout.
 
 %
 %
@@ -493,7 +573,7 @@ The argument \inltt{scale=value} rescales of a factor \inltt{value}
 \inltt{test.fld} by the factor value.
 The output file \inltt{file-conc.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
-to visualise it either in Tecplot or in Paraview the result.
+to visualise the result  either in Tecplot, Paraview or VisIt.
 
 %
 %
@@ -616,13 +696,21 @@ command
 \begin{lstlisting}[style=BashInputStyle]
 mpirun -np <nprocs> FieldConvert test.xml test.fld test.dat
 \end{lstlisting}
-replacing \inltt{<nprocs>} with the number of processors. 
-This will produce multiple \inltt{.dat} files of the form \inltt{test\_P0.dat}, 
-\inltt{test\_P1.dat}, \inltt{test\_P2.dat}. Similarly the VTK files can be
-processed in this manner as can the vorticity option. In the case of 
-the vorticity option a directory called \inltt{test\_vort.fld} (or the specified 
-output name) will be produced with the standard parallel field files placed 
-within the directory.
+or
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np <nprocs> FieldConvert test.xml test.fld test.vtu
+\end{lstlisting}
+replacing \inltt{<nprocs>} with the number of processors.  This will
+produce multiple \inltt{.dat} or \inltt{.vtu} files of the form
+\inltt{test\_P0.dat}, \inltt{test\_P1.dat}, \inltt{test\_P2.dat} or
+\inltt{test\_P0.vtu}, \inltt{test\_P1.vtu}, \inltt{test\_P2.vtu}. Note
+when producing a parallel \inltt{.vtu} file an additional file called
+\inltt{.pvtu} is written out which allows for parallel reading of the
+individual \inltt{.vtu} files. Similarly functions that produce a
+\inltt{.fld} file output can be processed in this manner. In the case
+when producing a .fld file a directory called \inltt{test.fld} (or the
+specified output name) will be produced with the standard parallel
+field files placed within the directory.
 %
 %
 %
@@ -652,7 +740,7 @@ done
 
 This will create a directory called \inltt{file2.fld} and put the different 
 parallel partitions into files with names 
-\inltt{P0000000.fld, P0000001.fld, ?., P0000009.fld}. This is nearly a complete
+\inltt{P0000000.fld, P0000001.fld, .., P0000009.fld}. This is nearly a complete
 parallel field file but the Info.xml file which contains the information about 
 which elements are in each partitioned file \inltt{P000000X.fld}. So to generate
 this Info.xml file you need to call

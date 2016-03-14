@@ -1113,12 +1113,14 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
                 Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
                 Gs::Gather(tmp4, Gs::gs_add, tmp1);
+                Gs::Finalise(tmp1);
 
                 if (unique_edges > 0)
                 {
                     Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
                     Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm);
                     Gs::Gather(tmp5, Gs::gs_add, tmp2);
+                    Gs::Finalise(tmp2);
                 }
 
                 if (unique_faces > 0)
@@ -1126,6 +1128,7 @@ namespace Nektar
                     Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
                     Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm);
                     Gs::Gather(tmp6, Gs::gs_add, tmp3);
+                    Gs::Finalise(tmp3);
                 }
 
                 // Finally, fill the partVerts set with all non-Dirichlet
@@ -1363,6 +1366,7 @@ namespace Nektar
             }
             Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
             Gs::Gather(edgeDof, Gs::gs_min, tmp);
+            Gs::Finalise(tmp);
             for (i=0; i < dofs[1].size(); i++)
             {
                 dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
@@ -1377,6 +1381,7 @@ namespace Nektar
             }
             Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
             Gs::Gather(faceDof, Gs::gs_min, tmp2);
+            Gs::Finalise(tmp2);
             for (i=0; i < dofs[2].size(); i++)
             {
                 dofs[2][faceId[i]] = (int) (faceDof[i]+0.5);
@@ -1842,6 +1847,8 @@ namespace Nektar
          */
         AssemblyMapCG::~AssemblyMapCG()
         {
+            Gs::Finalise(m_gsh);
+            Gs::Finalise(m_bndGsh);
         }
 
         /**

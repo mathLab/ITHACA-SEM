@@ -129,12 +129,21 @@ namespace Nektar
             LibUtilities::EquationSharedPtr ffunc =
                 pSession->GetFunction(pFunctionName, pFieldName);
             
-            Array<OneD, NekDouble> x0(1,0.0);
-            Array<OneD, NekDouble> x1(1,0.0);
-            Array<OneD, NekDouble> x2(1,0.0);
-         
-            ffunc->Evaluate(x0, x1, x2, pTime, pArray);
+            EvaluateTimeFunction(pTime,ffunc,pArray);
         }
+
+
+        void Forcing::EvaluateTimeFunction(
+               const NekDouble                          pTime,
+               const LibUtilities::EquationSharedPtr&   pEqn,
+               Array<OneD, NekDouble>&                  pArray)
+        {
+            // dummy array of zero pts.
+            Array<OneD, NekDouble> x0(pArray.num_elements(),0.0);
+
+            pEqn->Evaluate(x0, x0, x0, pTime, pArray);
+        }
+        
 
 
         void Forcing::EvaluateFunction(

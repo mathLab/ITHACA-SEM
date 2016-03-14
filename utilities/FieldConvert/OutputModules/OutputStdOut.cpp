@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputPts.cpp
+//  File: OutputStdOut.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,79 +29,47 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Read xml file of a series of points and hold
+//  Description: Dummy output module.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <set>
 #include <string>
-#include <iostream>
 using namespace std;
 
-#include <LibUtilities/BasicUtils/PtsIO.h>
-#include <LibUtilities/BasicUtils/PtsField.h>
-
-#include <tinyxml.h>
-
-#include "InputPts.h"
+#include "OutputStdOut.h"
+#include <LibUtilities/BasicUtils/MeshPartition.h>
+#include <boost/format.hpp>
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-ModuleKey InputPts::m_className[5] = {
+ModuleKey OutputStdOut::m_className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
-};
+        ModuleKey(eOutputModule, "stdout"),
+        OutputStdOut::create,
+        "Writes to stdout");
 
-
-/**
- * @brief Set up InputPts object.
- *
- */
-InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
-{
-    m_allowedFiles.insert("pts");
-}
-
-
-/**
- *
- */
-InputPts::~InputPts()
+OutputStdOut::OutputStdOut(FieldSharedPtr f) : OutputModule(f)
 {
 }
 
-
-/**
- *
- */
-void InputPts::Process(po::variables_map &vm)
+OutputStdOut::~OutputStdOut()
 {
+}
+
+void OutputStdOut::Process(po::variables_map &vm)
+{
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+    int i;
+
     if (m_f->m_verbose)
     {
-        cout << "Processing input pts file" << endl;
+        cout << "OutputStdOut: Output written to StdOut" << endl;
     }
-
-    string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
-
-    if(m_f->m_session)
-    {
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::
-        AllocateSharedPtr(m_f->m_session->GetComm());
-
-    }
-    else // serial communicator
-    {
-        LibUtilities::CommSharedPtr c = LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-        m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>
-            ::AllocateSharedPtr(c);
-    }
-
-    m_f->m_ptsIO->Import(inFile,  m_f->m_fieldPts);
 }
-
 }
 }

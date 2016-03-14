@@ -37,12 +37,16 @@ v4.3.0
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
 - Add option to output equi-spaced points in VTU format (!550)
+- Add module innerproduct (!568)
 - Add command line option of `--part-only` and `--part-only-overlapping` (!569)
 
 **MeshConvert:**
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)
+
+**Documentation:**
+- Added git submodule for including Nektar++ tutorials in the source tree (!507)
 
 v4.2.0
 ------

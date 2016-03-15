@@ -272,8 +272,8 @@ namespace Nektar
     {
         std::string varName;
         int cnt        = 0;
-
-        int nTracePts = GetTraceTotPoints();
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = inarray.num_elements();
 
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         for (int i = 0; i < nvariables; ++i)
@@ -296,7 +296,7 @@ namespace Nektar
             }
             else
             {
-                SetCommonBC(type, n, time, cnt, inarray);
+                SetCommonBC(type, n, time, cnt, Fwd, inarray);
             }
 
             // no User Defined conditions provided so skip cnt

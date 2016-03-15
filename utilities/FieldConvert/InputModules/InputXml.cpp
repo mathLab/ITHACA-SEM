@@ -35,7 +35,10 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 using namespace std;
+
+#include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
 
@@ -228,55 +231,47 @@ void InputXml::Process(po::variables_map &vm)
     char **argv;
     argv = (char**)malloc(6*sizeof(char*));
 
-    argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
-    sprintf(argv[0],"%s",firstarg.c_str());
-    
+    // Set up command lines options that will be passed through to SessionReader
+    vector<string> cmdArgs;
+    cmdArgs.push_back("FieldConvert");
+
     if(m_f->m_verbose)
     {
-        string verbose = "--verbose";
-        argv[argc] = (char *)malloc(verbose.size()*sizeof(char));
-
-        sprintf(argv[argc],"%s",verbose.c_str());
-        ++argc;
+        cmdArgs.push_back("--verbose");
     }
 
     if(vm.count("shared-filesystem"))
     {
-        string sharedfs = "--shared-filesystem";
-        argv[argc] = (char *)malloc(sharedfs.size()*sizeof(char));
-        sprintf(argv[argc],"%s",sharedfs.c_str());
-        argc ++;
+        cmdArgs.push_back("--shared-filesystem");
     }
 
     if(vm.count("part-only"))
     {
-        string argstr = "--part-only";
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
-        
-        argstr = boost::lexical_cast<string>(vm["part-only"].as<int>());
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
+        cmdArgs.push_back("--part-only");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["part-only"].as<int>()));
     }
-    
+
     if(vm.count("part-only-overlapping"))
     {
-        string argstr = "--part-only-overlapping";
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
+        cmdArgs.push_back("--part-only-overlapping");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
+    }
 
-        argstr = boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>());
-        argv[argc] = (char *)malloc(argstr.size()*sizeof(char));
-        sprintf(argv[argc],"%s",argstr.c_str());
-        argc ++;
+    int argc = cmdArgs.size();
+    const char **argv = new const char*[argc];
+    for (int i = 0; i < argc; ++i)
+    {
+        argv[i] = cmdArgs[i].c_str();
     }
 
     m_f->m_session = LibUtilities::SessionReader::
         CreateInstance(argc, (char **) argv, files, m_f->m_comm);
-    
+
+    // Free up memory.
+    delete [] argv;
+
     if(m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
@@ -408,6 +403,21 @@ void InputXml::Process(po::variables_map &vm)
         }
     }
 
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+    }
+
     // Override number of planes with value from cmd line
     if(NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
     {
@@ -416,8 +426,12 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
+<<<<<<< HEAD
 
 
+=======
+    
+>>>>>>> feature/MeshConvertLabels
     if(m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
@@ -439,11 +453,17 @@ void InputXml::Process(po::variables_map &vm)
             ss << cpuTime << "s";
             cout << "InputXml  CPU Time: " << setw(8) << left
                  << ss.str() << endl;
+<<<<<<< HEAD
 
         }
         
     }
 }
+=======
+>>>>>>> feature/MeshConvertLabels
 
+        }
+    }
+}
 }
 }

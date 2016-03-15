@@ -12,6 +12,9 @@ v4.3.0
 - Fix history point output formatting (!518)
 - Fix for OS X 10.11 (!512)
 - Fix `HexGeom::v_GetDir` to support heterogeneous basis functions (!520)
+- Added new `NekMeshUtils` library to support new `NekMesh` executable and
+  associated CAD routines. Old CAD wrappers in LibUtilities now moved to
+  `NekMeshUtils` (!527)
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
@@ -33,6 +36,7 @@ v4.3.0
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)
+- Add process module to calculate high-order mesh quality metric (!527).
 - Add module to extract one of the planes of 3DH1D (!542)
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
@@ -41,8 +45,11 @@ v4.3.0
 - Add support for interpolating to a box of points and fix ability to run interppointstofld module in parallel when using a plane or box optio(!561)n 
 - Add option to output equi-spaced points in VTU format (!550)
 - Add module innerproduct (!568)
+- Add command line option of `--part-only` and `--part-only-overlapping` (!569)
 
-**MeshConvert:**
+**NekMesh:**
+- `MeshConvert` is now renamed to `NekMesh` to reflect new mesh generation
+  functionality (!527).
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)

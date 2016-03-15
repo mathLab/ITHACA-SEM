@@ -58,10 +58,10 @@ elseif(CPACK_GENERATOR STREQUAL "PackageMaker")
     # OS X .pkg installer -- set install location
     set(CPACK_PACKAGE_DEFAULT_LOCATION "/")
     set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/nektar++")
+    set(CPACK_RESOURCE_FILE_WELCOME "@CMAKE_SOURCE_DIR@/pkg/osx-installer.html")
 
     # This is used as part of the identifier, so make it without spaces
-    set(CPACK_PACKAGE_VENDOR "imperial_college_london")
-else()
+    set(CPACK_PACKAGE_VENDOR "imperialcollegelondon")
 endif()
 
 # Determine architecture if not detected by rpm/dpkg above
@@ -102,15 +102,16 @@ if(INSTALL_BINS_FILES)
     )
 endif()
 
-# This horrible block of code is designed to patch up our executables ready for
-# OS X deployment. The strategy is to create a piece of INSTALL code that will
+# This lovely block of code is designed to patch up our executables ready for OS
+# X deployment. The strategy is to create a piece of INSTALL code that will
 # patch up each executable and copy any libraries that we depend on, so that
-# things like ARPACK can be compiled using MacPorts/Homebrew.
+# things like ARPACK can be compiled using MacPorts/Homebrew and we don't have
+# to bother messing around compiling them ourselves.
 #
 # The strategy is:
 #
 # - Examine the library dependencies using the get_prerequisites function from
-#   the GetPrerequisites CMake module (basically, run otool recursively)
+#   the GetPrerequisites CMake module (that essentially runs otool recursively)
 # - Copy each of the libraries into dist/lib
 # - Run install_name_tool on each library to remove the absolute path to the
 #   installed library.

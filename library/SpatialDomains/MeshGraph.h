@@ -387,6 +387,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedFaces() { return m_curvedFaces; }
 
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
+                SPATIAL_DOMAINS_EXPORT const PointGeomMap& GetAllPointGeoms() const { return m_vertSet; }
                 SPATIAL_DOMAINS_EXPORT const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
                 SPATIAL_DOMAINS_EXPORT const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
                 SPATIAL_DOMAINS_EXPORT const QuadGeomMap& GetAllQuadGeoms() const { return m_quadGeoms; }
@@ -647,4 +648,3 @@ namespace Nektar
 };
 
 #endif
-

@@ -93,7 +93,8 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(int nParts, bool shared)
+        void MeshPartition::PartitionMesh(int nParts, bool shared,
+                                          bool overlapping)
         {
             ASSERTL0(m_meshElements.size() >= nParts,
                      "Too few elements for this many processes.");
@@ -104,7 +105,7 @@ namespace Nektar
                 WeightElements();
             }
             CreateGraph(m_mesh);
-            PartitionGraph(m_mesh, nParts, m_localPartition);
+            PartitionGraph(m_mesh, nParts, m_localPartition, overlapping);
         }
 
         void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -1141,9 +1142,27 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Partition the graph.
+         *
+         * This routine partitions the graph @p pGraph into @p nParts, producing
+         * subgraphs that are populated in @p pLocalPartition. If the @p
+         * overlapping option is set (which is used for post-processing
+         * purposes), the resulting partitions are extended to cover
+         * neighbouring elements by additional vertex on the dual graph, which
+         * produces overlapping partitions (i.e. the intersection of two
+         * connected partitions is non-empty).
+         *
+         * @param pGraph           Graph to be partitioned.
+         * @param nParts           Number of partitions.
+         * @param pLocalPartition  Vector of sub-graphs representing each
+         *                         partition.
+         * @param overlapping      True if resulting partitions should overlap.
+         */
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
                                            int nParts,
-                                           std::vector<BoostSubGraph>& pLocalPartition)
+                                           std::vector<BoostSubGraph>& pLocalPartition,
+                                           bool overlapping)
         {
             int i;
             int nGraphVerts = boost::num_vertices(pGraph);
@@ -1151,6 +1170,7 @@ namespace Nektar
 
             // Convert boost graph into CSR format
             BoostVertexIterator    vertit, vertit_end;
+            BoostAdjacencyIterator adjvertit, adjvertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
             if (m_comm->GetRowComm()->TreatAsRankZero())
@@ -1255,6 +1275,25 @@ namespace Nektar
             {
                 pGraph[*vertit].partition = part[i];
                 boost::add_vertex(i, pLocalPartition[part[i]]);
+            }
+
+            // If the overlapping option is set (for post-processing purposes),
+            // add vertices that correspond to the neighbouring elements.
+            if (overlapping)
+            {
+                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                      vertit != vertit_end;
+                      ++vertit)
+                {
+                    for (boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
+                         adjvertit != adjvertit_end; ++adjvertit)
+                    {
+                        if(part[*adjvertit] != part[*vertit])
+                        {
+                            boost::add_vertex(*adjvertit, pLocalPartition[part[*vertit]]);
+                        }
+                    }
+                }
             }
         }
 

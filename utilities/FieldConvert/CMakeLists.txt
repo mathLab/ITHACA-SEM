@@ -9,6 +9,8 @@ SET(FieldConvertHeaders
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
     OutputModules/OutputFld.h
+    OutputModules/OutputStdOut.h
+    OutputModules/OutputPts.h
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
@@ -18,6 +20,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessHomogeneousPlane.h
+    ProcessModules/ProcessInnerProduct.h
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
     ProcessModules/ProcessInterpPointDataToFld.h
@@ -34,6 +37,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessWSS.h
     ProcessModules/ProcessC0Projection.h
     ProcessModules/ProcessQCriterion.h
+    ProcessModules/ProcessQualityMetric.h
 )
 
 SET(FieldConvertSources
@@ -47,6 +51,8 @@ SET(FieldConvertSources
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp
     OutputModules/OutputFld.cpp
+    OutputModules/OutputStdOut.cpp
+    OutputModules/OutputPts.cpp
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
@@ -56,6 +62,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
+    ProcessModules/ProcessInnerProduct.cpp
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
     ProcessModules/ProcessInterpPointDataToFld.cpp
@@ -72,6 +79,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessWSS.cpp
     ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessQCriterion.cpp
+    ProcessModules/ProcessQualityMetric.cpp
 )
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
@@ -108,4 +116,3 @@ IF (NEKTAR_USE_MPI)
     #ADD_NEKTAR_TEST(chan3D_vtu_par)
     ADD_NEKTAR_TEST(chan3D_vort_par)
 ENDIF (NEKTAR_USE_MPI)
-

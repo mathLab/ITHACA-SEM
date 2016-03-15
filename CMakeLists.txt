@@ -185,6 +185,7 @@ INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (FindANN)
 INCLUDE (ThirdPartyCCM)
+INCLUDE (ThirdPartyHDF5)
 
 
 INCLUDE (Doxygen)

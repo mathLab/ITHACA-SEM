@@ -430,7 +430,7 @@ void ProcessExtractSurf::Process()
                     
                     
                     ElmtConfig conf(elType,1,true,true);
-                    ElementSharedPtr E = GetElementFactory().CreateInstance(elType
+                    ElementSharedPtr E = GetElementFactory().CreateInstance(elType,
                                                                             conf,nodeList,tags);
                     E->SetId((*locit)->m_id);
                     m_mesh->m_element[E->GetDim()].push_back(E);

@@ -95,6 +95,31 @@ vector<Array<OneD, NekDouble> > GetPyFrStandardTet(int n)
     return ret;
 }
 
+vector<Array<OneD, NekDouble> > GetPyFrStandardPri(int n)
+{
+    vector<Array<OneD, NekDouble> > ret;
+
+    NekDouble du = 2.0 / (n-1);
+
+    for(int z = 0; z < n; z++)
+    {
+        int ct = 0;
+        for(int y = 0; y < n; y++)
+        {
+            for(int x = 0; x < n - y; x++)
+            {
+                Array<OneD, NekDouble> uvw(3);
+                uvw[0] = -1.0 + x * du;
+                uvw[1] = -1.0 + y * du;
+                uvw[2] = -1.0 + z * du;
+                ret.push_back(uvw);
+            }
+        }
+    }
+
+    return ret;
+}
+
 vector<Array<OneD, NekDouble> > GetPyFRNodes(ElementSharedPtr el, int nm)
 {
     vector<Array<OneD, NekDouble> > ret;
@@ -129,6 +154,35 @@ vector<Array<OneD, NekDouble> > GetPyFRNodes(ElementSharedPtr el, int nm)
         }
 
     }
+    else if(el->GetConf().m_e == LibUtilities::ePrism)
+    {
+        vector<Array<OneD, NekDouble> > Pri = GetPyFrStandardPri(nm);
+
+        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
+        geom->FillGeom();
+        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
+        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
+        Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
+
+        Array<OneD, NekDouble> xc(xmap->GetTotPoints());
+        Array<OneD, NekDouble> yc(xmap->GetTotPoints());
+        Array<OneD, NekDouble> zc(xmap->GetTotPoints());
+        xmap->BwdTrans(coeffs0,xc);
+        xmap->BwdTrans(coeffs1,yc);
+        xmap->BwdTrans(coeffs2,zc);
+
+        for(int i = 0; i < Pri.size(); i++)
+        {
+            Array<OneD, NekDouble> xp = Pri[i];
+
+            Array<OneD, NekDouble> xyz(3);
+            xyz[0] = xmap->PhysEvaluate(xp, xc);
+            xyz[1] = xmap->PhysEvaluate(xp, yc);
+            xyz[2] = xmap->PhysEvaluate(xp, zc);
+            ret.push_back(xyz);
+        }
+    }
 
     return ret;
 }
@@ -139,6 +193,10 @@ string GetDSName(string n)
     if(n == "A")
     {
         ret = "spt_tet_p0";
+    }
+    else if(n == "R")
+    {
+        ret = "spt_pri_p0";
     }
     else
     {
@@ -155,6 +213,12 @@ int GetNump(string n, int nm)
     if(n == "A")
     {
         LibUtilities::PointsKey pkey(nm, LibUtilities::eNodalTetEvenlySpaced);
+
+        ret = LibUtilities::PointsManager()[pkey]->GetTotNumPoints();
+    }
+    else if(n == "R")
+    {
+        LibUtilities::PointsKey pkey(nm, LibUtilities::eNodalPrismEvenlySpaced);
 
         ret = LibUtilities::PointsManager()[pkey]->GetTotNumPoints();
     }
@@ -279,6 +343,13 @@ void OutputPYFR::Process()
     lm[2] = 3;
     lm[3] = 2;
     linkmap["tet"] = lm;
+    lm.clear();
+    lm[0] = 2;
+    lm[1] = 1;
+    lm[2] = 3;
+    lm[3] = 0;
+    lm[4] = 4;
+    linkmap["pri"] = lm;
 
     { //con
         if(m_mesh->m_expDim == 2)

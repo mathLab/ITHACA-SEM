@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: 2D Nodal Triangle Fekete Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,7 +43,7 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
         void NodalTriElec::CalculatePoints()
         {
@@ -65,8 +65,8 @@ namespace Nektar
             {
                 if(int(NodalTriElecData[index][0]))
                 {
-                    b = NodalTriElecData[index][4]; 
-                    c = NodalTriElecData[index][5]; 
+                    b = NodalTriElecData[index][4];
+                    c = NodalTriElecData[index][5];
 
                     m_points[0][isum] = 2.0*b - 1.0;
                     m_points[1][isum] = 2.0*c - 1.0;
@@ -98,7 +98,7 @@ namespace Nektar
                         m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
-                    continue;   
+                    continue;
                 }//end symmetry3b
 
 
@@ -112,7 +112,7 @@ namespace Nektar
                         m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
-                    continue;   
+                    continue;
                 }//end symmetry6
             }//end npts
 
@@ -136,10 +136,10 @@ namespace Nektar
             PointsBaseType::CalculateWeights();
 
             typedef DataType T;
-            
+
             // Solve the Vandermonde system of integrals for the weight vector
             NekVector<T> w = MakeQuadratureWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]));
-            
+
             m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
         }
 
@@ -152,7 +152,7 @@ namespace Nektar
             NekVector<NekDouble> y( m_points[1] );
             NekVector<NekDouble> xi = x;
             NekVector<NekDouble> yi = y;
-                
+
             m_derivmatrix[0] = GetXDerivativeMatrix(x,y,xi,yi);
             m_derivmatrix[1] = GetYDerivativeMatrix(x,y,xi,yi);
 
@@ -193,7 +193,7 @@ namespace Nektar
 
             const int nVerts = 3;
             const int nEdgeInteriorPoints = GetNumPoints()-2;
-            const int nBoundaryPoints = 3*nEdgeInteriorPoints + 3; 
+            const int nBoundaryPoints = 3*nEdgeInteriorPoints + 3;
 
             if(nEdgeInteriorPoints==0)
             {
@@ -276,8 +276,78 @@ namespace Nektar
                     }
                 }
             }
+
+            if(GetNumPoints() < 5)
+            {
+                //at numpoints = 4 there is only one interior point so doesnt
+                //need sorting
+                return;
+            }
+
+            //someone forgot to finish this piece of code and tell anyone
+            //that they didnt
+            //face interior nodes needs to be considered
+            //make a copy of the unsorted nodes
+            //bubble sort by smallest y
+            //which will put them into sets of ever decreasing size
+            //which can be bubble sorted by x to obtain the distrobution
+
+            Array<OneD, NekDouble> xc(m_points[0].num_elements() - iend);
+            Array<OneD, NekDouble> yc(m_points[0].num_elements() - iend);
+            int ct = 0;
+            for(i = iend; i < m_points[0].num_elements(); i++, ct++)
+            {
+                xc[ct] = m_points[0][i];
+                yc[ct] = m_points[1][i];
+            }
+
+            //sort smallest first
+            bool repeat = true;
+            while(repeat)
+            {
+                repeat = false;
+                for(i = 0; i < xc.num_elements() - 1; i++)
+                {
+                    if(yc[i] > yc[i+1])
+                    {
+                        std::swap(xc[i],xc[i+1]);
+                        std::swap(yc[i],yc[i+1]);
+                        repeat = true;
+                    }
+                }
+            }
+
+            int offset = 0;
+            int npl = GetNumPoints() - 3;
+            while(npl > 1)
+            {
+                repeat = true;
+                while(repeat)
+                {
+                    repeat = false;
+                    for(i = offset; i < offset + npl - 1; i++)
+                    {
+                        if(xc[i] > xc[i+1])
+                        {
+                            std::swap(xc[i],xc[i+1]);
+                            std::swap(yc[i],yc[i+1]);
+                            repeat = true;
+                        }
+                    }
+                }
+                offset += npl;
+                npl--;
+            }
+
+            //copy back in
+            ct = 0;
+            for(i = iend; i < m_points[0].num_elements(); i++, ct++)
+            {
+                m_points[0][i] = xc[ct];
+                m_points[1][i] = yc[ct];
+            }
             return;
-        }     
+        }
     } // end of namespace stdregion
 } // end of namespace stdregion
 

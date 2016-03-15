@@ -42,6 +42,7 @@ v4.3.0
 - Add command line option to set number of homogeneous planes (!540)
 - Add option to output equi-spaced points in VTU format (!550)
 - Add module innerproduct (!568)
+- Add command line option of `--part-only` and `--part-only-overlapping` (!569)
 
 **NekMesh:**
 - `MeshConvert` is now renamed to `NekMesh` to reflect new mesh generation

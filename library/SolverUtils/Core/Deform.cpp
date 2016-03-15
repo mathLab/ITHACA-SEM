@@ -56,7 +56,8 @@ namespace SolverUtils {
      */
     void UpdateGeometry(
         SpatialDomains::MeshGraphSharedPtr           graph,
-        Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
+        Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        bool modal)
     {
         // Clear existing curvature.
         SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
@@ -233,6 +234,9 @@ namespace SolverUtils {
                     // Now interpolate face onto a more reasonable set of
                     // points.
                     int nq = max(nq0, nq1);
+                    if(!modal)
+                        nq--;
+
                     LibUtilities::PointsKey edgePts(
                         nq, LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::PointsKey triPts(

@@ -38,6 +38,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <cmath>
 
 #ifdef _WIN32
 #include <io.h>
@@ -68,6 +69,7 @@ namespace LibUtilities
  */
 inline void PrintProgressbar(const int position, const int goal, const string message)
 {
+    std::cout.unsetf ( std::ios::floatfield );
     if (ISTTY)
     {
         // carriage return
@@ -75,12 +77,12 @@ inline void PrintProgressbar(const int position, const int goal, const string me
 
         cout << message << ": ";
         float progress = position / float(goal);
-        cout << setw(3) << int(100 * progress) << "% [";
-        for (int j = 0; j < int(progress * 49); j++)
+        cout << setw(3) << ceil(100 * progress) << "% [";
+        for (int j = 0; j < ceil(progress * 49); j++)
         {
             cout << "=";
         }
-        for (int j = int(progress * 49); j < 49; j++)
+        for (int j = ceil(progress * 49); j < 49; j++)
         {
             cout << " ";
         }
@@ -89,7 +91,7 @@ inline void PrintProgressbar(const int position, const int goal, const string me
     else
     {
         // print only every 2 percent
-        if (int(100 * position / goal) % 2 ==  0)
+        if (int(ceil(double(100 * position / goal))) % 2 ==  0)
         {
             cout << "." <<  flush;
         }

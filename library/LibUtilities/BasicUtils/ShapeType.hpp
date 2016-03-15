@@ -31,11 +31,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHAPE_TYPE_H
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHAPE_TYPE_H
 
 #include <algorithm>
+#include <vector>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 

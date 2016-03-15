@@ -227,9 +227,6 @@ void InputXml::Process(po::variables_map &vm)
 
     // set up command lines options for session read to pass through
     string firstarg = "FieldConvert";
-    int argc = 1;
-    char **argv;
-    argv = (char**)malloc(6*sizeof(char*));
 
     // Set up command lines options that will be passed through to SessionReader
     vector<string> cmdArgs;
@@ -426,12 +423,7 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
-<<<<<<< HEAD
-
-
-=======
     
->>>>>>> feature/MeshConvertLabels
     if(m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
@@ -453,14 +445,6 @@ void InputXml::Process(po::variables_map &vm)
             ss << cpuTime << "s";
             cout << "InputXml  CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-<<<<<<< HEAD
-
-        }
-        
-    }
-}
-=======
->>>>>>> feature/MeshConvertLabels
 
         }
     }

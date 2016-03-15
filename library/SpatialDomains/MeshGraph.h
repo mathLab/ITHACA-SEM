@@ -283,7 +283,7 @@ namespace Nektar
                         const std::string &compositeStr,
                         CompositeMap &compositeVector) const;
 
-                inline const CompositeMap    &GetComposites() const;
+                inline const CompositeMap &GetComposites() const;
                 inline const map<int,string> &GetCompositesLabels() const;
 
                 inline const std::vector<CompositeMap> &GetDomain(void) const;
@@ -422,6 +422,7 @@ namespace Nektar
                 HexGeomMap                              m_hexGeoms;
 
                 int                                     m_meshDimension;
+                map<int,string>                         m_compositesLabels;
                 int                                     m_spaceDimension;
                 int                                     m_partition;
                 bool                                    m_meshPartitioned;
@@ -477,6 +478,16 @@ namespace Nektar
         inline const CompositeMap &MeshGraph::GetComposites() const
         {
             return m_meshComposites;
+        }
+
+
+        /**
+         * \brief Return a map of integers and strings containing the
+         * labels of each composite
+         */
+        inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
+        {
+            return m_compositesLabels;
         }
 
 

@@ -422,7 +422,6 @@ namespace Nektar
                 HexGeomMap                              m_hexGeoms;
 
                 int                                     m_meshDimension;
-                map<int,string>                         m_compositesLabels;
                 int                                     m_spaceDimension;
                 int                                     m_partition;
                 bool                                    m_meshPartitioned;
@@ -484,15 +483,6 @@ namespace Nektar
         /**
          * \brief Return a map of integers and strings containing the
          * labels of each composite
-         */
-        inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
-        {
-            return m_compositesLabels;
-        }
-
-
-        /**
-         *
          */
         inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
         {

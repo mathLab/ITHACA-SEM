@@ -33,7 +33,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/MeshElements.h>
+#include <NekMeshUtils/MeshElements/Element.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 #include <H5Cpp.h>
 #ifndef H5_NO_NAMESPACE
@@ -67,6 +69,96 @@ OutputPYFR::OutputPYFR(MeshSharedPtr m) : OutputModule(m)
 OutputPYFR::~OutputPYFR()
 {
 
+}
+
+vector<Array<OneD, NekDouble> > GetPyFrStandardTet(int n)
+{
+    vector<Array<OneD, NekDouble> > ret;
+
+    NekDouble du = 2.0 / (n-1);
+
+    for(int z = 0; z < n; z++)
+    {
+        for(int y = 0; y < n - z; y++)
+        {
+            for(int x = 0; x < n - y - z; x++)
+            {
+                Array<OneD, NekDouble> uvw(3);
+                uvw[0] = -1.0 + x * du;
+                uvw[1] = -1.0 + y * du;
+                uvw[2] = -1.0 + z * du;
+                ret.push_back(uvw);
+            }
+        }
+    }
+
+    return ret;
+}
+
+vector<Array<OneD, NekDouble> > GetPyFRNodes(ElementSharedPtr el, int nm)
+{
+    vector<Array<OneD, NekDouble> > ret;
+
+    if(el->GetConf().m_e == LibUtilities::eTetrahedron)
+    {
+        vector<Array<OneD, NekDouble> > Tet = GetPyFrStandardTet(nm);
+
+        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
+        geom->FillGeom();
+        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
+        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
+        Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
+
+        Array<OneD, NekDouble> xc(xmap->GetTotPoints());
+        Array<OneD, NekDouble> yc(xmap->GetTotPoints());
+        Array<OneD, NekDouble> zc(xmap->GetTotPoints());
+        xmap->BwdTrans(coeffs0,xc);
+        xmap->BwdTrans(coeffs1,yc);
+        xmap->BwdTrans(coeffs2,zc);
+
+        for(int i = 0; i < Tet.size(); i++)
+        {
+            Array<OneD, NekDouble> xp = Tet[i];
+
+            Array<OneD, NekDouble> xyz(3);
+            xyz[0] = xmap->PhysEvaluate(xp, xc);
+            xyz[1] = xmap->PhysEvaluate(xp, yc);
+            xyz[2] = xmap->PhysEvaluate(xp, zc);
+            ret.push_back(xyz);
+        }
+
+    }
+
+    return ret;
+}
+
+string GetDSName(string n)
+{
+    string ret = "Null";
+    if(n == "A")
+    {
+        ret = "spt_tet_p0";
+    }
+    else
+    {
+        cout << "unknown type" << endl;
+        abort();
+    }
+
+    return ret;
+}
+
+int GetNump(string n, int nm)
+{
+    int ret = 0;
+    if(n == "A")
+    {
+        LibUtilities::PointsKey pkey(nm, LibUtilities::eNodalTetEvenlySpaced);
+
+        ret = LibUtilities::PointsManager()[pkey]->GetTotNumPoints();
+    }
+    return ret;
 }
 
 /**
@@ -105,93 +197,26 @@ void OutputPYFR::Process()
     CompositeMap::iterator it;
     for(it = cm.begin(); it != cm.end(); it++)
     {
-        cout << it->first << " " << it->second->m_tag << endl;
+        cout << it->first << " " << it->second->m_tag;
 
-        int nv=0;
-        map<int, int> nodemap;
-        string dsname;
-        if(m_mesh->m_expDim == 2)
+        if(it->second->m_tag == "F" || it->second->m_tag == "E")
         {
-            if(it->second->m_tag == "Q")
-            {
-                nv = 4;
-                dsname = "spt_quad_p0";
-                nodemap[0] = 0;
-                nodemap[1] = 1;
-                nodemap[2] = 3;
-                nodemap[3] = 2;
-            }
-            else if(it->second->m_tag == "T")
-            {
-                nv = 3;
-                dsname = "spt_tri_p0";
-                nodemap[0] = 0;
-                nodemap[1] = 1;
-                nodemap[2] = 2;
-            }
-            else
-            {
-                continue;
-            }
-        }
-        else if(m_mesh->m_expDim == 3)
-        {
-            if(it->second->m_tag == "H")
-            {
-                nv = 8;
-                dsname = "spt_hex_p0";
-                nodemap[0] = 0;
-                nodemap[1] = 1;
-                nodemap[2] = 3;
-                nodemap[3] = 2;
-                nodemap[4] = 4;
-                nodemap[5] = 5;
-                nodemap[6] = 7;
-                nodemap[7] = 6;
-            }
-            else if(it->second->m_tag == "R")
-            {
-                nv = 6;
-                dsname = "spt_pri_p0";
-                nodemap[0] = 3;
-                nodemap[1] = 4;
-                nodemap[2] = 1;
-                nodemap[3] = 0;
-                nodemap[4] = 5;
-                nodemap[5] = 2;
-            }
-            else if(it->second->m_tag == "P")
-            {
-                nv = 5;
-                dsname = "spt_pyr_p0";
-                nodemap[0] = 0;
-                nodemap[1] = 1;
-                nodemap[2] = 3;
-                nodemap[3] = 2;
-                nodemap[4] = 4;
-            }
-            else if(it->second->m_tag == "A")
-            {
-                nv = 4;
-                dsname = "spt_tet_p0";
-                nodemap[0] = 0;
-                nodemap[1] = 1;
-                nodemap[2] = 2;
-                nodemap[3] = 3;
-            }
-            else
-            {
-                continue;
-            }
+            //not interested in boundary faces or edges here
+            continue;
         }
 
-        hsize_t dimsf[] = {nv, it->second->m_items.size(), m_mesh->m_expDim};
+        string dsname = GetDSName(it->second->m_tag);
+
+        int np = GetNump(it->second->m_tag, m_mesh->m_nummode);
+        cout << " points: " << np << endl;
+
+        hsize_t dimsf[] = {np, it->second->m_items.size(), m_mesh->m_expDim};
 
         DataSpace dataspace( 3, dimsf );
 
         DataSet* dataset = new DataSet(file->createDataSet(dsname, PredType::NATIVE_DOUBLE, dataspace));
 
-        double* data = new double[nv*it->second->m_items.size()*m_mesh->m_expDim];
+        double* data = new double[np * it->second->m_items.size() * m_mesh->m_expDim];
 
         for(int i = 0; i < it->second->m_items.size(); i++)
         {
@@ -220,14 +245,16 @@ void OutputPYFR::Process()
                 nekidtopyid[it->second->m_items[i]->GetId()] = numtet++;
             }
 
-            vector<NodeSharedPtr> ns = it->second->m_items[i]->GetVertexList();
-            for(int j = 0; j < nv; j++)
+            vector<Array<OneD, NekDouble> > ns = GetPyFRNodes(it->second->m_items[i], m_mesh->m_nummode);
+
+            for(int j = 0; j < ns.size(); j++)
             {
-                data[j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim + 0] = ns[nodemap[j]]->m_x;
-                data[j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim + 1] = ns[nodemap[j]]->m_y;
+                int offset = j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim;
+                data[offset + 0] = ns[j][0];
+                data[offset + 1] = ns[j][1];
                 if(m_mesh->m_expDim == 3)
                 {
-                    data[j*it->second->m_items.size()*m_mesh->m_expDim + i*m_mesh->m_expDim + 2] = ns[nodemap[j]]->m_z;
+                    data[offset + 2] = ns[j][2];
                 }
             }
         }
@@ -243,6 +270,15 @@ void OutputPYFR::Process()
         int       bl;
     } conec;
     StrType strdatatype(PredType::C_S1, 4);
+
+    //map from nektar face to pyfr face
+    map<string,map<int,int> > linkmap;
+    map<int,int> lm;
+    lm[0] = 0;
+    lm[1] = 1;
+    lm[2] = 3;
+    lm[3] = 2;
+    linkmap["tet"] = lm;
 
     { //con
         if(m_mesh->m_expDim == 2)
@@ -373,14 +409,18 @@ void OutputPYFR::Process()
                     str2 = "pri";
                 }
 
+                map<string,map<int, int> >::iterator lmap1 = linkmap.find(str1);
+                map<string,map<int, int> >::iterator lmap2 = linkmap.find(str2);
+                ASSERTL0(lmap1 != linkmap.end() && lmap2 != linkmap.end(),"unsupported element");
+
                 strcpy(c1.el, str1.c_str());
                 strcpy(c2.el, str2.c_str());
 
                 c1.id = nekidtopyid[e1->GetId()];
                 c2.id = nekidtopyid[e2->GetId()];
 
-                c1.fc = (*fit)->m_elLink[0].second;
-                c2.fc = (*fit)->m_elLink[1].second;
+                c1.fc = lmap1->second[(*fit)->m_elLink[0].second];
+                c2.fc = lmap2->second[(*fit)->m_elLink[1].second];
 
                 c1.bl = 0; c2.bl = 0;
 
@@ -490,8 +530,11 @@ void OutputPYFR::Process()
 
             strcpy(c.el, str.c_str());
 
+            map<string,map<int, int> >::iterator lmap = linkmap.find(str);
+            ASSERTL0(lmap != linkmap.end() ,"unsupported element");
+
             c.id = nekidtopyid[el.first->GetId()];
-            c.fc = el.second;
+            c.fc = lmap->second[el.second];
             c.bl = 0;
 
             cons[i] = c;

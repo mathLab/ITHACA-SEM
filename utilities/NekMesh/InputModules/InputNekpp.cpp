@@ -330,6 +330,10 @@ void InputNekpp::Process()
             }
         }
     }
+
+    SpatialDomains::ExpansionMap em = graph->GetExpansions();
+    m_mesh->m_nummode = em[0]->m_basisKeyVector[1].GetNumPoints();
+
     ProcessEdges(false);
     ProcessFaces(false);
     ProcessComposites();

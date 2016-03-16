@@ -2,7 +2,7 @@
 <test>
     <description>Test BL refinement from XML file</description>
     <executable>NekMesh</executable>
-    <parameters>-m bl:surf=2 -m jac:list -m extract:surf=2:detectbnd Tube45Refinement.xml Tube45Refined.xml:xml:test</parameters>
+    <parameters>-m jac:list -m extract:surf=2:detectbnd Tube45Refinement.xml Tube45Refined.xml:xml:test</parameters>
     <files>
         <file description="Input File">Tube45Refinement.xml</file>
     </files>

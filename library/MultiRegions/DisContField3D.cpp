@@ -1800,7 +1800,6 @@
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-#if 1
 
             Vmath::Zero(outarray.num_elements(), outarray, 1);
 
@@ -1812,31 +1811,6 @@
             // only filled in Fwd part on their own partition
             m_traceMap->UniversalTraceAssemble(outarray);
 
-#else
-            // Loop over elemente and collect forward expansion
-            int nexp = GetExpSize();
-            int n,e,offset,phys_offset;
-            Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
-                     "input array is of insufficient length");
-            
-            // use m_trace tmp space in element to fill values
-            for(n = 0; n < nexp; ++n)
-            {
-                phys_offset = GetPhys_Offset(n);
-                
-                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
-                {
-                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
-                                                 inarray + phys_offset,
-                                                 e_tmp = outarray + offset);
-                }
-            }
-#endif
         }
         
         /**
@@ -1861,46 +1835,12 @@
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
-            /*
-            for (int i = 0; i < Fn.num_elements(); ++i)
-            {
-                cout << "i = " << i << "\tFn = " << Fn[i] << endl;
-            }
-             */
-#if 1
+
             Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
             m_trace->IProductWRTBase(Fn, Fcoeffs);
             
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
                                                               outarray);
-#else
-            int e,n,offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            for (n = 0; n < GetExpSize(); ++n)
-            {
-                offset = GetCoeff_Offset(n);
-                e_outarray = outarray+offset;
-                for (e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
-                {
-                    t_offset = m_trace->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddFaceNormBoundaryInt(e, elmtToTrace[n][e],
-                                                        Fn + t_offset,
-                                                        e_outarray);
-                }
-            }
-#endif
-            /*
-            for (int i = 0; i < outarray.num_elements(); ++i)
-            {
-                cout << "i = " << i << "\toutarray = " << outarray[i] << endl;
-            }
-             */
-            //int num;
-            //cin >> num;
         }
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
@@ -1930,42 +1870,12 @@
             const Array<OneD, const NekDouble> &Bwd, 
                   Array<OneD,       NekDouble> &outarray)
         {
-#if 1
             Array<OneD, NekDouble> Coeffs(m_trace->GetNcoeffs());
 
             m_trace->IProductWRTBase(Fwd,Coeffs);
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0,Coeffs,outarray);
             m_trace->IProductWRTBase(Bwd,Coeffs);
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,Coeffs,outarray);
-#else
-            int e,n,offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            for(n = 0; n < GetExpSize(); ++n)
-            {
-                offset = GetCoeff_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
-                {
-                    t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-
-                    // Evaluate upwind flux less local edge 
-                    if(IsLeftAdjacentFace(n,e))
-                    {
-                        (*m_exp)[n]->AddFaceNormBoundaryInt(
-                         e, elmtToTrace[n][e],  Fwd + t_offset,
-                         e_outarray = outarray+offset);
-                    }
-                    else
-                    {
-                        (*m_exp)[n]->AddFaceNormBoundaryInt(
-                         e, elmtToTrace[n][e],  Bwd + t_offset,
-                         e_outarray = outarray+offset);
-                    }
-                }
-            }
-#endif
         }
 
         /**

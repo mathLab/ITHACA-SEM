@@ -1420,11 +1420,12 @@ namespace Nektar
                 // project onto modal  space.
                 OrthoExp.FwdTrans(tmp,orthocoeffs);
 
+		int cnt = 0; 
                 for(int j = 0; j < nmodes_a; ++j)
                 {
-                    for(int k = 0; k < nmodes_b; ++k)
+                    for(int k = 0; k < nmodes_b-j; ++k, ++cnt) 
                     {
-                        orthocoeffs[j*nmodes_b+k] *=
+                        orthocoeffs[cnt] *=
                             (1.0+SvvDiffCoeff*pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
                     }
                 }

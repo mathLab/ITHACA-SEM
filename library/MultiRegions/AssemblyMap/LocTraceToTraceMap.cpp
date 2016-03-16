@@ -238,7 +238,6 @@ namespace Nektar
                     int order_f = edge->GetNcoeffs();
                     int foffset = trace->GetCoeff_Offset(edge->GetElmtId());
                     
-                    // Bug is on fac! ##########################################
                     double fac = (*exp)[n]->EdgeNormalNegated(e) ? -1.0 : 1.0;
                     
                     LocalRegions::Expansion1DSharedPtr locExp1d
@@ -253,7 +252,6 @@ namespace Nektar
                             fac = -1.0;
                         }
                     }
-                    // #########################################################
 
                     if (LeftAdjacents[cnt])
                     {
@@ -343,7 +341,6 @@ namespace Nektar
                     int offset = trace->GetPhys_Offset(elmtToTrace[n][e]->
                                                        GetElmtId());
                     
-                    //if (exp2d->DetShapeType() == LibUtilities::eTriangle)
                     if (LeftAdjacents[TraceOrder[n][e]])
                     {
                         for (int i = 0; i < nedgepts; ++i)
@@ -400,7 +397,7 @@ namespace Nektar
                             PointsManager()[fromPointsKey0]->
                             GetI(toPointsKey0);
                             
-                            // check to see if we can
+                            // Check to see if we can
                             // just interpolate endpoint
                             if ((fromPointsKey0.GetPointsType() ==
                                 LibUtilities::eGaussRadauMAlpha1Beta0)
@@ -441,7 +438,6 @@ namespace Nektar
                 }
             }
         }
-        // ---------------------------------------------------------------------
 
         
         
@@ -875,7 +871,6 @@ namespace Nektar
                 
             }
         }
-        // ---------------------------------------------------------------------
         
         
         

@@ -322,12 +322,12 @@ void ProcessExtractSurf::Process()
     // once). This list is then compared against an earlier
     // identification of boundary edges on the required
     // surfaces and if the two overlap add a segment element
-    // and put segmenent element in comnposite as well
+    // and put segment element in composite as well
     if(detectbnd)
     {
         if (m_mesh->m_expDim != 2)
         {
-            cerr << "Surface detection only implemented for 2D meshes" << endl;
+            cerr << "Surface boundary detection only implemented for 2D meshes" << endl;
             return;
         }
         

@@ -334,7 +334,7 @@
           </V>
           <V VAR="p">
             <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
-            <I PROPERTY="Preconditioner"        VALUE="FullLinearSpaceWithLowEnergyBlock"/>
+            <I PROPERTY="Preconditioner"        VALUE="LowEnergyBlock"/>
             <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-6"/>
           </V>
         </GLOBALSYSSOLNINFO>

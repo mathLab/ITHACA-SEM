@@ -129,7 +129,7 @@ namespace Nektar
             m_tmpOUT(In.m_tmpOUT),
             m_homogeneousBasis(In.m_homogeneousBasis),
             m_lhom(In.m_lhom), 
-            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(In.m_dealiasing),
             m_padsize(In.m_padsize)
         {

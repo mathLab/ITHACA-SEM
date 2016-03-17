@@ -431,7 +431,9 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/\\\\.bzr/"
     "/\\\\.hg/"
     "/\\\\.git/"
+    "/\\\\.clang-format"
     "/\\\\.gitignore"
+    "/\\\\.gitmodules"
     "/build/"
     "/builds/"
     "/ThirdParty/"
@@ -441,8 +443,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/library/Demos/LocalRegions/XmlFiles/"
     "/solvers/ImageWarpingSolver/"
     "/solvers/VortexWaveInteraction/"
-    "/utilities/PreProcessing/Extras/"
-    "/utilities/PostProcessing/Extras/"
+    "/utilities/Extras/"
 )
 
 

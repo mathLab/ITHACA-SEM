@@ -7,6 +7,7 @@ list(APPEND libnektar++-spatialdomains_LIBS SpatialDomains)
 list(APPEND libnektar++-localregions_LIBS LocalRegions)
 list(APPEND libnektar++-collections_LIBS Collections)
 list(APPEND libnektar++-multiregions_LIBS MultiRegions)
+list(APPEND libnektar++-globalmapping_LIBS GlobalMapping)
 list(APPEND libnektar++-solverutils_LIBS SolverUtils)
 list(APPEND nektar++-incnavierstokes-solver_BINS IncNavierStokesSolver)
 list(APPEND nektar++-cardiacep-solver_BINS CardiacEPSolver)
@@ -29,7 +30,7 @@ list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
 
 # Nektar++ binary archive
 list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
-                          Collections MultiRegions SolverUtils)
+                          Collections MultiRegions GlobalMapping SolverUtils)
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver
                           DiffusionSolverTimeInt ShallowWaterSolver
@@ -100,6 +101,15 @@ if (NEKTAR_BUILD_LIBRARY)
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
     set(NEK_DEP "${NEK_DEP}, libnektar++-multiregions (= ${NEKTAR_VERSION})")
+
+    add_deb_package(
+        NAME libnektar++-globalmapping
+        SUMMARY "Nektar++ GlobalMapping library"
+        DESCRIPTION "
+ This library provides deformation routines for Nektar++ simulations."
+        DEPENDS "${NEK_DEP}"
+        INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-globalmapping (= ${NEKTAR_VERSION})")
 
     if (NEKTAR_BUILD_DEMOS)
         add_deb_package(
@@ -244,6 +254,12 @@ if (NEKTAR_BUILD_LIBRARY)
         DESCRIPTION
         "This library provides global expansions on multi-element domains."
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
+    add_rpm_package(
+        NAME libnektar++-globalmapping
+        SUMMARY "Nektar++ GlobalMapping library"
+        DESCRIPTION
+        "This library provides deformation routines for Nektar++ simulations."
+        INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
     add_rpm_package(
         NAME libnektar++-solverutils
         SUMMARY "Nektar++ SolverUtils library"

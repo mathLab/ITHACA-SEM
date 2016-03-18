@@ -361,7 +361,8 @@ namespace Nektar
 
                 Pvals = (m_pressureHBCs[m_intSteps-1]) +
                          m_HBCdata[j].m_coeffOffset;
-                Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
+                Uvals = (m_acceleration[m_intSteps])   +
+                         m_HBCdata[j].m_coeffOffset;
 
                 // Getting values on the edge and filling the pressure boundary
                 // expansion and the acceleration term. Multiplication by the

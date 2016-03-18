@@ -95,44 +95,19 @@ namespace Nektar
         m_pressureCalls++;
         if(m_HBCdata.num_elements()>0)
         {
-            Array<OneD, NekDouble> accelerationTerm;
-
             int  n,cnt;
-
-            accelerationTerm =
-                Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
-
-            // Rotate acceleration term
-            RollOver(m_acceleration);
 
             // Calculate Neumann BCs at current level
             CalcNeumannPressureBCs(fields, N, kinvis);
 
             //Calculate acceleration term at level n based on previous steps
-            if (m_pressureCalls > 2)
-            {
-                int acc_order = min(m_pressureCalls-2,m_intSteps);
-                Vmath::Smul(m_numHBCDof,
-                                 StifflyStable_Gamma0_Coeffs[acc_order-1],
-                                 m_acceleration[0], 1,
-                                 accelerationTerm,  1);
-
-                for(int i = 0; i < acc_order; i++)
-                {
-                    Vmath::Svtvp(m_numHBCDof,
-                                -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
-                                 m_acceleration[i+1], 1,
-                                 accelerationTerm,    1,
-                                 accelerationTerm,    1);
-                }
-            }
+            AccelerationBDF(m_acceleration);
 
             // Adding acceleration term to HOPBCs
             Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
-                         accelerationTerm,  1,
+                         m_acceleration[m_intSteps],  1,
                          m_pressureHBCs[m_intSteps-1], 1,
                          m_pressureHBCs[m_intSteps-1], 1);
-
 
             // Extrapolate to n+1
             ExtrapolateArray(m_pressureHBCs);
@@ -216,7 +191,7 @@ namespace Nektar
                 }
 
                 Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
-                Uvals = (m_acceleration[0]) + cnt;
+                Uvals = (m_acceleration[m_intSteps]) + cnt;
 
                 // Getting values on the edge and filling the pressure boundary
                 // expansion and the acceleration term. Multiplication by the
@@ -1280,6 +1255,43 @@ namespace Nektar
                          array[n],1, array[nlevels-1],1,
                          array[nlevels-1],1);
         }
+    }
+
+    /**
+     *    At the start, the newest value is stored in array[nlevels-1]
+     *        and the previous values in the first positions
+     *    At the end, the acceleration from BDF is stored in array[nlevels-1]
+     *        and the storage has been updated to included the new value
+     */
+    void Extrapolate::AccelerationBDF(
+            Array<OneD, Array<OneD, NekDouble> > &array)
+    {
+        int nlevels  = array.num_elements();
+        int nPts     = array[0].num_elements();
+
+        // Update array
+        RollOver(array);
+
+        // Calculate acceleration using Backward Differentiation Formula
+        Array<OneD, NekDouble> accelerationTerm (nPts, 0.0);
+        if (m_pressureCalls > 2)
+        {
+            int acc_order = min(m_pressureCalls-2,m_intSteps);
+            Vmath::Smul(nPts,
+                             StifflyStable_Gamma0_Coeffs[acc_order-1],
+                             m_acceleration[0], 1,
+                             accelerationTerm,  1);
+
+            for(int i = 0; i < acc_order; i++)
+            {
+                Vmath::Svtvp(nPts,
+                            -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+                             m_acceleration[i+1], 1,
+                             accelerationTerm,    1,
+                             accelerationTerm,    1);
+            }
+        }
+        m_acceleration[nlevels-1] = accelerationTerm;
     }
 
 }

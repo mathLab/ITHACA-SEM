@@ -130,8 +130,9 @@ namespace Nektar
             v_CorrectPressureBCs( pressure);
         }
         
-        void ExtrapolateArray(
-            Array<OneD, Array<OneD, NekDouble> > &array);
+        void ExtrapolateArray( Array<OneD, Array<OneD, NekDouble> > &array);
+
+        void AccelerationBDF( Array<OneD, Array<OneD, NekDouble> > &array);
 
     protected:
         virtual void v_SubSteppingTimeIntegration(

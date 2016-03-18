@@ -323,7 +323,7 @@ class Mapping
          * @param generalized  Flag defining if generalised or typical CurlCurl
          */
         GLOBAL_MAPPING_EXPORT void CurlCurlField(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray,
             const bool                                        generalized)
         {
@@ -533,9 +533,9 @@ class Mapping
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         GLOBAL_MAPPING_EXPORT virtual void v_CurlCurlField(
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray,
-            const bool                                      generalized);
+            const bool                                         generalized);
 
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
             const NekDouble time,

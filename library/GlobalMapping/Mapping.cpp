@@ -1007,7 +1007,7 @@ void Mapping::v_gradgradU(
 }
 
 void Mapping::v_CurlCurlField(
-    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &inarray,
     Array<OneD, Array<OneD, NekDouble> >              &outarray,
     const bool                                        generalized)
 {
@@ -1062,120 +1062,7 @@ void Mapping::v_CurlCurlField(
     }
     else
     {
-        switch(nvel)
-        {
-            case 2:
-            {
-                Array<OneD,NekDouble> Vx(physTot);
-                Array<OneD,NekDouble> Uy(physTot);
-                Array<OneD,NekDouble> Dummy(physTot);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                                                        inarray[1], Vx);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
-                                                        inarray[0], Uy);
-
-                Vmath::Vsub(physTot, Vx, 1, Uy, 1, Dummy, 1);
-
-                m_fields[0]->PhysDeriv(Dummy,outarray[1],outarray[0]);
-
-                Vmath::Smul(physTot, -1.0, outarray[1], 1, outarray[1], 1);
-            }
-            break;
-
-            case 3:
-            {
-                // Declare variables
-                Array<OneD,NekDouble> Ux(physTot);
-                Array<OneD,NekDouble> Uy(physTot);
-                Array<OneD,NekDouble> Uz(physTot);
-
-                Array<OneD,NekDouble> Vx(physTot);
-                Array<OneD,NekDouble> Vy(physTot);
-                Array<OneD,NekDouble> Vz(physTot);
-
-                Array<OneD,NekDouble> Wx(physTot);
-                Array<OneD,NekDouble> Wy(physTot);
-                Array<OneD,NekDouble> Wz(physTot);
-
-                Array<OneD,NekDouble> Dummy1(physTot);
-                Array<OneD,NekDouble> Dummy2(physTot);
-
-                // Calculate gradient
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                                                            inarray[0], Ux);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
-                                                            inarray[0], Uy);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
-                                                            inarray[0], Uz);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                                                            inarray[1], Vx);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
-                                                            inarray[1], Vy);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
-                                                            inarray[1], Vz);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                                                            inarray[2], Wx);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
-                                                            inarray[2], Wy);
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2], 
-                                                            inarray[2], Wz);
-
-                // x-component
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
-                                                            Vx, Dummy1); //Vxy
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
-                                                            Uy, Dummy2); //Uyy
-                Vmath::Vsub(physTot, Dummy1, 1, Dummy2, 1, outarray[0], 1);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                                                            Uz, Dummy1); //Uzz
-                Vmath::Vsub(physTot, outarray[0],   1, Dummy1, 1, 
-                                                        outarray[0], 1);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],
-                                                            Wz, Dummy2); //Wxz
-                Vmath::Vadd(physTot, outarray[0],   1, Dummy2, 1, 
-                                                        outarray[0], 1);
-
-                // y-component
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
-                                                            Wz, Dummy1); //Wzy
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
-                                                            Vz, Dummy2); //Vzz       
-                Vmath::Vsub(physTot, Dummy1, 1, Dummy2, 1, outarray[1], 1);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],
-                                                            Vx, Dummy1); //Vxx
-                Vmath::Vsub(physTot, outarray[1],   1, Dummy1, 1,  
-                                                        outarray[1], 1);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],
-                                                            Uy, Dummy2); //Uyx
-                Vmath::Vadd(physTot, outarray[1],   1, Dummy2, 1,  
-                                                        outarray[1], 1);
-
-                // z-component
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],
-                                                            Uz, Dummy1); //Uxz
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],
-                                                            Wy, Dummy2); //Wyy       
-                Vmath::Vsub(physTot, Dummy1, 1, Dummy2, 1, outarray[2], 1);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], 
-                                                            Wx, Dummy1); //Wxx
-                Vmath::Vsub(physTot, outarray[2],   1, Dummy1, 1,  
-                                                        outarray[2], 1);
-
-                m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1], 
-                                                            Vz, Dummy2); //Vyz
-                Vmath::Vadd(physTot, outarray[2],   1, Dummy2, 1,  
-                                                        outarray[2], 1);
-            }
-            break;
-        }
+        m_fields[0]->CurlCurl(inarray, outarray);
     }
 
     // Restore value of wavespace 

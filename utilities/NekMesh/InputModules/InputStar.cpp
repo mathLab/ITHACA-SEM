@@ -55,7 +55,10 @@ ModuleKey InputStar::className = GetModuleFactory().RegisterCreatorFunction(
 
 InputStar::InputStar(MeshSharedPtr m) : InputModule(m)
 {
-    m_config["writelabelsonly"] = ConfigOption(true,"0","Just write out tags from star file for each surface/composite");
+    m_config["writelabelsonly"] = ConfigOption(
+        true,
+        "0",
+        "Just write out tags from star file for each surface/composite");
 }
 
 InputStar::~InputStar()
@@ -117,14 +120,14 @@ void InputStar::SetupElements(void)
     vector<string> Facelabels;
     ReadBoundaryFaces(BndElementFaces, FaceNodes, ElementFaces, Facelabels);
 
-    if(m_config["writelabelsonly"].beenSet)
+    if (m_config["writelabelsonly"].beenSet)
     {
         nComposite = 2;
         // write boundary zones/composites
-        for(i = 0; i < BndElementFaces.size(); ++i)
+        for (i = 0; i < BndElementFaces.size(); ++i)
         {
-            cout << " 2D Zone (composite = " <<
-                nComposite << ", label = "<< Facelabels[i] << ")" << endl;
+            cout << " 2D Zone (composite = " << nComposite
+                 << ", label = " << Facelabels[i] << ")" << endl;
             nComposite++;
         }
         exit(1);

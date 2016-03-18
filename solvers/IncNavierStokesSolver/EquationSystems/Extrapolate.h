@@ -205,6 +205,12 @@ namespace Nektar
         // Number of HOPbcs
         int m_HBCnumber;
 
+        // Number of quadrature points for Outflow HOBC
+        int m_numOutHBCPts;
+
+        // Number of Outflow HOBcs
+        int m_outHBCnumber;
+
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 

@@ -218,69 +218,11 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-        static bool init = true;
-        static bool noHOBC = false;
-
-        if(noHOBC == true)
+        if(m_outHBCnumber == 0)
         {
            return;
         }
-        
-        if(init) // set up storage for boundary velocity at outflow
-        {
-            init = false;
-            int totbndpts = 0;
-            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
-                {
-                    totbndpts += m_PBndExp[n]->GetTotPoints();
-                }
-            }
-          
-            if(totbndpts == 0)
-            {
-                noHOBC = true;
-                return;
-            }
-  
-            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-            for(int i = 0; i < m_curl_dim; ++i)
-            {
-                m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-                for(int j = 0; j < m_curl_dim; ++j)
-                {             
-                    // currently just set up for 2nd order extrapolation 
-                    m_outflowVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
-                }
-            }
 
-            if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-            {
-                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-
-                for(int i = 0; i < m_curl_dim; ++i)
-                {
-                    m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        // currently just set up for 2nd order extrapolation
-                        m_PhyoutfVel[i][j] = Array<OneD, NekDouble> (totbndpts,0.0);
-                    }
-                }
-
-                m_nonlinearterm_phys   = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_nonlinearterm_coeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-
-                m_PBndCoeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
-                for(int i = 0; i < m_curl_dim; ++i)
-                {
-                    m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
-                }
-            }
-        }
-        
         StdRegions::StdExpansionSharedPtr Bc,Pbc; 
         Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
                                                         UBndConds(m_curl_dim);
@@ -771,9 +713,12 @@ namespace Nektar
         // Storage array for high order pressure BCs
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
         m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
-    
+
+        // Get number of expansions and points (or coeffs) for HOBCs
         m_HBCnumber = 0;
         m_numHBCDof = 0;
+        m_outHBCnumber = 0;
+        m_numOutHBCPts = 0;
         for( n = 0; n < m_PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
@@ -781,6 +726,12 @@ namespace Nektar
             {
                 m_numHBCDof += m_PBndExp[n]->GetNcoeffs();
                 m_HBCnumber += m_PBndExp[n]->GetExpSize();
+            }
+            // High order outflow boundary condition;
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
+            {
+                m_numOutHBCPts += m_PBndExp[n]->GetTotPoints();
+                m_outHBCnumber += m_PBndExp[n]->GetExpSize();
             }
         }
 
@@ -828,6 +779,55 @@ namespace Nektar
             default:
                 ASSERTL0(0,"Dimension not supported");
                 break;
+        }
+
+        // Initialise storage for outflow HOBCs
+        if(m_numOutHBCPts > 0)
+        {
+            m_outflowVel =
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+            for(int i = 0; i < m_curl_dim; ++i)
+            {
+                m_outflowVel[i] =
+                    Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+                for(int j = 0; j < m_curl_dim; ++j)
+                {
+                    // currently just set up for 2nd order extrapolation
+                    m_outflowVel[i][j] =
+                        Array<OneD, NekDouble>(m_numOutHBCPts,0.0);
+                }
+            }
+
+            if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+            {
+                m_PhyoutfVel =
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+
+                for(int i = 0; i < m_curl_dim; ++i)
+                {
+                    m_PhyoutfVel[i] =
+                        Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
+                    for(int j = 0; j < m_curl_dim; ++j)
+                    {
+                        // currently just set up for 2nd order extrapolation
+                        m_PhyoutfVel[i][j] =
+                            Array<OneD, NekDouble> (m_numOutHBCPts,0.0);
+                    }
+                }
+
+                m_nonlinearterm_phys   =
+                        Array<OneD, NekDouble> (m_numOutHBCPts,0.0);
+                m_nonlinearterm_coeffs =
+                        Array<OneD, NekDouble> (m_numOutHBCPts,0.0);
+
+                m_PBndCoeffs = Array<OneD, NekDouble> (m_numOutHBCPts,0.0);
+                m_UBndCoeffs =
+                        Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
+                for(int i = 0; i < m_curl_dim; ++i)
+                {
+                    m_UBndCoeffs[i] = Array<OneD, NekDouble> (m_numOutHBCPts);
+                }
+            }
         }
     }
 

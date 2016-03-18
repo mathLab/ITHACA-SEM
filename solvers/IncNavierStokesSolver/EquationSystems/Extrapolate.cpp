@@ -92,12 +92,12 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
+        m_pressureCalls++;
         if(m_HBCdata.num_elements()>0)
         {
             Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> accelerationTerm;
 
-            m_pressureCalls++;
             int  n,cnt;
             int  nint    = min(m_pressureCalls,m_intSteps);
             int  nlevels = m_pressureHBCs.num_elements();
@@ -188,7 +188,7 @@ namespace Nektar
     /**
      * Unified routine for calculation high-oder terms
      */
-    void Extrapolate::CalcNeumannPressureBCs(
+    void Extrapolate::v_CalcNeumannPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
@@ -1470,6 +1470,35 @@ namespace Nektar
         }
         
         return maxV;
+    }
+
+    /**
+     *    Update oldarrays to include newarray and 
+     *          extrapolate result to outarray
+     */    
+    void Extrapolate::ExtrapolateArray(
+            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
+            Array<OneD, NekDouble>  &newarray,
+            Array<OneD, NekDouble>  &outarray)
+    {
+        int  nint    = min(m_pressureCalls,m_intSteps);
+        int nPts = newarray.num_elements();
+        
+        // Update oldarrays
+        RollOver(oldarrays);
+        Vmath::Vcopy(nPts, newarray, 1, oldarrays[0], 1);
+        
+        // Extrapolate to outarray
+        Vmath::Smul(nPts, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
+                         oldarrays[nint-1],    1,
+                         outarray, 1);
+
+        for(int n = 0; n < nint-1; ++n)
+        {
+            Vmath::Svtvp(nPts, StifflyStable_Betaq_Coeffs[nint-1][n],
+                         oldarrays[n],1,outarray,1,
+                         outarray,1);
+        }        
     }
 
 }

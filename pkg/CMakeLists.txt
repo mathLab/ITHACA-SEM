@@ -7,8 +7,10 @@ list(APPEND libnektar++-utilities_LIBS      LibUtilities)
 list(APPEND libnektar++-stdregions_LIBS     StdRegions)
 list(APPEND libnektar++-spatialdomains_LIBS SpatialDomains)
 list(APPEND libnektar++-localregions_LIBS   LocalRegions)
+list(APPEND libnektar++-nekmeshutils_LIBS   NekMeshUtils)
 list(APPEND libnektar++-collections_LIBS    Collections)
 list(APPEND libnektar++-multiregions_LIBS   MultiRegions)
+list(APPEND libnektar++-globalmapping_LIBS  GlobalMapping)
 list(APPEND libnektar++-solverutils_LIBS    SolverUtils)
 
 # Solvers
@@ -22,13 +24,12 @@ list(APPEND nektar++-shallowwater-solver_BINS     ShallowWaterSolver)
 list(APPEND nektar++-pulsewave-solver_BINS        PulseWaveSolver)
 
 # Utilities
-list(APPEND nektar++-utilities_BINS MeshConvert FieldConvert
-    XmlToVtk XmlToTecplot ProbeFld)
+list(APPEND nektar++-utilities_BINS NekMesh FieldConvert)
 
 # Demos
 list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
     Helmholtz3DHomo1D Helmholtz3DHomo2D
-    StdProject0D StdProject1D StdProject2D StdProject3D 
+    StdProject0D StdProject1D StdProject2D StdProject3D
     StdProject_Diff1D StdProject_Diff2D StdProject_Diff3D
     SteadyAdvectionDiffusionReaction2D SteadyLinearAdvectionReaction2D
     LocProject1D LocProject2D LocProject3D LocProject_Diff1D
@@ -37,9 +38,10 @@ list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
 
 # Nektar++ binary archive
 list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
-                          Collections MultiRegions SolverUtils)
+                          NekMeshUtils Collections MultiRegions GlobalMapping
+                          SolverUtils)
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
-                          CompressibleFlowSolver DiffusionSolver 
+                          CompressibleFlowSolver DiffusionSolver
                           DiffusionSolverTimeInt ShallowWaterSolver
                           PulseWaveSolver)
 
@@ -100,6 +102,16 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
     set(NEK_DEP "${NEK_DEP}, libnektar++-localregions (= ${NEKTAR_VERSION})")
 
     add_nektar_package(
+        NAME libnektar++-nekmeshutils
+        TYPE deb
+        SUMMARY "Nektar++ NekMeshUtils library"
+        DESCRIPTION "
+ This library provides mesh generation and routines for the NekMesh
+ executable."
+        DEPENDS "${NEK_DEP}"
+        INSTALL_LIBS "${libnektar++-nekmeshutils_LIBS}")
+
+    add_nektar_package(
         NAME libnektar++-collections
         TYPE deb
         SUMMARY "Nektar++ Collections library"
@@ -119,6 +131,16 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
     set(NEK_DEP "${NEK_DEP}, libnektar++-multiregions (= ${NEKTAR_VERSION})")
+
+    add_nektar_package(
+        NAME libnektar++-globalmapping
+        TYPE deb
+        SUMMARY "Nektar++ GlobalMapping library"
+        DESCRIPTION "
+ This library provides deformation routines for Nektar++ simulations."
+        DEPENDS "${NEK_DEP}"
+        INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-globalmapping (= ${NEKTAR_VERSION})")
 
     if (NEKTAR_BUILD_DEMOS)
         add_nektar_package(
@@ -238,7 +260,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         NAME libnektar++-utilities
         TYPE rpm
         SUMMARY "Nektar++ library utilities"
-        DESCRIPTION 
+        DESCRIPTION
         "This library provides core routines including linear algebra and
          integration with ThirdParty libraries."
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
@@ -254,7 +276,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         NAME libnektar++-spatialdomains
         TYPE rpm
         SUMMARY "Nektar++ SpatialDomains library"
-        DESCRIPTION 
+        DESCRIPTION
         "This library provides the mappings between reference regions and
          physical regions in the domain."
         INSTALL_LIBS "${libnektar++-spatialdomains_LIBS}")
@@ -266,6 +288,14 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         "This library provides physical space expansions on the various
          supported regions."
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
+    add_nektar_package(
+        NAME libnektar++-nekmeshutils
+        TYPE rpm
+        SUMMARY "Nektar++ NekMeshUtils library"
+        DESCRIPTION
+        "This library provides mesh generation and library routines for the 
+         NekMesh executable."
+        INSTALL_LIBS "${libnektar++-nekmeshutols_LIBS}")
     add_nektar_package(
         NAME libnektar++-collections
         TYPE rpm
@@ -285,7 +315,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         NAME libnektar++-solverutils
         TYPE rpm
         SUMMARY "Nektar++ SolverUtils library"
-        DESCRIPTION 
+        DESCRIPTION
         "This library provides support classes and routines for constructing
          complete spectral/hp element solvers."
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
@@ -295,7 +325,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
             NAME nektar++-demos
             TYPE rpm
             SUMMARY "Nektar++ demonstration applications"
-            DESCRIPTION 
+            DESCRIPTION
             "This package contains a number of example programs for solving
              simple problems using the spectral/hp element method."
             INSTALL_BINS "${nektar++-demos_BINS}")
@@ -307,7 +337,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
             TYPE rpm
             SUMMARY "Nektar++ incompressible Navier-Stokes flow solver"
             DESCRIPTION
-            "Solves the incompressible Navier-Stokes equations using the    
+            "Solves the incompressible Navier-Stokes equations using the
              Nektar++ high-order spectral/hp element framework"
             INSTALL_BINS "${nektar++-incnavierstokes-solver_BINS}")
     endif (NEKTAR_SOLVER_INCNAVIERSTOKES)
@@ -348,7 +378,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
             TYPE rpm
             SUMMARY "Nektar++ compressible Navier-Stokes flow solver"
             DESCRIPTION
-            "Solves the compressible Euler and compressible Navier-Stokes 
+            "Solves the compressible Euler and compressible Navier-Stokes
              equations."
             INSTALL_BINS "${nektar++-compressibleflow-solver_BINS}")
     endif (NEKTAR_SOLVER_COMPRESSIBLE_FLOW)

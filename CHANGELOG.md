@@ -12,6 +12,9 @@ v4.3.0
 - Fix history point output formatting (!518)
 - Fix for OS X 10.11 (!512)
 - Fix `HexGeom::v_GetDir` to support heterogeneous basis functions (!520)
+- Added new `NekMeshUtils` library to support new `NekMesh` executable and
+  associated CAD routines. Old CAD wrappers in LibUtilities now moved to
+  `NekMeshUtils` (!527)
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
@@ -20,26 +23,32 @@ v4.3.0
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 - Add contribution guide (!551)
+- Add a filter to calculate exponential moving averages (!566)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **IncNavierStokesSolver**
 - Fix floquet stability analysis for HalfMode case (!536)
+- Add a filter to calculate Reynolds stresses (!566)
 
 **FieldConvert:**
 - Extended surface distance module to support hexahedra and quads (!524)
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)
+- Add process module to calculate high-order mesh quality metric (!527).
 - Add module to extract one of the planes of 3DH1D (!542)
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
 - Add option to output equi-spaced points in VTU format (!550)
 - Add module innerproduct (!568)
+- Add command line option of `--part-only` and `--part-only-overlapping` (!569)
 
-**MeshConvert:**
+**NekMesh:**
+- `MeshConvert` is now renamed to `NekMesh` to reflect new mesh generation
+  functionality (!527).
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)

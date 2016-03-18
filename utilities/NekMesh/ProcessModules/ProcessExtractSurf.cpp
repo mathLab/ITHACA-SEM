@@ -54,7 +54,9 @@ ModuleKey ProcessExtractSurf::className =
 ProcessExtractSurf::ProcessExtractSurf(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["surf"] = ConfigOption(
-        false, "-1", "Tag identifying surface/composite to process.");
+        false, "NotSet", "Tag identifying surface/composite to process.");
+    m_config["detectbnd"] =
+        ConfigOption(false, "-1", "Tag to detect on boundary composites");
 }
 
 ProcessExtractSurf::~ProcessExtractSurf()
@@ -64,11 +66,13 @@ ProcessExtractSurf::~ProcessExtractSurf()
 void ProcessExtractSurf::Process()
 {
     int i, j;
-    string surf = m_config["surf"].as<string>();
+    string surf    = m_config["surf"].as<string>();
+    bool detectbnd = m_config["detectbnd"].beenSet;
 
     // Obtain vector of surface IDs from string.
     vector<unsigned int> surfs;
-    ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+    ASSERTL0(ParseUtils::GenerateSeqVector(surf.c_str(), surfs),
+             "Failed to interp surf string. Have you specified this string?");
     sort(surfs.begin(), surfs.end());
 
     // If we're running in verbose mode print out a list of surfaces.
@@ -111,6 +115,8 @@ void ProcessExtractSurf::Process()
 
     // keptIds stores IDs of elements we processed earlier.
     boost::unordered_set<int> keptIds;
+
+    EdgeSet bndEdgeSet;
 
     // Iterate over list of surface elements.
     for (i = 0; i < el.size(); ++i)
@@ -158,11 +164,26 @@ void ProcessExtractSurf::Process()
             {
                 elmt->SetVertex(j, f->m_vertexList[j]);
             }
+
+            EdgeSet::iterator edit;
             for (j = 0; j < edges.size(); ++j)
             {
                 m_mesh->m_edgeSet.insert(f->m_edgeList[j]);
                 elmt->SetEdge(j, f->m_edgeList[j]);
                 f->m_edgeList[j]->m_elLink.push_back(std::make_pair(elmt, j));
+
+                // generate a list of edges on boundary of surfaces being
+                // extracted
+                edit = bndEdgeSet.find(f->m_edgeList[j]);
+                if (edit != bndEdgeSet.end())
+                {
+                    // remove since visited more than once
+                    bndEdgeSet.erase(edit);
+                }
+                else
+                {
+                    bndEdgeSet.insert(f->m_edgeList[j]);
+                }
             }
             elmt->SetVolumeNodes(f->m_faceNodes);
             elmt->SetId(f->m_id);
@@ -293,6 +314,137 @@ void ProcessExtractSurf::Process()
         if (m_mesh->m_verbose && newComps.size() > 1)
         {
             cout << endl;
+        }
+    }
+
+    // Detect composites for boundaries. This is done by looping over all
+    // elements identifiying if they are not part of required surfaces and if
+    // not setting up a list of boundary edges (identified by only being visited
+    // once). This list is then compared against an earlier identification of
+    // boundary edges on the required surfaces and if the two overlap add a
+    // segment element and put segment element in composite as well
+    if (detectbnd)
+    {
+        if (m_mesh->m_expDim != 2)
+        {
+            cerr << "Surface boundary detection only implemented for 2D meshes"
+                 << endl;
+            return;
+        }
+
+        map<int, EdgeSet> surfBndEdgeSet;
+        EdgeSet::iterator edit;
+        map<int, string> surfLabels;
+
+        // Iterate over list of surface elements.
+        for (i = 0; i < el.size(); ++i)
+        {
+            // Work out whether this lies on our surface of interest.
+            vector<int> inter, tags = el[i]->GetTagList();
+
+            ASSERTL0(tags.size() == 1, "Not sure what mutliple tags implies");
+
+            sort(tags.begin(), tags.end());
+            set_intersection(surfs.begin(),
+                             surfs.end(),
+                             tags.begin(),
+                             tags.end(),
+                             back_inserter(inter));
+
+            // It does so continue to next element.
+            if (inter.size() == 1)
+            {
+                continue;
+            }
+
+            int surf = tags[0];
+
+            // gather surface labels if they exist.
+            if (m_mesh->m_faceLabels.count(surf))
+            {
+                surfLabels[surf] = m_mesh->m_faceLabels[surf];
+            }
+
+            // Get list of element vertices and edges.
+            ElementSharedPtr elmt       = el[i];
+            vector<EdgeSharedPtr> edges = elmt->GetEdgeList();
+
+            FaceSharedPtr f = elmt->GetFaceLink();
+            if (f)
+            {
+                for (j = 0; j < edges.size(); ++j)
+                {
+                    // generate a list of edges on boundary of surfaces being
+                    // extracted
+                    if (surfBndEdgeSet.count(surf))
+                    {
+                        edit = surfBndEdgeSet[surf].find(f->m_edgeList[j]);
+                        if (edit != surfBndEdgeSet[surf].end())
+                        {
+                            // remove since visited more than once
+                            surfBndEdgeSet[surf].erase(edit);
+                        }
+                        else
+                        {
+                            surfBndEdgeSet[surf].insert(f->m_edgeList[j]);
+                        }
+                    }
+                    else
+                    {
+                        EdgeSet newEdgeSet;
+                        surfBndEdgeSet[surf] = newEdgeSet;
+                        surfBndEdgeSet[surf].insert(f->m_edgeList[j]);
+                    }
+                }
+            }
+        }
+
+        m_mesh->m_faceLabels.clear();
+
+        // iteratve over surfBndEdgeSet and see if they are in BndEdgeSet
+        map<int, EdgeSet>::iterator esetit;
+        for (esetit = surfBndEdgeSet.begin(); esetit != surfBndEdgeSet.end();
+             ++esetit)
+        {
+            CompositeSharedPtr newComp(new Composite());
+            newComp->m_id  = maxId;
+            newComp->m_tag = "E";
+            // set up labels if they exist
+            if (surfLabels.count(esetit->first))
+            {
+                newComp->m_label = surfLabels[esetit->first];
+            }
+
+            for (edit = esetit->second.begin(); edit != esetit->second.end();
+                 ++edit)
+            {
+                EdgeSet::iterator locit;
+                if ((locit = bndEdgeSet.find(*edit)) != bndEdgeSet.end())
+                {
+                    // make 1D segment element
+                    LibUtilities::ShapeType elType = LibUtilities::eSegment;
+
+                    vector<int> tags;
+                    tags.push_back(maxId);
+
+                    // make unique node list
+                    vector<NodeSharedPtr> nodeList;
+                    nodeList.push_back((*locit)->m_n1);
+                    nodeList.push_back((*locit)->m_n2);
+
+                    ElmtConfig conf(elType, 1, true, true);
+                    ElementSharedPtr E = GetElementFactory().CreateInstance(
+                        elType, conf, nodeList, tags);
+                    E->SetId((*locit)->m_id);
+                    m_mesh->m_element[E->GetDim()].push_back(E);
+                    newComp->m_items.push_back(E);
+                }
+            }
+
+            if (newComp->m_items.size())
+            {
+                m_mesh->m_composite[maxId++] = newComp;
+            }
         }
     }
 }

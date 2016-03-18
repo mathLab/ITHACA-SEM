@@ -330,6 +330,10 @@ void InputNekpp::Process()
             }
         }
     }
+
+    // set up composite labels if they exist
+    m_mesh->m_faceLabels = graph->GetCompositesLabels();
+
     ProcessEdges(false);
     ProcessFaces(false);
     ProcessComposites();

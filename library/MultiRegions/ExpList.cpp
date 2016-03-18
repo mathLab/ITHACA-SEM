@@ -560,11 +560,11 @@ namespace Nektar
             Array<OneD,NekDouble> Uy(nq);
             Array<OneD,NekDouble> Dummy(nq);
 
-            bool m_halfMode = false;
+            bool halfMode = false;
             if ( GetExpType() == MultiRegions::e3DH1D)
             {
                 m_session->MatchSolverInfo("ModeType", "HalfMode",
-                                           m_halfMode, false);
+                                           halfMode, false);
             }
 
             switch(GetExpType())
@@ -604,7 +604,7 @@ namespace Nektar
                     PhysDeriv(Q[2], Wx, Wy, Dummy);
 
                     // For halfmode, need to change the sign of z derivatives
-                    if (m_halfMode)
+                    if (halfMode)
                     {
                         Vmath::Neg(nq, Uz, 1);
                         Vmath::Neg(nq, Vz, 1);

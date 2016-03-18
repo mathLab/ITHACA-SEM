@@ -911,28 +911,52 @@ namespace Nektar
             const int                  eid,
             const Orientation      edgeOrient,
             Array<OneD, unsigned int>& maparray,
-            Array<OneD,          int>& signarray)
+            Array<OneD,          int>& signarray,
+            int P)
         {
-            ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
+            ASSERTL1(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(eid) == LibUtilities::eModified_B,
                      "Mapping not defined for this type of basis");
 
             int i;
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+            int numModes;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
 
-            if(maparray.num_elements() != nEdgeCoeffs)
+            switch (eid)
             {
-                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            case 0:
+                numModes = order0;
+                break;
+            case 1:
+            case 2:
+                numModes = order1;
+                break;
             }
 
-            if(signarray.num_elements() != nEdgeCoeffs)
+            bool checkForZeroedModes = false;
+            if (P == -1)
             {
-                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+                P = numModes;
+            }
+            else if(P != numModes)
+            {
+                checkForZeroedModes = true;
+            }
+
+
+            if(maparray.num_elements() != P)
+            {
+                maparray = Array<OneD, unsigned int>(P);
+            }
+
+            if(signarray.num_elements() != P)
+            {
+                signarray = Array<OneD, int>(P,1);
             }
             else
             {
-                fill(signarray.get() , signarray.get()+nEdgeCoeffs, 1);
+                fill(signarray.get() , signarray.get()+P, 1);
             }
 
             switch(eid)
@@ -940,7 +964,7 @@ namespace Nektar
                 case 0:
                 {
                     int cnt = 0;
-                    for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
+                    for(i = 0; i < P; cnt+=order1-i, ++i)
                     {
                         maparray[i] = cnt;
                     }
@@ -949,7 +973,7 @@ namespace Nektar
                     {
                         swap( maparray[0] , maparray[1] );
 
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        for(i = 3; i < P; i+=2)
                         {
                             signarray[i] = -1;
                         }
@@ -958,18 +982,18 @@ namespace Nektar
                 }
                 case 1:
                 {
-                    maparray[0] = nummodes1;
+                    maparray[0] = order1;
                     maparray[1] = 1;
-                    for(i = 2; i < nEdgeCoeffs; i++)
+                    for(i = 2; i < P; i++)
                     {
-                        maparray[i] = nummodes1-1+i;
+                        maparray[i] = order1-1+i;
                     }
 
                     if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
 
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        for(i = 3; i < P; i+=2)
                         {
                             signarray[i] = -1;
                         }
@@ -978,7 +1002,7 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    for(i = 0; i < nEdgeCoeffs; i++)
+                    for(i = 0; i < P; i++)
                     {
                         maparray[i] = i;
                     }
@@ -987,7 +1011,7 @@ namespace Nektar
                     {
                         swap( maparray[0] , maparray[1] );
 
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        for(i = 3; i < P; i+=2)
                         {
                             signarray[i] = -1;
                         }
@@ -997,6 +1021,18 @@ namespace Nektar
             default:
                 ASSERTL0(false,"eid must be between 0 and 2");
                 break;
+            }
+
+
+            if (checkForZeroedModes)
+            {
+                // Zero signmap and set maparray to zero if
+                // elemental modes are not as large as face modes
+                for (int j = numModes; j < P; j++)
+                {
+                    signarray[j] = 0.0;
+                    maparray[j]  = maparray[0];
+                }
             }
         }
 
@@ -1380,8 +1416,7 @@ namespace Nektar
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
-            // apply SVV filter (JEL)
+            // Apply SVV filter (JEL)
             for(j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b-j; ++k)

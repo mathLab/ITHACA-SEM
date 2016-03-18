@@ -1421,11 +1421,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            void StdExpansion::v_GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
-                                               Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray)
+            void StdExpansion::v_GetEdgeToElementMap(
+                const int                  eid,
+                const Orientation          edgeOrient,
+                Array<OneD, unsigned int>& maparray,
+                Array<OneD, int>&          signarray,
+                int                        P)
             {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
             }
 
             void StdExpansion::v_GetFaceToElementMap(const int fid, const Orientation faceOrient,
@@ -1474,6 +1477,20 @@ namespace Nektar
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+        
+            void StdExpansion::v_GetEdgePhysMap(
+                const int  edge,
+                Array<OneD, int>   &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+            }
+
+            void StdExpansion::v_GetFacePhysMap(const int  face,
+                                                Array<OneD, int>   &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
@@ -1668,6 +1685,12 @@ namespace Nektar
         void StdExpansion::v_NegateFaceNormal(const int face)
         {
             ASSERTL0(false, "Not implemented.");
+        }
+
+        bool StdExpansion::v_FaceNormalNegated(const int face)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
         }
 
         void StdExpansion::v_ComputeVertexNormal(const int vertex)

@@ -210,19 +210,6 @@ namespace Nektar
 
         NekDouble m_timestep;
 
-        /// Flag to determine if single homogeneous mode is used.
-        bool m_SingleMode;
-        /// Flag to determine if half homogeneous mode is used.
-        bool m_HalfMode;
-        /// Flag to determine if use multiple homogenenous modes are used.
-        bool m_MultipleModes;
-
-        NekDouble m_LhomZ;  ///< physical length in Z direction (if homogeneous)
-        
-        int m_npointsX;     ///< number of points in X direction (if homogeneous)
-        int m_npointsY;     ///< number of points in Y direction (if homogeneous)
-        int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
-
         /// Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoElmtID;
         
@@ -235,12 +222,6 @@ namespace Nektar
         /// Storage for current and previous levels of the acceleration term.
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
 
-        /// wave number 2 pi k /Lz
-        Array<OneD, NekDouble>  m_wavenumber;
-        
-        /// minus Square of wavenumber
-        Array<OneD, NekDouble>  m_negWavenumberSq;
-        
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
 

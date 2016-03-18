@@ -213,8 +213,6 @@ namespace Nektar
         }
     }
 
-
-
     void Extrapolate::CalcOutflowBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,

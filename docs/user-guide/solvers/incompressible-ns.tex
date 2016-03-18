@@ -658,12 +658,12 @@ Available options of the motion type for the moving body include free, constrain
 </SOLVERINFO>
 \end{lstlisting}
 
-A moving body type boundary condition should be specified in \inltt{BOUNDARYCONDITIONS} for the velocities on the far field and in-flow boundaries such as,
+A moving body type boundary condition should be specified in \inltt{BOUNDARYCONDITIONS} for the velocities on the moving body,
 
 \begin{lstlisting}[style=XMLStyle]
 <BOUNDARYCONDITIONS>
-    <REGION REF="1">
-        <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="1" />
+    <REGION REF="0">
+        <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="0" />
         <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
         <D VAR="w" VALUE="0" />
         <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
@@ -720,6 +720,7 @@ value of the aerodynamic forces on boundary 0, defined in the
 \inltt{GEOMETRY} section, will be output every 10 time steps.evaluates the aerodynamic forces along the moving body surface. The
 forces for each computational plane are projected along the Cartesian axes and the pressure and viscous contributions are computed in each direction.
 
+Also, to use this module a \inltt{MAPPING} needs to be specified, as described in section \ref{sec:mapping}. In the case of free and constrained motion presented here, the functions defined by the mapping act as initial conditions. Also, when using the MovingBody forcing, it is not necessary to set the \inltt{TIMEDEPENDENT} property of the mapping. 
 
 \section{Stability analysis Session file configuration}
 \label{SecStabFile}
@@ -917,6 +918,127 @@ Once these three files (the  \inltt{Geometry} in \inlsh{Session.xml.gz}, the non
 \begin{lstlisting}[style=BashInputStyle]
 IncNavierStokesSolver Session.xml.gz Session.xml
 \end{lstlisting}
+
+
+\section{Coordinate transformations Session file configuration}\label{sec:mapping}
+
+This section describes how to include a coordinate transformation
+to the solution of the incompressible Navier-Stokes equations.
+In some cases, this approach allows a slightly deformed geometry to
+be mapped into a geometry with a homogeneous direction, which can be treated
+using a quasi-3D method. It is also useful for problems with a moving body,
+ where otherwise a moving mesh would have to be employed.
+ 
+\subsection{Solver Info}
+
+To activate the mapping technique, \inltt{SolverType} needs to be set as:
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="SolverType" VALUE="VCSMapping" />
+\end{lstlisting}
+Also, there are other optional properties in the \inltt{SolverInfo} section:
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> <!-- Default = FALSE -->
+<I PROPERTY="MappingImplicitViscous" VALUE="TRUE"/>  <!-- Default = FALSE -->
+
+<I PROPERTY="MappingNeglectViscous" VALUE="FALSE"/>  <!-- Default = FALSE -->
+\end{lstlisting}
+the first two options determine if the pressure and viscous terms resulting from the
+coordinate transformation are treated implicitly using an iterative procedure. If the last
+option is set to true, the viscous terms in the mapping are not computed. This leads to a
+faster solution, but the effect on the results need to be determined for the specific case. 
+ By default, all mapping terms are computed and treated explicitly.
+ 
+\subsection{Parameters}
+
+When treating the mapping terms implicitly, the following parameters can be set:
+\begin{lstlisting}[style=XMLStyle]
+<P> MappingPressureTolerance    = 1e-8  </P>  <!-- Default = 1e-12  -->
+<P> MappingViscousTolerance     = 1e-8  </P>  <!-- Default = 1e-12  -->
+<P> MappingPressureRelaxation   = 0.9   </P>  <!-- Default = 1.0    -->
+<P> MappingViscousRelaxation    = 0.9   </P>  <!-- Default = 1.0    -->
+\end{lstlisting}
+They determine the tolerance of the iterative solution of the equations, 
+and a relaxation parameter which can improve the numerical stability of the method.
+
+\subsection{Mapping}
+
+The particular transformation employed is specified by:
+\begin{lstlisting}[style=XMLStyle]
+<MAPPING TYPE="XYofZ">
+    <COORDS>Mapping</COORDS>
+    <VEL>MappingVel</VEL>
+    <TIMEDEPENDENT>True</TIMEDEPENDENT> <!-- Default is False -->
+</MAPPING>
+\end{lstlisting}
+where \inltt{TIMEDEPENDENT} indicates if the transformation varies 
+with time.
+
+The available values for \inltt{TYPE}, and the transformations they represent, 
+are:
+\begin{center}
+  \begin{tabular}{llll}
+    \toprule
+    Mapping type & $\bar{x}$ & $\bar{y}$ & $\bar{z}$ \\
+    \midrule
+    \inltt{Translation} &  $x +f(t)$  & $y + g(t)$ & $z + h(t)$   \\
+    \inltt{XofZ} &  $x + f(z,t)$  & $y$ & $z$   \\
+    \inltt{XofXZ} &  $f(x,z,t)$  & $y$ & $z$   \\
+    \inltt{XYofZ} &  $x + f(z,t)$  & $y + g(z,t)$ & $z$   \\
+    \inltt{XYofXY} &  $f(x,y,t)$  & $g(x,y,t)$ & $z$   \\
+    \inltt{General} &  $f(x,y,z,t)$  & $g(x,y,z,t)$ & $h(x,y,z,t)$   \\      
+    \bottomrule
+  \end{tabular}
+\end{center}
+where $(\bar{x},\bar{y},\bar{z})$ are the Cartesian (physical) coordinates and 
+$(x,y,z)$ are the transformed coordinates. Note that for quasi-3D problems, the
+$z$ coordinate cannot be transformed.
+
+\subsection{Functions}
+
+The function \inltt{COORDS} (and \inltt{VEL} for time dependent mappings)
+ indicated in the \inltt{MAPPING} section need to be defined, for example as:
+\begin{lstlisting}[style=XMLStyle]
+        <FUNCTION NAME="Mapping">
+            <E VAR="x" VALUE="x + cos(PI*z)" />
+            <E VAR="y" VALUE="y + cos(2*PI*t)" />
+        </FUNCTION>
+        
+        <FUNCTION NAME="MappingVel">
+            <E VAR="vx" VALUE="0.0" />
+            <E VAR="vy" VALUE="-1.0*2*PI*sin(2*PI*t)" />
+        </FUNCTION>
+\end{lstlisting} 
+the transformation defined by these functions need to be valid 
+(non-zero Jacobian). By default, any component of \inltt{COORDS} that
+is not specified is taken as a trivial transformation, e.g. $\bar{x} = x$,
+ and any velocity not specified is considered to be zero.
+ 
+\subsection{Boundary conditions}
+
+In case of a time-dependent mapping, a moving body boundary condition
+is available: 
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+    <REGION REF="0">
+        <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+        <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+        <D VAR="w" VALUE="0" />
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+     </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+When using the \inltt{MovingBody} boundary condition, the Dirichlet condition
+is relative to the boundary, while the regular Dirichlet boundary condition
+is taken in an absolute sense. 
+
+All Dirichlet boundary conditions are specified in the Cartesian (physical) space,
+ and are automatically transformed to the computational frame of reference. 
+ 
+\begin{notebox}
+Examples of the use of mappings can be found in the test directory
+\inlsh{NEKTAR/solvers/IncNavierStokesSolver/Tests}. See for example the files
+\inlsh{KovaFlow\_3DH1D\_P8\_16modes\_Mapping-implicit.xml} and \inlsh{CylFlow\_Mov\_mapping.xml}.
+\end{notebox}
 
 \section{Adaptive polynomial order Session file configuration}
 \label{SectionDriverAdaptive}

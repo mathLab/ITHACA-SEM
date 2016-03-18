@@ -759,11 +759,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                 int NumHomoDir = 0,
-                int NumHomoStrip = 1,
                 Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis =
                     LibUtilities::NullBasisSharedPtr1DArray,
                 std::vector<NekDouble> &HomoLen =
                     LibUtilities::NullNekDoubleVector,
+                bool  homoStrips = false,
+                std::vector<unsigned int> &HomoSIDs =
+                    LibUtilities::NullUnsignedIntVector,
                 std::vector<unsigned int> &HomoZIDs =
                     LibUtilities::NullUnsignedIntVector,
                 std::vector<unsigned int> &HomoYIDs =

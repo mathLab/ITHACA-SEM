@@ -350,7 +350,8 @@ void OutputFld::Process(po::variables_map &vm)
 
         if(writefld)
         {
-            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                                                    m_f->m_fieldMetaDataMap);
         }
 
         // output error for regression checking.

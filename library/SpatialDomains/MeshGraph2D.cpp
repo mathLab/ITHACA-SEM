@@ -547,7 +547,7 @@ namespace Nektar
                 if(err == TIXML_SUCCESS)
                 {
                     m_compositesLabels[indx] = labelstr;
-                }                
+                }
 
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.

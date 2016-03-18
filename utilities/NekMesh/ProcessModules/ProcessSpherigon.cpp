@@ -489,8 +489,8 @@ void ProcessSpherigon::Process()
         MeshSharedPtr plymesh = plyfile->GetMesh();
         GenerateNormals(plymesh->m_element[plymesh->m_expDim], plymesh);
 
-        // finally find nearest vertex and set normal to mesh surface
-        // file normal.  probably should have a hex tree search ?
+        // finally find nearest vertex and set normal to mesh surface file
+        // normal.  probably should have a hex tree search ?
         Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
         Node minx(0, 0.0, 0.0, 0.0), tmp, tmpsav;
         NodeSet::iterator it;
@@ -873,11 +873,11 @@ void ProcessSpherigon::Process()
                 P += Q[k] * blend[k];
             }
 
-            if ((boost::math::isnan)(P.m_x)||
-                (boost::math::isnan)(P.m_y)||
+            if ((boost::math::isnan)(P.m_x) || (boost::math::isnan)(P.m_y) ||
                 (boost::math::isnan)(P.m_z))
             {
-                ASSERTL0(false, "spherigon point is a nan. Check to see if "
+                ASSERTL0(false,
+                         "spherigon point is a nan. Check to see if "
                          "ply file is correct if using input normal file");
             }
             else

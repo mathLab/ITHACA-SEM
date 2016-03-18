@@ -298,7 +298,7 @@ namespace Nektar
     /**
      * Explicit part of the method - Advection, Forcing + HOPBCs
      */
-    void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(
+    void VelocityCorrectionScheme::v_EvaluateAdvection_SetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
@@ -337,8 +337,6 @@ namespace Nektar
         int i;
         int phystot = m_fields[0]->GetTotPoints();
 
-        StdRegions::ConstFactorMap factors;
-
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
@@ -351,43 +349,23 @@ namespace Nektar
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
     
-        // Set up forcing term and coefficients for pressure Poisson equation
+        // Set up forcing term for pressure Poisson equation
         SetUpPressureForcing(inarray, F, aii_Dt);
-        factors[StdRegions::eFactorLambda] = 0.0;
 
-        // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList,
-                              factors);
+        // Solve Pressure System
+        SolvePressure (F[0]);
 
-        // Set up forcing term and coefficients for Helmholtz problems
+        // Set up forcing term for Helmholtz problems
         SetUpViscousForcing(inarray, F, aii_Dt);
-        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
-        if(m_useSpecVanVisc)
-        {
-            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
-        }
         
-        
-        // Solve Helmholtz system and put in Physical space
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            if(m_saved_aii_Dt[i] != aii_Dt)
-            {
-                // reset global manager
-                m_fields[i]->ClearGlobalLinSysManager();
-                m_saved_aii_Dt[i] = aii_Dt; 
-            }
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors,m_varCoeffLap);
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
-        }
+        // Solve velocity system
+        SolveViscous( F, outarray, aii_Dt);
     }
         
     /**
      * Forcing term for Poisson solver solver
      */ 
-    void   VelocityCorrectionScheme::SetUpPressureForcing(
+    void   VelocityCorrectionScheme::v_SetUpPressureForcing(
         const Array<OneD, const Array<OneD, NekDouble> > &fields, 
         Array<OneD, Array<OneD, NekDouble> > &Forcing, 
         const NekDouble aii_Dt)
@@ -411,7 +389,7 @@ namespace Nektar
     /**
      * Forcing term for Helmholtz solver
      */
-    void   VelocityCorrectionScheme::SetUpViscousForcing(
+    void   VelocityCorrectionScheme::v_SetUpViscousForcing(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         Array<OneD, Array<OneD, NekDouble> > &Forcing, 
         const NekDouble aii_Dt)
@@ -442,5 +420,46 @@ namespace Nektar
         }
     }
 
+    
+    /**
+     * Solve pressure system
+     */
+    void   VelocityCorrectionScheme::v_SolvePressure(
+        const Array<OneD, NekDouble>  &Forcing)
+    {
+        StdRegions::ConstFactorMap factors;
+        // Setup coefficient for equation
+        factors[StdRegions::eFactorLambda] = 0.0;
+
+        // Solver Pressure Poisson Equation
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
+                              factors);
+    }
+    
+    /**
+     * Solve velocity system
+     */
+    void   VelocityCorrectionScheme::v_SolveViscous(
+        const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
+        Array<OneD, Array<OneD, NekDouble> > &outarray,
+        const NekDouble aii_Dt)
+    {
+        StdRegions::ConstFactorMap factors;
+        // Setup coefficients for equation
+        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+        }
+
+        // Solve Helmholtz system and put in Physical space
+        for(int i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
+                                   NullFlagList, factors);
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
+        }
+    }
     
 } //end of namespace

@@ -171,7 +171,19 @@ namespace Nektar
         void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis)
+        {
+            v_CalcNeumannPressureBCs( fields, N, kinvis);
+        }
+                
+        virtual void v_CalcNeumannPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &fields,
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
+            
+        virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
+        {    
+        }        
         
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,

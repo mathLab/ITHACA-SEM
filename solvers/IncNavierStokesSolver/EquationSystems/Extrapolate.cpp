@@ -158,7 +158,7 @@ namespace Nektar
     /**
      * Unified routine for calculation high-oder terms
      */
-    void Extrapolate::CalcNeumannPressureBCs(
+    void Extrapolate::v_CalcNeumannPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
@@ -1493,6 +1493,5 @@ namespace Nektar
     {
         return LibUtilities::eNoTimeIntegrationMethod;
     }
-    
 }
 

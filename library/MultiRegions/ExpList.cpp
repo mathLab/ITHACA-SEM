@@ -1983,12 +1983,13 @@ namespace Nektar
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                                                   int NumHomoDir,
-                                                  int NumHomoStrip,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
+                                                  bool  homoStrips,
+                                                  std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
-        {
+        {   
             int startenum = (int) LibUtilities::eSegment;
             int endenum   = (int) LibUtilities::eHexahedron;
             int s         = 0;
@@ -2073,16 +2074,13 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    for(int i = 0; i < NumHomoStrip; ++i)
-                    {
-                        LibUtilities::FieldDefinitionsSharedPtr fdef  =
-                            MemoryManager<LibUtilities::FieldDefinitions>::
-                                AllocateSharedPtr(shape, elementIDs, basis,
-                                                  UniOrder, numModes,fields,
-                                                  NumHomoDir, HomoLen, HomoZIDs,
-                                                  HomoYIDs);
-                        fielddef.push_back(fdef);
-                    }
+                    LibUtilities::FieldDefinitionsSharedPtr fdef  =
+                        MemoryManager<LibUtilities::FieldDefinitions>::
+                            AllocateSharedPtr(shape, elementIDs, basis,
+                                            UniOrder, numModes,fields,
+                                            NumHomoDir, HomoLen, homoStrips,
+                                            HomoSIDs, HomoZIDs, HomoYIDs);
+                    fielddef.push_back(fdef);
                 }
             }
         }

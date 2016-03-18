@@ -52,6 +52,8 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <GlobalMapping/Mapping.h>
+
 #include <boost/format.hpp>
 # include <boost/function.hpp>
 
@@ -2068,8 +2070,17 @@ namespace Nektar
             {
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
             }
+            
+            // If necessary, add mapping information to metadata
+            //      and output mapping coordinates
+            Array<OneD, MultiRegions::ExpListSharedPtr> fields(1);
+            fields[0] = field;           
+            GlobalMapping::MappingSharedPtr mapping = 
+                    GlobalMapping::Mapping::Load(m_session, fields);
+            LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
+            mapping->Output( fieldMetaDataMap, outname);
 
-            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap);
         }
 
 

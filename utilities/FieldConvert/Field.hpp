@@ -106,6 +106,7 @@ struct Field {
     bool                                    m_addNormals;
 
     bool                                    m_setUpEquiSpacedFields;
+
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
 
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;

@@ -74,7 +74,7 @@ namespace Nektar
                 exp[i] = m_f->m_exp[i];
             }
 
-            SolverUtils::UpdateGeometry(m_f->m_graph, exp);
+            SolverUtils::UpdateGeometry(m_f->m_graph, exp, false);
         }
     }
 }

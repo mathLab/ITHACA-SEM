@@ -225,9 +225,6 @@ void InputXml::Process(po::variables_map &vm)
                  "argument");
     }
 
-    // set up command lines options for session read to pass through
-    string firstarg = "FieldConvert";
-
     // Set up command lines options that will be passed through to SessionReader
     vector<string> cmdArgs;
     cmdArgs.push_back("FieldConvert");

@@ -457,7 +457,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
     // check to see that we do have some elmement in teh domain since
     // possibly all points could be outside of the domain
-    ASSERTL0(i > 0, "No elements are set. Are the interpolated points wihtin the domain given by the xml files?");
+    ASSERTL0(i > 0, "No elements are set. Are the interpolated points "
+             "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,

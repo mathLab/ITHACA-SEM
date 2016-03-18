@@ -99,7 +99,6 @@ class PtsPoint
 class PtsField
 {
     public:
-
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
             const Array<OneD, Array<OneD, NekDouble> > &pts);

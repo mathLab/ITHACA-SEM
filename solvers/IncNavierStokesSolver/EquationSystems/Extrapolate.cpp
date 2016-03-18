@@ -95,14 +95,11 @@ namespace Nektar
         m_pressureCalls++;
         if(m_HBCdata.num_elements()>0)
         {
-            Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> accelerationTerm;
 
             int  n,cnt;
             int  nint    = min(m_pressureCalls,m_intSteps);
             int  nlevels = m_pressureHBCs.num_elements();
-
-            int acc_order = 0;
 
             accelerationTerm =
                 Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
@@ -116,30 +113,18 @@ namespace Nektar
             // Calculate Neumann BCs at current level
             CalcNeumannPressureBCs(fields, N, kinvis);
 
-            // Copy High order values into storage array 
-            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                // High order boundary condition;
-                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                {
-                    int nq = m_PBndExp[n]->GetNcoeffs();
-                    Vmath::Vcopy(nq, &(m_PBndExp[n]->GetCoeffs()[0]), 1,
-                                     &(m_pressureHBCs[0])[cnt], 1);
-                    cnt += nq;
-                }
-            }
-
             //Calculate acceleration term at level n based on previous steps
             if (m_pressureCalls > 2)
             {
-                acc_order = min(m_pressureCalls-2,m_intSteps);
-                Vmath::Smul(cnt, StifflyStable_Gamma0_Coeffs[acc_order-1],
+                int acc_order = min(m_pressureCalls-2,m_intSteps);
+                Vmath::Smul(m_numHBCDof,
+                                 StifflyStable_Gamma0_Coeffs[acc_order-1],
                                  m_acceleration[0], 1,
                                  accelerationTerm,  1);
 
                 for(int i = 0; i < acc_order; i++)
                 {
-                    Vmath::Svtvp(cnt, 
+                    Vmath::Svtvp(m_numHBCDof,
                                 -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
                                  m_acceleration[i+1], 1,
                                  accelerationTerm,    1,
@@ -148,20 +133,20 @@ namespace Nektar
             }
 
             // Adding acceleration term to HOPBCs
-            Vmath::Svtvp(cnt, -1.0/m_timestep,
+            Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
                          accelerationTerm,  1,
                          m_pressureHBCs[0], 1,
                          m_pressureHBCs[0], 1);
 
 
             // Extrapolate to n+1
-            Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
+            Vmath::Smul(m_numHBCDof, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
                              m_pressureHBCs[nint-1],    1,
                              m_pressureHBCs[nlevels-1], 1);
 
             for(n = 0; n < nint-1; ++n)
             {
-                Vmath::Svtvp(cnt, StifflyStable_Betaq_Coeffs[nint-1][n],
+                Vmath::Svtvp(m_numHBCDof, StifflyStable_Betaq_Coeffs[nint-1][n],
                              m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
                              m_pressureHBCs[nlevels-1],1);
             }
@@ -244,7 +229,7 @@ namespace Nektar
                                         kinvis,Q[i],Advection[i]);
                 }
 
-                Pvals = m_PBndExp[n]->UpdateCoeffs();
+                Pvals = (m_pressureHBCs[0]) + cnt;
                 Uvals = (m_acceleration[0]) + cnt;
 
                 // Getting values on the edge and filling the pressure boundary
@@ -853,7 +838,8 @@ namespace Nektar
                 HBCnumber += m_PBndExp[n]->GetExpSize();
             }
         }
-    
+
+        m_numHBCDof = cnt;
         int checkHBC = HBCnumber;
         m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
         //ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "

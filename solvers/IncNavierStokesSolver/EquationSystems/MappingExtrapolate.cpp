@@ -359,9 +359,7 @@ namespace Nektar
                     MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
                 }
 
-                Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                            + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
+                Pvals = (m_pressureHBCs[0]) + m_HBCdata[j].m_coeffOffset;
                 Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
 
                 // Getting values on the edge and filling the pressure boundary
@@ -448,19 +446,9 @@ namespace Nektar
         //     by the relaxation parameter, and zero the correction term
         if (m_implicitPressure)
         {
-            int n, cnt;
-
-            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                if(m_PBndConds[n]->GetUserDefined() == "H")
-                {
-                    int nq = m_PBndExp[n]->GetNcoeffs();
-                    Vmath::Smul(nq, m_pressureRelaxation,
-                                    &(m_PBndExp[n]->GetCoeffs()[0]),  1, 
-                                    &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
-                    cnt += nq;
-                }
-            }    
+            Vmath::Smul(m_numHBCDof, m_pressureRelaxation,
+                            m_pressureHBCs[0], 1,
+                            m_pressureHBCs[0], 1);
         } 
         m_bcCorrection  = Array<OneD, NekDouble> (m_pressureHBCs[0].num_elements(), 0.0);
     }

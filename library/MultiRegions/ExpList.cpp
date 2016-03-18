@@ -561,7 +561,7 @@ namespace Nektar
             Array<OneD,NekDouble> Dummy(nq);
 
             bool halfMode = false;
-            if ( GetExpType() == MultiRegions::e3DH1D)
+            if ( GetExpType() == e3DH1D)
             {
                 m_session->MatchSolverInfo("ModeType", "HalfMode",
                                            halfMode, false);
@@ -569,7 +569,7 @@ namespace Nektar
 
             switch(GetExpType())
             {
-                case MultiRegions::e2D:
+                case e2D:
                 {
                     PhysDeriv(DirCartesianMap[0], Vel[1], Vx);
                     PhysDeriv(DirCartesianMap[1], Vel[0], Uy);
@@ -582,9 +582,9 @@ namespace Nektar
                 }
                 break;
 
-                case MultiRegions::e3D:
-                case MultiRegions::e3DH1D:
-                case MultiRegions::e3DH2D:
+                case e3D:
+                case e3DH1D:
+                case e3DH2D:
                 {
                     Array<OneD,NekDouble> Vz(nq);
                     Array<OneD,NekDouble> Uz(nq);

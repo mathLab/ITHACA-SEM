@@ -426,7 +426,7 @@ if (NEKTAR_BUILD_LIBRARY AND PKGMAKER)
         MESSAGE(WARNING "Shipping OS X with PETSc is unlikely to work!")
     endif ()
     add_nektar_package(
-        NAME nektar++
+        NAME nektar++-serial
         TYPE pkgmaker
         SUMMARY "Nektar++ libraries and solvers"
         DESCRIPTION "This is all of Nektar++"

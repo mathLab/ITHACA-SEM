@@ -77,7 +77,7 @@ MappingExtrapolate::~MappingExtrapolate()
 void MappingExtrapolate::v_CorrectPressureBCs(
     const Array<OneD, NekDouble> &pressure)
 {
-    if (m_HBCdata.num_elements() > 0)
+    if (m_HBCnumber > 0)
     {
         int cnt, n;
         int physTot = m_fields[0]->GetTotPoints();

@@ -93,7 +93,7 @@ namespace Nektar
         NekDouble kinvis)
     {
         m_pressureCalls++;
-        if(m_HBCdata.num_elements()>0)
+        if(m_HBCnumber > 0)
         {
             int  n,cnt;
 
@@ -126,11 +126,11 @@ namespace Nektar
             }
 
         }
-        
+
         CalcOutflowBCs(fields, N, kinvis);
     }
-    
-    
+
+
     /**
      * Unified routine for calculation high-oder terms
      */
@@ -138,7 +138,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
-    {    
+    {
         int n, cnt;
 
         Array<OneD, NekDouble> Pvals;
@@ -788,29 +788,29 @@ namespace Nektar
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
         m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
     
-        int HBCnumber = 0;
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        m_HBCnumber = 0;
+        m_numHBCDof = 0;
+        for( n = 0; n < m_PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
             {
-                cnt += m_PBndExp[n]->GetNcoeffs();
-                HBCnumber += m_PBndExp[n]->GetExpSize();
+                m_numHBCDof += m_PBndExp[n]->GetNcoeffs();
+                m_HBCnumber += m_PBndExp[n]->GetExpSize();
             }
         }
 
-        m_numHBCDof = cnt;
-        int checkHBC = HBCnumber;
-        m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
+        //int checkHBC = m_HBCnumber;
+        //m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
         //ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
         //                       "condition is required for scheme "
         //                       "consistency");
 
-        m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
+        m_acceleration[0] = Array<OneD, NekDouble>(m_numHBCDof, 0.0);
         for(n = 0; n < m_intSteps; ++n)
         {
-            m_pressureHBCs[n]   = Array<OneD, NekDouble>(cnt, 0.0);
-            m_acceleration[n+1] = Array<OneD, NekDouble>(cnt, 0.0);
+            m_pressureHBCs[n]   = Array<OneD, NekDouble>(m_numHBCDof, 0.0);
+            m_acceleration[n+1] = Array<OneD, NekDouble>(m_numHBCDof, 0.0);
         }
 
         m_pressureCalls = 0;
@@ -839,219 +839,6 @@ namespace Nektar
             {
                 m_curl_dim = 3;
                 m_bnd_dim  = 3;
-            }
-            break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
-        }
-    
-        
-        m_HBCdata = Array<OneD, HBCInfo>(HBCnumber);
-        StdRegions::StdExpansionSharedPtr elmt;
-    
-        switch(m_pressure->GetExpType())
-        {
-            case MultiRegions::e2D:
-            case MultiRegions::e3D:
-            {
-                int coeff_count = 0;
-                int exp_size;
-                int j=0;
-                int cnt = 0;
-                for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
-                {
-                    exp_size = m_PBndExp[n]->GetExpSize();
-
-                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                    {
-                        for(int i = 0; i < exp_size; ++i,cnt++)
-                        {
-                            m_HBCdata[j].m_globalElmtID =
-                                                m_pressureBCtoElmtID[cnt];
-                            elmt = m_pressure->GetExp(
-                                                m_HBCdata[j].m_globalElmtID);
-                            m_HBCdata[j].m_ptsInElmt    =
-                                                elmt->GetTotPoints();
-                            m_HBCdata[j].m_physOffset   =
-                                                m_pressure->GetPhys_Offset(
-                                                m_HBCdata[j].m_globalElmtID);
-                            m_HBCdata[j].m_bndElmtOffset = i;
-                            m_HBCdata[j].m_elmtTraceID  =
-                                                m_pressureBCtoTraceID[cnt];
-                            m_HBCdata[j].m_bndryElmtID  = n;
-                            m_HBCdata[j].m_coeffOffset  = coeff_count;
-                            coeff_count += elmt->GetEdgeNcoeffs(
-                                                m_HBCdata[j].m_elmtTraceID);
-                            j = j+1;
-                        }
-                    }
-                    else // setting if just standard BC no High order
-                    {
-                        cnt += exp_size;
-                    }
-                }
-            }
-            break;
-            
-            case MultiRegions::e3DH1D:
-            {
-                Array<OneD, unsigned int> planes;
-                planes = m_pressure->GetZIDs();
-                int num_planes = planes.num_elements();            
-                int num_elm_per_plane = (m_pressure->GetExpSize())/num_planes;
-                
-                m_wavenumber      = Array<OneD, NekDouble>(HBCnumber);
-                m_negWavenumberSq = Array<OneD, NekDouble>(HBCnumber);
-        
-                int exp_size, exp_size_per_plane;
-                int i, j, k, n;
-                int K;
-                NekDouble sign = -1.0;
-                int cnt = 0;
-                
-                m_session->MatchSolverInfo("ModeType", "SingleMode", 
-                                           m_SingleMode, false);
-                m_session->MatchSolverInfo("ModeType", "HalfMode", 
-                                           m_HalfMode, false);
-                m_session->MatchSolverInfo("ModeType", "MultipleModes", 
-                                           m_MultipleModes, false);
-                m_session->LoadParameter("LZ", m_LhomZ);
-
-                // Stability Analysis flags
-                if(m_session->DefinesSolverInfo("ModeType"))
-                {
-                    if(m_SingleMode)
-                    {
-                        m_npointsZ = 2;
-                    }
-                    else if(m_HalfMode)
-                    {
-                        m_npointsZ = 1;
-                    }
-                    else if(m_MultipleModes)
-                    {
-                        m_npointsZ = m_session->GetParameter("HomModesZ");
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "SolverInfo ModeType not valid");
-                    }
-                }
-                else 
-                {
-                    m_npointsZ = m_session->GetParameter("HomModesZ");
-                }
-
-                int coeff_count = 0;
-
-                for(n = 0, j= 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    exp_size = m_PBndExp[n]->GetExpSize();
-                    exp_size_per_plane = exp_size/num_planes;
-
-                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                    {
-                        for(k = 0; k < num_planes; k++)
-                        {
-                            K = planes[k]/2;
-                            for(i = 0; i < exp_size_per_plane; ++i, ++j, ++cnt)
-                            {
-                                m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
-                                elmt        = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
-                                m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();         
-                                m_HBCdata[j].m_physOffset = m_pressure->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                                m_HBCdata[j].m_bndElmtOffset = i+k*exp_size_per_plane;       
-                                m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
-                                m_HBCdata[j].m_bndryElmtID = n;
-                                m_HBCdata[j].m_coeffOffset = coeff_count;
-                                coeff_count += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
-    
-                                if(m_SingleMode)
-                                {
-                                    m_wavenumber[j]      = -2*M_PI/m_LhomZ;       
-                                    m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-                                }
-                                else if(m_HalfMode || m_MultipleModes)
-                                {
-                                    m_wavenumber[j]      = 2*M_PI/m_LhomZ;       
-                                    m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-                                }
-                                else
-                                {
-                                    m_wavenumber[j]     = 2*M_PI*sign*(NekDouble(K))/m_LhomZ; 
-                                    m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-                                }
-
-                                int assElmtID;
-
-                                if(k%2==0)
-                                {
-                                    if(m_HalfMode)
-                                    {
-                                        assElmtID = m_HBCdata[j].m_globalElmtID;
-
-                                    }
-                                    else
-                                    {
-                                        assElmtID = m_HBCdata[j].m_globalElmtID + num_elm_per_plane;
-                                    }
-                                }
-                                else 
-                                {
-                                    assElmtID = m_HBCdata[j].m_globalElmtID - num_elm_per_plane;
-                                }
-
-                                m_HBCdata[j].m_assPhysOffset = m_pressure->GetPhys_Offset(assElmtID);
-                            }
-                            sign = -1.0*sign;
-                        }
-                    }
-                    else
-                    {
-                        cnt += exp_size;
-                    }
-                }
-            }
-            break;
-            
-            case MultiRegions::e3DH2D:
-            {
-                int cnt = 0;
-                int exp_size, exp_size_per_line;
-                int j=0;
-        
-                for(int k1 = 0; k1 < m_npointsZ; k1++)
-                {
-                    for(int k2 = 0; k2 < m_npointsY; k2++)
-                    {
-                        for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
-                        {
-                            exp_size = m_PBndExp[n]->GetExpSize();
-                            
-                            exp_size_per_line = exp_size/(m_npointsZ*m_npointsY);
-                            
-                            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                            {
-                                for(int i = 0; i < exp_size_per_line; ++i,cnt++)
-                                {
-                                    // find element and edge of this expansion. 
-                                    m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];
-                                    elmt      = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
-                                    m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();
-                                    m_HBCdata[j].m_physOffset = m_pressure->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                                    m_HBCdata[j].m_bndElmtOffset = i+(k1*m_npointsY+k2)*exp_size_per_line;
-                                    m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];                
-                                    m_HBCdata[j].m_bndryElmtID = n;
-                                }
-                            }
-                            else
-                            {
-                                cnt += exp_size_per_line;
-                            }
-                        }
-                    }
-                }
             }
             break;
             default:

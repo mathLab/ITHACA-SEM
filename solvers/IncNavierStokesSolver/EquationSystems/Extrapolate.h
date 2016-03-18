@@ -46,28 +46,6 @@
 
 namespace Nektar
 {
-    struct HBCInfo
-    {
-        /// Global element ID.
-        int m_globalElmtID;
-        /// Number of physical points in the element.
-        int m_ptsInElmt;
-        /// Physical offset of the element in the global list.
-        int m_physOffset;
-        /// Physical offset of the element in the boundary expansion.
-        int m_bndElmtOffset;
-        /// Trace ID of the element
-        int m_elmtTraceID;
-        /// Pressure boundary condition ID.
-        int m_bndryElmtID;
-        /// Associated element physical offset (\f$ k\f$ and \f$ k_c\f$ are the
-        /// real and complex plane).
-        int m_assPhysOffset;
-        /// Coefficient offset used to locate the acceleration term in the
-        /// general m_pressureHBC.
-        int m_coeffOffset;
-    };
-
     // Forward declaration
     class Extrapolate;
     typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
@@ -221,7 +199,11 @@ namespace Nektar
         /// Maximum points used in Element adjacent to pressure BC evaluation
         int m_pressureBCsElmtMaxPts;
 
+        // Number of degrees of freedom (coefficients) for HOPbc
         int m_numHBCDof;
+
+        // Number of HOPbcs
+        int m_HBCnumber;
 
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
@@ -252,9 +234,6 @@ namespace Nektar
 
         /// Storage for current and previous levels of the acceleration term.
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
-        
-        /// data structure to old all the information regarding High order pressure BCs
-        Array<OneD, HBCInfo > m_HBCdata;
 
         /// wave number 2 pi k /Lz
         Array<OneD, NekDouble>  m_wavenumber;

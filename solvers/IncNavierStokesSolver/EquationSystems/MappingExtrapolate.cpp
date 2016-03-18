@@ -359,7 +359,8 @@ namespace Nektar
                     MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
                 }
 
-                Pvals = (m_pressureHBCs[0]) + m_HBCdata[j].m_coeffOffset;
+                Pvals = (m_pressureHBCs[m_intSteps-1]) +
+                         m_HBCdata[j].m_coeffOffset;
                 Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
 
                 // Getting values on the edge and filling the pressure boundary
@@ -447,10 +448,10 @@ namespace Nektar
         if (m_implicitPressure)
         {
             Vmath::Smul(m_numHBCDof, m_pressureRelaxation,
-                            m_pressureHBCs[0], 1,
-                            m_pressureHBCs[0], 1);
+                            m_pressureHBCs[m_intSteps-1], 1,
+                            m_pressureHBCs[m_intSteps-1], 1);
         } 
-        m_bcCorrection  = Array<OneD, NekDouble> (m_pressureHBCs[0].num_elements(), 0.0);
+        m_bcCorrection  = Array<OneD, NekDouble> (m_numHBCDof, 0.0);
     }
 
 }

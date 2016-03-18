@@ -98,14 +98,9 @@ namespace Nektar
             Array<OneD, NekDouble> accelerationTerm;
 
             int  n,cnt;
-            int  nint    = min(m_pressureCalls,m_intSteps);
-            int  nlevels = m_pressureHBCs.num_elements();
 
             accelerationTerm =
                 Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
-
-            // Rotate HOPBCs storage
-            RollOver(m_pressureHBCs);
 
             // Rotate acceleration term
             RollOver(m_acceleration);
@@ -135,21 +130,12 @@ namespace Nektar
             // Adding acceleration term to HOPBCs
             Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
                          accelerationTerm,  1,
-                         m_pressureHBCs[0], 1,
-                         m_pressureHBCs[0], 1);
+                         m_pressureHBCs[m_intSteps-1], 1,
+                         m_pressureHBCs[m_intSteps-1], 1);
 
 
             // Extrapolate to n+1
-            Vmath::Smul(m_numHBCDof, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
-                             m_pressureHBCs[nint-1],    1,
-                             m_pressureHBCs[nlevels-1], 1);
-
-            for(n = 0; n < nint-1; ++n)
-            {
-                Vmath::Svtvp(m_numHBCDof, StifflyStable_Betaq_Coeffs[nint-1][n],
-                             m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
-                             m_pressureHBCs[nlevels-1],1);
-            }
+            ExtrapolateArray(m_pressureHBCs);
 
             // Copy values of [dP/dn]^{n+1} in the pressure bcs storage.
             // m_pressureHBCS[nlevels-1] will be cancelled at next time step
@@ -158,7 +144,7 @@ namespace Nektar
                 if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
-                    Vmath::Vcopy(nq, &(m_pressureHBCs[nlevels-1])[cnt],  1,
+                    Vmath::Vcopy(nq, &(m_pressureHBCs[m_intSteps-1])[cnt],  1,
                                      &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
                     cnt += nq;
                 }
@@ -229,7 +215,7 @@ namespace Nektar
                                         kinvis,Q[i],Advection[i]);
                 }
 
-                Pvals = (m_pressureHBCs[0]) + cnt;
+                Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
                 Uvals = (m_acceleration[0]) + cnt;
 
                 // Getting values on the edge and filling the pressure boundary
@@ -1268,32 +1254,32 @@ namespace Nektar
     }
 
     /**
-     *    Update oldarrays to include newarray and 
-     *          extrapolate result to outarray
+     *    At the start, the newest value is stored in array[nlevels-1]
+     *        and the previous values in the first positions
+     *    At the end, the extrapolated value is stored in array[nlevels-1]
+     *        and the storage has been updated to included the new value
      */    
     void Extrapolate::ExtrapolateArray(
-            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
-            Array<OneD, NekDouble>  &newarray,
-            Array<OneD, NekDouble>  &outarray)
+            Array<OneD, Array<OneD, NekDouble> > &array)
     {
-        int  nint    = min(m_pressureCalls,m_intSteps);
-        int nPts = newarray.num_elements();
-        
-        // Update oldarrays
-        RollOver(oldarrays);
-        Vmath::Vcopy(nPts, newarray, 1, oldarrays[0], 1);
-        
+        int nint     = min(m_pressureCalls,m_intSteps);
+        int nlevels  = array.num_elements();
+        int nPts     = array[0].num_elements();
+
+        // Update array
+        RollOver(array);
+
         // Extrapolate to outarray
         Vmath::Smul(nPts, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
-                         oldarrays[nint-1],    1,
-                         outarray, 1);
+                         array[nint-1],    1,
+                         array[nlevels-1], 1);
 
         for(int n = 0; n < nint-1; ++n)
         {
             Vmath::Svtvp(nPts, StifflyStable_Betaq_Coeffs[nint-1][n],
-                         oldarrays[n],1,outarray,1,
-                         outarray,1);
-        }        
+                         array[n],1, array[nlevels-1],1,
+                         array[nlevels-1],1);
+        }
     }
 
 }

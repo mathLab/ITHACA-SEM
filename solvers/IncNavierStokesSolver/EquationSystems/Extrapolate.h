@@ -131,10 +131,8 @@ namespace Nektar
         }
         
         void ExtrapolateArray(
-            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
-            Array<OneD, NekDouble>  &newarray,
-            Array<OneD, NekDouble>  &outarray);
-        
+            Array<OneD, Array<OneD, NekDouble> > &array);
+
     protected:
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,        

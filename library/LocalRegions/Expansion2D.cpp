@@ -122,10 +122,6 @@ namespace Nektar
             AddEdgeNormBoundaryInt(edge, EdgeExp, edgePhys, outarray);
         }
 
-        
-        
-        
-        // =====================================================================
         void Expansion2D::v_AddEdgeNormBoundaryInt(
             const int                           edge,
             const ExpansionSharedPtr           &EdgeExp,
@@ -304,12 +300,7 @@ namespace Nektar
                 }
             }
         }
-        // =====================================================================
-        
-        
-        
-        
-        
+
         void Expansion2D::SetTraceToGeomOrientation(
             Array<OneD, ExpansionSharedPtr> &EdgeExp,
             Array<OneD, NekDouble> &inout)
@@ -1409,14 +1400,6 @@ namespace Nektar
         
         void Expansion2D::ReOrientEdgePhysMap(
             const int                                   nvert,
-            const StdRegions::Orientation               orient,
-            const int                                   nq0,
-            Array<OneD, int>                            &idmap)
-        {
-            ReOrientQuadEdgePhysMap(orient, nq0, idmap);
-        }
-        
-        void Expansion2D::ReOrientQuadEdgePhysMap(
             const StdRegions::Orientation               orient,
             const int                                   nq0,
             Array<OneD, int>                            &idmap)

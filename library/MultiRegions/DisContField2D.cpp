@@ -1367,16 +1367,13 @@ namespace Nektar
                 // blocked routine
                 Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                                GetNLocTracePts());
-            
+
                 m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
-            
                 m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
 
                 Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
                                                         GetNFwdLocTracePts();
-             
                 m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
-            
             }
             else
             {

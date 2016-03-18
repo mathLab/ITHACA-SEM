@@ -235,7 +235,7 @@ namespace Nektar
                 }
 
                 // CurlCurl
-                CurlCurl(Velocity,Q,BndElmtExp);
+                BndElmtExp->CurlCurl(Velocity, Q);
 
                 // Mounting advection component into the high-order condition
                 for(int i = 0; i < m_bnd_dim; i++)
@@ -786,76 +786,7 @@ namespace Nektar
             }
         }
     }
-    
-    
-    /**
-     * Curl Curl routine - dimension dependent
-     */
-    void Extrapolate::CurlCurl(
-        Array<OneD, Array<OneD, NekDouble> > &Vel,
-        Array<OneD, Array<OneD, NekDouble> > &Q,
-        const MultiRegions::ExpListSharedPtr &BndElmtExp)
-    {
-        int nq = BndElmtExp->GetTotPoints();
-        Array<OneD,NekDouble> Vx(nq);
-        Array<OneD,NekDouble> Uy(nq);
-        Array<OneD,NekDouble> Dummy(nq);
 
-        switch(m_curl_dim)
-        {
-            case 2:
-            {
-                BndElmtExp->PhysDeriv(MultiRegions::DirCartesianMap[0],
-                                      Vel[1], Vx);
-                BndElmtExp->PhysDeriv(MultiRegions::DirCartesianMap[1],
-                                      Vel[0], Uy);
-
-                Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
-
-                BndElmtExp->PhysDeriv(Dummy,Q[1],Q[0]);
-
-                Vmath::Smul(nq, -1.0, Q[1], 1, Q[1], 1);
-            }
-            break;
-
-            case 3:
-            {
-                Array<OneD,NekDouble> Vz(nq);
-                Array<OneD,NekDouble> Uz(nq);
-                Array<OneD,NekDouble> Wx(nq);
-                Array<OneD,NekDouble> Wy(nq);
-
-                BndElmtExp->PhysDeriv(Vel[0], Dummy, Uy, Uz);
-                BndElmtExp->PhysDeriv(Vel[1], Vx, Dummy, Vz);
-                BndElmtExp->PhysDeriv(Vel[2], Wx, Wy, Dummy);
-
-                Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
-                Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
-                Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
-
-                BndElmtExp->PhysDeriv(Q[0], Dummy, Uy, Uz);
-                BndElmtExp->PhysDeriv(Q[1], Vx, Dummy, Vz);
-                BndElmtExp->PhysDeriv(Q[2], Wx, Wy, Dummy);
-
-                // For halfmode, need to change the sign of z derivatives
-                if (m_HalfMode)
-                {
-                    Vmath::Neg(nq, Uz, 1);
-                    Vmath::Neg(nq, Vz, 1);
-                }
-
-                Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
-                Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
-                Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
-            }
-            break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
-        }
-    }
-    
-    
     /** 
      * Function to roll time-level storages to the next step layout.
      * The stored data associated with the oldest time-level 

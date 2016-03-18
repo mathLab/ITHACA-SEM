@@ -184,11 +184,6 @@ namespace Nektar
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);
 
-        void CurlCurl(
-            Array<OneD, Array<OneD, NekDouble> > &Vel,
-            Array<OneD, Array<OneD, NekDouble> > &Q,
-            const MultiRegions::ExpListSharedPtr &BndElmtExp);
-        
         LibUtilities::SessionReaderSharedPtr m_session;
 
         LibUtilities::CommSharedPtr m_comm;

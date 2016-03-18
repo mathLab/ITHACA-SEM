@@ -551,6 +551,75 @@ namespace Nektar
             }
         }
 
+        void ExpList::v_CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q)
+        {
+            int nq = GetTotPoints();
+            Array<OneD,NekDouble> Vx(nq);
+            Array<OneD,NekDouble> Uy(nq);
+            Array<OneD,NekDouble> Dummy(nq);
+
+            bool m_halfMode = false;
+            if ( GetExpType() == MultiRegions::e3DH1D)
+            {
+                m_session->MatchSolverInfo("ModeType", "HalfMode",
+                                           m_halfMode, false);
+            }
+
+            switch(GetExpType())
+            {
+                case MultiRegions::e2D:
+                {
+                    PhysDeriv(DirCartesianMap[0], Vel[1], Vx);
+                    PhysDeriv(DirCartesianMap[1], Vel[0], Uy);
+
+                    Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
+
+                    PhysDeriv(Dummy,Q[1],Q[0]);
+
+                    Vmath::Smul(nq, -1.0, Q[1], 1, Q[1], 1);
+                }
+                break;
+
+                case MultiRegions::e3D:
+                case MultiRegions::e3DH1D:
+                case MultiRegions::e3DH2D:
+                {
+                    Array<OneD,NekDouble> Vz(nq);
+                    Array<OneD,NekDouble> Uz(nq);
+                    Array<OneD,NekDouble> Wx(nq);
+                    Array<OneD,NekDouble> Wy(nq);
+
+                    PhysDeriv(Vel[0], Dummy, Uy, Uz);
+                    PhysDeriv(Vel[1], Vx, Dummy, Vz);
+                    PhysDeriv(Vel[2], Wx, Wy, Dummy);
+
+                    Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
+                    Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
+                    Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
+
+                    PhysDeriv(Q[0], Dummy, Uy, Uz);
+                    PhysDeriv(Q[1], Vx, Dummy, Vz);
+                    PhysDeriv(Q[2], Wx, Wy, Dummy);
+
+                    // For halfmode, need to change the sign of z derivatives
+                    if (m_halfMode)
+                    {
+                        Vmath::Neg(nq, Uz, 1);
+                        Vmath::Neg(nq, Vz, 1);
+                    }
+
+                    Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
+                    Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
+                    Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
+                }
+                break;
+                default:
+                    ASSERTL0(0,"Dimension not supported");
+                    break;
+            }
+        }
 
         /**
          * The coefficients of the function to be acted upon

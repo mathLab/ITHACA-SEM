@@ -647,8 +647,11 @@ namespace Nektar
                 const int dir,
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD, NekDouble> &out_d);
-            
-            
+
+            inline void CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q);
+
             // functions associated with DisContField
             inline const Array<OneD, const  boost::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
@@ -1207,6 +1210,10 @@ namespace Nektar
                 Direction edir,
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &out_d);
+
+            virtual void v_CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q);
             
             virtual void v_HomogeneousFwdTrans(
                 const Array<OneD, const NekDouble> &inarray,
@@ -1711,6 +1718,13 @@ namespace Nektar
             v_PhysDeriv(edir, inarray,out_d);
         }        
     
+        inline void ExpList::CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q)
+        {
+            v_CurlCurl(Vel, Q);
+        }
+
         /**
          *
          */

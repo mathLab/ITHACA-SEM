@@ -68,6 +68,10 @@ int main(int argc, char* argv[])
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
+        ("part-only", po::value<int>(),
+                "Partition into specfiied npart partitions and exit")
+        ("part-only-overlapping", po::value<int>(),
+                "Partition into specfiied npart overlapping partitions and exit")
         ("procid", po::value<int>(),
                 "Process as single procid of a partition of size nproc "
                 "(-nproc must be specified).")
@@ -236,6 +240,15 @@ int main(int argc, char* argv[])
     modcmds.insert(modcmds.begin(), inout.begin(), inout.end()-1);
     modcmds.push_back(*(inout.end()-1));
     int nInput = inout.size()-1;
+
+    // For special case of part-only or part-only-overlapping options
+    // only require a single input file and so reset the nInputs to be
+    // of size inout.size(). Since the code will exit before reaching
+    // any output module this seems to work as expected
+    if(vm.count("part-only")||vm.count("part-only-overlapping"))
+    {
+        nInput = inout.size();
+    }
 
     InputModuleSharedPtr inputModule;
 

@@ -186,8 +186,7 @@ namespace Nektar
                 // Mounting advection component into the high-order condition
                 for(int i = 0; i < m_bnd_dim; i++)
                 {
-                    MountHOPBCs(BndElmtExp->GetTotPoints(),
-                                        kinvis,Q[i],Advection[i]);
+                    MountHOPBCs(nq, kinvis,Q[i],Advection[i]);
                 }
 
                 Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
@@ -208,7 +207,7 @@ namespace Nektar
                 }
                 m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Uvals);
 
-                // Get offset for next acceleration term
+                // Get offset for next terms
                 cnt += m_PBndExp[n]->GetNcoeffs();
             }
         }

@@ -144,73 +144,45 @@ namespace Nektar
                 {
                     m_pressure->HomogeneousFwdTrans(correction[i], correction[i]);
                 }
-            }            
+            }
             // p_i - alpha*J*div(G(p))    
             for (int i = 0; i < nvel; ++i)
             {
                 Vmath::Vsub(physTot, gradP[i], 1, correction[i], 1, correction[i], 1);
             }
-            
+
             // Get value at boundary and calculate Inner product
-            StdRegions::StdExpansionSharedPtr Pbc;
-            StdRegions::StdExpansionSharedPtr elmt;
-            Array<OneD, Array<OneD, const NekDouble> > correctionElmt(m_bnd_dim);
+            Array<OneD, Array<OneD, NekDouble> > correctionElmt(m_bnd_dim);
             Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
-            for(int i = 0; i < m_bnd_dim; i++)
+            MultiRegions::ExpListSharedPtr BndElmtExp;
+            for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            }
-            for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
-            {
-                /// Casting the boundary expansion to the specific case
-                Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetExp(m_HBCdata[j].m_bndElmtOffset));
-
-                /// Picking up the element where the HOPBc is located
-                elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
-
-                /// Assigning
-                for(int i = 0; i < m_bnd_dim; i++)
+                // High order boundary condition;
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                 {
-                    correctionElmt[i]  = correction[i] + m_HBCdata[j].m_physOffset;
-                }
-                Vals = m_bcCorrection + m_HBCdata[j].m_coeffOffset;
-                // Getting values on the edge and filling the correction
-                switch(m_pressure->GetExpType())
-                {
-                    case MultiRegions::e2D:
-                    case MultiRegions::e3DH1D:
-                    {                                                         
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              correctionElmt[0], BndValues[0]);                    
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              correctionElmt[1], BndValues[1]);
+                    m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
 
-                        // InnerProduct 
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                                       Vals);
-                    }
-                    break;
-
-                    case MultiRegions::e3D:
+                    // Obtaining fields on BndElmtExp
+                    for(int i = 0; i < m_bnd_dim; i++)
                     {
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc, 
-                                              correctionElmt[0], BndValues[0]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              correctionElmt[1], BndValues[1]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              correctionElmt[2], BndValues[2]);
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                              BndValues[2], Vals);
+                        m_fields[0]->ExtractPhysToBndElmt(n, 
+                                        correction[i],correctionElmt[i]);
                     }
-                    break;
-                default:
-                    ASSERTL0(0,"Dimension not supported");
-                    break;
+
+                    Vals =  m_bcCorrection + cnt;
+                    // Getting values on the edge and filling the correction
+                    for(int i = 0; i < m_bnd_dim; i++)
+                    {
+                        m_fields[0]->ExtractElmtToBndPhys(n, correctionElmt[i],
+                                                             BndValues[i]);
+                    }
+                    m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Vals);
+
+                    // Get offset for next terms
+                    cnt += m_PBndExp[n]->GetNcoeffs();
                 }
-            }      
-            
+            }
+
             // Apply new correction
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
@@ -222,8 +194,8 @@ namespace Nektar
                                     &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
                     cnt += nq;
                 }
-            }                
-        }        
+            }
+        }
     }
 
     void MappingExtrapolate::v_CalcNeumannPressureBCs(
@@ -239,14 +211,15 @@ namespace Nektar
         {
             int physTot = m_fields[0]->GetTotPoints();
             int nvel = m_fields.num_elements()-1;
+            int i, n, cnt;
             
             Array<OneD, NekDouble> Pvals;
             Array<OneD, NekDouble> Uvals;
             StdRegions::StdExpansionSharedPtr Pbc;
             StdRegions::StdExpansionSharedPtr elmt;
 
-            Array<OneD, Array<OneD, const NekDouble> > Velocity(m_bnd_dim);
-            Array<OneD, Array<OneD, const NekDouble> > Advection(m_bnd_dim);
+            Array<OneD, Array<OneD, NekDouble> > Velocity(m_bnd_dim);
+            Array<OneD, Array<OneD, NekDouble> > Advection(m_bnd_dim);
             // Get transformation Jacobian
             Array<OneD, NekDouble> Jac(physTot,0.0);
             m_mapping->GetJacobian(Jac);
@@ -259,10 +232,8 @@ namespace Nektar
             // Temporary variables
             Array<OneD, NekDouble> tmp(physTot,0.0);
             Array<OneD, NekDouble> tmp2(physTot,0.0);
-            for(int i = 0; i < m_bnd_dim; i++)
+            for(i = 0; i < m_bnd_dim; i++)
             {
-                BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-                Q[i]         = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,0.0);
                 N_new[i]   = Array<OneD, NekDouble> (physTot,0.0);
             }
             for(int i = 0; i < nvel; i++)
@@ -272,7 +243,7 @@ namespace Nektar
             }
             
             // Multiply convective terms by Jacobian
-            for(int i = 0; i < m_bnd_dim; i++)
+            for(i = 0; i < m_bnd_dim; i++)
             {
                 if (m_fields[0]->GetWaveSpace())
                 {
@@ -290,7 +261,7 @@ namespace Nektar
             }
             
             // Get velocity in physical space
-            for(int i = 0; i < nvel; i++)
+            for(i = 0; i < nvel; i++)
             {
                 if (m_fields[0]->GetWaveSpace())
                 {
@@ -324,7 +295,7 @@ namespace Nektar
             }        
             
             // Multiply by Jacobian and convert to wavespace (if necessary)
-            for(int i = 0; i < m_bnd_dim; i++)
+            for(i = 0; i < m_bnd_dim; i++)
             {
                 Vmath::Vmul(physTot, Jac, 1, fields_new[i], 1, fields_new[i], 1);
                 Vmath::Vmul(physTot, Jac, 1, Q_field[i]   , 1, Q_field[i]   , 1);
@@ -333,116 +304,56 @@ namespace Nektar
                     m_fields[0]->HomogeneousFwdTrans(fields_new[i],fields_new[i]);
                     m_fields[0]->HomogeneousFwdTrans(Q_field[i],Q_field[i]);
                 }                          
-            }            
+            }
 
-            for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
+            MultiRegions::ExpListSharedPtr BndElmtExp;
+            for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                /// Casting the boundary expansion to the specific case
-                Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetExp(m_HBCdata[j].m_bndElmtOffset));
-
-                /// Picking up the element where the HOPBc is located
-                elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
-
-                /// Assigning
-                for(int i = 0; i < m_bnd_dim; i++)
+                // High order boundary condition;
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
                 {
-                    Velocity[i]  = fields_new[i] + m_HBCdata[j].m_physOffset;
-                    Advection[i] = N_new[i]      + m_HBCdata[j].m_physOffset;
-                    Q[i]         = Q_field[i]   + m_HBCdata[j].m_physOffset;
-                }
+                    m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
+                    int nq  = BndElmtExp->GetTotPoints();
 
-                // Mounting advection component into the high-order condition
-                for(int i = 0; i < m_bnd_dim; i++)
-                {
-                    MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
-                }
-
-                Pvals = (m_pressureHBCs[m_intSteps-1]) +
-                         m_HBCdata[j].m_coeffOffset;
-                Uvals = (m_acceleration[m_intSteps])   +
-                         m_HBCdata[j].m_coeffOffset;
-
-                // Getting values on the edge and filling the pressure boundary
-                // expansion and the acceleration term. Multiplication by the
-                // normal is required
-                switch(m_pressure->GetExpType())
-                {
-                    case MultiRegions::e2D:
-                    case MultiRegions::e3DH1D:
-                    {                                                         
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Q[0], BndValues[0]);                    
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Q[1], BndValues[1]);
-
-                        // InnerProduct 
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                                       Pvals);
-
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[0], BndValues[0]);
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[1], BndValues[1]);
-
-                        // InnerProduct                     
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                                       Uvals);
-                    }
-                    break;
-                    case MultiRegions::e3DH2D:
+                    // Obtaining fields on BndElmtExp
+                    for(int i = 0; i < m_bnd_dim; i++)
                     {
-                        if(m_HBCdata[j].m_elmtTraceID == 0)
-                        {
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                    ->GetCoeff_Offset(
-                                        m_HBCdata[j].m_bndElmtOffset))[0]
-                                                                    = -1.0*Q[0][0];
-                        }
-                        else if (m_HBCdata[j].m_elmtTraceID == 1)
-                        {
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                    ->GetCoeff_Offset(
-                                        m_HBCdata[j].m_bndElmtOffset))[0] 
-                                                = Q[0][m_HBCdata[j].m_ptsInElmt-1];
-                        }
-                        else
-                        {
-                            ASSERTL0(false,
-                                     "In the 3D homogeneous 2D approach BCs edge "
-                                     "ID can be just 0 or 1 ");
-                        }
+                        m_fields[0]->ExtractPhysToBndElmt(n, 
+                                        fields_new[i],Velocity[i]);
+                        m_fields[0]->ExtractPhysToBndElmt(n, 
+                                        N_new[i],Advection[i]);
+                        m_fields[0]->ExtractPhysToBndElmt(n, 
+                                        Q_field[i],Q[i]);
                     }
-                    break;
-                    case MultiRegions::e3D:
-                    {
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc, 
-                                              Q[0], BndValues[0]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Q[1], BndValues[1]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Q[2], BndValues[2]);
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                              BndValues[2], Pvals);
 
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[0], BndValues[0]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[1], BndValues[1]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[2], BndValues[2]);
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                              BndValues[2], Uvals);
+                    // Mounting advection component into the high-order condition
+                    for(int i = 0; i < m_bnd_dim; i++)
+                    {
+                        MountHOPBCs(nq, kinvis,Q[i],Advection[i]);
                     }
-                    break;
-                default:
-                    ASSERTL0(0,"Dimension not supported");
-                    break;
+
+                    Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
+                    Uvals = (m_acceleration[m_intSteps]) + cnt;
+
+                    // Getting values on the edge and filling the pressure boundary
+                    // expansion and the acceleration term. Multiplication by the
+                    // normal is required
+                    for(int i = 0; i < m_bnd_dim; i++)
+                    {
+                        m_fields[0]->ExtractElmtToBndPhys(n, Q[i],BndValues[i]);
+                    }
+                    m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Pvals);
+
+                    for(int i = 0; i < m_bnd_dim; i++)
+                    {
+                        m_fields[0]->ExtractElmtToBndPhys(n, Velocity[i],BndValues[i]);
+                    }
+                    m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Uvals);
+
+                    // Get offset for next terms
+                    cnt += m_PBndExp[n]->GetNcoeffs();
                 }
-            }            
+            }
         }
         // If pressure terms are treated implicitly, we need to multiply
         //     by the relaxation parameter, and zero the correction term

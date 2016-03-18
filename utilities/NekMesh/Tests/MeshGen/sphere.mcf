@@ -1,0 +1,18 @@
+<NEKTAR>
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="CADFile" VALUE="sphere.STEP" />
+            <I PROPERTY="MeshType" VALUE="Euler" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> MinDelta = 0.01 </P>
+            <P> MaxDelta = 0.2 </P>
+            <P> EPS = 0.01 </P>
+            <P> Order = 4 </P>
+            <P> BLThick = 0.02 </P>
+        </PARAMETERS>
+
+    </CONDITIONS>
+</NEKTAR>

@@ -1,0 +1,17 @@
+<NEKTAR>
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="CADFile" VALUE="predator.STEP" />
+            <I PROPERTY="MeshType" VALUE="Euler" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> MinDelta = 0.05 </P>
+            <P> MaxDelta = 1.0 </P>
+            <P> EPS = 0.5 </P>
+            <P> Order = 4 </P>
+        </PARAMETERS>
+
+    </CONDITIONS>
+</NEKTAR>

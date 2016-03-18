@@ -130,15 +130,18 @@ void FaceMesh::Mesh(bool remesh)
         m_mesh->m_element[2].push_back(m_localElements[i]);
     }
 
-    cout << "\r                                                                "
-            "                             ";
-    cout << scientific << "\r\t\tFace " << m_id << endl
-         << "\t\t\tNodes: " << m_localNodes.size() << endl
-         << "\t\t\tEdges: " << m_localEdges.size() << endl
-         << "\t\t\tTriangles: " << m_localElements.size() << endl
-         << "\t\t\tLoops: " << m_edgeloops.size() << endl
-         << "\t\t\tSTR: " << m_str << endl
-         << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << "\r                                                                "
+                "                             ";
+        cout << scientific << "\r\t\tFace " << m_id << endl
+             << "\t\t\tNodes: " << m_localNodes.size() << endl
+             << "\t\t\tEdges: " << m_localEdges.size() << endl
+             << "\t\t\tTriangles: " << m_localElements.size() << endl
+             << "\t\t\tLoops: " << m_edgeloops.size() << endl
+             << "\t\t\tSTR: " << m_str << endl
+             << endl;
+    }
 }
 
 void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)

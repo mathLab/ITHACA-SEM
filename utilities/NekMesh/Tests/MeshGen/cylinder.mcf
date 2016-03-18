@@ -1,0 +1,17 @@
+<NEKTAR>
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="CADFile" VALUE="cylinder.STEP" />
+            <I PROPERTY="MeshType" VALUE="Euler" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> MinDelta = 0.005 </P>
+            <P> MaxDelta = 0.2 </P>
+            <P> EPS = 0.1 </P>
+            <P> Order = 4 </P>
+        </PARAMETERS>
+
+    </CONDITIONS>
+</NEKTAR>

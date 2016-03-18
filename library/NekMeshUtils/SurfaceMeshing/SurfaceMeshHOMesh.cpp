@@ -400,8 +400,11 @@ void SurfaceMesh::HOSurf()
 
                     if (!BGFSUpdate(opti, J, B, H))
                     {
-                        cout << "BFGS reported no update, curve on "
-                             << c->GetId() << endl;
+                        if(m_mesh->m_verbose)
+                        {
+                            cout << "BFGS reported no update, curve on "
+                                << c->GetId() << endl;
+                        }
                         break;
                     }
                 }
@@ -529,8 +532,11 @@ void SurfaceMesh::HOSurf()
 
                     if (!BGFSUpdate(opti, J, B, H))
                     {
-                        cout << "BFGS reported no update, edge on " << surf
-                             << endl;
+                        if(m_mesh->m_verbose)
+                        {
+                            cout << "BFGS reported no update, edge on " << surf
+                                << endl;
+                        }
                         // exit(-1);
                         break;
                     }

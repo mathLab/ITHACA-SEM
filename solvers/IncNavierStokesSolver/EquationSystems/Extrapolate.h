@@ -185,9 +185,9 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &input);
 
         void CurlCurl(
-            Array<OneD, Array<OneD, const NekDouble> > &Vel,
+            Array<OneD, Array<OneD, NekDouble> > &Vel,
             Array<OneD, Array<OneD, NekDouble> > &Q,
-            const int j);
+            const MultiRegions::ExpListSharedPtr &BndElmtExp);
         
         LibUtilities::SessionReaderSharedPtr m_session;
 

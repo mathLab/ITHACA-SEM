@@ -193,133 +193,77 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {    
+        int n, cnt;
+
         Array<OneD, NekDouble> Pvals;
         Array<OneD, NekDouble> Uvals;
-        StdRegions::StdExpansionSharedPtr Pbc;
-        StdRegions::StdExpansionSharedPtr elmt;
 
-        Array<OneD, Array<OneD, const NekDouble> > Velocity(m_curl_dim);
-        Array<OneD, Array<OneD, const NekDouble> > Advection(m_bnd_dim);
-        
+        Array<OneD, Array<OneD, NekDouble> > Velocity(m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > Advection(m_bnd_dim);
+
         Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
-        Array<OneD, Array<OneD, NekDouble> > Q(m_bnd_dim);
-        
-        for(int i = 0; i < m_bnd_dim; i++)
+        Array<OneD, Array<OneD, NekDouble> > Q(m_curl_dim);
+
+        MultiRegions::ExpListSharedPtr BndElmtExp;
+        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
         {
-            BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            Q[i]         = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,0.0);
-        }
-        
-        for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
-        {
-            /// Casting the boundary expansion to the specific case
-            Pbc = boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                            ->GetExp(m_HBCdata[j].m_bndElmtOffset));
-
-            /// Picking up the element where the HOPBc is located
-            elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
-
-            /// Assigning
-            for(int i = 0; i < m_bnd_dim; i++)
+            // High order boundary condition;
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
             {
-                Velocity[i]  = fields[i] + m_HBCdata[j].m_physOffset;
-                Advection[i] = N[i]      + m_HBCdata[j].m_physOffset;
-            }
+                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
+                int nqb = m_PBndExp[n]->GetTotPoints();
+                int nq  = BndElmtExp->GetTotPoints();
 
-            // for the 3DH1D case we need to grab the conjugate mode
-            if(m_pressure->GetExpType() == MultiRegions::e3DH1D)
-            {
-                Velocity[2]  = fields[2] + m_HBCdata[j].m_assPhysOffset;
-            }
-
-            /// Calculating the curl-curl and storing it in Q
-            CurlCurl(Velocity,Q,j);
-
-            // Mounting advection component into the high-order condition
-            for(int i = 0; i < m_bnd_dim; i++)
-            {
-                MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
-            }
-
-            Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                        + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                            ->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
-            Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
-
-            // Getting values on the edge and filling the pressure boundary
-            // expansion and the acceleration term. Multiplication by the
-            // normal is required
-            switch(m_pressure->GetExpType())
-            {
-                case MultiRegions::e2D:
-                case MultiRegions::e3DH1D:
+                for(int i = 0; i < m_bnd_dim; i++)
                 {
-                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Q[0], BndValues[0]);
-                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Q[1], BndValues[1]);
-                    Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                                   Pvals);
+                    BndValues[i] = Array<OneD, NekDouble> (nqb,0.0);
+                }
 
-                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Velocity[0], BndValues[0]);
-                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Velocity[1], BndValues[1]);
-                    Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                                   Uvals);
-                }
-                break;
-                case MultiRegions::e3DH2D:
+                for(int i = 0; i < m_curl_dim; i++)
                 {
-                    if(m_HBCdata[j].m_elmtTraceID == 0)
-                    {
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                            + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetCoeff_Offset(
-                                    m_HBCdata[j].m_bndElmtOffset))[0]
-                                                                = -1.0*Q[0][0];
-                    }
-                    else if (m_HBCdata[j].m_elmtTraceID == 1)
-                    {
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                            + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetCoeff_Offset(
-                                    m_HBCdata[j].m_bndElmtOffset))[0] 
-                                            = Q[0][m_HBCdata[j].m_ptsInElmt-1];
-                    }
-                    else
-                    {
-                        ASSERTL0(false,
-                                 "In the 3D homogeneous 2D approach BCs edge "
-                                 "ID can be just 0 or 1 ");
-                    }
+                    Q[i]         = Array<OneD, NekDouble> (nq,0.0);
                 }
-                break;
-                case MultiRegions::e3D:
-                {
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc, 
-                                          Q[0], BndValues[0]);
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Q[1], BndValues[1]);
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Q[2], BndValues[2]);
-                    Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                          BndValues[2], Pvals);
 
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Velocity[0], BndValues[0]);
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Velocity[1], BndValues[1]);
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                          Velocity[2], BndValues[2]);
-                    Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                          BndValues[2], Uvals);
+                // Obtaining fields on BndElmtExp
+                for(int i = 0; i < m_curl_dim; i++)
+                {
+                    m_fields[0]->ExtractPhysToBndElmt(n, fields[i],Velocity[i]);
                 }
-                break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
+                for(int i = 0; i < m_bnd_dim; i++)
+                {
+                    m_fields[0]->ExtractPhysToBndElmt(n, N[i],Advection[i]);
+                }
+
+                // CurlCurl
+                CurlCurl(Velocity,Q,BndElmtExp);
+
+                // Mounting advection component into the high-order condition
+                for(int i = 0; i < m_bnd_dim; i++)
+                {
+                    MountHOPBCs(BndElmtExp->GetTotPoints(),
+                                        kinvis,Q[i],Advection[i]);
+                }
+
+                Pvals = m_PBndExp[n]->UpdateCoeffs();
+                Uvals = (m_acceleration[0]) + cnt;
+
+                // Getting values on the edge and filling the pressure boundary
+                // expansion and the acceleration term. Multiplication by the
+                // normal is required
+                for(int i = 0; i < m_bnd_dim; i++)
+                {
+                    m_fields[0]->ExtractElmtToBndPhys(n, Q[i],BndValues[i]);
+                }
+                m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Pvals);
+
+                for(int i = 0; i < m_bnd_dim; i++)
+                {
+                    m_fields[0]->ExtractElmtToBndPhys(n, Velocity[i],BndValues[i]);
+                }
+                m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Uvals);
+
+                // Get offset for next acceleration term
+                cnt += m_PBndExp[n]->GetNcoeffs();
             }
         }
     }
@@ -848,127 +792,61 @@ namespace Nektar
      * Curl Curl routine - dimension dependent
      */
     void Extrapolate::CurlCurl(
-        Array<OneD, Array<OneD, const NekDouble> > &Vel,
+        Array<OneD, Array<OneD, NekDouble> > &Vel,
         Array<OneD, Array<OneD, NekDouble> > &Q,
-        const int j)
+        const MultiRegions::ExpListSharedPtr &BndElmtExp)
     {
-        StdRegions::StdExpansionSharedPtr elmt
-                        = m_fields[0]->GetExp(m_HBCdata[j].m_globalElmtID);
+        int nq = BndElmtExp->GetTotPoints();
+        Array<OneD,NekDouble> Vx(nq);
+        Array<OneD,NekDouble> Uy(nq);
+        Array<OneD,NekDouble> Dummy(nq);
 
-        Array<OneD,NekDouble> Vx(m_pressureBCsElmtMaxPts);
-        Array<OneD,NekDouble> Uy(m_pressureBCsElmtMaxPts);
-
-        switch(m_fields[0]->GetExpType())
+        switch(m_curl_dim)
         {
-            case MultiRegions::e2D:
+            case 2:
             {
-                Array<OneD,NekDouble> Dummy(m_pressureBCsElmtMaxPts);
+                BndElmtExp->PhysDeriv(MultiRegions::DirCartesianMap[0],
+                                      Vel[1], Vx);
+                BndElmtExp->PhysDeriv(MultiRegions::DirCartesianMap[1],
+                                      Vel[0], Uy);
 
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[1], Vx);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Vel[0], Uy);
+                Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
 
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx, 1, Uy, 1, Dummy, 1);
+                BndElmtExp->PhysDeriv(Dummy,Q[1],Q[0]);
 
-                elmt->PhysDeriv(Dummy,Q[1],Q[0]);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, -1.0, Q[1], 1, Q[1], 1);
+                Vmath::Smul(nq, -1.0, Q[1], 1, Q[1], 1);
             }
             break;
 
-            case MultiRegions::e3DH1D:
+            case 3:
             {
-                Array<OneD,NekDouble> Wz(m_pressureBCsElmtMaxPts);
+                Array<OneD,NekDouble> Vz(nq);
+                Array<OneD,NekDouble> Uz(nq);
+                Array<OneD,NekDouble> Wx(nq);
+                Array<OneD,NekDouble> Wy(nq);
 
-                Array<OneD,NekDouble> Dummy1(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Dummy2(m_pressureBCsElmtMaxPts);
+                BndElmtExp->PhysDeriv(Vel[0], Dummy, Uy, Uz);
+                BndElmtExp->PhysDeriv(Vel[1], Vx, Dummy, Vz);
+                BndElmtExp->PhysDeriv(Vel[2], Wx, Wy, Dummy);
 
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[1], Vx);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Vel[0], Uy);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_wavenumber[j],
-                                                      Vel[2], 1, Wz,     1);
+                Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
+                Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
+                Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
 
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Vx, Dummy1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Uy, Dummy2);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Dummy1, 1, Dummy2, 1,
-                                                      Q[0],   1);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      Vel[0], 1, Dummy1, 1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Wz, Dummy2);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Q[0],   1, Dummy1, 1,
-                                                      Q[0],   1);
-                Vmath::Vadd(m_HBCdata[j].m_ptsInElmt, Q[0],   1, Dummy2, 1,
-                                                      Q[0],   1);
+                BndElmtExp->PhysDeriv(Q[0], Dummy, Uy, Uz);
+                BndElmtExp->PhysDeriv(Q[1], Vx, Dummy, Vz);
+                BndElmtExp->PhysDeriv(Q[2], Wx, Wy, Dummy);
 
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Wz, Dummy1);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      Vel[1], 1, Dummy2, 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Dummy1, 1, Dummy2, 1,
-                                                      Q[1],   1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vx, Dummy1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Uy, Dummy2);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Q[1],   1, Dummy1, 1,
-                                                      Q[1],   1);
-                Vmath::Vadd(m_HBCdata[j].m_ptsInElmt, Q[1],   1, Dummy2, 1,
-                                                      Q[1],   1);
-            }
-            break;
+                // For halfmode, need to change the sign of z derivatives
+                if (m_HalfMode)
+                {
+                    Vmath::Neg(nq, Uz, 1);
+                    Vmath::Neg(nq, Vz, 1);
+                }
 
-            case MultiRegions::e3DH2D:
-            {
-                Array<OneD,NekDouble> Wx(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Wz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Uz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> qz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> qy(m_pressureBCsElmtMaxPts);
-
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[2], Wx);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[1], Vx);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      Vel[0], 1, Uy, 1);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_wavenumber[j],
-                                                      Vel[0], 1, Uz, 1);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Wz,     1, Wx, 1,
-                                                      qy,     1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx,     1, Uy, 1,
-                                                      qz,     1);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      qz,     1, Uy, 1);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_wavenumber[j],
-                                                      qy,     1, Uz, 1);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Uy,     1, Uz, 1,
-                                                      Q[0],   1);
-            }
-            break;
-
-            case MultiRegions::e3D:
-            {
-                Array<OneD,NekDouble> Dummy(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Vz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Uz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Wx(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Wy(m_pressureBCsElmtMaxPts);
-
-                elmt->PhysDeriv(Vel[0], Dummy, Uy, Uz);
-                elmt->PhysDeriv(Vel[1], Vx, Dummy, Vz);
-                elmt->PhysDeriv(Vel[2], Wx, Wy, Dummy);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Wy, 1, Vz, 1, Q[0], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Uz, 1, Wx, 1, Q[1], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx, 1, Uy, 1, Q[2], 1);
-
-                elmt->PhysDeriv(Q[0], Dummy, Wy, Vx);
-                elmt->PhysDeriv(Q[1], Wx, Dummy, Uz);
-                elmt->PhysDeriv(Q[2], Vz, Uy, Dummy);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Uy, 1, Uz, 1, Q[0], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx, 1, Vz, 1, Q[1], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Wx, 1, Wy, 1, Q[2], 1);
+                Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
+                Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
+                Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
             }
             break;
             default:

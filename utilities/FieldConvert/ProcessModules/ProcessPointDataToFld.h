@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputTecplot.h
+//  File: ProcessPointDataToFld.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,14 +29,15 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Tecplot output module
+//  Description: Interpolate point data to a field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPDATATOFLD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSINTERPDATATOFLD
 
-#include <tinyxml.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+
 #include "../Module.h"
 
 namespace Nektar
@@ -44,44 +45,26 @@ namespace Nektar
 namespace Utilities
 {
 
-enum TecOutType
-{
-    eFullBlockZone,
-    eFullBlockZoneEquiSpaced,
-    eSeperateZones
-};
-
-/// Converter from fld to dat.
-class OutputTecplot : public OutputModule
+/**
+ * @brief This processing module interpolates one field to another
+ */
+class ProcessPointDataToFld : public ProcessModule
 {
     public:
         /// Creates an instance of this class
         static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
+            return MemoryManager<ProcessPointDataToFld>::AllocateSharedPtr(f);
         }
-        static ModuleKey m_className;
-        OutputTecplot(FieldSharedPtr f);
-        virtual ~OutputTecplot();
+        static ModuleKey className;
 
-        /// Write fld to output file.
+        ProcessPointDataToFld(FieldSharedPtr f);
+        virtual ~ProcessPointDataToFld();
+
+        /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+
     private:
-        bool m_doError;
-        TecOutType m_outputType;
-
-        void WriteTecplotHeader(std::ofstream &outfile,
-                                std::string var);
-
-        void WriteTecplotZone(std::ofstream &outfile);
-
-        int GetNumTecplotBlocks(void);
-
-        void WriteTecplotField(const int field,
-                               std::ofstream &outfile);
-
-        void WriteTecplotConnectivity(std::ofstream &outfile);
-        
 };
 
 }

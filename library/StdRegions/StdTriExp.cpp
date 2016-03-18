@@ -1228,15 +1228,28 @@ namespace Nektar
             {
                 case ePhysInterpToEquiSpaced:
                 {
-                    int nq0 = m_base[0]->GetNumPoints();
-                    int nq1 = m_base[1]->GetNumPoints();
-                    int nq = max(nq0,nq1);
+                    int nq0, nq1, nq;
+
+                    nq0 = m_base[0]->GetNumPoints();
+                    nq1 = m_base[1]->GetNumPoints();
+
+                    // take definition from key 
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+                    else
+                    {
+                        nq = max(nq0,nq1);
+                    }
+                    
                     int neq = LibUtilities::StdTriData::
                                                 getNumberOfCoefficients(nq,nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);
                     Array<OneD, NekDouble>               coll  (2);
                     Array<OneD, DNekMatSharedPtr>        I     (2);
                     Array<OneD, NekDouble>               tmp   (nq0);
+
 
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(neq,nq0*nq1);
                     int cnt = 0;

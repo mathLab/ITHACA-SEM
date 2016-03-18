@@ -1389,18 +1389,19 @@ namespace Nektar
                     }
                 }
 
-                std::string msg = "Failed to find point within element to tolerance of "
-                    + boost::lexical_cast<std::string>(tol)
-                    + " using local point ("
-                    + boost::lexical_cast<std::string>(locCoords[0]) +","
-                    + boost::lexical_cast<std::string>(locCoords[1]) +","
-                    + boost::lexical_cast<std::string>(locCoords[1]) 
-                    + ") in element: "
-                    + boost::lexical_cast<std::string>(min_id);
-                WARNINGL1(false,msg.c_str());
-
                 if(returnNearestElmt)
                 {
+
+                    std::string msg = "Failed to find point within element to tolerance of "
+                        + boost::lexical_cast<std::string>(tol)
+                        + " using local point ("
+                        + boost::lexical_cast<std::string>(locCoords[0]) +","
+                        + boost::lexical_cast<std::string>(locCoords[1]) +","
+                        + boost::lexical_cast<std::string>(locCoords[1]) 
+                        + ") in element: "
+                        + boost::lexical_cast<std::string>(min_id);
+                    WARNINGL1(false,msg.c_str());
+                    
                     Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                     return min_id;
                 }

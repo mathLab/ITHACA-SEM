@@ -443,6 +443,46 @@ namespace Nektar
                     }
                 }
                 break;
+            case eEquiSpacedToCoeffs:
+                {
+                    // check to see if equispaced basis
+                    int nummodes = m_base[0]->GetNumModes();
+                    bool equispaced = true;
+                    for(int i = 1; i < m_base.num_elements(); ++i)
+                    {
+                        if(m_base[i]->GetNumModes() != nummodes)
+                        {
+                            equispaced = false;
+                        }
+                    }
+                        
+                    ASSERTL0(equispaced, "Currently need to have same num modes in all directionmodes to use EquiSpacedToCoeff method");
+
+                    int ntot = GetTotPoints();
+                    Array<OneD, NekDouble>               qmode(ntot);
+                    Array<OneD, NekDouble>               emode(m_ncoeffs);
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    int cnt = 0;
+                    
+                    for(int i = 0; i < m_ncoeffs; ++i)
+                    {
+                        // Get mode at quadrature points 
+                        FillMode(i,qmode); 
+                        
+                        // interpolate to equi spaced
+                        PhysInterpToSimplexEquiSpaced(qmode,emode,nummodes);
+                        
+                        // fill matrix
+                        Vmath::Vcopy(m_ncoeffs, &emode[0], 1,
+                                     returnval->GetRawPtr() + i*m_ncoeffs, 1);
+                        
+                    }
+                    // invert matrix 
+                    returnval->Invert();
+
+                }
+                break;
             case eMass:
             case eHelmholtz:
             case eLaplacian:
@@ -1683,22 +1723,37 @@ namespace Nektar
 
         void StdExpansion::PhysInterpToSimplexEquiSpaced(
             const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD, NekDouble>       &outarray)
+            Array<OneD, NekDouble>       &outarray,
+            int npset)
         {
             LibUtilities::ShapeType shape = DetShapeType();
-            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this);
-            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
+            DNekMatSharedPtr  intmat;
 
-            int nqtot = 1; 
-            int nqbase;
-            int np = 0; 
-            for(int i = 0; i < m_base.num_elements(); ++i)
+            int nqtot = GetTotPoints(); 
+            int np = 0;
+            if(npset == -1) // use values from basis num points()
             {
-                nqbase = m_base[i]->GetNumPoints();
-                nqtot *= nqbase;
-                np     = max(np,nqbase);
+                int nqbase;;
+                for(int i = 0; i < m_base.num_elements(); ++i)
+                {
+                    nqbase = m_base[i]->GetNumPoints();
+                    np     = max(np,nqbase);
+                }
+                
+                StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this);
+                intmat = GetStdMatrix(Ikey);
             }
-            
+            else
+            {
+                np = npset;
+                
+                ConstFactorMap cmap; 
+                cmap[eFactorConst] = np;
+                StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this, cmap);
+                intmat = GetStdMatrix(Ikey);
+
+            }
+
             NekVector<NekDouble> in (nqtot,inarray,eWrapper);
             NekVector<NekDouble> out(LibUtilities::GetNumberOfCoefficients(shape,np,np,np),outarray,eWrapper);
             out = (*intmat) * in;
@@ -1710,5 +1765,26 @@ namespace Nektar
         {
             ASSERTL0(false, "Not implemented.");
         }
+
+        void StdExpansion::EquiSpacedToCoeffs(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD, NekDouble>       &outarray)
+        {
+            LibUtilities::ShapeType shape = DetShapeType();
+
+            // inarray has to be consistent with NumModes definition
+            // There is also a check in GetStdMatrix to see if all
+            // modes are of the same size
+            ConstFactorMap cmap;
+
+            cmap[eFactorConst] = m_base[0]->GetNumModes();
+            StdMatrixKey      Ikey(eEquiSpacedToCoeffs, shape, *this,cmap);
+            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
+            
+            NekVector<NekDouble> in (m_ncoeffs, inarray, eWrapper);
+            NekVector<NekDouble> out(m_ncoeffs, outarray,eWrapper);
+            out = (*intmat) * in;
+        }
+
     }//end namespace
 }//end namespace

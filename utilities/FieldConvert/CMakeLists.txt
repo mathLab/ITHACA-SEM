@@ -26,6 +26,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessInterpPointDataToFld.h
     ProcessModules/ProcessIsoContour.h
     ProcessModules/ProcessJacobianEnergy.h
+    ProcessModules/ProcessMapping.h
     ProcessModules/ProcessNumModes.h
     ProcessModules/ProcessMeanMode.h
     ProcessModules/ProcessPrintFldNorms.h
@@ -68,6 +69,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessInterpPointDataToFld.cpp
     ProcessModules/ProcessIsoContour.cpp
     ProcessModules/ProcessJacobianEnergy.cpp
+    ProcessModules/ProcessMapping.cpp
     ProcessModules/ProcessNumModes.cpp
     ProcessModules/ProcessMeanMode.cpp
     ProcessModules/ProcessPrintFldNorms.cpp

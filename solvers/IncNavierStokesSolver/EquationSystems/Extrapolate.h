@@ -125,6 +125,16 @@ namespace Nektar
         Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
         
+        void CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
+        {
+            v_CorrectPressureBCs( pressure);
+        }
+        
+        void ExtrapolateArray(
+            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
+            Array<OneD, NekDouble>  &newarray,
+            Array<OneD, NekDouble>  &outarray);
+        
     protected:
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,        
@@ -152,7 +162,19 @@ namespace Nektar
         void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis)
+        {
+            v_CalcNeumannPressureBCs( fields, N, kinvis);
+        }
+                
+        virtual void v_CalcNeumannPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &fields,
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
+            
+        virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
+        {    
+        }        
         
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,

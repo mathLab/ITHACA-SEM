@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterAverageFields.h
+// File FilterMovingAverage.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Average solution fields during time-stepping.
+// Description: Calculates exponential moving average of solution fields
+//              during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H
 
 #include <SolverUtils/Filters/FilterSampler.h>
 
@@ -42,46 +43,46 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAverageFields : public FilterSampler
+class FilterMovingAverage : public FilterSampler
 {
 public:
-    friend class MemoryManager<FilterAverageFields>;
+    friend class MemoryManager<FilterMovingAverage>;
 
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const std::map<std::string, std::string> &pParams)
     {
-        FilterSharedPtr p = MemoryManager<FilterAverageFields>
-                                ::AllocateSharedPtr(pSession, pParams);
+        FilterSharedPtr p =
+            MemoryManager<FilterMovingAverage>::AllocateSharedPtr(pSession,
+                                                                  pParams);
         return p;
     }
 
-    ///Name of the class
+    /// Name of the class
     static std::string className;
 
-    SOLVER_UTILS_EXPORT FilterAverageFields(
+    SOLVER_UTILS_EXPORT FilterMovingAverage(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
+    SOLVER_UTILS_EXPORT virtual ~FilterMovingAverage();
 
 protected:
     virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     virtual bool v_IsTimeDependent();
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
-    virtual void v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time);
     virtual std::string v_GetFileSuffix()
     {
-        return "_avg";
+        return "_movAvg";
     }
+
+    NekDouble m_alpha;
 };
 }
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H */

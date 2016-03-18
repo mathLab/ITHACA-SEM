@@ -129,12 +129,20 @@ namespace Nektar
         Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
         
+
+        void CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure);
+        
         void IProductNormVelocityOnHBC(const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
                                        Array<OneD, NekDouble> &IprodVn);
         
         void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
         
         LibUtilities::TimeIntegrationMethod GetSubStepIntegrationMethod(void); 
+        
+        void ExtrapolateArray(
+            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
+            Array<OneD, NekDouble>  &newarray,
+            Array<OneD, NekDouble>  &outarray);
         
     protected: 
         virtual void v_EvaluatePressureBCs(
@@ -181,9 +189,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
             
-        virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
-        {    
-        }        
+        virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure);
         
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -379,13 +385,20 @@ namespace Nektar
     /**
      *
      */
-    
     inline LibUtilities::TimeIntegrationMethod 
         Extrapolate::GetSubStepIntegrationMethod(void)
     {
         return v_GetSubStepIntegrationMethod();
     }
-    
+
+    /**
+     *
+     */
+    inline void Extrapolate::CorrectPressureBCs(
+        const Array<OneD, NekDouble>  &pressure)
+    {
+        v_CorrectPressureBCs(pressure);
+    }
 }
 
 #endif

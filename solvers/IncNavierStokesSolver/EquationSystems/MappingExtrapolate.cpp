@@ -164,8 +164,8 @@ namespace Nektar
             {
                 /// Casting the boundary expansion to the specific case
                 Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetExp(m_HBCdata[j].m_bndElmtOffset));
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]
+                                ->GetExp(m_HBCdata[j].m_bndElmtID));
 
                 /// Picking up the element where the HOPBc is located
                 elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
@@ -339,8 +339,8 @@ namespace Nektar
             {
                 /// Casting the boundary expansion to the specific case
                 Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetExp(m_HBCdata[j].m_bndElmtOffset));
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]
+                                ->GetExp(m_HBCdata[j].m_bndElmtID));
 
                 /// Picking up the element where the HOPBc is located
                 elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
@@ -359,9 +359,9 @@ namespace Nektar
                     MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
                 }
 
-                Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                            + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
+                Pvals = m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()
+                            + m_PBndExp[m_HBCdata[j].m_bndryID]
+                                ->GetCoeff_Offset(m_HBCdata[j].m_bndElmtID);
                 Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
 
                 // Getting values on the edge and filling the pressure boundary
@@ -395,18 +395,18 @@ namespace Nektar
                     {
                         if(m_HBCdata[j].m_elmtTraceID == 0)
                         {
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()
+                                + m_PBndExp[m_HBCdata[j].m_bndryID]
                                     ->GetCoeff_Offset(
-                                        m_HBCdata[j].m_bndElmtOffset))[0]
+                                        m_HBCdata[j].m_bndElmtID))[0]
                                                                     = -1.0*Q[0][0];
                         }
                         else if (m_HBCdata[j].m_elmtTraceID == 1)
                         {
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()
+                                + m_PBndExp[m_HBCdata[j].m_bndryID]
                                     ->GetCoeff_Offset(
-                                        m_HBCdata[j].m_bndElmtOffset))[0] 
+                                        m_HBCdata[j].m_bndElmtID))[0] 
                                                 = Q[0][m_HBCdata[j].m_ptsInElmt-1];
                         }
                         else

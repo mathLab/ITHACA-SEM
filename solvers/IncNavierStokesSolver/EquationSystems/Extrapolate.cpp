@@ -278,20 +278,6 @@ namespace Nektar
                 {
                     m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
                 }
-                Array<OneD, unsigned int> planes;
-                planes = m_pressure->GetZIDs();
-                int num_planes = planes.num_elements();
-                m_expsize_per_plane = Array<OneD, unsigned int> (m_PBndConds.num_elements());
-                for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    int exp_size = m_PBndExp[n]->GetExpSize();
-                    m_expsize_per_plane[n] = exp_size/num_planes;
-                }
-                m_totexps_per_plane = 0;
-                for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    m_totexps_per_plane += m_PBndExp[n]->GetExpSize()/num_planes;
-                }
             }
         }
         

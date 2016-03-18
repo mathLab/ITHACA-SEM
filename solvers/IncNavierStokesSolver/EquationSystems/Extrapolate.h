@@ -234,17 +234,11 @@ namespace Nektar
         ///    Storage for nonlinear term in wave space at the outflow for high order outflow BCs
         Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
 
-        /// expansion sizes of pressure boundary conditions in each plane 
-        /// at the outflow for high order outflow BCs
-        Array<OneD, unsigned int> m_expsize_per_plane; ///(if homogeneous)
-
         /// Storage for Fourier Coeffs of Dirichlet pressure condition from the input file
         Array<OneD, NekDouble> m_PBndCoeffs; ///(if homogeneous)
 
         /// Storage for Fourier Coeffs of Neumann velocity condition from the input file
         Array<OneD, Array<OneD, NekDouble> > m_UBndCoeffs; ///(if homogeneous)
-
-        int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
 
     private:
         static std::string def;

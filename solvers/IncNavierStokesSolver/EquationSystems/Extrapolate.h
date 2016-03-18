@@ -207,6 +207,7 @@ namespace Nektar
 
         // Number of quadrature points for Outflow HOBC
         int m_numOutHBCPts;
+        int m_numOutElmtPts;
 
         // Number of Outflow HOBcs
         int m_outHBCnumber;
@@ -229,7 +230,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
 
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
-        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
 
         /// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)

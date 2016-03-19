@@ -164,7 +164,6 @@ namespace Nektar
         NekDouble kinvis)
     {    
         Array<OneD, NekDouble> Pvals;
-        Array<OneD, NekDouble> Uvals;
         StdRegions::StdExpansionSharedPtr Pbc;
         StdRegions::StdExpansionSharedPtr elmt;
 

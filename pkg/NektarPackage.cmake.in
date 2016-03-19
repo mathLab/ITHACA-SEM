@@ -59,6 +59,7 @@ elseif(CPACK_GENERATOR STREQUAL "PackageMaker")
     set(CPACK_PACKAGE_DEFAULT_LOCATION "/")
     set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/nektar++")
     set(CPACK_RESOURCE_FILE_WELCOME "@CMAKE_SOURCE_DIR@/pkg/osx-installer.html")
+    set(CPACK_POSTFLIGHT_SCRIPT "@CMAKE_SOURCE_DIR@/pkg/osx-postflight.sh")
 
     # This is used as part of the identifier, so make it without spaces
     set(CPACK_PACKAGE_VENDOR "imperialcollegelondon")

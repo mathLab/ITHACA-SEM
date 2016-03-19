@@ -22,7 +22,7 @@ long_description    \
 	equations and cardiac electrophysiology.
 
 homepage            http://www.nektar.info/
-master_sites        http://www.nektar.info/downloads/11?dummy=
+master_sites        http://www.nektar.info/downloads/file/
 distname            nektar++-${version}
 extract.suffix      .tar.bz2
 
@@ -42,6 +42,12 @@ depends_lib  \
     port:boost \
     port:zlib \
     port:tinyxml
+
+variant demos description {
+    Build additional Nektar++ demos
+} {
+    configure.args-append -DNEKTAR_BUILD_DEMOS=ON
+}
 
 variant vtk description {
     Enable VTK support for post-processing.

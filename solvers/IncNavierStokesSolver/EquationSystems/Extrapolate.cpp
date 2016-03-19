@@ -243,7 +243,7 @@ namespace Nektar
         }
 
         MultiRegions::ExpListSharedPtr BndElmtExp;
-        int cnt     = 0;
+        int cnt    = 0;
         for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
         {
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
@@ -333,21 +333,34 @@ namespace Nektar
                 }
 
                 // Calculate pressure boundary condition
-                Vmath::Svtvp( nqb, kinvis, nGradUn, 1, u2, 1, bndVal, 1);
+                Array<OneD, NekDouble> pbc (nqb, 0.0);
+                Vmath::Svtvp( nqb, kinvis, nGradUn, 1, u2, 1, pbc, 1);
+                Vmath::Vsub( nqb, pbc, 1, m_PBndExp[n]->GetPhys(), 1,
+                                             pbc, 1);
                 if ( m_PBndExp[n]->GetWaveSpace())
                 {
-                    m_PBndExp[n]->HomogeneousFwdTrans(bndVal, bndVal);
+                    m_PBndExp[n]->HomogeneousFwdTrans(pbc, bndVal);
+                    m_PBndExp[n]->FwdTrans(bndVal,
+                                           m_PBndExp[n]->UpdateCoeffs());
                 }
-                m_PBndExp[n]->FwdTrans(bndVal, m_PBndExp[n]->UpdateCoeffs());
-
+                else
+                {
+                    m_PBndExp[n]->FwdTrans(pbc,
+                                           m_PBndExp[n]->UpdateCoeffs());
+                }
                 // Calculate velocity boundary conditions
-                Vmath::Vsub( nqb, nGradUn, 1, divU, 1, bndVal, 1);
+                Vmath::Vsub( nqb, pbc, 1, u2, 1, bndVal, 1);
+                Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
+                Vmath::Vsub( nqb, bndVal, 1, divU, 1, bndVal, 1);
                 for( int i = 0; i < m_curl_dim; i++)
                 {
                     if(boost::iequals(UBndConds[i][n]->GetUserDefined(),"HOutflow"))
                     {
                         // Reuse divU
                         Vmath::Vmul( nqb, normals[i], 1, bndVal, 1, divU, 1);
+                        Vmath::Vadd( nqb, divU, 1, UBndExp[i][n]->GetPhys(), 1,
+                                             divU, 1);
+                        Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);
                         if ( UBndExp[i][n]->GetWaveSpace())
                         {
                             UBndExp[i][n]->HomogeneousFwdTrans(divU, divU);
@@ -440,7 +453,7 @@ namespace Nektar
                 m_numOutElmtPts += BndElmtExp->GetTotPoints();
 
                 m_numOutHBCPts += m_PBndExp[n]->GetTotPoints();
-                m_outHBCnumber ++;
+                m_outHBCnumber += m_PBndExp[n]->GetTotPoints();;
             }
         }
 
@@ -493,24 +506,32 @@ namespace Nektar
         // Initialise storage for outflow HOBCs
         if(m_numOutHBCPts > 0)
         {
-            m_outflowVel = Array<OneD, 
-                               Array<OneD, 
-                               Array<OneD, 
+            MultiRegions::ExpListSharedPtr BndElmtExp;
+            m_outflowVel = Array<OneD,
+                               Array<OneD,
+                               Array<OneD,
                                Array<OneD, NekDouble> > > > (m_outHBCnumber);
-            for( int i = 0; i < m_outHBCnumber; ++i)
+            for(n = 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                m_outflowVel[i] = Array<OneD,
-                                      Array<OneD, 
-                                      Array<OneD, NekDouble> > > (m_curl_dim);
-                for(int j = 0; j < m_curl_dim; ++j)
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
                 {
-                    m_outflowVel[i][j] = Array<OneD,
-                                         Array<OneD, NekDouble> > (m_intSteps);
-                    for(int k = 0; k < m_intSteps; ++k)
+                    m_outflowVel[cnt] = Array<OneD,
+                                          Array<OneD,
+                                          Array<OneD, NekDouble> > > (m_curl_dim);
+
+                    m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
+                    int nq  = BndElmtExp->GetTotPoints();
+                    for(int j = 0; j < m_curl_dim; ++j)
                     {
-                        m_outflowVel[i][j][k] =
-                            Array<OneD, NekDouble>(m_numOutElmtPts,0.0);
+                        m_outflowVel[cnt][j] = Array<OneD,
+                                             Array<OneD, NekDouble> > (m_intSteps);
+                        for(int k = 0; k < m_intSteps; ++k)
+                        {
+                            m_outflowVel[cnt][j][k] =
+                                Array<OneD, NekDouble>(nq,0.0);
+                        }
                     }
+                    cnt++;
                 }
             }
         }

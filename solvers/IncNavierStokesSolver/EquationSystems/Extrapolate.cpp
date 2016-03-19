@@ -95,8 +95,6 @@ namespace Nektar
         m_pressureCalls++;
         if(m_HBCnumber > 0)
         {
-            int  n,cnt;
-
             // Calculate Neumann BCs at current level
             CalcNeumannPressureBCs(fields, N, kinvis);
 
@@ -112,19 +110,8 @@ namespace Nektar
             // Extrapolate to n+1
             ExtrapolateArray(m_pressureHBCs);
 
-            // Copy values of [dP/dn]^{n+1} in the pressure bcs storage.
-            // m_pressureHBCS[nlevels-1] will be cancelled at next time step
-            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                {
-                    int nq = m_PBndExp[n]->GetNcoeffs();
-                    Vmath::Vcopy(nq, &(m_pressureHBCs[m_intSteps-1])[cnt],  1,
-                                     &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
-                    cnt += nq;
-                }
-            }
-
+            // Copy m_pressureHBCs to m_PbndExp
+            CopyPressureHBCsToPbndExp();
         }
 
         CalcOutflowBCs(fields, N, kinvis);
@@ -768,6 +755,21 @@ namespace Nektar
             }
         }
         m_acceleration[nlevels-1] = accelerationTerm;
+    }
+
+    void Extrapolate::CopyPressureHBCsToPbndExp()
+    {
+        int n, cnt;
+        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+            {
+                int nq = m_PBndExp[n]->GetNcoeffs();
+                Vmath::Vcopy(nq, &(m_pressureHBCs[m_intSteps-1])[cnt],  1,
+                                 &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
+                cnt += nq;
+            }
+        }
     }
 
 }

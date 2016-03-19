@@ -112,6 +112,8 @@ namespace Nektar
 
         void AccelerationBDF( Array<OneD, Array<OneD, NekDouble> > &array);
 
+        void CopyPressureHBCsToPbndExp();
+
     protected:
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,        

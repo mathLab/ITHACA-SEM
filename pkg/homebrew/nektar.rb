@@ -10,7 +10,7 @@ class Nektar < Formula
 
   desc "Nektar++ spectral/hp element framework"
   homepage "https://www.nektar.info/"
-  url "http://ae-nektar.ae.ic.ac.uk/~dmoxey/nektar-4.2.0.tar.gz"
+  url "http://www.nektar.info/downloads/file/nektar-4.2.0.tar.gz"
   sha256 "5ae78f8fae4f0f1bfab9fe94fdb5c1b356f9a8acf8e2bca1680e3c1f04529873"
   head "https://gitlab.nektar.info/nektar/nektar.git"
 

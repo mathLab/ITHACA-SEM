@@ -233,8 +233,6 @@ void MappingExtrapolate::v_CalcNeumannPressureBCs(
 
         Array<OneD, NekDouble> Pvals;
         Array<OneD, NekDouble> Uvals;
-        StdRegions::StdExpansionSharedPtr Pbc;
-        StdRegions::StdExpansionSharedPtr elmt;
 
         Array<OneD, Array<OneD, NekDouble> > Velocity(m_bnd_dim);
         Array<OneD, Array<OneD, NekDouble> > Advection(m_bnd_dim);

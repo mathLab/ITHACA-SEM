@@ -232,21 +232,6 @@ namespace Nektar
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
 
-        /// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
-        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
-
-        /// Storage for nonlinear term in physical space at the outflow for high order outflow BCs 
-        Array<OneD, NekDouble> m_nonlinearterm_phys; ///(if homogeneous)
-
-        ///    Storage for nonlinear term in wave space at the outflow for high order outflow BCs
-        Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
-
-        /// Storage for Fourier Coeffs of Dirichlet pressure condition from the input file
-        Array<OneD, NekDouble> m_PBndCoeffs; ///(if homogeneous)
-
-        /// Storage for Fourier Coeffs of Neumann velocity condition from the input file
-        Array<OneD, Array<OneD, NekDouble> > m_UBndCoeffs; ///(if homogeneous)
-
     private:
         static std::string def;
 

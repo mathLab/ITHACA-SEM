@@ -361,7 +361,7 @@ namespace Nektar
                         Vmath::Vadd( nqb, divU, 1, UBndExp[i][n]->GetPhys(), 1,
                                              divU, 1);
                         Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);
-                        if ( UBndExp[i][n]->GetWaveSpace())
+                        if ( m_fields[0]->GetWaveSpace())
                         {
                             UBndExp[i][n]->HomogeneousFwdTrans(divU, divU);
                         }

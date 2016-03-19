@@ -2714,7 +2714,8 @@ namespace Nektar
         /**
          */
         void ExpList::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

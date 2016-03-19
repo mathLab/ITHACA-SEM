@@ -182,7 +182,8 @@ namespace Nektar
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &FaceID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
             /*

@@ -98,7 +98,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
 			
 			/// Storage space for the boundary to element and boundary to trace map.
             /// This member variable is really allocated just in case a boundary expansion

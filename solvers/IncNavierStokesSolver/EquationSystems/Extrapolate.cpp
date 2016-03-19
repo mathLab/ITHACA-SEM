@@ -156,7 +156,7 @@ namespace Nektar
             // High order boundary condition;
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
             {
-                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
+                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
                 int nqb = m_PBndExp[n]->GetTotPoints();
                 int nq  = BndElmtExp->GetTotPoints();
 
@@ -249,7 +249,7 @@ namespace Nektar
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
             {
                 // Get expansion with element on this boundary
-                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
+                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
                 int nqb = m_PBndExp[n]->GetTotPoints();
                 int nq  = BndElmtExp->GetTotPoints();
 
@@ -449,7 +449,7 @@ namespace Nektar
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
             {
                 MultiRegions::ExpListSharedPtr BndElmtExp;
-                m_pressure->GetBndElmtExpansion(n, BndElmtExp);
+                m_pressure->GetBndElmtExpansion(n, BndElmtExp, false);
                 m_numOutElmtPts += BndElmtExp->GetTotPoints();
 
                 m_numOutHBCPts += m_PBndExp[n]->GetTotPoints();

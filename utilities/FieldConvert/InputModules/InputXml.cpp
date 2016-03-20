@@ -135,7 +135,6 @@ void InputXml::Process(po::variables_map &vm)
     string xml_ending = "xml";
     string xml_gz_ending = "xml.gz";
 
-
     std::vector<std::string> files;
     // load .xml ending
     for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
@@ -225,7 +224,6 @@ void InputXml::Process(po::variables_map &vm)
                  "Failed to find shape type in -onlyshape command line "
                  "argument");
     }
-
 
     // Set up command lines options that will be passed through to SessionReader
     vector<string> cmdArgs;

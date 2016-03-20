@@ -618,111 +618,93 @@ namespace Nektar
       
         /**
          * \brief Returns the physical values at the quadrature points of a face
-         * Wrapper function to v_GetFacePhysVals
          */
-        void TetExp::v_GetTracePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient)
-        {
-            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
-        }
-
-        /**
-         * \brief Returns the physical values at the quadrature points of a face
-         */
-        void TetExp::v_GetFacePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient)
+        void TetExp::v_GetFacePhysMap(const int                face,
+                                      Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
 
-            Array<OneD,NekDouble> o_tmp (GetFaceNumPoints(face));
-            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
-            Array<OneD,NekDouble> o_tmp3;
-            
-            if (orient == StdRegions::eNoOrientation)
-            {
-                orient = GetForient(face);
-            }
-            
+            int nq0 = 0; 
+            int nq1 = 0; 
+
+            // get forward aligned faces. 
             switch(face)
             {
                 case 0:
                 {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,inarray.get(),1,o_tmp.get(),1);
-                    //interpolate
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), 
-                                           m_base[1]->GetPointsKey(), 
-                                           o_tmp.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           o_tmp2.get());
+                    nq0 = nquad0; 
+                    nq1 = nquad1;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
+                    for (int i = 0; i < nquad0*nquad1; ++i)
+                    {
+                        outarray[i] = i;
+                    }
+
                     break;
                 }
                 case 1:
                 {
+                    nq0 = nquad0; 
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
                     //Direction A and B positive
                     for (int k=0; k<nquad2; k++)
                     {
-                        Vmath::Vcopy(nquad0,inarray.get()+(nquad0*nquad1*k),1,o_tmp.get()+(k*nquad0),1);
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0+i] = (nquad0*nquad1*k)+i;
+                        }
                     }
-                    //interpolate
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), 
-                                           m_base[2]->GetPointsKey(), 
-                                           o_tmp.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           o_tmp2.get());
                     break;
                 }
                 case 2:
                 {
+                    nq0 = nquad1; 
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
                     //Directions A and B positive
-                    Vmath::Vcopy(nquad1*nquad2,inarray.get()+(nquad0-1),nquad0,o_tmp.get(),1);
-                    //interpolate
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    for(int j = 0; j < nquad1*nquad2; ++j)
+                    {
+                        outarray[j] = nquad0-1 + j*nquad0;
+                    }
                     break;
                 }
                 case 3:
                 {
+                    nq0 = nquad1; 
+                    nq1 = nquad2;
+                    if(outarray.num_elements() != nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
                     //Directions A and B positive
-                    Vmath::Vcopy(nquad1*nquad2,inarray.get(),nquad0,o_tmp.get(),1);
-                    //interpolate
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    for(int j = 0; j < nquad1*nquad2; ++j)
+                    {
+                        outarray[j] = j*nquad0;
+                    }
                 }
                 break;
             default:
                 ASSERTL0(false,"face value (> 3) is out of range");
                 break;
             }
-
-            int nq1 = FaceExp->GetNumPoints(0);
-            int nq2 = FaceExp->GetNumPoints(1);
-            
-            if ((int)orient == 7)
-            {
-                for (int j = 0; j < nq2; ++j)
-                {
-                    Vmath::Vcopy(nq1, o_tmp2.get()+((j+1)*nq1-1), -1, outarray.get()+j*nq1, 1);
-                }
-            }
-            else
-            {
-                Vmath::Vcopy(nq1*nq2, o_tmp2.get(), 1, outarray.get(), 1);
-            }
-        }
-
+       }
+        
 
         /**
 	 * \brief Compute the normal of a triangular face

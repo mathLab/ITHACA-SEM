@@ -198,10 +198,11 @@ namespace Nektar
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD, int> &signarray);
             STD_REGIONS_EXPORT void v_GetEdgeToElementMap(
-                    const int eid,
-                    const Orientation edgeOrient,
-                    Array<OneD, unsigned int> &maparray,
-                    Array<OneD, int> &signarray);
+                    const int                  eid,
+                    const Orientation          edgeOrient,
+                    Array<OneD, unsigned int>& maparray,
+                    Array<OneD, int>&          signarray,
+                    int                        P = -1);
 
             //---------------------------------------
             // Wrapper functions

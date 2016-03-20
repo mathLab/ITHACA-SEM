@@ -77,9 +77,9 @@ struct Field {
 
     ~Field()
     {
-        if (m_session)
+        if (m_comm)
         {
-            m_session->Finalise();
+            m_comm->Finalise();
         }
     }
     bool                                    m_verbose;

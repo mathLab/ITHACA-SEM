@@ -148,7 +148,7 @@ namespace Nektar
 
         NekDouble m_cflSafetyFactor;
         int m_infosteps;
-        int minsubsteps;
+        int m_minsubsteps;
     };
 }
 

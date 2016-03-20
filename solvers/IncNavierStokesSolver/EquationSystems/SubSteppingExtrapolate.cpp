@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: SubSteppingExtrapolate.cpp
-//
+//a
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -546,7 +546,6 @@ namespace Nektar
         // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
         IProductNormVelocityBCOnHBC(m_acceleration[0]);
         
-#if  1
         //Calculate acceleration term at level n based on previous steps
         int acc_order = min(m_pressureCalls,m_intSteps);
         Vmath::Smul(HBCPts, StifflyStable_Gamma0_Coeffs[acc_order-1]/m_timestep,
@@ -561,17 +560,6 @@ namespace Nektar
                          accelerationTerm,    1);
         }
         
-#else
-        Blas::Dscal(HBCPts,1.0/m_timestep,&m_acceleration[0][0],1);
-
-        // Update base of characteristic - Now done in v_SubStepAdvanace()
-        // scale according to time integration scheme. 
-        Blas::Dscal(HBCPts,1.0/m_timestep,&m_acceleration[1][0],1);
-
-        // evaluate time derivative 
-        Vmath::Vsub(HBCPts,m_acceleration[0],1,m_acceleration[1],1,accelerationTerm,1);
-#endif
-
         // Subtract accleration term off m_pressureHBCs[nlevels-1]
         int  nlevels = m_pressureHBCs.num_elements();
         Vmath::Vsub(HBCPts, m_pressureHBCs[nlevels-1],1,accelerationTerm, 1,

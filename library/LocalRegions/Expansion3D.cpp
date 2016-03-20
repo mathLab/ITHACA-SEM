@@ -867,7 +867,7 @@ namespace Nektar
                     }
                 }
                 break;
-                //HDG postprocessing
+            //HDG postprocessing
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
                     MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
@@ -985,10 +985,10 @@ namespace Nektar
                                            faceCoeffs,
                                            faceCoeffs);
 
-                StdRegions::StdMatrixKey masskey(
-                                                 StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
-                FaceExp->MassMatrixOp(
-                                      faceCoeffs,faceCoeffs,masskey);
+                StdRegions::StdMatrixKey masskey(StdRegions::eMass,
+                                                 FaceExp->DetShapeType(),
+                                                 *FaceExp);
+                FaceExp->MassMatrixOp(faceCoeffs, faceCoeffs, masskey);
 
                 // Reorder coefficients for the lower degree face.
                 int offset1 = 0, offset2 = 0;
@@ -1093,9 +1093,9 @@ namespace Nektar
         }
 
         void Expansion3D::v_AddRobinMassMatrix(
-                                               const int face, 
-                                               const Array<OneD, const NekDouble > &primCoeffs, 
-                                               DNekMatSharedPtr &inoutmat)
+            const int                            face,
+            const Array<OneD, const NekDouble > &primCoeffs,
+                  DNekMatSharedPtr              &inoutmat)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
@@ -1116,11 +1116,10 @@ namespace Nektar
             LibUtilities::ShapeType shapeType = 
                 faceExp->DetShapeType();
 
-            LocalRegions::MatrixKey mkey(
-                                         StdRegions::eMass,
-                                         shapeType, 
-                                         *faceExp, 
-                                         StdRegions::NullConstFactorMap, 
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,
+                                         shapeType,
+                                         *faceExp,
+                                         StdRegions::NullConstFactorMap,
                                          varcoeffs);
 
             DNekScalMat &facemat = *faceExp->GetLocMatrix(mkey);
@@ -1178,9 +1177,13 @@ namespace Nektar
                 StdRegions::IndexMapValuesSharedPtr map1 = 
                     StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
-                                              StdRegions::eFaceToElement, DetShapeType(), 
-                                              GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                              face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                    StdRegions::eFaceToElement,
+                    DetShapeType(),
+                    GetBasisNumModes(0),
+                    GetBasisNumModes(1),
+                    GetBasisNumModes(2),
+                    face,
+                    StdRegions::eDir1FwdDir1_Dir2FwdDir2);
                 StdRegions::IndexMapValuesSharedPtr map2 = 
                     StdExpansion::GetIndexMap(ikey2);
                 
@@ -1227,7 +1230,7 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion3D::v_BuildVertexMatrix(
-                                                          const DNekScalMatSharedPtr &r_bnd)
+            const DNekScalMatSharedPtr &r_bnd)
         {
             MatrixStorage storage = eFULL;
             DNekMatSharedPtr m_vertexmatrix;
@@ -1239,7 +1242,7 @@ namespace Nektar
 
             m_vertexmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                          nVerts, nVerts, 0.0, storage);
+                    nVerts, nVerts, 0.0, storage);
             DNekMat &VertexMat = (*m_vertexmatrix);
 
             for (vid1 = 0; vid1 < nVerts; ++vid1)
@@ -1258,8 +1261,8 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion3D::v_BuildTransformationMatrix(
-                                                                  const DNekScalMatSharedPtr &r_bnd, 
-                                                                  const StdRegions::MatrixType matrixType)
+            const DNekScalMatSharedPtr  &r_bnd,
+            const StdRegions::MatrixType matrixType)
         {
             int nVerts, nEdges;
             int eid, fid, vid, n, i;
@@ -1311,10 +1314,10 @@ namespace Nektar
 
             m_transformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                          nBndCoeffs, nBndCoeffs, 0.0, storage);
+                    nBndCoeffs, nBndCoeffs, 0.0, storage);
             m_transposedtransformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                          nBndCoeffs, nBndCoeffs, 0.0, storage);
+                    nBndCoeffs, nBndCoeffs, 0.0, storage);
 
             DNekMat &R  = (*m_transformationmatrix);
             DNekMat &RT = (*m_transposedtransformationmatrix);
@@ -1351,7 +1354,7 @@ namespace Nektar
                 for (eid = 0; eid < nConnectedEdges; ++eid)
                 {
                     MatEdgeLocation[eid] = GetEdgeInverseBoundaryMap(
-                                                                     geom->GetVertexEdgeMap(vid, eid));
+                                            geom->GetVertexEdgeMap(vid, eid));
                     nmodes = MatEdgeLocation[eid].num_elements();
 
                     if (nmodes)
@@ -1369,7 +1372,7 @@ namespace Nektar
                 for (fid = 0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
-                                                                     geom->GetVertexFaceMap(vid, fid));
+                                            geom->GetVertexFaceMap(vid, fid));
                     nmodes = MatFaceLocation[fid].num_elements();
 
                     if (nmodes)
@@ -1382,12 +1385,12 @@ namespace Nektar
 
                 DNekMatSharedPtr m_vertexedgefacetransformmatrix =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                              1, efRow, 0.0, storage);
+                        1, efRow, 0.0, storage);
                 DNekMat &Sveft = (*m_vertexedgefacetransformmatrix);
 
                 DNekMatSharedPtr m_vertexedgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                              1, efRow, 0.0, storage);
+                        1, efRow, 0.0, storage);
                 DNekMat &Svef = (*m_vertexedgefacecoupling);
 
                 // Vertex-edge coupling
@@ -1422,7 +1425,7 @@ namespace Nektar
                 // Allocation of matrix to store edge/face-edge/face coupling
                 DNekMatSharedPtr m_edgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                              efRow, efRow, 0.0, storage);
+                        efRow, efRow, 0.0, storage);
                 DNekMat &Sefef = (*m_edgefacecoupling);
 
                 NekDouble EdgeEdgeValue, FaceFaceValue;
@@ -1465,12 +1468,14 @@ namespace Nektar
                                                  facemodearray[m]);
 
                         // Set the value in the vertex edge/face matrix
-                        Sefef.SetValue(
-                                       n, nedgemodesconnected + m, FaceFaceValue);
+                        Sefef.SetValue(n,
+                                       nedgemodesconnected + m,
+                                       FaceFaceValue);
 
                         // and transpose
-                        Sefef.SetValue(
-                                       nedgemodesconnected + m, n, FaceFaceValue);
+                        Sefef.SetValue(nedgemodesconnected + m,
+                                       n,
+                                       FaceFaceValue);
                     }
                 }
 
@@ -1546,19 +1551,19 @@ namespace Nektar
                 // Edge-face coupling matrix
                 DNekMatSharedPtr m_efedgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                              efRow, efCol, 0.0, storage);
+                        efRow, efCol, 0.0, storage);
                 DNekMat &Mef = (*m_efedgefacecoupling);
 
                 // Face-face coupling matrix
                 DNekMatSharedPtr m_effacefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                              efCol, efCol, 0.0, storage);
+                        efCol, efCol, 0.0, storage);
                 DNekMat &Meff = (*m_effacefacecoupling);
 
                 // Edge-face transformation matrix
                 DNekMatSharedPtr m_edgefacetransformmatrix =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                              efRow, efCol, 0.0, storage);
+                        efRow, efCol, 0.0, storage);
                 DNekMat &Meft = (*m_edgefacetransformmatrix);
 
                 int nfacemodesconnected =
@@ -1585,7 +1590,7 @@ namespace Nektar
                 for (fid = 0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
-                                                                     geom->GetEdgeFaceMap(eid, fid));
+                                            geom->GetEdgeFaceMap(eid, fid));
                     nmodes = MatFaceLocation[fid].num_elements();
 
                     if (nmodes)
@@ -1667,20 +1672,20 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "unkown matrix type" );
                 return NullDNekMatSharedPtr;
             }
-	}
+        }
 
         /**
-	 * \brief Build inverse and inverse transposed transformation matrix:
-	 * \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
-	 *
-	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} &
-	 * -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
-	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
-	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
-	 */
+         * \brief Build inverse and inverse transposed transformation matrix:
+         * \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
+         *
+         * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} &
+         * -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+         *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+         *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+         */
         DNekMatSharedPtr Expansion3D::v_BuildInverseTransformationMatrix(
-                                                                         const DNekScalMatSharedPtr & m_transformationmatrix)
-	{
+            const DNekScalMatSharedPtr & m_transformationmatrix)
+        {
             int i, j, n, eid = 0, fid = 0;
             int nCoeffs = NumBndryCoeffs();
             NekDouble MatrixValue;
@@ -1692,7 +1697,7 @@ namespace Nektar
             // Inverse transformation matrix
             DNekMatSharedPtr m_inversetransformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                                                          nCoeffs, nCoeffs, 0.0, storage);
+                    nCoeffs, nCoeffs, 0.0, storage);
             DNekMat &InvR = (*m_inversetransformationmatrix);
 
             int nVerts = GetNverts();
@@ -1775,12 +1780,13 @@ namespace Nektar
                                   -R(GetVertexMap(i), facemodearray[j]));
                     for (n = 0; n < nedgemodestotal; ++n)
                     {
-                        MatrixValue = InvR.GetValue(
-                                                    GetVertexMap(i), facemodearray[j])
+                        MatrixValue = InvR.GetValue(GetVertexMap(i),
+                                                    facemodearray[j])
                             + R(GetVertexMap(i), edgemodearray[n])
                             * R(edgemodearray[n], facemodearray[j]);
-                        InvR.SetValue(
-                                      GetVertexMap(i), facemodearray[j], MatrixValue);
+                        InvR.SetValue(GetVertexMap(i),
+                                      facemodearray[j],
+                                      MatrixValue);
                     }
                 }
             }
@@ -1802,10 +1808,10 @@ namespace Nektar
             }
 
             return m_inversetransformationmatrix;
-	}
+        }
 
         Array<OneD, unsigned int> Expansion3D::v_GetEdgeInverseBoundaryMap(
-                                                                           int eid)
+            int eid)
         {
             int n, j;
             int nEdgeCoeffs;
@@ -1847,7 +1853,9 @@ namespace Nektar
         }
 
         Array<OneD, unsigned int>
-        Expansion3D::v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient)
+        Expansion3D::v_GetFaceInverseBoundaryMap(
+            int fid,
+            StdRegions::Orientation faceOrient)
         {
             int n, j;
             int nFaceCoeffs;
@@ -1918,7 +1926,7 @@ namespace Nektar
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
             const Array<OneD, const NekDouble>      &inarray,
-            Array<OneD,       NekDouble>             &outarray,
+                  Array<OneD,       NekDouble>      &outarray,
             StdRegions::Orientation                  orient)
         {
             
@@ -2127,10 +2135,11 @@ namespace Nektar
             }
         }
 
-        void Expansion3D::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        void Expansion3D::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
         {
             NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
         }
-        
     } //end of namespace
 } //end of namespace

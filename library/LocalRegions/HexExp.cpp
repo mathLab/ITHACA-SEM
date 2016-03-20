@@ -793,6 +793,7 @@ namespace Nektar
                     ASSERTL0(false,"face value (> 5) is out of range");
                     break;
             }
+
         }
 
         void HexExp::v_ComputeFaceNormal(const int face)

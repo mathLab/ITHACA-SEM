@@ -445,6 +445,7 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
+        
         StdRegions::StdExpansionSharedPtr PrismExp::v_GetStdExp(void) const
         {
             return MemoryManager<StdRegions::StdPrismExp>
@@ -675,6 +676,7 @@ namespace Nektar
                 ASSERTL0(false,"face value (> 4) is out of range");
                 break;
 	    }
+
         }
 
         /** \brief  Get the normals along specficied face 

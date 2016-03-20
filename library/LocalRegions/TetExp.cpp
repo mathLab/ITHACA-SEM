@@ -48,9 +48,9 @@ namespace Nektar
          */
 
         /**
-	 * \brief Constructor using BasisKey class for quadrature points and 
-	 * order definition 
-	 *
+         * \brief Constructor using BasisKey class for quadrature points and 
+         * order definition 
+         *
          * @param   Ba          Basis key for first coordinate.
          * @param   Bb          Basis key for second coordinate.
          * @param   Bc          Basis key for third coordinate.
@@ -60,24 +60,30 @@ namespace Nektar
                         const LibUtilities::BasisKey &Bc,
                         const SpatialDomains::TetGeomSharedPtr &geom
                         ):
-            StdExpansion  (LibUtilities::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),3,Ba,Bb,Bc),
-            StdExpansion3D(LibUtilities::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),Ba,Bb,Bc),
+            StdExpansion  (
+                LibUtilities::StdTetData::getNumberOfCoefficients(
+                    Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
+                    3, Ba, Bb, Bc),
+            StdExpansion3D(
+                LibUtilities::StdTetData::getNumberOfCoefficients(
+                    Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
+                    Ba, Bb, Bc),
             StdRegions::StdTetExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
-                            boost::bind(&TetExp::CreateMatrix, this, _1),
-                            std::string("TetExpMatrix")),
+                 boost::bind(&TetExp::CreateMatrix, this, _1),
+                 std::string("TetExpMatrix")),
             m_staticCondMatrixManager(
-                                      boost::bind(&TetExp::CreateStaticCondMatrix, this, _1),
-                                      std::string("TetExpStaticCondMatrix"))
+                 boost::bind(&TetExp::CreateStaticCondMatrix, this, _1),
+                 std::string("TetExpStaticCondMatrix"))
         {
         }
 
 
         /**
-	 * \brief Copy Constructor
-	 */
+         * \brief Copy Constructor
+         */
         TetExp::TetExp(const TetExp &T):
             StdExpansion(T),
             StdExpansion3D(T),
@@ -90,8 +96,8 @@ namespace Nektar
         }
 
         /**
-	 * \brief Destructor
-	 */
+         * \brief Destructor
+         */
         TetExp::~TetExp()
         {
         }
@@ -112,7 +118,7 @@ namespace Nektar
          * point.
          */
         NekDouble TetExp::v_Integral(
-                                     const Array<OneD, const NekDouble> &inarray)
+            const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();

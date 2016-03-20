@@ -1365,7 +1365,6 @@ namespace Nektar
             ComputeEdgeNormal(edge);
         }
 
-
         const StdRegions::NormalVector &Expansion2D::v_GetEdgeNormal(const int edge) const
         {
             std::map<int, StdRegions::NormalVector>::const_iterator x;
@@ -1380,8 +1379,6 @@ namespace Nektar
         {
             return v_GetEdgeNormal(id);
         }
-        
-
         
         void Expansion2D::v_NegateEdgeNormal(const int edge)
         {

@@ -544,7 +544,6 @@ namespace Nektar
         void GlobalLinSysIterative::Set_Rhs_Magnitude(
             const NekVector<NekDouble> &pIn)
         {
-
             Array<OneD, NekDouble> vExchange(1);
             vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
 
@@ -566,7 +565,8 @@ namespace Nektar
                 m_rhs_magnitude = (m_rhs_mag_cnt*(m_rhs_magnitude) + 
 	                        new_rhs_mag)/(NekDouble)(m_rhs_mag_cnt+1);
             }
-            ++m_rhs_mag_cnt;
+            
+            m_rhs_mag_cnt = min(m_rhs_mag_cnt+1,1000);
         }
 
     }

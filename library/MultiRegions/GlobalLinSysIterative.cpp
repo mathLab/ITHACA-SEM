@@ -53,6 +53,7 @@ namespace Nektar
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_rhs_magnitude(NekConstants::kNekUnsetDouble),
+                  m_rhs_mag_cnt(0),
                   m_precon(NullPreconditionerSharedPtr),
                   m_totalIterations(0),
                   m_useProjection(false),
@@ -563,11 +564,10 @@ namespace Nektar
             }
             else
             {
-                m_rhs_magnitude = (cnt*(m_rhs_magnitude)
-                                + new_rhs_mag)/(NekDouble)(cnt+1);
+                m_rhs_magnitude = (m_rhs_mag_cnt*(m_rhs_magnitude) + 
+	                        new_rhs_mag)/(NekDouble)(m_rhs_mag_cnt+1);
             }
-
-            ++cnt;
+            ++m_rhs_mag_cnt;
         }
 
     }

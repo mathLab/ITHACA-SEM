@@ -73,6 +73,9 @@ namespace Nektar
             /// dot product of rhs to normalise stopping criterion
             NekDouble                                   m_rhs_magnitude;
 
+            /// cnt to how many times rhs_magnitude is called 
+            int                                         m_rhs_mag_cnt; 
+            
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;

@@ -53,7 +53,7 @@ namespace Nektar
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_rhs_magnitude(NekConstants::kNekUnsetDouble),
-                  m_rhs_mag_cnt(0),
+                  m_rhs_mag_sm(0.9),
                   m_precon(NullPreconditionerSharedPtr),
                   m_totalIterations(0),
                   m_useProjection(false),
@@ -431,7 +431,6 @@ namespace Nektar
                          << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")" 
                          << endl;
                 }
-                //m_rhs_magnitude = NekConstants::kNekUnsetDouble;
                 return;
             }
 
@@ -562,11 +561,9 @@ namespace Nektar
             }
             else
             {
-                m_rhs_magnitude = (m_rhs_mag_cnt*(m_rhs_magnitude) + 
-	                        new_rhs_mag)/(NekDouble)(m_rhs_mag_cnt+1);
+                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
+                                   (1.0-m_rhs_mag_sm)*new_rhs_mag); 
             }
-            
-            m_rhs_mag_cnt = min(m_rhs_mag_cnt+1,1000);
         }
 
     }

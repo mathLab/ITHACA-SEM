@@ -538,7 +538,15 @@ namespace Nektar
                     m_precon->BuildPreconditioner();
                 }
 
+                if(m_locToGloMap->GetNextLevelLocalToGlobalMap())
+                {
+                    // for multilevel iterative solver always use rhs
+                    // vector value with no weighting
+                    m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+                }
+
                 Set_Rhs_Magnitude(F_GlobBnd);
+
                 return m_S1Blk;
             }
             else

@@ -74,7 +74,7 @@ namespace Nektar
             NekDouble                                   m_rhs_magnitude;
 
             /// cnt to how many times rhs_magnitude is called 
-            int                                         m_rhs_mag_cnt; 
+            NekDouble                                   m_rhs_mag_sm; 
             
             PreconditionerSharedPtr                     m_precon;
 

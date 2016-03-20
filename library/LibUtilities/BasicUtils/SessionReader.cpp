@@ -1463,12 +1463,26 @@ namespace Nektar
                     {
                         TiXmlElement *vMainEntry =
                             vMainNektar->FirstChildElement(p->Value());
-                        TiXmlElement *q = new TiXmlElement(*p);
-                        if (vMainEntry)
+
+                        // First check if the new item is in fact blank
+                        if (!p->FirstChild() && vMainEntry)
                         {
-                            vMainNektar->RemoveChild(vMainEntry);
+                            std::string warningmsg =
+                                "File " + pFilenames[i] + " contains " +
+                                "an empty XML element " +
+                                std::string(p->Value()) +
+                                " which will be ignored.";
+                            WARNINGL0(false, warningmsg.c_str());
                         }
-                        vMainNektar->LinkEndChild(q);
+                        else
+                        {
+                            if (vMainEntry)
+                            {
+                                vMainNektar->RemoveChild(vMainEntry);
+                            }
+                            TiXmlElement *q = new TiXmlElement(*p);
+                            vMainNektar->LinkEndChild(q);
+                        }
                         p = p->NextSiblingElement();
                     }
 

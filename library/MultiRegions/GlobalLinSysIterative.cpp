@@ -545,7 +545,6 @@ namespace Nektar
             const NekVector<NekDouble> &pIn)
         {
 
-            static int cnt = 0;
             Array<OneD, NekDouble> vExchange(1);
             vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
 

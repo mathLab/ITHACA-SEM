@@ -42,6 +42,7 @@
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
@@ -100,6 +101,9 @@ namespace Nektar
             GlobalLinSysMapShPtr        m_globalBndMat;
             ExpListSharedPtr            m_trace;
             AssemblyMapDGSharedPtr      m_traceMap;
+            /// Map of local trace (the points at the face of the
+            /// element) to the trace space discretisation
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap; 
 
             /**
              * @brief A set storing the global IDs of any boundary faces.

@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
+        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
@@ -78,6 +79,7 @@ int main(int argc, char* argv[])
                 "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
                 "Specify modules which are to be used.")
+        ("shared-filesystem,s", "Using shared filesystem.")
         ("useSessionVariables",
                 "Use variables defined in session for output")
         ("verbose,v",
@@ -184,13 +186,13 @@ int main(int argc, char* argv[])
 
 
     /*
-     * Process list of modules. Each element of the vector of module strings can
-     * be in the following form:
+     * Process list of modules. Each element of the vector of module
+     * strings can be in the following form:
      *
      * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
      *
-     * where the only required argument is 'modname', specifing the name of the
-     * module to load.
+     * where the only required argument is 'modname', specifing the
+     * name of the module to load.
      */
 
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
@@ -338,19 +340,29 @@ int main(int argc, char* argv[])
     }
 
     // If any output module has to reset points then set intput modules to match
-    bool RequiresEquiSpaced = false;
-    for (int i = 0; i < modules.size(); ++i)
-    {
-        if(modules[i]->GetRequireEquiSpaced())
-        {
-            RequiresEquiSpaced = true;
-        }
-    }
-    if (RequiresEquiSpaced)
+   if(vm.count("noequispaced"))
     {
         for (int i = 0; i < modules.size(); ++i)
         {
-            modules[i]->SetRequireEquiSpaced(true);
+            modules[i]->SetRequireEquiSpaced(false);
+        }
+    }
+    else
+    {
+        bool RequiresEquiSpaced = false;
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetRequireEquiSpaced())
+            {
+                RequiresEquiSpaced = true;
+            }
+        }
+        if (RequiresEquiSpaced)
+        {
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                modules[i]->SetRequireEquiSpaced(true);
+            }
         }
     }
     // Run field process.

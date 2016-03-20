@@ -2363,28 +2363,24 @@ namespace Nektar
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
-                    }
 
-                    // loop over all elements in partition and set expansion
-                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                    LibUtilities::BasisKeyVector def;
-
-                    for(int d = 0; d < m_domain.size(); ++d)
-                    {
-                        CompositeMap::const_iterator compIter;
-
-                        for (compIter = m_domain[d].begin();
-                             compIter != m_domain[d].end(); ++compIter)
+                        // loop over all elements and set expansion
+                        for(k = 0; k < fielddef.size(); ++k)
                         {
-                            GeometryVector::const_iterator x;
-                            for (x = compIter->second->begin();
-                                 x != compIter->second->end(); ++x)
+                            for(int h = 0; h < fielddef[k]->m_fields.size(); ++h)
                             {
-                                ExpansionShPtr expansionElementShPtr =
-                                            MemoryManager<Expansion>::
-                                                    AllocateSharedPtr(*x, def);
-                                int id = (*x)->GetGlobalID();
-                                (*expansionMap)[id] = expansionElementShPtr;
+                                if(fielddef[k]->m_fields[h] == field)
+                                {
+                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
+                                    LibUtilities::BasisKeyVector def;
+
+                                    for(int g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
+                                    {
+                                        ExpansionShPtr tmpexp =
+                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
+                                    }
+                                }
                             }
                         }
                     }
@@ -3192,6 +3188,7 @@ namespace Nektar
             switch(type)
             {
             case eModified:
+            case eModifiedGLLRadau10:
                 quadoffset = 1;
                 break;
             case eModifiedQuadPlus1:
@@ -3209,6 +3206,7 @@ namespace Nektar
             case eModified:
             case eModifiedQuadPlus1:
             case eModifiedQuadPlus2:
+            case eModifiedGLLRadau10:
                 {
                     switch (shape)
                     {
@@ -3258,9 +3256,18 @@ namespace Nektar
                             LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
                             returnval.push_back(bkey1);
 
-                            const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
-                            LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
-                            returnval.push_back(bkey2);
+                            if(type == eModifiedGLLRadau10)
+                            {
+                                const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
+                                LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2); 
+                                returnval.push_back(bkey2);
+                            }
+                            else
+                            {
+                                const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
+                                LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
+                                returnval.push_back(bkey2);
+                            }
                         }
                         break;
                     case LibUtilities::ePyramid:

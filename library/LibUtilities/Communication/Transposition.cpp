@@ -50,9 +50,10 @@ namespace Nektar
          * Constructor for 1D transform.
          */
         Transposition::Transposition(const LibUtilities::BasisKey &HomoBasis0,
-                                     LibUtilities::CommSharedPtr hcomm)
+                                     LibUtilities::CommSharedPtr hcomm0,
+                                     LibUtilities::CommSharedPtr hcomm1)
         {
-            m_hcomm = hcomm;
+            m_hcomm = hcomm1;
             m_num_homogeneous_directions = 1;
 
             m_num_points_per_proc =
@@ -81,6 +82,17 @@ namespace Nektar
                 m_planes_IDs[i] = m_rank_id*m_num_points_per_proc[0] + i;
             }
 
+            int global_rank_id = hcomm0->GetColumnComm()->GetRank();
+            int NumStrips = hcomm0->GetColumnComm()->GetSize() /
+                            m_hcomm->GetSize();
+            m_strip_ID = 0;
+
+            if (NumStrips > 1)
+            {
+                m_strip_ID = 
+                    (NumStrips > global_rank_id) ? global_rank_id:(global_rank_id - NumStrips);
+            }
+            
             if(HomoBasis0.GetBasisType() == LibUtilities::eFourier)
             {
                 for(int i = 0 ; i < m_num_points_per_proc[0] ; i++)
@@ -199,6 +211,10 @@ namespace Nektar
             return m_planes_IDs;
         }
 
+        unsigned int Transposition::GetStripID(void)
+        {
+            return m_strip_ID;
+        }
 
         /**
          * Main method: General transposition, the dir parameters define if

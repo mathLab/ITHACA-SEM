@@ -57,10 +57,19 @@ enum PtsType{
     ePtsFile,
     ePtsLine,
     ePtsPlane,
+    ePtsBox,
     ePtsTriBlock,
     ePtsTetBlock
 };
 
+
+enum PtsInfo{
+    eIsEquiSpacedData,
+    ePtsPerElmtEdge
+};
+
+
+static map<PtsInfo,int> NullPtsInfoMap;
 
 class PtsPoint
 {
@@ -90,7 +99,6 @@ class PtsPoint
 class PtsField
 {
     public:
-
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
             const Array<OneD, Array<OneD, NekDouble> > &pts);
@@ -98,11 +106,13 @@ class PtsField
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
             const vector<std::string> fieldnames,
-            const Array<OneD, Array<OneD, NekDouble> > &pts) :
-            m_dim(dim),
-            m_fieldNames(fieldnames),
-            m_pts(pts),
-            m_ptsType(ePtsFile)
+            const Array<OneD, Array<OneD, NekDouble> > &pts,
+            map<PtsInfo,int> ptsInfo = NullPtsInfoMap):
+               m_ptsInfo(ptsInfo),
+                 m_dim(dim),
+                m_fieldNames(fieldnames),
+                m_pts(pts),
+                m_ptsType(ePtsFile)
         {
         };
 
@@ -112,12 +122,13 @@ class PtsField
             const Array<OneD, Array<OneD, NekDouble> > &pts,
             const Array<OneD, Array<OneD, float> > &weights,
             const Array<OneD, Array<OneD, unsigned int> > &neighInds) :
+            m_ptsInfo(NullPtsInfoMap),
             m_dim(dim),
             m_fieldNames(fieldnames),
             m_pts(pts),
             m_ptsType(ePtsFile),
             m_weights(weights),
-            m_neighInds(neighInds)
+                m_neighInds(neighInds)
         {
         };
 
@@ -184,12 +195,18 @@ class PtsField
 
         LIB_UTILITIES_EXPORT void SetPtsType(const PtsType type);
 
+        LIB_UTILITIES_EXPORT vector<NekDouble> GetBoxSize() const;
+
+        LIB_UTILITIES_EXPORT void SetBoxSize(const vector<NekDouble> boxsize);
         template<typename FuncPointerT, typename ObjectPointerT>
         void setProgressCallback(FuncPointerT func,
                 ObjectPointerT obj)
         {
             m_progressCallback = boost::bind(func, obj, _1, _2);
         }
+
+        /// map for information about points that can be added through PtsInfo enum
+        map<PtsInfo,int> m_ptsInfo; 
 
     private:
 
@@ -217,6 +234,9 @@ class PtsField
         /// Structure: m_neighInds[ptIdx][neighbourIdx]
         Array<OneD, Array<OneD, unsigned int> > m_neighInds;
 
+        /// vector of box size xmin,xmax,ymin,ymax,zmin,zmax
+        vector<NekDouble> m_boxSize;
+        
         boost::function<void (const int position, const int goal)> m_progressCallback;
 
         LIB_UTILITIES_EXPORT void CalcW_Linear(const int physPtIdx,

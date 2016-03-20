@@ -300,7 +300,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void Expansion2D::SetTraceToGeomOrientation(
             Array<OneD, ExpansionSharedPtr> &EdgeExp,
             Array<OneD, NekDouble> &inout)
@@ -1393,6 +1393,40 @@ namespace Nektar
         bool Expansion2D::v_EdgeNormalNegated(const int edge)
         {
             return m_negatedNormals[edge];
+        }
+        
+        void Expansion2D::ReOrientEdgePhysMap(
+            const int                                   nvert,
+            const StdRegions::Orientation               orient,
+            const int                                   nq0,
+            Array<OneD, int>                            &idmap)
+        {
+            if (idmap.num_elements() != nq0)
+            {
+                idmap = Array<OneD, int>(nq0);
+            }
+            switch (orient)
+            {
+                case StdRegions::eForwards:
+                    // Fwd
+                    for (int i = 0; i < nq0; ++i)
+                    {
+                        idmap[i] = i;
+                    }
+                    break;
+                case StdRegions::eBackwards:
+                {
+                    // Bwd
+                    for (int i = 0; i < nq0; ++i)
+                    {
+                        idmap[i] = nq0-1-i;
+                    }
+                }
+                    break;
+                default:
+                    ASSERTL0(false, "Unknown orientation");
+                    break;
+            }
         }
     }
 }

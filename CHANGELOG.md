@@ -22,14 +22,17 @@ v4.3.0
   (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
+- Added in a method to convert equispaced interpolated points back to coefficients which requires the introduction of a new StdRegions matrix.(!561)
 - Empty XML tags which would override non-empty XML tags are now ignored (!581)
 - Add contribution guide (!551)
+- Add a filter to calculate exponential moving averages (!566)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **IncNavierStokesSolver**
 - Fix floquet stability analysis for HalfMode case (!536)
+- Add a filter to calculate Reynolds stresses (!566)
 
 **FieldConvert:**
 - Extended surface distance module to support hexahedra and quads (!524)
@@ -41,6 +44,8 @@ v4.3.0
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
+- Add module to project set of points to a fld file(!561)
+- Add support for interpolating to a box of points and fix ability to run interppointstofld module in parallel when using a plane or box optio(!561)n 
 - Add option to output equi-spaced points in VTU format (!550)
 - Add module innerproduct (!568)
 - Add command line option of `--part-only` and `--part-only-overlapping` (!569)

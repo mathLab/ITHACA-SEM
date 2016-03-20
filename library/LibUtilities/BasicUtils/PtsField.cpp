@@ -346,23 +346,15 @@ int PtsField::GetPointsPerEdge(const int i) const
 /**
  * @brief Set the number of points per edge
  *
- * @param nPtsPerEdge  Number of points per edge. Empty if the point data has no
- * specific shape (ePtsLine) or is a block (ePtsTetBlock, ePtsTriBlock), size=1
- * for ePtsLine and 2 for a ePtsPlane
+ * @param nPtsPerEdge Number of points per edge. Empty if the point
+ * data has no specific shape (ePtsLine) or is a block (ePtsTetBlock,
+ * ePtsTriBlock), size=1 for ePtsLine, 2 for ePtsPlane and 3 for ePtsBox
  */
 void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
 {
-    ASSERTL0(m_ptsType == ePtsLine || m_ptsType == ePtsPlane,
-             "SetPointsPerEdge only supported for ePtsLine and ePtsPlane .");
-
-    int totPts(1);
-    for (int i = 0; i < nPtsPerEdge.size(); ++i)
-    {
-        totPts = totPts * nPtsPerEdge.at(i);
-    }
-
-    ASSERTL0(totPts == m_pts[0].num_elements(),
-             "nPtsPerEdge does not match total number of points");
+    ASSERTL0(m_ptsType == ePtsLine || m_ptsType == ePtsPlane || 
+             m_ptsType == ePtsBox,
+             "SetPointsPerEdge only supported for ePtsLine, ePtsPlane and ePtsBox.");
 
     m_nPtsPerEdge = nPtsPerEdge;
 }
@@ -378,6 +370,18 @@ void PtsField::SetPtsType(const PtsType type)
 {
     m_ptsType = type;
 }
+
+vector<NekDouble> PtsField::GetBoxSize() const
+{
+    return m_boxSize;
+}
+
+void PtsField::SetBoxSize(const vector< NekDouble> boxSize)
+{
+    m_boxSize = boxSize;
+}
+
+
 
 
 /**

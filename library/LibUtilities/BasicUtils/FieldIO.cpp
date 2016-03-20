@@ -925,17 +925,16 @@ namespace Nektar
                         valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(), homoSIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous strips IDs.");
                     }
-
                     // Get Homogeneous points IDs
                     std::vector<unsigned int> homoZIDs;
                     std::vector<unsigned int> homoYIDs;
-                    
+
                     if(numHomoDir == 1)
                     {
                         valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous planes IDs.");
                     }
-                    
+
                     if(numHomoDir == 2)
                     {
                         valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
@@ -943,8 +942,8 @@ namespace Nektar
                         valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(), homoYIDs);
                         ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in y-direction.");
                     }
-                    
-                    
+
+
                     // Get points type
                     std::vector<PointsType> points;
 
@@ -1343,6 +1342,7 @@ namespace Nektar
                 // Send this process's ID list to the root process
                 m_comm->Send(0, idlist);
             }
+
         }
 
 

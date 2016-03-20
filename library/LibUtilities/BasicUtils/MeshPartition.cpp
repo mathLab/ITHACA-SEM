@@ -1276,9 +1276,8 @@ namespace Nektar
 
             // If the overlapping option is set (for post-processing purposes),
             // add vertices that correspond to the neighbouring elements.
-            if(overlapping)
+            if (overlapping)
             {
-                // 
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
                       ++vertit)
@@ -1289,13 +1288,12 @@ namespace Nektar
                         if(part[*adjvertit] != part[*vertit])
                         {
                             boost::add_vertex(*adjvertit, pLocalPartition[part[*vertit]]);
-                            
                         }
                     }
                 }
             }
         }
-        
+
 
         void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)
         {

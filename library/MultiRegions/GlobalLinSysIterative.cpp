@@ -528,7 +528,6 @@ namespace Nektar
                              << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
                     }
-                    //m_rhs_magnitude = NekConstants::kNekUnsetDouble;
                     break;
                 }
                 min_resid = min(min_resid, eps);
@@ -541,33 +540,34 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysIterative::Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn)
+        void GlobalLinSysIterative::Set_Rhs_Magnitude(
+            const NekVector<NekDouble> &pIn)
         {
 
-            static int cnt = 0; 
+            static int cnt = 0;
             Array<OneD, NekDouble> vExchange(1);
             vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
 
-            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-#if 1 // a hack to ensure that very different rhs values are not being
-      // used in subsequent solvers such as the velocit solve in INC
-      // NS. If this works we then need to work out a better way to
-      // control this.
-            NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0]:1.0;
-            
+            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
+                vExchange, Nektar::LibUtilities::ReduceSum);
+
+            // a hack to ensure that very different rhs values are not being
+            // used in subsequent solvers such as the velocit solve in INC
+            // NS. If this works we then need to work out a better way to
+            // control this.
+            NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0] : 1.0;
+
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
                 m_rhs_magnitude = new_rhs_mag;
             }
             else
             {
-                m_rhs_magnitude = (cnt*(m_rhs_magnitude) + new_rhs_mag)/(NekDouble)(cnt+1);
+                m_rhs_magnitude = (cnt*(m_rhs_magnitude)
+                                + new_rhs_mag)/(NekDouble)(cnt+1);
             }
 
             ++cnt;
-#else
-            m_rhs_magnitude = (vExchange[0] > 1e-6)? vExchange[0]:1.0;
-#endif
         }
 
     }

@@ -567,7 +567,9 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
-        void TriExp::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        void TriExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
         {
             NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
         }

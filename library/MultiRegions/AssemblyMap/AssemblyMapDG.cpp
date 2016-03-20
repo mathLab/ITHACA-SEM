@@ -520,7 +520,6 @@ namespace Nektar
 
             m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
                                        m_localToGlobalBndMap.end());
-            
         }
 
         /**

@@ -1886,57 +1886,55 @@
             Array<OneD, int> &ElmtID,
             Array<OneD, int> &FaceID)
         {
-            map<int,int> globalIdMap;
-            int i, n;
-            int cnt;
-            int nbcs = 0;
-            
-            SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
-                    m_graph);
-            
-            // Populate global ID map (takes global geometry ID to local
-            // expansion list ID).
-            LocalRegions::Expansion3DSharedPtr exp3d;
-            for (i = 0; i < GetExpSize(); ++i)
+            if (m_BCtoElmMap.num_elements() == 0)
             {
-                exp3d = (*m_exp)[i]->as<LocalRegions::Expansion3D>();
-                globalIdMap[exp3d->GetGeom3D()->GetGlobalID()] = i;
-            }
+                map<int,int> globalIdMap;
+                int i, n;
+                int cnt;
+                int nbcs = 0;
 
-            // Determine number of boundary condition expansions.
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
-            {
-                nbcs += m_bndCondExpansions[i]->GetExpSize();
-            }
+                SpatialDomains::MeshGraph3DSharedPtr graph3D = 
+                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
+                        m_graph);
 
-            // make sure arrays are of sufficient length
-            if(ElmtID.num_elements() != nbcs)
-            {
-                ElmtID = Array<OneD, int>(nbcs);
-            }
-
-            if(FaceID.num_elements() != nbcs)
-            {
-                FaceID = Array<OneD, int>(nbcs);
-            }
-            
-            LocalRegions::Expansion2DSharedPtr exp2d;
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {
-                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
+                // Populate global ID map (takes global geometry ID to local
+                // expansion list ID).
+                LocalRegions::Expansion3DSharedPtr exp3d;
+                for (i = 0; i < GetExpSize(); ++i)
                 {
-                    exp2d = m_bndCondExpansions[n]->GetExp(i)->
-                                        as<LocalRegions::Expansion2D>();
-                    // Use face to element map from MeshGraph3D.
-                    SpatialDomains::ElementFaceVectorSharedPtr tmp = 
-                        graph3D->GetElementsFromFace(exp2d->GetGeom2D());
-                    
-                    ElmtID[cnt] = globalIdMap[(*tmp)[0]->
-                                              m_Element->GetGlobalID()];
-                    FaceID[cnt] = (*tmp)[0]->m_FaceIndx;
+                    exp3d = (*m_exp)[i]->as<LocalRegions::Expansion3D>();
+                    globalIdMap[exp3d->GetGeom3D()->GetGlobalID()] = i;
+                }
+
+                // Determine number of boundary condition expansions.
+                for(i = 0; i < m_bndConditions.num_elements(); ++i)
+                {
+                    nbcs += m_bndCondExpansions[i]->GetExpSize();
+                }
+
+                // Initialize arrays
+                m_BCtoElmMap = Array<OneD, int>(nbcs);
+                m_BCtoFaceMap = Array<OneD, int>(nbcs);
+
+                LocalRegions::Expansion2DSharedPtr exp2d;
+                for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                {
+                    for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
+                    {
+                        exp2d = m_bndCondExpansions[n]->GetExp(i)->
+                                            as<LocalRegions::Expansion2D>();
+                        // Use face to element map from MeshGraph3D.
+                        SpatialDomains::ElementFaceVectorSharedPtr tmp = 
+                            graph3D->GetElementsFromFace(exp2d->GetGeom2D());
+
+                        m_BCtoElmMap[cnt] = globalIdMap[(*tmp)[0]->
+                                                  m_Element->GetGlobalID()];
+                        m_BCtoFaceMap[cnt] = (*tmp)[0]->m_FaceIndx;
+                    }
                 }
             }
+            ElmtID = m_BCtoElmMap;
+            FaceID = m_BCtoFaceMap;
         }
         
         void DisContField3D::v_GetBndElmtExpansion(int i,

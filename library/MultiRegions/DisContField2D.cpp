@@ -1676,56 +1676,54 @@ namespace Nektar
             Array<OneD, int> &ElmtID, 
             Array<OneD, int> &EdgeID)
         {
-            map<int, int> globalIdMap;
-            int i,n;
-            int cnt;
-            int nbcs = 0;
-
-            SpatialDomains::MeshGraph2DSharedPtr graph2D =
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
-                    m_graph);
-
-            // Populate global ID map (takes global geometry ID to local
-            // expansion list ID).
-            for (i = 0; i < GetExpSize(); ++i)
+            if (m_BCtoElmMap.num_elements() == 0)
             {
-                globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-            }
-            
-            // Determine number of boundary condition expansions.
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
-            {
-                nbcs += m_bndCondExpansions[i]->GetExpSize();
-            }
+                map<int, int> globalIdMap;
+                int i,n;
+                int cnt;
+                int nbcs = 0;
 
-            // make sure arrays are of sufficient length
-            if(ElmtID.num_elements() != nbcs)
-            {
-                ElmtID = Array<OneD, int>(nbcs);
-            }
+                SpatialDomains::MeshGraph2DSharedPtr graph2D =
+                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
+                        m_graph);
 
-            if(EdgeID.num_elements() != nbcs)
-            {
-                EdgeID = Array<OneD, int>(nbcs);
-            }
-
-            LocalRegions::Expansion1DSharedPtr exp1d;
-            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {
-                for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
-                     ++i, ++cnt)
+                // Populate global ID map (takes global geometry ID to local
+                // expansion list ID).
+                for (i = 0; i < GetExpSize(); ++i)
                 {
-                    exp1d = m_bndCondExpansions[n]->GetExp(i)->
-                                        as<LocalRegions::Expansion1D>();
-                    // Use edge to element map from MeshGraph2D.
-                    SpatialDomains::ElementEdgeVectorSharedPtr tmp =
-                        graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
+                    globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
 
-                    ElmtID[cnt] = globalIdMap[(*tmp)[0]->
-                        m_Element->GetGlobalID()];
-                    EdgeID[cnt] = (*tmp)[0]->m_EdgeIndx;
+                // Determine number of boundary condition expansions.
+                for(i = 0; i < m_bndConditions.num_elements(); ++i)
+                {
+                    nbcs += m_bndCondExpansions[i]->GetExpSize();
+                }
+
+                // Initialize arrays
+                m_BCtoElmMap = Array<OneD, int>(nbcs);
+                m_BCtoEdgMap = Array<OneD, int>(nbcs);
+
+                LocalRegions::Expansion1DSharedPtr exp1d;
+                for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                {
+                    for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
+                         ++i, ++cnt)
+                    {
+                        exp1d = m_bndCondExpansions[n]->GetExp(i)->
+                                            as<LocalRegions::Expansion1D>();
+                        // Use edge to element map from MeshGraph2D.
+                        SpatialDomains::ElementEdgeVectorSharedPtr tmp =
+                            graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
+
+                        m_BCtoElmMap[cnt] = globalIdMap[(*tmp)[0]->
+                            m_Element->GetGlobalID()];
+                        m_BCtoEdgMap[cnt] = (*tmp)[0]->m_EdgeIndx;
+                    }
                 }
             }
+            ElmtID = m_BCtoElmMap;
+            EdgeID = m_BCtoEdgMap;
         }
         
         void DisContField2D::v_GetBndElmtExpansion(int i,

@@ -78,7 +78,10 @@ namespace Nektar
             
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
-            
+
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoFaceMap;
+
         protected:
             /**
              * @brief An object which contains the discretised boundary

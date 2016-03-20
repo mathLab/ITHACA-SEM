@@ -94,6 +94,8 @@ namespace Nektar
                 return m_trace;
             }
 
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoEdgMap;
 
         protected:
 

@@ -455,30 +455,31 @@ namespace Nektar
                             equispaced = false;
                         }
                     }
-                        
-                    ASSERTL0(equispaced, "Currently need to have same num modes in all directionmodes to use EquiSpacedToCoeff method");
+
+                    ASSERTL0(equispaced,
+                             "Currently need to have same num modes in all "
+                             "directionmodes to use EquiSpacedToCoeff method");
 
                     int ntot = GetTotPoints();
                     Array<OneD, NekDouble>               qmode(ntot);
                     Array<OneD, NekDouble>               emode(m_ncoeffs);
 
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(
+                                                        m_ncoeffs,m_ncoeffs);
                     int cnt = 0;
-                    
                     for(int i = 0; i < m_ncoeffs; ++i)
                     {
-                        // Get mode at quadrature points 
-                        FillMode(i,qmode); 
-                        
+                        // Get mode at quadrature points
+                        FillMode(i,qmode);
+
                         // interpolate to equi spaced
                         PhysInterpToSimplexEquiSpaced(qmode,emode,nummodes);
-                        
+
                         // fill matrix
                         Vmath::Vcopy(m_ncoeffs, &emode[0], 1,
                                      returnval->GetRawPtr() + i*m_ncoeffs, 1);
-                        
                     }
-                    // invert matrix 
+                    // invert matrix
                     returnval->Invert();
 
                 }

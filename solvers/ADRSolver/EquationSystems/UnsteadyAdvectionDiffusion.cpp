@@ -63,8 +63,9 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
         
-        // turn on substepping 
-        m_session->MatchSolverInfo("Extrapolation", "SubStepping", m_subSteppingScheme, false);
+        // turn on substepping
+        m_session->MatchSolverInfo("Extrapolation", "SubStepping",
+                                   m_subSteppingScheme, false);
         
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
@@ -123,8 +124,8 @@ namespace Nektar
                 break;
             }
             // Continuous field 
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
             {
                 // Advection term
                 std::string advName;
@@ -134,18 +135,19 @@ namespace Nektar
                     CreateInstance(advName, advName);
                 m_advObject->SetFluxVector(&UnsteadyAdvectionDiffusion::
                                            GetFluxVectorAdv, this);
-                
-		if(advName.compare("WeakDG") == 0)
-		{
-		    string riemName; 
-		    m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
-		    m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
+
+                if(advName.compare("WeakDG") == 0)
+                {
+                    string riemName;
+                    m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
+                    m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
                         CreateInstance(riemName);
-		    m_riemannSolver->SetScalar("Vn", &UnsteadyAdvectionDiffusion::
+                    m_riemannSolver->SetScalar("Vn",
+                                               &UnsteadyAdvectionDiffusion::
                                                GetNormalVelocity, this);
-		    m_advObject->SetRiemannSolver(m_riemannSolver);
-		    m_advObject->InitObject      (m_session, m_fields);
-		}
+                    m_advObject->SetRiemannSolver(m_riemannSolver);
+                    m_advObject->InitObject      (m_session, m_fields);
+                }
 
                 // In case of Galerkin explicit diffusion gives an error
                 if (m_explicitDiffusion)
@@ -155,35 +157,37 @@ namespace Nektar
                 // In case of Galerkin implicit diffusion: do nothing
                 break;
             }
-        default:
+            default:
             {
                 ASSERTL0(false, "Unsupported projection type.");
                 break;
             }
         }
-        
-        m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
+
+        m_ode.DefineImplicitSolve (
+            &UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
 
         if(m_subSteppingScheme) // Substepping
         {
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,
                      "Projection must be set to Mixed_CG_Discontinuous for "
                      "substepping");
-            SetUpSubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
+            SetUpSubSteppingTimeIntegration(
+                    m_intScheme->GetIntegrationMethod(), m_intScheme);
 
         }
         else // Standard velocity correction scheme
         {
-            m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+            m_ode.DefineOdeRhs(&UnsteadyAdvectionDiffusion::DoOdeRhs, this);
         }
-        
+
         if (m_projectionType == MultiRegions::eDiscontinuous &&
             m_explicitDiffusion == 1)
-        {    
+        {
             m_ode.DefineProjection(&UnsteadyAdvectionDiffusion::DoOdeProjection, this);
         }
     }
-	
+
     /**
      * @brief Unsteady linear advection diffusion equation destructor.
      */
@@ -199,9 +203,11 @@ namespace Nektar
     {
         return GetNormalVel(m_velocity);
     }
+
+
     Array<OneD, NekDouble> &UnsteadyAdvectionDiffusion::GetNormalVel(
-                                                                          const Array<OneD, const Array<OneD, NekDouble> > &velfield)
-    {   
+        const Array<OneD, const Array<OneD, NekDouble> > &velfield)
+    {
         // Number of trace (interface) points
         int i;
         int nTracePts = GetTraceNpoints();
@@ -236,10 +242,10 @@ namespace Nektar
      * @param time       Time.
      */
     void UnsteadyAdvectionDiffusion::DoOdeRhs(
-                                              const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                                              Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                                              const NekDouble time)
-    {  
+        const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+              Array<OneD,        Array<OneD, NekDouble> >&outarray,
+        const NekDouble time)
+    {
         // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
         
@@ -286,31 +292,31 @@ namespace Nektar
      * @param time       Time.
      */
     void UnsteadyAdvectionDiffusion::DoOdeProjection(
-                                                     const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                                                     Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                                                     const NekDouble time)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble time)
     {
         int i;
         int nvariables = inarray.num_elements();
         SetBoundaryConditions(time);
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuous:
+            case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
                 }
                 break;
             }
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     m_fields[i]->FwdTrans(inarray[i], coeffs);
@@ -318,7 +324,7 @@ namespace Nektar
                 }
                 break;
             }
-        default:
+            default:
             {
                 ASSERTL0(false, "Unknown projection scheme");
                 break;
@@ -335,10 +341,10 @@ namespace Nektar
      * @param lambda     Diffusion coefficient.
      */
     void UnsteadyAdvectionDiffusion::DoImplicitSolve(
-                                                     const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                                     Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                                                     const NekDouble time,
-                                                     const NekDouble lambda)
+        const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+              Array<OneD,       Array<OneD, NekDouble> >&outarray,
+        const NekDouble time,
+        const NekDouble lambda)
     {
         int nvariables = inarray.num_elements();
         int nq = m_fields[0]->GetNpoints();
@@ -391,8 +397,8 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void UnsteadyAdvectionDiffusion::GetFluxVectorAdv(
-                                                      const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-                                                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
@@ -419,11 +425,11 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void UnsteadyAdvectionDiffusion::GetFluxVectorDiff(
-                                                       const int i, 
-                                                       const int j,
-                                                       const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                                       Array<OneD, Array<OneD, NekDouble> > &derivatives,
-                                                       Array<OneD, Array<OneD, NekDouble> > &flux)
+        const int i,
+        const int j,
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> > &derivatives,
+              Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         for (int k = 0; k < flux.num_elements(); ++k)
         {

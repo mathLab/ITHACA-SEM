@@ -462,19 +462,19 @@ namespace Nektar
         void UnsteadySystem::v_GenerateSummary(SummaryList& s)
         {
             EquationSystem::v_GenerateSummary(s);
-	    AddSummaryItem(s, "Advection",
-			     m_explicitAdvection ? "explicit" : "implicit");
-	    
-	    if(m_session->DefinesSolverInfo("AdvectionType"))
-	    {
-	        AddSummaryItem(s,"AdvectionType",
-			     m_session->GetSolverInfo("AdvectionType"));
-	    }
-		
-	    AddSummaryItem(s, "Diffusion",
-			   m_explicitDiffusion ? "explicit" : "implicit");
+            AddSummaryItem(s, "Advection",
+                           m_explicitAdvection ? "explicit" : "implicit");
 
-            if (m_session->GetSolverInfo("EQTYPE") 
+            if(m_session->DefinesSolverInfo("AdvectionType"))
+            {
+                AddSummaryItem(s, "AdvectionType",
+                               m_session->GetSolverInfo("AdvectionType"));
+            }
+
+            AddSummaryItem(s, "Diffusion",
+                           m_explicitDiffusion ? "explicit" : "implicit");
+
+            if (m_session->GetSolverInfo("EQTYPE")
                     == "SteadyAdvectionDiffusionReaction")
             {
                 AddSummaryItem(s, "Reaction",
@@ -930,14 +930,15 @@ namespace Nektar
             return false;
         }
 
-        void UnsteadySystem::SVVVarDiffCoeff(const Array<OneD, Array<OneD, NekDouble> > vel, 
-                                             StdRegions::VarCoeffMap &varCoeffMap)
+        void UnsteadySystem::SVVVarDiffCoeff(
+            const Array<OneD, Array<OneD, NekDouble> >  vel,
+                  StdRegions::VarCoeffMap              &varCoeffMap)
         {
             int phystot = m_fields[0]->GetTotPoints();
             int nvel = vel.num_elements();
 
             Array<OneD, NekDouble> varcoeff(phystot),tmp;
-            
+
             // calculate magnitude of v
             Vmath::Vmul(phystot,vel[0],1,vel[0],1,varcoeff,1);
             for(int n = 1; n < nvel; ++n)
@@ -950,23 +951,24 @@ namespace Nektar
             {
                 int offset = m_fields[0]->GetPhys_Offset(i);
                 int nq = m_fields[0]->GetExp(i)->GetTotPoints();
-                Array<OneD, NekDouble> unit(nq,1.0);               
+                Array<OneD, NekDouble> unit(nq,1.0);
 
-                int nmodes = 0; 
-                
+                int nmodes = 0;
+
                 for(int n = 0; n < m_fields[0]->GetExp(i)->GetNumBases(); ++n)
                 {
-                    nmodes = max(nmodes,m_fields[0]->GetExp(i)->GetBasisNumModes(n));
+                    nmodes = max(nmodes,
+                                 m_fields[0]->GetExp(i)->GetBasisNumModes(n));
                 }
-                
+
                 NekDouble h = m_fields[0]->GetExp(i)->Integral(unit);
                 h = pow(h,(NekDouble) (1.0/nvel))/((NekDouble) nmodes);
 
                 Vmath::Smul(nq,h,varcoeff+offset,1,tmp = varcoeff+offset,1);
             }
 
-            // set up map with eVarCoffLaplacian key 
-            varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff; 
+            // set up map with eVarCoffLaplacian key
+            varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
         }
     }
 }

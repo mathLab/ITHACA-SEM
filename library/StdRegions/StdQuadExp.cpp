@@ -1552,19 +1552,21 @@ namespace Nektar
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
-            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping 
+            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping
             {
                 Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
                 Array<OneD, NekDouble> tmp(qa*qb);
-                
-                Vmath::Vsqrt(qa*qb,mkey.GetVarCoeff(eVarCoeffLaplacian),1,sqrt_varcoeff,1);
+
+                Vmath::Vsqrt(qa * qb,
+                             mkey.GetVarCoeff(eVarCoeffLaplacian), 1,
+                             sqrt_varcoeff,                        1);
 
                 //Vmath::Fill(qa*qb,Vmath::Vmax(qa*qb,sqrt_varcoeff,1),
                 //sqrt_varcoeff,1);
 
-                // multiply by sqrt(Variable Coefficient) containing h v /p 
+                // multiply by sqrt(Variable Coefficient) containing h v /p
                 Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
-                
+
                 // project onto modal  space.
                 OrthoExp.FwdTrans(tmp,orthocoeffs);
 
@@ -1574,39 +1576,41 @@ namespace Nektar
                     {
                         // linear space but makes high modes very negative
                         orthocoeffs[j*nmodes_b+k] *=
-                            (1.0+SvvDiffCoeff*pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
+                            (1.0+SvvDiffCoeff*
+                             pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
                         // bilinear blend
                         //orthocoeffs[j*nmodes_b+k] *=
-                        //(1.0+SvvDiffCoeff*pow(j/(NekDouble)(nmodes_a-1.0),0.5*nmodes)*
-                        //pow(k/(NekDouble)(nmodes_b-1.0),0.5*nmodes));
+                        //(1.0 + SvvDiffCoeff
+                        //      *pow(j/(NekDouble)(nmodes_a-1.0),0.5*nmodes)
+                        //      *pow(k/(NekDouble)(nmodes_b-1.0),0.5*nmodes));
                     }
                 }
 
                 // backward transform to physical space
                 OrthoExp.BwdTrans(orthocoeffs,tmp);
-                
-                // multiply by sqrt(Variable Coefficient) containing h v /p  - split to keep symmetry
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p
+                // - split to keep symmetry
                 Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
-                
             }
             else
             {
-                
                 //for the "old" implementation
-                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-                
+                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
+                                                        min(nmodes_a,nmodes_b));
+
                 // project onto modal  space.
                 OrthoExp.FwdTrans(array,orthocoeffs);
-                
+
                 //counters for scanning through orthocoeffs array
                 int j, k, cnt = 0;
-                
+
                 //------"New" Version August 22nd '13--------------------
                 for(j = 0; j < nmodes_a; ++j)
                 {
                     for(k = 0; k < nmodes_b; ++k)
                     {
-                        if(j + k >= cutoff) //to filter out only the "high-modes"
+                        if(j + k >= cutoff)//to filter out only the "high-modes"
                         {
                              orthocoeffs[j*nmodes_b+k] *=
                                  (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
@@ -1618,9 +1622,9 @@ namespace Nektar
                              orthocoeffs[j*nmodes_b+k] *= 0.0;
                         }
                         cnt++;
-	            }
+                    }
                 }
-                
+
                 // backward transform to physical space
                 OrthoExp.BwdTrans(orthocoeffs,array);
             }

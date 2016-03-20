@@ -1514,7 +1514,11 @@ namespace Nektar
                             
                         }
                         
-                        ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list (edgeid = " + boost::lexical_cast<string>(edgeid));
+                        ASSERTL0(curve->m_points.size() == numPts,
+                                 "Number of points specificed by attribute "
+                                 "NUMPOINTS is different from number of points "
+                                 "in list (edgeid = " +
+                                 boost::lexical_cast<string>(edgeid));
 
                         m_curvedEdges[edgeid] = curve;
                         
@@ -2387,7 +2391,7 @@ namespace Nektar
                     }
                 }
             }
-        
+
             // loop over all elements find the geometry shared ptr and
             // set up basiskey vector
             for(i = 0; i < fielddef.size(); ++i)
@@ -2407,10 +2411,10 @@ namespace Nektar
 
                 for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
-                    
+
                     LibUtilities::BasisKeyVector bkeyvec;
                     id = fielddef[i]->m_elementIDs[j];
-                    
+
                     switch (fielddef[i]->m_shapeType)
                     {
                     case LibUtilities::eSegment:
@@ -2803,7 +2807,7 @@ namespace Nektar
                             ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
                             break;
                         }
-                    
+
                         for(k = 0; k < fields.size(); ++k)
                         {
                             expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
@@ -2848,7 +2852,7 @@ namespace Nektar
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
-                    
+
                         // loop over all elements and set expansion
                         for(k = 0; k < fielddef.size(); ++k)
                         {
@@ -2882,7 +2886,7 @@ namespace Nektar
                 std::vector<unsigned int> nmodes = fielddef[i]->m_numModes;
                 std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_basis;
                 bool UniOrder =  fielddef[i]->m_uniOrder;
-                
+
                 for(j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
                     LibUtilities::BasisKeyVector bkeyvec;
@@ -3117,7 +3121,7 @@ namespace Nektar
         }
 
 
-        /** 
+        /**
          * \brief Reset all points keys to have expansion order of \a
          *  nmodes.  we keep the point distribution the same and make
          *  the number of points the same difference from the number
@@ -3128,28 +3132,36 @@ namespace Nektar
             ExpansionMapShPtrMapIter   it;
 
             // iterate over all defined expansions
-            for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
+            for (it = m_expansionMapShPtrMap.begin();
+                 it != m_expansionMapShPtrMap.end();
+                 ++it)
             {
                 ExpansionMapIter expIt;
-                
-                for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
+
+                for (expIt = it->second->begin();
+                     expIt != it->second->end();
+                     ++expIt)
                 {
-                    for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
+                    for(int i = 0;
+                        i < expIt->second->m_basisKeyVector.size();
+                        ++i)
                     {
-                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i]; 
-                        
-                        const LibUtilities::PointsKey pkey(npts,bkeyold.GetPointsType());
+                        LibUtilities::BasisKey  bkeyold =
+                            expIt->second->m_basisKeyVector[i];
+
+                        const LibUtilities::PointsKey pkey(
+                            npts, bkeyold.GetPointsType());
+
                         LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),
                                                        bkeyold.GetNumModes(),
                                                        pkey);
-                        expIt->second->m_basisKeyVector[i] = bkeynew; 
-                        
+                        expIt->second->m_basisKeyVector[i] = bkeynew;
                     }
                 }
             }
         }
 
-        
+
         /**
          * For each element of shape given by \a shape in field \a
          * var, replace the current BasisKeyVector describing the

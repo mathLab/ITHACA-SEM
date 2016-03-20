@@ -1269,7 +1269,7 @@ namespace Nektar
                     nq0 = m_base[0]->GetNumPoints();
                     nq1 = m_base[1]->GetNumPoints();
 
-                    // take definition from key 
+                    // take definition from key
                     if(mkey.ConstFactorExists(eFactorConst))
                     {
                         nq = (int) mkey.GetConstFactor(eFactorConst);
@@ -1278,7 +1278,7 @@ namespace Nektar
                     {
                         nq = max(nq0,nq1);
                     }
-                    
+
                     int neq = LibUtilities::StdTriData::
                                                 getNumberOfCoefficients(nq,nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);
@@ -1412,47 +1412,46 @@ namespace Nektar
                 Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
                 Array<OneD, NekDouble> tmp(qa*qb);
 
-                Vmath::Vsqrt(qa*qb,mkey.GetVarCoeff(eVarCoeffLaplacian),1,sqrt_varcoeff,1);
+                Vmath::Vsqrt(qa * qb,
+                             mkey.GetVarCoeff(eVarCoeffLaplacian), 1,
+                             sqrt_varcoeff,                        1);
 
-                // multiply by sqrt(Variable Coefficient) containing h v /p 
+                // multiply by sqrt(Variable Coefficient) containing h v /p
                 Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
-                
+
                 // project onto modal  space.
                 OrthoExp.FwdTrans(tmp,orthocoeffs);
 
-		int cnt = 0; 
+                int cnt = 0;
                 for(int j = 0; j < nmodes_a; ++j)
                 {
-                    for(int k = 0; k < nmodes_b-j; ++k, ++cnt) 
+                    for(int k = 0; k < nmodes_b-j; ++k, ++cnt)
                     {
                         orthocoeffs[cnt] *=
-                            (1.0+SvvDiffCoeff*pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
+                            (1.0 + SvvDiffCoeff
+                                *pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
                     }
                 }
 
                 // backward transform to physical space
                 OrthoExp.BwdTrans(orthocoeffs,tmp);
-                
-                // multiply by sqrt(Variable Coefficient) containing h v /p  - split to keep symmetry
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p
+                // - split to keep symmetry
                 Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
-                
             }
             else
             {
                 int j, k , cnt = 0;
-                
-                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-                
+                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
+                                                        min(nmodes_a,nmodes_b));
+
                 NekDouble epsilon = 1.0;
                 int nmodes = min(nmodes_a,nmodes_b);
-                
-                //To avoid the fac[j] from blowing up
-                //NekDouble epsilon = 0.001;
-                
+
                 // project onto physical space.
                 OrthoExp.FwdTrans(array,orthocoeffs);
-                
-                //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+
                 // apply SVV filter (JEL)
                 for(j = 0; j < nmodes_a; ++j)
                 {
@@ -1460,16 +1459,19 @@ namespace Nektar
                     {
                         if(j + k >= cutoff)
                         {
-                            orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
+                            orthocoeffs[cnt] *= (SvvDiffCoeff
+                                *exp(-(j+k-nmodes)*(j+k-nmodes)
+                                    /((NekDouble)((j+k-cutoff+epsilon)
+                                            *(j+k-cutoff+epsilon)))));
                         }
                         else
                         {
                             orthocoeffs[cnt] *= 0.0;
-	    		}
-		        cnt++;
+                        }
+                        cnt++;
                     }
                 }
-                
+
                 // backward transform to physical space
                 OrthoExp.BwdTrans(orthocoeffs,array);
             }

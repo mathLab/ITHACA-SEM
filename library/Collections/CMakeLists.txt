@@ -10,7 +10,7 @@ SET(COLLECTIONS_SOURCES
   IProduct.cpp
   )
 
-SET(SOLVER_UTILS_HEADERS
+SET(COLLECTIONS_HEADERS
   CoalescedGeomData.h
   Collection.h 
   CollectionOptimisation.h
@@ -18,9 +18,11 @@ SET(SOLVER_UTILS_HEADERS
   Operator.h
 )
 
-ADD_NEKTAR_LIBRARY(Collections lib ${NEKTAR_LIBRARY_TYPE}
-                    ${COLLECTIONS_SOURCES} ${COLLECTIONS_HEADERS})
-TARGET_LINK_LIBRARIES(Collections LINK_PUBLIC LocalRegions)
+ADD_NEKTAR_LIBRARY(NAME Collections
+    DESCRIPTION "Nektar++ Collections library"
+    SOURCES ${COLLECTIONS_SOURCES}
+    HEADERS ${COLLECTIONS_HEADERS}
+    DEPENDS LocalRegions)
 
 INSTALL(DIRECTORY ./ 
         DESTINATION ${NEKTAR_INCLUDE_DIR}/Collections 

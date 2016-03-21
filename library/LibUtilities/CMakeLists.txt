@@ -360,10 +360,12 @@ SET(LibUtilitySources
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
+ADD_NEKTAR_LIBRARY(NAME LibUtilities
+    DESCRIPTION "Nektar++ LibUtilities library"
+    SOURCES ${LibUtilitySources}
+    HEADERS ${LibUtilityHeaders})
 
 ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
-
 
 ### Libraries needed specifically by LibUtilities ###
 ### Static libraries do not need to be linked by
@@ -463,5 +465,10 @@ IF( NEKTAR_USE_PETSC )
     ADD_DEPENDENCIES(LibUtilities petsc-3.5.2)
 ENDIF( NEKTAR_USE_PETSC )
 
-INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+INSTALL(FILES ${ExpressionTemplates}
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates
+    COMPONENT dev)
+INSTALL(DIRECTORY ./
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities
+    COMPONENT dev
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

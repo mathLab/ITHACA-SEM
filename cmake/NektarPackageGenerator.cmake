@@ -1,5 +1,5 @@
 # Define components
-SET(CPACK_COMPONENTS_ALL dev lib demos extra-demos)
+SET(CPACK_COMPONENTS_ALL lib solvers)
 
 cpack_add_component(lib
     DISPLAY_NAME "nektar++-lib"
@@ -20,6 +20,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "${NEKTAR_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${NEKTAR_VERSION_PATCH}")
 
 # Debian-specific options
+set(CPACK_DEB_COMPONENT_INSTALL ON)
 set(CPACK_DEBIAN_PACKAGE_DEBUG ON)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER 
     "Chris Cantwell <c.cantwell@imperial.ac.uk>")

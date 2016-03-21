@@ -16,7 +16,6 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
             RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component} OPTIONAL)
 ENDMACRO(ADD_SOLVER_EXECUTABLE name component source)
 
-
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")
 FOREACH(dir ${dir_list})
@@ -24,12 +23,3 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
-
-
-SET(CPACK_COMPONENTS_ALL solvers)
-
-SET(CPACK_COMPONENT_SOLVERS_NAME "nektar++-solvers")
-SET(CPACK_COMPONENT_SOLVERS_DESCRIPTION "Solvers for Nektar++")
-#SET(CPACK_COMPONENT_SOLVERS_DEPENDS lib)
-
-INCLUDE(CPack)

@@ -334,7 +334,7 @@ INSTALL(DIRECTORY ${TPDIST}/lib/
 )
 
 IF(NEKTAR_BUILD_PACKAGES)
-    add_subdirectory(pkg)
+    include(NektarPackageGenerator)
 ENDIF(NEKTAR_BUILD_PACKAGES)
 
 ADD_SUBDIRECTORY(docs)

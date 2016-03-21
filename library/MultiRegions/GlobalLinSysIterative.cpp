@@ -549,10 +549,10 @@ namespace Nektar
             m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
                 vExchange, Nektar::LibUtilities::ReduceSum);
 
-            // a hack to ensure that very different rhs values are not being
-            // used in subsequent solvers such as the velocit solve in INC
-            // NS. If this works we then need to work out a better way to
-            // control this.
+            // To ensure that very different rhs values are not being
+            // used in subsequent solvers such as the velocit solve in
+            // INC NS. If this works we then need to work out a better
+            // way to control this.
             NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0] : 1.0;
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)

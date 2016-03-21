@@ -23,6 +23,7 @@ v4.3.0
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
 - Added in a method to convert equispaced interpolated points back to coefficients which requires the introduction of a new StdRegions matrix.(!561)
+- Empty XML tags which would override non-empty XML tags are now ignored (!581)
 - Add contribution guide (!551)
 - Add a filter to calculate exponential moving averages (!566)
 

@@ -1,0 +1,54 @@
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+    <title>Install Nektar++</title>
+    <style type="text/css">
+     body {
+       font-family: Helvetica;
+       font-size: 10pt;
+     }
+     pre {
+       background-color: #eee;
+       border: 1px solid #aaa;
+       padding: 5px;
+       margin: 0;
+       margin-left: 2em;
+       margin-bottom: 2em;
+     }
+    </style>
+  </head>
+  <body>
+    <p>
+      This package will install the Nektar++ spectral/<i>hp</i> element
+      framework onto your system.
+    </p>
+    <h3>Installing and uninstalling</h3>
+    <p>
+      Nektar++ is a command-line application, meaning that to use it you must
+      use the terminal. Once installed, Nektar++ executables can be found in the
+      directory <code>/opt/nektar++/bin</code>. To uninstall Nektar++, remove the
+      directory <code>/opt/nektar++</code> and issue the command
+    </p>
+    <pre>sudo pkgutil --forget org.imperialcollegelondon.nektar++-serial</pre><br />
+    <h3>Caveats</h3>
+    <p>
+      Note that this distributed version is for <b>serial execution</b> only and
+      ships with a reasonably minimal set of features:
+    </p>
+    <ul>
+      <li>Core libraries;</li>
+      <li>Common solvers and utilities, including the NekMesh generator;</li>
+      <li>ARPACK for stability analysis and FFTW for homogeneous simulations.
+    </ul>
+    <p>
+      If you are interested in other solvers, development headers, or parallel
+      execution, then please consider using releases through Homebrew
+      (<a href="http://brew.sh/">http://brew.sh/</a>) instead:
+    </p>
+    <pre>brew tap homebrew/science && brew tap mdave/nektar && brew install nektar</pre><br />
+    <p>
+      Alternatively, visit the <a href="http://www.nektar.info/">Nektar++ website</a> for
+      instructions on compiling from source.
+    </p>
+  </body>
+</html>

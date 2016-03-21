@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterAverageFields.h
+// File FilterReynoldsStresses.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Average solution fields during time-stepping.
+// Description: Append Reynolds stresses to the average fields
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
 
 #include <SolverUtils/Filters/FilterSampler.h>
 
@@ -42,33 +42,34 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAverageFields : public FilterSampler
+class FilterReynoldsStresses : public FilterSampler
 {
 public:
-    friend class MemoryManager<FilterAverageFields>;
+    friend class MemoryManager<FilterReynoldsStresses>;
 
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const std::map<std::string, std::string> &pParams)
     {
-        FilterSharedPtr p = MemoryManager<FilterAverageFields>
-                                ::AllocateSharedPtr(pSession, pParams);
+        FilterSharedPtr p =
+            MemoryManager<FilterReynoldsStresses>::AllocateSharedPtr(pSession,
+                                                                     pParams);
         return p;
     }
 
-    ///Name of the class
+    /// Name of the class
     static std::string className;
 
-    SOLVER_UTILS_EXPORT FilterAverageFields(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
+    SOLVER_UTILS_EXPORT
+    FilterReynoldsStresses(const LibUtilities::SessionReaderSharedPtr &pSession,
+                           const std::map<std::string, std::string> &pParams);
+    SOLVER_UTILS_EXPORT ~FilterReynoldsStresses();
 
 protected:
     virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     virtual bool v_IsTimeDependent();
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -78,10 +79,15 @@ protected:
         const NekDouble &time);
     virtual std::string v_GetFileSuffix()
     {
-        return "_avg";
+        return "_stress";
     }
+
+    std::vector<Array<OneD, NekDouble> > m_fields;
+    std::vector<Array<OneD, NekDouble> > m_delta;
+    NekDouble m_alpha;
+    bool m_movAvg;
 };
 }
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESES_H */

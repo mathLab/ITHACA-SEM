@@ -75,7 +75,9 @@ int main(int argc, char *argv[])
         ("verbose,v",              "Turn on verbosity.")
         ("generate-metric,g",      po::value<vector<int> >(),
                                    "Generate a single metric.")
-        ("generate-all-metrics,a", "Generate all metrics.");
+        ("generate-all-metrics,a", "Generate all metrics.")
+        ("executable,e",           po::value<string>(),
+                                   "Use specified executable.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -200,7 +202,7 @@ int main(int argc, char *argv[])
             fs::path source_file(file.GetDependentFile(i).m_filename);
 
             fs::path source = specPath / source_file;
-            fs::path dest   = tmpDir   / source_file;
+            fs::path dest   = tmpDir   / source_file.filename();
             fs::copy_file(source, dest);
         }
 
@@ -218,14 +220,22 @@ int main(int argc, char *argv[])
                     + " ";
         }
 
-        // If executable doesn't exist in path then hope that it is in the
-        // user's PATH environment variable.
-        fs::path execPath = startDir / fs::path(file.GetExecutable());
-        if (!fs::exists(execPath))
+        fs::path execPath;
+        if (vm.count("executable"))
         {
-            execPath = fs::path(file.GetExecutable());
+            execPath = vm["executable"].as<std::string>();
         }
-
+        else
+        {
+            // If executable doesn't exist in path then hope that it is in the
+            // user's PATH environment variable.
+            execPath = startDir / fs::path(file.GetExecutable());
+            if (!fs::exists(execPath))
+            {
+                execPath = fs::path(file.GetExecutable());
+            }
+        }
+        
         command += PortablePath(execPath);
         command += " ";
         command += file.GetParameters();

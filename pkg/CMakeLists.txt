@@ -295,7 +295,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         DESCRIPTION
         "This library provides mesh generation and library routines for the 
          NekMesh executable."
-        INSTALL_LIBS "${libnektar++-nekmeshutols_LIBS}")
+        INSTALL_LIBS "${libnektar++-nekmeshutils_LIBS}")
     add_nektar_package(
         NAME libnektar++-collections
         TYPE rpm
@@ -311,6 +311,13 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         DESCRIPTION
         "This library provides global expansions on multi-element domains."
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
+    add_nektar_package(
+        NAME libnektar++-globalmapping
+        TYPE rpm
+        SUMMARY "Nektar++ GlobalMapping library"
+        DESCRIPTION 
+        "This library provides deformation routines for Nektar++ simulations."
+        INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
     add_nektar_package(
         NAME libnektar++-solverutils
         TYPE rpm

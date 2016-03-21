@@ -38,6 +38,9 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/HexExp.h>
 
 using namespace std;
 
@@ -71,6 +74,8 @@ void APE::v_InitObject()
 
     // Load isentropic coefficient, Ratio of specific heats
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
+
+    m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
 
     // Define Baseflow fields
     m_basefield = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
@@ -160,6 +165,37 @@ APE::~APE()
 }
 
 
+NekDouble APE::GetCFLEstimate()
+{
+    int nElm = m_fields[0]->GetExpSize();
+    const Array<OneD, int> expOrder = GetNumExpModesPerExp();
+
+    Array<OneD, NekDouble> cfl(nElm, 0.0);
+    Array<OneD, NekDouble> stdVelocity(nElm, 0.0);
+
+    // Get standard velocity to compute the time-step limit
+    GetStdVelocity(stdVelocity);
+
+    // Factors to compute the time-step limit
+    NekDouble alpha   = MaxTimeStepEstimator();
+    NekDouble cLambda = 0.2; // Spencer book-317
+
+    // Loop over elements to compute the time-step limit for each element
+    for (int el = 0; el < nElm; ++el)
+    {
+        NekDouble lambdaMax = stdVelocity[el] * cLambda
+            * (expOrder[el] - 1) * (expOrder[el] - 1);
+        cfl[el] = m_timestep * lambdaMax / alpha;
+    }
+
+    // Get the minimum time-step limit and return the time-step
+    NekDouble maxCFL = Vmath::Vmax(nElm, cfl, 1);
+    m_comm->AllReduce(maxCFL, LibUtilities::ReduceMax);
+
+    return maxCFL;
+}
+
+
 /**
  * @brief Return the flux vector for the APE equations.
  *
@@ -246,6 +282,15 @@ bool APE::v_PostIntegrate(int step)
     {
         m_fields[0]->FwdTrans(m_basefield[i], tmpC);
         m_fields[0]->BwdTrans(tmpC, m_basefield[i]);
+    }
+
+        if (m_cflsteps && !((step + 1) % m_cflsteps))
+    {
+        NekDouble cfl = GetCFLEstimate();
+        if (m_comm->GetRank() == 0)
+        {
+            cout << "CFL: " << cfl << endl;
+        }
     }
 
     return UnsteadySystem::v_PostIntegrate(step);
@@ -414,6 +459,102 @@ void APE::WallBC(int bcRegion, int cnt,
 void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
     Vmath::Vadd(GetTotPoints(), m_sourceTerms, 1, outarray[0], 1, outarray[0], 1);
+}
+
+
+/**
+ * @brief Compute the advection velocity in the standard space
+ * for each element of the expansion.
+ *
+ * @param stdV       Standard velocity field.
+ */
+void APE::GetStdVelocity(Array<OneD, NekDouble> &stdV)
+{
+    int nElm = m_fields[0]->GetExpSize();
+
+    ASSERTL1(stdV.num_elements() ==  nElm,  "stdV malformed");
+
+    Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
+    Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim+1);
+    LibUtilities::PointsKeyVector ptsKeys;
+
+    // Zero output array
+    Vmath::Zero(stdV.num_elements(), stdV, 1);
+
+    int cnt = 0;
+
+    for (int el = 0; el < nElm; ++el)
+    {
+        ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
+
+        // Possible bug: not multiply by jacobian??
+        const SpatialDomains::GeomFactorsSharedPtr metricInfo =
+                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
+        const Array<TwoD, const NekDouble> &gmat =
+                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
+                ->GetDerivFactors(ptsKeys);
+
+        int nq = m_fields[0]->GetExp(el)->GetTotPoints();
+
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            stdVelocity[i] = Array<OneD, NekDouble>(nq, 0.0);
+
+            velocity[i] = Array<OneD, NekDouble>(nq, 0.0);
+            for (int j = 0; j < nq; ++j)
+            {
+                // The total advection velocity is v+c, so we need to scale c by
+                // adding it before we do the transformation.
+                NekDouble c = sqrt(m_gamma * m_basefield[0][cnt+j] / m_basefield[1][cnt+j]);
+                velocity[i][j] = m_basefield[i+2][cnt+j] + c;
+            }
+        }
+
+        // scale the velocity components
+        if (metricInfo->GetGtype() == SpatialDomains::eDeformed)
+        {
+            // d xi/ dx = gmat = 1/J * d x/d xi
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                Vmath::Vmul(nq, gmat[i], 1, velocity[0], 1, stdVelocity[i], 1);
+                for (int j = 1; j < m_spacedim; ++j)
+                {
+                    Vmath::Vvtvp(nq, gmat[m_spacedim * j + i], 1, velocity[j],
+                            1, stdVelocity[i], 1, stdVelocity[i], 1);
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                Vmath::Smul(nq, gmat[i][0], velocity[0], 1, stdVelocity[i], 1);
+                for (int j = 1; j < m_spacedim; ++j)
+                {
+                    Vmath::Svtvp(nq, gmat[m_spacedim * j + i][0], velocity[j],
+                            1, stdVelocity[i], 1, stdVelocity[i], 1);
+                }
+            }
+        }
+
+        // compute the max absolute velocity of the element
+        for (int i = 0; i < nq; ++i)
+        {
+            NekDouble pntVelocity = 0.0;
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                pntVelocity += stdVelocity[j][i] * stdVelocity[j][i];
+            }
+            pntVelocity = sqrt(pntVelocity);
+
+            if (pntVelocity > stdV[el])
+            {
+                stdV[el] = pntVelocity;
+            }
+        }
+
+        cnt += nq;
+    }
 }
 
 

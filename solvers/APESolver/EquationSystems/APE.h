@@ -66,6 +66,8 @@ class APE : public UnsteadySystem
         /// Destructor
         virtual ~APE();
 
+        NekDouble GetCFLEstimate();
+
 
     protected:
 
@@ -78,6 +80,8 @@ class APE : public UnsteadySystem
         Array<OneD, Array<OneD, NekDouble> >            m_basefield;
         Array<OneD, NekDouble>                          m_sourceTerms;
         std::vector<std::string>                        m_basefield_names;
+        /// dump cfl estimate
+        int                                             m_cflsteps;
 
         /// Initialises UnsteadySystem class members.
         APE(const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -99,6 +103,8 @@ class APE : public UnsteadySystem
         virtual bool v_PostIntegrate(int step);
 
         void AddSource(Array< OneD, Array< OneD, NekDouble > >& outarray);
+
+        void GetStdVelocity(Array< OneD, NekDouble >& stdV);
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);

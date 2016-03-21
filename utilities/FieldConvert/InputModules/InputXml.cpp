@@ -314,7 +314,7 @@ void InputXml::Process(po::variables_map &vm)
 
     m_f->m_exp.resize(1);
 
-    // load fielddef if fld file is defined This gives
+    // load fielddef header if fld file is defined. This gives
     // precedence to Homogeneous definition in fld file
     int NumHomogeneousDir = 0;
     if(fldfilegiven)
@@ -372,6 +372,29 @@ void InputXml::Process(po::variables_map &vm)
 
 
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
+    }
+    else
+    {
+        if(vm.count("output-points"))
+        {
+            int nPointsNew = vm["output-points"].as<int>();
+            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
+        }
+    }
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
     }
 
     if(m_f->m_verbose)

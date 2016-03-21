@@ -114,8 +114,6 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
         m_f->m_exp[i] = m_f->AppendExpList(0);
     }
 
-
-    // load points into field
     Array<OneD, Array<OneD, NekDouble> > pts;
     m_f->m_fieldPts->GetPts(pts);
 

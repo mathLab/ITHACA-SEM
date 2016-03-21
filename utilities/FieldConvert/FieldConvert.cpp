@@ -36,7 +36,6 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-
 #include "Module.h"
 
 using namespace std;
@@ -44,6 +43,8 @@ using namespace Nektar::Utilities;
 
 int main(int argc, char* argv[])
 {
+    Timer     timer;
+    timer.Start();
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h",
@@ -61,10 +62,10 @@ int main(int argc, char* argv[])
         ("range,r", po::value<string>(),
                 "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
                 "in which any vertex is contained.")
+        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
-        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
@@ -226,6 +227,7 @@ int main(int argc, char* argv[])
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 
+
     if (vm.count("verbose"))
     {
         f->m_verbose = true;
@@ -239,6 +241,7 @@ int main(int argc, char* argv[])
     // Add input and output modules to beginning and end of this vector.
     modcmds.insert(modcmds.begin(), inout.begin(), inout.end()-1);
     modcmds.push_back(*(inout.end()-1));
+
     int nInput = inout.size()-1;
 
     // For special case of part-only or part-only-overlapping options
@@ -365,6 +368,7 @@ int main(int argc, char* argv[])
             }
         }
     }
+    
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
@@ -372,5 +376,20 @@ int main(int argc, char* argv[])
         cout.flush();
     }
 
+    if(f->m_verbose)
+    {
+        if(f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "Total CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
+        
+    }
     return 0;
 }

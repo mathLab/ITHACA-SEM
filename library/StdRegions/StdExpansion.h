@@ -330,7 +330,7 @@ namespace Nektar
              * belonging to the \a i-th face.
              *
              * This function is a wrapper around the virtual function \a
-             * v_GetFaceNcoeffs()
+             * v_GetFaceNumPoints()
              *
              * \param i specifies which face
              * \return returns the number of expansion coefficients belonging to
@@ -365,6 +365,22 @@ namespace Nektar
             {
                 return v_GetTotalFaceIntNcoeffs();
             }
+
+            /** \brief This function returns the number of expansion coefficients
+             *  belonging to the \a i-th edge/face
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetTraceNcoeffs()
+             *
+             *  \param i specifies which edge/face
+             *  \return returns the number of expansion coefficients belonging to
+             *  the \a i-th edge/face
+             */
+            int GetTraceNcoeffs(const int i) const
+            {
+                return v_GetTraceNcoeffs(i);
+            }
+
 
             LibUtilities::PointsKey GetFacePointsKey(const int i, const int j) const
             {
@@ -713,7 +729,7 @@ namespace Nektar
                 v_NormVectorIProductWRTBase(Fx,outarray);
             }
 
-            void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
+            void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
             {
                 v_NormVectorIProductWRTBase(Fx,Fy,outarray);
             }
@@ -721,6 +737,11 @@ namespace Nektar
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray)
             {
                 v_NormVectorIProductWRTBase(Fx,Fy,Fz,outarray);
+            }
+
+            void NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+            {
+                v_NormVectorIProductWRTBase(Fvec, outarray);
             }
 
             DNekScalBlkMatSharedPtr GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
@@ -1184,9 +1205,14 @@ namespace Nektar
             
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
+                     const Array<OneD, const NekDouble> &Fx, 
+                     const Array<OneD, const NekDouble> &Fy, 
+                     Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
@@ -1555,6 +1581,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
 
             STD_REGIONS_EXPORT virtual int v_GetTotalFaceIntNcoeffs() const;
+
+
+            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const;
 
             STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(const int i, const int j) const;
 

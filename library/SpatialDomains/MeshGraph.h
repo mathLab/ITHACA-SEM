@@ -319,7 +319,11 @@ namespace Nektar
                 /// Reset expansion to have specified polynomial order \a nmodes
                 SPATIAL_DOMAINS_EXPORT void SetExpansionsToPolyOrder(int nmodes);
 
-                /// This function sets the expansion #exp in map with entry #variable
+                /// Reset expansion to have specified point order \a
+                /// npts
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToPointOrder(int npts);
+                /// This function sets the expansion #exp in map with
+                /// entry #variable
 
                 inline void SetExpansions(
                         const std::string variable,
@@ -419,12 +423,12 @@ namespace Nektar
                 HexGeomMap                              m_hexGeoms;
 
                 int                                     m_meshDimension;
-                map<int,string>                         m_compositesLabels;
                 int                                     m_spaceDimension;
                 int                                     m_partition;
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
+                map<int,string>                         m_compositesLabels;
                 std::vector<CompositeMap>               m_domain;
                 DomainRangeShPtr                        m_domainRange;
 

@@ -702,6 +702,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            inline const vector<bool> &GetLeftAdjacentFaces(void) const;
+            
             inline void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
 
             inline void ExtractTracePhys(
@@ -893,6 +895,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void CreateCollections(
                     Collections::ImplementationType ImpType
                                                     = Collections::eNoImpType);
+
+            MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
@@ -1102,6 +1106,8 @@ namespace Nektar
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
+            virtual const vector<bool> &v_GetLeftAdjacentFaces(void) const;
 
             virtual void v_ExtractTracePhys(
                 Array<OneD,NekDouble> &outarray);
@@ -1326,6 +1332,8 @@ namespace Nektar
                 const NekDouble scale,
                 const Array<OneD, NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray);
+
+            virtual void v_ClearGlobalLinSysManager(void);
 
             void ExtractFileBCs(const std::string                &fileName,
                                 const std::string                &varName,
@@ -2049,6 +2057,11 @@ namespace Nektar
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
         }
 
+        inline const vector<bool> &ExpList::GetLeftAdjacentFaces(void) const
+        {
+            return v_GetLeftAdjacentFaces();
+        }
+        
         inline void ExpList::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
             v_ExtractTracePhys(outarray);

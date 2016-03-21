@@ -124,11 +124,13 @@ void OutputVtk::Process(po::variables_map &vm)
     ofstream outfile(filename.c_str());
     m_f->m_exp[0]->WriteVtkHeader(outfile);
     int nfields = 0;
+    int dim = 0; 
+
     vector<string> fieldname;
-    
     if(fPts == LibUtilities::NullPtsField) // standard output in collapsed coordinates 
     {
-       
+       dim =  m_f->m_exp[0]->GetExp(0)->GetCoordim();
+    
        int nstrips;
        if (m_f->m_fielddef.size() == 0)
        {
@@ -168,7 +170,8 @@ void OutputVtk::Process(po::variables_map &vm)
    {
         int i   = 0;
         int j   = 0;
-        int dim = fPts->GetDim();
+
+        dim = fPts->GetDim();
 
         if(fPts->GetNpoints() == 0)
         {

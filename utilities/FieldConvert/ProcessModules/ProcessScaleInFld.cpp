@@ -74,15 +74,16 @@ ProcessScaleInFld::~ProcessScaleInFld()
 
 void ProcessScaleInFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        cout << "ProcessScaleInFld: Rescaling input fld" << endl;
-    }
 
     ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
 
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
+
+    if (m_f->m_verbose)
+    {
+        cout << "ProcessScaleInFld: Rescaling input fld by factor " << scale << endl;
+    }
 
     for(int i = 0; i < m_f->m_data.size(); ++i)
     {

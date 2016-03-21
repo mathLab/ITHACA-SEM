@@ -140,6 +140,33 @@ where the file \inltt{test-C0Proj.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt.
 
+The option \inltt{localtoglobalmap} will do a global gather of the
+coefficients and then scatter them back to the local elements. This
+will replace the coefficients shared between two elements with the
+coefficients of one of the elements (most likely the one with the
+highest id). Although not a formal projection it does not require any
+matrix inverse and so is very cheap to perform.
+
+The option \inltt{usexmlbcs} will enforce the boundary conditions
+specified in the input xml file.
+
+The option \inltt{helmsmoothing=$L$} will perform a Helmholtz
+smoothing projection of the form
+\[
+\left (\nabla^2 + \left (\frac{2 \pi}{L}\right )^2 \right ) \hat{u}^{new} =
+\left (\frac{2 \pi}{L}\right )^2 \hat{u}^{orig}
+\]
+which can be interpreted in a Fourier sense as smoothing the original
+coefficients using a low pass filter of the form
+\[
+\hat{u}_k^{new} = \frac{1}{(1 + k^2/K_0^2)} \hat{u}_k^{orig} \mbox{\,  where  \,}
+K_0 = \frac{2 \pi}{L}
+\]
+and so $L$ is the length scale below which the coefficients values are
+halved or more. Since this form of the Helmholtz operator is not
+possitive definite, currently a direct solver is necessary and so this
+smoother is mainly of use in two-dimensions.
+
 \subsection{Calculate Q-Criterion: \textit{QCriterion} module}
 To perform the Q-criterion calculation and obtain an output
 data containing the Q-criterion solution, the user can run
@@ -506,14 +533,17 @@ the .dat file, i.e.
 Optionally \inltt{smooth} can be specified to smooth the isocontour
 with default values \inltt{smoothnegdiffusion}=0.495,
 \inltt{smoothnegdiffusion}=0.5 and \inltt{smoothiter}=100. This option
-automatically calls a \inltt{globalcondense} option which remove
-multiply defined verties from the simplex definition which arise as
-isocontour are generated element by element.
+typically should be used wiht the \inltt{globalcondense} option which
+removes multiply defined verties from the simplex definition which
+arise as isocontour are generated element by element. The
+\inltt{smooth} option preivously automatically called the
+\inltt{globalcondense} option but this has been depracated since it is
+now possible to read isocontour files directly and so it is useful to
+have these as separate options.
 
 In addition to the \inltt{smooth} or \inltt{globalcondense} options
 you can specify \inltt{removesmallcontour}=100 which will remove
-separate isocontours of less than 100 triangles. This optin requires
-\inltt{smooth} or \inltt{globalcondense} to be specified.
+separate isocontours of less than 100 triangles. 
 
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,
@@ -552,8 +582,6 @@ FieldConvert -m meanmode file.xml file.fld file-mean.fld
 The output file \inltt{file-mean.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot or in Paraview or VisIt.
-
-setnantovalue option
 %
 %
 %

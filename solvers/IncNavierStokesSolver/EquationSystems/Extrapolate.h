@@ -55,11 +55,11 @@ namespace Nektar
         /// Physical offset of the element in the global list.
         int m_physOffset;
         /// Physical offset of the element in the boundary expansion.
-        int m_bndElmtOffset;
+        int m_bndElmtID;
         /// Trace ID of the element
         int m_elmtTraceID;
         /// Pressure boundary condition ID.
-        int m_bndryElmtID;
+        int m_bndryID;
         /// Associated element physical offset (\f$ k\f$ and \f$ k_c\f$ are the
         /// real and complex plane).
         int m_assPhysOffset;
@@ -117,26 +117,40 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
 
-        void EvaluatePressureBCs(
+        inline void  EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
+        void CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields);
+        void ExtrapolatePressureHBCs(void);
+        void CopyPressureHBCsToPbndExp(void);
+
         Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
         
-        void CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
-        {
-            v_CorrectPressureBCs( pressure);
-        }
+
+        void CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure);
+        
+        void IProductNormVelocityOnHBC(const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                                       Array<OneD, NekDouble> &IprodVn);
+        
+        void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
+        
+        LibUtilities::TimeIntegrationMethod GetSubStepIntegrationMethod(void); 
         
         void ExtrapolateArray(
             Array<OneD, Array<OneD, NekDouble> > &oldarrays,
             Array<OneD, NekDouble>  &newarray,
             Array<OneD, NekDouble>  &outarray);
         
-    protected:
-        virtual void v_SubSteppingTimeIntegration(
+    protected: 
+        virtual void v_EvaluatePressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis)=0;
+
+       virtual void v_SubSteppingTimeIntegration(
             int intMethod,        
             const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
 
@@ -159,6 +173,9 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
+        virtual LibUtilities::TimeIntegrationMethod 
+            v_GetSubStepIntegrationMethod(void);
+
         void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
@@ -172,13 +189,10 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
             
-        virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
-        {    
-        }        
+        virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure);
         
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
-            const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
         void RollOver(
@@ -188,6 +202,8 @@ namespace Nektar
             Array<OneD, Array<OneD, const NekDouble> > &Vel,
             Array<OneD, Array<OneD, NekDouble> > &Q,
             const int j);
+
+        
         
         LibUtilities::SessionReaderSharedPtr m_session;
 
@@ -269,6 +285,8 @@ namespace Nektar
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
 
+        Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+
         /// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
 
@@ -290,14 +308,26 @@ namespace Nektar
 
         int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
 
-    private:
-        static std::string def;
-
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
         static NekDouble StifflyStable_Gamma0_Coeffs[3];
+
+    private:
+        static std::string def;
+
     };
+
+    /**
+     * Evaluate Pressure Boundary Conditions for Standard Extrapolation
+     */
+    inline void Extrapolate::EvaluatePressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis)
+    {
+        v_EvaluatePressureBCs(inarray,N,kinvis);
+    }
 
     /**
      *
@@ -350,6 +380,24 @@ namespace Nektar
         Array<OneD, const NekDouble> &Advection)
     {
         v_MountHOPBCs(HBCdata,kinvis,Q,Advection);
+    }
+
+    /**
+     *
+     */
+    inline LibUtilities::TimeIntegrationMethod 
+        Extrapolate::GetSubStepIntegrationMethod(void)
+    {
+        return v_GetSubStepIntegrationMethod();
+    }
+
+    /**
+     *
+     */
+    inline void Extrapolate::CorrectPressureBCs(
+        const Array<OneD, NekDouble>  &pressure)
+    {
+        v_CorrectPressureBCs(pressure);
     }
 }
 

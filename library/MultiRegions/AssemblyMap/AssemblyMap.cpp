@@ -143,6 +143,21 @@ namespace Nektar
             }
 
 
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "MaxIterations"))
+            {
+                m_maxIterations = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "MaxIterations").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("MaxIterations",
+                                        m_maxIterations,
+                                        5000);
+            }
+
+
             if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
             {
                 m_successiveRHS = boost::lexical_cast<int>(
@@ -169,6 +184,7 @@ namespace Nektar
             m_hash(0),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
+            m_maxIterations(oldLevelMap->m_maxIterations),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_gsh(oldLevelMap->m_gsh),
@@ -1191,6 +1207,11 @@ namespace Nektar
         NekDouble AssemblyMap::GetIterativeTolerance() const
         {
             return m_iterativeTolerance;
+        }
+
+        int AssemblyMap::GetMaxIterations() const
+        {
+            return m_maxIterations;
         }
 
         int AssemblyMap::GetSuccessiveRHS() const

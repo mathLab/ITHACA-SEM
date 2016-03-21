@@ -14,6 +14,7 @@ IF( NEKTAR_SOLVER_ADR )
        ./EquationSystems/UnsteadyDiffusion.cpp
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp
+       ./EquationSystems/UnsteadyViscousBurgers.cpp
       #./EquationSystems/CFLtester.cpp
        ./EquationSystems/EigenValuesAdvection.cpp)
 

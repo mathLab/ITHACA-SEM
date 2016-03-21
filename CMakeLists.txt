@@ -154,7 +154,7 @@ ENDIF()
 INCLUDE (NektarCommon)
 
 # Set various ThirdParty locations
-SET(TPURL   http://www.nektar.info/thirdparty)
+SET(TPURL   https://www.nektar.info/thirdparty)
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)

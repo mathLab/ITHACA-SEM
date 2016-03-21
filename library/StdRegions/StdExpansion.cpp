@@ -455,30 +455,31 @@ namespace Nektar
                             equispaced = false;
                         }
                     }
-                        
-                    ASSERTL0(equispaced, "Currently need to have same num modes in all directionmodes to use EquiSpacedToCoeff method");
+
+                    ASSERTL0(equispaced,
+                             "Currently need to have same num modes in all "
+                             "directionmodes to use EquiSpacedToCoeff method");
 
                     int ntot = GetTotPoints();
                     Array<OneD, NekDouble>               qmode(ntot);
                     Array<OneD, NekDouble>               emode(m_ncoeffs);
 
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(
+                                                        m_ncoeffs,m_ncoeffs);
                     int cnt = 0;
-                    
                     for(int i = 0; i < m_ncoeffs; ++i)
                     {
-                        // Get mode at quadrature points 
-                        FillMode(i,qmode); 
-                        
+                        // Get mode at quadrature points
+                        FillMode(i,qmode);
+
                         // interpolate to equi spaced
                         PhysInterpToSimplexEquiSpaced(qmode,emode,nummodes);
-                        
+
                         // fill matrix
                         Vmath::Vcopy(m_ncoeffs, &emode[0], 1,
                                      returnval->GetRawPtr() + i*m_ncoeffs, 1);
-                        
                     }
-                    // invert matrix 
+                    // invert matrix
                     returnval->Invert();
 
                 }
@@ -700,7 +701,8 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
-            if (mkey.GetNVarCoeff())
+            if (mkey.GetNVarCoeff()&&
+                (!mkey.ConstFactorExists(eFactorSVVDiffCoeff)))
             {
                 if (k1 == k2)
                 {
@@ -728,7 +730,7 @@ namespace Nektar
             else
             {
                 // Multiply by svv tensor
-                if(mkey.ConstFactorExists(eFactorSVVCutoffRatio))
+                if(mkey.ConstFactorExists(eFactorSVVDiffCoeff))
                 {
                     Vmath::Vcopy(nq, dtmp, 1, tmp, 1);
                     SVVLaplacianFilter(dtmp,mkey);
@@ -749,7 +751,7 @@ namespace Nektar
             Array<OneD,NekDouble> store(m_ncoeffs);
             Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
 
-            if(mkey.GetNVarCoeff() == 0)
+            if(mkey.GetNVarCoeff() == 0||mkey.ConstFactorExists(eFactorSVVDiffCoeff))
             {
                 // just call diagonal matrix form of laplcian operator
                 for(i = 0; i < dim; ++i)
@@ -1015,14 +1017,19 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
-        void StdExpansion::v_NormVectorIProductWRTBase(
-                                                       const Array<OneD, const NekDouble> &Fx,
+        void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx,
                                                        const Array<OneD, const NekDouble> &Fy,
                                                        const Array<OneD, const NekDouble> &Fz,
                                                        Array< OneD, NekDouble> &outarray)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
+
+        void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
 
         DNekScalBlkMatSharedPtr StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
         {
@@ -1172,7 +1179,14 @@ namespace Nektar
         {
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
+        }        
+        
+        int StdExpansion::v_GetTraceNcoeffs(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
         }
+
 
         LibUtilities::PointsKey StdExpansion::v_GetFacePointsKey(const int i, const int j) const
         {
@@ -1756,7 +1770,7 @@ namespace Nektar
             int np = 0;
             if(npset == -1) // use values from basis num points()
             {
-                int nqbase;;
+                int nqbase;
                 for(int i = 0; i < m_base.num_elements(); ++i)
                 {
                     nqbase = m_base[i]->GetNumPoints();

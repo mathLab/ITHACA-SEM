@@ -78,16 +78,17 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     m_doError = (vm.count("error") == 1)?  true: false;
 
-    if (m_f->m_verbose)
-    {
-        cout << "OutputTecplot: Writing file..." << endl;
-    }
-
     // Do nothing if no expansion defined
     if (fPts == LibUtilities::NullPtsField && !m_f->m_exp.size())
     {
         return;
     }
+
+    if (m_f->m_verbose)
+    {
+        cout << "OutputTecplot: Writing file..." << endl;
+    }
+
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
@@ -657,6 +658,8 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
     for(i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
     {
+        cnt = m_f->m_exp[0]->GetPhys_Offset(i);
+        
         if(nbase == 1)
         {
             int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
@@ -726,7 +729,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                         outfile << cnt + j*np0 + k    << endl;
                     }
                 }
-                cnt += np0*np1;
             }
         }
         else if(nbase == 3)
@@ -753,7 +755,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                     }
                 }
             }
-            cnt += np0*np1*np2;
         }
         else
         {

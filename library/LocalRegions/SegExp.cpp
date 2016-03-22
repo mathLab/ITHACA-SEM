@@ -637,6 +637,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             v_IProductWRTBase(Fn,outarray);
         }
 
+        void SegExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], outarray);
+        }
+
         //-----------------------------
         // Evaluation functions
         //-----------------------------

@@ -34,15 +34,17 @@
  //
  ///////////////////////////////////////////////////////////////////////////////
 
- #include <MultiRegions/DisContField3D.h>
- #include <LocalRegions/Expansion3D.h>
- #include <LocalRegions/Expansion2D.h>
- #include <SpatialDomains/MeshGraph3D.h>
- #include <LocalRegions/HexExp.h>
- #include <LocalRegions/TetExp.h>
- #include <LocalRegions/PrismExp.h>
-
- #include <boost/assign/std/vector.hpp>
+#include <MultiRegions/DisContField3D.h>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
+#include <SpatialDomains/MeshGraph3D.h>
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/TetExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/ManagerAccess.h> 
+#include <boost/assign/std/vector.hpp>
+#include <boost/tuple/tuple.hpp>
 
  using namespace boost::assign;
 
@@ -194,7 +196,7 @@
                  m_periodicVerts      = In.m_periodicVerts;
                  m_periodicEdges      = In.m_periodicEdges;
                  m_periodicFaces      = In.m_periodicFaces;
-                 
+
                  if(SetUpJustDG)
                  {
                  }
@@ -325,6 +327,7 @@
                  *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;
+
              m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
                  m_session,graph3D,trace,*this,m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
@@ -545,7 +548,7 @@
                 AllocateSharedPtr(*this, m_trace, elmtToTrace,
                                   m_leftAdjacentFaces);
 
-        }
+         }
 
         /**
          * For each boundary region, checks that the types and number of
@@ -1704,10 +1707,9 @@
         {
             v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
         }
-        
-        
+
         void DisContField3D::v_GetFwdBwdTracePhys(
-            const Array<OneD, const NekDouble> &field,
+                                          const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
@@ -1759,10 +1761,12 @@
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-
-                        ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,
-                                 "method not set up for non-zero Neumann "
-                                 "boundary condition");
+                        
+                        // Turning this off since we can have non-zero
+                        //Neumann in mixed CG-DG method
+                        //ASSERTL1((m_bndCondExpansions[n]->GetPhys())[id1]
+                        //== 0.0, "method not set up for non-zero
+                        //Neumann " "boundary condition");
                         
                         Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
@@ -1775,7 +1779,7 @@
                              "and Robin conditions.");
                 }
             }
-
+            
             // Copy any periodic boundary conditions.
             for (n = 0; n < m_periodicFwdCopy.size(); ++n)
             {
@@ -1787,6 +1791,11 @@
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
+         const vector<bool> &DisContField3D::v_GetLeftAdjacentFaces(void) const
+        {
+            return m_leftAdjacentFaces;
+        }
+         
         void DisContField3D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
         {
@@ -2460,32 +2469,57 @@
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
                     {
-                        LibUtilities::Equation condition = boost::
-                            static_pointer_cast<SpatialDomains::
-                                NeumannBoundaryCondition>(
+                        string filebcs = boost::static_pointer_cast<
+                            SpatialDomains::NeumannBoundaryCondition>(
+                                m_bndConditions[i])->m_filename;
+
+                        if (filebcs != "")
+                        {
+                            ExtractFileBCs(filebcs, varName, locExpList);
+                        }
+                        else
+                        {
+                            
+                            LibUtilities::Equation condition = boost::
+                                static_pointer_cast<SpatialDomains::
+                                                    NeumannBoundaryCondition>(
                                     m_bndConditions[i])->m_neumannCondition;
                         
-                        condition.Evaluate(x0, x1, x2, time, 
-                                           locExpList->UpdatePhys());
-                        
-                        locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                    locExpList->UpdateCoeffs());
+                            condition.Evaluate(x0, x1, x2, time, 
+                                               locExpList->UpdatePhys());
+                            
+                            locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                        locExpList->UpdateCoeffs());
+                        }
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
                     {
-                        LibUtilities::Equation condition = boost::
-                            static_pointer_cast<SpatialDomains::
-                                RobinBoundaryCondition>(
-                                    m_bndConditions[i])->m_robinFunction;
+
+                        string filebcs = boost::static_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition>
+                                (m_bndConditions[i])->m_filename;
                         
+                        if (filebcs != "")
+                        {
+                            ExtractFileBCs(filebcs, varName, locExpList);
+                        }
+                        else
+                        {
+                            LibUtilities::Equation condition = boost::
+                                static_pointer_cast<SpatialDomains::
+                                                    RobinBoundaryCondition>(
+                                    m_bndConditions[i])->m_robinFunction;
+
+                            condition.Evaluate(x0, x1, x2, time, 
+                                               locExpList->UpdatePhys());
+
+                        }
+
                         LibUtilities::Equation coeff = boost::
                             static_pointer_cast<SpatialDomains::
                                 RobinBoundaryCondition>(
                                     m_bndConditions[i])->m_robinPrimitiveCoeff;
-                        
-                        condition.Evaluate(x0, x1, x2, time, 
-                                           locExpList->UpdatePhys());
                         
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());

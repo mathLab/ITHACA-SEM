@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
+    StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
 #ifdef TIMING
     NekDouble st;
@@ -146,6 +147,34 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
+        // Set up variable coefficients if defined
+        if (vSession->DefinesFunction("d00"))
+        {
+            Array<OneD, NekDouble> d00(nq,0.0);
+            LibUtilities::EquationSharedPtr d00func =
+                vSession->GetFunction("d00",0);
+            d00func->Evaluate(xc0, xc1, xc2, d00);
+            varcoeffs[StdRegions::eVarCoeffD00] = d00;
+        }
+        if (vSession->DefinesFunction("d11"))
+        {
+            Array<OneD, NekDouble> d11(nq,0.0);
+            LibUtilities::EquationSharedPtr d11func =
+                vSession->GetFunction("d11",0);
+            d11func->Evaluate(xc0, xc1, xc2, d11);
+            varcoeffs[StdRegions::eVarCoeffD11] = d11;
+        }
+        if (vSession->DefinesFunction("d22"))
+        {
+            Array<OneD, NekDouble> d22(nq,0.0);
+            LibUtilities::EquationSharedPtr d22func =
+                vSession->GetFunction("d22",0);
+            d22func->Evaluate(xc0, xc1, xc2, d22);
+            varcoeffs[StdRegions::eVarCoeffD22] = d22;
+        }
+        //----------------------------------------------
+
+        //----------------------------------------------
         // Define forcing function for first variable defined in file
         fce = Array<OneD,NekDouble>(nq);
         LibUtilities::EquationSharedPtr ffunc =
@@ -164,7 +193,8 @@ int main(int argc, char *argv[])
         //Helmholtz solution taking physical forcing after setting
         //initial condition to zero
         Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors,
+                       varcoeffs);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
 

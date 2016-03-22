@@ -128,14 +128,6 @@ namespace Nektar
                 Array<OneD, int>        &outarray);
 
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
-            
-            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
-                const int                                face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
-                StdRegions::Orientation                  orient);
-            
             //---------------------------------------
             // Matrix creation functions
             //---------------------------------------

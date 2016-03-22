@@ -1968,7 +1968,13 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+        
+        void ExpList::v_ClearGlobalLinSysManager(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
             const std::string               &varName,
@@ -2420,6 +2426,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            vector<bool> returnval;
+            return returnval;
+        }
+
 
         void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
@@ -2702,15 +2717,6 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
-        /**
-         */
-        void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-                                            Array<OneD,int> &EdgeID)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
         
         /**
          */
@@ -2847,6 +2853,15 @@ namespace Nektar
             }
         }
 
+        /**
+         */
+        void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                            Array<OneD,int> &EdgeID)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
         /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
@@ -3140,6 +3155,12 @@ namespace Nektar
                 }
             }
         }
+        
+        void ExpList::ClearGlobalLinSysManager(void)
+        {
+            v_ClearGlobalLinSysManager();
+        }
+
     } //end of namespace
 } //end of namespace
 

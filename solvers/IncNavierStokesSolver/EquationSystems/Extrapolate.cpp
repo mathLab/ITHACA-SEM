@@ -55,11 +55,11 @@ namespace Nektar
     }
 
     Extrapolate::Extrapolate(
-        const LibUtilities::SessionReaderSharedPtr pSession,
+        const LibUtilities::SessionReaderSharedPtr  pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-        MultiRegions::ExpListSharedPtr pPressure,
-        const Array<OneD, int> pVel,
-        const SolverUtils::AdvectionSharedPtr advObject)
+        MultiRegions::ExpListSharedPtr              pPressure,
+        const Array<OneD, int>                      pVel,
+        const SolverUtils::AdvectionSharedPtr       advObject)
         : m_session(pSession),
           m_fields(pFields),
           m_pressure(pPressure),
@@ -73,50 +73,47 @@ namespace Nektar
     Extrapolate::~Extrapolate()
     {
     }
-
-        
+    
     std::string Extrapolate::def =
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
             "StandardExtrapolate", "StandardExtrapolate");
-    
-    /** 
-     * Function to extrapolate the new pressure boundary condition.
-     * Based on the velocity field and on the advection term.
-     * Acceleration term is also computed.
-     * This routine is a general one for 2d and 3D application and it can be called
-     * directly from velocity correction scheme. Specialisation on dimensionality is
-     * redirected to the CalcPressureBCs method.
-     */
-    void Extrapolate::EvaluatePressureBCs(
-        const Array<OneD, const Array<OneD, NekDouble> > &fields,
-        const Array<OneD, const Array<OneD, NekDouble> >  &N,
-        NekDouble kinvis)
+
+    void Extrapolate::CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields)    
     {
-        m_pressureCalls++;
-        if(m_HBCnumber > 0)
+        int nHBCs = m_acceleration[0].num_elements();
+        
+        // Adding extrapolated acceleration term to HOPBCs
+        Array<OneD, NekDouble> accelerationTerm(nHBCs, 0.0);
+        
+        // Rotate acceleration term
+        RollOver(m_acceleration);
+        
+        // update current normal of field on bc  to m_acceleration[0]; 
+        IProductNormVelocityOnHBC(fields,m_acceleration[0]);
+        
+        //Calculate acceleration term at level n based on previous steps
+        if (m_pressureCalls > 2)
         {
-            // Calculate Neumann BCs at current level
-            CalcNeumannPressureBCs(fields, N, kinvis);
-
-            //Calculate acceleration term at level n based on previous steps
-            AccelerationBDF(m_acceleration);
-
-            // Adding acceleration term to HOPBCs
-            Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
-                         m_acceleration[m_intSteps],  1,
-                         m_pressureHBCs[m_intSteps-1], 1,
-                         m_pressureHBCs[m_intSteps-1], 1);
-
-            // Extrapolate to n+1
-            ExtrapolateArray(m_pressureHBCs);
-
-            // Copy m_pressureHBCs to m_PbndExp
-            CopyPressureHBCsToPbndExp();
+            int acc_order = min(m_pressureCalls-2,m_intSteps);
+            Vmath::Smul(nHBCs, StifflyStable_Gamma0_Coeffs[acc_order-1],
+                        m_acceleration[0], 1,
+                        accelerationTerm,  1);
+            
+            for(int i = 0; i < acc_order; i++)
+            {
+                Vmath::Svtvp(nHBCs, 
+                             -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+                             m_acceleration[i+1], 1,
+                             accelerationTerm,    1,
+                             accelerationTerm,    1);
+            }
         }
-
-        CalcOutflowBCs(fields, N, kinvis);
+        
+        Vmath::Svtvp(nHBCs, -1.0/m_timestep,
+                     accelerationTerm,  1,
+                     m_pressureHBCs[0], 1,
+                     m_pressureHBCs[0], 1);
     }
-
 
     /**
      * Unified routine for calculation high-oder terms
@@ -177,7 +174,6 @@ namespace Nektar
                 }
 
                 Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
-                Uvals = (m_acceleration[m_intSteps]) + cnt;
 
                 // Getting values on the edge and filling the pressure boundary
                 // expansion and the acceleration term. Multiplication by the
@@ -188,17 +184,16 @@ namespace Nektar
                 }
                 m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Pvals);
 
-                for(int i = 0; i < m_bnd_dim; i++)
-                {
-                    m_fields[0]->ExtractElmtToBndPhys(n, Velocity[i],BndValues[i]);
-                }
-                m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Uvals);
-
                 // Get offset for next terms
                 cnt += m_PBndExp[n]->GetNcoeffs();
             }
         }
     }
+
+    // do nothing unless otherwise defined. 
+    void Extrapolate::v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
+    {    
+    } 
 
     void Extrapolate::CalcOutflowBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -363,6 +358,91 @@ namespace Nektar
         }
     }
 
+    void Extrapolate::IProductNormVelocityOnHBC(
+                                     const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                                     Array<OneD, NekDouble> &IProdVn)
+    {
+        
+        int i,j,n;
+
+        int pindex=m_fields.num_elements()-1;                
+        StdRegions::StdExpansionSharedPtr  Pbc,elmt;
+
+        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
+        velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
+        for(i = 1; i < m_bnd_dim; ++i)
+        {
+            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
+        }
+
+        Array<OneD, NekDouble> Velmt,IProdVnTmp; 
+
+        for(n = 0; n < m_HBCdata.num_elements(); ++n)
+        {            
+            Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
+            
+            /// Picking up the element where the HOPBc is located
+            elmt = m_fields[pindex]->GetExp(m_HBCdata[n].m_globalElmtID);
+
+            // Get velocity bc
+            for(j = 0; j < m_bnd_dim; ++j)
+            {
+                // Get edge values and put into velbc
+                Velmt = Vel[j] + m_HBCdata[n].m_physOffset;
+                elmt->GetTracePhysVals(m_HBCdata[n].m_elmtTraceID,Pbc,Velmt,velbc[j]);
+            }
+            
+            IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
+
+            // Evaluate Iproduct wrt norm term 
+            Pbc->NormVectorIProductWRTBase(velbc,IProdVnTmp); 
+        }
+    }
+
+    void Extrapolate::IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IProdVn)
+    {
+        
+        int i,j,n;
+
+        StdRegions::StdExpansionSharedPtr  Pbc;
+
+        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > VelBndExp(m_bnd_dim);
+        
+        for(i = 0; i < m_bnd_dim; ++i)
+        {
+            VelBndExp[i] = m_fields[m_velocity[i]]->GetBndCondExpansions();
+        }
+        
+        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
+        velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
+        for(i = 1; i < m_bnd_dim; ++i)
+        {
+            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
+        }
+        
+        Array<OneD, NekDouble> Velmt,IProdVnTmp; 
+        int bndid,elmtid;
+
+        for(n = 0; n < m_HBCdata.num_elements(); ++n)
+        {            
+            bndid  = m_HBCdata[n].m_bndryID;
+            elmtid = m_HBCdata[n].m_bndElmtID;
+                      
+            // Get velocity bc
+            for(j = 0; j < m_bnd_dim; ++j)
+            {                
+                VelBndExp[j][bndid]->GetExp(elmtid)->BwdTrans(VelBndExp[j][bndid]->GetCoeffs() + 
+                                                              VelBndExp[j][bndid]->GetCoeff_Offset(elmtid),
+                                                              velbc[j]);
+            }
+                      
+            IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
+            // Evaluate Iproduct wrt norm term 
+            Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
+            Pbc->NormVectorIProductWRTBase(velbc,IProdVnTmp); 
+        }
+    }
+    
     /** 
      * Function to roll time-level storages to the next step layout.
      * The stored data associated with the oldest time-level 
@@ -387,7 +467,7 @@ namespace Nektar
     
     
     /**
-     * Map to directly locate HOPBCs position and offsets in all scenarios
+     * Initialize HOBCs
      */
     void Extrapolate::GenerateHOPBCMap()
     {
@@ -684,11 +764,16 @@ namespace Nektar
                 }
 
                 maxV[el] = sqrt(maxV[el]);
-                //cout << maxV[el]*maxV[el] << endl;
             }
         }
         
         return maxV;
+    }
+
+
+    LibUtilities::TimeIntegrationMethod Extrapolate::v_GetSubStepIntegrationMethod(void)
+    {
+        return LibUtilities::eNoTimeIntegrationMethod;
     }
 
     /**
@@ -757,7 +842,7 @@ namespace Nektar
         m_acceleration[nlevels-1] = accelerationTerm;
     }
 
-    void Extrapolate::CopyPressureHBCsToPbndExp()
+    void Extrapolate::CopyPressureHBCsToPbndExp(void)
     {
         int n, cnt;
         for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
@@ -771,6 +856,4 @@ namespace Nektar
             }
         }
     }
-
 }
-

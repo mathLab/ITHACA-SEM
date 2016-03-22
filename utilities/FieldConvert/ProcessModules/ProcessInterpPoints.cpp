@@ -441,6 +441,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     // Read in local from field partitions
     const SpatialDomains::ExpansionMap &expansions = fromField->m_graph->GetExpansions();
 
+
     fromField->m_fld = MemoryManager<LibUtilities::FieldIO>
         ::AllocateSharedPtr(fromField->m_session->GetComm());
 
@@ -587,7 +588,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             }
             else
             {
-                WARNINGL0(false,"Did not fine velocity components for Cp0");
+                WARNINGL0(false,"Did not find velocity components for Cp0");
             }
         }
         else

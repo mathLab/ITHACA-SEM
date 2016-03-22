@@ -286,6 +286,8 @@ namespace Nektar
             /// Template method virtual forwarder for GetBndConditions().
             MULTI_REGIONS_EXPORT virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
+            MULTI_REGIONS_EXPORT virtual void v_ClearGlobalLinSysManager(void);
+
         };
 
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;

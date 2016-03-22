@@ -49,6 +49,9 @@ namespace Nektar
 {
     namespace MultiRegions
     {        
+        class AssemblyMapDG;
+        
+
         class DisContField3D : public ExpList3D
         {
         public:
@@ -76,8 +79,14 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
             
+
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
+
+            MULTI_REGIONS_EXPORT bool GetLeftAdjacentFaces(int cnt)
+            {
+                return m_leftAdjacentFaces[cnt];
+            }
 
             Array<OneD, int> m_BCtoElmMap;
             Array<OneD, int> m_BCtoFaceMap;
@@ -161,6 +170,7 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,      NekDouble> &Fwd,
                       Array<OneD,      NekDouble> &Bwd);
+            virtual const vector<bool> &v_GetLeftAdjacentFaces(void) const;
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(

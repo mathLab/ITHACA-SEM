@@ -48,9 +48,9 @@ namespace Nektar
          */
 
         /**
-	 * \brief Constructor using BasisKey class for quadrature points and 
-	 * order definition 
-	 *
+         * \brief Constructor using BasisKey class for quadrature points and 
+         * order definition 
+         *
          * @param   Ba          Basis key for first coordinate.
          * @param   Bb          Basis key for second coordinate.
          * @param   Bc          Basis key for third coordinate.
@@ -60,24 +60,30 @@ namespace Nektar
                         const LibUtilities::BasisKey &Bc,
                         const SpatialDomains::TetGeomSharedPtr &geom
                         ):
-            StdExpansion  (LibUtilities::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),3,Ba,Bb,Bc),
-            StdExpansion3D(LibUtilities::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),Ba,Bb,Bc),
+            StdExpansion  (
+                LibUtilities::StdTetData::getNumberOfCoefficients(
+                    Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
+                    3, Ba, Bb, Bc),
+            StdExpansion3D(
+                LibUtilities::StdTetData::getNumberOfCoefficients(
+                    Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
+                    Ba, Bb, Bc),
             StdRegions::StdTetExp(Ba,Bb,Bc),
             Expansion     (geom),
             Expansion3D   (geom),
             m_matrixManager(
-                    boost::bind(&TetExp::CreateMatrix, this, _1),
-                    std::string("TetExpMatrix")),
+                 boost::bind(&TetExp::CreateMatrix, this, _1),
+                 std::string("TetExpMatrix")),
             m_staticCondMatrixManager(
-                    boost::bind(&TetExp::CreateStaticCondMatrix, this, _1),
-                    std::string("TetExpStaticCondMatrix"))
+                 boost::bind(&TetExp::CreateStaticCondMatrix, this, _1),
+                 std::string("TetExpStaticCondMatrix"))
         {
         }
 
 
         /**
-	 * \brief Copy Constructor
-	 */
+         * \brief Copy Constructor
+         */
         TetExp::TetExp(const TetExp &T):
             StdExpansion(T),
             StdExpansion3D(T),
@@ -90,8 +96,8 @@ namespace Nektar
         }
 
         /**
-	 * \brief Destructor
-	 */
+         * \brief Destructor
+         */
         TetExp::~TetExp()
         {
         }
@@ -112,7 +118,7 @@ namespace Nektar
          * point.
          */
         NekDouble TetExp::v_Integral(
-                  const Array<OneD, const NekDouble> &inarray)
+            const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -153,16 +159,16 @@ namespace Nektar
          * @param   out_d2      Derivative in third coordinate direction.
          */
         void TetExp::v_PhysDeriv(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &out_d0,
-                  Array<OneD,       NekDouble> &out_d1,
-                  Array<OneD,       NekDouble> &out_d2)
+                                 const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &out_d0,
+                                 Array<OneD,       NekDouble> &out_d1,
+                                 Array<OneD,       NekDouble> &out_d2)
         {
             int  TotPts = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*
                 m_base[2]->GetNumPoints();
             
             Array<TwoD, const NekDouble> df =
-                                m_metricinfo->GetDerivFactors(GetPointsKeys());
+                m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(3*TotPts);
             Array<OneD,NekDouble> Diff1 = Diff0 + TotPts;
             Array<OneD,NekDouble> Diff2 = Diff1 + TotPts;
@@ -231,8 +237,8 @@ namespace Nektar
          * @param   outarray    Array of coefficients to update.
          */
         void TetExp::v_FwdTrans( 
-                 const Array<OneD, const NekDouble> & inarray,
-                       Array<OneD,NekDouble> &outarray)
+                                const Array<OneD, const NekDouble> & inarray,
+                                Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
@@ -285,16 +291,16 @@ namespace Nektar
          *   = {\bf B_1 G} \f$
          */
         void TetExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+                                       const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,       NekDouble> &outarray)
         {
             v_IProductWRTBase_SumFac(inarray, outarray);
         }
 
         void TetExp::v_IProductWRTBase_SumFac(
-            const Array<OneD, const NekDouble> &inarray,
-            Array<OneD,       NekDouble> &outarray,
-            bool multiplybyweights)
+                                              const Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD,       NekDouble> &outarray,
+                                              bool multiplybyweights)
         {
             const int nquad0 = m_base[0]->GetNumPoints();
             const int nquad1 = m_base[1]->GetNumPoints();
@@ -356,9 +362,9 @@ namespace Nektar
          * @param outarray  Value of the inner product.
          */
         void TetExp::v_IProductWRTDerivBase(
-            const int                           dir, 
-            const Array<OneD, const NekDouble> &inarray, 
-                  Array<OneD,       NekDouble> &outarray)
+                                            const int                           dir, 
+                                            const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD,       NekDouble> &outarray)
         {
             const int nquad0 = m_base[0]->GetNumPoints();
             const int nquad1 = m_base[1]->GetNumPoints();
@@ -386,7 +392,7 @@ namespace Nektar
                                          nquad2*order0*(order1+1)/2);
             
             const Array<TwoD, const NekDouble>& df =
-                                m_metricinfo->GetDerivFactors(GetPointsKeys());
+                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             MultiplyByQuadratureMetric(inarray,tmp1);
             
@@ -428,10 +434,10 @@ namespace Nektar
             
             // Assemble terms for first IP.
             Vmath::Vvtvvtp(nqtot, &tmp2[0], 1, &h0[0], 1,
-                                  &tmp3[0], 1, &h1[0], 1,
-                                  &tmp5[0], 1);
+                           &tmp3[0], 1, &h1[0], 1,
+                           &tmp5[0], 1);
             Vmath::Vvtvp  (nqtot, &tmp4[0], 1, &h1[0], 1,
-                                  &tmp5[0], 1, &tmp5[0], 1);
+                           &tmp5[0], 1, &tmp5[0], 1);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
@@ -441,8 +447,8 @@ namespace Nektar
 
             // Assemble terms for second IP.
             Vmath::Vvtvvtp(nqtot, &tmp3[0], 1, &h2[0], 1,
-                                  &tmp4[0], 1, &h3[0], 1,
-                                  &tmp5[0], 1);
+                           &tmp4[0], 1, &h3[0], 1,
+                           &tmp5[0], 1);
             
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
                                          m_base[1]->GetDbdata(),
@@ -473,8 +479,8 @@ namespace Nektar
          * StdExpansion method
          */
         NekDouble TetExp::v_StdPhysEvaluate(
-            const Array<OneD, const NekDouble> &Lcoord,
-            const Array<OneD, const NekDouble> &physvals)
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals)
         {
             // Evaluate point in local (eta) coordinates.
             return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
@@ -485,8 +491,8 @@ namespace Nektar
          * @returns Evaluation of expansion at given coordinate.
          */
         NekDouble TetExp::v_PhysEvaluate(
-                  const Array<OneD, const NekDouble> &coord,
-                  const Array<OneD, const NekDouble> & physvals)
+                                         const Array<OneD, const NekDouble> &coord,
+                                         const Array<OneD, const NekDouble> & physvals)
         {
             ASSERTL0(m_geom,"m_geom not defined");
 
@@ -503,8 +509,8 @@ namespace Nektar
 	 * \brief Get the coordinates "coords" at the local coordinates "Lcoords"
 	 */
         void TetExp::v_GetCoord(
-                  const Array<OneD, const NekDouble> &Lcoords, 
-                        Array<OneD,NekDouble> &coords)
+                                const Array<OneD, const NekDouble> &Lcoords, 
+                                Array<OneD,NekDouble> &coords)
         {
             int  i;
 
@@ -522,9 +528,9 @@ namespace Nektar
         }
 
         void TetExp::v_GetCoords(
-            Array<OneD, NekDouble> &coords_0,
-            Array<OneD, NekDouble> &coords_1,
-            Array<OneD, NekDouble> &coords_2)
+                                 Array<OneD, NekDouble> &coords_0,
+                                 Array<OneD, NekDouble> &coords_1,
+                                 Array<OneD, NekDouble> &coords_2)
         {
             Expansion::v_GetCoords(coords_0, coords_1, coords_2);
         }
@@ -556,10 +562,10 @@ namespace Nektar
         }
 
         void TetExp::v_ExtractDataToCoeffs(
-                const NekDouble *data,
-                const std::vector<unsigned int > &nummodes,
-                const int mode_offset,
-                NekDouble * coeffs)
+                                           const NekDouble *data,
+                                           const std::vector<unsigned int > &nummodes,
+                                           const int mode_offset,
+                                           NekDouble * coeffs)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
@@ -591,7 +597,7 @@ namespace Nektar
                         for(i = 0; i < fillorder1-j; ++i)
                         {
                             Vmath::Vcopy(fillorder2-j-i, &data[cnt],    1,
-                                                         &coeffs[cnt1], 1);
+                                         &coeffs[cnt1], 1);
                             cnt  += data_order2-j-i;
                             cnt1 += order2-j-i;
                         }
@@ -612,10 +618,10 @@ namespace Nektar
                 break;
             default:
                 ASSERTL0(false, "basis is either not set up or not "
-                                "hierarchicial");
+                         "hierarchicial");
             }
         }
-      
+
         /**
          * \brief Returns the physical values at the quadrature points of a face
          */
@@ -703,7 +709,7 @@ namespace Nektar
                 ASSERTL0(false,"face value (> 3) is out of range");
                 break;
             }
-       }
+        }
         
 
         /**

@@ -293,7 +293,7 @@ namespace Nektar
                 // Calculate pressure boundary condition
                 Array<OneD, NekDouble> pbc (nqb, 0.0);
                 Vmath::Svtvp( nqb, kinvis, nGradUn, 1, u2, 1, pbc, 1);
-                Vmath::Vsub( nqb, pbc, 1, m_PBndExp[n]->GetPhys(), 1,
+                Vmath::Vadd( nqb, pbc, 1, m_PBndExp[n]->GetPhys(), 1,
                                              pbc, 1);
                 if ( m_PBndExp[n]->GetWaveSpace())
                 {

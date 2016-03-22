@@ -370,7 +370,7 @@ namespace Nektar
             }
             
             // set up HBC m_acceleration field for Pressure BCs
-            IProductNormVelocityOnHBC(fields,m_acceleration[m+1]);
+            IProductNormVelocityOnHBC(fields,m_acceleration[m]);
 
             // Reset time integrated solution in m_integrationSoln 
             integrationSoln->SetSolVector(m,fields);

@@ -9,8 +9,8 @@ IF (NEKTAR_SOLVER_ELASTICITY)
       ./EquationSystems/IterativeElasticSystem.cpp
       ./EquationSystems/CoupledAssemblyMap.cpp)
 
-    ADD_SOLVER_EXECUTABLE(LinearElasticSolver solvers 
-	${LinearElasticSolverSource})
+    ADD_SOLVER_EXECUTABLE(LinearElasticSolver SOURCES ${LinearElasticSolverSource})
+    FINALISE_CPACK_COMPONENT(linearelasticsolver DESCRIPTION "Nektar++ linear elasticity solver")
 
     ADD_NEKTAR_TEST(L-domain)
     IF (NEKTAR_USE_MPI)

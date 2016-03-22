@@ -3,34 +3,33 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_INCNAVIERSTOKES
     "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
-    SET(IncNavierStokesSolverSource 
-       ./EquationSystems/CoupledLinearNS.cpp
-       ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
-       ./EquationSystems/IncNavierStokes.cpp
-       ./EquationSystems/VelocityCorrectionScheme.cpp
-       ./EquationSystems/VCSMapping.cpp
-       ./EquationSystems/Extrapolate.cpp
-       ./EquationSystems/StandardExtrapolate.cpp
-       ./EquationSystems/MappingExtrapolate.cpp
-       ./EquationSystems/SubSteppingExtrapolate.cpp
-       ./AdvectionTerms/AdjointAdvection.cpp
-       ./AdvectionTerms/LinearisedAdvection.cpp
-       ./AdvectionTerms/NavierStokesAdvection.cpp
-       ./AdvectionTerms/SkewSymmetricAdvection.cpp
-       ./AdvectionTerms/AlternateSkewAdvection.cpp
-       ./AdvectionTerms/NoAdvection.cpp
-       ./Filters/FilterEnergy.cpp
-       ./Filters/FilterReynoldsStresses.cpp
-       ./Filters/FilterMovingBody.cpp
-       ./Forcing/ForcingMovingBody.cpp	
-       ./Forcing/ForcingStabilityCoupledLNS.cpp	
-       ./IncNavierStokesSolver.cpp 
-       )
-
-    ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver solvers 
-			${IncNavierStokesSolverSource})
+    ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver
+        SOURCES IncNavierStokesSolver.cpp
+        LIBRARY_SOURCES
+        EquationSystems/CoupledLinearNS.cpp
+        EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
+        EquationSystems/IncNavierStokes.cpp
+        EquationSystems/VelocityCorrectionScheme.cpp
+        EquationSystems/VCSMapping.cpp
+        EquationSystems/Extrapolate.cpp
+        EquationSystems/StandardExtrapolate.cpp
+        EquationSystems/MappingExtrapolate.cpp
+        EquationSystems/SubSteppingExtrapolate.cpp
+        AdvectionTerms/AdjointAdvection.cpp
+        AdvectionTerms/LinearisedAdvection.cpp
+        AdvectionTerms/NavierStokesAdvection.cpp
+        AdvectionTerms/SkewSymmetricAdvection.cpp
+        AdvectionTerms/AlternateSkewAdvection.cpp
+        AdvectionTerms/NoAdvection.cpp
+        Filters/FilterEnergy.cpp
+        Filters/FilterReynoldsStresses.cpp
+        Filters/FilterMovingBody.cpp
+        Forcing/ForcingMovingBody.cpp	
+        Forcing/ForcingStabilityCoupledLNS.cpp	
+        )
 
     SUBDIRS(Utilities)      
+    FINALISE_CPACK_COMPONENT(incnavierstokessolver DESCRIPTION "Nektar++ Incompressible Navier-Stokes solver")
 
     ADD_NEKTAR_TEST(Kovasznay_Flow_3modes)
     ADD_NEKTAR_TEST(ChanStability)

@@ -8,10 +8,9 @@ IF( NEKTAR_SOLVER_DIFFUSION )
     SET(DiffusionSolverTimeIntSource
         ./DiffusionSolverTimeInt.cpp)
         
-    ADD_SOLVER_EXECUTABLE(DiffusionSolver solvers 
-        ${DiffusionSolverSource})
-    ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt solvers 
-        ${DiffusionSolverTimeIntSource})
+    ADD_SOLVER_EXECUTABLE(DiffusionSolver SOURCES DiffusionSolver.cpp COMPONENT diffusionsolver)
+    ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt SOURCES DiffusionSolverTimeInt COMPONENT diffusionsolver)
+    FINALISE_CPACK_COMPONENT(diffusionsolver DESCRIPTION "Nektar++ Diffusion Solver")
 
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)

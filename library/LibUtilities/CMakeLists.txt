@@ -360,7 +360,7 @@ SET(LibUtilitySources
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(NAME LibUtilities
+ADD_NEKTAR_LIBRARY(LibUtilities
     DESCRIPTION "Nektar++ LibUtilities library"
     SOURCES ${LibUtilitySources}
     HEADERS ${LibUtilityHeaders})

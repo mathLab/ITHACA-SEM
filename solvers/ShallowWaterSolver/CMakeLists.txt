@@ -20,8 +20,8 @@ IF( NEKTAR_SOLVER_SHALLOW_WATER )
        ./RiemannSolvers/HLLCSolver.cpp	
 	)
 
-    ADD_SOLVER_EXECUTABLE(ShallowWaterSolver solvers 
-			${ShallowWaterSolverSource})
+    ADD_SOLVER_EXECUTABLE(ShallowWaterSolver SOURCES ${ShallowWaterSolverSource})
+    FINALISE_CPACK_COMPONENT(shallowwatersolver DESCRIPTION "Nektar++ shallow water solver")
 
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P4)
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P8)

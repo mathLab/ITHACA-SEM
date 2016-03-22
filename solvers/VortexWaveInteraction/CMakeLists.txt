@@ -58,13 +58,13 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
 
     SUBDIRS(utilities)
 
-    ADD_SOLVER_EXECUTABLE(VortexWaveInteractionSolver solvers 
+    ADD_SOLVER_EXECUTABLE(VortexWaveInteractionSolver SOURCES
 		     ${VortexWaveInteractionSolverSource})
 
-    ADD_SOLVER_EXECUTABLE(CalcL2ToLinfPressure solvers 
+    ADD_SOLVER_EXECUTABLE(CalcL2ToLinfPressure SOURCES
 		     ${CalcL2ToLinfPressureSource})
                         
-    ADD_SOLVER_EXECUTABLE(CalcVWIplusPressure solvers 
+    ADD_SOLVER_EXECUTABLE(CalcVWIplusPressure SOURCES
 		     ${CalcVWIplusPressureSource})
 
      ENDIF( NEKTAR_SOLVER_VORTEXWAVE )

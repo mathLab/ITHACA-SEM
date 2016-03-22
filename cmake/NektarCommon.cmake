@@ -1,10 +1,23 @@
-MACRO(CHANGE_EXTENSION output var new_ext)
-    GET_FILENAME_COMPONENT(FileName ${var} NAME_WE)
-    GET_FILENAME_COMPONENT(Path ${var} PATH)
-    SET(${output} ${Path}/${FileName}.${new_ext})
+MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
+    SET(${outvar} "")
+    FOREACH (pkg ${depends})
+        STRING(TOLOWER ${pkg} pkg_lower)
+        SET(${outvar} "${DEB_DEPS}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
+    ENDFOREACH()
+
+    # Remove starting ", "
+    STRING(SUBSTRING ${${outvar}} 2 -1 ${outvar})
 ENDMACRO()
 
-        
+MACRO(FINALISE_CPACK_COMPONENT name)
+    CMAKE_PARSE_ARGUMENTS(COMP "" "DESCRIPTION" "" ${ARGN})
+    SET(CPACK_COMPONENT_${name}_DISPLAY_NAME nektar++-${name})
+    SET(CPACK_COMPONENT_${name}_DESCRIPTION ${COMP_DESCRIPTION})
+
+    LIST(REMOVE_DUPLICATES "CPACK_COMPONENT_${name}_DEPENDS")
+    CONSTRUCT_DEBIAN_DEPS(${CPACK_COMPONENT_${name}_DEPENDS} "CPACK_DEBIAN_${name}_DEPENDS")
+ENDMACRO()
+
 MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
@@ -18,8 +31,8 @@ MACRO(SET_COMMON_PROPERTIES name)
         #   warning)" warning (4800)
         # 4250 - Inheritance via dominance.  Nektar appears to be handling the 
         # diamond correctly.
-            # 4373 - Overriding a virtual method with parameters that differ by const
-            #        or volatile conforms to the standard.
+        # 4373 - Overriding a virtual method with parameters that differ by const
+        #        or volatile conforms to the standard.
         # /Za is necessary to prevent temporaries being bound to reference
         #   parameters.
         SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS 
@@ -30,10 +43,10 @@ MACRO(SET_COMMON_PROPERTIES name)
     ENDIF( MSVC )	
     
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-	    IF(NEKTAR_ENABLE_PROFILE)
-	        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-	        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pg")
-	        SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pg")
+        IF(NEKTAR_ENABLE_PROFILE)
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+            SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pg")
+            SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pg")
             SET(LINK_FLAGS "${LINK_FLAGS} -pg")
         ENDIF(NEKTAR_ENABLE_PROFILE)
     ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
@@ -76,33 +89,12 @@ MACRO(SET_COMMON_PROPERTIES name)
     ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
-MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
-    IF( NEKTAR_USE_PRECOMPILED_HEADERS )
-        IF( MSVC )	
-            # /Yu"stdafx.h" 
-            #MESSAGE(${${precompiledHeader}})
-    	    #MESSAGE(${${sourceFiles}})
-            SET_SOURCE_FILES_PROPERTIES(${${sourceFiles}} 
-                PROPERTIES COMPILE_FLAGS "/Yu\"${${precompiledHeader}}\"")
-            LIST(GET ${sourceFiles} 0 OUTVAR)
-            #MESSAGE(${OUTVAR})
-            SET_SOURCE_FILES_PROPERTIES(${OUTVAR} 
-                PROPERTIES COMPILE_FLAGS "/Yc\"${${precompiledHeader}}\"")
-            
-        ENDIF()	
-    ENDIF()
-ENDMACRO()
-
-MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
-    IF( ${ARGC} LESS 4 )
-        ADD_EXECUTABLE(${name} ${${sources}})
-    ELSE( ${ARGC} LESS 4 )
-        ADD_EXECUTABLE(${name} ${${sources}} ${${ARGV3}})
-    ENDIF( ${ARGC} LESS 4)
-	
+MACRO(ADD_NEKTAR_EXECUTABLE name)
+    CMAKE_PARSE_ARGUMENTS(NEKEXE "" "COMPONENT" "DEPENDS;SOURCES" ${ARGN})
+    ADD_EXECUTABLE(${name} ${NEKEXE_SOURCES})
     SET_COMMON_PROPERTIES(${name})
-    
-    IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
+
+    IF (${CMAKE_SYSTEM} MATCHES "Linux.*")
         # The boost thread library needs pthread on linux.
         GET_TARGET_PROPERTY(THE_COMPILE_FLAGS ${name} COMPILE_FLAGS)
         GET_TARGET_PROPERTY(THE_LINK_FLAGS ${name} LINK_FLAGS)
@@ -113,47 +105,54 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
         ENDIF(NOT THE_COMPILE_FLAGS)
 
         IF(NOT THE_LINK_FLAGS )
-	        SET(THE_LINK_FLAGS "")
+            SET(THE_LINK_FLAGS "")
         ENDIF(NOT THE_LINK_FLAGS)
 
-        SET_TARGET_PROPERTIES(${name} 
+        SET_TARGET_PROPERTIES(${name}
                 PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
-        SET_TARGET_PROPERTIES(${name} 
+        SET_TARGET_PROPERTIES(${name}
                 PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
-	
-    ENDIF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
+    ENDIF()
 
-    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
-	INSTALL(TARGETS ${name} 
-		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component} OPTIONAL
-		ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${component} OPTIONAL
-		LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${component} OPTIONAL)
+    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${NEKEXE_COMPONENT})
+    INSTALL(TARGETS ${name}
+        RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${NEKEXE_COMPONENT} OPTIONAL
+        ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKEXE_COMPONENT} OPTIONAL
+        LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKEXE_COMPONENT} OPTIONAL)
 
-ENDMACRO(ADD_NEKTAR_EXECUTABLE name component sources)
+    # Add dependencies for executable. We append the dependencies to the CPack
+    # component list so that we can resolve these later.
+    TARGET_LINK_LIBRARIES(${name} LINK_PUBLIC ${NEKEXE_DEPENDS})
+    FOREACH(dep ${NEKEXE_DEPENDS})
+        LIST(APPEND CPACK_COMPONENT_${NEKEXE_COMPONENT}_DEPENDS ${dep})
+    ENDFOREACH()
+ENDMACRO()
 
-FUNCTION(ADD_NEKTAR_LIBRARY)
-    CMAKE_PARSE_ARGUMENTS(NEKLIB "" "NAME;DESCRIPTION" "DEPENDS;SOURCES;HEADERS" ${ARGN})
+MACRO(ADD_NEKTAR_LIBRARY name)
+    CMAKE_PARSE_ARGUMENTS(NEKLIB "" "DESCRIPTION;GROUP" "DEPENDS;SOURCES;HEADERS" ${ARGN})
 
-    ADD_LIBRARY(${NEKLIB_NAME} ${NEKTAR_LIBRARY_TYPE} ${NEKLIB_SOURCES} ${NEKLIB_HEADERS})
+    ADD_LIBRARY(${name} ${NEKTAR_LIBRARY_TYPE} ${NEKLIB_SOURCES} ${NEKLIB_HEADERS})
 
     # Infer component name from lower-case library name
-    STRING(TOLOWER ${NEKLIB_NAME} NEKLIB_COMPONENT)
+    STRING(TOLOWER ${name} NEKLIB_COMPONENT)
 
-    SET_PROPERTY(TARGET ${NEKLIB_NAME} PROPERTY FOLDER ${NEKLIB_COMPONENT})
-    SET_PROPERTY(TARGET ${NEKLIB_NAME} PROPERTY VERSION ${NEKTAR_VERSION})
+    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${NEKLIB_COMPONENT})
+    SET_PROPERTY(TARGET ${name} PROPERTY VERSION ${NEKTAR_VERSION})
 
-    SET_COMMON_PROPERTIES(${NEKLIB_NAME})
+    SET_COMMON_PROPERTIES(${name})
 
-    INSTALL(TARGETS ${NEKLIB_NAME}
+    INSTALL(TARGETS ${name}
         EXPORT Nektar++Libraries
-		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${NEKLIB_COMPONENT} OPTIONAL
-		ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKLIB_COMPONENT} OPTIONAL
-		LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKLIB_COMPONENT} OPTIONAL)
+        RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${NEKLIB_COMPONENT} OPTIONAL
+        ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKLIB_COMPONENT} OPTIONAL
+        LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKLIB_COMPONENT} OPTIONAL)
 
     FOREACH(HEADER ${NEKLIB_HEADERS})
         STRING(REGEX MATCH "(.*)[/\\]" DIR ${HEADER})
-        INSTALL(FILES ${HEADER} DESTINATION ${NEKTAR_INCLUDE_DIR}/${NEKLIB_NAME}/${DIR})
-    ENDFOREACH(HEADER HEADERS)
+        INSTALL(FILES ${HEADER}
+            DESTINATION ${NEKTAR_INCLUDE_DIR}/${name}/${DIR}
+            COMPONENT dev)
+    ENDFOREACH()
 
     # Add CPack information
     SET(CPACK_COMPONENT_${NEKLIB_COMPONENT}_DISPLAY_NAME nektar++-${NEKLIB_COMPONENT})
@@ -161,24 +160,14 @@ FUNCTION(ADD_NEKTAR_LIBRARY)
     SET(CPACK_COMPONENT_${NEKLIB_COMPONENT}_DESCRIPTION ${NEKLIB_DESCRIPTION})
 
     # If we have dependencies then link against them, and also configure CPack
-    # Debian dependencies, which are a special case for some reason...
+    # Debian dependencies, which are a special case for some reason. Then set up
+    # standard CPack components.
     IF(NEKLIB_DEPENDS)
-        TARGET_LINK_LIBRARIES(${NEKLIB_NAME} LINK_PUBLIC ${NEKLIB_DEPENDS})
-
-        SET(DEB_DEPS "")
-        FOREACH (pkg ${NEKLIB_DEPENDS})
-            STRING(TOLOWER ${pkg} pkg_lower)
-            SET(DEB_DEPS "${DEB_DEPS}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
-        ENDFOREACH()
-
-        # Remove starting ", "
-        STRING(SUBSTRING ${DEB_DEPS} 2 -1 DEB_DEPS)
-        SET(CPACK_DEBIAN_${NEKLIB_DEPENDS}_DEPENDS ${DEB_DEPS})
-
-        # Set general CPack component dependencies.
+        TARGET_LINK_LIBRARIES(${name} LINK_PUBLIC ${NEKLIB_DEPENDS})
+        CONSTRUCT_DEBIAN_DEPS(${NEKLIB_DEPENDS} "CPACK_DEBIAN_${NEKLIB_NAME}_DEPENDS")
         SET(CPACK_COMPONENT_${NEKLIB_COMPONENT}_DEPENDS ${NEKLIB_DEPENDS})
     ENDIF()
-ENDFUNCTION()
+ENDMACRO()
 
 # Adds a test with a given name.
 # The Test Definition File should be in a subdirectory called Tests relative

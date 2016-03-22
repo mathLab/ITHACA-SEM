@@ -4,21 +4,20 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_ADR
 
 IF( NEKTAR_SOLVER_ADR )
     SET(ADRSolverSource 
-       ./ADRSolver.cpp 
-       ./EquationSystems/Laplace.cpp
-       ./EquationSystems/Poisson.cpp       
-       ./EquationSystems/Helmholtz.cpp
-       ./EquationSystems/SteadyAdvectionDiffusion.cpp
-       ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
-       ./EquationSystems/UnsteadyAdvection.cpp
-       ./EquationSystems/UnsteadyDiffusion.cpp
-       ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
-       ./EquationSystems/UnsteadyInviscidBurger.cpp
-      #./EquationSystems/CFLtester.cpp
-       ./EquationSystems/EigenValuesAdvection.cpp)
+        ./ADRSolver.cpp 
+        ./EquationSystems/Laplace.cpp
+        ./EquationSystems/Poisson.cpp       
+        ./EquationSystems/Helmholtz.cpp
+        ./EquationSystems/SteadyAdvectionDiffusion.cpp
+        ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+        ./EquationSystems/UnsteadyAdvection.cpp
+        ./EquationSystems/UnsteadyDiffusion.cpp
+        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
+        ./EquationSystems/UnsteadyInviscidBurger.cpp
+        ./EquationSystems/EigenValuesAdvection.cpp)
 
-    ADD_SOLVER_EXECUTABLE(ADRSolver solvers 
-        ${ADRSolverSource})
+    ADD_SOLVER_EXECUTABLE(ADRSolver SOURCES ${ADRSolverSource})
+    FINALISE_CPACK_COMPONENT(adrsolver DESCRIPTION "Nektar++ ADRSolver")
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST_LENGTHY(Advection1D_FRDG_GLL_LAGRANGE_SEM)

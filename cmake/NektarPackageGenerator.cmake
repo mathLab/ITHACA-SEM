@@ -1,14 +1,3 @@
-# Define components
-SET(CPACK_COMPONENTS_ALL lib solvers)
-
-cpack_add_component(lib
-    DISPLAY_NAME "nektar++-lib"
-    DESCRIPTION "Nektar++ libraries")
-cpack_add_component(solvers
-    DISPLAY_NAME "nektar++-solvers"
-    DESCRIPTION "Nektar++ solvers"
-    DEPENDS lib)
-
 set(CPACK_PACKAGE_VENDOR "Imperial College London")
 set(CPACK_PACKAGE_CONTACT 
     "Nektar++ users mailing list <nektar-users@imperial.ac.uk>")
@@ -41,4 +30,4 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/NektarCPackConfig.cmake.in
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake)
 
 # Finally, include the CPack module
-INCLUDE(CPack)
+include(CPack)

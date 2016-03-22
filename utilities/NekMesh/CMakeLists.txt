@@ -1,28 +1,3 @@
-SET(NekMeshHeaders
-    InputModules/InputGmsh.h
-    InputModules/InputNek.h
-    InputModules/InputNekpp.h
-    InputModules/InputPly.h
-    InputModules/InputSem.h
-    InputModules/InputSwan.h
-    InputModules/InputStarTec.h
-    Module.h
-    OutputModules/OutputGmsh.h
-    OutputModules/OutputNekpp.h
-    ProcessModules/ProcessBL.h
-    ProcessModules/ProcessCyl.h
-    ProcessModules/ProcessDetectSurf.h
-    ProcessModules/ProcessExtractSurf.h
-    ProcessModules/ProcessExtractTetPrismInterface.h
-    ProcessModules/ProcessJac.h
-    ProcessModules/ProcessLinear.h
-    ProcessModules/ProcessPerAlign.h
-    ProcessModules/ProcessScalar.h
-    ProcessModules/ProcessSpherigon.h
-    ProcessModules/ProcessTetSplit.h
-    ProcessModules/ProcessOptiExtract.h
-)
-
 SET(NekMeshSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
@@ -50,28 +25,22 @@ SET(NekMeshSources
 )
 
 IF (NEKTAR_USE_CCM)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputStar.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputVtk.h OutputModules/OutputVtk.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
 ENDIF (NEKTAR_USE_VTK)
 
 IF (NEKTAR_USE_MESHGEN)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputCAD.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
-ADD_EXECUTABLE(NekMesh ${NekMeshSources})
-SET_COMMON_PROPERTIES(NekMesh)
-TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions)
-SET_PROPERTY(TARGET NekMesh PROPERTY FOLDER util)
-INSTALL(TARGETS NekMesh
-    RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT util)
+ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
+    SOURCES ${NekMeshSources}
+    DEPENDS NekMeshUtils LocalUtils)
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh ccmio adf)

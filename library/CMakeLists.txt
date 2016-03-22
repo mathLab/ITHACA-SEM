@@ -4,7 +4,7 @@ SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs     Demos)
 SET(TimingsSubDirs  Timings)
 
-SUBDIRS(${LibrarySubDirs} )
+SUBDIRS(${LibrarySubDirs})
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
 

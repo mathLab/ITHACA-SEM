@@ -81,14 +81,9 @@ namespace Nektar
             // Calculate Neumann BCs at current level
             CalcNeumannPressureBCs(fields, N, kinvis);
 
-            //Calculate acceleration term at level n based on previous steps
-            AccelerationBDF(m_acceleration);
-
-            // Adding acceleration term to HOPBCs
-            Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
-                         m_acceleration[m_intSteps],  1,
-                         m_pressureHBCs[m_intSteps-1], 1,
-                         m_pressureHBCs[m_intSteps-1], 1);
+            // calculate (phi,du/dt) and level n which will then be
+            // extrpolated.
+            CalcExplicitDuDt(fields);
 
             // Extrapolate to n+1
             ExtrapolateArray(m_pressureHBCs);
@@ -97,7 +92,7 @@ namespace Nektar
             CopyPressureHBCsToPbndExp();
         }
 
-        CalcOutflowBCs(fields, N, kinvis);
+        CalcOutflowBCs(fields, kinvis);
     }
 
     

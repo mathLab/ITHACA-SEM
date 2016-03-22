@@ -251,6 +251,8 @@ namespace Nektar
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
 
+        Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];

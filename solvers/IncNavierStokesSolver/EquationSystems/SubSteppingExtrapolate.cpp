@@ -248,15 +248,12 @@ namespace Nektar
 
         m_pressureCalls++;
 
-        // Rotate HOPBCs storage
-        RollOver(m_pressureHBCs);
-
         // Calculate non-linear and viscous BCs at current level and
         // put in m_pressureHBCs[0]
         CalcNeumannPressureBCs(inarray,velfields,kinvis);
 
         // Extrapolate to m_pressureHBCs to n+1
-        ExtrapolatePressureHBCs();
+        ExtrapolateArray(m_pressureHBCs);
         
         // Add (phi,Du/Dt) term to m_presureHBC 
         AddDuDt();
@@ -539,31 +536,17 @@ namespace Nektar
      */
     void SubSteppingExtrapolate::AddDuDt(void)
     {
-        int HBCPts = m_acceleration[0].num_elements();
-
-        Array<OneD, NekDouble> accelerationTerm(HBCPts, 0.0);
-
         // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
-        IProductNormVelocityBCOnHBC(m_acceleration[0]);
+        IProductNormVelocityBCOnHBC(m_acceleration[m_intSteps]);
         
         //Calculate acceleration term at level n based on previous steps
-        int acc_order = min(m_pressureCalls,m_intSteps);
-        Vmath::Smul(HBCPts, StifflyStable_Gamma0_Coeffs[acc_order-1]/m_timestep,
-                    m_acceleration[0], 1, accelerationTerm,  1);
+        AccelerationBDF(m_acceleration);
         
-        for(int i = 0; i < acc_order; i++)
-        {
-            Vmath::Svtvp(HBCPts, 
-                         -1*StifflyStable_Alpha_Coeffs[acc_order-1][i]/m_timestep,
-                         m_acceleration[i+1], 1,
-                         accelerationTerm,    1,
-                         accelerationTerm,    1);
-        }
-        
-        // Subtract accleration term off m_pressureHBCs[nlevels-1]
-        int  nlevels = m_pressureHBCs.num_elements();
-        Vmath::Vsub(HBCPts, m_pressureHBCs[nlevels-1],1,accelerationTerm, 1,
-                    m_pressureHBCs[nlevels-1],1);
+        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+        Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
+                     m_acceleration[m_intSteps],  1,
+                     m_pressureHBCs[m_intSteps-1], 1,
+                     m_pressureHBCs[m_intSteps-1], 1);
     }
 
     LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)

@@ -2807,7 +2807,45 @@ namespace Nektar
                 offsetElmt += nq;
             }
         }
-        
+
+        /**
+         */
+        void ExpList::v_ExtractPhysToBnd(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bnd)
+        {
+            int n, cnt;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            StdRegions::StdExpansionSharedPtr elmt;
+
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+
+            // Initialise result
+            bnd = Array<OneD, NekDouble>
+                            (GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+
+            int offsetBnd;
+            int offsetPhys;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
+                offsetBnd = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+
+                elmt   = GetExp(ElmtID[cnt+n]);
+                elmt->GetTracePhysVals(EdgeID[cnt+n],
+                                      GetBndCondExpansions()[i]->GetExp(n),
+                                      tmp1 = phys + offsetPhys,
+                                      tmp2 = bnd + offsetBnd);
+            }
+        }
+
         /**
          */
         void ExpList::v_GetBoundaryNormals(int i,

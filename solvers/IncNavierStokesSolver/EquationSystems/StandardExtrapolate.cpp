@@ -82,7 +82,7 @@ namespace Nektar
             CalcNeumannPressureBCs(fields, N, kinvis);
 
             // calculate (phi,du/dt) and level n which will then be
-            // extrpolated.
+            // extrapolated.
             CalcExplicitDuDt(fields);
 
             // Extrapolate to n+1

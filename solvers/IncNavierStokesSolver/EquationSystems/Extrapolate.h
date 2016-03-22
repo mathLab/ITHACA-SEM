@@ -220,7 +220,6 @@ namespace Nektar
 
         // Number of quadrature points for Outflow HOBC
         int m_numOutHBCPts;
-        int m_numOutElmtPts;
 
         // Number of Outflow HOBcs
         int m_outHBCnumber;

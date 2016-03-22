@@ -152,9 +152,8 @@ namespace Nektar
 
                 Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
 
-                // Getting values on the edge and filling the pressure boundary
-                // expansion and the acceleration term. Multiplication by the
-                // normal is required
+                // Getting values on the boundary and filling the pressure bnd
+                // expansion. Multiplication by the normal is required
                 for(int i = 0; i < m_bnd_dim; i++)
                 {
                     m_fields[0]->ExtractElmtToBndPhys(n, Q[i],BndValues[i]);
@@ -425,7 +424,7 @@ namespace Nektar
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
         m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
 
-        // Get number of expansions and points (or coeffs) for HOBCs
+        // Get useful values for HOBCs
         m_HBCnumber = 0;
         m_numHBCDof = 0;
         m_outHBCnumber = 0;
@@ -441,12 +440,8 @@ namespace Nektar
             // High order outflow boundary condition;
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
             {
-                MultiRegions::ExpListSharedPtr BndElmtExp;
-                m_pressure->GetBndElmtExpansion(n, BndElmtExp, false);
-                m_numOutElmtPts += BndElmtExp->GetTotPoints();
-
                 m_numOutHBCPts += m_PBndExp[n]->GetTotPoints();
-                m_outHBCnumber += m_PBndExp[n]->GetTotPoints();;
+                m_outHBCnumber++;
             }
         }
 
@@ -512,7 +507,7 @@ namespace Nektar
                                           Array<OneD,
                                           Array<OneD, NekDouble> > > (m_curl_dim);
 
-                    m_fields[0]->GetBndElmtExpansion(n, BndElmtExp);
+                    m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
                     int nq  = BndElmtExp->GetTotPoints();
                     for(int j = 0; j < m_curl_dim; ++j)
                     {

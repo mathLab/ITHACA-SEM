@@ -177,7 +177,6 @@ namespace Nektar
         }
         
         Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.num_elements());
-        Array<OneD, int> VelIds(m_velocity.num_elements());
         
         Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.num_elements());
         
@@ -331,9 +330,7 @@ namespace Nektar
         
         static int ncalls = 1;
         int  nint         = min(ncalls++, m_intSteps);
-        
-        Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(), 
-                                   m_cflSafetyFactor);
+
         //this needs to change
         m_comm = m_fields[0]->GetComm()->GetRowComm();
 

@@ -327,7 +327,7 @@ namespace Nektar
         
         NekDouble dt; 
         
-        Array<OneD, Array<OneD, NekDouble> > fields, velfields;
+        Array<OneD, Array<OneD, NekDouble> > fields;
         
         static int ncalls = 1;
         int  nint         = min(ncalls++, m_intSteps);
@@ -389,7 +389,6 @@ namespace Nektar
         int n_element      = m_fields[0]->GetExpSize(); 
 
         const Array<OneD, int> ExpOrder=m_fields[0]->EvalBasisNumModesMaxPerExp();
-        Array<OneD, int> ExpOrderList (n_element, ExpOrder);
         
         const NekDouble cLambda = 0.2; // Spencer book pag. 317
         

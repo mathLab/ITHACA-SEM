@@ -211,12 +211,6 @@ namespace Nektar
         
         /// number of times the high-order pressure BCs have been called
         int m_pressureCalls;
-        
-        /// Maximum points used in pressure BC evaluation
-        int m_pressureBCsMaxPts;
-
-        /// Maximum points used in Element adjacent to pressure BC evaluation
-        int m_pressureBCsElmtMaxPts;
 
         // Number of degrees of freedom (coefficients) for HOPbc
         int m_numHBCDof;
@@ -236,19 +230,13 @@ namespace Nektar
 
         NekDouble m_timestep;
 
-        /// Id of element to which pressure  boundary condition belongs
-        Array<OneD, int> m_pressureBCtoElmtID;
-        
-        /// Id of edge (2D) or face (3D) to which pressure boundary condition belongs
-        Array<OneD, int> m_pressureBCtoTraceID;
-        
         /// Storage for current and previous levels of high order pressure boundary conditions.
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
 
         /// Storage for current and previous levels of the acceleration term.
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
 
-        /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
+        /// Storage for current and previous velocity fields at the outflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;

@@ -419,26 +419,7 @@ namespace Nektar
         m_PBndConds   = m_pressure->GetBndConditions();
         m_PBndExp     = m_pressure->GetBndCondExpansions();
     
-        // Set up mapping from pressure boundary condition to pressure element
-        // details.
-        m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
-                                         m_pressureBCtoTraceID);
-
-        // find the maximum values of points  for pressure BC evaluation
-        m_pressureBCsMaxPts = 0; 
-        m_pressureBCsElmtMaxPts = 0; 
         int cnt, n;
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
-            {
-                m_pressureBCsMaxPts = max(m_pressureBCsMaxPts,
-                                m_PBndExp[n]->GetExp(i)->GetTotPoints());
-                m_pressureBCsElmtMaxPts = max(m_pressureBCsElmtMaxPts,
-                                m_pressure->GetExp(m_pressureBCtoElmtID[cnt++])
-                                                            ->GetTotPoints());
-            }
-        }
     
         // Storage array for high order pressure BCs
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);

@@ -520,7 +520,13 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         cout << "]" << endl;
     }
 
+    if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
+    {
+        calcCp0();
+    }
+
 }
+
 
 void ProcessInterpPoints::InterpolateFieldToPts(
                                                 vector<MultiRegions::ExpListSharedPtr> &field0,
@@ -541,62 +547,6 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     int pfield = -1;
     NekDouble p0,qinv;
     vector<int> velid;
-
-    if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
-    {
-
-        vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                      m_config["cp"].as<string>().c_str(),values),
-                 "Failed to interpret cp string");
-
-        ASSERTL0(values.size() == 2,
-                 "cp string should contain 2 values "
-                 "p0 and q (=1/2 rho u^2)");
-
-        p0  =  values[0];
-        qinv = 1.0/values[1];
-        
-        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
-
-        for(int i = 0; i < fPts->GetNFields(); ++i)
-        {
-            if(boost::iequals(fPts->GetFieldName(i),"p"))
-            {
-                pfield = i;
-            }
-
-            if(boost::iequals(fPts->GetFieldName(i),"u")||
-               boost::iequals(fPts->GetFieldName(i),"v")||
-               boost::iequals(fPts->GetFieldName(i),"w"))
-            {
-                velid.push_back(i);
-            }
-        }
-        
-        if(pfield != -1)
-        {
-            Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
-            m_f->m_fieldPts->AddField(newPts, "Cp");
-            nfields += 1;
-
-            if(velid.size())
-            {
-                Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
-                m_f->m_fieldPts->AddField(newPts, "Cp0");
-                nfields += 1;
-            }
-            else
-            {
-                WARNINGL0(false,"Did not find velocity components for Cp0");
-            }
-        }
-        else
-        {
-            WARNINGL0(false,"Failed to find 'p' field to determine cp0");
-        }
-
-    }
     
     // resize data field
     m_f->m_data.resize(nfields);
@@ -656,23 +606,91 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             cout <<"." << flush;
         }
         intpts ++;
+    }
+}
 
+
+void ProcessInterpPoints::calcCp0()
+{
+
+    int nq1 = m_f->m_data[0].size();
+    int r, f;
+    int nfields = m_f->m_data.size();
+    int pfield = -1;
+    NekDouble p0,qinv;
+    vector<int> velid;
+
+
+    vector<NekDouble> values;
+    ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                    m_config["cp"].as<string>().c_str(),values),
+                "Failed to interpret cp string");
+
+    ASSERTL0(values.size() == 2,
+                "cp string should contain 2 values "
+                "p0 and q (=1/2 rho u^2)");
+
+    p0  =  values[0];
+    qinv = 1.0/values[1];
+
+    for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
+    {
+        if(boost::iequals(m_f->m_fieldPts->GetFieldName(i),"p"))
+        {
+            pfield = i;
+        }
+
+        if(boost::iequals(m_f->m_fieldPts->GetFieldName(i),"u")||
+            boost::iequals(m_f->m_fieldPts->GetFieldName(i),"v")||
+            boost::iequals(m_f->m_fieldPts->GetFieldName(i),"w"))
+        {
+            velid.push_back(i);
+        }
+    }
+
+    if(pfield != -1)
+    {
+        nfields += 1;
+
+        if(velid.size())
+        {
+            nfields += 1;
+        }
+        else
+        {
+            WARNINGL0(false,"Did not find velocity components for Cp0");
+        }
+    }
+    else
+    {
+        WARNINGL0(false,"Failed to find 'p' field to determine cp0");
+    }
+
+    // resize data field
+    m_f->m_data.resize(nfields);
+
+    for (f = 0; f < nfields; ++f)
+    {
+        m_f->m_data[f].resize(nq1);
+    }
+
+    for (r = 0; r < nq1; r++)
+    {
         if(pfield != -1) // calculate cp
         {
             m_f->m_data[nfields-2][r] = qinv*(m_f->m_data[pfield][r] - p0);
 
             if(velid.size()) // calculate cp0
             {
-                NekDouble q = 0; 
+                NekDouble q = 0;
                 for(int i = 0; i < velid.size(); ++i)
                 {
                     q += 0.5*m_f->m_data[velid[i]][r]*m_f->m_data[velid[i]][r];
                 }
-                
+
                 m_f->m_data[nfields-1][r] = qinv*(m_f->m_data[pfield][r]+q - p0);
             }
         }
-
     }
 }
 

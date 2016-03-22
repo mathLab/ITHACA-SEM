@@ -69,6 +69,8 @@ class ProcessInterpPoints : public ProcessModule
                                    NekDouble                               clamp_up,
                                    NekDouble                               def_value,
                                    bool                                    isRoot);
+
+        void calcCp0();
 };
 
 }
